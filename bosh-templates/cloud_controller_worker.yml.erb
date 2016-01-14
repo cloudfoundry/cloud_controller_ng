@@ -190,6 +190,8 @@ quota_definitions:
 default_quota_definition: <%= p("cc.default_quota_definition") %>
 
 resource_pool:
+  blobstore_type: <%= p("cc.resource_pool.blobstore_type") %>
+  webdav_config: <%= p("cc.resource_pool.webdav_config").to_json %>
   minimum_size: <%= p("cc.resource_pool.minimum_size") %>
   maximum_size: <%= p("cc.resource_pool.maximum_size") %>
   resource_directory_key: <%= p("cc.resource_pool.resource_directory_key") %>
@@ -199,9 +201,11 @@ resource_pool:
     key_pair_id: <%= p("cc.resource_pool.cdn.key_pair_id") %>
     private_key: <%= p("cc.resource_pool.cdn.private_key").inspect %>
   <% end %>
-  fog_connection: <%= p(["cc.resource_pool.fog_connection", "cc.default_fog_connection"]).to_json %>
+  fog_connection: <%= p("cc.resource_pool.fog_connection", {}).to_json %>
 
 packages:
+  blobstore_type: <%= p("cc.packages.blobstore_type") %>
+  webdav_config: <%= p("cc.packages.webdav_config").to_json %>
   app_package_directory_key: <%= p("cc.packages.app_package_directory_key") %>
   max_package_size: <%= p("cc.packages.max_package_size") %>
   <% if_p("cc.packages.cdn") do %>
@@ -210,9 +214,11 @@ packages:
     key_pair_id: <%= p("cc.packages.cdn.key_pair_id") %>
     private_key: <%= p("cc.packages.cdn.private_key").inspect %>
   <% end %>
-  fog_connection: <%= p(["cc.packages.fog_connection", "cc.default_fog_connection"]).to_json %>
+  fog_connection: <%= p("cc.packages.fog_connection", {}).to_json %>
 
 droplets:
+  blobstore_type: <%= p("cc.droplets.blobstore_type") %>
+  webdav_config: <%= p("cc.droplets.webdav_config").to_json %>
   droplet_directory_key: <%= p("cc.droplets.droplet_directory_key") %>
   <% if_p("cc.droplets.cdn") do %>
   cdn:
@@ -220,9 +226,11 @@ droplets:
     key_pair_id: <%= p("cc.droplets.cdn.key_pair_id") %>
     private_key: <%= p("cc.droplets.cdn.private_key").inspect %>
   <% end %>
-  fog_connection: <%= p(["cc.droplets.fog_connection", "cc.default_fog_connection"]).to_json %>
+  fog_connection: <%= p("cc.droplets.fog_connection", {}).to_json %>
 
 buildpacks:
+  blobstore_type: <%= p("cc.buildpacks.blobstore_type") %>
+  webdav_config: <%= p("cc.buildpacks.webdav_config").to_json %>
   buildpack_directory_key: <%= p("cc.buildpacks.buildpack_directory_key") %>
   <% if_p("cc.buildpacks.cdn") do %>
   cdn:
@@ -230,7 +238,7 @@ buildpacks:
     key_pair_id: <%= p("cc.buildpacks.cdn.key_pair_id") %>
     private_key: <%= p("cc.buildpacks.cdn.private_key").inspect %>
   <% end %>
-  fog_connection: <%= p(["cc.buildpacks.fog_connection", "cc.default_fog_connection"]).to_json %>
+  fog_connection: <%= p("cc.buildpacks.fog_connection", {}).to_json %>
 
 db_encryption_key: <%= p("cc.db_encryption_key") %>
 

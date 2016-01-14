@@ -1,17 +1,17 @@
-<% if p("cc.packages.fog_connection.provider", "local").downcase == "local" %>
+<% if p("cc.packages.blobstore_type").downcase == "fog" && p("cc.packages.fog_connection.provider", "").downcase == "local" %>
 echo "Preparing local package directory"
-mkdir -p <%= p(["cc.packages.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>
-chown vcap:vcap <%= p(["cc.packages.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>
+mkdir -p <%= p("cc.packages.fog_connection.local_root") %>
+chown vcap:vcap <%= p("cc.packages.fog_connection.local_root") %>
 <% end %>
 
-<% if p("cc.resource_pool.fog_connection.provider", "local").downcase == "local" %>
+<% if p("cc.resource_pool.blobstore_type").downcase == "fog" && p("cc.resource_pool.fog_connection.provider", "").downcase == "local" %>
 echo "Preparing local resource_pool directory"
-mkdir -p <%= p(["cc.resource_pool.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>
-chown vcap:vcap <%= p(["cc.resource_pool.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>
+mkdir -p <%= p("cc.resource_pool.fog_connection.local_root") %>
+chown vcap:vcap <%= p("cc.resource_pool.fog_connection.local_root") %>
 <% end %>
 
-<% if p("cc.droplets.fog_connection.provider", "local").downcase == "local" %>
+<% if p("cc.droplets.blobstore_type").downcase == "fog" && p("cc.droplets.fog_connection.provider", "").downcase == "local" %>
 echo "Preparing local droplet directory"
-mkdir -p <%= p(["cc.droplets.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>
-chown vcap:vcap <%= p(["cc.droplets.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>
+mkdir -p <%= p("cc.droplets.fog_connection.local_root") %>
+chown vcap:vcap <%= p("cc.droplets.fog_connection.local_root") %>
 <% end %>
