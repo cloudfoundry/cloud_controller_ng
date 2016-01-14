@@ -20,7 +20,18 @@ Sequel.migration do
     if self.class.name.match(/mysql/i)
       run 'update apps_routes set guid=UUID();'
     elsif self.class.name.match(/postgres/i)
-      run 'update apps_routes set guid=gen_random_uuid();'
+      run 'CREATE OR REPLACE FUNCTION get_uuid()
+      RETURNS TEXT AS $$
+      BEGIN
+        BEGIN
+          RETURN gen_random_uuid();
+        EXCEPTION WHEN OTHERS THEN
+          RETURN uuid_generate_v4();
+        END;
+       END;
+       $$ LANGUAGE plpgsql;'
+
+      run 'update apps_routes set guid=get_uuid();'
     end
 
     alter_table :apps_routes do
@@ -44,6 +55,9 @@ Sequel.migration do
       drop_column :id
 
       add_index [:app_id, :route_id], unique: true, name: :ar_app_id_route_id_index
+    end
+    if self.class.name.match(/postgres/i)
+      run 'drop function if exists get_uuid();'
     end
   end
 end
