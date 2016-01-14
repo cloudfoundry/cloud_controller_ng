@@ -34,7 +34,7 @@ module CloudController
 
       describe 'basic auth' do
         before do
-          options.merge!(user: 'username', password: 'top-sekret')
+          options.merge!(username: 'username', password: 'top-sekret')
         end
 
         it 'adds Authorization header when there is a user and password' do

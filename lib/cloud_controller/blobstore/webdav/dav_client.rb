@@ -17,7 +17,7 @@ module CloudController
         @headers  = {}
         @secret = @options[:secret]
 
-        user     = @options[:user]
+        user     = @options[:username]
         password = @options[:password]
         if user && password
           @headers['Authorization'] = 'Basic ' +

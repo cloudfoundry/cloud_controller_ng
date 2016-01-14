@@ -56,6 +56,10 @@ module CloudController
       context 'when webdav is requested' do
         let(:blobstore_type) { 'webdav' }
 
+        before do
+          options.merge!(webdav_config: {})
+        end
+
         it 'provides a webdav client' do
           expect(ClientProvider.provide(options: options, directory_key: 'key').wrapped_client).to be_a(DavClient)
         end

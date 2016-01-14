@@ -28,10 +28,11 @@ module CloudController
 
         Client.new(client)
       end
+      private_class_method :provide_fog
 
       def self.provide_webdav(options, directory_key, root_dir)
         client = DavClient.new(
-          options,
+          options.fetch(:webdav_config),
           directory_key,
           options[:minimum_size],
           options[:maximum_size]
@@ -39,6 +40,7 @@ module CloudController
 
         Client.new(client)
       end
+      private_class_method :provide_webdav
     end
   end
 end

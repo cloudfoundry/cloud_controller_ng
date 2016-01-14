@@ -102,7 +102,7 @@ class VCAP::CloudController::ResourcePool
       blobstore.exists?(sha1)
     end
   rescue => e
-    logger.error('Fog connection error: ' + e)
+    logger.error('blobstore error: ' + e.to_s)
     raise e
   end
 
