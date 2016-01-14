@@ -12,7 +12,7 @@ module CloudController
       it_behaves_like 'a blob'
 
       describe 'attributes' do
-        let(:headers) { { 'ETag' => 'the-etag', 'Last-Modified' => 'modified-date' } }
+        let(:headers) { { 'ETag' => 'the-etag', 'Last-Modified' => 'modified-date', 'Content-Length' => 123455 } }
 
         before do
           allow(httpmessage).to receive(:headers).and_return(headers)
@@ -23,6 +23,7 @@ module CloudController
             {
               etag:          'the-etag',
               last_modified: 'modified-date',
+              content_length: 123455,
               created_at:    nil,
             }
           )

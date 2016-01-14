@@ -78,63 +78,18 @@ module VCAP::CloudController
     end
 
     describe '#copy' do
-      let(:fake_io) { double :dest }
-      let(:files) { double :files }
-
       let(:descriptor) do
         { 'sha1' => 'deadbeef' }
       end
 
       before do
         allow(@resource_pool).to receive(:resource_known?).and_return(true)
-        allow(@resource_pool.blobstore).to receive(:files).and_return(files)
-        allow(files).to receive(:get)
-        allow(File).to receive(:open).and_yield(fake_io)
-      end
-
-      it 'creates the path to the destination' do
-        expect(FileUtils).to receive(:mkdir_p).with('some')
-        @resource_pool.copy(descriptor, 'some/destination')
       end
 
       it 'streams the resource to the destination' do
-        expect(fake_io).to receive(:write).with('chunk one')
-        expect(fake_io).to receive(:write).with('chunk two')
-
-        expect(files).to receive(:get).with('de/ad/deadbeef').
-          and_yield('chunk one', 9, 18).
-          and_yield('chunk two', 0, 18)
+        expect(@resource_pool.blobstore).to receive(:download_from_blobstore).with(descriptor['sha1'], 'some/destination')
 
         @resource_pool.copy(descriptor, 'some/destination')
-      end
-
-      context 'when a cdn is configured' do
-        let(:resource_pool_config) do
-          {
-            maximum_size: @max_file_size,
-            resource_directory_key: 'spec-cc-resources',
-            fog_connection: {
-              provider: 'AWS',
-              aws_access_key_id: 'fake_aws_key_id',
-              aws_secret_access_key: 'fake_secret_access_key',
-            },
-            cdn: {
-              uri: 'http://example.com',
-            }
-          }
-        end
-
-        it 'downloads the resource via the CDN' do
-          allow_any_instance_of(HTTPClient).to receive(:get) do |&blk|
-            blk.call('chunk one')
-            blk.call('chunk two')
-          end
-
-          expect(fake_io).to receive(:write).with('chunk one')
-          expect(fake_io).to receive(:write).with('chunk two')
-
-          @resource_pool.copy(descriptor, 'some/destination')
-        end
       end
     end
   end

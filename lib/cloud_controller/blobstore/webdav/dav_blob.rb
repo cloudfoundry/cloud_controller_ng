@@ -20,9 +20,10 @@ module CloudController
 
       def attributes(*keys)
         @attributes ||= {
-          etag:          @httpmessage.headers['ETag'],
-          last_modified: @httpmessage.headers['Last-Modified'],
-          created_at:    nil
+          etag:           @httpmessage.headers['ETag'],
+          last_modified:  @httpmessage.headers['Last-Modified'],
+          content_length: @httpmessage.headers['Content-Length'],
+          created_at:     nil
         }
 
         return @attributes if keys.empty?
