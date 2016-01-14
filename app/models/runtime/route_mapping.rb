@@ -1,6 +1,7 @@
 module VCAP::CloudController
   class RouteMapping < Sequel::Model(:apps_routes)
-    #set_dataset(:apps_routes)
+    plugin :after_initialize
+
     many_to_one :app
     many_to_one :route
 
@@ -8,11 +9,13 @@ module VCAP::CloudController
 
     import_attributes :app_port, :app_guid, :route_guid
 
-    #
-    #
-    # def table_name
-    #   :apps_routes
-    # end
+    def after_initialize
+      if self.guid.blank? && self.exists?
+        RouteMapping.dataset.where('guid is null and id = ?', self.id).update(guid: SecureRandom.uuid)
+        reload
+      end
+      super
+    end
 
     def validate
       if self.app_port && !app.diego

@@ -1929,18 +1929,20 @@ module VCAP::CloudController
         route
       end
 
-      it 'returns the mapped http routes associated with the app' do
-        app.add_route(route_with_service)
-        app.add_route(route_without_service)
+      context 'with no app ports specified' do
+        it 'returns the mapped http routes associated with the app' do
+          app.add_route(route_with_service)
+          app.add_route(route_without_service)
 
-        expected_hash = {
-          'http_routes' => [
-            { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url },
-            { 'hostname' => route_without_service.uri }
-          ]
-        }
+          expected_hash = {
+            'http_routes' => [
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url },
+              { 'hostname' => route_without_service.uri }
+            ]
+          }
 
-        expect(app.routing_info).to match expected_hash
+          expect(app.routing_info).to match expected_hash
+        end
       end
 
       context 'with app port specified in route mapping' do
@@ -1950,6 +1952,57 @@ module VCAP::CloudController
         it 'returns the app port in routing info' do
           expected_hash = {
             'http_routes' => [
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
+            ]
+          }
+
+          expect(app.routing_info).to match expected_hash
+        end
+      end
+
+      context 'with multiple route mapping to same route with different app ports' do
+        let(:app) { AppFactory.make(space: space, diego: true, ports: [8080, 9090]) }
+        let!(:route_mapping1) { RouteMapping.make(app: app, route: route_with_service, app_port: 8080) }
+        let!(:route_mapping2) { RouteMapping.make(app: app, route: route_with_service, app_port: 9090) }
+
+        it 'returns the app port in routing info' do
+          expected_hash = {
+            'http_routes' => [
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080 },
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
+            ]
+          }
+
+          expect(app.routing_info).to match expected_hash
+        end
+      end
+
+      context 'with multiple route mapping to different route with same app port' do
+        let(:app) { AppFactory.make(space: space, diego: true, ports: [9090]) }
+        let!(:route_mapping1) { RouteMapping.make(app: app, route: route_without_service, app_port: 9090) }
+        let!(:route_mapping2) { RouteMapping.make(app: app, route: route_with_service, app_port: 9090) }
+
+        it 'returns the app port in routing info' do
+          expected_hash = {
+            'http_routes' => [
+              { 'hostname' => route_without_service.uri, 'port' => 9090 },
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
+            ]
+          }
+
+          expect(app.routing_info).to match expected_hash
+        end
+      end
+
+      context 'with multiple route mapping to different route with different app ports' do
+        let(:app) { AppFactory.make(space: space, diego: true, ports: [8080, 9090]) }
+        let!(:route_mapping1) { RouteMapping.make(app: app, route: route_without_service, app_port: 8080) }
+        let!(:route_mapping2) { RouteMapping.make(app: app, route: route_with_service, app_port: 9090) }
+
+        it 'returns the app port in routing info' do
+          expected_hash = {
+            'http_routes' => [
+              { 'hostname' => route_without_service.uri, 'port' => 8080 },
               { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
             ]
           }

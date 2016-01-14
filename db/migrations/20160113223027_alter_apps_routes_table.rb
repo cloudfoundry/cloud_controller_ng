@@ -35,7 +35,6 @@ Sequel.migration do
     end
 
     alter_table :apps_routes do
-      set_column_not_null :guid
       add_index :guid, unique: true, name: :apps_routes_guid_index
       add_index :created_at, name: :apps_routes_created_at_index
       add_index :updated_at, name: :apps_routes_updated_at_index

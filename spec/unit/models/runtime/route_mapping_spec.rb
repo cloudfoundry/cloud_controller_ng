@@ -115,6 +115,18 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'with null guid' do
+        let(:app_obj) { AppFactory.make(space: space, diego: true, ports: [8080]) }
+        before do
+          RouteMapping.db.run("insert into apps_routes (app_id, route_id) values (#{app_obj.id}, #{route.id})")
+        end
+
+        it 'auto assigns a guid during read' do
+          mapping = RouteMapping.find(app_id: app_obj.id, route_id: route.id)
+          expect(mapping.guid).to_not be_nil
+        end
+      end
     end
 
     describe 'apps association' do

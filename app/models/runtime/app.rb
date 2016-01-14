@@ -467,11 +467,16 @@ module VCAP::CloudController
     def routing_info
       route_mappings = RouteMapping.select_all(RouteMapping.table_name).where(:"#{RouteMapping.table_name}__app_id" => self.id)
       route_app_port_map = {}
-      route_mappings.each { |route_map| route_app_port_map[route_map.route_id] = route_map.app_port }
+      route_mappings.each do |route_map|
+        unless route_map.app_port.nil?
+          route_app_port_map[route_map.route_id] = [] if route_app_port_map[route_map.route_id].nil?
+          route_app_port_map[route_map.route_id].push(route_map.app_port)
+        end
+      end
       info = routes.map do |r|
         info = { 'hostname' => r.uri }
         info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
-        info['port'] = route_app_port_map[r.id] if !route_app_port_map[r.id].nil?
+        info['port'] = route_app_port_map[r.id].shift unless route_app_port_map[r.id].blank?
         info
       end
       { 'http_routes' => info }
