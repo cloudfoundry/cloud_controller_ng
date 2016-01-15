@@ -117,11 +117,11 @@ name: <%= name %>
 route_services_enabled: <%= !p("router.route_services_secret").empty? %>
 
 info:
-  name: <%= p("name") %>
+  name: "<%= p("name") %>"
   build: "<%= p("build") %>"
-  version: <%= p("version") %>
-  support_address: <%= p("support_address") %>
-  description: <%= p("description") %>
+  version: "<%= p("version") %>"
+  support_address: "<%= p("support_address") %>"
+  description: "<%= p("description") %>"
 <% if_p("cc.allow_app_ssh_access") do %>
   app_ssh_endpoint: <%= "ssh." + p("system_domain") + ":" + p("app_ssh.port").to_s %>
 <% if_p("app_ssh.host_key_fingerprint") do |fingerprint| %>

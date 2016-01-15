@@ -120,11 +120,11 @@ index: <%= spec.index %>
 name: <%= name %>
 
 info:
-  name: <%= p("name") %>
+  name: "<%= p("name") %>"
   build: "<%= p("build") %>"
-  version: <%= p("version") %>
-  support_address: <%= p("support_address") %>
-  description: <%= p("description") %>
+  version: "<%= p("version") %>"
+  support_address: "<%= p("support_address") %>"
+  description: "<%= p("description") %>"
 
 <% if_p("cc.directories") do %>
 directories:<% p("cc.directories").each do |key, value| %>
