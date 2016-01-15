@@ -11,12 +11,6 @@ describe 'v3 service bindings' do
     VCAP::CloudController::RackAppBuilder.new.build test_config, request_metrics
   end
 
-  before do
-    allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
-      FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
-    end
-  end
-
   let(:user) { VCAP::CloudController::User.make }
 
   let(:user_headers) do
@@ -81,62 +75,115 @@ describe 'v3 service bindings' do
     MultiJson.load(last_response.body)['guid']
   end
 
-  let(:service_instance_guid) do
-    post(
-      '/v2/service_brokers',
-      {
-        name:          'cool-runnings',
-        broker_url:    'https://example.com/foo/bar',
-        auth_username: 'utako',
-        auth_password: 'green'
-      }.to_json,
-      admin
-    )
+  describe 'when the service is managed' do
+    let(:service_instance_guid) do
+      post(
+        '/v2/service_brokers',
+        {
+          name:          'cool-runnings',
+          broker_url:    'https://example.com/foo/bar',
+          auth_username: 'utako',
+          auth_password: 'green'
+        }.to_json,
+        admin
+      )
 
-    get('/v2/service_plans', nil, admin_headers)
-    service_plan_guid = MultiJson.load(last_response.body)['resources'][0]['metadata']['guid']
+      get('/v2/service_plans', nil, admin_headers)
+      service_plan_guid = MultiJson.load(last_response.body)['resources'][0]['metadata']['guid']
 
-    put(
-      "/v2/service_plans/#{service_plan_guid}",
-      { 'public': true }.to_json,
-      admin
-    )
+      put(
+        "/v2/service_plans/#{service_plan_guid}",
+        { 'public': true }.to_json,
+        admin
+      )
 
-    post(
-      '/v2/service_instances',
-      {
-        name:              'my-service-instance',
-        service_plan_guid: service_plan_guid,
-        space_guid:        space_guid
-      }.to_json,
-      user_headers
-    )
+      post(
+        '/v2/service_instances',
+        {
+          name:              'my-service-instance',
+          service_plan_guid: service_plan_guid,
+          space_guid:        space_guid
+        }.to_json,
+        user_headers
+      )
 
-    MultiJson.load(last_response.body)['metadata']['guid']
+      MultiJson.load(last_response.body)['metadata']['guid']
+    end
+
+    before do
+      allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
+        FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
+      end
+    end
+
+    it 'can be created' do
+      post(
+        '/v3/service_bindings',
+        {
+          type:          'app',
+          relationships: {
+            app:              { guid: app_guid },
+            service_instance: { guid: service_instance_guid },
+          }
+        }.to_json,
+        user_headers
+      )
+      service_binding_guid = MultiJson.load(last_response.body)['guid']
+
+      expect(last_response.status).to eq(201)
+
+      get(
+        "/v3/service_bindings/#{service_binding_guid}",
+        nil,
+        user_headers
+      )
+
+      expect(MultiJson.load(last_response.body)['data']['credentials']['username']).to eq('cool_user')
+    end
   end
 
-  it 'can be created' do
-    post(
-      '/v3/service_bindings',
-      {
-        type:          'app',
-        relationships: {
-          app:              { guid: app_guid },
-          service_instance: { guid: service_instance_guid },
-        }
-      }.to_json,
-      user_headers
-    )
-    service_binding_guid = MultiJson.load(last_response.body)['guid']
+  describe 'when the service is user provided' do
+    let(:service_instance_guid) do
+      post(
+        '/v2/user_provided_service_instances',
+        {
+          name:       'test_ups',
+          space_guid: space_guid,
+          credentials: {
+            'username': 'user_provided_username'
+          }
+        }.to_json,
+        user_headers
+      )
 
-    expect(last_response.status).to eq(201)
+      MultiJson.load(last_response.body)['metadata']['guid']
+    end
 
-    get(
-      "/v3/service_bindings/#{service_binding_guid}",
-      nil,
-      user_headers
-    )
+    it 'can be created' do
+      post(
+        '/v3/service_bindings',
+        {
+          type:          'app',
+          relationships: {
+            app:              { guid: app_guid },
+            service_instance: { guid: service_instance_guid },
+          }
+        }.to_json,
+        user_headers
+      )
+      service_binding_guid = MultiJson.load(last_response.body)['guid']
 
-    expect(MultiJson.load(last_response.body)['data']['credentials']['username']).to eq('cool_user')
+      expect(last_response.status).to eq(201)
+
+      get(
+        "/v3/service_bindings/#{service_binding_guid}",
+        nil,
+        user_headers
+      )
+
+      p last_response.body
+
+      expect(MultiJson.load(last_response.body)['data']['credentials']['username']).to eq('user_provided_username')
+    end
   end
 end
