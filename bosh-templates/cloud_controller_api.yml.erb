@@ -119,7 +119,7 @@ route_services_enabled: <%= !p("router.route_services_secret").empty? %>
 info:
   name: "<%= p("name") %>"
   build: "<%= p("build") %>"
-  version: "<%= p("version") %>"
+  version: <%= p("version") %>
   support_address: "<%= p("support_address") %>"
   description: "<%= p("description") %>"
 <% if_p("cc.allow_app_ssh_access") do %>
