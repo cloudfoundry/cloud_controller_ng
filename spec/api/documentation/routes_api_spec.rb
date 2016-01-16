@@ -124,6 +124,8 @@ EOF
       request_parameter :path, 'The path of a route', required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
 
       example 'Check a Route exists' do
+        explanation 'This endpoint returns a status code of 204 if the route exists, and 404 if it does not.'
+
         client.get "/v2/routes/reserved/domain/#{domain.guid}/host/#{route.host}?path=#{route_path}", {}, headers
         expect(status).to eq 204
       end
