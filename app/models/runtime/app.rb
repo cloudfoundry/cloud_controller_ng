@@ -473,13 +473,25 @@ module VCAP::CloudController
           route_app_port_map[route_map.route_id].push(route_map.app_port)
         end
       end
-      info = routes.map do |r|
-        info = { 'hostname' => r.uri }
-        info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
-        info['port'] = route_app_port_map[r.id].shift unless route_app_port_map[r.id].blank?
-        info
+      http_info = []
+      tcp_info = []
+      routes.each do |r|
+        if r.domain.router_group_guid.nil?
+          info = { 'hostname' => r.uri }
+          info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
+          info['port'] = route_app_port_map[r.id].shift unless route_app_port_map[r.id].blank?
+          http_info.push(info)
+        elsif !route_app_port_map[r.id].blank?
+          info = { 'router_group_guid' => r.domain.router_group_guid }
+          info['external_port'] = r.port
+          info['container_port'] = route_app_port_map[r.id].shift
+          tcp_info.push(info)
+        end
       end
-      { 'http_routes' => info }
+      route_info = {}
+      route_info['http_routes'] = http_info unless http_info.blank?
+      route_info['tcp_routes'] = tcp_info unless tcp_info.blank?
+      route_info
     end
 
     def mark_as_staged

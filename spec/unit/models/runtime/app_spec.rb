@@ -2010,6 +2010,107 @@ module VCAP::CloudController
           expect(app.routing_info).to match expected_hash
         end
       end
+
+      context 'tcp routes' do
+        context 'with only one app port mapped to route' do
+          let(:app) { AppFactory.make(space: space, diego: true, ports: [9090]) }
+          let(:domain) { SharedDomain.make(name: 'tcpdomain.com', router_group_guid: 'router-group-guid-1') }
+          let(:tcp_route) { Route.make(domain: domain, space: space, port: 52000) }
+          let!(:route_mapping) { RouteMapping.make(app: app, route: tcp_route, app_port: 9090) }
+
+          it 'returns the app port in routing info' do
+            expected_hash = {
+              'tcp_routes' => [
+                { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 9090 },
+              ]
+            }
+
+            expect(app.routing_info).to match expected_hash
+          end
+        end
+
+        context 'with multiple app ports mapped to same route' do
+          let(:app) { AppFactory.make(space: space, diego: true, ports: [9090, 5555]) }
+          let(:domain) { SharedDomain.make(name: 'tcpdomain.com', router_group_guid: 'router-group-guid-1') }
+          let(:tcp_route) { Route.make(domain: domain, space: space, port: 52000) }
+          let!(:route_mapping_1) { RouteMapping.make(app: app, route: tcp_route, app_port: 9090) }
+          let!(:route_mapping_2) { RouteMapping.make(app: app, route: tcp_route, app_port: 5555) }
+
+          it 'returns the app ports in routing info' do
+            expected_hash = {
+              'tcp_routes' => [
+                { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 9090 },
+                { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 5555 },
+              ]
+            }
+
+            expect(app.routing_info).to match expected_hash
+          end
+        end
+
+        context 'with same app port mapped to different routes' do
+          let(:app) { AppFactory.make(space: space, diego: true, ports: [9090]) }
+          let(:domain) { SharedDomain.make(name: 'tcpdomain.com', router_group_guid: 'router-group-guid-1') }
+          let(:tcp_route_1) { Route.make(domain: domain, space: space, port: 52000) }
+          let(:tcp_route_2) { Route.make(domain: domain, space: space, port: 52001) }
+          let!(:route_mapping_1) { RouteMapping.make(app: app, route: tcp_route_1, app_port: 9090) }
+          let!(:route_mapping_2) { RouteMapping.make(app: app, route: tcp_route_2, app_port: 9090) }
+
+          it 'returns the app ports in routing info' do
+            expected_hash = {
+              'tcp_routes' => [
+                { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route_1.port, 'container_port' => 9090 },
+                { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route_2.port, 'container_port' => 9090 },
+              ]
+            }
+
+            expect(app.routing_info).to match expected_hash
+          end
+        end
+
+        context 'with app ports of same app mapped to different routes' do
+          let(:app) { AppFactory.make(space: space, diego: true, ports: [9090, 5555]) }
+          let(:domain) { SharedDomain.make(name: 'tcpdomain.com', router_group_guid: 'router-group-guid-1') }
+          let(:tcp_route_1) { Route.make(domain: domain, space: space, port: 52000) }
+          let(:tcp_route_2) { Route.make(domain: domain, space: space, port: 52001) }
+          let!(:route_mapping_1) { RouteMapping.make(app: app, route: tcp_route_1, app_port: 9090) }
+          let!(:route_mapping_2) { RouteMapping.make(app: app, route: tcp_route_2, app_port: 5555) }
+
+          it 'returns the multiple route mappings in routing info' do
+            expected_hash = {
+              'tcp_routes' => [
+                { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route_1.port, 'container_port' => 9090 },
+                { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route_2.port, 'container_port' => 5555 },
+              ]
+            }
+
+            expect(app.routing_info).to match expected_hash
+          end
+        end
+      end
+
+      context 'with both http and tcp routes' do
+        let(:app) { AppFactory.make(space: space, diego: true, ports: [8080, 9090, 5555]) }
+        let(:tcp_domain) { SharedDomain.make(name: 'tcpdomain.com', router_group_guid: 'router-group-guid-1') }
+        let(:tcp_route) { Route.make(domain: tcp_domain, space: space, port: 52000) }
+        let!(:route_mapping_1) { RouteMapping.make(app: app, route: route_with_service, app_port: 8080) }
+        let!(:route_mapping_2) { RouteMapping.make(app: app, route: route_with_service, app_port: 9090) }
+        let!(:tcp_route_mapping) { RouteMapping.make(app: app, route: tcp_route, app_port: 5555) }
+
+        it 'returns the app port in routing info' do
+          expected_hash = {
+            'http_routes' => [
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080 },
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
+            ],
+            'tcp_routes' => [
+              { 'router_group_guid' => tcp_domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 5555 },
+            ]
+          }
+
+          expect(app.routing_info).to match expected_hash
+        end
+      end
     end
 
     describe '#validate_route' do
