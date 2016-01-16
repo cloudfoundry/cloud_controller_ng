@@ -5,7 +5,6 @@ module VCAP::CloudController
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:name) }
       it { expect(described_class).to be_queryable_by(:owning_organization_guid) }
-      it { expect(described_class).to be_queryable_by(:space_guid) }
     end
 
     describe 'Attributes' do
