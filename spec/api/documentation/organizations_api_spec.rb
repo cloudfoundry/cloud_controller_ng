@@ -178,9 +178,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
             allow(uaa_client).to receive(:id_for_username).and_return(associated_user.guid)
 
             client.delete "v2/organizations/#{organization.guid}/users", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
-            expect(status).to eq(200)
-
-            standard_entity_response parsed_response, :organization
+            expect(status).to eq(204)
           end
         end
       end
@@ -233,9 +231,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
             allow(uaa_client).to receive(:id_for_username).and_return(associated_manager_guid)
 
             client.delete "v2/organizations/#{organization.guid}/managers", MultiJson.dump({ username: 'manage@example.com' }, pretty: true), headers
-            expect(status).to eq(200)
-
-            standard_entity_response parsed_response, :organization
+            expect(status).to eq(204)
           end
         end
       end
@@ -287,9 +283,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
             allow(uaa_client).to receive(:id_for_username).and_return(associated_billing_manager_guid)
 
             client.delete "v2/organizations/#{organization.guid}/billing_managers", MultiJson.dump({ username: 'billing_manager@example.com' }, pretty: true), headers
-            expect(status).to eq(200)
-
-            standard_entity_response parsed_response, :organization
+            expect(status).to eq(204)
           end
         end
       end
@@ -341,9 +335,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
             allow(uaa_client).to receive(:id_for_username).and_return(associated_auditor_guid)
 
             client.delete "v2/organizations/#{organization.guid}/auditors", MultiJson.dump({ username: 'auditor@example.com' }, pretty: true), headers
-            expect(status).to eq(200)
-
-            standard_entity_response parsed_response, :organization
+            expect(status).to eq(204)
           end
         end
       end

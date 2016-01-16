@@ -912,9 +912,9 @@ module VCAP::CloudController
 
             delete "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
 
-            expect(last_response.status).to eq(200)
+            expect(last_response.status).to eq(204)
             expect(org.reload.send(plural_role)).to_not include(user)
-            expect(decoded_response['metadata']['guid']).to eq(org.guid)
+            expect(last_response.body).to be_empty
           end
 
           it 'verifies the user has update access to the org' do
@@ -965,9 +965,9 @@ module VCAP::CloudController
               expect(org.send(plural_role)).to include(user)
               delete "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
 
-              expect(last_response.status).to eq(200)
+              expect(last_response.status).to eq(204)
               expect(org.reload.send(plural_role)).to_not include(user)
-              expect(decoded_response['metadata']['guid']).to eq(org.guid)
+              expect(last_response.body).to be_empty
             end
           end
         end

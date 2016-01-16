@@ -165,7 +165,7 @@ module VCAP::CloudController
         org = find_guid_and_validate_access(:update, guid)
         org.send("remove_#{role}", user)
 
-        [HTTP::OK, object_renderer.render_json(self.class, org, @opts)]
+        [HTTP::NO_CONTENT]
       end
     end
 
