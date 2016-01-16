@@ -89,17 +89,31 @@ module VCAP::CloudController
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
       org_index = opts[:q].index { |query| query.start_with?('organization_guid:') } if opts[:q]
-      if !org_index.nil?
+      orgs_index = opts[:q].index { |query| query.start_with?('organization_guid IN ') } if opts[:q]
+
+      org_guids = []
+
+      if org_index
         org_guid = opts[:q][org_index].split(':')[1]
         opts[:q].delete(opts[:q][org_index])
+        org_guids += [org_guid]
+      end
 
-        super(model, ds, qp, opts).
+      if orgs_index
+        org_guids += opts[:q][orgs_index].split(' IN ')[1].split(',')
+        opts[:q].delete(opts[:q][orgs_index])
+      end
+
+      filtered_dataset = super(model, ds, qp, opts)
+
+      if org_guids.any?
+        filtered_dataset.
           select_all(:routes).
           left_join(:spaces, id: :routes__space_id).
           left_join(:organizations, id: :spaces__organization_id).
-          where(organizations__guid: org_guid)
+          where(organizations__guid: org_guids)
       else
-        super(model, ds, qp, opts)
+        filtered_dataset
       end
     end
 

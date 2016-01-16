@@ -647,10 +647,16 @@ module VCAP::CloudController
         end
 
         context 'When Organization Guid Present' do
-          let(:first_route_info) { decoded_response.fetch('resources').first }
-          let(:second_route_info) { decoded_response.fetch('resources').last }
+          let(:first_route_info) { decoded_response.fetch('resources')[0] }
+          let(:second_route_info) { decoded_response.fetch('resources')[1] }
+          let(:third_route_info) { decoded_response.fetch('resources')[2] }
           let(:space1) { Space.make(organization: organization) }
           let(:route1) { Route.make(domain: domain, space: space1) }
+
+          let(:organization2) { Organization.make }
+          let(:domain2) { PrivateDomain.make(owning_organization: organization2) }
+          let(:space2) { Space.make(organization: organization2) }
+          let(:route2) { Route.make(domain: domain2, space: space2) }
 
           it 'Allows filtering by organization_guid' do
             org_guid = organization.guid
@@ -700,6 +706,23 @@ module VCAP::CloudController
             expect(decoded_response['resources'].length).to eq(2)
             expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
             expect(second_route_info.fetch('metadata').fetch('guid')).to eq(route1_guid)
+          end
+
+          it 'Allows filtering at organization level with multiple guids' do
+            org_guid = organization.guid
+            route_guid = route.guid
+            route1_guid = route1.guid
+
+            org2_guid = organization2.guid
+            route2_guid = route2.guid
+
+            get "v2/routes?q=organization_guid%20IN%20#{org_guid},#{org2_guid}", {}, admin_headers
+
+            expect(last_response.status).to eq(200)
+            expect(decoded_response['resources'].length).to eq(3)
+            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
+            expect(second_route_info.fetch('metadata').fetch('guid')).to eq(route1_guid)
+            expect(third_route_info.fetch('metadata').fetch('guid')).to eq(route2_guid)
           end
         end
       end
