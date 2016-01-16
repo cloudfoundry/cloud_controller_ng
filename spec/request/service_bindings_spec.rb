@@ -181,8 +181,6 @@ describe 'v3 service bindings' do
         user_headers
       )
 
-      p last_response.body
-
       expect(MultiJson.load(last_response.body)['data']['credentials']['username']).to eq('user_provided_username')
     end
   end
