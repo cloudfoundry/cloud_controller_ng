@@ -5,6 +5,7 @@ module VCAP::CloudController
 
     many_to_many :routes, join_table: :apps_v3_routes, left_key: :app_v3_id
     one_to_many :service_bindings, class: 'VCAP::CloudController::ServiceBindingModel', key: :app_id
+    one_to_many :tasks, class: 'VCAP::CloudController::TaskModel', key: :app_id
 
     many_to_one :space, class: 'VCAP::CloudController::Space', key: :space_guid, primary_key: :guid, without_guid_generation: true
     one_through_one :organization, join_table: Space.table_name, left_key: :guid, left_primary_key: :space_guid, right_primary_key: :guid, right_key: :space_guid

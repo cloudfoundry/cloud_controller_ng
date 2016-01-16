@@ -79,6 +79,14 @@ module VCAP::CloudController
     buildpack_lifecycle_data  { BuildpackLifecycleDataModel.make(droplet: object.save) }
   end
 
+  TaskModel.blueprint do
+    app { AppModel.make }
+    name { Sham.name }
+    droplet { DropletModel.make(app_guid: app.guid) }
+    command { 'bundle exec rake' }
+    state { VCAP::CloudController::TaskModel::RUNNING_STATE }
+  end
+
   User.blueprint do
     guid              { Sham.uaa_id }
   end

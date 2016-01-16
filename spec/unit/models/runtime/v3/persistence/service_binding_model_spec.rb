@@ -47,11 +47,6 @@ module VCAP::CloudController
         }.to raise_error(Sequel::ValidationFailed, /app presence/)
       end
 
-      it 'must have an app' do
-        expect { ServiceBindingModel.make(service_instance: service_instance, app: nil)
-        }.to raise_error(Sequel::ValidationFailed, /app presence/)
-      end
-
       it 'must have a type' do
         expect { ServiceBindingModel.make(type: nil, service_instance: service_instance, app: app_model)
         }.to raise_error(Sequel::ValidationFailed, /type presence/)

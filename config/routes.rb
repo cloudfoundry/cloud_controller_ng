@@ -97,9 +97,10 @@ Rails.application.routes.draw do
 
   get '/apps/:guid/droplets', to: 'apps_droplets#index'
 
-  match '404', to: 'errors#not_found', via: :all
-  match '500', to: 'errors#internal_error', via: :all
-  match '400', to: 'errors#bad_request', via: :all
+  # apps_tasks
+  post '/v3/apps/:guid/tasks', to: 'apps_tasks#create'
+
+  post '/apps/:guid/tasks', to: 'apps_tasks#create'
 
   # service_bindings
   post '/v3/service_bindings', to: 'service_bindings#create'
@@ -109,4 +110,9 @@ Rails.application.routes.draw do
   post '/service_bindings', to: 'service_bindings#create'
   get '/service_bindings/:guid', to: 'service_bindings#show'
   get '/service_bindings', to: 'service_bindings#index'
+
+  # errors
+  match '404', to: 'errors#not_found', via: :all
+  match '500', to: 'errors#internal_error', via: :all
+  match '400', to: 'errors#bad_request', via: :all
 end
