@@ -38,7 +38,7 @@ resource 'Service Brokers', type: [:api, :legacy_api] do
     field :broker_url, 'The URL of the service broker.', required: true, example_values: %w(https://broker.example.com)
     field :auth_username, 'The username with which to authenticate against the service broker.', required: true, example_values: %w(admin)
     field :auth_password, 'The password with which to authenticate against the service broker.', required: true, example_values: %w(secretpassw0rd)
-    field :space_guid, 'Guid of a space the broker is scoped to. Space developers are able to create service brokers scoped to a space.', required: false, experimental: true
+    field :space_guid, 'Guid of a space the broker is scoped to. Space developers are able to create service brokers scoped to a space.', required: false
   end
 
   shared_context 'updatable_fields' do
