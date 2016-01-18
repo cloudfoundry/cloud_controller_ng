@@ -112,11 +112,11 @@ module VCAP::CloudController
       app.destroy
 
       @app_event_repository.record_app_delete_request(
-          app,
-          app.space,
-          SecurityContext.current_user.guid,
-          SecurityContext.current_user_email,
-          recursive_delete?)
+        app,
+        app.space,
+        SecurityContext.current_user.guid,
+        SecurityContext.current_user_email,
+        recursive_delete?)
 
       [HTTP::NO_CONTENT, nil]
     end
@@ -170,19 +170,19 @@ module VCAP::CloudController
 
       if app_enable_ssh && !ssh_allowed
         raise VCAP::Errors::ApiError.new_from_details(
-            'InvalidRequest',
-            'enable_ssh must be false due to global allow_ssh setting',
+          'InvalidRequest',
+          'enable_ssh must be false due to global allow_ssh setting',
           )
       end
     end
 
     def after_create(app)
       record_app_create_value = @app_event_repository.record_app_create(
-          app,
-          app.space,
-          SecurityContext.current_user.guid,
-          SecurityContext.current_user_email,
-          request_attrs)
+        app,
+        app.space,
+        SecurityContext.current_user.guid,
+        SecurityContext.current_user_email,
+        request_attrs)
       record_app_create_value if request_attrs
     end
 

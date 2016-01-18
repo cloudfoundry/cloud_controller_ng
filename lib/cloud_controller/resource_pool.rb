@@ -23,8 +23,8 @@ class VCAP::CloudController::ResourcePool
     @cdn = options[:cdn]
 
     @blobstore = CloudController::Blobstore::Client.new(
-        options[:fog_connection],
-        options[:resource_directory_key] || 'cc-resources'
+      options[:fog_connection],
+      options[:resource_directory_key] || 'cc-resources'
     )
 
     @minimum_size = options[:minimum_size] || 0

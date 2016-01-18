@@ -97,11 +97,12 @@ module VCAP::CloudController
               let(:app) { AppFactory.make(staging_task_id: 'fake-staging-task-id', docker_image: 'user_provided') }
 
               before do
-                app.add_droplet(Droplet.new(
-                                      app: app,
-                                      droplet_hash: 'the-droplet-hash',
-                                      cached_docker_image: 'cached',
-                                  ))
+                app.add_droplet(
+                  Droplet.new(
+                    app: app,
+                    droplet_hash: 'the-droplet-hash',
+                    cached_docker_image: 'cached',
+                  ))
                 app.droplet_hash = 'the-droplet-hash'
               end
 

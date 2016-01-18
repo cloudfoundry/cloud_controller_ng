@@ -12,12 +12,12 @@ describe AppsTasksController, type: :controller do
     @request.env.merge!(headers_for(VCAP::CloudController::User.make))
     allow_any_instance_of(AppsTasksController).to receive(:membership).and_return(membership)
     allow(membership).to receive(:has_any_roles?).with(
-        [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(true)
+      [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(true)
     allow(membership).to receive(:has_any_roles?).with(
-        [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-         VCAP::CloudController::Membership::SPACE_MANAGER,
-         VCAP::CloudController::Membership::SPACE_AUDITOR,
-         VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
+      [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+       VCAP::CloudController::Membership::SPACE_MANAGER,
+       VCAP::CloudController::Membership::SPACE_AUDITOR,
+       VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
   end
 
   describe '#create' do
@@ -83,12 +83,12 @@ describe AppsTasksController, type: :controller do
       context 'when the user does not have write permissions on the app space' do
         before do
           allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
+            [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
           allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-               VCAP::CloudController::Membership::SPACE_MANAGER,
-               VCAP::CloudController::Membership::SPACE_AUDITOR,
-               VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
+            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+             VCAP::CloudController::Membership::SPACE_MANAGER,
+             VCAP::CloudController::Membership::SPACE_AUDITOR,
+             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
         end
 
         it 'returns a 403 unauthorized' do
@@ -102,10 +102,10 @@ describe AppsTasksController, type: :controller do
       context 'when the user does not have read permissions on the app space' do
         before do
           allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-               VCAP::CloudController::Membership::SPACE_MANAGER,
-               VCAP::CloudController::Membership::SPACE_AUDITOR,
-               VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+             VCAP::CloudController::Membership::SPACE_MANAGER,
+             VCAP::CloudController::Membership::SPACE_AUDITOR,
+             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
         end
 
         it 'returns a 404 ResourceNotFound' do
@@ -222,10 +222,10 @@ describe AppsTasksController, type: :controller do
       context 'when the user does not have read permissions on the app space' do
         before do
           allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-               VCAP::CloudController::Membership::SPACE_MANAGER,
-               VCAP::CloudController::Membership::SPACE_AUDITOR,
-               VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+             VCAP::CloudController::Membership::SPACE_MANAGER,
+             VCAP::CloudController::Membership::SPACE_AUDITOR,
+             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
         end
 
         it 'returns a 404 ResourceNotFound' do

@@ -232,17 +232,17 @@ module VCAP::Services
 
         def self.response_not_understood(expected_state, actual_state)
           actual_state = (actual_state) ? "'#{actual_state}'" : 'null'
-          'The service broker returned an invalid response for the request to service-broker.com/v2/service_instances/GUID: ' + \
+          'The service broker returned an invalid response for the request to service-broker.com/v2/service_instances/GUID: ' \
           "expected state was '#{expected_state}', broker returned #{actual_state}."
         end
 
         def self.invalid_json_error(body, uri)
-          "The service broker returned an invalid response for the request to #{uri}: " + \
+          "The service broker returned an invalid response for the request to #{uri}: " \
           "expected valid JSON object in body, broker returned '#{body}'"
         end
 
         def self.broker_returned_an_error(status, body, uri)
-          "The service broker returned an invalid response for the request to #{uri}. " + \
+          "The service broker returned an invalid response for the request to #{uri}. " \
           "Status Code: #{status} message, Body: #{body}"
         end
 

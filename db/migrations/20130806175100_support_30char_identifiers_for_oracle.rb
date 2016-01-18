@@ -27,7 +27,7 @@ end
 
 def rename_index_internal(db, alter_table, table, columns, opts={})
   columns = [columns] unless columns.is_a?(Array)
-  db.indexes(table).each do | name, index |
+  db.indexes(table).each do |name, index|
     if (index[:columns] - columns).empty? &&
         (columns - index[:columns]).empty? &&
         name != opts[:name]
@@ -62,8 +62,8 @@ def rename_permission_table(name, name_short, permission)
   fk_name_short = "#{join_table_short}_#{name_short}_fk".to_sym
   fk_user_short = "#{join_table_short}_user_fk".to_sym
 
-  rename_foreign_key(join_table, fk_name, fk_name_short) do | db, alter_table |
-    rename_foreign_key_internal(db, alter_table, join_table, fk_user, fk_user_short) do | db, alter_table |
+  rename_foreign_key(join_table, fk_name, fk_name_short) do |db, alter_table|
+    rename_foreign_key_internal(db, alter_table, join_table, fk_user, fk_user_short) do |db, alter_table|
       rename_index_internal(db, alter_table, join_table, [id_attr, :user_id], unique: true, name: idx_name)
     end
   end
@@ -77,32 +77,32 @@ Sequel.migration do
     rename_foreign_key(:service_instances, :service_instances_service_plan_id, :svc_instances_service_plan_id)
 
     # Where indexes and fk cross mysql requires that the fk be dropped before the index is dropped
-    rename_foreign_key(:service_plans, :fk_service_plans_service_id, :fk_service_plans_service_id) do | db, alter_table |
+    rename_foreign_key(:service_plans, :fk_service_plans_service_id, :fk_service_plans_service_id) do |db, alter_table|
       rename_index_internal(db, alter_table, :service_plans, [:service_id, :name], unique: true, name: :svc_plan_svc_id_name_index)
     end
-    rename_foreign_key(:spaces, :fk_spaces_organization_id, :fk_spaces_organization_id) do | db, alter_table |
+    rename_foreign_key(:spaces, :fk_spaces_organization_id, :fk_spaces_organization_id) do |db, alter_table|
       rename_index_internal(db, alter_table, :spaces, [:organization_id, :name], unique: true, name: :spaces_org_id_name_index)
     end
-    rename_foreign_key(:domains_organizations, :fk_domains_organizations_domain_id, :fk_domains_orgs_domain_id) do | db, alter_table |
+    rename_foreign_key(:domains_organizations, :fk_domains_organizations_domain_id, :fk_domains_orgs_domain_id) do |db, alter_table|
       rename_index_internal(db, alter_table, :domains_organizations, [:domain_id, :organization_id], unique: true, name: :do_domain_id_org_id_index)
     end
-    rename_foreign_key(:domains_spaces, :fk_domains_spaces_space_id, :fk_domains_spaces_space_id) do | db, alter_table |
-      rename_foreign_key_internal(db, alter_table, :domains_spaces, :fk_domains_spaces_domain_id, :fk_domains_spaces_domain_id) do | db, alter_table |
+    rename_foreign_key(:domains_spaces, :fk_domains_spaces_space_id, :fk_domains_spaces_space_id) do |db, alter_table|
+      rename_foreign_key_internal(db, alter_table, :domains_spaces, :fk_domains_spaces_domain_id, :fk_domains_spaces_domain_id) do |db, alter_table|
         rename_index_internal(db, alter_table, :domains_spaces, [:space_id, :domain_id], unique: true, name: :ds_space_id_domain_id_index)
       end
     end
-    rename_foreign_key(:service_instances, :service_instances_space_id, :service_instances_space_id) do | db, alter_table |
+    rename_foreign_key(:service_instances, :service_instances_space_id, :service_instances_space_id) do |db, alter_table|
       rename_index_internal(db, alter_table, :service_instances, [:space_id, :name], unique: true, name: :si_space_id_name_index)
     end
 
-    rename_foreign_key(:apps_routes, :fk_apps_routes_app_id, :fk_apps_routes_app_id) do | db, alter_table |
-      rename_foreign_key_internal(db, alter_table, :apps_routes, :fk_apps_routes_route_id, :fk_apps_routes_route_id) do | db, alter_table |
+    rename_foreign_key(:apps_routes, :fk_apps_routes_app_id, :fk_apps_routes_app_id) do |db, alter_table|
+      rename_foreign_key_internal(db, alter_table, :apps_routes, :fk_apps_routes_route_id, :fk_apps_routes_route_id) do |db, alter_table|
         rename_index_internal(db, alter_table, :apps_routes, [:app_id, :route_id], unique: true, name: :ar_app_id_route_id_index)
       end
     end
 
-    rename_foreign_key(:service_bindings, :fk_service_bindings_service_instance_id, :fk_sb_service_instance_id) do | db, alter_table |
-      rename_foreign_key_internal(db, alter_table, :service_bindings, :fk_service_bindings_app_id, :fk_service_bindings_app_id) do | db, alter_table |
+    rename_foreign_key(:service_bindings, :fk_service_bindings_service_instance_id, :fk_sb_service_instance_id) do |db, alter_table|
+      rename_foreign_key_internal(db, alter_table, :service_bindings, :fk_service_bindings_app_id, :fk_service_bindings_app_id) do |db, alter_table|
         rename_index_internal(db, alter_table, :service_bindings, [:app_id, :service_instance_id], unique: true, name: :sb_app_id_srv_inst_id_index)
       end
     end
@@ -120,14 +120,14 @@ Sequel.migration do
     rename_index(:service_instances, :name, name: :service_instances_name_index)
     rename_common_indexes(:service_bindings, :sb)
 
-    rename_foreign_key(:apps, :fk_apps_space_id, :fk_apps_space_id) do | db, alter_table |
+    rename_foreign_key(:apps, :fk_apps_space_id, :fk_apps_space_id) do |db, alter_table|
       rename_index_internal(db, alter_table, :apps, [:space_id, :name, :not_deleted], unique: true, name: :apps_space_id_name_nd_idx)
     end
 
     rename_index(:service_instances, :gateway_name, name: :si_gateway_name_index)
 
-    rename_foreign_key(:service_plan_visibilities, :fk_service_plan_visibilities_organization_id, :fk_spv_organization_id) do | db, alter_table |
-      rename_foreign_key_internal(db, alter_table, :service_plan_visibilities, :fk_service_plan_visibilities_service_plan_id, :fk_spv_service_plan_id) do | db, alter_table |
+    rename_foreign_key(:service_plan_visibilities, :fk_service_plan_visibilities_organization_id, :fk_spv_organization_id) do |db, alter_table|
+      rename_foreign_key_internal(db, alter_table, :service_plan_visibilities, :fk_service_plan_visibilities_service_plan_id, :fk_spv_service_plan_id) do |db, alter_table|
         rename_index_internal(db, alter_table, :service_plan_visibilities, [:organization_id, :service_plan_id], unique: true, name: :spv_org_id_sp_id_index)
       end
     end

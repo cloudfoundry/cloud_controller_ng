@@ -121,11 +121,11 @@ module VCAP::CloudController
         let(:space) { Space.make }
         let(:broker) do
           ServiceBroker.new(
-              name: name,
-              broker_url: broker_url,
-              auth_username: auth_username,
-              auth_password: auth_password,
-              space_id: space.id
+            name: name,
+            broker_url: broker_url,
+            auth_username: auth_username,
+            auth_password: auth_password,
+            space_id: space.id
           )
         end
 

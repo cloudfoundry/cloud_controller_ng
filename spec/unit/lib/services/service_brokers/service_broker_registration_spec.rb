@@ -79,9 +79,9 @@ module VCAP::Services::ServiceBrokers
         registration.create
 
         expect(VCAP::Services::SSO::DashboardClientManager).to have_received(:new).with(
-                                                                 broker,
-                                                                 services_event_repository
-                                                               )
+          broker,
+          services_event_repository
+        )
         expect(client_manager).to have_received(:synchronize_clients_with_catalog).with(catalog)
       end
 
@@ -389,9 +389,9 @@ module VCAP::Services::ServiceBrokers
         registration.update
 
         expect(VCAP::Services::SSO::DashboardClientManager).to have_received(:new).with(
-                                                                 broker,
-                                                                 services_event_repository
-                                                               )
+          broker,
+          services_event_repository
+        )
         expect(client_manager).to have_received(:synchronize_clients_with_catalog).with(catalog)
       end
 

@@ -99,8 +99,8 @@ module VCAP
 
             it 'retries to decode token with newly fetched asymmetric key' do
               allow(uaa_info).to receive(:validation_key).and_return(
-                  { 'value' => old_rsa_key.public_key.to_pem },
-                  { 'value' => rsa_key.public_key.to_pem },
+                { 'value' => old_rsa_key.public_key.to_pem },
+                { 'value' => rsa_key.public_key.to_pem },
               )
               expect(subject.decode_token("bearer #{generate_token(rsa_key, token_content)}")).to eq(token_content)
             end

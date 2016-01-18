@@ -468,13 +468,13 @@ module VCAP::Services::ServiceBrokers::V2
           client.update(instance, new_plan, previous_values: { plan_id: '1234' })
 
           expect(http_client).to have_received(:patch).with(
-              anything,
-              hash_including({
-                  plan_id:	new_plan.broker_provided_id,
-                  previous_values: {
-                    plan_id: '1234'
-                  }
-                })
+            anything,
+            hash_including({
+                plan_id:	new_plan.broker_provided_id,
+                previous_values: {
+                  plan_id: '1234'
+                }
+              })
             )
         end
       end
@@ -660,8 +660,8 @@ module VCAP::Services::ServiceBrokers::V2
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
       let(:key) do
         VCAP::CloudController::ServiceKey.new(
-            name: 'fake-service_key',
-            service_instance: instance
+          name: 'fake-service_key',
+          service_instance: instance
         )
       end
 
@@ -1076,12 +1076,12 @@ module VCAP::Services::ServiceBrokers::V2
         client.deprovision(instance)
 
         expect(http_client).to have_received(:delete).with(
-            anything,
-            {
-              service_id: instance.service.broker_provided_id,
-              plan_id:    instance.service_plan.broker_provided_id
-            }
-          )
+          anything,
+          {
+            service_id: instance.service.broker_provided_id,
+            plan_id:    instance.service_plan.broker_provided_id
+          }
+        )
       end
 
       context 'when the caller does not pass the accepts_incomplete flag' do

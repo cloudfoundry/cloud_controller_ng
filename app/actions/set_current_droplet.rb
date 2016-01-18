@@ -32,11 +32,11 @@ module VCAP::CloudController
     def update_app(app, fields)
       app.update(fields)
       Repositories::Runtime::AppEventRepository.new.record_app_map_droplet(
-          app,
-          app.space,
-          @user.guid,
-          @user_email,
-          fields
+        app,
+        app.space,
+        @user.guid,
+        @user_email,
+        fields
       )
     end
   end

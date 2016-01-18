@@ -67,14 +67,14 @@ module VCAP::CloudController
       before do
         @service_instance_a = ManagedServiceInstance.make(space: @space_a)
         @obj_a = ServiceKey.make(
-            name: 'fake-name-a',
-            service_instance: @service_instance_a
+          name: 'fake-name-a',
+          service_instance: @service_instance_a
         )
 
         @service_instance_b = ManagedServiceInstance.make(space: @space_b)
         @obj_b = ServiceKey.make(
-            name: 'fake-name-b',
-            service_instance: @service_instance_b
+          name: 'fake-name-b',
+          service_instance: @service_instance_b
         )
       end
 

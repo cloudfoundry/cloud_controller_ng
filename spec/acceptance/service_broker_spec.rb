@@ -642,8 +642,10 @@ HEREDOC
           }
         ].to_json
 
-        expect(a_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').with(
-          body:  expected_json_body
+        expect(
+          a_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').
+          with(
+            body:  expected_json_body
         )).to have_been_made
       end
     end

@@ -111,8 +111,8 @@ describe 'CORS', type: :integration do
             it 'returns the valid request methods in the Access-Control-Allow-Methods header' do
               response = make_preflight_request_with_origin 'http://bar.baz.inblue.net', 'PUT', authed_headers
               expect(response['Access-Control-Allow-Methods'].split(',')).to contain_exactly(
-                  'PUT', 'POST', 'DELETE', 'GET'
-                )
+                'PUT', 'POST', 'DELETE', 'GET'
+              )
             end
 
             it 'returns a max-age header with a large value (since these headers rarely change' do
@@ -129,10 +129,10 @@ describe 'CORS', type: :integration do
             it 'allows needed request headers to be included' do
               response = make_preflight_request_with_origin 'http://bar.baz.inblue.net', 'PUT', authed_headers
               expect(response['Access-Control-Allow-Headers'].split(',')).to contain_exactly(
-                  'origin',
-                  'content-type',
-                  'authorization'
-                )
+                'origin',
+                'content-type',
+                'authorization'
+              )
             end
 
             context 'when the request asks to allow additional request headers' do
@@ -140,11 +140,11 @@ describe 'CORS', type: :integration do
               it 'allows that by adding them to the Allow-Headers list' do
                 response = make_preflight_request_with_origin 'http://bar.baz.inblue.net', 'PUT', authed_headers.merge(extra_headers)
                 expect(response['Access-Control-Allow-Headers'].split(',')).to contain_exactly(
-                    'origin',
-                    'content-type',
-                    'authorization',
-                    'foo', 'bar', 'baz'
-                  )
+                  'origin',
+                  'content-type',
+                  'authorization',
+                  'foo', 'bar', 'baz'
+                )
               end
             end
           end
@@ -301,8 +301,8 @@ describe 'CORS', type: :integration do
             it 'returns the valid request methods in the Access-Control-Allow-Methods header' do
               response = make_preflight_request_with_origin 'http://bar.baz.inblue.net', 'PUT', authed_headers
               expect(response['Access-Control-Allow-Methods'].split(',')).to contain_exactly(
-                  'PUT', 'POST', 'DELETE', 'GET'
-                )
+                'PUT', 'POST', 'DELETE', 'GET'
+              )
             end
 
             it 'returns a max-age header with a large value (since these headers rarely change' do
@@ -319,10 +319,10 @@ describe 'CORS', type: :integration do
             it 'allows needed request headers to be included' do
               response = make_preflight_request_with_origin 'http://bar.baz.inblue.net', 'PUT', authed_headers
               expect(response['Access-Control-Allow-Headers'].split(',')).to contain_exactly(
-                  'origin',
-                  'content-type',
-                  'authorization'
-                )
+                'origin',
+                'content-type',
+                'authorization'
+              )
             end
 
             context 'when the request asks to allow additional request headers' do
@@ -330,11 +330,11 @@ describe 'CORS', type: :integration do
               it 'allows that by adding them to the Allow-Headers list' do
                 response = make_preflight_request_with_origin 'http://bar.baz.inblue.net', 'PUT', authed_headers.merge(extra_headers)
                 expect(response['Access-Control-Allow-Headers'].split(',')).to contain_exactly(
-                    'origin',
-                    'content-type',
-                    'authorization',
-                    'foo', 'bar', 'baz'
-                  )
+                  'origin',
+                  'content-type',
+                  'authorization',
+                  'foo', 'bar', 'baz'
+                )
               end
             end
           end

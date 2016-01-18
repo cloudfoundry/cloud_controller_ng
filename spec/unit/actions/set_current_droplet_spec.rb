@@ -28,12 +28,12 @@ module VCAP::CloudController
 
       it 'creates an audit event' do
         expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_map_droplet).with(
-                                                                                 app_model,
-                                                                                 app_model.space,
-                                                                                 user.guid,
-                                                                                 user_email,
-                                                                                 { droplet_guid: droplet.guid }
-                                                                             )
+          app_model,
+          app_model.space,
+          user.guid,
+          user_email,
+          { droplet_guid: droplet.guid }
+        )
 
         set_current_droplet.update_to(app_model, droplet)
       end

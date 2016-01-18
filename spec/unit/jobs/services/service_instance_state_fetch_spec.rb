@@ -102,13 +102,13 @@ module VCAP::CloudController
           context 'when the caller provides repository_opts instead of a repository' do
             it 'uses the opts to construct a repository' do
               job =  VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
-                  name,
-                  client_attrs,
-                  service_instance.guid,
-                  nil,
-                  request_attrs,
-                  nil,
-                  service_event_repository_opts
+                name,
+                client_attrs,
+                service_instance.guid,
+                nil,
+                request_attrs,
+                nil,
+                service_event_repository_opts
               )
               expect(job.services_event_repository).to be_a Repositories::Services::EventRepository
             end

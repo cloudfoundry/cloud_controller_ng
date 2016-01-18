@@ -134,8 +134,8 @@ module VCAP::CloudController::BrokerApiHelper
     stub_request(:get,
       "http://#{stubbed_broker_username}:#{stubbed_broker_password}@#{stubbed_broker_host}/v2/service_instances/#{@service_instance_guid}/last_operation").
       to_return(
-      status: 200,
-      body: fetch_body.to_json)
+        status: 200,
+        body: fetch_body.to_json)
   end
 
   def provision_service(opts={})

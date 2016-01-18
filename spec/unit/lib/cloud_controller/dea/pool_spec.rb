@@ -256,11 +256,12 @@ module VCAP::CloudController
       describe 'existing apps on the instance' do
         before do
           subject.process_advertise_message(dea_advertise_msg)
-          subject.process_advertise_message(dea_advertise_msg.merge(
-            'id' => 'other-dea-id',
-            'app_id_to_count' => {
-              'app-id' => 1
-            }
+          subject.process_advertise_message(
+            dea_advertise_msg.merge(
+              'id' => 'other-dea-id',
+              'app_id_to_count' => {
+                'app-id' => 1
+              }
           ))
         end
 

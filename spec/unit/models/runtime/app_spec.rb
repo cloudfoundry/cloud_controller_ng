@@ -519,65 +519,65 @@ module VCAP::CloudController
     describe 'Serialization' do
       it {
         is_expected.to export_attributes(
-            :enable_ssh,
-            :buildpack,
-            :command,
-            :console,
-            :debug,
-            :detected_buildpack,
-            :detected_start_command,
-            :diego,
-            :disk_quota,
-            :docker_image,
-            :docker_credentials_json,
-            :environment_json,
-            :health_check_timeout,
-            :health_check_type,
-            :instances,
-            :memory,
-            :name,
-            :package_state,
-            :package_updated_at,
-            :production,
-            :space_guid,
-            :stack_guid,
-            :staging_failed_reason,
-            :staging_failed_description,
-            :staging_task_id,
-            :state,
-            :version,
-            :ports
-          )
+          :enable_ssh,
+          :buildpack,
+          :command,
+          :console,
+          :debug,
+          :detected_buildpack,
+          :detected_start_command,
+          :diego,
+          :disk_quota,
+          :docker_image,
+          :docker_credentials_json,
+          :environment_json,
+          :health_check_timeout,
+          :health_check_type,
+          :instances,
+          :memory,
+          :name,
+          :package_state,
+          :package_updated_at,
+          :production,
+          :space_guid,
+          :stack_guid,
+          :staging_failed_reason,
+          :staging_failed_description,
+          :staging_task_id,
+          :state,
+          :version,
+          :ports
+        )
       }
 
       it {
         is_expected.to import_attributes(
-            :enable_ssh,
-            :app_guid,
-            :buildpack,
-            :command,
-            :console,
-            :debug,
-            :detected_buildpack,
-            :diego,
-            :disk_quota,
-            :docker_image,
-            :docker_credentials_json,
-            :environment_json,
-            :health_check_timeout,
-            :health_check_type,
-            :instances,
-            :memory,
-            :name,
-            :production,
-            :route_guids,
-            :service_binding_guids,
-            :space_guid,
-            :stack_guid,
-            :staging_task_id,
-            :state,
-            :ports
-          )
+          :enable_ssh,
+          :app_guid,
+          :buildpack,
+          :command,
+          :console,
+          :debug,
+          :detected_buildpack,
+          :diego,
+          :disk_quota,
+          :docker_image,
+          :docker_credentials_json,
+          :environment_json,
+          :health_check_timeout,
+          :health_check_type,
+          :instances,
+          :memory,
+          :name,
+          :production,
+          :route_guids,
+          :service_binding_guids,
+          :space_guid,
+          :stack_guid,
+          :staging_task_id,
+          :state,
+          :ports
+        )
       }
     end
 
@@ -760,9 +760,9 @@ module VCAP::CloudController
         context 'when the app has a current droplet' do
           before do
             subject.add_droplet(Droplet.new(
-              app: subject,
-              droplet_hash: 'the-droplet-hash',
-              execution_metadata: 'some-staging-metadata',
+                                  app: subject,
+                                  droplet_hash: 'the-droplet-hash',
+                                  execution_metadata: 'some-staging-metadata',
             ))
             subject.droplet_hash = 'the-droplet-hash'
           end
@@ -831,9 +831,9 @@ module VCAP::CloudController
       context 'when the app has a current droplet' do
         before do
           subject.add_droplet(Droplet.new(
-            app: subject,
-            droplet_hash: 'the-droplet-hash',
-            detected_start_command: 'run-my-app',
+                                app: subject,
+                                droplet_hash: 'the-droplet-hash',
+                                detected_start_command: 'run-my-app',
           ))
           subject.droplet_hash = 'the-droplet-hash'
         end
@@ -2776,9 +2776,9 @@ module VCAP::CloudController
             it 'returns the ports that were specified in the execution_metadata' do
               app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
               app.add_droplet(Droplet.new(
-                                   app: app,
-                                   droplet_hash: 'the-droplet-hash',
-                                   execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
+                                app: app,
+                                droplet_hash: 'the-droplet-hash',
+                                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
                                ))
               app.droplet_hash = 'the-droplet-hash'
               expect(app.ports).to eq([1024, 1025])
@@ -2789,9 +2789,9 @@ module VCAP::CloudController
             it 'returns the ports that were specified during creation' do
               app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
               app.add_droplet(Droplet.new(
-                                  app: app,
-                                  droplet_hash: 'the-droplet-hash',
-                                  execution_metadata: '{"ports":[{"Port":1024, "Protocol":"udp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"udp"}]}',
+                                app: app,
+                                droplet_hash: 'the-droplet-hash',
+                                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"udp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"udp"}]}',
                               ))
               app.droplet_hash = 'the-droplet-hash'
               expect(app.ports).to eq([8080])
@@ -2802,9 +2802,9 @@ module VCAP::CloudController
             it 'returns the ports that were specified during creation' do
               app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1, ports: [1111])
               app.add_droplet(Droplet.new(
-                                  app: app,
-                                  droplet_hash: 'the-droplet-hash',
-                                  execution_metadata: 'some-invalid-json',
+                                app: app,
+                                droplet_hash: 'the-droplet-hash',
+                                execution_metadata: 'some-invalid-json',
                               ))
               app.droplet_hash = 'the-droplet-hash'
               expect(app.ports).to eq([1111])
@@ -2815,9 +2815,9 @@ module VCAP::CloudController
             it 'returns the ports that were specified during creation' do
               app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
               app.add_droplet(Droplet.new(
-                                  app: app,
-                                  droplet_hash: 'the-droplet-hash',
-                                  execution_metadata: '{"cmd":"run.sh"}',
+                                app: app,
+                                droplet_hash: 'the-droplet-hash',
+                                execution_metadata: '{"cmd":"run.sh"}',
                               ))
               app.droplet_hash = 'the-droplet-hash'
               expect(app.ports).to eq([8080])
@@ -2846,9 +2846,9 @@ module VCAP::CloudController
             it 'returns the ports that were specified during creation' do
               app = App.make(diego: true, ports: [1025, 1026, 1027, 1028], package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
               app.add_droplet(Droplet.new(
-                                  app: app,
-                                  droplet_hash: 'the-droplet-hash',
-                                  execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":8080, "Protocol":"tcp"}]}',
+                                app: app,
+                                droplet_hash: 'the-droplet-hash',
+                                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":8080, "Protocol":"tcp"}]}',
                               ))
               app.droplet_hash = 'the-droplet-hash'
               expect(app.ports).to eq([1025, 1026, 1027, 1028])

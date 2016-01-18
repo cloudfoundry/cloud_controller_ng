@@ -27,8 +27,8 @@ module VCAP::CloudController
     def unlock_and_fail!
       ServiceInstanceOperation.db.transaction do
         service_instance.last_operation.update_attributes(
-            type: @type,
-            state: 'failed'
+          type: @type,
+          state: 'failed'
         )
       end
       @needs_unlock = false
