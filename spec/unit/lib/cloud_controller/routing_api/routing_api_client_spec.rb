@@ -152,7 +152,7 @@ module VCAP::CloudController::RoutingApi
 
           it 'returns a RoutingApiUnavailable error' do
             expect {
-              puts routing_api.router_groups
+              routing_api.router_groups
             }.to raise_error Client::RoutingApiUnavailable
 
             expect(a_request(:get, routing_api_url + path)).
