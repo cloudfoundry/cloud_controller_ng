@@ -13,8 +13,10 @@ describe AppsTasksController, type: :controller do
         "command": 'rake db:migrate && true',
       }
     end
+    let(:enabled) { true }
 
     before do
+      VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: enabled, error_message: nil)
       @request.env.merge!(headers_for(VCAP::CloudController::User.make))
       app_model.droplet = droplet
       app_model.save
@@ -34,6 +36,18 @@ describe AppsTasksController, type: :controller do
 
       expect(app_model.reload.tasks.count).to eq(1)
       expect(app_model.tasks.first).to eq(VCAP::CloudController::TaskModel.last)
+    end
+
+    context 'when the task_creation feature flag is disabled' do
+      let(:enabled) { false }
+
+      it 'raises 403' do
+        post :create, guid: app_model.guid, body: req_body
+
+        expect(response.status).to eq(403)
+        expect(response.body).to include('FeatureDisabled')
+        expect(response.body).to include('task_creation')
+      end
     end
 
     context 'invalid task' do

@@ -23,6 +23,8 @@ describe 'Tasks' do
     end
 
     before do
+      VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: true, error_message: nil)
+
       app_model.droplet = droplet
       app_model.save
     end

@@ -5,6 +5,7 @@ require 'presenters/v3/task_presenter'
 
 class AppsTasksController < ApplicationController
   def create
+    FeatureFlag.raise_unless_enabled!('task_creation')
     message = TaskCreateMessage.new(params[:body])
 
     app_guid = params[:guid]
