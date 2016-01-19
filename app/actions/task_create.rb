@@ -1,8 +1,10 @@
 module VCAP::CloudController
   class TaskCreate
     class InvalidTask < StandardError; end
+    class NoAssignedDroplet < StandardError; end
 
     def create(app, message)
+      no_assigned_droplet! unless app.droplet
       TaskModel.create(
         name:    message.name,
         state:   TaskModel::RUNNING_STATE,
@@ -12,6 +14,12 @@ module VCAP::CloudController
       )
     rescue Sequel::ValidationFailed => e
       raise InvalidTask.new(e.message)
+    end
+
+    private
+
+    def no_assigned_droplet!
+      raise NoAssignedDroplet.new('Task must have a droplet. Specify droplet or assign current droplet to app.')
     end
   end
 end

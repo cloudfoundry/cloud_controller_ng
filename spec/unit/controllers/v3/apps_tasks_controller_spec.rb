@@ -3,9 +3,12 @@ require 'rails_helper'
 describe AppsTasksController, type: :controller do
   describe '#create' do
     let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:space) { app_model.space }
+    let(:org) { space.organization }
     let(:droplet) do
-      VCAP::CloudController::DropletModel.make(app_guid: app_model.guid,
-                                               state: VCAP::CloudController::DropletModel::STAGED_STATE)
+      VCAP::CloudController::DropletModel.make(
+        app_guid: app_model.guid,
+        state: VCAP::CloudController::DropletModel::STAGED_STATE)
     end
     let(:req_body) do
       {
@@ -14,10 +17,19 @@ describe AppsTasksController, type: :controller do
       }
     end
     let(:enabled) { true }
+    let(:membership) { instance_double(VCAP::CloudController::Membership) }
 
     before do
       VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: enabled, error_message: nil)
       @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      allow_any_instance_of(AppsTasksController).to receive(:membership).and_return(membership)
+      allow(membership).to receive(:has_any_roles?).with(
+        [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(true)
+      allow(membership).to receive(:has_any_roles?).with(
+        [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+         VCAP::CloudController::Membership::SPACE_MANAGER,
+         VCAP::CloudController::Membership::SPACE_AUDITOR,
+         VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
       app_model.droplet = droplet
       app_model.save
     end
@@ -47,6 +59,88 @@ describe AppsTasksController, type: :controller do
         expect(response.status).to eq(403)
         expect(response.body).to include('FeatureDisabled')
         expect(response.body).to include('task_creation')
+      end
+    end
+
+    context 'when the user does not have write scope' do
+      before do
+        @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])))
+      end
+
+      it 'raises 403' do
+        post :create, guid: app_model.guid, body: req_body
+
+        expect(response.status).to eq(403)
+        expect(response.body).to include 'NotAuthorized'
+      end
+    end
+
+    context 'when the user does not have write permissions on the space' do
+      before do
+        allow(membership).to receive(:has_any_roles?).with(
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
+        allow(membership).to receive(:has_any_roles?).with(
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+           VCAP::CloudController::Membership::SPACE_MANAGER,
+           VCAP::CloudController::Membership::SPACE_AUDITOR,
+           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
+      end
+
+      it 'returns a 403 unauthorized' do
+        post :create, guid: app_model.guid, body: req_body
+
+        expect(response.status).to eq 403
+        expect(response.body).to include 'NotAuthorized'
+      end
+    end
+
+    context 'when the user does not have read permissions on the space' do
+      before do
+        allow(membership).to receive(:has_any_roles?).with(
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+           VCAP::CloudController::Membership::SPACE_MANAGER,
+           VCAP::CloudController::Membership::SPACE_AUDITOR,
+           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+      end
+
+      it 'returns a 404 ResourceNotFound' do
+        post :create, guid: app_model.guid, body: req_body
+
+        expect(response.status).to eq 404
+        expect(response.body).to include 'ResourceNotFound'
+      end
+    end
+
+    context 'when the app does not exist' do
+      it 'returns a 404 ResourceNotFound' do
+        post :create, guid: 'bogus', body: req_body
+
+        expect(response.status).to eq 404
+        expect(response.body).to include 'ResourceNotFound'
+      end
+    end
+
+    context 'when the app does not have an assigned droplet' do
+      let(:droplet) { nil }
+
+      it 'returns a 422 and a helpful error' do
+        post :create, guid: app_model.guid, body: req_body
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include 'Task must have a droplet. Specify droplet or assign current droplet to app.'
+      end
+    end
+
+    context 'when the user has requested an invalid field' do
+      it 'returns a 400 and a helpful error' do
+        req_body.merge! invalid: 'field'
+
+        post :create, guid: app_model.guid, body: req_body
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include "Unknown field(s): 'invalid'"
       end
     end
 

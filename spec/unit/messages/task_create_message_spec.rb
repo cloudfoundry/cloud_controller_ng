@@ -18,6 +18,14 @@ module VCAP::CloudController
         expect(message.name).to eq('mytask')
         expect(message.command).to eq('rake db:migrate && true')
       end
+
+      it 'validates that there are not excess fields' do
+        body.merge! 'bogus': 'field'
+        message = TaskCreateMessage.create(body)
+
+        expect(message).to_not be_valid
+        expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
+      end
     end
   end
 end

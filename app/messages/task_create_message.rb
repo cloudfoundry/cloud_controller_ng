@@ -6,6 +6,8 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_KEYS)
 
+    validates_with NoAdditionalKeysValidator
+
     def self.create(body)
       TaskCreateMessage.new(body.symbolize_keys)
     end

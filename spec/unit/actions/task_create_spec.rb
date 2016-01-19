@@ -28,6 +28,16 @@ module VCAP::CloudController
         expect(task.state).to eq(TaskModel::RUNNING_STATE)
       end
 
+      context 'when the app does not have an assigned droplet' do
+        let(:app_with_no_droplet) { AppModel.make }
+
+        it 'raises a NoAssignedDroplet error' do
+          expect {
+            TaskCreate.new.create(app_with_no_droplet, message)
+          }.to raise_error(TaskCreate::NoAssignedDroplet, 'Task must have a droplet. Specify droplet or assign current droplet to app.')
+        end
+      end
+
       context 'when the task is invalid' do
         before do
           allow_any_instance_of(TaskModel).to receive(:save).and_raise(Sequel::ValidationFailed.new('booooooo'))
