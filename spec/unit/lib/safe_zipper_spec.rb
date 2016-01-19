@@ -31,7 +31,7 @@ describe SafeZipper do
         [
           "Archive:\n Filename\n ---\n 0  09-15-15 17:44 foo\n ---\n10000000001 1 file\n",
           nil,
-          double('status', :success? => true)]
+          double('status', success?: true)]
       )
       expect(SafeZipper.unzip(zip_path, zip_destination)).to eq 10_000_000_001
     end

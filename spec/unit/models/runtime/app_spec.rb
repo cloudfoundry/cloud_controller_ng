@@ -371,7 +371,7 @@ module VCAP::CloudController
 
         context 'app update' do
           def act_as_cf_admin(&block)
-            allow(VCAP::CloudController::SecurityContext).to receive_messages(:admin? => true)
+            allow(VCAP::CloudController::SecurityContext).to receive_messages(admin?: true)
             block.call
           ensure
             allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_call_original

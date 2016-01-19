@@ -1,6 +1,7 @@
 require 'cloudfront-signer'
 require 'cloud_controller/blobstore/client'
 require 'presenters/api/staging_job_presenter'
+require 'utils/hash_utils'
 
 module VCAP::CloudController
   class StagingsController < RestController::BaseController
@@ -203,18 +204,11 @@ module VCAP::CloudController
 
     def upload_path
       @upload_path ||=
-          if get_from_hash_tree(config, :nginx, :use_nginx)
+          if HashUtils.dig(config, :nginx, :use_nginx)
             params['droplet_path']
-          elsif (tempfile = get_from_hash_tree(params, 'upload', 'droplet', :tempfile))
+          elsif (tempfile = HashUtils.dig(params, 'upload', 'droplet', :tempfile))
             tempfile.path
           end
-    end
-
-    def get_from_hash_tree(hash, *path)
-      path.reduce(hash) do |here, seg|
-        return unless here && here.is_a?(Hash)
-        here[seg]
-      end
     end
 
     def check_app_exists(app, guid)

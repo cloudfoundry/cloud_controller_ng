@@ -869,7 +869,7 @@ module VCAP::CloudController
 
                 expect(Delayed::Worker.new.work_off).to eq([1, 0])
                 expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(1)
-                expect(a_request(:get, /#{service_broker_url_regex}\/last_operation/)).not_to have_been_made.times(1)
+                expect(a_request(:get, %r{#{service_broker_url_regex}/last_operation})).not_to have_been_made.times(1)
 
                 expect(Delayed::Job.count).to eq 0
               end

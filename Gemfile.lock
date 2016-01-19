@@ -62,9 +62,9 @@ GEM
     allowy (1.0.0)
       activesupport (>= 3.2)
       i18n
-    ast (2.0.0)
-    astrolabe (1.3.0)
-      parser (>= 2.2.0.pre.3, < 3.0)
+    ast (2.2.0)
+    astrolabe (1.3.1)
+      parser (~> 2.2)
     awesome_print (1.2.0)
     backports (3.6.4)
     beefcake (1.0.0)
@@ -246,9 +246,8 @@ GEM
     parallel (1.3.3)
     parallel_tests (1.0.7)
       parallel
-    parser (2.2.0.1)
-      ast (>= 1.1, < 3.0)
-      slop (~> 3.4, >= 3.4.5)
+    parser (2.3.0.1)
+      ast (~> 2.2)
     pg (0.16.0)
     posix-spawn (0.3.9)
     powerpack (0.1.1)
@@ -310,9 +309,9 @@ GEM
       rspec-mocks (~> 3.4.0)
       rspec-support (~> 3.4.0)
     rspec-support (3.4.1)
-    rubocop (0.29.0)
+    rubocop (0.30.1)
       astrolabe (~> 1.3)
-      parser (>= 2.2.0.1, < 3.0)
+      parser (>= 2.2.2.1, < 3.0)
       powerpack (~> 0.1)
       rainbow (>= 1.99.1, < 3.0)
       ruby-progressbar (~> 1.4)
@@ -391,7 +390,6 @@ DEPENDENCIES
   activemodel
   addressable
   allowy
-  astrolabe
   awesome_print
   byebug
   cf-message-bus (~> 0.3.0)
