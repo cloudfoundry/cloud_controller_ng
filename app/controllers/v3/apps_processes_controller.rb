@@ -7,7 +7,7 @@ class AppsProcessesController < ApplicationController
     invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
     app = AppModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
-    app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)
+    app_not_found! unless app && can_read?(app.space.guid, app.space.organization.guid)
 
     paginated_result = SequelPaginator.new.get_page(app.processes_dataset, pagination_options)
 
@@ -16,7 +16,7 @@ class AppsProcessesController < ApplicationController
 
   def show
     app = AppModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
-    app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)
+    app_not_found! unless app && can_read?(app.space.guid, app.space.organization.guid)
 
     process = app.processes_dataset.where(type: params[:type]).first
     process_not_found! if process.nil?
@@ -31,11 +31,11 @@ class AppsProcessesController < ApplicationController
     unprocessable!(message.errors.full_messages) if message.invalid?
 
     app = AppModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
-    app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)
+    app_not_found! unless app && can_read?(app.space.guid, app.space.organization.guid)
 
     process = app.processes_dataset.where(type: params[:type]).first
     process_not_found! if process.nil?
-    unauthorized! if !can_scale?(app.space.guid)
+    unauthorized! unless can_scale?(app.space.guid)
 
     begin
       ProcessScale.new(current_user, current_user_email).scale(process, message)
@@ -64,11 +64,11 @@ class AppsProcessesController < ApplicationController
     process_type = params[:type]
 
     app = AppModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
-    app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)
+    app_not_found! unless app && can_read?(app.space.guid, app.space.organization.guid)
 
     process = app.processes_dataset.where(type: process_type).first
     process_not_found! if process.nil?
-    unauthorized! if !can_terminate?(app.space.guid)
+    unauthorized! unless can_terminate?(app.space.guid)
 
     instance_not_found! unless process_index < process.instances && process_index >= 0
 

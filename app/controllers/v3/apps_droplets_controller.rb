@@ -11,7 +11,7 @@ class AppsDropletsController < ApplicationController
     invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
     app, space, org = AppFetcher.new.fetch(app_guid)
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
 
     paginated_result = AppDropletsListFetcher.new.fetch(app_guid, pagination_options, message)
 

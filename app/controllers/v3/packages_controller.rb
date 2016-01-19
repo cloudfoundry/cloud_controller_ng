@@ -40,7 +40,7 @@ class PackagesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
-    package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
+    package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
     unauthorized! unless can_upload?(package.space.guid)
 
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
@@ -57,7 +57,7 @@ class PackagesController < ApplicationController
 
   def download
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
-    package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
+    package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
 
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     unprocessable!('Package has no bits to download.') unless package.state == 'READY'
@@ -72,14 +72,14 @@ class PackagesController < ApplicationController
 
   def show
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
-    package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
+    package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
 
     render status: :ok, json: package_presenter.present_json(package)
   end
 
   def destroy
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
-    package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
+    package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
     unauthorized! unless can_delete?(package.space.guid)
 
     PackageDelete.new.delete(package)
@@ -92,7 +92,7 @@ class PackagesController < ApplicationController
     unprocessable!(staging_message.errors.full_messages) unless staging_message.valid?
 
     package = PackageModel.where(guid: params[:guid]).eager(:app, :space, space: :organization, app: :buildpack_lifecycle_data).all.first
-    package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
+    package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
 
     if package.type == VCAP::CloudController::PackageModel::DOCKER_TYPE && !roles.admin?
       FeatureFlag.raise_unless_enabled!('diego_docker')

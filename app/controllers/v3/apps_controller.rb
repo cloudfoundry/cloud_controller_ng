@@ -33,7 +33,7 @@ class AppsV3Controller < ApplicationController
   def show
     app, space, org = AppFetcher.new.fetch(params[:guid])
 
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
 
     render status: :ok, json: AppPresenter.new.present_json(app)
   end
@@ -67,7 +67,7 @@ class AppsV3Controller < ApplicationController
 
     app, space, org = AppFetcher.new.fetch(params[:guid])
 
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_update?(space.guid)
 
     lifecycle = AppLifecycleProvider.provide_for_update(message, app)
@@ -85,7 +85,7 @@ class AppsV3Controller < ApplicationController
   def destroy
     app, space, org  = AppDeleteFetcher.new.fetch(params[:guid])
 
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_delete?(space.guid)
 
     AppDelete.new(current_user.guid, current_user_email).delete(app)
@@ -95,7 +95,7 @@ class AppsV3Controller < ApplicationController
 
   def start
     app, space, org = AppFetcher.new.fetch(params[:guid])
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
     droplet_not_found! unless app.droplet
     unauthorized! unless can_start?(space.guid)
 
@@ -112,7 +112,7 @@ class AppsV3Controller < ApplicationController
 
   def stop
     app, space, org = AppFetcher.new.fetch(params[:guid])
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_stop?(space.guid)
 
     AppStop.new(current_user, current_user_email).stop(app)
@@ -124,7 +124,7 @@ class AppsV3Controller < ApplicationController
 
   def show_environment
     app, space, org = AppFetcher.new.fetch(params[:guid])
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_read_envs?(space.guid)
 
     render status: :ok, json: AppPresenter.new.present_json_env(app)
@@ -135,7 +135,7 @@ class AppsV3Controller < ApplicationController
     droplet_guid = params[:body]['droplet_guid']
     app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
 
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_update?(space.guid)
     unprocessable!('Stop the app before changing droplet') if app.desired_state != 'STOPPED'
 

@@ -32,13 +32,13 @@ class DropletsController < ApplicationController
 
   def show
     droplet = DropletModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
-    droplet_not_found! if droplet.nil? || !can_read?(droplet.space.guid, droplet.space.organization.guid)
+    droplet_not_found! unless droplet && can_read?(droplet.space.guid, droplet.space.organization.guid)
     render status: :ok, json: droplet_presenter.present_json(droplet)
   end
 
   def destroy
     droplet, space, org = DropletDeleteFetcher.new.fetch(params[:guid])
-    droplet_not_found! if droplet.nil? || !can_read?(space.guid, org.guid)
+    droplet_not_found! unless droplet && can_read?(space.guid, org.guid)
 
     unauthorized! unless can_delete?(space.guid)
 

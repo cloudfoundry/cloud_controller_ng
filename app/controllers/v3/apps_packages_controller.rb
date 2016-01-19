@@ -10,7 +10,7 @@ class AppsPackagesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app_model = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
-    app_not_found! if app_model.nil? || !can_read?(app_model.space.guid, app_model.space.organization.guid)
+    app_not_found! unless app_model && can_read?(app_model.space.guid, app_model.space.organization.guid)
     unauthorized! unless can_create?(app_model.space.guid)
 
     package = PackageCreate.new(current_user, current_user_email).create(message)
@@ -29,7 +29,7 @@ class AppsPackagesController < ApplicationController
     invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
     app_model = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
-    app_not_found! if app_model.nil? || !can_read?(app_model.space.guid, app_model.space.organization.guid)
+    app_not_found! unless app_model && can_read?(app_model.space.guid, app_model.space.organization.guid)
 
     paginated_result = SequelPaginator.new.get_page(app_model.packages_dataset.eager(:docker_data), pagination_options)
 
@@ -48,12 +48,12 @@ class AppsPackagesController < ApplicationController
     app_guid = params[:guid]
     source_package_guid = params[:source_package_guid]
     app_model = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
-    app_not_found! if app_model.nil? || !can_read?(app_model.space.guid, app_model.space.organization.guid)
+    app_not_found! unless app_model && can_read?(app_model.space.guid, app_model.space.organization.guid)
     unauthorized! unless can_create?(app_model.space.guid)
 
     source_package = PackageModel.where(guid: source_package_guid).eager(:app, :space, space: :organization).eager(:docker_data).all.first
 
-    package_not_found! if source_package.nil? || !can_read?(source_package.space.guid, source_package.space.organization.guid)
+    package_not_found! unless source_package && can_read?(source_package.space.guid, source_package.space.organization.guid)
     unauthorized! unless can_create?(source_package.space.guid)
     unprocessable!('Source and destination app cannot be the same') if app_guid == source_package.app_guid
 

@@ -10,7 +10,7 @@ class AppsRoutesController < ApplicationController
     app_guid = params[:guid]
 
     app, space, org = AppRoutesFetcher.new.fetch(app_guid)
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
 
     pagination_options = PaginationOptions.from_params(params)
     routes = SequelPaginator.new.get_page(app.routes_dataset, pagination_options)
@@ -22,7 +22,7 @@ class AppsRoutesController < ApplicationController
     app_guid = params[:guid]
 
     app, route, web_process, space, org = AddRouteFetcher.new.fetch(app_guid, params['route_guid'])
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
     route_not_found! if route.nil?
     unauthorized! unless can_write?(space.guid)
 
@@ -39,7 +39,7 @@ class AppsRoutesController < ApplicationController
     app_guid = params[:guid]
 
     app, route, space, org = DeleteRouteFetcher.new.fetch(app_guid, params['route_guid'])
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
     route_not_found! if route.nil?
     unauthorized! unless can_delete?(space.guid)
 
