@@ -1,5 +1,9 @@
 require 'jobs/runtime/blobstore_delete.rb'
 require 'jobs/v3/buildpack_cache_delete'
+require 'actions/package_delete'
+require 'actions/task_delete'
+require 'actions/droplet_delete'
+require 'actions/process_delete'
 
 module VCAP::CloudController
   class AppDelete
@@ -16,6 +20,7 @@ module VCAP::CloudController
 
       apps.each do |app|
         PackageDelete.new.delete(packages_to_delete(app))
+        TaskDelete.new.delete(tasks_to_delete(app))
         DropletDelete.new.delete(droplets_to_delete(app))
         ProcessDelete.new.delete(processes_to_delete(app))
         delete_buildpack_cache(app)
@@ -56,6 +61,10 @@ module VCAP::CloudController
         :"#{ProcessModel.table_name}__id",
         :"#{ProcessModel.table_name}__app_guid",
         :"#{ProcessModel.table_name}__name").all
+    end
+
+    def tasks_to_delete(app_model)
+      app_model.tasks_dataset
     end
   end
 end

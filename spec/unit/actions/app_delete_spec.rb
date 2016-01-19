@@ -44,6 +44,21 @@ module VCAP::CloudController
             expect { app.refresh }.to raise_error Sequel::Error, 'Record not found'
           end
         end
+
+        context 'when the app has associated tasks' do
+          before do
+            TaskModel.make(app_guid: app.guid, name: 'task1')
+            TaskModel.make(app_guid: app.guid, name: 'task2')
+          end
+
+          it 'deletes the tasks' do
+            expect(app.tasks.count).to eq(2)
+            expect {
+              app_delete.delete(app_dataset)
+            }.to change { TaskModel.count }.by(-2)
+            expect(app.exists?).to be_falsey
+          end
+        end
       end
 
       describe 'recursive deletion' do
