@@ -15,10 +15,16 @@ class AppsTasksController < ApplicationController
     resource_not_found!(:app) unless app && can_read?(app.space.guid, app.space.organization.guid)
     unauthorized! unless can_create?(app.space.guid)
 
-    task     = TaskCreate.new.create(app, message)
+    task = TaskCreate.new.create(app, message)
     render status: :accepted, json: TaskPresenter.new.present_json(task)
   rescue TaskCreate::InvalidTask, TaskCreate::NoAssignedDroplet => e
     unprocessable!(e)
+  end
+
+  def show
+    task = TaskModel.where(guid: params[:guid]).eager(:space, space: :organization).first
+    resource_not_found!(:task) unless task && can_read?(task.space.guid, task.space.organization.guid)
+    render status: :ok, json: TaskPresenter.new.present_json(task)
   end
 
   private

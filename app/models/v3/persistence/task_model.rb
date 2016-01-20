@@ -7,6 +7,9 @@ module VCAP::CloudController
 
     many_to_one :app, class: 'VCAP::CloudController::AppModel'
     many_to_one :droplet, class: 'VCAP::CloudController::DropletModel'
+    one_through_one :space, join_table: AppModel.table_name,
+                            left_key: :guid, left_primary_key: :app_guid,
+                            right_key: :space_guid, right_primary_key: :guid
 
     def validate
       validates_includes TASK_STATES, :state
