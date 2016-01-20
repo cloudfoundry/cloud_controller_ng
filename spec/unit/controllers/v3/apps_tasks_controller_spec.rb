@@ -170,6 +170,18 @@ describe AppsTasksController, type: :controller do
       expect(JSON.parse(response.body)).to include('name' => 'mytask')
     end
 
+    context 'when the requested task does not belong to the provided app guid' do
+      it 'returns a 404' do
+        other_app = VCAP::CloudController::AppModel.make space_guid: space.guid
+        other_task = VCAP::CloudController::TaskModel.make name: 'other_task', app_guid: other_app.guid
+        get :show, task_guid: other_task.guid, app_guid: app_model.guid
+
+        expect(response.status).to eq 404
+        expect(response.body).to include 'ResourceNotFound'
+        expect(response.body).to include 'Task not found'
+      end
+    end
+
     context 'when only task guid is present' do
       it 'returns a 200 and the task' do
         get :show, task_guid: task.guid
