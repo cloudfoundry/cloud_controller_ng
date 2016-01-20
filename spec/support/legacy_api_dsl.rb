@@ -110,16 +110,17 @@ module LegacyApiDsl
       model_name = options[:path] || model
       title = options[:title] || model_name.to_s.pluralize.titleize
 
-      if options[:outer_model]
+      outer_model = options[:outer_model]
+      if outer_model
         model_name = options[:path] if options[:path]
-        path = "#{options[:outer_model].to_s.pluralize}/:guid/#{model_name}"
-        outer_model_description = " for the #{options[:outer_model].to_s.singularize.titleize}"
+        path = "#{outer_model.to_s.pluralize}/:guid/#{model_name}"
+        outer_model_description = " for the #{outer_model.to_s.singularize.titleize}"
       else
         path = options[:path] || model
       end
 
       get root(path) do
-        standard_list_parameters controller
+        standard_list_parameters controller, outer_model: outer_model
         example_request "List all #{title}#{outer_model_description}" do
           expect(status).to eq 200
           standard_list_response parsed_response, model
@@ -196,12 +197,16 @@ module LegacyApiDsl
       end
     end
 
-    def standard_list_parameters(controller)
-      if controller.query_parameters.size > 0
+    def standard_list_parameters(controller, outer_model: nil)
+      query_parameters = controller.query_parameters
+      if query_parameters.size > 0
         query_parameter_description = 'Parameters used to filter the result set.<br/>'
         query_parameter_description += 'Format queries as &lt;filter&gt;&lt;op&gt;&lt;value&gt;<br/>'
         query_parameter_description += ' Valid ops: : &gt;= &lt;= &lt; &gt; IN<br/>'
-        query_parameter_description += " Valid filters: #{controller.query_parameters.to_a.join(', ')}"
+        query_parameter_description += " Valid filters: #{query_parameters.to_a.join(', ')}"
+        if outer_model && query_parameters.include?((outer_model.to_s + '_guid'))
+          query_parameter_description += "<br/> (Note that filtering on #{outer_model}_guid will return an empty list if you specify anything other than the guid included in the path.)"
+        end
 
         examples = ['q=filter:value', 'q=filter>value', 'q=filter IN a,b,c']
         request_parameter :q, query_parameter_description, { html: true, example_values: examples }
