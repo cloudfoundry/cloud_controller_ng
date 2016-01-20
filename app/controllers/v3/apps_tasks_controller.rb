@@ -22,7 +22,7 @@ class AppsTasksController < ApplicationController
   end
 
   def show
-    task = TaskModel.where(guid: params[:guid]).eager(:space, space: :organization).first
+    task = TaskModel.where(guid: params[:task_guid]).eager(:space, space: :organization).first
     resource_not_found!(:task) unless task && can_read?(task.space.guid, task.space.organization.guid)
     render status: :ok, json: TaskPresenter.new.present_json(task)
   end

@@ -98,10 +98,12 @@ Rails.application.routes.draw do
   get '/apps/:guid/droplets', to: 'apps_droplets#index'
 
   # apps_tasks
-  get '/v3/tasks/:guid', to: 'apps_tasks#show'
+  get '/v3/tasks/:task_guid', to: 'apps_tasks#show'
+  get '/v3/apps/:app_guid/tasks/:task_guid', to: 'apps_tasks#show'
   post '/v3/apps/:guid/tasks', to: 'apps_tasks#create'
 
-  get '/tasks/:guid', to: 'apps_tasks#show'
+  get '/tasks/:task_guid', to: 'apps_tasks#show'
+  get '/apps/:app_guid/tasks/:task_guid', to: 'apps_tasks#show'
   post '/apps/:guid/tasks', to: 'apps_tasks#create'
 
   # service_bindings

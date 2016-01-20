@@ -164,10 +164,19 @@ describe AppsTasksController, type: :controller do
     let!(:task) { VCAP::CloudController::TaskModel.make name: 'mytask', app_guid: app_model.guid }
 
     it 'returns a 200 and the task' do
-      get :show, guid: task.guid
+      get :show, task_guid: task.guid, app_guid: app_model.guid
 
       expect(response.status).to eq 200
       expect(JSON.parse(response.body)).to include('name' => 'mytask')
+    end
+
+    context 'when only task guid is present' do
+      it 'returns a 200 and the task' do
+        get :show, task_guid: task.guid
+
+        expect(response.status).to eq 200
+        expect(JSON.parse(response.body)).to include('name' => 'mytask')
+      end
     end
 
     describe 'access permissions' do
@@ -177,7 +186,7 @@ describe AppsTasksController, type: :controller do
         end
 
         it 'raises 403' do
-          get :show, guid: task.guid
+          get :show, task_guid: task.guid
 
           expect(response.status).to eq(403)
           expect(response.body).to include 'NotAuthorized'
@@ -194,7 +203,7 @@ describe AppsTasksController, type: :controller do
         end
 
         it 'returns a 404 ResourceNotFound' do
-          get :show, guid: task.guid
+          get :show, task_guid: task.guid
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -204,7 +213,7 @@ describe AppsTasksController, type: :controller do
     end
 
     it 'returns a 404 if the task does not exist' do
-      get :show, guid: 'bogus'
+      get :show, task_guid: 'bogus'
 
       expect(response.status).to eq 404
       expect(response.body).to include 'ResourceNotFound'
