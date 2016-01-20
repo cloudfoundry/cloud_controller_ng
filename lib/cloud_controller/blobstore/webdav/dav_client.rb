@@ -1,6 +1,7 @@
 require 'cloud_controller/blobstore/base_client'
 require 'cloud_controller/blobstore/errors'
 require 'cloud_controller/blobstore/webdav/dav_blob'
+require 'cloud_controller/blobstore/webdav/nginx_secure_link_signer'
 
 module CloudController
   module Blobstore
@@ -13,9 +14,8 @@ module CloudController
 
         @client = HTTPClient.new
 
-        @endpoint = @options[:endpoint]
+        @endpoint = @options[:private_endpoint]
         @headers  = {}
-        @secret = @options[:secret]
 
         user     = @options[:username]
         password = @options[:password]
@@ -23,6 +23,15 @@ module CloudController
           @headers['Authorization'] = 'Basic ' +
             Base64.strict_encode64("#{user}:#{password}").strip
         end
+
+        path_prefix = File.join(['/read', @directory_key])
+        @signer     = NginxSecureLinkSigner.new(
+          secret:               @options[:secret],
+          internal_host:        @options[:private_endpoint],
+          internal_path_prefix: path_prefix,
+          public_host:          @options[:public_endpoint],
+          public_path_prefix:   path_prefix
+        )
       end
 
       def local?
@@ -99,20 +108,15 @@ module CloudController
       def blob(key)
         response = @client.head(url(key), header: @headers)
 
-        return DavBlob.new(httpmessage: response, url: read_url(key), secret: @secret) if response.status == 200
+        return DavBlob.new(httpmessage: response, key: partitioned_key(key), signer: @signer) if response.status == 200
         raise BlobstoreError.new("Could not get object, #{response.status}/#{response.content}") if response.status != 404
       end
 
       def delete_blob(blob)
-        response = @client.delete(blob.url.to_s, header: @headers)
+        response = @client.delete(url_from_blob_key(blob.key), header: @headers)
 
         return if response.status == 404
         raise BlobstoreError.new("Could not delete object, #{response.status}/#{response.content}") if response.status != 204
-      end
-
-      def download_uri(key)
-        b = blob(key)
-        b.download_url if b
       end
 
       def delete_all(_=nil)
@@ -138,9 +142,8 @@ module CloudController
         [@endpoint, 'admin', @directory_key, key].compact.join('/')
       end
 
-      def read_url(key)
-        key = partitioned_key(key) unless key.blank?
-        [@endpoint, 'read', @directory_key, key].compact.join('/')
+      def url_from_blob_key(key)
+        [@endpoint, 'admin', @directory_key, key].compact.join('/')
       end
 
       def logger

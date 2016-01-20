@@ -12,14 +12,14 @@ module VCAP::CloudController
       if blobstore.local?
         return blob.local_path, nil
       else
-        return nil, blob.download_url
+        return nil, blob.public_download_url
       end
     end
 
     private
 
     def logger
-      @logger ||= Steno.logger('cc.action.package_upload')
+      @logger ||= Steno.logger('cc.action.package_download')
     end
   end
 end

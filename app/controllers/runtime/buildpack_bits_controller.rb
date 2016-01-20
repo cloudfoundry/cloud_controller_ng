@@ -49,7 +49,7 @@ module VCAP::CloudController
       if @buildpack_blobstore.local?
         send_local_blob(blob)
       else
-        return [HTTP::FOUND, { 'Location' => blob.download_url }, nil]
+        return [HTTP::FOUND, { 'Location' => blob.public_download_url }, nil]
       end
     end
 
@@ -65,7 +65,8 @@ module VCAP::CloudController
 
     def send_local_blob(blob)
       if @config[:nginx][:use_nginx]
-        url = blob.download_url
+
+        url = blob.internal_download_url
         logger.debug "nginx redirect #{url}"
         return [200, { 'X-Accel-Redirect' => url }, '']
       else

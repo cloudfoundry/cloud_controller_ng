@@ -183,44 +183,6 @@ module CloudController
           end
         end
 
-        describe 'returns a download uri' do
-          context 'when the blob store is a local' do
-            subject(:client) do
-              described_class.new({ provider: 'Local', local_root: '/tmp' }, directory_key)
-            end
-
-            before do
-              Fog.unmock!
-            end
-
-            after do
-              Fog.mock!
-            end
-
-            it 'does have a url' do
-              upload_tmpfile(client)
-              expect(client.download_uri('abcdef')).to match(%r{/ab/cd/abcdef})
-            end
-          end
-
-          context 'when not local' do
-            before do
-              upload_tmpfile(client)
-              @uri = URI.parse(client.download_uri('abcdef'))
-            end
-
-            it 'returns the correct uri to fetch a blob directly from amazon' do
-              expect(@uri.scheme).to eql 'https'
-              expect(@uri.host).to eql "#{directory_key}.s3.amazonaws.com"
-              expect(@uri.path).to eql '/ab/cd/abcdef'
-            end
-
-            it 'returns nil for a non-existent key' do
-              expect(client.download_uri('not-a-key')).to be_nil
-            end
-          end
-        end
-
         describe '#download_from_blobstore' do
           context 'when directly from the underlying storage' do
             before do
@@ -292,7 +254,7 @@ module CloudController
             key = 'abcdef12345'
 
             client.cp_to_blobstore(path, key)
-            expect(client.blob(key).public_url).to be_nil
+            expect(client.blob(key).file.public_url).to be_nil
           end
 
           it 'can copy as a public file' do
@@ -302,7 +264,7 @@ module CloudController
             key = 'abcdef12345'
 
             client.cp_to_blobstore(path, key)
-            expect(client.blob(key).public_url).to be
+            expect(client.blob(key).file.public_url).to be
           end
 
           it 'sets conten-type to mime-type of application/zip when not specified' do
@@ -460,7 +422,7 @@ module CloudController
               upload_tmpfile(client, src_key)
 
               client.cp_file_between_keys(src_key, dest_key)
-              expect(client.blob(dest_key).public_url).to be
+              expect(client.blob(dest_key).file.public_url).to be
             end
           end
 
@@ -468,7 +430,7 @@ module CloudController
             it 'does not have a public url' do
               upload_tmpfile(client, src_key)
               client.cp_file_between_keys(src_key, dest_key)
-              expect(client.blob(dest_key).public_url).to be_nil
+              expect(client.blob(dest_key).file.public_url).to be_nil
             end
           end
 
@@ -747,7 +709,7 @@ module CloudController
           upload_tmpfile(client, 'abcdef')
           expect(client.exists?('abcdef')).to be true
           expect(client.blob('abcdef')).to be
-          expect(client.download_uri('abcdef')).to match(%r{my-root/ab/cd/abcdef})
+          expect(client.blob('abcdef').public_download_url).to match(%r{my-root/ab/cd/abcdef})
         end
       end
 

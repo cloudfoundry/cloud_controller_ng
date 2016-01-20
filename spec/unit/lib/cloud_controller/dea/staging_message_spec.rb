@@ -124,9 +124,9 @@ module VCAP::CloudController
               admin_buildpacks = request[:admin_buildpacks]
 
               expect(admin_buildpacks).to have(3).items
-              expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri('a key'), key: 'a key')
-              expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri('b key'), key: 'b key')
-              expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri('c key'), key: 'c key')
+              expect(admin_buildpacks).to include(url: buildpack_blobstore.blob('a key').internal_download_url, key: 'a key')
+              expect(admin_buildpacks).to include(url: buildpack_blobstore.blob('b key').internal_download_url, key: 'b key')
+              expect(admin_buildpacks).to include(url: buildpack_blobstore.blob('c key').internal_download_url, key: 'c key')
             end
           end
         end
@@ -160,8 +160,8 @@ module VCAP::CloudController
                 admin_buildpacks = request[:admin_buildpacks]
 
                 expect(admin_buildpacks).to have(2).items
-                expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri('b key'), key: 'b key')
-                expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri('c key'), key: 'c key')
+                expect(admin_buildpacks).to include(url: buildpack_blobstore.blob('b key').internal_download_url, key: 'b key')
+                expect(admin_buildpacks).to include(url: buildpack_blobstore.blob('c key').internal_download_url, key: 'c key')
               end
             end
           end

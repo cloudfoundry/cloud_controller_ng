@@ -83,13 +83,13 @@ module VCAP::CloudController
       if app.docker_image.present?
         Diego::Docker::LifecycleProtocol.new
       else
-        Diego::Buildpack::LifecycleProtocol.new(dependency_locator.blobstore_url_generator(true))
+        Diego::Buildpack::LifecycleProtocol.new(dependency_locator.blobstore_url_generator)
       end
     end
 
     def diego_package_lifecycle_protocol(lifecycle_type)
       if lifecycle_type == Lifecycles::BUILDPACK
-        Diego::Buildpack::V3::LifecycleProtocol.new(dependency_locator.blobstore_url_generator(true))
+        Diego::Buildpack::V3::LifecycleProtocol.new(dependency_locator.blobstore_url_generator)
       elsif lifecycle_type == Lifecycles::DOCKER
         Diego::Docker::V3::LifecycleProtocol.new
       end

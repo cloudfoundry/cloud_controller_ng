@@ -69,10 +69,6 @@ shared_examples_for 'a blobstore client' do
     }.not_to raise_error
   end
 
-  it 'provides download uri for a file by key' do
-    expect(subject.download_uri(key)).to be_a(String)
-  end
-
   it 'returns a blob object for a file by key' do
     expect(subject.blob(key)).to be_a(CloudController::Blobstore::Blob)
   end

@@ -12,12 +12,12 @@ module CloudController
         file.send(:path)
       end
 
-      def download_url
+      def internal_download_url
         download_uri_for_file
       end
 
-      def public_url
-        file.public_url
+      def public_download_url
+        download_uri_for_file
       end
 
       def attributes(*keys)

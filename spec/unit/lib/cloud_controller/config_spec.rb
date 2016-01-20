@@ -83,10 +83,6 @@ module VCAP::CloudController
           expect(config[:broker_client_default_async_poll_interval_seconds]).to eq(60)
         end
 
-        it 'does not set a default value for internal_service_hostname' do
-          expect(config[:internal_service_hostname]).to be_nil
-        end
-
         it ' sets a default value for num_of_valid_packages_per_app_to_store' do
           expect(config[:packages][:max_valid_packages_stored]).to eq(5)
         end

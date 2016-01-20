@@ -1,99 +1,92 @@
+require 'cloud_controller/blobstore/url_generator/url_generator_helpers'
+require 'cloud_controller/blobstore/url_generator/upload_url_generator'
+require 'cloud_controller/blobstore/url_generator/internal_url_generator'
+require 'cloud_controller/blobstore/url_generator/local_url_generator'
+
 module CloudController
   module Blobstore
     class UrlGenerator
+      include UrlGeneratorHelpers
+      extend Forwardable
+
       def initialize(blobstore_options, package_blobstore, buildpack_cache_blobstore, admin_buildpack_blobstore, droplet_blobstore)
-        @blobstore_options = blobstore_options
-        @package_blobstore = package_blobstore
+        @blobstore_options         = blobstore_options
+        @package_blobstore         = package_blobstore
         @buildpack_cache_blobstore = buildpack_cache_blobstore
         @admin_buildpack_blobstore = admin_buildpack_blobstore
-        @droplet_blobstore = droplet_blobstore
+        @droplet_blobstore         = droplet_blobstore
+        @internal_url_generator    = InternalUrlGenerator.new(blobstore_options, package_blobstore, buildpack_cache_blobstore, admin_buildpack_blobstore, droplet_blobstore)
+        @local_url_generator       = LocalUrlGenerator.new(blobstore_options, package_blobstore, buildpack_cache_blobstore, admin_buildpack_blobstore, droplet_blobstore)
+        @upload_url_generator      = UploadUrlGenerator.new(blobstore_options)
       end
 
-      # Downloads
       def app_package_download_url(app)
-        generate_download_url(@package_blobstore, "/staging/apps/#{app.guid}", app.guid)
+        if @package_blobstore.local?
+          @local_url_generator.app_package_download_url(app)
+        else
+          @internal_url_generator.app_package_download_url(app)
+        end
       end
 
       def package_download_url(package)
-        generate_download_url(@package_blobstore, "/staging/packages/#{package.guid}", package.guid)
+        if @package_blobstore.local?
+          @local_url_generator.package_download_url(package)
+        else
+          @internal_url_generator.package_download_url(package)
+        end
       end
 
       def buildpack_cache_download_url(app)
-        generate_download_url(@buildpack_cache_blobstore, "/staging/buildpack_cache/#{app.guid}/download", app.buildpack_cache_key)
+        if @buildpack_cache_blobstore.local?
+          @local_url_generator.buildpack_cache_download_url(app)
+        else
+          @internal_url_generator.buildpack_cache_download_url(app)
+        end
       end
 
       def v3_app_buildpack_cache_download_url(app_guid, stack)
-        generate_download_url(@buildpack_cache_blobstore, "/staging/v3/buildpack_cache/#{stack}/#{app_guid}/download", "#{app_guid}/#{stack}")
+        if @buildpack_cache_blobstore.local?
+          @local_url_generator.v3_app_buildpack_cache_download_url(app_guid, stack)
+        else
+          @internal_url_generator.v3_app_buildpack_cache_download_url(app_guid, stack)
+        end
       end
 
       def admin_buildpack_download_url(buildpack)
-        generate_download_url(@admin_buildpack_blobstore, "/v2/buildpacks/#{buildpack.guid}/download", buildpack.key)
+        if @admin_buildpack_blobstore.local?
+          @local_url_generator.admin_buildpack_download_url(buildpack)
+        else
+          @internal_url_generator.admin_buildpack_download_url(buildpack)
+        end
       end
 
       def droplet_download_url(app)
-        droplet = app.current_droplet
-        return nil unless droplet
-
-        blob = droplet.blob
-        url = blob.download_url if blob
-
-        return nil unless url
-        @droplet_blobstore.local? ? staging_uri("/staging/droplets/#{app.guid}/download") : url
+        if @droplet_blobstore.local?
+          @local_url_generator.droplet_download_url(app)
+        else
+          @internal_url_generator.droplet_download_url(app)
+        end
       end
 
       def v3_droplet_download_url(droplet)
-        generate_download_url(@droplet_blobstore, "/staging/v3/droplets/#{droplet.guid}/download", droplet.blobstore_key)
-      end
-
-      def perma_droplet_download_url(app_guid)
-        staging_uri("/staging/droplets/#{app_guid}/download")
+        if @droplet_blobstore.local?
+          @local_url_generator.v3_droplet_download_url(droplet)
+        else
+          @internal_url_generator.v3_droplet_download_url(droplet)
+        end
       end
 
       def unauthorized_perma_droplet_download_url(app)
         return nil unless app.droplet_hash
 
-        URI::HTTP.build(
-          host: @blobstore_options[:blobstore_host],
-          port: @blobstore_options[:blobstore_port],
-          path: "/internal/v2/droplets/#{app.guid}/#{app.droplet_hash}/download",
-        ).to_s
+        no_auth_uri("/internal/v2/droplets/#{app.guid}/#{app.droplet_hash}/download")
       end
 
-      # Uploads
-      def droplet_upload_url(app)
-        staging_uri("/staging/droplets/#{app.guid}/upload")
-      end
-
-      def package_droplet_upload_url(droplet_guid)
-        staging_uri("/staging/v3/droplets/#{droplet_guid}/upload")
-      end
-
-      def v3_app_buildpack_cache_upload_url(app_guid, stack)
-        staging_uri("/staging/v3/buildpack_cache/#{stack}/#{app_guid}/upload")
-      end
-
-      def buildpack_cache_upload_url(app)
-        staging_uri("/staging/buildpack_cache/#{app.guid}/upload")
-      end
-
-      private
-
-      def generate_download_url(store, path, blobstore_key)
-        uri = store.download_uri(blobstore_key)
-        return nil unless uri
-        store.local? ? staging_uri(path) : uri
-      end
-
-      def staging_uri(path)
-        return nil unless path
-
-        URI::HTTP.build(
-          host: @blobstore_options[:blobstore_host],
-          port: @blobstore_options[:blobstore_port],
-          userinfo: [@blobstore_options[:user], @blobstore_options[:password]],
-          path: path,
-        ).to_s
-      end
+      def_delegators :@upload_url_generator,
+        :droplet_upload_url,
+        :package_droplet_upload_url,
+        :v3_app_buildpack_cache_upload_url,
+        :buildpack_cache_upload_url
     end
   end
 end

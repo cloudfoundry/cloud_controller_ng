@@ -4,10 +4,18 @@ require_relative '../blob_shared'
 module CloudController
   module Blobstore
     describe DavBlob do
-      subject(:blob) { DavBlob.new(httpmessage: httpmessage, url: url, secret: secret) }
+      subject(:blob) { DavBlob.new(httpmessage: httpmessage, key: 'fo/ob/foobar', signer: signer) }
       let(:httpmessage) { instance_double(HTTP::Message, headers: {}) }
-      let(:url) { 'http://localhost' }
-      let(:secret) { 'some-secret' }
+      let(:key) { 'fo/ob/foobar' }
+      let(:signer) do
+        NginxSecureLinkSigner.new(
+          secret:               'some-secret',
+          internal_host:        'http://blobstore.private.com',
+          internal_path_prefix: '/read',
+          public_host:          'https://blobstore.public.com',
+          public_path_prefix:   '/read'
+        )
+      end
 
       it_behaves_like 'a blob'
 
@@ -34,14 +42,22 @@ module CloudController
         end
       end
 
-      describe 'download_url' do
-        let(:url) { 'https://blobstore.public.com/fo/ob/foobar' }
-
+      describe 'internal_download_url' do
         it 'generates a signed expiring url with expiration of 1 hour' do
           # using nginx method defined here: http://nginx.org/en/docs/http/ngx_http_secure_link_module.html
 
           Timecop.freeze(Time.utc(2008, 1, 1, 12, 0, 0)) do
-            expect(blob.download_url).to eq('https://blobstore.public.com/fo/ob/foobar?expires=1199192400&md5=2Iqd_VTner-0CUrqUBHGUg')
+            expect(blob.internal_download_url).to eq('http://blobstore.private.com/read/fo/ob/foobar?expires=1199192400&md5=3RBuMi1CauNAw8thvmZfPw')
+          end
+        end
+      end
+
+      describe 'public_download_url' do
+        it 'generates a signed expiring url with expiration of 1 hour' do
+          # using nginx method defined here: http://nginx.org/en/docs/http/ngx_http_secure_link_module.html
+
+          Timecop.freeze(Time.utc(2008, 1, 1, 12, 0, 0)) do
+            expect(blob.public_download_url).to eq('https://blobstore.public.com/read/fo/ob/foobar?expires=1199192400&md5=3RBuMi1CauNAw8thvmZfPw')
           end
         end
       end

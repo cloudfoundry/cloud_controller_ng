@@ -7,6 +7,7 @@ message_bus_servers:
 
 external_protocol: http
 external_domain: api2.vcap.me
+internal_service_hostname: api.internal.cf
 
 system_domain_organization: the-system_domain-org-name
 system_domain: vcap.me

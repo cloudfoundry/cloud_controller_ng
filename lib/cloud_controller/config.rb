@@ -15,7 +15,7 @@ module VCAP::CloudController
       {
         :external_port => Integer,
         :external_protocol => String,
-        optional(:internal_service_hostname) => String,
+        :internal_service_hostname => String,
         :info => {
           name: String,
           build: String,

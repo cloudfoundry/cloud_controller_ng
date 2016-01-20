@@ -26,10 +26,10 @@ module VCAP::CloudController
         allow(blobstore_client).to receive(:blob).and_return(blob_double)
       end
 
-      context 'the storage is S3' do
+      context 'the storage is not local' do
         before do
           allow(blobstore_client).to receive(:local?).and_return(false)
-          allow(blob_double).to receive(:download_url).and_return(download_location)
+          allow(blob_double).to receive(:public_download_url).and_return(download_location)
         end
 
         it 'fetches and returns the download URL' do
@@ -39,7 +39,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'the storage is NFS' do
+      context 'the storage is local' do
         before do
           allow(blobstore_client).to receive(:local?).and_return(true)
           allow(blob_double).to receive(:local_path).and_return(download_location)

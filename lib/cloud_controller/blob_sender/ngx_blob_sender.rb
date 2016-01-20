@@ -6,7 +6,7 @@ module CloudController
       end
 
       def send_blob(app_guid, blob_name, blob, controller)
-        url = blob.download_url
+        url = blob.internal_download_url
         @missing_blob_handler.handle_missing_blob!(app_guid, blob_name) unless url
         logger.debug "nginx redirect #{url}"
         [200, { 'X-Accel-Redirect' => url }, '']

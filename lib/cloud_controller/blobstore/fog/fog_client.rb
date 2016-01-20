@@ -117,11 +117,6 @@ module CloudController
         delete_file(blob.file) if blob.file
       end
 
-      def download_uri(key)
-        b = blob(key)
-        b.download_url if b
-      end
-
       def blob(key)
         f = file(key)
         FogBlob.new(f, @cdn) if f

@@ -9,6 +9,7 @@ info:
   description: "Cloud Foundry sponsored by Pivotal"
 
 external_protocol: http
+internal_service_hostname: cc.internal.cf
 
 system_domain_organization: the-system-domain-org-name
 system_domain: the-system-domain.com

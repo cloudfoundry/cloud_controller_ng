@@ -85,19 +85,6 @@ module VCAP::CloudController
           expect(runner).to be_a(Diego::Runner)
         end
 
-        context 'when the app is a buildpack app' do
-          let(:docker_image) { nil }
-
-          before do
-            locator = CloudController::DependencyLocator.instance
-            expect(locator).to receive(:blobstore_url_generator).with(true).and_call_original
-          end
-
-          it 'uses a service dns name blobstore url generator' do
-            expect(runner).to_not be_nil
-          end
-        end
-
         context 'when the app has a docker image' do
           let(:docker_image) { 'foobar' }
 

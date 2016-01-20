@@ -9,7 +9,8 @@ module CloudController
       let(:httpclient) { instance_double(HTTPClient) }
       let(:options) do
         {
-          endpoint: 'http://localhost',
+          private_endpoint: 'http://localhost',
+          public_endpoint: 'http://localhost.public',
           secret:   'some-secret'
         }
       end
@@ -20,7 +21,7 @@ module CloudController
       end
 
       describe 'conforms to blobstore client interface' do
-        let(:deletable_blob) { instance_double(DavBlob, url: nil) }
+        let(:deletable_blob) { instance_double(DavBlob, key: nil) }
         before do
           allow(httpclient).to receive_messages(head: instance_double(HTTP::Message, status: 200))
           allow(httpclient).to receive_messages(put: instance_double(HTTP::Message, status: 201))
@@ -469,7 +470,7 @@ module CloudController
         it 'deletes the blobs key' do
           allow(response).to receive_messages(status: 204, content: '')
           allow(httpclient).to receive_messages(delete: response)
-          blob = DavBlob.new(httpmessage: instance_double(HTTPClient), url: 'http://localhost/admin/droplets/fo/ob/foobar', secret: 'some-secret')
+          blob = DavBlob.new(httpmessage: instance_double(HTTPClient), key: 'fo/ob/foobar', signer: nil)
 
           client.delete_blob(blob)
 
@@ -479,32 +480,10 @@ module CloudController
         it 'does not error if the object is already deleted' do
           allow(response).to receive_messages(status: 404, content: 'Not Found')
           allow(httpclient).to receive_messages(delete: response)
-          blob = DavBlob.new(httpmessage: instance_double(HTTPClient), url: 'http://localhost/admin/droplets/fo/ob/foobar', secret: 'some-secret')
+          blob = DavBlob.new(httpmessage: instance_double(HTTPClient), key: 'fo/ob/foobar', signer: nil)
 
           expect { client.delete_blob(blob) }.not_to raise_error
           expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/fo/ob/foobar', header: {})
-        end
-      end
-
-      describe '#download_uri' do
-        it 'returns the correct uri to fetch a blob directly from the blobstore' do
-          allow(response).to receive_messages(status: 200)
-          allow(httpclient).to receive_messages(head: response)
-
-          uri = URI(client.download_uri('foobar'))
-
-          expect(uri.scheme).to eql 'http'
-          expect(uri.host).to eql 'localhost'
-          expect(uri.path).to eql '/read/droplets/fo/ob/foobar'
-          expect(uri.query).to include('expires=')
-          expect(uri.query).to include('md5=')
-        end
-
-        it 'returns nil for a non-existent key' do
-          allow(response).to receive_messages(status: 404)
-          allow(httpclient).to receive_messages(head: response)
-
-          expect(client.download_uri('not-a-key')).to be_nil
         end
       end
     end

@@ -22,7 +22,7 @@ module VCAP::CloudController
       if @blobstore.local?
         @blob_sender.send_blob(guid, 'AppPackage', blob, self)
       else
-        return [HTTP::FOUND, { 'Location' => blob.download_url }, nil]
+        return [HTTP::FOUND, { 'Location' => blob.public_download_url }, nil]
       end
     end
 
