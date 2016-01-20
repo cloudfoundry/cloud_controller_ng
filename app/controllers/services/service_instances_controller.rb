@@ -201,15 +201,8 @@ module VCAP::CloudController
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
-      # organization_guid is not a column on the table, but we want to be able to filter by it
-      #   we cannot send it directly because super will blow up since it's not in the table
-      #   so we make a subquery from a left join of spaces onto organizations to get space_ids that satisfy the
-      #   condition(s) on organization_guid
-      #   then we call super with the organization_guid filters stripped out, and filter on space_id being a
-      #   row returned by our subquery
-      # we have to do a subquery because otherwise get_filtered_dataset doesn't specify fully-qualified column names
-      #   and throws a database error when executing the query if we request a filter on a column present in
-      #   spaces or organizations (e.g., name) because the column 'name' is ambiguous
+      # special case: Sequel does not support querying columns not on the current table, so
+      # when filtering by org_guid we have to join tables before executing the query.
 
       opts[:q] = [] unless opts[:q]
       org_guids = opts[:q].select { |opt| opt.start_with?('organization_guid') }
@@ -218,9 +211,11 @@ module VCAP::CloudController
 
       if org_guids.empty?
         super(model, ds, qp, opts)
+      elsif unsupported_operators?(org_guids)
+        raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', 'The operators IN, >, <. <=, >= are not supported when filtering by organization_guid.')
       else
         space_ids = Space.select(:spaces__id).left_join(:organizations, id: :spaces__organization_id)
-        for filter in org_guids
+        org_guids.each do |filter|
           org_guid = filter.split(':')[1]
           space_ids = space_ids.where(organizations__guid: org_guid)
         end
@@ -364,6 +359,10 @@ module VCAP::CloudController
 
     def not_found!(guid)
       raise Errors::ApiError.new_from_details('ServiceInstanceNotFound', guid)
+    end
+
+    def unsupported_operators?(org_guids)
+      org_guids.flatten.to_s.match(/organization_guid(\s*IN\s*|<|>)/)
     end
 
     def plan_visible_to_org?(organization, service_plan)

@@ -913,33 +913,59 @@ module VCAP::CloudController
       context 'filtering' do
         let(:first_found_instance) { decoded_response.fetch('resources').first }
 
-        it 'allows filtering by organization_guid' do
-          ManagedServiceInstance.make(name: 'other')
-          org_guid = service_instance.space.organization.guid
+        context 'when filtering by org guid' do
+          context 'when the operator is ":"' do
+            it 'successfully filters' do
+              ManagedServiceInstance.make(name: 'other')
+              org_guid = service_instance.space.organization.guid
 
-          get "v2/service_instances?q=organization_guid:#{org_guid}", {}, headers_for(developer)
+              get "v2/service_instances?q=organization_guid:#{org_guid}", {}, headers_for(developer)
 
-          expect(last_response.status).to eq(200)
-          expect(decoded_response['resources'].length).to eq(1)
-          expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
-        end
+              expect(last_response.status).to eq(200)
+              expect(decoded_response['resources'].length).to eq(1)
+              expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
+            end
 
-        context 'when filtering by organization_guid as well as other parameters' do
-          let(:org1) { Organization.make(name: 'org1') }
-          let(:org2) { Organization.make(name: 'org2') }
-          let(:space1) { Space.make(name: 'space1', organization: org1) }
-          let(:space2) { Space.make(name: 'space2', organization: org2) }
-          let!(:instance_1) { ManagedServiceInstance.make(name: 'the-same-name', space: space1) }
-          let!(:instance_2) { ManagedServiceInstance.make(name: 'a-different-name', space: space1) }
-          let!(:instance_3) { ManagedServiceInstance.make(name: 'the-same-name', space: space2) }
+            context 'when filtering by other parameters as well' do
+              let(:org1) { Organization.make(name: 'org1') }
+              let(:org2) { Organization.make(name: 'org2') }
+              let(:space1) { Space.make(name: 'space1', organization: org1) }
+              let(:space2) { Space.make(name: 'space2', organization: org2) }
+              let!(:instance_1) { ManagedServiceInstance.make(name: 'the-same-name', space: space1) }
+              let!(:instance_2) { ManagedServiceInstance.make(name: 'a-different-name', space: space1) }
+              let!(:instance_3) { ManagedServiceInstance.make(name: 'the-same-name', space: space2) }
 
-          it 'filters by both parameters' do
-            get "v2/service_instances?q=organization_guid:#{org1.guid}&q=name:#{instance_1.name}", {}, json_headers(admin_headers)
+              it 'filters by both parameters' do
+                get "v2/service_instances?q=organization_guid:#{org1.guid}&q=name:#{instance_1.name}", {}, json_headers(admin_headers)
 
-            expect(last_response.status).to eq(200)
-            resources = decoded_response['resources']
-            expect(resources.length).to eq(1)
-            expect(resources[0].fetch('entity').fetch('name')).to eq('the-same-name')
+                expect(last_response.status).to eq(200)
+                resources = decoded_response['resources']
+                expect(resources.length).to eq(1)
+                expect(resources[0].fetch('entity').fetch('name')).to eq('the-same-name')
+              end
+            end
+          end
+
+          context 'when the operator is "IN"' do
+            # let(:org_guid) { Sham.guid }
+            it 'returns an informative error' do
+              get "v2/service_instances?q=organization_guid%20IN%20#{Sham.guid},#{Sham.guid}", {}, headers_for(developer)
+
+              expect(last_response.status).to eq(400)
+              expect(last_response.body).to include('The query parameter is invalid:')
+              expect(last_response.body).to include('The operators IN, >, <. <=, >= are not supported when filtering by organization_guid.')
+            end
+          end
+
+          context 'when the operator is "<" or ">"' do
+            let(:org_guid) { Sham.guid }
+            it 'returns an informative error' do
+              get "v2/service_instances?q=organization_guid>=#{org_guid}", {}, headers_for(developer)
+
+              expect(last_response.status).to eq(400)
+              expect(last_response.body).to include('The query parameter is invalid:')
+              expect(last_response.body).to include('The operators IN, >, <. <=, >= are not supported when filtering by organization_guid.')
+            end
           end
         end
       end
