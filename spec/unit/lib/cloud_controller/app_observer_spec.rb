@@ -18,7 +18,8 @@ module VCAP::CloudController
         needs_staging?: app_needs_staging,
         active?: app_active,
         buildpack_cache_key: key,
-        diego: diego
+        diego: diego,
+        is_v3?: false
       )
     end
     let(:app_started) { false }
@@ -58,6 +59,13 @@ module VCAP::CloudController
         expect(job.queue).to eq('cc-generic')
       end
 
+      it "does NOT delete the app's buildpack cache when the app is a v3 process" do
+        allow(app).to receive(:is_v3?).and_return(true)
+
+        delete_buildpack_cache_jobs = Delayed::Job.where("handler like '%buildpack_cache_blobstore%'")
+        expect { subject }.to_not change { delete_buildpack_cache_jobs.count }
+      end
+
       context 'when the app has no package hash' do
         let(:package_hash) { nil }
 
@@ -76,6 +84,17 @@ module VCAP::CloudController
           job = delete_package_jobs.last
           expect(job.handler).to include(app.guid)
           expect(job.queue).to eq('cc-generic')
+        end
+
+        context 'when the app is a v3 process' do
+          before do
+            allow(app).to receive(:is_v3?).and_return(true)
+          end
+
+          it "does not delete the app's package" do
+            delete_package_jobs = Delayed::Job.where("handler like '%package_blobstore%'")
+            expect { subject }.to_not change { delete_package_jobs.count }
+          end
         end
       end
     end
