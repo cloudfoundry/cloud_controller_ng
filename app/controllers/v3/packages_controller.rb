@@ -146,10 +146,6 @@ class PackagesController < ApplicationController
     raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', operation, message)
   end
 
-  def membership
-    @membership ||= Membership.new(current_user)
-  end
-
   def package_presenter
     @package_presenter ||= PackagePresenter.new
   end

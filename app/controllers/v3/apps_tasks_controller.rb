@@ -38,10 +38,6 @@ class AppsTasksController < ApplicationController
     raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "#{resource.to_s.capitalize} not found")
   end
 
-  def membership
-    @membership ||= VCAP::CloudController::Membership.new(current_user)
-  end
-
   def can_read?(space_guid, org_guid)
     roles.admin? ||
     membership.has_any_roles?([Membership::SPACE_DEVELOPER,

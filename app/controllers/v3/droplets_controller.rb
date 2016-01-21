@@ -64,8 +64,4 @@ class DropletsController < ApplicationController
   def droplet_presenter
     @droplet_presenter ||= DropletPresenter.new
   end
-
-  def membership
-    @membership ||= Membership.new(current_user)
-  end
 end

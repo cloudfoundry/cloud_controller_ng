@@ -58,10 +58,6 @@ class ServiceBindingsController < ApplicationController
     ServiceBindingModelPresenter.new
   end
 
-  def membership
-    @membership ||= Membership.new(current_user)
-  end
-
   def space_guids_for_user
     membership.space_guids_for_roles([VCAP::CloudController::Membership::SPACE_DEVELOPER])
   end

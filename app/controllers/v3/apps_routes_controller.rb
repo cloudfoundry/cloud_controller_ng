@@ -50,10 +50,6 @@ class AppsRoutesController < ApplicationController
 
   private
 
-  def membership
-    @membership ||= Membership.new(current_user)
-  end
-
   def can_read?(space_guid, org_guid)
     roles.admin? ||
       membership.has_any_roles?([Membership::SPACE_DEVELOPER,
