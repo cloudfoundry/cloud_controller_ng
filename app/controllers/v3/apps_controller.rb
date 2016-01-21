@@ -189,15 +189,15 @@ class AppsV3Controller < ApplicationController
   alias_method :can_read_envs?, :can_create?
 
   def droplet_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found')
+    resource_not_found!(:droplet)
   end
 
   def space_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Space not found')
+    resource_not_found!(:space)
   end
 
   def app_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
+    resource_not_found!(:app)
   end
 
   def instances_reporters

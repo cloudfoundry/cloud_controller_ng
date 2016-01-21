@@ -125,4 +125,8 @@ class ApplicationController < ActionController::Base
   def membership
     @membership ||= Membership.new(current_user)
   end
+
+  def resource_not_found!(resource)
+    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "#{resource.to_s.humanize} not found")
+  end
 end

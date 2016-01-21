@@ -29,6 +29,6 @@ class AppsDropletsController < ApplicationController
   end
 
   def app_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
+    resource_not_found!(:app)
   end
 end

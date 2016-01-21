@@ -58,7 +58,7 @@ class DropletsController < ApplicationController
   end
 
   def droplet_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found')
+    resource_not_found!(:droplet)
   end
 
   def droplet_presenter

@@ -30,7 +30,7 @@ class ProcessesController < ApplicationController
   def show
     guid = params[:guid]
     process = ProcessModel.where(guid: guid).eager(:space, :organization).all.first
-    not_found! unless process && can_read?(process.space.guid, process.organization.guid)
+    process_not_found! unless process && can_read?(process.space.guid, process.organization.guid)
     render status: :ok, json: process_presenter.present_json(process)
   end
 
@@ -40,7 +40,7 @@ class ProcessesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     process = ProcessModel.where(guid: guid).eager(:space, :organization).all.first
-    not_found! unless process && can_read?(process.space.guid, process.organization.guid)
+    process_not_found! unless process && can_read?(process.space.guid, process.organization.guid)
     unauthorized! unless can_update?(process.space.guid)
 
     ProcessUpdate.new(current_user, current_user_email).update(process, message)
@@ -53,7 +53,7 @@ class ProcessesController < ApplicationController
   def terminate
     process_guid = params[:guid]
     process = ProcessModel.where(guid: process_guid).eager(:space, :organization).all.first
-    not_found! unless process && can_read?(process.space.guid, process.organization.guid)
+    process_not_found! unless process && can_read?(process.space.guid, process.organization.guid)
     unauthorized! unless can_terminate?(process.space.guid)
 
     index = params[:index].to_i
@@ -71,7 +71,7 @@ class ProcessesController < ApplicationController
     unprocessable!(message.errors.full_messages) if message.invalid?
 
     process, space, org = ProcessScaleFetcher.new.fetch(params[:guid])
-    not_found! unless process && can_read?(space.guid, org.guid)
+    process_not_found! unless process && can_read?(space.guid, org.guid)
     unauthorized! unless can_scale?(space.guid)
 
     ProcessScale.new(current_user, current_user_email).scale(process, message)
@@ -86,7 +86,7 @@ class ProcessesController < ApplicationController
     process = ProcessModel.where(guid: guid).eager(:space).all.first
     process_stats = instances_reporters.stats_for_app(process)
 
-    not_found! unless process && can_stats?(process.space.guid)
+    process_not_found! unless process && can_stats?(process.space.guid)
 
     render status: :ok, json: process_presenter.present_json_stats(process, process_stats, "/v3/processes/#{guid}/stats")
   end
@@ -117,11 +117,11 @@ class ProcessesController < ApplicationController
   alias_method :can_stats?, :can_update?
 
   def instance_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Instance not found')
+    resource_not_found!(:instance)
   end
 
-  def not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')
+  def process_not_found!
+    resource_not_found!(:process)
   end
 
   def instances_reporters

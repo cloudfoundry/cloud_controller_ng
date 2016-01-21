@@ -135,7 +135,7 @@ class PackagesController < ApplicationController
   alias_method :can_upload?, :can_delete?
 
   def package_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found')
+    resource_not_found!(:package)
   end
 
   def bits_already_uploaded!

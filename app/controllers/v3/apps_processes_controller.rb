@@ -99,15 +99,15 @@ class AppsProcessesController < ApplicationController
   alias_method :can_stats?, :can_scale?
 
   def app_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
+    resource_not_found!(:app)
   end
 
   def process_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')
+    resource_not_found!(:process)
   end
 
   def instance_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Instance not found')
+    resource_not_found!(:instance)
   end
 
   def runners

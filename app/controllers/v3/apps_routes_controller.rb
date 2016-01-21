@@ -64,10 +64,10 @@ class AppsRoutesController < ApplicationController
   alias_method :can_delete?, :can_write?
 
   def app_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
+    resource_not_found!(:app)
   end
 
   def route_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Route not found')
+    resource_not_found!(:route)
   end
 end

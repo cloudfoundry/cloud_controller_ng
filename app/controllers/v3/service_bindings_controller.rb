@@ -68,14 +68,14 @@ class ServiceBindingsController < ApplicationController
   alias_method :can_read?, :can_create?
 
   def app_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
+    resource_not_found!(:app)
   end
 
   def service_instance_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Service instance not found')
+    resource_not_found!(:service_instance)
   end
 
   def service_binding_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Service binding not found')
+    resource_not_found!(:service_binding)
   end
 end
