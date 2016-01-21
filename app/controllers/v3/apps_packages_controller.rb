@@ -73,10 +73,6 @@ class AppsPackagesController < ApplicationController
     roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
   end
 
-  def app_not_found!
-    resource_not_found!(:app)
-  end
-
   def package_not_found!
     resource_not_found!(:package)
   end

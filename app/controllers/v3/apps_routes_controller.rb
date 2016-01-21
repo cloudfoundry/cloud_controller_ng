@@ -58,10 +58,6 @@ class AppsRoutesController < ApplicationController
   end
   alias_method :can_delete?, :can_write?
 
-  def app_not_found!
-    resource_not_found!(:app)
-  end
-
   def route_not_found!
     resource_not_found!(:route)
   end

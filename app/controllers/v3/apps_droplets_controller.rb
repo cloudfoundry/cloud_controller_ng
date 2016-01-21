@@ -20,10 +20,4 @@ class AppsDropletsController < ApplicationController
 
     render :ok, json: DropletPresenter.new.present_json_list(paginated_result, "/v3/apps/#{params[:guid]}/droplets", message)
   end
-
-  private
-
-  def app_not_found!
-    resource_not_found!(:app)
-  end
 end

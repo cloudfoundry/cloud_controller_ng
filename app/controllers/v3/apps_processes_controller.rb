@@ -94,10 +94,6 @@ class AppsProcessesController < ApplicationController
   alias_method :can_terminate?, :can_scale?
   alias_method :can_stats?, :can_scale?
 
-  def app_not_found!
-    resource_not_found!(:app)
-  end
-
   def process_not_found!
     resource_not_found!(:process)
   end

@@ -10,6 +10,10 @@ module AppSubresource
 
   private
 
+  def app_not_found!
+    resource_not_found!(:app)
+  end
+
   def can_read?(space_guid, org_guid)
     roles.admin? ||
       membership.has_any_roles?(ROLES_FOR_READING, space_guid, org_guid)

@@ -37,10 +37,6 @@ class AppsTasksController < ApplicationController
 
   private
 
-  def app_not_found!
-    resource_not_found!(:app)
-  end
-
   def task_not_found!
     resource_not_found!(:task)
   end
