@@ -13,7 +13,9 @@ module CloudController
         end
 
         it 'provides a fog client' do
-          expect(ClientProvider.provide(options: options, directory_key: 'key').wrapped_client).to be_a(FogClient)
+          allow(FogClient).to receive(:new).and_call_original
+          ClientProvider.provide(options: options, directory_key: 'key')
+          expect(FogClient).to have_received(:new)
         end
       end
 
@@ -25,7 +27,9 @@ module CloudController
         end
 
         it 'provides a fog client' do
-          expect(ClientProvider.provide(options: options, directory_key: 'key').wrapped_client).to be_a(FogClient)
+          allow(FogClient).to receive(:new).and_call_original
+          ClientProvider.provide(options: options, directory_key: 'key')
+          expect(FogClient).to have_received(:new)
         end
 
         context 'when a cdn is requested in the options' do
@@ -35,9 +39,7 @@ module CloudController
 
           it 'sets up a cdn for the fog client' do
             allow(FogClient).to receive(:new).and_call_original
-
-            expect(ClientProvider.provide(options: options, directory_key: 'key').wrapped_client).to be_a(FogClient)
-
+            ClientProvider.provide(options: options, directory_key: 'key')
             expect(FogClient).to have_received(:new).with(anything, anything, an_instance_of(Cdn), anything, anything, anything)
           end
         end
@@ -61,7 +63,9 @@ module CloudController
         end
 
         it 'provides a webdav client' do
-          expect(ClientProvider.provide(options: options, directory_key: 'key').wrapped_client).to be_a(DavClient)
+          allow(DavClient).to receive(:new).and_call_original
+          ClientProvider.provide(options: options, directory_key: 'key')
+          expect(DavClient).to have_received(:new)
         end
       end
     end

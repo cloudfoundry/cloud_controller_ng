@@ -5,5 +5,11 @@ module CloudController
 
     class BlobstoreError < StandardError
     end
+
+    class ConflictError < StandardError
+    end
+
+    class UnsafeDelete < StandardError
+    end
   end
 end

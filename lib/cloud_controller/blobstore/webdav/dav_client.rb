@@ -6,11 +6,12 @@ require 'cloud_controller/blobstore/webdav/nginx_secure_link_signer'
 module CloudController
   module Blobstore
     class DavClient < BaseClient
-      def initialize(options, directory_key, min_size=nil, max_size=nil)
+      def initialize(options, directory_key, root_dir=nil, min_size=nil, max_size=nil)
         @options       = options
         @directory_key = directory_key
         @min_size      = min_size || 0
         @max_size      = max_size
+        @root_dir      = root_dir
 
         @client = HTTPClient.new
 
@@ -100,36 +101,43 @@ module CloudController
 
       def delete(key)
         response = @client.delete(url(key), header: @headers)
+        return if response.status == 204
 
-        raise FileNotFound.new("Could not find object '#{key}', #{response.status}/#{response.content}") if (response.status == 404)
-        raise BlobstoreError.new("Could not delete object, #{response.status}/#{response.content}") if response.status != 204
+        raise FileNotFound.new("Could not find object '#{key}', #{response.status}/#{response.content}") if response.status == 404
+        raise ConflictError.new("Conflict deleting object '#{key}', #{response.status}/#{response.content}") if response.status == 409
+        raise BlobstoreError.new("Could not delete object, #{response.status}/#{response.content}")
       end
 
       def blob(key)
         response = @client.head(url(key), header: @headers)
-
         return DavBlob.new(httpmessage: response, key: partitioned_key(key), signer: @signer) if response.status == 200
+
         raise BlobstoreError.new("Could not get object, #{response.status}/#{response.content}") if response.status != 404
       end
 
       def delete_blob(blob)
         response = @client.delete(url_from_blob_key(blob.key), header: @headers)
-
         return if response.status == 404
+
         raise BlobstoreError.new("Could not delete object, #{response.status}/#{response.content}") if response.status != 204
       end
 
       def delete_all(_=nil)
-        # TODO: THis seems dangerous and have not added error handling yet
-        response = @client.delete(url(''), header: @headers)
+        url      = url_without_key
+        response = @client.delete(url, header: @headers)
+        return if response.status == 204
 
-        with_retries(5, 'delete-all', {}) do
-          response = @client.request(:mkcol, url(''), nil, nil, @headers)
-          raise 'error' unless response.status == 201
-        end
+        raise FileNotFound.new("Could not find object '#{URI(url).path}', #{response.status}/#{response.content}") if response.status == 404
+        raise BlobstoreError.new("Could not delete all, #{response.status}/#{response.content}")
       end
 
       def delete_all_in_path(path)
+        url      = url(path) + '/'
+        response = @client.delete(url, header: @headers)
+        return if response.status == 204
+
+        raise FileNotFound.new("Could not find object '#{URI(url).path}', #{response.status}/#{response.content}") if response.status == 404
+        raise BlobstoreError.new("Could not delete all in path, #{response.status}/#{response.content}")
       end
 
       def files
@@ -138,12 +146,15 @@ module CloudController
       private
 
       def url(key)
-        key = partitioned_key(key) unless key.blank?
-        [@endpoint, 'admin', @directory_key, key].compact.join('/')
+        [@endpoint, 'admin', @directory_key, partitioned_key(key)].compact.join('/')
       end
 
       def url_from_blob_key(key)
         [@endpoint, 'admin', @directory_key, key].compact.join('/')
+      end
+
+      def url_without_key
+        [@endpoint, 'admin', @directory_key, @root_dir].compact.join('/') + '/'
       end
 
       def logger

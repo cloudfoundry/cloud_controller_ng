@@ -35,9 +35,20 @@ module VCAP::CloudController
             expect { job.perform }.to_not raise_error
           end
 
+          it 'it hides Blobstore::ConflictError if raised by the blob store on deleting the old format of the droplet key' do
+            allow(droplet_blobstore).to receive(:delete).with(new_droplet_key)
+            allow(droplet_blobstore).to receive(:delete).with(old_droplet_key).and_raise CloudController::Blobstore::ConflictError
+            expect { job.perform }.to_not raise_error
+          end
+
           it "it doesn't hide EISDIR if raised for the new droplet key format" do
             allow(droplet_blobstore).to receive(:delete).with(new_droplet_key).and_raise Errno::EISDIR
             expect { job.perform }.to raise_error(Errno::EISDIR, /Is a directory/)
+          end
+
+          it "it doesn't hide Blobstore::ConflictError if raised for the new droplet key format" do
+            allow(droplet_blobstore).to receive(:delete).with(new_droplet_key).and_raise CloudController::Blobstore::ConflictError
+            expect { job.perform }.to raise_error(CloudController::Blobstore::ConflictError)
           end
 
           it "it doesn't hide error other than EISDIR" do

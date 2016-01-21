@@ -16,7 +16,7 @@ module VCAP::CloudController
           blobstore.delete(new_droplet_key)
           begin
             blobstore.delete(old_droplet_key)
-          rescue Errno::EISDIR
+          rescue Errno::EISDIR, CloudController::Blobstore::ConflictError
             # The new droplets are with a path which is under the old droplet path
             # This means that sometimes, if there are multiple versions of a droplet,
             # the directory will still exist after we delete the droplet.

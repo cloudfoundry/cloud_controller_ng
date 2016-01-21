@@ -4,17 +4,18 @@ require_relative '../client_shared'
 module CloudController
   module Blobstore
     describe DavClient do
-      subject(:client) { DavClient.new(options, directory_key) }
+      subject(:client) { DavClient.new(options, directory_key, root_dir) }
       let(:response) { instance_double(HTTP::Message) }
       let(:httpclient) { instance_double(HTTPClient) }
       let(:options) do
         {
           private_endpoint: 'http://localhost',
-          public_endpoint: 'http://localhost.public',
-          secret:   'some-secret'
+          public_endpoint:  'http://localhost.public',
+          secret:           'some-secret'
         }
       end
       let(:directory_key) { 'droplets' }
+      let(:root_dir) { nil }
 
       before do
         allow(HTTPClient).to receive_messages(new: httpclient)
@@ -212,7 +213,7 @@ module CloudController
         end
 
         describe 'file size limits' do
-          subject(:client) { DavClient.new(options, directory_key, min_size, max_size) }
+          subject(:client) { DavClient.new(options, directory_key, root_dir, min_size, max_size) }
           let(:min_size) { 20 }
           let(:max_size) { 50 }
 
@@ -308,7 +309,7 @@ module CloudController
         end
 
         describe 'file size limits' do
-          subject(:client) { DavClient.new(options, directory_key, min_size, max_size) }
+          subject(:client) { DavClient.new(options, directory_key, root_dir, min_size, max_size) }
           let(:min_size) { 20 }
           let(:max_size) { 50 }
 
@@ -413,30 +414,65 @@ module CloudController
 
           expect { client.delete('foobar') }.to raise_error BlobstoreError, /Could not delete object/
         end
+
+        it 'should raise a ConflictError when there is a conflict deleting an object' do
+          allow(response).to receive_messages(status: 409, content: '')
+          expect(httpclient).to receive(:delete).and_return(response)
+
+          expect { client.delete('foobar') }.to raise_error ConflictError, /Conflict deleting object/
+        end
       end
 
       describe '#delete_all' do
-        let(:delete_response) { instance_double(HTTP::Message, status: 204, content: '') }
-        let(:mkcol_response) { instance_double(HTTP::Message, status: 201, content: '') }
+        let(:root_dir) { 'buildpack_cache' }
 
-        it 'deletes the collection and then recreates the collection' do
-          allow(delete_response).to receive_messages(status: 404, content: 'Not Found')
-          allow(httpclient).to receive(:delete).and_return(delete_response)
-          allow(httpclient).to receive(:request).and_return(mkcol_response)
-
+        it 'deletes the collection' do
+          allow(httpclient).to receive(:delete).and_return(instance_double(HTTP::Message, status: 204, content: ''))
           client.delete_all
+          expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/buildpack_cache/', header: {})
+        end
 
-          expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/', header: {})
-          expect(httpclient).to have_received(:request) do |*args|
-            method, uri, _, _, headers = args
-            expect(method).to eq(:mkcol)
-            expect(uri).to eq('http://localhost/admin/droplets/')
-            expect(headers).to eq({})
-          end
+        it 'raises FileNotfound when the server returns 404' do
+          allow(httpclient).to receive(:delete).and_return(instance_double(HTTP::Message, status: 404, content: ''))
+          expect {
+            client.delete_all
+          }.to raise_error(FileNotFound, /Could not find object/)
+          expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/buildpack_cache/', header: {})
+        end
+
+        it 'raises an error when the server returns any other code' do
+          allow(httpclient).to receive(:delete).and_return(instance_double(HTTP::Message, status: 500, content: ''))
+          expect {
+            client.delete_all
+          }.to raise_error(BlobstoreError, /Could not delete all/)
+          expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/buildpack_cache/', header: {})
         end
       end
 
       describe '#delete_all_in_path' do
+        let(:root_dir) { 'buildpack_cache' }
+
+        it 'deletes the collection' do
+          allow(httpclient).to receive(:delete).and_return(instance_double(HTTP::Message, status: 204, content: ''))
+          client.delete_all_in_path('foobar')
+          expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/buildpack_cache/fo/ob/foobar/', header: {})
+        end
+
+        it 'raises FileNotfound when the server returns 404' do
+          allow(httpclient).to receive(:delete).and_return(instance_double(HTTP::Message, status: 404, content: ''))
+          expect {
+            client.delete_all_in_path('foobar')
+          }.to raise_error(FileNotFound, /Could not find object/)
+          expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/buildpack_cache/fo/ob/foobar/', header: {})
+        end
+
+        it 'raises an error when the server returns any other code' do
+          allow(httpclient).to receive(:delete).and_return(instance_double(HTTP::Message, status: 500, content: ''))
+          expect {
+            client.delete_all_in_path('foobar')
+          }.to raise_error(BlobstoreError, /Could not delete all in path/)
+          expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/buildpack_cache/fo/ob/foobar/', header: {})
+        end
       end
 
       describe '#blob' do
@@ -484,6 +520,18 @@ module CloudController
 
           expect { client.delete_blob(blob) }.not_to raise_error
           expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/fo/ob/foobar', header: {})
+        end
+      end
+
+      context 'when root_dir is configured' do
+        let(:root_dir) { 'root_dir' }
+
+        it 'includes it in the key' do
+          allow(response).to receive_messages(status: 200)
+          allow(httpclient).to receive_messages(head: response)
+
+          expect(client.exists?('foobar')).to be(true)
+          expect(httpclient).to have_received(:head).with('http://localhost/admin/droplets/root_dir/fo/ob/foobar', header: {})
         end
       end
     end

@@ -1,6 +1,7 @@
 require 'cloud_controller/blobstore/client'
 require 'cloud_controller/blobstore/fog/fog_client'
 require 'cloud_controller/blobstore/webdav/dav_client'
+require 'cloud_controller/blobstore/safe_delete_client'
 
 module CloudController
   module Blobstore
@@ -13,34 +14,37 @@ module CloudController
         end
       end
 
-      def self.provide_fog(options, directory_key, root_dir)
-        cdn_uri = options[:cdn].try(:[], :uri)
-        cdn     = CloudController::Blobstore::Cdn.make(cdn_uri)
+      class << self
+        private
 
-        client = FogClient.new(
-          options.fetch(:fog_connection),
-          directory_key,
-          cdn,
-          root_dir,
-          options[:minimum_size],
-          options[:maximum_size]
-        )
+        def provide_fog(options, directory_key, root_dir)
+          cdn_uri = options[:cdn].try(:[], :uri)
+          cdn     = CloudController::Blobstore::Cdn.make(cdn_uri)
 
-        Client.new(client)
+          client = FogClient.new(
+            options.fetch(:fog_connection),
+            directory_key,
+            cdn,
+            root_dir,
+            options[:minimum_size],
+            options[:maximum_size]
+          )
+
+          Client.new(SafeDeleteClient.new(client, root_dir))
+        end
+
+        def provide_webdav(options, directory_key, root_dir)
+          client = DavClient.new(
+            options.fetch(:webdav_config),
+            directory_key,
+            root_dir,
+            options[:minimum_size],
+            options[:maximum_size]
+          )
+
+          Client.new(SafeDeleteClient.new(client, root_dir))
+        end
       end
-      private_class_method :provide_fog
-
-      def self.provide_webdav(options, directory_key, root_dir)
-        client = DavClient.new(
-          options.fetch(:webdav_config),
-          directory_key,
-          options[:minimum_size],
-          options[:maximum_size]
-        )
-
-        Client.new(client)
-      end
-      private_class_method :provide_webdav
     end
   end
 end
