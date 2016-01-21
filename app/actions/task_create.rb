@@ -1,7 +1,8 @@
 module VCAP::CloudController
   class TaskCreate
     class InvalidTask < StandardError; end
-    class NoAssignedDroplet < StandardError; end
+    class TaskCreateError < StandardError; end
+    class NoAssignedDroplet < TaskCreateError; end
 
     def create(app, message)
       no_assigned_droplet! unless app.droplet

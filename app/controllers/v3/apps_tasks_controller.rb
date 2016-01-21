@@ -20,7 +20,7 @@ class AppsTasksController < ApplicationController
 
     task = TaskCreate.new.create(app, message)
     render status: :accepted, json: TaskPresenter.new.present_json(task)
-  rescue TaskCreate::InvalidTask, TaskCreate::NoAssignedDroplet => e
+  rescue TaskCreate::InvalidTask, TaskCreate::TaskCreateError => e
     unprocessable!(e)
   end
 
