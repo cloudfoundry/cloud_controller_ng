@@ -58,12 +58,19 @@ describe AppsTasksController, type: :controller do
       context 'when the task_creation feature flag is disabled' do
         let(:enabled) { false }
 
-        it 'raises 403' do
+        it 'raises 403 for non-admins' do
           post :create, guid: app_model.guid, body: req_body
 
           expect(response.status).to eq(403)
           expect(response.body).to include('FeatureDisabled')
           expect(response.body).to include('task_creation')
+        end
+
+        it 'succeeds for admins' do
+          @request.env.merge!(admin_headers)
+          post :create, guid: app_model.guid, body: req_body
+
+          expect(response.status).to eq(202)
         end
       end
 

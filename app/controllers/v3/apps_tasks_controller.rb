@@ -8,7 +8,7 @@ class AppsTasksController < ApplicationController
   include AppSubresource
 
   def create
-    FeatureFlag.raise_unless_enabled!('task_creation')
+    FeatureFlag.raise_unless_enabled!('task_creation') unless roles.admin?
     message = TaskCreateMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
