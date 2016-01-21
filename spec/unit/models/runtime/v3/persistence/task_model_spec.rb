@@ -56,6 +56,19 @@ module VCAP::CloudController
         end
       end
 
+      describe 'command' do
+        it 'can be <= 4096 characters' do
+          task.command = 'a' * 4096
+          expect(task).to be_valid
+        end
+
+        it 'cannot be > 4096 characters' do
+          task.command = 'a' * 4097
+          expect(task).to_not be_valid
+          expect(task.errors.full_messages).to include('command must be shorter than 4097 characters')
+        end
+      end
+
       describe 'presence' do
         it 'must have an app' do
           expect { TaskModel.make(name: 'name',

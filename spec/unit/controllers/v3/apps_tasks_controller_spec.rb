@@ -151,11 +151,25 @@ describe AppsTasksController, type: :controller do
       end
     end
 
+    context 'when there is a validation failure' do
+      it 'returns a 422 and a helpful error' do
+        stub_const('VCAP::CloudController::TaskModel::COMMAND_MAX_LENGTH', 6)
+        req_body.merge! command: 'a' * 7
+
+        post :create, guid: app_model.guid, body: req_body
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include 'The request is semantically invalid: command must be shorter than 7 characters'
+      end
+    end
+
     context 'invalid task' do
       it 'returns a useful error message' do
         post :create, guid: app_model.guid, body: {}
 
         expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
       end
     end
   end

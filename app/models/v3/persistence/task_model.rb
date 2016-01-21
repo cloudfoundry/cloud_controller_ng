@@ -4,6 +4,7 @@ module VCAP::CloudController
     TASK_STATES = [
       RUNNING_STATE = 'RUNNING'
     ].map(&:freeze).freeze
+    COMMAND_MAX_LENGTH = 4096.freeze
 
     many_to_one :app, class: 'VCAP::CloudController::AppModel'
     many_to_one :droplet, class: 'VCAP::CloudController::DropletModel'
@@ -17,6 +18,8 @@ module VCAP::CloudController
 
       validates_presence :app
       validates_presence :command
+      validates_max_length COMMAND_MAX_LENGTH, :command,
+        message: "must be shorter than #{COMMAND_MAX_LENGTH + 1} characters"
       validates_presence :droplet
       validates_presence :name
     end
