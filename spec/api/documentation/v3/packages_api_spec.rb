@@ -372,11 +372,13 @@ resource 'Packages (Experimental)', type: :api do
         Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
       eos
 
-      client.get "/v3/packages/#{guid}", {}, headers
-      do_request_with_error_handling
+      Timecop.freeze do
+        client.get "/v3/packages/#{guid}", {}, headers
+        do_request_with_error_handling
 
-      expect(response_status).to eq(302)
-      expect(response_headers['Location']).to eq(bits_download_url)
+        expect(response_status).to eq(302)
+        expect(response_headers['Location']).to eq(bits_download_url)
+      end
     end
   end
 
