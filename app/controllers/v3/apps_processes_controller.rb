@@ -1,4 +1,8 @@
+require 'controllers/v3/mixins/app_subresource'
+
 class AppsProcessesController < ApplicationController
+  include AppSubresource
+
   def index
     message = ProcessesListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
@@ -81,14 +85,6 @@ class AppsProcessesController < ApplicationController
 
   def process_presenter
     ProcessPresenter.new
-  end
-
-  def can_read?(space_guid, org_guid)
-    roles.admin? ||
-    membership.has_any_roles?([Membership::SPACE_DEVELOPER,
-                               Membership::SPACE_MANAGER,
-                               Membership::SPACE_AUDITOR,
-                               Membership::ORG_MANAGER], space_guid, org_guid)
   end
 
   def can_scale?(space_guid)

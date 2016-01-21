@@ -4,8 +4,11 @@ require 'queries/delete_route_fetcher'
 require 'actions/add_route_to_app'
 require 'actions/remove_route_from_app'
 require 'presenters/v3/route_presenter'
+require 'controllers/v3/mixins/app_subresource'
 
 class AppsRoutesController < ApplicationController
+  include AppSubresource
+
   def index
     app_guid = params[:guid]
 
@@ -49,14 +52,6 @@ class AppsRoutesController < ApplicationController
   end
 
   private
-
-  def can_read?(space_guid, org_guid)
-    roles.admin? ||
-      membership.has_any_roles?([Membership::SPACE_DEVELOPER,
-                                 Membership::SPACE_MANAGER,
-                                 Membership::SPACE_AUDITOR,
-                                 Membership::ORG_MANAGER], space_guid, org_guid)
-  end
 
   def can_write?(space_guid)
     roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)

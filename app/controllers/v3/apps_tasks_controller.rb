@@ -2,8 +2,11 @@ require 'queries/app_fetcher'
 require 'actions/task_create'
 require 'messages/task_create_message'
 require 'presenters/v3/task_presenter'
+require 'controllers/v3/mixins/app_subresource'
 
 class AppsTasksController < ApplicationController
+  include AppSubresource
+
   def create
     FeatureFlag.raise_unless_enabled!('task_creation')
     message = TaskCreateMessage.new(params[:body])
@@ -40,14 +43,6 @@ class AppsTasksController < ApplicationController
 
   def task_not_found!
     resource_not_found!(:task)
-  end
-
-  def can_read?(space_guid, org_guid)
-    roles.admin? ||
-    membership.has_any_roles?([Membership::SPACE_DEVELOPER,
-                               Membership::SPACE_MANAGER,
-                               Membership::SPACE_AUDITOR,
-                               Membership::ORG_MANAGER], space_guid, org_guid)
   end
 
   def can_create?(space_guid)

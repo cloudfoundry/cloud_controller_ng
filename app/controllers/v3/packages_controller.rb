@@ -8,8 +8,11 @@ require 'actions/package_upload'
 require 'messages/package_upload_message'
 require 'messages/droplet_create_message'
 require 'messages/packages_list_message'
+require 'controllers/v3/mixins/app_subresource'
 
 class PackagesController < ApplicationController
+  include AppSubresource
+
   before_action :check_read_permissions!, only: [:index, :show, :download]
 
   def index
@@ -117,16 +120,6 @@ class PackagesController < ApplicationController
   end
 
   private
-
-  def can_read?(space_guid, org_guid)
-    roles.admin? ||
-    membership.has_any_roles?(
-      [Membership::SPACE_DEVELOPER,
-       Membership::SPACE_MANAGER,
-       Membership::SPACE_AUDITOR,
-       Membership::ORG_MANAGER],
-      space_guid, org_guid)
-  end
 
   def can_delete?(space_guid)
     roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)

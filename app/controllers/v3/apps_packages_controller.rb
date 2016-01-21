@@ -1,8 +1,11 @@
 require 'messages/package_create_message'
 require 'actions/package_create'
 require 'actions/package_copy'
+require 'controllers/v3/mixins/app_subresource'
 
 class AppsPackagesController < ApplicationController
+  include AppSubresource
+
   def create_new
     app_guid = params[:guid]
 
@@ -65,14 +68,6 @@ class AppsPackagesController < ApplicationController
   end
 
   private
-
-  def can_read?(space_guid, org_guid)
-    roles.admin? ||
-    membership.has_any_roles?([Membership::SPACE_DEVELOPER,
-                               Membership::SPACE_MANAGER,
-                               Membership::SPACE_AUDITOR,
-                               Membership::ORG_MANAGER], space_guid, org_guid)
-  end
 
   def can_create?(space_guid)
     roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)

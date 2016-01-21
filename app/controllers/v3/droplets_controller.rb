@@ -6,12 +6,7 @@ require 'messages/droplets_list_message'
 require 'cloud_controller/membership'
 
 class DropletsController < ApplicationController
-  ROLES_FOR_READING =  [
-    Membership::SPACE_DEVELOPER,
-    Membership::SPACE_MANAGER,
-    Membership::SPACE_AUDITOR,
-    Membership::ORG_MANAGER
-  ].freeze
+  include AppSubresource
 
   def index
     message = DropletsListMessage.from_params(query_params)
@@ -48,10 +43,6 @@ class DropletsController < ApplicationController
   end
 
   private
-
-  def can_read?(space_guid, org_guid)
-    roles.admin? || membership.has_any_roles?(ROLES_FOR_READING, space_guid, org_guid)
-  end
 
   def can_delete?(space_guid)
     roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
