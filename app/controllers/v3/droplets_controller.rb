@@ -4,6 +4,7 @@ require 'actions/droplet_delete'
 require 'queries/droplet_list_fetcher'
 require 'messages/droplets_list_message'
 require 'cloud_controller/membership'
+require 'app/controllers/v3/mixins/app_subresource'
 
 class DropletsController < ApplicationController
   include AppSubresource
