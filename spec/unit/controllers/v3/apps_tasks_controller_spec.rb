@@ -32,10 +32,14 @@ describe AppsTasksController, type: :controller do
         "command": 'rake db:migrate && true',
       }
     end
+    let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
 
     before do
       app_model.droplet = droplet
       app_model.save
+
+      allow(VCAP::CloudController::Diego::NsyncClient).to receive(:new).and_return(client)
+      allow(client).to receive(:run_task).and_return(nil)
     end
 
     it 'returns a 202 and the task' do
@@ -43,6 +47,7 @@ describe AppsTasksController, type: :controller do
 
       expect(response.status).to eq 202
       expect(JSON.parse(response.body)).to include('name' => 'mytask')
+      expect(JSON.parse(response.body)['state']).to eq('RUNNING')
     end
 
     it 'creates a task for the app' do

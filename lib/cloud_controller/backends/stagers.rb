@@ -12,7 +12,7 @@ require 'cloud_controller/diego/docker/staging_completion_handler'
 require 'cloud_controller/diego/egress_rules'
 require 'cloud_controller/diego/v3/stager'
 require 'cloud_controller/diego/v3/messenger'
-require 'cloud_controller/diego/v3/protocol'
+require 'cloud_controller/diego/v3/protocol/app_protocol'
 
 module VCAP::CloudController
   class Stagers
@@ -43,7 +43,7 @@ module VCAP::CloudController
     end
 
     def stager_for_package(package, lifecycle_type)
-      protocol           = Diego::V3::Protocol.new(diego_package_lifecycle_protocol(lifecycle_type), Diego::EgressRules.new)
+      protocol           = Diego::V3::Protocol::AppProtocol.new(diego_package_lifecycle_protocol(lifecycle_type), Diego::EgressRules.new)
       completion_handler = diego_package_completion_handler(lifecycle_type)
       Diego::V3::Stager.new(package, v3_messenger_for_protocol(protocol), completion_handler, @config)
     end

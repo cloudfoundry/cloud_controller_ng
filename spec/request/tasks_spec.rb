@@ -19,10 +19,15 @@ describe 'Tasks' do
   let!(:droplet) do
     VCAP::CloudController::DropletModel.make(
       app_guid: app_model.guid,
-      state: VCAP::CloudController::DropletModel::STAGED_STATE)
+      state: VCAP::CloudController::DropletModel::STAGED_STATE,
+      droplet_hash: 'droplet-hash'
+    )
   end
 
   before do
+    allow(ApplicationController).to receive(:configuration).and_return(TestConfig.config)
+    stub_request(:put, 'http://nsync.service.cf.internal:8787/v1/task').to_return(status: 202)
+
     VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: true, error_message: nil)
 
     app_model.droplet = droplet

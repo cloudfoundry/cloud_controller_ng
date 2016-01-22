@@ -568,6 +568,21 @@
   http_code: 422
   message: "Only one package can be staged at a time per application."
 
+170018:
+  name: InvalidTaskAddress
+  http_code: 500
+  message: "Invalid config: %s"
+
+170019:
+  name: TaskError
+  http_code: 500
+  message: "task failed: %s"
+
+170020:
+  name: TaskWorkersUnavailable
+  http_code: 503
+  message: "Task workers are unavailable: %s"
+
 180002:
   name: ServiceGatewayError
   http_code: 503

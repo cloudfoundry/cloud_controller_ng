@@ -3,6 +3,7 @@ require 'actions/task_create'
 require 'messages/task_create_message'
 require 'presenters/v3/task_presenter'
 require 'controllers/v3/mixins/app_subresource'
+require 'cloud_controller/diego/nsync_client'
 
 class AppsTasksController < ApplicationController
   include AppSubresource
@@ -18,7 +19,10 @@ class AppsTasksController < ApplicationController
     app_not_found! unless app && can_read?(app.space.guid, app.space.organization.guid)
     unauthorized! unless can_create?(app.space.guid)
 
-    task = TaskCreate.new.create(app, message)
+    task     = TaskCreate.new.create(app, message)
+    diego_task_runner = VCAP::CloudController::Diego::NsyncClient.new(configuration)
+    diego_task_runner.run_task(task)
+
     render status: :accepted, json: TaskPresenter.new.present_json(task)
   rescue TaskCreate::InvalidTask, TaskCreate::TaskCreateError => e
     unprocessable!(e)

@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'cloud_controller/diego/v3/protocol'
+require 'cloud_controller/diego/v3/protocol/app_protocol'
 require 'cloud_controller/diego/v3/messenger'
 
 module VCAP::CloudController
@@ -8,7 +8,7 @@ module VCAP::CloudController
       describe Messenger do
         let(:stager_client) { instance_double(StagerClient) }
         let(:config) { TestConfig.config }
-        let(:protocol) { instance_double(V3::Protocol) }
+        let(:protocol) { instance_double(V3::Protocol::AppProtocol) }
         let(:default_health_check_timeout) { 9999 }
 
         let(:package) { PackageModel.make }
