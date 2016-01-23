@@ -82,6 +82,8 @@ module VCAP::CloudController
     end
 
     def run!
+      create_pidfile
+
       EM.run do
         begin
           message_bus = MessageBus::Configurer.new(servers: @config[:message_bus_servers], logger: logger).go
@@ -145,8 +147,6 @@ module VCAP::CloudController
     private
 
     def start_cloud_controller(message_bus)
-      create_pidfile
-
       setup_logging
       setup_db
       Config.configure_components(@config)
