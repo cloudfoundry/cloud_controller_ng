@@ -68,11 +68,25 @@ module VCAP::CloudController
           end
         end
 
+        context 'host is empty in request' do
+          let(:host) { '' }
+          it 'does not raise an error' do
+            expect { validator.validate }.not_to raise_error
+          end
+        end
+
         context 'path is included in request' do
           let(:path) { '/fake/path' }
           it 'raises a RouteInvalid error' do
             expect { validator.validate }.
                 to raise_error(RouteValidator::RouteInvalid, 'Host and path are not supported, as domain belongs to a TCP router group.')
+          end
+        end
+
+        context 'path is empty in request' do
+          let(:path) { '' }
+          it 'does not raise an error' do
+            expect { validator.validate }.not_to raise_error
           end
         end
 

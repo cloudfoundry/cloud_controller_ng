@@ -51,7 +51,7 @@ module VCAP::CloudController
     end
 
     def validate_path_not_included
-      unless path.nil?
+      unless path.blank?
         raise RouteInvalid.new('Host and path are not supported, as domain belongs to a TCP router group.')
       end
     end
