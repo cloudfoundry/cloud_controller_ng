@@ -1576,6 +1576,51 @@ module VCAP::CloudController
       context 'for a started app' do
         before { app.update(state: 'STARTED') }
 
+        context 'when lazily backfilling default port values' do
+          before do
+            # Need to get the app in a state where diego is true but ports are
+            # nil. This would only occur on deployments that existed before we
+            # added the default port value.
+            default_ports = VCAP::CloudController::App::DEFAULT_PORTS
+            stub_const('VCAP::CloudController::App::DEFAULT_PORTS', nil)
+            app.update(diego: true)
+            stub_const('VCAP::CloudController::App::DEFAULT_PORTS', default_ports)
+          end
+
+          context 'when changing fields that do not update the version' do
+            it 'does not update the version' do
+              app.instances = 3
+
+              expect {
+                app.save
+                app.reload
+              }.not_to change { app.version }
+            end
+          end
+
+          context 'when changing a fields that updates the version' do
+            it 'updates the version' do
+              app.memory = 17
+
+              expect {
+                app.save
+                app.reload
+              }.to change { app.version }
+            end
+          end
+
+          context 'when the user updates the port' do
+            it 'updates the version' do
+              app.ports = [1753]
+
+              expect {
+                app.save
+                app.reload
+              }.to change { app.version }
+            end
+          end
+        end
+
         it 'should update the version when changing :memory' do
           app.memory = 2048
           expect { app.save }.to change(app, :version)
@@ -2251,7 +2296,37 @@ module VCAP::CloudController
 
     describe 'updating' do
       context 'switching from diego to dea' do
-        let(:app) { App.create_from_hash(name: 'test', space_guid: space.guid, diego: true, ports: [2345]) }
+        let(:app_hash) do
+          {
+            name: 'test',
+            package_hash: 'abc',
+            package_state: 'STAGED',
+            state: 'STARTED',
+            space_guid: space.guid,
+            diego: true,
+            ports: [2345]
+          }
+        end
+        let(:app) { AppFactory.make(app_hash) }
+
+        it 'should not update the version' do
+          app.diego = false
+
+          expect {
+            app.save
+            app.reload
+          }.not_to change { app.version }
+        end
+
+        it 'should update the version when the user updates a version-updating field' do
+          app.diego = false
+          app.memory = 17
+
+          expect {
+            app.save
+            app.reload
+          }.to change { app.version }
+        end
 
         context 'no ports are specified' do
           before do

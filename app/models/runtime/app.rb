@@ -149,6 +149,7 @@ module VCAP::CloudController
 
     def before_validation
       # column_changed?(:ports) reports false here for reasons unknown
+      @ports_changed_by_user = changed_columns.include?(:ports)
       update_ports(nil) if changed_from_diego_to_dea && !changed_columns.include?(:ports)
       super
     end
@@ -163,7 +164,7 @@ module VCAP::CloudController
       self.disk_quota ||= Config.config[:default_app_disk_in_mb]
       self.enable_ssh = Config.config[:allow_app_ssh_access] && space.allow_ssh if enable_ssh.nil?
 
-      update_ports(DEFAULT_PORTS) if diego && (ports.nil? || ports.empty?)
+      update_ports(DEFAULT_PORTS) if diego && ports.blank?
 
       if Config.config[:instance_file_descriptor_limit]
         self.file_descriptors ||= Config.config[:instance_file_descriptor_limit]
@@ -185,7 +186,7 @@ module VCAP::CloudController
       # * memory is changed
       # * health check type is changed
       # * enable_ssh is changed
-      # * ports are changed
+      # * ports were changed by the user
       #
       # this is to indicate that the running state of an application has changed,
       # and that the system should converge on this new version.
@@ -194,7 +195,7 @@ module VCAP::CloudController
        column_changed?(:memory) ||
        column_changed?(:health_check_type) ||
        column_changed?(:enable_ssh) ||
-       changed_columns.include?(:ports)
+       @ports_changed_by_user
       ) && started?
     end
 
