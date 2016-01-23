@@ -25,6 +25,7 @@ export NEW_RELIC_ENV=<%= p("cc.newrelic.environment_name") %>_background
 export NEW_RELIC_DISPATCHER=delayed_job
 
 source /var/vcap/packages/common/utils.sh
+source $CC_JOB_DIR/bin/blobstore_waiter.sh
 
 case $1 in
 
@@ -39,6 +40,8 @@ case $1 in
 
     echo $$ > $PIDFILE
     chown vcap:vcap $PIDFILE
+
+    wait_for_blobstore
 
     cd $CC_PACKAGE_DIR/cloud_controller_ng
     

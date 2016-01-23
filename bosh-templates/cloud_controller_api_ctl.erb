@@ -41,6 +41,7 @@ export NRCONFIG=$CONFIG_DIR/newrelic.yml
 export NEW_RELIC_ENV=<%= p("cc.newrelic.environment_name") %>
 
 source /var/vcap/packages/common/utils.sh
+source $CC_JOB_DIR/bin/blobstore_waiter.sh
 
 case $1 in
 
@@ -55,24 +56,7 @@ case $1 in
 
     pid_guard $PIDFILE "Cloud controller ng"
 
-    <% if properties.nfs_server.address %>
-    export NFS_SHARE=<%= p('nfs_server.share_path') %>
-
-    echo "Checking for nfs to be mounted"
-
-    nfs_check_attempts=0
-    while [[ ! -f $NFS_SHARE/shared/.nfs_test ]]; do
-      sleep 0.1
-      nfs_check_attempts=$((nfs_check_attempts+1))
-
-      if [[ $nfs_check_attempts -eq 300 ]]; then
-        echo "Failed to find nfs mount"
-        exit 1
-      fi
-    done
-
-    echo "nfs is mounted"
-    <% end %>
+    wait_for_blobstore
 
     <% if_p("cc.directories.diagnostics") do |diag_dir| %>
     mkdir -p <%= diag_dir %>
