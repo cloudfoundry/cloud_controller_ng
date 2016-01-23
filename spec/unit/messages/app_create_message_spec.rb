@@ -32,12 +32,12 @@ module VCAP::CloudController
         expect(message.environment_variables).to eq({ 'ENVVAR' => 'env-val' })
         expect(message.relationships).to eq({ 'space' => { 'guid' => 'some-guid' } })
         expect(message.lifecycle).to eq(
-            { 'type' => 'buildpack',
-              'data' => {
-                'buildpack' => 'some-buildpack',
-                'stack' => 'some-stack'
-              }
-            })
+          { 'type' => 'buildpack',
+            'data' => {
+              'buildpack' => 'some-buildpack',
+              'stack' => 'some-stack'
+            }
+          })
       end
 
       it 'converts requested keys to symbols' do

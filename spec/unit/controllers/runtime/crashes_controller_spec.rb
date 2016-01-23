@@ -34,7 +34,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
           expect(MultiJson.load(last_response.body)).to eq(expected)
           expect(instances_reporters).to have_received(:crashed_instances_for_app).with(
-                                          satisfy { |requested_app| requested_app.guid == @app.guid })
+            satisfy { |requested_app| requested_app.guid == @app.guid })
         end
       end
 

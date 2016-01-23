@@ -90,13 +90,13 @@ module VCAP::CloudController
           expect(event.actor_name).to eq(user_email)
           request = event.metadata.fetch('request')
           expect(request).to eq(
-                               'name' => 'new',
-                               'instances' => 1,
-                               'memory' => 84,
-                               'state' => 'STOPPED',
-                               'environment_json' => 'PRIVATE DATA HIDDEN',
-                               'docker_credentials_json' => 'PRIVATE DATA HIDDEN',
-                             )
+            'name' => 'new',
+            'instances' => 1,
+            'memory' => 84,
+            'state' => 'STOPPED',
+            'environment_json' => 'PRIVATE DATA HIDDEN',
+            'docker_credentials_json' => 'PRIVATE DATA HIDDEN',
+          )
         end
 
         it 'logs the event' do
@@ -377,10 +377,10 @@ module VCAP::CloudController
             expect(event.actee_type).to eq('v3-app')
             request = event.metadata.fetch('request')
             expect(request).to eq(
-                'name' => 'new',
-                'space_guid' => 'space-guid',
-                'environment_variables' => 'PRIVATE DATA HIDDEN',
-              )
+              'name' => 'new',
+              'space_guid' => 'space-guid',
+              'environment_variables' => 'PRIVATE DATA HIDDEN',
+            )
           end
         end
 

@@ -14,9 +14,9 @@ module VCAP::CloudController
     describe '#as_summary_json' do
       it 'returns a hash containing the guid and name' do
         expect(subject.as_summary_json).to eq(
-                                             guid: subject.guid,
-                                             name: 'test.example.com',
-                                             router_group_guid: 'my-router-group-guid')
+          guid: subject.guid,
+          name: 'test.example.com',
+          router_group_guid: 'my-router-group-guid')
       end
     end
 

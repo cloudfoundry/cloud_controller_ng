@@ -65,11 +65,11 @@ EOF
 
       example 'Creating a Route' do
         body = MultiJson.dump(
-            required_fields.merge(
-                domain_guid: domain.guid,
-                space_guid: space.guid,
-                port: 10000
-            ), pretty: true
+          required_fields.merge(
+            domain_guid: domain.guid,
+            space_guid: space.guid,
+            port: 10000
+          ), pretty: true
         )
         client.post '/v2/routes', body, headers
         expect(status).to eq(201)
@@ -85,9 +85,9 @@ EOF
 
       example 'Update a Route' do
         body = MultiJson.dump(
-            {
-                port: 10000
-            }, pretty: true
+          {
+              port: 10000
+          }, pretty: true
         )
         client.put "/v2/routes/#{guid}", body, headers
 

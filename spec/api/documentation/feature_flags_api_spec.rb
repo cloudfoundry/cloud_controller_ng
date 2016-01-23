@@ -28,47 +28,47 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       expect(parsed_response.length).to eq(10)
       expect(parsed_response).to include(
-          {
-            'name'          => 'user_org_creation',
-            'enabled'       => false,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/user_org_creation'
-          })
+        {
+          'name'          => 'user_org_creation',
+          'enabled'       => false,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/user_org_creation'
+        })
       expect(parsed_response).to include(
-          {
-            'name'          => 'app_bits_upload',
-            'enabled'       => true,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/app_bits_upload'
-          })
+        {
+          'name'          => 'app_bits_upload',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/app_bits_upload'
+        })
       expect(parsed_response).to include(
-          {
-            'name'          => 'app_scaling',
-            'enabled'       => true,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/app_scaling'
-          })
+        {
+          'name'          => 'app_scaling',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/app_scaling'
+        })
       expect(parsed_response).to include(
-          {
-            'name'          => 'private_domain_creation',
-            'enabled'       => false,
-            'error_message' => 'foobar',
-            'url'           => '/v2/config/feature_flags/private_domain_creation'
-          })
+        {
+          'name'          => 'private_domain_creation',
+          'enabled'       => false,
+          'error_message' => 'foobar',
+          'url'           => '/v2/config/feature_flags/private_domain_creation'
+        })
       expect(parsed_response).to include(
-          {
-            'name'          => 'route_creation',
-            'enabled'       => true,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/route_creation'
-          })
+        {
+          'name'          => 'route_creation',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/route_creation'
+        })
       expect(parsed_response).to include(
-          {
-            'name'          => 'service_instance_creation',
-            'enabled'       => true,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/service_instance_creation'
-          })
+        {
+          'name'          => 'service_instance_creation',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/service_instance_creation'
+        })
       expect(parsed_response).to include({
             'name' => 'set_roles_by_username',
             'enabled' => true,
@@ -110,12 +110,12 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
 
       expect(status).to eq(200)
       expect(parsed_response).to eq(
-          {
-            'name'          => 'unset_roles_by_username',
-            'enabled'       => true,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/unset_roles_by_username'
-          })
+        {
+          'name'          => 'unset_roles_by_username',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/unset_roles_by_username'
+        })
     end
   end
 
@@ -132,12 +132,12 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
 
       expect(status).to eq(200)
       expect(parsed_response).to eq(
-          {
-            'name'          => 'set_roles_by_username',
-            'enabled'       => true,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/set_roles_by_username'
-          })
+        {
+          'name'          => 'set_roles_by_username',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/set_roles_by_username'
+        })
     end
   end
 
@@ -148,12 +148,12 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
 
       expect(status).to eq(200)
       expect(parsed_response).to eq(
-          {
-            'name'          => 'app_bits_upload',
-            'enabled'       => true,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/app_bits_upload'
-          })
+        {
+          'name'          => 'app_bits_upload',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/app_bits_upload'
+        })
     end
   end
 
@@ -164,12 +164,12 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
 
       expect(status).to eq(200)
       expect(parsed_response).to eq(
-          {
-            'name'          => 'app_scaling',
-            'enabled'       => true,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/app_scaling'
-          })
+        {
+          'name'          => 'app_scaling',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/app_scaling'
+        })
     end
   end
 
@@ -180,12 +180,12 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
 
       expect(status).to eq(200)
       expect(parsed_response).to eq(
-          {
-            'name'          => 'user_org_creation',
-            'enabled'       => false,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/user_org_creation'
-          })
+        {
+          'name'          => 'user_org_creation',
+          'enabled'       => false,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/user_org_creation'
+        })
     end
   end
 
@@ -196,12 +196,12 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
 
       expect(status).to eq(200)
       expect(parsed_response).to eq(
-          {
-            'name'          => 'private_domain_creation',
-            'enabled'       => true,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/private_domain_creation'
-          })
+        {
+          'name'          => 'private_domain_creation',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/private_domain_creation'
+        })
     end
   end
 
@@ -212,12 +212,12 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
 
       expect(status).to eq(200)
       expect(parsed_response).to eq(
-          {
-            'name'          => 'route_creation',
-            'enabled'       => true,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/route_creation'
-          })
+        {
+          'name'          => 'route_creation',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/route_creation'
+        })
     end
   end
 
@@ -228,12 +228,12 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
 
       expect(status).to eq(200)
       expect(parsed_response).to eq(
-          {
-            'name'          => 'service_instance_creation',
-            'enabled'       => true,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/service_instance_creation'
-          })
+        {
+          'name'          => 'service_instance_creation',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/service_instance_creation'
+        })
     end
   end
 
@@ -245,12 +245,12 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
 
       expect(status).to eq(200)
       expect(parsed_response).to eq(
-          {
-            'name'          => 'diego_docker',
-            'enabled'       => false,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/diego_docker'
-          })
+        {
+          'name'          => 'diego_docker',
+          'enabled'       => false,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/diego_docker'
+        })
     end
   end
 
@@ -262,12 +262,12 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
 
       expect(status).to eq(200)
       expect(parsed_response).to eq(
-          {
-            'name'          => 'task_creation',
-            'enabled'       => false,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/task_creation'
-          })
+        {
+          'name'          => 'task_creation',
+          'enabled'       => false,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/task_creation'
+        })
     end
   end
 
@@ -280,12 +280,12 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
 
       expect(status).to eq(200)
       expect(parsed_response).to eq(
-          {
-            'name'          => 'user_org_creation',
-            'enabled'       => true,
-            'error_message' => nil,
-            'url'           => '/v2/config/feature_flags/user_org_creation'
-          })
+        {
+          'name'          => 'user_org_creation',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/user_org_creation'
+        })
     end
   end
 end

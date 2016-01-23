@@ -85,32 +85,32 @@ module VCAP::CloudController
         context 'when a format parameter is not specified' do
           before do
             app = make_diego_app(
-                state: 'STARTED',
-                package_state: 'STAGED',
-                package_hash: 'package-hash',
-                disk_quota: 1_024,
-                environment_json: {
-                    'env-key-3' => 'env-value-3',
-                    'env-key-4' => 'env-value-4',
-                },
-                file_descriptors: 16_384,
-                instances: 4,
-                memory: 1_024,
-                guid: 'app-guid-6',
-                command: 'start-command-6',
-                stack: Stack.make(name: 'stack-6'),
+              state: 'STARTED',
+              package_state: 'STAGED',
+              package_hash: 'package-hash',
+              disk_quota: 1_024,
+              environment_json: {
+                'env-key-3' => 'env-value-3',
+                'env-key-4' => 'env-value-4',
+              },
+              file_descriptors: 16_384,
+              instances: 4,
+              memory: 1_024,
+              guid: 'app-guid-6',
+              command: 'start-command-6',
+              stack: Stack.make(name: 'stack-6'),
             )
 
             route1 = Route.make(
-                space: app.space,
-                host: 'arsenio',
-                domain: SharedDomain.make(name: 'lo-mein.com'),
+              space: app.space,
+              host: 'arsenio',
+              domain: SharedDomain.make(name: 'lo-mein.com'),
             )
             app.add_route(route1)
             route2 = Route.make(
-                space: app.space,
-                host: 'conan',
-                domain: SharedDomain.make(name: 'doe-mane.com'),
+              space: app.space,
+              host: 'conan',
+              domain: SharedDomain.make(name: 'doe-mane.com'),
             )
             app.add_route(route2)
 

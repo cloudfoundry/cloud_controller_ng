@@ -64,8 +64,8 @@ module VCAP::Services::SSO::UAA
         client_manager.modify_transaction(changeset)
 
         expect(a_request(:post, tx_url).with(
-          body: expected_json_body,
-          headers: { 'Authorization' => auth_header })).to have_been_made
+                 body: expected_json_body,
+                 headers: { 'Authorization' => auth_header })).to have_been_made
       end
 
       it 'logs a sanitized version of the request' do
@@ -317,8 +317,8 @@ module VCAP::Services::SSO::UAA
 
           it 'makes a request to UAA with minimal scope' do
             expect(a_request(:post, tx_url).with(
-              body: expected_json_body,
-              headers: { 'Authorization' => auth_header })).to have_been_made
+                     body: expected_json_body,
+                     headers: { 'Authorization' => auth_header })).to have_been_made
           end
         end
 
@@ -328,8 +328,8 @@ module VCAP::Services::SSO::UAA
 
           it 'makes a request to UAA with extended scope' do
             expect(a_request(:post, tx_url).with(
-              body: expected_json_body,
-              headers: { 'Authorization' => auth_header })).to have_been_made
+                     body: expected_json_body,
+                     headers: { 'Authorization' => auth_header })).to have_been_made
           end
         end
 
@@ -339,8 +339,8 @@ module VCAP::Services::SSO::UAA
 
           it 'makes a request to UAA with extended scope' do
             expect(a_request(:post, tx_url).with(
-              body: expected_json_body,
-              headers: { 'Authorization' => auth_header })).to have_been_made
+                     body: expected_json_body,
+                     headers: { 'Authorization' => auth_header })).to have_been_made
           end
         end
       end

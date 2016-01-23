@@ -65,11 +65,11 @@ module VCAP::CloudController
       end
 
       response, err = service_instance.client.update(
-          service_instance,
-          service_plan,
-          accepts_incomplete: accepts_incomplete,
-          arbitrary_parameters: request_attrs['parameters'],
-          previous_values: previous_values
+        service_instance,
+        service_plan,
+        accepts_incomplete: accepts_incomplete,
+        arbitrary_parameters: request_attrs['parameters'],
+        previous_values: previous_values
       )
 
       service_instance.last_operation.update_attributes(response[:last_operation])
@@ -110,11 +110,11 @@ module VCAP::CloudController
 
     def build_fetch_job(service_instance, request_attrs)
       VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
-          'service-instance-state-fetch',
-          service_instance.client.attrs,
-          service_instance.guid,
-          @services_event_repository,
-          request_attrs,
+        'service-instance-state-fetch',
+        service_instance.client.attrs,
+        service_instance.guid,
+        @services_event_repository,
+        request_attrs,
       )
     end
 

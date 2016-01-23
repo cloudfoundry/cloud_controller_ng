@@ -5,11 +5,11 @@ module VCAP::CloudController
   describe AppPresenter do
     let(:app) do
       AppModel.make(
-      created_at: Time.at(1),
-      updated_at: Time.at(2),
-      environment_variables: { 'some' => 'stuff' },
-      desired_state: 'STOPPED',
-    )
+        created_at: Time.at(1),
+        updated_at: Time.at(2),
+        environment_variables: { 'some' => 'stuff' },
+        desired_state: 'STOPPED',
+      )
     end
 
     before do

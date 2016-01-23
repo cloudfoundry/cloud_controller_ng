@@ -56,10 +56,10 @@ describe ProcessesController, type: :controller do
       get :index
 
       expect(membership).to have_received(:space_guids_for_roles).with(
-                                [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-                                 VCAP::CloudController::Membership::SPACE_MANAGER,
-                                 VCAP::CloudController::Membership::SPACE_AUDITOR,
-                                 VCAP::CloudController::Membership::ORG_MANAGER])
+        [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+         VCAP::CloudController::Membership::SPACE_MANAGER,
+         VCAP::CloudController::Membership::SPACE_AUDITOR,
+         VCAP::CloudController::Membership::ORG_MANAGER])
     end
 
     it 'fails without read permissions scope on the auth token' do
@@ -161,10 +161,10 @@ describe ProcessesController, type: :controller do
         expect(response.body).to include('Process not found')
 
         expect(membership).to have_received(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], process_type.space.guid, process_type.space.organization.guid)
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+           VCAP::CloudController::Membership::SPACE_MANAGER,
+           VCAP::CloudController::Membership::SPACE_AUDITOR,
+           VCAP::CloudController::Membership::ORG_MANAGER], process_type.space.guid, process_type.space.organization.guid)
       end
     end
   end
@@ -268,10 +268,10 @@ describe ProcessesController, type: :controller do
         expect(response.body).to include('ResourceNotFound')
 
         expect(membership).to have_received(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], process_type.space.guid, process_type.space.organization.guid)
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+           VCAP::CloudController::Membership::SPACE_MANAGER,
+           VCAP::CloudController::Membership::SPACE_AUDITOR,
+           VCAP::CloudController::Membership::ORG_MANAGER], process_type.space.guid, process_type.space.organization.guid)
       end
     end
 
@@ -287,7 +287,7 @@ describe ProcessesController, type: :controller do
         expect(response.body).to include('NotAuthorized')
 
         expect(membership).to have_received(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER], process_type.space.guid)
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER], process_type.space.guid)
       end
     end
   end
@@ -369,10 +369,10 @@ describe ProcessesController, type: :controller do
         expect(response.body).to include('ResourceNotFound')
 
         expect(membership).to have_received(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], process_type.space.guid, process_type.space.organization.guid)
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+           VCAP::CloudController::Membership::SPACE_MANAGER,
+           VCAP::CloudController::Membership::SPACE_AUDITOR,
+           VCAP::CloudController::Membership::ORG_MANAGER], process_type.space.guid, process_type.space.organization.guid)
       end
     end
 
@@ -388,7 +388,7 @@ describe ProcessesController, type: :controller do
         expect(response.body).to include('NotAuthorized')
 
         expect(membership).to have_received(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER], process_type.space.guid)
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER], process_type.space.guid)
       end
     end
   end

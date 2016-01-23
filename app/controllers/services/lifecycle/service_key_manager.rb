@@ -22,9 +22,9 @@ module VCAP::CloudController
       validate_create_action(request_attrs)
 
       service_key, errors = ServiceKeyCreate.new(@logger).create(
-          service_instance,
-          request_attrs.except('parameters'),
-          request_attrs['parameters']
+        service_instance,
+        request_attrs.except('parameters'),
+        request_attrs['parameters']
       )
 
       if errors.present?
@@ -38,12 +38,12 @@ module VCAP::CloudController
       delete_action = ServiceKeyDelete.new
       deletion_job = Jobs::DeleteActionJob.new(ServiceKey, service_key.guid, delete_action)
       delete_and_audit_job = Jobs::AuditEventJob.new(
-          deletion_job,
-          @services_event_repository,
-          :record_service_key_event,
-          :delete,
-          service_key.class,
-          service_key.guid
+        deletion_job,
+        @services_event_repository,
+        :record_service_key_event,
+        :delete,
+        service_key.class,
+        service_key.guid
       )
 
       delete_and_audit_job.perform

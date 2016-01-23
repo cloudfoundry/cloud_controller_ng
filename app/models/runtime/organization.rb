@@ -21,7 +21,7 @@ module VCAP::CloudController
       :private_domains,
       class: 'VCAP::CloudController::PrivateDomain',
       right_key: :private_domain_id,
-      dataset: proc { | r |
+      dataset: proc { |r|
         VCAP::CloudController::Domain.dataset.where(owning_organization_id: self.id).
           or(id: db[r.join_table_source].select(r.qualified_right_key).where(r.predicate_key => self.id))
       },
@@ -103,7 +103,7 @@ module VCAP::CloudController
     def self.user_visibility_filter(user)
       {
         id: dataset.join_table(:inner, :organizations_managers, organization_id: :id, user_id: user.id).select(:organizations__id).union(
-            dataset.join_table(:inner, :organizations_users, organization_id: :id, user_id: user.id).select(:organizations__id)
+          dataset.join_table(:inner, :organizations_users, organization_id: :id, user_id: user.id).select(:organizations__id)
           ).union(
             dataset.join_table(:inner, :organizations_billing_managers, organization_id: :id, user_id: user.id).select(:organizations__id)
           ).union(

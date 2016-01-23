@@ -24,14 +24,14 @@ module VCAP::CloudController
 
       it 'creates an audit event' do
         expect(Repositories::Runtime::PackageEventRepository).to receive(:record_app_add_package).with(
-            instance_of(PackageModel),
-            user,
-            user_email,
-            {
-              'app_guid' => app_guid,
-              'type' => type,
-            }
-          )
+          instance_of(PackageModel),
+          user,
+          user_email,
+          {
+            'app_guid' => app_guid,
+            'type' => type,
+          }
+        )
 
         package_create.create(message)
       end

@@ -310,12 +310,12 @@ module VCAP::CloudController
               })
 
           expect(service_instance.as_summary_json['last_operation']).to include(
-              {
-                'state' => 'in progress',
-                'description' => '50% all the time',
-                'type' => 'create',
-              }
-            )
+            {
+              'state' => 'in progress',
+              'description' => '50% all the time',
+              'type' => 'create',
+            }
+          )
         end
       end
       context 'when the last_operation does not exist' do

@@ -53,7 +53,7 @@ module VCAP::CloudController
           ServiceInstance.db.transaction do
             service_instance.lock!
             service_instance.save_and_update_operation(
-                last_operation: attrs_to_update[:last_operation].slice(:state, :description)
+              last_operation: attrs_to_update[:last_operation].slice(:state, :description)
             )
 
             if service_instance.last_operation.state == 'succeeded'
@@ -67,10 +67,10 @@ module VCAP::CloudController
           update_polling_interval
           if Time.now + @poll_interval > end_timestamp
             ManagedServiceInstance.first(guid: service_instance_guid).save_and_update_operation(
-                last_operation: {
-                    state: 'failed',
-                    description: 'Service Broker failed to provision within the required time.',
-                }
+              last_operation: {
+                state: 'failed',
+                description: 'Service Broker failed to provision within the required time.',
+              }
             )
           else
             enqueue_again

@@ -62,14 +62,16 @@ module VCAP::CloudController::RestController
       {}.tap do |res|
         parents.push(controller)
 
-        res.merge!(serialize_relationships(
-          controller.to_one_relationships,
-          controller, depth, obj, opts, parents, orphans,
+        res.merge!(
+          serialize_relationships(
+            controller.to_one_relationships,
+            controller, depth, obj, opts, parents, orphans,
         ))
 
-        res.merge!(serialize_relationships(
-          controller.to_many_relationships,
-          controller, depth, obj, opts, parents, orphans,
+        res.merge!(
+          serialize_relationships(
+            controller.to_many_relationships,
+            controller, depth, obj, opts, parents, orphans,
         ))
 
         parents.pop

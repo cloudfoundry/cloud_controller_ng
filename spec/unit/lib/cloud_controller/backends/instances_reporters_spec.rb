@@ -8,9 +8,9 @@ module VCAP::CloudController
     let(:dea_app) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED') }
     let(:diego_app) do
       AppFactory.make(
-          package_hash: 'abc',
-          package_state: 'STAGED',
-          diego: true
+        package_hash: 'abc',
+        package_state: 'STAGED',
+        diego: true
       )
     end
 

@@ -131,3 +131,6 @@ Style/TrivialAccessors:
 
 Style/EachWithObject:
   Enabled: false
+
+StructInheritance:
+  Enabled: false

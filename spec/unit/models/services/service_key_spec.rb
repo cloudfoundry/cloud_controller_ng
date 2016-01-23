@@ -39,9 +39,9 @@ module VCAP::CloudController
 
       def new_model
         ServiceKey.make(
-            name: Sham.name,
-            service_instance: service_instance,
-            credentials: value_to_encrypt
+          name: Sham.name,
+          service_instance: service_instance,
+          credentials: value_to_encrypt
         )
       end
 
