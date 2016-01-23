@@ -34,12 +34,12 @@ module VCAP::CloudController
         it 'includes service binding information' do
           expect(system_env_presenter.system_env['VCAP_SERVICES']["#{service.label}"]).to have(1).items
           expect(system_env_presenter.system_env['VCAP_SERVICES']["#{service.label}"].first).to eq(
-              'name'             => 'elephantsql-vip-uat',
-              'label'            => 'elephantsql-n/a',
-              'tags'             => ['excellent'],
-              'plan'             => service_plan.name,
-              'credentials'      => service_binding.credentials,
-              'syslog_drain_url' => 'logs.go-here.com'
+            'name'             => 'elephantsql-vip-uat',
+            'label'            => 'elephantsql-n/a',
+            'tags'             => ['excellent'],
+            'plan'             => service_plan.name,
+            'credentials'      => service_binding.credentials,
+            'syslog_drain_url' => 'logs.go-here.com'
             )
         end
 
@@ -65,12 +65,12 @@ module VCAP::CloudController
           it 'includes service binding information' do
             binding_information = system_env_presenter.system_env['VCAP_SERVICES']['rabbit'].first
             expect(binding_information).to eq(
-                'name'             => service_instance.name,
-                'label'            => service.label,
-                'tags'             => service_instance.merged_tags,
-                'plan'             => service_plan.name,
-                'credentials'      => service_binding.credentials,
-                'syslog_drain_url' => service_binding.syslog_drain_url
+              'name'             => service_instance.name,
+              'label'            => service.label,
+              'tags'             => service_instance.merged_tags,
+              'plan'             => service_plan.name,
+              'credentials'      => service_binding.credentials,
+              'syslog_drain_url' => service_binding.syslog_drain_url
               )
           end
         end
