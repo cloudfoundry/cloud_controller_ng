@@ -207,26 +207,21 @@ module VCAP::CloudController
       # special case: Sequel does not support querying columns not on the current table, so
       # when filtering by org_guid we have to join tables before executing the query.
 
-      opts[:q] = [] unless opts[:q]
-      org_guids = opts[:q].select { |opt| opt.start_with?('organization_guid') }
-      opts[:q] -= org_guids
+      org_filters = []
+
+      opts[:q] ||= []
+      opts[:q].each do |filter|
+        key, comparison, value = filter.split(/(:|>=|<=|<|>| IN )/, 2)
+        org_filters.push [key, comparison, value] if key == 'organization_guid'
+      end
+
+      opts[:q] -= org_filters.map(&:join)
       opts.delete(:q) if opts[:q].blank?
 
-      if org_guids.empty?
+      if org_filters.empty?
         super(model, ds, qp, opts)
-      elsif unsupported_operators?(org_guids)
-        raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', 'The operators IN, >, <. <=, >= are not supported when filtering by organization_guid.')
       else
-        space_ids = Space.select(:spaces__id).left_join(:organizations, id: :spaces__organization_id)
-        org_guids.each do |filter|
-          org_guid = filter.split(':')[1]
-          space_ids = space_ids.where(organizations__guid: org_guid)
-        end
-
-        Query.
-          filtered_dataset_from_query_params(model, ds, qp, opts).
-          select_all(:service_instances).
-            where(space_id: space_ids)
+        super(model, ds, qp, opts).where(space_id: select_spaces_based_on_org_filters(org_filters))
       end
     end
 
@@ -373,10 +368,6 @@ module VCAP::CloudController
       raise Errors::ApiError.new_from_details('ServiceInstanceNotFound', guid)
     end
 
-    def unsupported_operators?(org_guids)
-      org_guids.flatten.to_s.match(/organization_guid(\s*IN\s*|<|>)/)
-    end
-
     def plan_visible_to_org?(organization, service_plan)
       ServicePlan.organization_visible(organization).filter(guid: service_plan.guid).count > 0
     end
@@ -434,6 +425,23 @@ module VCAP::CloudController
 
     def self.errors_on(e, fields)
       e.errors.on(fields).to_a
+    end
+
+    def select_spaces_based_on_org_filters(org_filters)
+      space_ids = Space.select(:spaces__id).left_join(:organizations, id: :spaces__organization_id)
+      org_filters.each do |_, comparison, value|
+        if value.blank?
+          space_ids = space_ids.where(organizations__guid: nil)
+        elsif comparison == ':'
+          space_ids = space_ids.where(organizations__guid: value)
+        elsif comparison == ' IN '
+          space_ids = space_ids.where(organizations__guid: value.split(','))
+        else
+          space_ids = space_ids.where("organizations.guid #{comparison} ?", value)
+        end
+      end
+
+      space_ids
     end
   end
 end

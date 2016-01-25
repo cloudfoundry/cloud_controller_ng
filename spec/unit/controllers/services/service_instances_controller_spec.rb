@@ -901,71 +901,125 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_instances' do
-      let(:service_instance) { ManagedServiceInstance.make(gateway_name: Sham.name) }
-      let(:space) { service_instance.space }
-      let(:developer) { make_developer_for_space(space) }
+      context 'dashboard_url' do
+        let(:service_instance) { ManagedServiceInstance.make(gateway_name: Sham.name) }
+        let(:space) { service_instance.space }
+        let(:developer) { make_developer_for_space(space) }
 
-      it 'shows the dashboard_url if there is' do
-        service_instance.update(dashboard_url: 'http://dashboard.io')
-        get "v2/service_instances/#{service_instance.guid}", {}, headers_for(developer)
-        expect(decoded_response.fetch('entity').fetch('dashboard_url')).to eq('http://dashboard.io')
+        it 'shows the dashboard_url if there is' do
+          service_instance.update(dashboard_url: 'http://dashboard.io')
+          get "v2/service_instances/#{service_instance.guid}", {}, headers_for(developer)
+          expect(decoded_response.fetch('entity').fetch('dashboard_url')).to eq('http://dashboard.io')
+        end
       end
 
       context 'filtering' do
-        let(:first_found_instance) { decoded_response.fetch('resources').first }
-
         context 'when filtering by org guid' do
+          let(:org1) { Organization.make(guid: '1') }
+          let(:org2) { Organization.make(guid: '2') }
+          let(:org3) { Organization.make(guid: '3') }
+          let(:space1) { Space.make(organization: org1) }
+          let(:space2) { Space.make(organization: org2) }
+          let(:space3) { Space.make(organization: org3) }
+
           context 'when the operator is ":"' do
             it 'successfully filters' do
-              ManagedServiceInstance.make(name: 'other')
-              org_guid = service_instance.space.organization.guid
+              instance1 = ManagedServiceInstance.make(name: 'instance-1', space: space1)
+              ManagedServiceInstance.make(name: 'instance-2', space: space2)
 
-              get "v2/service_instances?q=organization_guid:#{org_guid}", {}, headers_for(developer)
+              get "v2/service_instances?q=organization_guid:#{org1.guid}", {}, json_headers(admin_headers)
 
               expect(last_response.status).to eq(200)
               expect(decoded_response['resources'].length).to eq(1)
-              expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
+              expect(decoded_response['resources'][0].fetch('metadata').fetch('guid')).to eq(instance1.guid)
             end
 
             context 'when filtering by other parameters as well' do
-              let(:org1) { Organization.make(name: 'org1') }
-              let(:org2) { Organization.make(name: 'org2') }
-              let(:space1) { Space.make(name: 'space1', organization: org1) }
-              let(:space2) { Space.make(name: 'space2', organization: org2) }
-              let!(:instance_1) { ManagedServiceInstance.make(name: 'the-same-name', space: space1) }
-              let!(:instance_2) { ManagedServiceInstance.make(name: 'a-different-name', space: space1) }
-              let!(:instance_3) { ManagedServiceInstance.make(name: 'the-same-name', space: space2) }
-
               it 'filters by both parameters' do
-                get "v2/service_instances?q=organization_guid:#{org1.guid}&q=name:#{instance_1.name}", {}, json_headers(admin_headers)
+                instance1 = ManagedServiceInstance.make(name: 'instance-1', space: space1)
+                ManagedServiceInstance.make(name: 'instance-2', space: space1)
+                ManagedServiceInstance.make(name: instance1.name, space: space2)
+
+                get "v2/service_instances?q=organization_guid:#{org1.guid}&q=name:#{instance1.name}", {}, json_headers(admin_headers)
 
                 expect(last_response.status).to eq(200)
                 resources = decoded_response['resources']
                 expect(resources.length).to eq(1)
-                expect(resources[0].fetch('entity').fetch('name')).to eq('the-same-name')
+                expect(resources[0].fetch('metadata').fetch('guid')).to eq(instance1.guid)
               end
             end
           end
 
           context 'when the operator is "IN"' do
-            # let(:org_guid) { Sham.guid }
-            it 'returns an informative error' do
-              get "v2/service_instances?q=organization_guid%20IN%20#{Sham.guid},#{Sham.guid}", {}, headers_for(developer)
+            it 'successfully filters' do
+              instance1 = ManagedServiceInstance.make(name: 'inst1', space: space1)
+              instance2 = ManagedServiceInstance.make(name: 'inst2', space: space2)
+              ManagedServiceInstance.make(name: 'inst3', space: space3)
 
-              expect(last_response.status).to eq(400)
-              expect(last_response.body).to include('The query parameter is invalid:')
-              expect(last_response.body).to include('The operators IN, >, <. <=, >= are not supported when filtering by organization_guid.')
+              get "v2/service_instances?q=organization_guid%20IN%20#{org1.guid},#{org2.guid}", {}, json_headers(admin_headers)
+
+              expect(last_response.status).to eq(200)
+              services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+              expect(services.length).to eq(2)
+              expect(services).to include(instance1.guid)
+              expect(services).to include(instance2.guid)
             end
           end
 
-          context 'when the operator is "<" or ">"' do
-            let(:org_guid) { Sham.guid }
-            it 'returns an informative error' do
-              get "v2/service_instances?q=organization_guid>=#{org_guid}", {}, headers_for(developer)
+          context 'when the operator is a comparator' do
+            let!(:instance1) { ManagedServiceInstance.make(name: 'inst1', space: space1) }
+            let!(:instance2) { ManagedServiceInstance.make(name: 'inst2', space: space2) }
+            let!(:instance3) { ManagedServiceInstance.make(name: 'inst3', space: space3) }
 
-              expect(last_response.status).to eq(400)
-              expect(last_response.body).to include('The query parameter is invalid:')
-              expect(last_response.body).to include('The operators IN, >, <. <=, >= are not supported when filtering by organization_guid.')
+            it 'successfully filters on <' do
+              get "v2/service_instances?q=organization_guid<#{org2.guid}", {}, json_headers(admin_headers)
+
+              expect(last_response.status).to eq(200)
+              services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+              expect(services.length).to eq(1)
+              expect(services).to include(instance1.guid)
+            end
+
+            it 'successfully filters on >' do
+              get "v2/service_instances?q=organization_guid>#{org2.guid}", {}, json_headers(admin_headers)
+
+              expect(last_response.status).to eq(200)
+              services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+              expect(services.length).to eq(1)
+              expect(services).to include(instance3.guid)
+            end
+
+            it 'successfully filters on <=' do
+              get "v2/service_instances?q=organization_guid<=#{org2.guid}", {}, json_headers(admin_headers)
+
+              expect(last_response.status).to eq(200)
+              services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+              expect(services.length).to eq(2)
+              expect(services).to include(instance1.guid)
+              expect(services).to include(instance2.guid)
+            end
+
+            it 'successfully filters on >=' do
+              get "v2/service_instances?q=organization_guid>=#{org2.guid}", {}, json_headers(admin_headers)
+
+              expect(last_response.status).to eq(200)
+              services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+              expect(services.length).to eq(2)
+              expect(services).to include(instance2.guid)
+              expect(services).to include(instance3.guid)
+            end
+          end
+
+          context 'when the query is missing an operator or a value' do
+            it 'filters by org_guid = nil (to match behavior of filters other than org guid)' do
+              ManagedServiceInstance.make(name: 'instance-1', space: space1)
+              ManagedServiceInstance.make(name: 'instance-2', space: space2)
+
+              get 'v2/service_instances?q=organization_guid', {}, json_headers(admin_headers)
+
+              expect(last_response.status).to eq(200)
+              services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+              expect(services.length).to eq(0)
             end
           end
         end
