@@ -14,6 +14,7 @@ PIDFILE=$RUN_DIR/cloud_controller_worker_$INDEX.pid
 export CONFIG_DIR=$CC_JOB_DIR/config
 export CLOUD_CONTROLLER_NG_CONFIG=$CONFIG_DIR/cloud_controller_ng.yml
 export BUNDLE_GEMFILE=$CC_PACKAGE_DIR/cloud_controller_ng/Gemfile
+export TMPDIR=/var/vcap/data/cloud_controller_ng/tmp
 
 export C_INCLUDE_PATH=/var/vcap/packages/libpq/include:$C_INCLUDE_PATH
 export LIBRARY_PATH=/var/vcap/packages/libpq/lib:$LIBRARY_PATH
@@ -33,15 +34,17 @@ case $1 in
 
     mkdir -p $RUN_DIR
     mkdir -p $LOG_DIR
+    mkdir -p $TMPDIR
 
     chown vcap:vcap $RUN_DIR
     chown vcap:vcap $LOG_DIR
+    chown vcap:vcap $TMPDIR
 
     echo $$ > $PIDFILE
     chown vcap:vcap $PIDFILE
 
     cd $CC_PACKAGE_DIR/cloud_controller_ng
-    
+
     # Run the buildpack install only on the first CC Worker launch
     <% if spec.index.to_i == 0 %>
     if [ $INDEX == 1 ]; then
