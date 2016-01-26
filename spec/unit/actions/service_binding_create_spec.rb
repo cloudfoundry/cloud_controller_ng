@@ -41,7 +41,7 @@ module VCAP::CloudController
       end
 
       it 'creates a v3 Service Binding' do
-        service_binding = service_binding_create.create(app_model, service_instance, message.type)
+        service_binding = service_binding_create.create(app_model, service_instance, message)
 
         expect(ServiceBindingModel.count).to eq(1)
         expect(service_binding.app_guid).to eq(app_model.guid)
@@ -90,7 +90,7 @@ module VCAP::CloudController
 
         it 'raises InvalidServiceBinding' do
           expect {
-            service_binding_create.create(app_model, service_instance, message.type)
+            service_binding_create.create(app_model, service_instance, message)
           }.to raise_error(ServiceBindingCreate::InvalidServiceBinding)
         end
       end
@@ -103,7 +103,7 @@ module VCAP::CloudController
 
           it 'does not create a binding' do
             expect {
-              service_binding_create.create(app_model, service_instance, message.type)
+              service_binding_create.create(app_model, service_instance, message)
             }.to raise_error VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse
 
             expect(ServiceBindingModel.count).to eq 0

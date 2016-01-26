@@ -9,7 +9,8 @@ module VCAP::CloudController
 
     include VCAP::CloudController::LockCheck
 
-    def create(app_model, service_instance, type)
+    def create(app_model, service_instance, message)
+      type = message.type
       service_binding = ServiceBindingModel.new(service_instance: service_instance,
                                                 app: app_model,
                                                 credentials: {},
