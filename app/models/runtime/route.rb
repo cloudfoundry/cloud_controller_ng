@@ -79,7 +79,7 @@ module VCAP::CloudController
         # This is only for routes controller translate_validation_exception method
         # in order to distinguish between hostname being taken and path being
         # taken
-        validates_unique [:host, :domain_id, :port]  do |ds|
+        validates_unique [:host, :domain_id, :port] do |ds|
           ds.where(path: '')
         end
       else

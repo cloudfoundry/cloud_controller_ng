@@ -139,7 +139,7 @@ describe 'v3 service bindings' do
         'guid'       => guid,
         'type'       => 'app',
         'data'       => {
-          'credentials'      => {
+          'credentials' => {
             'username' => 'managed_username'
           },
           'syslog_drain_url' => 'syslog://mydrain.example.com'
@@ -147,13 +147,13 @@ describe 'v3 service bindings' do
         'created_at' => iso8601,
         'updated_at' => nil,
         'links'      => {
-          'self'             => {
+          'self' => {
             'href' => "/v3/service_bindings/#{guid}"
           },
           'service_instance' => {
             'href' => "/v2/service_instances/#{service_instance_guid}"
           },
-          'app'              => {
+          'app' => {
             'href' => "/v3/apps/#{app_guid}"
           }
         }
@@ -224,7 +224,7 @@ describe 'v3 service bindings' do
         'guid'       => guid,
         'type'       => 'app',
         'data'       => {
-          'credentials'      => {
+          'credentials' => {
             'username' => 'user_provided_username'
           },
           'syslog_drain_url' => 'syslog://drain.url.com'
@@ -232,13 +232,13 @@ describe 'v3 service bindings' do
         'created_at' => iso8601,
         'updated_at' => nil,
         'links'      => {
-          'self'             => {
+          'self' => {
             'href' => "/v3/service_bindings/#{guid}"
           },
           'service_instance' => {
             'href' => "/v2/service_instances/#{service_instance_guid}"
           },
-          'app'              => {
+          'app' => {
             'href' => "/v3/apps/#{app_guid}"
           }
         }

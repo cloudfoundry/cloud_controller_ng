@@ -113,7 +113,7 @@ module VCAP::CloudController
             {
               relationships: {
                 route: { guid: 'some-guid' },
-                process: { type: 123  }
+                process: { type: 123 }
               }
             }
           end

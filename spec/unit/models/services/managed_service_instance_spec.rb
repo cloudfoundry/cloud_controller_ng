@@ -113,7 +113,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#save_with_new_operation'  do
+    describe '#save_with_new_operation' do
       let(:service_instance) { ManagedServiceInstance.make }
       let(:developer) { make_developer_for_space(service_instance.space) }
 

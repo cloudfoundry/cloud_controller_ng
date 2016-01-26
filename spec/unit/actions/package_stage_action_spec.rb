@@ -28,7 +28,7 @@ module VCAP::CloudController
       let(:staging_message) { DropletCreateMessage.create_from_http_request(request) }
       let(:request) do
         {
-          lifecycle:    {
+          lifecycle: {
             type: 'buildpack',
             data: lifecycle_data
           },

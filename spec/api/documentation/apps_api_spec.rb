@@ -295,7 +295,7 @@ resource 'Apps', type: [:api, :legacy_api] do
         0 => {
           state: 'RUNNING',
           stats: {
-            usage:      {
+            usage: {
               disk: 66392064,
               mem:  29880320,
               cpu:  0.13511219703079957,

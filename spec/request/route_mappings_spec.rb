@@ -125,7 +125,7 @@ describe 'Route Mappings' do
           'next'          => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings?page=2&per_page=2" },
           'previous'      => nil
         },
-        'resources'  => [
+        'resources' => [
           {
             'guid'       => route_mapping1.guid,
             'created_at' => iso8601,

@@ -21,7 +21,7 @@ module VCAP::CloudController::Diego
       Environment::EXCLUDE.each { |k| vcap_app.delete(k) }
       encoded_vcap_application_json = vcap_app.to_json
 
-      vcap_services_key     = :VCAP_SERVICES
+      vcap_services_key = :VCAP_SERVICES
       system_env = SystemEnvPresenter.new(app.all_service_bindings).system_env
       expect(system_env).to have_key(vcap_services_key)
 

@@ -33,8 +33,8 @@ module VCAP::CloudController
       context 'when the droplet states are provided' do
         let(:filters) { { states: ['PENDING', 'FAILED'] } }
         let!(:failed_droplet) { DropletModel.make(state: 'FAILED', app_guid: app_guid) }
-        let!(:pending_droplet) { DropletModel.make(state: 'PENDING', app_guid: app_guid)  }
-        let!(:undesirable_pending_droplet) { DropletModel.make(state: 'PENDING')  }
+        let!(:pending_droplet) { DropletModel.make(state: 'PENDING', app_guid: app_guid) }
+        let!(:undesirable_pending_droplet) { DropletModel.make(state: 'PENDING') }
 
         it 'returns all of the desired droplets with the requested droplet states' do
           results = fetcher.fetch(app_guid, pagination_options, message).records

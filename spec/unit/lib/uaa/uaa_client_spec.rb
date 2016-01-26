@@ -73,7 +73,7 @@ module VCAP::CloudController
 
       it 'returns a map of the given ids to the corresponding usernames from UAA' do
         response_body = {
-          'resources'    => [
+          'resources' => [
             { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
             { 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' }
           ],

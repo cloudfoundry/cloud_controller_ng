@@ -222,7 +222,7 @@ module VCAP::CloudController
             'updated_at' => nil,
             'url' => "/v2/service_brokers/#{service_broker.guid}",
           },
-          'entity' =>  {
+          'entity' => {
             'name' => name,
             'broker_url' => broker_url,
             'auth_username' => auth_username,
@@ -634,7 +634,7 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(200)
           json_response = MultiJson.load(last_response.body)
           expect(json_response).to include({
-            'entity' =>  {
+            'entity' => {
               'name' => 'My Updated Service',
               'broker_url' => broker.broker_url,
               'auth_username' => 'new-username',

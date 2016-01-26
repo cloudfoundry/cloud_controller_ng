@@ -48,7 +48,7 @@ module VCAP::CloudController::RestController
       if v2_api? || unversioned_api?
         common_params = CommonParams.new(logger)
         query_string = sinatra.request.query_string if sinatra
-        @opts    = common_params.parse(params, query_string)
+        @opts = common_params.parse(params, query_string)
       end
       @sinatra = sinatra
       @access_context = Security::AccessContext.new

@@ -74,7 +74,7 @@ module VCAP::CloudController
         upload: upload_link,
         download: download_link,
         stage: { href: "/v3/packages/#{package.guid}/droplets", method: 'POST' },
-        app:  {
+        app: {
           href: "/v3/apps/#{package.app_guid}",
         },
       }

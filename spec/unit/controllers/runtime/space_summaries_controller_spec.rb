@@ -6,8 +6,8 @@ module VCAP::CloudController
     let(:app_obj) { AppFactory.make(space: space) }
     let!(:first_route) { Route.make(space: space, app_guids: [app_obj.guid]) }
     let!(:second_route) { Route.make(space: space, app_guids: [app_obj.guid]) }
-    let(:first_service) {  ManagedServiceInstance.make(space: space) }
-    let(:second_service) {  ManagedServiceInstance.make(space: space) }
+    let(:first_service) { ManagedServiceInstance.make(space: space) }
+    let(:second_service) { ManagedServiceInstance.make(space: space) }
 
     let(:instances_reporters) { double(:instances_reporters) }
     let(:running_instances) { { app_obj.guid => 5 } }

@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class DropletPresenter
     def initialize(pagination_presenter=PaginationPresenter.new)
-      @pagination_presenter                = pagination_presenter
+      @pagination_presenter = pagination_presenter
     end
 
     def present_json(droplet)

@@ -4,7 +4,7 @@ describe AppBitsPackage do
   let(:fingerprints_in_app_cache) do
     path = File.join(local_tmp_dir, 'content')
     sha = 'some_fake_sha'
-    File.open(path, 'w') { |f| f.write 'content'  }
+    File.open(path, 'w') { |f| f.write 'content' }
     global_app_bits_cache.cp_to_blobstore(path, sha)
 
     CloudController::Blobstore::FingerprintsCollection.new([{ 'fn' => 'path/to/content.txt', 'size' => 123, 'sha1' => sha }])
@@ -175,7 +175,7 @@ describe AppBitsPackage do
         let(:fingerprints_in_app_cache) do
           path = File.join(local_tmp_dir, 'content')
           sha = 'some_fake_sha'
-          File.open(path, 'w') { |f| f.write 'content'  }
+          File.open(path, 'w') { |f| f.write 'content' }
           global_app_bits_cache.cp_to_blobstore(path, sha)
 
           CloudController::Blobstore::FingerprintsCollection.new([{ 'fn' => 'path/to/content.txt', 'size' => 123, 'sha1' => sha, 'mode' => mode }])

@@ -46,7 +46,7 @@ module VCAP::Services::ServiceBrokers
             'tags'        => ['mysql', 'relational'],
             'requires'    => ['ultimate', 'power'],
             'plan_updateable' => true,
-            'plans'       => [
+            'plans' => [
               {
                 'id'          => plan_id,
                 'name'        => plan_name,

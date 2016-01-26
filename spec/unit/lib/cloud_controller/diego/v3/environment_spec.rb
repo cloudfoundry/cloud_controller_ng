@@ -16,21 +16,21 @@ module VCAP::CloudController::Diego
 
       let(:expected_vcap_application) do
         {
-          'limits'           => {
+          'limits' => {
             'mem'  => task.memory_in_mb,
             'disk' => disk_limit,
             'fds'  => TestConfig.config[:instance_file_descriptor_limit] || 16384,
           },
-          'application_id'   => app.guid,
-          'application_version'   => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+          'application_id' => app.guid,
+          'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
           'application_name' => app.name,
           'application_uris' => [],
-          'version'   => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+          'version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
           'name'             => app.name,
           'space_name'       => space.name,
           'space_id'         => space.guid,
           'uris' => [],
-          'users'            => nil
+          'users' => nil
         }
       end
 
@@ -88,7 +88,7 @@ module VCAP::CloudController::Diego
 
         context 'when additional environment variables are nil' do
           it 'is merged on top of the initial envs and app envs' do
-            running_envs    = { 'SILLY' => 'lily', 'PUPPIES' => 'frolicking' }
+            running_envs = { 'SILLY' => 'lily', 'PUPPIES' => 'frolicking' }
 
             constructed_envs = V3::Environment.new(app, task, space, running_envs).build(nil)
             expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
@@ -104,12 +104,12 @@ module VCAP::CloudController::Diego
         context 'when the app has a route associated with it' do
           let(:expected_vcap_application) do
             {
-              'limits'              => {
+              'limits' => {
                 'mem'  => task.memory_in_mb,
                 'disk' => disk_limit,
                 'fds'  => TestConfig.config[:instance_file_descriptor_limit] || 16384,
               },
-              'application_id'      => app.guid,
+              'application_id' => app.guid,
               'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
               'application_name'    => app.name,
               'application_uris'    => match_array([route1.fqdn, route2.fqdn]),

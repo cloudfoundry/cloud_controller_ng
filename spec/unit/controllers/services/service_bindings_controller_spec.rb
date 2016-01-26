@@ -176,7 +176,7 @@ module VCAP::CloudController
 
         it 'creates a service binding with the provided binding options' do
           binding_options = Sham.binding_options
-          body =  params.merge('binding_options' => binding_options).to_json
+          body = params.merge('binding_options' => binding_options).to_json
           post '/v2/service_bindings', body, headers_for(developer)
 
           expect(last_response).to have_status_code(201)
@@ -199,7 +199,7 @@ module VCAP::CloudController
 
           it 'creates a service binding with the provided binding options' do
             binding_options = Sham.binding_options
-            body =  params.merge('binding_options' => binding_options).to_json
+            body = params.merge('binding_options' => binding_options).to_json
             post '/v2/service_bindings', body, headers_for(developer)
 
             expect(last_response).to have_status_code(201)

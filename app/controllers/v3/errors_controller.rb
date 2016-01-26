@@ -1,6 +1,6 @@
 class ErrorsController < ApplicationController
   def not_found
-    error =  VCAP::Errors::ApiError.new_from_details('NotFound')
+    error = VCAP::Errors::ApiError.new_from_details('NotFound')
     presenter = ErrorPresenter.new(error, Rails.env.test?)
     render status: :not_found, json: MultiJson.dump(presenter.error_hash, pretty: true)
   end

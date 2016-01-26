@@ -19,7 +19,7 @@ module VCAP::CloudController
                     buildpack_key:      String,
                     detected_buildpack: String,
                   },
-                  process_types:      dict(Symbol, String)
+                  process_types: dict(Symbol, String)
                 }
               }
             end

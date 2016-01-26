@@ -351,7 +351,7 @@ module VCAP::CloudController
               stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 202)
               app.add_route route
 
-              stub_request(:delete, service_binding_url_pattern).to_return(status: 200,  body: {}.to_json)
+              stub_request(:delete, service_binding_url_pattern).to_return(status: 200, body: {}.to_json)
 
               expect {
                 stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 500)
@@ -399,7 +399,7 @@ module VCAP::CloudController
           stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 202)
         end
 
-        it 'unbinds the route and service instance', isolation: :truncation  do
+        it 'unbinds the route and service instance', isolation: :truncation do
           expect(route_binding.service_instance).to eq service_instance
           expect(route_binding.route).to eq route
           expect(route_binding.route_service_url).to eq service_instance.route_service_url

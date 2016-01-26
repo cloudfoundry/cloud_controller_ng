@@ -143,7 +143,7 @@ module VCAP::CloudController
           let!(:service_to_be_deleted)      { VCAP::CloudController::Service.make(service_broker: broker_to_be_deleted) }
           let!(:service_plan_to_be_deleted) { VCAP::CloudController::ServicePlan.make(service: service_to_be_deleted) }
           let!(:broker_to_be_deleted)       { VCAP::CloudController::ServiceBroker.make(space_guid: space.guid) }
-          let!(:broker_to_be_deleted2)       { VCAP::CloudController::ServiceBroker.make(space_guid: space.guid) }
+          let!(:broker_to_be_deleted2) { VCAP::CloudController::ServiceBroker.make(space_guid: space.guid) }
           let!(:service_instance_to_be_deleted) { ManagedServiceInstance.make(space: space, service_plan: service_plan_to_be_deleted) }
 
           before do

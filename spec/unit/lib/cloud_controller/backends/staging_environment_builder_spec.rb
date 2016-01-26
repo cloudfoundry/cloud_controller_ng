@@ -38,7 +38,7 @@ module VCAP::CloudController
               'MEMORY_LIMIT'     => memory_limit,
               'VCAP_SERVICES'    => be_an_instance_of(Hash),
               'VCAP_APPLICATION' => {
-                'limits'              => {
+                'limits' => {
                   'mem'  => memory_limit,
                   'disk' => disk_limit,
                   'fds'  => 16384

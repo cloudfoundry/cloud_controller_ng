@@ -457,7 +457,7 @@ module VCAP::CloudController
       let(:space_one) { Space.make(organization: organization_one) }
       let(:space_two) { Space.make(organization: organization_two) }
       let(:user) { make_developer_for_space(space_one) }
-      let(:headers) { headers_for(user)  }
+      let(:headers) { headers_for(user) }
 
       before do
         user.add_organization(organization_two)
@@ -661,7 +661,7 @@ module VCAP::CloudController
           end
 
           context 'when user is an Org Manager' do
-            let(:user)    { make_manager_for_org(space.organization) }
+            let(:user) { make_manager_for_org(space.organization) }
 
             it 'fails to delete spaces with associated private service brokers' do
               delete "/v2/spaces/#{space.guid}", '', headers_for(user)

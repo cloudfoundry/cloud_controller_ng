@@ -18,7 +18,7 @@ module VCAP::CloudController
     strip_attributes :label
 
     def validate
-      validates_presence :label,                message:  Sequel.lit('Service name is required')
+      validates_presence :label,                message: Sequel.lit('Service name is required')
       validates_presence :description,          message: 'is required'
       validates_presence :bindable,             message: 'is required'
       validates_url :info_url,                  message: 'must be a valid url'

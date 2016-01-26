@@ -84,7 +84,7 @@ module VCAP::CloudController
 
         it 'deletes the buildpack caches' do
           delete_buildpack_cache_jobs = Delayed::Job.where("handler like '%BuildpackCacheDelete%'")
-          expect {  app_delete.delete(app_dataset) }.to change { delete_buildpack_cache_jobs.count }.by(1)
+          expect { app_delete.delete(app_dataset) }.to change { delete_buildpack_cache_jobs.count }.by(1)
           job = delete_buildpack_cache_jobs.last
 
           expect(job.handler).to include(app.guid)

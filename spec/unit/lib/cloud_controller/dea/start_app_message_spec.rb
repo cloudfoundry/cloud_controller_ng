@@ -120,7 +120,7 @@ module VCAP::CloudController
 
       describe 'evironment variables' do
         before do
-          app.environment_json   = { 'KEY' => 'value' }
+          app.environment_json = { 'KEY' => 'value' }
         end
 
         it 'includes app environment variables' do

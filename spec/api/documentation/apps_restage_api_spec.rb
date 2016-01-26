@@ -12,7 +12,7 @@ resource 'Apps', type: [:api, :legacy_api] do
   parameter :guid, 'The guid of the App'
   post '/v2/apps/:guid/restage' do
     example 'Restage an App' do
-      client.post "/v2/apps/#{app_obj.guid}/restage", {},  headers
+      client.post "/v2/apps/#{app_obj.guid}/restage", {}, headers
       expect(status).to eq(201)
     end
   end

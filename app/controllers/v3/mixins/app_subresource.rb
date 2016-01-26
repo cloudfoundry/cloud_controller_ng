@@ -1,7 +1,7 @@
 require 'cloud_controller/membership'
 
 module AppSubresource
-  ROLES_FOR_READING =  [
+  ROLES_FOR_READING = [
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
     VCAP::CloudController::Membership::SPACE_MANAGER,
     VCAP::CloudController::Membership::SPACE_AUDITOR,

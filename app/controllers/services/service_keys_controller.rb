@@ -8,7 +8,7 @@ module VCAP::CloudController
       attribute :parameters, Hash, default: nil
     end
 
-    get path,      :enumerate
+    get path, :enumerate
 
     query_parameters :name, :service_instance_guid
 

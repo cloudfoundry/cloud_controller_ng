@@ -166,7 +166,7 @@ module VCAP::CloudController::Metrics
           cc_local:   2,
           cc_generic: 1
         }
-        expected_total                      = 3
+        expected_total = 3
 
         expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
         expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
@@ -182,7 +182,7 @@ module VCAP::CloudController::Metrics
           cc_local:   1,
           cc_generic: 1
         }
-        expected_total                      = 2
+        expected_total = 2
 
         expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
         expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
@@ -222,7 +222,7 @@ module VCAP::CloudController::Metrics
           cc_local:   2,
           cc_generic: 1
         }
-        expected_total                = 3
+        expected_total = 3
 
         expect(updater1).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
         expect(updater2).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
@@ -246,7 +246,7 @@ module VCAP::CloudController::Metrics
               size:        20,
               num_waiting: 0,
             },
-            resultqueue:      {
+            resultqueue: {
               size:        0,
               num_waiting: 1,
             },
@@ -270,7 +270,7 @@ module VCAP::CloudController::Metrics
                 size:        0,
                 num_waiting: 0,
               },
-              resultqueue:      {
+              resultqueue: {
                 size:        0,
                 num_waiting: 0,
               },

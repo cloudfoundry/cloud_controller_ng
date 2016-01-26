@@ -29,7 +29,7 @@ describe 'Service Broker API integration' do
                            secret:       'dash-board-confessional-ahhhhh',
                            redirect_uri: 'http://redirect.to.me.plz'
                          },
-                         plans:       [{
+                         plans: [{
                                          id:          'plan1-guid-here',
                                          name:        'small',
                                          description: 'A small shared database with 100mb storage quota and 10 connections'

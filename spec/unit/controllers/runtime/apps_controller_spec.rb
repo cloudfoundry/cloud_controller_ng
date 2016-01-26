@@ -632,7 +632,7 @@ module VCAP::CloudController
           expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, app_obj.space, admin_user.guid, SecurityContext.current_user_email, false)
         end
 
-        it 'records the recursive query parameter when recursive'  do
+        it 'records the recursive query parameter when recursive' do
           allow(app_event_repository).to receive(:record_app_delete_request).and_call_original
 
           delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers_for(admin_user))

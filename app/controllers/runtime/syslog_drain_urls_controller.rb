@@ -35,7 +35,7 @@ module VCAP::CloudController
     private
 
     def last_id
-      Integer(params.fetch('next_id',  0))
+      Integer(params.fetch('next_id', 0))
     end
 
     def batch_size

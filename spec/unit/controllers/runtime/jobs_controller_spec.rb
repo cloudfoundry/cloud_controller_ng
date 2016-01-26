@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::JobsController do
     let(:job) { Delayed::Job.enqueue double(perform: nil) }
     let(:job_request_id) { job.guid }
-    let(:user)  { User.make }
+    let(:user) { User.make }
 
     describe 'GET /v2/jobs/:guid' do
       context 'permissions' do
@@ -31,7 +31,7 @@ module VCAP::CloudController
         end
       end
 
-      subject { get("/v2/jobs/#{job_request_id}", {}, headers_for(user))  }
+      subject { get("/v2/jobs/#{job_request_id}", {}, headers_for(user)) }
 
       context 'when the job exists' do
         it 'returns job' do

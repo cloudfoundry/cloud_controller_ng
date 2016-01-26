@@ -30,7 +30,7 @@ module VCAP::CloudController
           uris = @app.routes.map(&:fqdn)
 
           {
-            'limits'              => {
+            'limits' => {
               'mem'  => @task.memory_in_mb,
               'disk' => default_disk_limit,
               'fds'  => Config.config[:instance_file_descriptor_limit] || 16384,

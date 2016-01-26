@@ -27,6 +27,7 @@ module VCAP::CloudController
       @route_event_repository = dependencies.fetch(:route_event_repository)
     end
 
+    # rubocop:disable Metrics/CyclomaticComplexity
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:host, :domain_id, :port])
       if name_errors && name_errors.include?(:unique)
@@ -66,6 +67,7 @@ module VCAP::CloudController
 
       Errors::ApiError.new_from_details('RouteInvalid', e.errors.full_messages)
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     def create
       json_msg = self.class::CreateMessage.decode(body)

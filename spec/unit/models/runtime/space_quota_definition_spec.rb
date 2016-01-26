@@ -83,7 +83,7 @@ module VCAP::CloudController
 
     describe '#destroy' do
       it 'nullifies space_quota_definition on space' do
-        space  = Space.make(organization: space_quota_definition.organization)
+        space = Space.make(organization: space_quota_definition.organization)
         space.space_quota_definition = space_quota_definition
         space.save
         expect { space_quota_definition.destroy }.to change { space.reload.space_quota_definition }.from(space_quota_definition).to(nil)

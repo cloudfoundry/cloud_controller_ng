@@ -86,7 +86,7 @@ class AppsV3Controller < ApplicationController
   end
 
   def destroy
-    app, space, org  = AppDeleteFetcher.new.fetch(params[:guid])
+    app, space, org = AppDeleteFetcher.new.fetch(params[:guid])
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_delete?(space.guid)
