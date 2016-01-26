@@ -1167,10 +1167,13 @@ module VCAP::CloudController
         let(:service_alt) { Service.make(label: 'giraffesql-n/a') }
         let(:service_plan) { ServicePlan.make(service: service) }
         let(:service_plan_alt) { ServicePlan.make(service: service_alt) }
-        let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-vip-uat', tags: ['excellent']) }
+        let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-vip-uat') }
         let(:service_instance_same_label) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-2') }
         let(:service_instance_diff_label) { ManagedServiceInstance.make(space: space, service_plan: service_plan_alt, name: 'giraffesql-vip-uat') }
-        let!(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com') }
+
+        before do
+          ServiceBinding.make(app: app, service_instance: service_instance)
+        end
 
         it 'contains a populated vcap_services' do
           expect(app.system_env_json['VCAP_SERVICES']).not_to eq({})
@@ -1178,49 +1181,17 @@ module VCAP::CloudController
           expect(app.system_env_json['VCAP_SERVICES']["#{service.label}"]).to have(1).services
         end
 
-        it 'includes service binding information' do
-          expect(app.system_env_json['VCAP_SERVICES']["#{service.label}"]).to have(1).items
-          expect(app.system_env_json['VCAP_SERVICES']["#{service.label}"].first).to eq(
-              'name'             => 'elephantsql-vip-uat',
-              'label'            => 'elephantsql-n/a',
-              'tags'             => ['excellent'],
-              'plan'             => service_plan.name,
-              'credentials'      => service_binding.credentials,
-              'syslog_drain_url' => 'logs.go-here.com'
-            )
-        end
-
-        context 'when process belongs to a parent(v3) app bound to a service' do
-          let(:process) { app }
-          let(:parent_app) { AppModel.make space_guid: space.guid }
-          let(:service) { Service.make(label: 'rabbit', tags: ['swell']) }
-          let(:service_plan) { ServicePlan.make(service: service) }
-          let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'rabbit-instance') }
-          let!(:service_binding) do
-            ServiceBindingModel.create(app: parent_app, service_instance: service_instance,
-                                       type: 'app', credentials: { 'url' => 'www.service.com/foo' }, syslog_drain_url: 'logs.go-here-2.com')
+        describe 'service hash includes only white-listed keys' do
+          subject(:service_hash_keys) do
+            app.system_env_json['VCAP_SERVICES']["#{service.label}"].first.keys
           end
 
-          before do
-            process.app = parent_app
-          end
-
-          it 'includes the services from the parent' do
-            expect(process.system_env_json['VCAP_SERVICES']).not_to eq({})
-            expect(process.system_env_json['VCAP_SERVICES']).to have_key("#{service.label}")
-          end
-
-          it 'includes service binding information' do
-            binding_information = process.system_env_json['VCAP_SERVICES']['rabbit'].first
-            expect(binding_information).to eq(
-                'name'             => service_instance.name,
-                'label'            => service.label,
-                'tags'             => service_instance.merged_tags,
-                'plan'             => service_plan.name,
-                'credentials'      => service_binding.credentials,
-                'syslog_drain_url' => service_binding.syslog_drain_url
-              )
-          end
+          its(:count) { should eq(5) }
+          it { is_expected.to include('name') }
+          it { is_expected.to include('label') }
+          it { is_expected.to include('tags') }
+          it { is_expected.to include('plan') }
+          it { is_expected.to include('credentials') }
         end
 
         describe 'grouping' do
