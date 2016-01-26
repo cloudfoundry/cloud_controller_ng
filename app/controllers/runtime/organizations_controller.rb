@@ -72,7 +72,8 @@ module VCAP::CloudController
     def enumerate_services(guid)
       org = find_guid_and_validate_access(:read, guid)
 
-      associated_controller, associated_model = ServicesController, Service
+      associated_controller = ServicesController
+      associated_model = Service
 
       filtered_dataset = Query.filtered_dataset_from_query_params(
         associated_model,

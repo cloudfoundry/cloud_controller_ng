@@ -4,6 +4,7 @@ AllCops:
     - Rakefile
   Exclude:
     - vendor/**/*
+    - db/migrations/**/*
 
 UnusedMethodArgument:
   Enabled: false
@@ -136,4 +137,10 @@ Performance/Sample:
   Enabled: false
 
 ClosingParenthesisIndentation:
+  Enabled: false
+
+ModuleLength:
+  Enabled: false
+
+Style/TrailingUnderscoreVariable:
   Enabled: false
