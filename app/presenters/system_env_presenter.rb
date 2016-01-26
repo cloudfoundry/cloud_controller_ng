@@ -14,7 +14,7 @@ class SystemEnvPresenter
   def service_binding_env_variables(service_bindings)
     services_hash = {}
     service_bindings.each do |service_binding|
-      service_name                = service_binding_label(service_binding)
+      service_name                = service_binding.service.label
       services_hash[service_name] ||= []
       services_hash[service_name] << service_binding_env_values(service_binding)
     end
@@ -23,50 +23,12 @@ class SystemEnvPresenter
 
   def service_binding_env_values(service_binding)
     {
+      'name'             => service_binding.service_instance.name,
+      'label'            => service_binding.service.label,
+      'tags'             => service_binding.service_instance.merged_tags,
+      'plan'             => service_binding.service_instance.service_plan.name,
       'credentials'      => service_binding.credentials,
       'syslog_drain_url' => service_binding.syslog_drain_url
-    }.merge(service_instance_presenter(service_binding.service_instance))
-  end
-
-  def service_instance_presenter(service_instance)
-    if service_instance.is_gateway_service
-      @presenter = ManagedPresenter.new(service_instance)
-    else
-      @presenter = ProvidedPresenter.new(service_instance)
-    end
-  end
-
-  def service_binding_label(service_binding)
-    service_instance_presenter(service_binding.service_instance).to_hash['label']
-  end
-
-  class ProvidedPresenter
-    def initialize(service_instance)
-      @service_instance = service_instance
-    end
-
-    def to_hash
-      {
-        'label' => 'user-provided',
-        'name'  => @service_instance.name,
-        'tags'  => @service_instance.tags
-      }
-    end
-  end
-
-  class ManagedPresenter
-    def initialize(service_instance)
-      @service_instance = service_instance
-    end
-
-    def to_hash
-      {
-        'label'    => @service_instance.service.label,
-        'provider' => @service_instance.service.provider,
-        'plan'     => @service_instance.service_plan.name,
-        'name'     => @service_instance.name,
-        'tags'     => @service_instance.merged_tags
-      }
-    end
+    }
   end
 end

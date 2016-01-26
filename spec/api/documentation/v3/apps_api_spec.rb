@@ -692,8 +692,7 @@ resource 'Apps (Experimental)', type: :api do
                 'tags' => ['50% off'],
                 'plan' => service_instance.service_plan.name,
                 'credentials' => service_binding.credentials,
-                'syslog_drain_url' => 'https://syslog.example.com/drain',
-                'provider' => nil
+                'syslog_drain_url' => 'https://syslog.example.com/drain'
               }
             ]
           }
