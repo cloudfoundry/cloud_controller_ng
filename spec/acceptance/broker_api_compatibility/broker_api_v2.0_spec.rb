@@ -345,9 +345,7 @@ describe 'Service Broker API integration' do
         include_examples 'broker errors'
 
         it 'sends all required fields' do
-          # rubocop:disable Metrics/LineLength
           expected_url = %r{broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}\?plan_id=plan1-guid-here&service_id=service-guid-here}
-          # rubocop:enable Metrics/LineLength
           expect(a_request(:delete, expected_url)).to have_been_made
         end
 

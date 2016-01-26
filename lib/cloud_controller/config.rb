@@ -9,7 +9,6 @@ require 'repositories/services/event_repository'
 
 # Config template for cloud controller
 module VCAP::CloudController
-  # rubocop:disable ClassLength
   class Config < VCAP::Config
     define_schema do
       {

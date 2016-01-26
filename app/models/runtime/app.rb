@@ -11,7 +11,6 @@ require 'presenters/v3/cache_key_presenter'
 require_relative 'buildpack'
 
 module VCAP::CloudController
-  # rubocop:disable ClassLength
   class App < Sequel::Model
     plugin :serialization
     plugin :after_initialize
