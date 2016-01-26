@@ -647,7 +647,7 @@ resource 'Apps (Experimental)', type: :api do
     let(:space_name) { 'some_space' }
     let(:space) { VCAP::CloudController::Space.make(name: space_name) }
     let(:space_guid) { space.guid }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make space: space, tags: ['50% off'] }
+
     let(:app_model) do
       VCAP::CloudController::AppModel.make(
         name:                  'app_name',
@@ -656,9 +656,6 @@ resource 'Apps (Experimental)', type: :api do
           'SOME_KEY' => 'some_val'
         }
       )
-    end
-    let!(:service_binding) do
-      VCAP::CloudController::ServiceBindingModel.make service_instance: service_instance, app: app_model, syslog_drain_url: 'https://syslog.example.com/drain'
     end
 
     before do
@@ -683,20 +680,9 @@ resource 'Apps (Experimental)', type: :api do
         'environment_variables' => {
           'SOME_KEY' => 'some_val'
         },
-        'system_env_json' => {
-          'VCAP_SERVICES' => {
-            service_instance.service.label => [
-              {
-                'name' => service_instance.name,
-                'label' => service_instance.service.label,
-                'tags' => ['50% off'],
-                'plan' => service_instance.service_plan.name,
-                'credentials' => service_binding.credentials,
-                'syslog_drain_url' => 'https://syslog.example.com/drain'
-              }
-            ]
-          }
-        },
+        # 'system_env_json' => {
+        #   'VCAP_SERVICES' => "NOT YET IMPLEMENTED"
+        # },
         'application_env_json'  => {
           'VCAP_APPLICATION' => {
             'limits'           => {
