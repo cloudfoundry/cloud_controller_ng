@@ -33,7 +33,12 @@ namespace :spec do
     run_specs("spec/integration")
   end
 
-  task outer: %w[api acceptance integration]
+  desc "Run the request tests"
+  task request: "db:pick" do
+    run_specs("spec/request")
+  end
+
+  task outer: %w[api acceptance integration request]
 
   desc 'Run only previously failing tests'
   task failed: "db:pick" do
