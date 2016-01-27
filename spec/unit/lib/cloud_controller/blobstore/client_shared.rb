@@ -72,11 +72,4 @@ shared_examples_for 'a blobstore client' do
   it 'returns a blob object for a file by key' do
     expect(subject.blob(key)).to be_a(CloudController::Blobstore::Blob)
   end
-
-  # TODO: remove it
-  it 'has a files method that we want to remove' do
-    expect {
-      subject.files
-    }.not_to raise_error
-  end
 end

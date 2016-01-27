@@ -122,12 +122,11 @@ module CloudController
         FogBlob.new(f, @cdn) if f
       end
 
-      # Deprecated should not allow to access underlying files
+      private
+
       def files
         dir.files
       end
-
-      private
 
       def files_for(prefix)
         if connection.is_a? Fog::Storage::Local::Real

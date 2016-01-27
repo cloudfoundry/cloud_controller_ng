@@ -39,10 +39,6 @@ module CloudController
       def blob(key)
         Blob.new
       end
-
-      # Deprecated should not allow to access underlying files
-      def files
-      end
     end
   end
 end

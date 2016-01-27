@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'webrick'
 require_relative '../client_shared'
+require 'fog/aws/models/storage/files'
 
 module CloudController
   module Blobstore
@@ -11,8 +12,8 @@ module CloudController
       let(:directory_key) { 'a-directory-key' }
       let(:connection_config) do
         {
-          provider: 'AWS',
-          aws_access_key_id: 'fake_access_key_id',
+          provider:              'AWS',
+          aws_access_key_id:     'fake_access_key_id',
           aws_secret_access_key: 'fake_secret_access_key',
         }
       end
@@ -87,6 +88,7 @@ module CloudController
       end
 
       context 'common behaviors' do
+        let(:directory) { Fog::Storage.new(connection_config).directories.create(key: directory_key) }
         subject(:client) do
           described_class.new(connection_config, directory_key)
         end
@@ -96,21 +98,9 @@ module CloudController
             upload_tmpfile(client, sha_of_content)
           end
 
-          describe '#files' do
-            it 'returns a file saved in the blob store' do
-              expect(client.files).to have(1).item
-              expect(client.exists?(sha_of_content)).to be true
-            end
-
-            it 'uses the correct director keys when storing files' do
-              actual_directory_key = client.files.first.directory.key
-              expect(actual_directory_key).to eq(directory_key)
-            end
-          end
-
           describe 'a file existence' do
             it 'does not exist if not present' do
-              different_content = 'foobar'
+              different_content        = 'foobar'
               sha_of_different_content = Digester.new.digest(different_content)
 
               expect(client.exists?(sha_of_different_content)).to be false
@@ -234,9 +224,12 @@ module CloudController
 
         describe '#cp_to_blobstore' do
           it 'calls the fog with public false' do
-            FileUtils.touch(File.join(local_dir, 'empty_file'))
-            expect(client.files).to receive(:create).with(hash_including(public: false))
-            client.cp_to_blobstore(local_dir, 'empty_file')
+            path = File.join(local_dir, 'empty_file')
+            FileUtils.touch(path)
+
+            client.cp_to_blobstore(path, 'foobar')
+
+            expect(directory.files.head('fo/ob/foobar').public?).to be_falsey
           end
 
           it 'uploads the files with the specified key' do
@@ -245,7 +238,7 @@ module CloudController
 
             client.cp_to_blobstore(path, 'abcdef123456')
             expect(client.exists?('abcdef123456')).to be true
-            expect(client.files).to have(1).item
+            expect(directory.files).to have(1).item
           end
 
           it 'defaults to private files' do
@@ -271,16 +264,18 @@ module CloudController
             path = File.join(local_dir, 'empty_file')
             FileUtils.touch(path)
 
-            expect(client.files).to receive(:create).with(hash_including(content_type: 'application/zip'))
             client.cp_to_blobstore(path, 'abcdef123456')
+
+            expect(directory.files.head('ab/cd/abcdef123456').content_type).to eq('application/zip')
           end
 
           it 'sets conten-type to mime-type of file when specified' do
             path = File.join(local_dir, 'empty_file.png')
             FileUtils.touch(path)
 
-            expect(client.files).to receive(:create).with(hash_including(content_type: 'image/png'))
             client.cp_to_blobstore(path, 'abcdef123456')
+
+            expect(directory.files.head('ab/cd/abcdef123456').content_type).to eq('image/png')
           end
 
           context 'limit the file size' do
@@ -311,7 +306,7 @@ module CloudController
             context 'and the error is a Excon::Errors::SocketError' do
               it 'succeeds when the underlying call eventually succeds' do
                 called = 0
-                expect(client.files).to receive(:create).exactly(3).times do |_|
+                expect_any_instance_of(Fog::Storage::AWS::Files).to receive(:create).exactly(3).times do |_|
                   called += 1
                   raise Excon::Errors::SocketError.new(EOFError.new) if called <= 2
                 end
@@ -324,7 +319,7 @@ module CloudController
               end
 
               it 'fails when the max number of retries is hit' do
-                expect(client.files).to receive(:create).exactly(3).times.and_raise(Excon::Errors::SocketError.new(EOFError.new))
+                expect_any_instance_of(Fog::Storage::AWS::Files).to receive(:create).exactly(3).times.and_raise(Excon::Errors::SocketError.new(EOFError.new))
 
                 path = File.join(local_dir, 'some_file')
                 FileUtils.touch(path)
@@ -337,7 +332,7 @@ module CloudController
             context 'and the error is a Excon::Errors::BadRequest' do
               it 'succeeds when the underlying call eventually succeds' do
                 called = 0
-                expect(client.files).to receive(:create).exactly(3).times do |_|
+                expect_any_instance_of(Fog::Storage::AWS::Files).to receive(:create).exactly(3).times do |_|
                   called += 1
                   raise Excon::Errors::BadRequest.new('a bad request') if called <= 2
                 end
@@ -350,7 +345,7 @@ module CloudController
               end
 
               it 'fails when the max number of retries is hit' do
-                expect(client.files).to receive(:create).exactly(3).times.and_raise(Excon::Errors::BadRequest.new('a bad request'))
+                expect_any_instance_of(Fog::Storage::AWS::Files).to receive(:create).exactly(3).times.and_raise(Excon::Errors::BadRequest.new('a bad request'))
 
                 path = File.join(local_dir, 'some_file')
                 FileUtils.touch(path)
@@ -362,7 +357,7 @@ module CloudController
 
             context 'when retries is 0' do
               it 'fails if the underlying operation fails' do
-                expect(client.files).to receive(:create).once.and_raise(SystemCallError.new('o no'))
+                expect_any_instance_of(Fog::Storage::AWS::Files).to receive(:create).once.and_raise(SystemCallError.new('o no'))
 
                 path = File.join(local_dir, 'some_file')
                 FileUtils.touch(path)
@@ -376,7 +371,7 @@ module CloudController
               context 'and the underlying blobstore eventually succeeds' do
                 it 'succeeds' do
                   called = 0
-                  expect(client.files).to receive(:create).exactly(3).times do |_|
+                  expect_any_instance_of(Fog::Storage::AWS::Files).to receive(:create).exactly(3).times do |_|
                     called += 1
                     raise SystemCallError.new('o no') if called <= 2
                   end
@@ -391,7 +386,7 @@ module CloudController
 
               context 'and the underlying blobstore fails more than the requested number of retries' do
                 it 'fails' do
-                  expect(client.files).to receive(:create).exactly(3).times.and_raise(SystemCallError.new('o no'))
+                  expect_any_instance_of(Fog::Storage::AWS::Files).to receive(:create).exactly(3).times.and_raise(SystemCallError.new('o no'))
 
                   path = File.join(local_dir, 'some_file')
                   FileUtils.touch(path)
@@ -413,7 +408,7 @@ module CloudController
             client.cp_file_between_keys(src_key, dest_key)
 
             expect(client.exists?(dest_key)).to be true
-            expect(client.files).to have(2).item
+            expect(directory.files).to have(2).item
           end
 
           context 'when the source file is public' do
@@ -446,9 +441,9 @@ module CloudController
 
             it 'removes the old package from the package blobstore' do
               client.cp_file_between_keys(src_key, dest_key)
-              expect(client.files).to have(2).item
+              expect(directory.files).to have(2).item
 
-              src_file_length = client.blob(dest_key).file.content_length
+              src_file_length  = client.blob(dest_key).file.content_length
               dest_file_length = client.blob(src_key).file.content_length
               expect(dest_file_length).to eq(src_file_length)
             end
@@ -460,7 +455,7 @@ module CloudController
                 client.cp_file_between_keys(src_key, dest_key)
               }.to raise_error(CloudController::Blobstore::FileNotFound)
 
-              expect(client.files).to have(0).items
+              expect(directory.files).to have(0).items
             end
           end
         end
@@ -494,7 +489,7 @@ module CloudController
           end
 
           it 'should be ok if there are no files' do
-            expect(client.files).to have(0).items
+            expect(directory.files).to have(0).items
             expect {
               client.delete_all
             }.to_not raise_error
@@ -503,15 +498,15 @@ module CloudController
           context 'when the underlying blobstore allows multiple deletes in a single request' do
             let(:connection_config) do
               {
-                provider: 'AWS',
-                aws_access_key_id: 'fake_access_key_id',
+                provider:              'AWS',
+                aws_access_key_id:     'fake_access_key_id',
                 aws_secret_access_key: 'fake_secret_access_key',
               }
             end
 
             it 'should be ok if there are no files' do
               Fog.mock!
-              expect(client.files).to have(0).items
+              expect(directory.files).to have(0).items
               expect {
                 client.delete_all
               }.to_not raise_error
@@ -584,7 +579,7 @@ module CloudController
             remote_key_2 = "#{remote_path_1}/stack_2"
 
             remote_path_2 = 'bbbbguid'
-            remote_key_3 = "#{remote_path_2}/stack_3"
+            remote_key_3  = "#{remote_path_2}/stack_3"
 
             client.cp_to_blobstore(path, remote_key_1)
             client.cp_to_blobstore(path, remote_key_2)
@@ -601,7 +596,7 @@ module CloudController
           end
 
           it 'should be ok if there are no files' do
-            expect(client.files).to have(0).items
+            expect(directory.files).to have(0).items
             expect {
               client.delete_all_in_path('nonsense_path')
             }.to_not raise_error
@@ -610,15 +605,15 @@ module CloudController
           context 'when the underlying blobstore allows multiple deletes in a single request' do
             let(:connection_config) do
               {
-                provider: 'AWS',
-                aws_access_key_id: 'fake_access_key_id',
+                provider:              'AWS',
+                aws_access_key_id:     'fake_access_key_id',
                 aws_secret_access_key: 'fake_secret_access_key',
               }
             end
 
             it 'should be ok if there are no files' do
               Fog.mock!
-              expect(client.files).to have(0).items
+              expect(directory.files).to have(0).items
               expect {
                 client.delete_all_in_path('path!')
               }.to_not raise_error
@@ -640,7 +635,7 @@ module CloudController
               remote_key_2 = "#{remote_path_1}/stack_2"
 
               remote_path_2 = 'bbbbguid'
-              remote_key_3 = "#{remote_path_2}/stack_3"
+              remote_key_3  = "#{remote_path_2}/stack_3"
 
               client_with_root.cp_to_blobstore(path, remote_key_1)
               client_with_root.cp_to_blobstore(path, remote_key_2)
@@ -670,7 +665,7 @@ module CloudController
           end
 
           it "should be ok if the file doesn't exist" do
-            expect(client.files).to have(0).items
+            expect(directory.files).to have(0).items
             expect {
               client.delete('non-existent-file')
             }.to_not raise_error
@@ -719,8 +714,8 @@ module CloudController
           total_time = 0
           while code != '200' && total_time < 10
             begin
-              res  = Net::HTTP.get_response(URI(uri))
-              code = res.code
+              res        = Net::HTTP.get_response(URI(uri))
+              code       = res.code
               total_time += 0.1
               sleep 0.1
             rescue
@@ -743,8 +738,8 @@ module CloudController
             client = described_class.new(connection_config, directory_key, cdn)
 
             source_directory_path = File.expand_path('../../../../../fixtures/', File.dirname(__FILE__))
-            source_file_path = File.join(source_directory_path, 'pa/rt/partitioned_key')
-            source_hexdigest = Digest::SHA2.file(source_file_path).hexdigest
+            source_file_path      = File.join(source_directory_path, 'pa/rt/partitioned_key')
+            source_hexdigest      = Digest::SHA2.file(source_file_path).hexdigest
 
             pid = spawn("ruby -rwebrick -e'WEBrick::HTTPServer.new(:Port => #{port}, :DocumentRoot => \"#{source_directory_path}\").start'", out: 'test.out', err: 'test.err')
 
@@ -775,7 +770,7 @@ module CloudController
 
           it 'correctly downloads byte streams' do
             Fog.unmock!
-            local_root = File.expand_path('../../../../../', File.dirname(__FILE__))
+            local_root            = File.expand_path('../../../../../', File.dirname(__FILE__))
             source_directory_path = File.join(local_root, 'fixtures')
 
             client = described_class.new({ provider: 'Local', local_root: local_root }, 'fixtures')
