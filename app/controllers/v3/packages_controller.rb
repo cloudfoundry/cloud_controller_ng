@@ -96,6 +96,7 @@ class PackagesController < ApplicationController
 
     package = PackageModel.where(guid: params[:guid]).eager(:app, :space, space: :organization, app: :buildpack_lifecycle_data).all.first
     package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
+    staging_in_progress! if package.app.staging_in_progress?
 
     if package.type == VCAP::CloudController::PackageModel::DOCKER_TYPE && !roles.admin?
       FeatureFlag.raise_unless_enabled!('diego_docker')
@@ -137,6 +138,10 @@ class PackagesController < ApplicationController
 
   def unable_to_perform!(operation, message)
     raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', operation, message)
+  end
+
+  def staging_in_progress!
+    raise VCAP::Errors::ApiError.new_from_details('StagingInProgress')
   end
 
   def package_presenter

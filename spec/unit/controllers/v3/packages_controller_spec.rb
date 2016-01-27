@@ -642,6 +642,18 @@ describe PackagesController, type: :controller do
       expect(VCAP::CloudController::DropletModel.last.package.guid).to eq(package.guid)
     end
 
+    context 'if staging is in progress on any package on the app' do
+      before do
+        allow_any_instance_of(VCAP::CloudController::AppModel).to receive(:staging_in_progress?).and_return true
+      end
+
+      it 'returns a 422 Unprocessable Entity and an informative error message' do
+        post :stage, guid: package.guid
+        expect(response.status).to eq 422
+        expect(response.body).to include 'Only one package can be staged at a time per application.'
+      end
+    end
+
     context 'admin' do
       before do
         @request.env.merge!(json_headers(admin_headers))

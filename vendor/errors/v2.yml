@@ -563,6 +563,11 @@
   http_code: 500
   message: "Runner error: %s"
 
+170017:
+  name: StagingInProgress
+  http_code: 422
+  message: "Only one package can be staged at a time per application."
+
 180002:
   name: ServiceGatewayError
   http_code: 503
