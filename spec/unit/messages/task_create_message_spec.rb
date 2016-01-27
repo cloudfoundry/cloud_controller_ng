@@ -8,6 +8,9 @@ module VCAP::CloudController
         {
           'name': 'mytask',
           'command': 'rake db:migrate && true',
+          'environment_variables' => {
+            'ENVVAR' => 'env-val'
+          },
         }
       end
 
@@ -17,6 +20,7 @@ module VCAP::CloudController
         expect(message).to be_a(TaskCreateMessage)
         expect(message.name).to eq('mytask')
         expect(message.command).to eq('rake db:migrate && true')
+        expect(message.environment_variables).to eq({ 'ENVVAR' => 'env-val' })
       end
 
       it 'validates that there are not excess fields' do
@@ -26,6 +30,31 @@ module VCAP::CloudController
         expect(message).to_not be_valid
         expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
       end
+
+      context 'when environment_variables is not a hash' do
+        let(:params) do
+          {
+            name:                  'name',
+            environment_variables: 'potato',
+            relationships:         { space: { guid: 'guid' } },
+            lifecycle: {
+              type: 'buildpack',
+              data: {
+                buildpack: 'nil',
+                stack: Stack.default.name
+              }
+            }
+          }
+        end
+
+        it 'is not valid' do
+          message = AppCreateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors_on(:environment_variables)).to include('must be a hash')
+        end
+      end
+
     end
   end
 end
