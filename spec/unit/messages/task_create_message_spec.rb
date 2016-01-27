@@ -54,7 +54,6 @@ module VCAP::CloudController
           expect(message.errors_on(:environment_variables)).to include('must be a hash')
         end
       end
-
     end
   end
 end
