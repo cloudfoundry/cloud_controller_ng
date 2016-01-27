@@ -245,7 +245,7 @@ module VCAP::CloudController
           :routes,
           :service_bindings,
           :domain
-        ].length)
+        ].freeze.length)
       end
     end
 
@@ -331,7 +331,7 @@ module VCAP::CloudController
           :routes,
           :service_bindings,
           :domain
-        ].length)
+        ].freeze.length)
       end
 
       context 'when the process guid is not found' do

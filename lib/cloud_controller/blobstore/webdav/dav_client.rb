@@ -99,7 +99,7 @@ module CloudController
         raise BlobstoreError.new("Could not copy object while creating destination, #{response.status}/#{response.content}") if response.status != 201 && response.status != 204
 
         response = @client.request(:copy, url(source_key), header: @headers.merge(destination_header))
-        raise FileNotFound.new("Could not find object '#{source_key}', #{response.status}/#{response.content}") if (response.status == 404)
+        raise FileNotFound.new("Could not find object '#{source_key}', #{response.status}/#{response.content}") if response.status == 404
         raise BlobstoreError.new("Could not copy object, #{response.status}/#{response.content}") if response.status != 201 && response.status != 204
       end
 
