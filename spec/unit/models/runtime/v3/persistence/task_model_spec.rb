@@ -69,6 +69,14 @@ module VCAP::CloudController
         end
       end
 
+      describe 'environment_variables' do
+        it 'validates them' do
+          expect {
+            AppModel.make(environment_variables: '')
+          }.to raise_error(Sequel::ValidationFailed, /must be a hash/)
+        end
+      end
+
       describe 'presence' do
         it 'must have an app' do
           expect { TaskModel.make(name: 'name',
