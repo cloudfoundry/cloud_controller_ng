@@ -44,7 +44,6 @@ module VCAP::CloudController
     end
 
     describe '#staging_in_progress' do
-
       context 'when a droplet is in staging state' do
         let!(:droplet) { DropletModel.make(app_guid: app_model.guid, state: DropletModel::STAGING_STATE) }
 
