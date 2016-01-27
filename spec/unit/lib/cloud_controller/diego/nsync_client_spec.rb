@@ -182,71 +182,71 @@ module VCAP::CloudController::Diego
       end
     end
 
-      describe '#run_task' do
-        let(:content_type_header) { { 'Content-Type' => 'application/json' } }
-        let(:droplet) { VCAP::CloudController::DropletModel.make(droplet_hash: 'some-fake-key') }
-        let(:task) { VCAP::CloudController::TaskModel.make(droplet: droplet) }
-        let(:config) { {} }
-        let(:client_url) { "#{config[:diego_nsync_url]}/v1/task" }
+    describe '#desire_task' do
+      let(:content_type_header) { { 'Content-Type' => 'application/json' } }
+      let(:droplet) { VCAP::CloudController::DropletModel.make(droplet_hash: 'some-fake-key') }
+      let(:task) { VCAP::CloudController::TaskModel.make(droplet: droplet) }
+      let(:config) { {} }
+      let(:client_url) { "#{config[:diego_nsync_url]}/v1/tasks" }
 
-        context 'when the config is missing a diego task url' do
-          it 'sets the state to FAILED and returns an error' do
-            expect { client.run_task(task) }.to raise_error VCAP::Errors::ApiError, /Diego Task URL does not exist/
+      context 'when the config is missing a diego task url' do
+        it 'sets the state to FAILED and returns an error' do
+          expect { client.desire_task(task) }.to raise_error VCAP::Errors::ApiError, /Diego Task URL does not exist/
+          expect(task.state).to eq('FAILED')
+        end
+      end
+
+      context 'when there is a valid config' do
+        let(:config) do
+          {
+            diego_nsync_url: 'http://nsync.service.cf.internal:8787',
+            internal_api: {
+              auth_user: 'my-cool-user',
+              auth_password: 'my-not-so-cool-password'
+            },
+            internal_service_hostname: 'hostname'
+          }
+        end
+        let(:protocol) { instance_double(VCAP::CloudController::Diego::V3::Protocol::TaskProtocol) }
+        let(:desired_message) { MultiJson.dump({ process_guid: 'process-guid' }) }
+
+        before do
+          allow(VCAP::CloudController::Diego::V3::Protocol::TaskProtocol).to receive(:new).and_return(protocol)
+          allow(protocol).to receive(:task_request).and_return(desired_message)
+          stub_request(:post, client_url).to_return(status: 202, body: '')
+        end
+
+        it 'keeps the task state as RUNNING' do
+          expect { client.desire_task(task) }.not_to raise_error
+          expect(task.state).to eq('RUNNING')
+        end
+
+        it 'send the request with a proper json body' do
+          expect { client.desire_task(task) }.not_to raise_error
+          expect(a_request(:post, client_url).with(body: desired_message, headers: content_type_header)).to have_been_made.once
+        end
+
+        context 'when the task url is unavailable' do
+          it 'retries and eventually raises TaskWorkerUnavailable' do
+            stub = stub_request(:post, client_url).to_raise(Errno::ECONNREFUSED)
+
+            expect { client.desire_task(task) }.to raise_error(VCAP::Errors::ApiError, /connection refused/i)
+            expect(stub).to have_been_requested.times(3)
             expect(task.state).to eq('FAILED')
           end
         end
 
-        context 'when there is a valid config' do
-          let(:config) do
-            {
-              diego_nsync_url: 'http://nsync.service.cf.internal:8787',
-              internal_api: {
-                auth_user: 'my-cool-user',
-                auth_password: 'my-not-so-cool-password'
-              },
-              internal_service_hostname: 'hostname'
-            }
-          end
-          let(:protocol) { instance_double(VCAP::CloudController::Diego::V3::Protocol::TaskProtocol) }
-          let(:desired_message) { MultiJson.dump({ process_guid: 'process-guid' }) }
-
+        context 'when we do not receive a 202 from the task endpoint' do
           before do
-            allow(VCAP::CloudController::Diego::V3::Protocol::TaskProtocol).to receive(:new).and_return(protocol)
-            allow(protocol).to receive(:task_request).and_return(desired_message)
-            stub_request(:put, client_url).to_return(status: 202, body: '')
+            stub_request(:post, client_url).to_return(status: 500, body: '')
           end
 
-          it 'keeps the task state as RUNNING' do
-            expect { client.run_task(task) }.not_to raise_error
-            expect(task.state).to eq('RUNNING')
-          end
-
-          it 'send the request with a proper json body' do
-            expect { client.run_task(task) }.not_to raise_error
-            expect(a_request(:put, client_url).with(body: desired_message, headers: content_type_header)).to have_been_made.once
-          end
-
-          context 'when the task url is unavailable' do
-            it 'retries and eventually raises TaskWorkerUnavailable' do
-              stub = stub_request(:put, client_url).to_raise(Errno::ECONNREFUSED)
-
-              expect { client.run_task(task) }.to raise_error(VCAP::Errors::ApiError, /connection refused/i)
-              expect(stub).to have_been_requested.times(3)
-              expect(task.state).to eq('FAILED')
-            end
-          end
-
-          context 'when we do not receive a 202 from the task endpoint' do
-            before do
-              stub_request(:put, client_url).to_return(status: 500, body: '')
-            end
-
-            it 'raises a TaskError' do
-              expect { client.run_task(task) }.to raise_error(VCAP::Errors::ApiError, /task failed: 500/i)
-              expect(task.state).to eq('FAILED')
-            end
+          it 'raises a TaskError' do
+            expect { client.desire_task(task) }.to raise_error(VCAP::Errors::ApiError, /task failed: 500/i)
+            expect(task.state).to eq('FAILED')
           end
         end
       end
+    end
   end
 end

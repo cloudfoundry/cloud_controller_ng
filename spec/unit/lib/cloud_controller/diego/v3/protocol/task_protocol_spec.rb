@@ -48,7 +48,7 @@ module VCAP::CloudController
             context 'the task has a buildpack droplet' do
               let(:app) { AppModel.make }
               let(:droplet) { DropletModel.make(:buildpack, app_guid: app.guid, environment_variables: { 'foo' => 'bar' }) }
-              let(:task) { TaskModel.new(app_guid: app.guid, droplet_guid: droplet.guid, command: 'be rake my panda') }
+              let(:task) { TaskModel.make(app_guid: app.guid, droplet_guid: droplet.guid, command: 'be rake my panda') }
 
               before do
                 app.buildpack_lifecycle_data = BuildpackLifecycleDataModel.make
@@ -58,40 +58,41 @@ module VCAP::CloudController
               it 'contains the correct payload for creating a task' do
                 result = protocol.task_request(task, config)
 
-                expect(result).to eq({
-                  rootfs:                app.lifecycle_data.stack,
-                  log_guid:              app.guid,
-                  environment_variables: [{ 'name' => 'foo', 'value' => 'bar' }],
-                  memory_mb:             1024,
-                  disk_mb:               1024,
-                  egress_rules:          ['running_egress_rule'],
-                  droplet_url:           'www.droplet.url',
-                  lifecycle_type:        Lifecycles::BUILDPACK,
-                  command:               'be rake my panda',
-                  completion_callback:   "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/task/#{task.guid}/completed"
+                expect(result).to match_json({
+                  'task_guid' => task.guid,
+                  'rootfs' => app.lifecycle_data.stack,
+                  'log_guid' => app.guid,
+                  'environment' => [{ 'name' => 'foo', 'value' => 'bar' }],
+                  'memory_mb' => 1024,
+                  'disk_mb' => 1024,
+                  'egress_rules' => ['running_egress_rule'],
+                  'droplet_uri' => 'www.droplet.url',
+                  'lifecycle' => Lifecycles::BUILDPACK,
+                  'command' => 'be rake my panda',
+                  'completion_callback' => "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed"
                 })
               end
             end
 
             context 'the task has a docker file droplet' do
               let(:app) { AppModel.make }
-              let(:droplet) { DropletModel.make(:docker, app_guid: app.guid, environment_variables: { 'foo' => 'bar' }, docker_receipt_image: 'image_url') }
+              let(:droplet) { DropletModel.make(:docker, app_guid: app.guid, environment_variables: { 'foo' => 'bar' }, docker_receipt_image: 'cloudfoundry/capi-docker') }
               let(:task) { TaskModel.new(app_guid: app.guid, droplet_guid: droplet.guid, command: 'be rake my panda') }
 
               it 'contains the correct payload for creating a task' do
                 result = protocol.task_request(task, config)
 
-                expect(result).to eq({
-                  rootfs:                'image_url',
-                  log_guid:              app.guid,
-                  environment_variables: [{ 'name' => 'foo', 'value' => 'bar' }],
-                  memory_mb:             1024,
-                  disk_mb:               1024,
-                  egress_rules:          ['running_egress_rule'],
-                  droplet_url:           'www.droplet.url',
-                  lifecycle_type:        Lifecycles::DOCKER,
-                  command:               'be rake my panda',
-                  completion_callback:   "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/task/#{task.guid}/completed"
+                expect(result).to match_json({
+                  'task_guid' => task.guid,
+                  'log_guid' => app.guid,
+                  'environment' => [{ 'name' => 'foo', 'value' => 'bar' }],
+                  'memory_mb' => 1024,
+                  'disk_mb' => 1024,
+                  'egress_rules' => ['running_egress_rule'],
+                  'docker_path' => 'cloudfoundry/capi-docker',
+                  'lifecycle' => Lifecycles::DOCKER,
+                  'command' => 'be rake my panda',
+                  'completion_callback' => "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed"
                 })
               end
             end

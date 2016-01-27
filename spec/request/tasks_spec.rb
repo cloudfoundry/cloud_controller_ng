@@ -26,7 +26,7 @@ describe 'Tasks' do
 
   before do
     allow(ApplicationController).to receive(:configuration).and_return(TestConfig.config)
-    stub_request(:put, 'http://nsync.service.cf.internal:8787/v1/task').to_return(status: 202)
+    stub_request(:post, 'http://nsync.service.cf.internal:8787/v1/tasks').to_return(status: 202)
 
     VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: true, error_message: nil)
 

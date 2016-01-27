@@ -21,7 +21,7 @@ class AppsTasksController < ApplicationController
 
     task     = TaskCreate.new.create(app, message)
     diego_task_runner = VCAP::CloudController::Diego::NsyncClient.new(configuration)
-    diego_task_runner.run_task(task)
+    diego_task_runner.desire_task(task)
 
     render status: :accepted, json: TaskPresenter.new.present_json(task)
   rescue TaskCreate::InvalidTask, TaskCreate::TaskCreateError => e

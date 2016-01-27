@@ -9,19 +9,19 @@ module VCAP::CloudController
         @url = URI(config[:diego_nsync_url]) if config[:diego_nsync_url]
       end
 
-      def run_task(task)
+      def desire_task(task)
         if @url.nil?
           raise Errors::ApiError.new_from_details('InvalidTaskAddress', 'Diego Task URL does not exist.')
         end
 
         logger.info('task.request', task_guid: task.guid)
 
-        path = '/v1/task'
+        path = '/v1/tasks'
         task_request = V3::Protocol::TaskProtocol.new(EgressRules.new).task_request(task, @config)
 
         begin
           tries ||= 3
-          response = http_client.put(path, task_request, REQUEST_HEADERS)
+          response = http_client.post(path, task_request, REQUEST_HEADERS)
         rescue Errno::ECONNREFUSED => e
           retry unless (tries -= 1).zero?
           raise Errors::ApiError.new_from_details('TaskWorkersUnavailable', e)
@@ -32,7 +32,7 @@ module VCAP::CloudController
         end
 
         return nil
-      rescue Exception => e
+      rescue => e
         fail_task(task)
         raise e
       end

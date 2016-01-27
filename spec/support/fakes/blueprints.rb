@@ -80,6 +80,7 @@ module VCAP::CloudController
   end
 
   TaskModel.blueprint do
+    guid { Sham.guid }
     app { AppModel.make }
     name { Sham.name }
     droplet { DropletModel.make(app_guid: app.guid) }

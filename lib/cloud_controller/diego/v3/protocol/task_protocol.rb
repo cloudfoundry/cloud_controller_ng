@@ -20,28 +20,29 @@ module VCAP::CloudController
             blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator(true)
 
             result = {
-              log_guid:              task.app.guid,
-              memory_mb:             config[:default_app_memory],
-              disk_mb:               config[:default_app_disk_in_mb],
-              environment_variables: env || nil,
-              egress_rules:          @egress_rules.running(task.app),
-              droplet_url:           blobstore_url_generator.v3_droplet_download_url(task.droplet),
-              completion_callback:   task_completion_callback(task, config),
-              lifecycle_type:        task.app.lifecycle_type,
-              command:               task.command,
+              'task_guid' => task.guid,
+              'log_guid' => task.app.guid,
+              'memory_mb' => config[:default_app_memory],
+              'disk_mb' => config[:default_app_disk_in_mb],
+              'environment' => env || nil,
+              'egress_rules' => @egress_rules.running(task.app),
+              'completion_callback' => task_completion_callback(task, config),
+              'lifecycle' => task.app.lifecycle_type,
+              'command' => task.command,
             }
 
             if task.app.lifecycle_type == Lifecycles::BUILDPACK
               result = result.merge({
-                rootfs: task.app.lifecycle_data.stack,
+                'rootfs' => task.app.lifecycle_data.stack,
+                'droplet_uri' => blobstore_url_generator.v3_droplet_download_url(task.droplet),
               })
             elsif task.app.lifecycle_type == Lifecycles::DOCKER
               result = result.merge(
-                rootfs: task.droplet.docker_receipt_image,
+                'docker_path' => task.droplet.docker_receipt_image,
               )
             end
 
-            result
+            result.to_json
           end
 
           private
@@ -49,7 +50,7 @@ module VCAP::CloudController
           def task_completion_callback(task, config)
             auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"
             host_port = "#{config[:internal_service_hostname]}:#{config[:external_port]}"
-            path      = "/internal/v3/task/#{task.guid}/completed"
+            path      = "/internal/v3/tasks/#{task.guid}/completed"
             "http://#{auth}@#{host_port}#{path}"
           end
         end

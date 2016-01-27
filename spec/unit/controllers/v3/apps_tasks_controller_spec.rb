@@ -39,7 +39,7 @@ describe AppsTasksController, type: :controller do
       app_model.save
 
       allow(VCAP::CloudController::Diego::NsyncClient).to receive(:new).and_return(client)
-      allow(client).to receive(:run_task).and_return(nil)
+      allow(client).to receive(:desire_task).and_return(nil)
     end
 
     it 'returns a 202 and the task' do
