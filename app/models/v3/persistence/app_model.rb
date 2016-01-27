@@ -43,6 +43,14 @@ module VCAP::CloudController
       DockerLifecycleDataModel.new
     end
 
+    def staging_in_progress?
+      droplets.each do |droplet|
+        return true if droplet.state == DropletModel::STAGING_STATE || droplet.state == DropletModel::PENDING_STATE
+      end
+
+      false
+    end
+
     class << self
       def user_visible(user)
         dataset.where(user_visibility_filter(user))

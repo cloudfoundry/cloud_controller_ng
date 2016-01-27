@@ -43,6 +43,33 @@ module VCAP::CloudController
       end
     end
 
+    describe '#staging_in_progress' do
+
+      context 'when a droplet is in staging state' do
+        let!(:droplet) { DropletModel.make(app_guid: app_model.guid, state: DropletModel::STAGING_STATE) }
+
+        it 'returns true' do
+          expect(app_model.staging_in_progress?).to eq(true)
+        end
+      end
+
+      context 'when a droplet is in pending state' do
+        let!(:droplet) { DropletModel.make(app_guid: app_model.guid, state: DropletModel::PENDING_STATE) }
+
+        it 'returns true' do
+          expect(app_model.staging_in_progress?).to eq(true)
+        end
+      end
+
+      context 'when a droplet is not in neither pending or staging state' do
+        let!(:droplet) { DropletModel.make(app_guid: app_model.guid, state: DropletModel::STAGED_STATE) }
+
+        it 'returns false' do
+          expect(app_model.staging_in_progress?).to eq(false)
+        end
+      end
+    end
+
     describe 'validations' do
       describe 'name' do
         let(:space_guid) { space.guid }
