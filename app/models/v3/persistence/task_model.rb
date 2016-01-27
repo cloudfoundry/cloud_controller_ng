@@ -3,8 +3,9 @@ module VCAP::CloudController
     include Serializer
     TASK_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
     TASK_STATES = [
-      RUNNING_STATE = 'RUNNING',
-      FAILED_STATE = 'FAILED'
+      SUCCEEDED_STATE = 'SUCCEEDED',
+      FAILED_STATE = 'FAILED',
+      RUNNING_STATE = 'RUNNING'
     ].map(&:freeze).freeze
     COMMAND_MAX_LENGTH = 4096.freeze
 

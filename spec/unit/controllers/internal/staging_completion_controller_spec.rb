@@ -237,6 +237,9 @@ module VCAP::CloudController
 
           it 'fails with a 400' do
             post url, MultiJson.dump(staging_response)
+
+            expect(last_response.status).to eq(400)
+            expect(last_response.body).to match /InvalidRequest/
           end
         end
 
