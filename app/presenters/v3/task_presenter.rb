@@ -13,6 +13,7 @@ module VCAP::CloudController
         command: task.command,
         state:   task.state,
         result:  { message: nil },
+        environment_variables:   task.environment_variables || {},
         links:   build_links(task)
       }
     end
