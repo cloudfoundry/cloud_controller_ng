@@ -2,7 +2,7 @@ function wait_for_blobstore {
     max_attempts=30
     sleep_length=1
 
-    <% if properties.nfs_server.address %>
+    <% if properties.nfs_server.address && p('cc.buildpacks.blobstore_type') == 'fog' %>
     NFS_SHARE=<%= p('nfs_server.share_path') %>
 
     echo "Checking for nfs to be mounted"
