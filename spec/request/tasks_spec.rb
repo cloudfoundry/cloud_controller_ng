@@ -50,7 +50,7 @@ describe 'Tasks' do
       expect(parsed_body['name']).to eq('best task ever')
       expect(parsed_body['command']).to eq('be rake && true')
       expect(parsed_body['state']).to eq('RUNNING')
-      expect(parsed_body['result']).to eq({ 'message' => nil })
+      expect(parsed_body['result']).to eq({ 'failure_reason' => nil })
 
       expect(parsed_body['links']['self']).to eq({ 'href' => "/v3/tasks/#{guid}" })
       expect(parsed_body['links']['app']).to eq({ 'href' => "/v3/apps/#{app_model.guid}" })
@@ -71,7 +71,7 @@ describe 'Tasks' do
       expect(parsed_body['name']).to eq('task')
       expect(parsed_body['command']).to eq('echo task')
       expect(parsed_body['state']).to eq('RUNNING')
-      expect(parsed_body['result']).to eq({ 'message' => nil })
+      expect(parsed_body['result']).to eq({ 'failure_reason' => nil })
     end
   end
 
@@ -89,7 +89,7 @@ describe 'Tasks' do
       expect(parsed_body['name']).to eq('task')
       expect(parsed_body['command']).to eq('echo task')
       expect(parsed_body['state']).to eq('RUNNING')
-      expect(parsed_body['result']).to eq({ 'message' => nil })
+      expect(parsed_body['result']).to eq({ 'failure_reason' => nil })
     end
   end
 end

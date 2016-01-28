@@ -12,8 +12,8 @@ module VCAP::CloudController
         name:    task.name,
         command: task.command,
         state:   task.state,
-        result:  { message: task.failure_reason },
         environment_variables:   task.environment_variables || {},
+        result:  { failure_reason: task.failure_reason },
         links:   build_links(task)
       }
     end

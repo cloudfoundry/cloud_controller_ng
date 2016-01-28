@@ -23,7 +23,6 @@ module VCAP::CloudController
         expect(result['name']).to eq(task.name)
         expect(result['command']).to eq(task.command)
         expect(result['state']).to eq(task.state)
-        expect(result['result']['message']).to be_nil
         expect(result['environment_variables']).to eq(task.environment_variables)
         expect(result['result']['failure_reason']).to eq 'sup dawg'
         expect(result['links']).to eq(links)
