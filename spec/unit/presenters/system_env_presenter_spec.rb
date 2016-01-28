@@ -16,7 +16,7 @@ module VCAP::CloudController
       context 'when there are services' do
         let(:space) { Space.make }
         let(:app) { App.make(environment_json: { 'jesse' => 'awesome' }, space: space) }
-        let(:service) { Service.make(label: 'elephantsql-n/a') }
+        let(:service) { Service.make(label: 'elephantsql-n/a', provider: 'cool-provider') }
         let(:service_alt) { Service.make(label: 'giraffesql-n/a') }
         let(:service_plan) { ServicePlan.make(service: service) }
         let(:service_plan_alt) { ServicePlan.make(service: service_alt) }
@@ -34,13 +34,29 @@ module VCAP::CloudController
         it 'includes service binding information' do
           expect(system_env_presenter.system_env['VCAP_SERVICES']["#{service.label}"]).to have(1).items
           expect(system_env_presenter.system_env['VCAP_SERVICES']["#{service.label}"].first).to eq(
-            'name'             => 'elephantsql-vip-uat',
-            'label'            => 'elephantsql-n/a',
-            'tags'             => ['excellent'],
-            'plan'             => service_plan.name,
             'credentials'      => service_binding.credentials,
-            'syslog_drain_url' => 'logs.go-here.com'
+            'syslog_drain_url' => 'logs.go-here.com',
+            'label'            => 'elephantsql-n/a',
+            'provider'         => 'cool-provider',
+            'plan'             => service_plan.name,
+            'name'             => 'elephantsql-vip-uat',
+            'tags'             => ['excellent']
             )
+        end
+
+        context 'when the service is user-provided' do
+          let(:service_instance) { UserProvidedServiceInstance.make(space: space, name: 'elephantsql-vip-uat') }
+
+          it 'includes service binding information' do
+            expect(system_env_presenter.system_env['VCAP_SERVICES']['user-provided']).to have(1).items
+            expect(system_env_presenter.system_env['VCAP_SERVICES']['user-provided'].first).to eq(
+              'credentials'      => service_binding.credentials,
+              'syslog_drain_url' => 'logs.go-here.com',
+              'label'            => 'user-provided',
+              'name'             => 'elephantsql-vip-uat',
+              'tags'             => []
+              )
+          end
         end
 
         context 'when process belongs to a parent(v3) app bound to a service' do
@@ -65,12 +81,13 @@ module VCAP::CloudController
           it 'includes service binding information' do
             binding_information = system_env_presenter.system_env['VCAP_SERVICES']['rabbit'].first
             expect(binding_information).to eq(
-              'name'             => service_instance.name,
-              'label'            => service.label,
-              'tags'             => service_instance.merged_tags,
-              'plan'             => service_plan.name,
               'credentials'      => service_binding.credentials,
-              'syslog_drain_url' => service_binding.syslog_drain_url
+              'syslog_drain_url' => service_binding.syslog_drain_url,
+              'label'            => service.label,
+              'provider'         => service.provider,
+              'plan'             => service_plan.name,
+              'name'             => service_instance.name,
+              'tags'             => service_instance.merged_tags
               )
           end
         end
