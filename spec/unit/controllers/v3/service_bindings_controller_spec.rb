@@ -350,18 +350,17 @@ describe ServiceBindingsController, type: :controller do
     end
 
     context 'permissions' do
-      context 'when the user is not a space developer of the requested space' do
+      context 'when the user has read-only permissions' do
         before do
           allow(membership).to receive(:has_any_roles?).
             with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
             and_return(false)
         end
 
-        it 'returns a 403 Not Authorized' do
+        it 'returns a 200' do
           get :show, guid: service_binding.guid
 
-          expect(response.status).to eq 403
-          expect(response.body).to include 'NotAuthorized'
+          expect(response.status).to eq 200
         end
       end
 
@@ -375,6 +374,21 @@ describe ServiceBindingsController, type: :controller do
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'
+        end
+      end
+
+      context 'when the does not have read permissions' do
+        before do
+          allow(membership).to receive(:has_any_roles?).
+            and_return(false)
+        end
+
+        it 'returns a 404' do
+          get :show, guid: service_binding.guid
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'Service binding not found'
         end
       end
 

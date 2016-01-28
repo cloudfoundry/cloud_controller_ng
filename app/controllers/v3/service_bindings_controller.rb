@@ -4,8 +4,11 @@ require 'presenters/v3/service_binding_model_presenter'
 require 'messages/service_binding_create_message'
 require 'messages/service_bindings_list_message'
 require 'actions/service_binding_create'
+require 'controllers/v3/mixins/app_subresource'
 
 class ServiceBindingsController < ApplicationController
+  include AppSubresource
+
   def create
     message = ServiceBindingCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -31,8 +34,7 @@ class ServiceBindingsController < ApplicationController
   def show
     service_binding = VCAP::CloudController::ServiceBindingModel.find(guid: params[:guid])
 
-    service_binding_not_found! unless service_binding
-    unauthorized! unless can_read?(service_binding.space.guid)
+    service_binding_not_found! unless service_binding && can_read?(service_binding.space.guid, service_binding.space.organization.guid)
     render status: :ok, json: service_binding_presenter.present_json(service_binding)
   end
 
@@ -64,11 +66,6 @@ class ServiceBindingsController < ApplicationController
 
   def can_create?(space_guid)
     roles.admin? || membership.has_any_roles?([VCAP::CloudController::Membership::SPACE_DEVELOPER], space_guid)
-  end
-  alias_method :can_read?, :can_create?
-
-  def app_not_found!
-    resource_not_found!(:app)
   end
 
   def service_instance_not_found!
