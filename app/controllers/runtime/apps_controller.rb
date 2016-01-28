@@ -1,3 +1,5 @@
+require 'presenters/system_env_presenter'
+
 module VCAP::CloudController
   class AppsController < RestController::ModelController
     def self.dependencies
@@ -45,7 +47,7 @@ module VCAP::CloudController
           staging_env_json:     EnvironmentVariableGroup.staging.environment_json,
           running_env_json:     EnvironmentVariableGroup.running.environment_json,
           environment_json:     app.environment_json,
-          system_env_json:      app.system_env_json,
+          system_env_json:      SystemEnvPresenter.new(app.all_service_bindings).system_env,
           application_env_json: { 'VCAP_APPLICATION' => app.vcap_application },
         }, pretty: true)
       ]

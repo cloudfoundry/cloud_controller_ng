@@ -346,30 +346,6 @@ module VCAP::CloudController
     end
     alias_method_chain :docker_credentials_json, 'serialization'
 
-    def system_env_json
-      services_hash = {}
-      parent_app_bindings = app ? app.service_bindings : []
-      (service_bindings + parent_app_bindings).each do |service_binding|
-        service_name                = service_binding.service.label
-        services_hash[service_name] ||= []
-        services_hash[service_name] << service_binding_env_values(service_binding)
-      end
-
-      { 'VCAP_SERVICES' => services_hash }
-    end
-
-    def service_binding_env_values(service_binding)
-      {
-        'name'             => service_binding.service_instance.name,
-        'label'            => service_binding.service_instance.service.label,
-        'tags'             => service_binding.service_instance.merged_tags,
-        'plan'             => service_binding.service_instance.service_plan.name,
-        'credentials'      => service_binding.credentials,
-        'syslog_drain_url' => service_binding.syslog_drain_url
-      }
-    end
-    private :service_binding_env_values
-
     def vcap_application
       app_name = app.nil? ? name : app.name
       {
@@ -686,6 +662,10 @@ module VCAP::CloudController
         return ports unless ports.empty?
       end
       super
+    end
+
+    def all_service_bindings
+      service_bindings + (app ? app.service_bindings : [])
     end
 
     private

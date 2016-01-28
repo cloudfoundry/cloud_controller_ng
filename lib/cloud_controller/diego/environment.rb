@@ -1,3 +1,5 @@
+require 'presenters/system_env_presenter'
+
 module VCAP::CloudController
   module Diego
     class Environment
@@ -13,7 +15,7 @@ module VCAP::CloudController
         add_hash_to_env(@initial_env, env)
 
         env << { 'name' => 'VCAP_APPLICATION', 'value' => vcap_application.to_json }
-        env << { 'name' => 'VCAP_SERVICES', 'value' => app.system_env_json['VCAP_SERVICES'].to_json }
+        env << { 'name' => 'VCAP_SERVICES', 'value' => SystemEnvPresenter.new(app.all_service_bindings).system_env['VCAP_SERVICES'].to_json }
         env << { 'name' => 'MEMORY_LIMIT', 'value' => "#{app.memory}m" }
 
         db_uri = app.database_uri

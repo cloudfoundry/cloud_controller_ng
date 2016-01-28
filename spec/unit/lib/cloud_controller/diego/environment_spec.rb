@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'presenters/system_env_presenter'
 
 module VCAP::CloudController::Diego
   describe Environment do
@@ -19,7 +20,7 @@ module VCAP::CloudController::Diego
       Environment::EXCLUDE.each { |k| vcap_app.delete(k) }
       encoded_vcap_application_json = vcap_app.to_json
 
-      encoded_vcap_services_json = app.system_env_json['VCAP_SERVICES'].to_json
+      encoded_vcap_services_json = SystemEnvPresenter.new(app.all_service_bindings).system_env['VCAP_SERVICES'].to_json
 
       expect(Environment.new(app).as_json).to eq([
         { 'name' => 'VCAP_APPLICATION', 'value' => encoded_vcap_application_json },

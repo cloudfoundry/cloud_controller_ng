@@ -123,6 +123,13 @@ module VCAP::CloudController
           desired_state: 'STOPPED',
         )
       end
+      let(:service) { Service.make(label: 'rabbit', tags: ['swell']) }
+      let(:service_plan) { ServicePlan.make(service: service) }
+      let(:service_instance) { ManagedServiceInstance.make(space: app_model.space, service_plan: service_plan, name: 'rabbit-instance') }
+      let!(:service_binding) do
+        ServiceBindingModel.create(app: app_model, service_instance: service_instance,
+                                   type:                         'app', credentials: { 'url' => 'www.service.com/foo' }, syslog_drain_url: 'logs.go-here-2.com')
+      end
 
       it 'presents the app environment variables as json' do
         json_result = AppPresenter.new.present_json_env(app_model)
@@ -130,6 +137,7 @@ module VCAP::CloudController
 
         expect(result['environment_variables']).to eq(app_model.environment_variables)
         expect(result['application_env_json']['VCAP_APPLICATION']['name']).to eq(app_model.name)
+        expect(result['system_env_json']['VCAP_SERVICES']['rabbit'][0]['name']).to eq('rabbit-instance')
         expect(result['staging_env_json']).to eq({})
         expect(result['running_env_json']).to eq({})
       end
