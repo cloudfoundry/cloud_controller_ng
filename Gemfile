@@ -2,7 +2,7 @@
 source 'http://rubygems.org'
 
 gem 'addressable'
-gem 'railties'
+gem 'railties', '~>4.2.5.1'
 gem 'rake'
 gem 'eventmachine', '~> 1.0.0'
 gem 'fog'
@@ -28,8 +28,10 @@ gem 'delayed_job_sequel', git: 'https://github.com/cloudfoundry/delayed_job_sequ
 gem 'thin', '~> 1.6.0'
 gem 'newrelic_rpm', '3.12.0.288'
 gem 'clockwork', require: false
-gem 'activemodel'
+gem 'activemodel', '~> 4.2.5.1'
 gem 'statsd-ruby'
+gem 'actionpack', '~> 4.2.5.1'
+gem 'actionview', '~> 4.2.5.1'
 
 # We need to use https for git urls as the git protocol is blocked by various
 # firewalls
