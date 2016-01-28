@@ -60,7 +60,6 @@ resource 'Apps', type: [:api, :legacy_api] do
     field :staging_failed_description, 'Detailed description for the staging_failed_reason', default: nil
 
     field :ports, 'Ports on which application may listen. Overwrites previously configured ports. Ports must be in range 1024-65535. Supported for Diego only.',
-      experimental:   true,
       example_values: [[5222, 8080], [1056]]
   end
 
