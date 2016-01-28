@@ -22,7 +22,7 @@ class ServiceBindingsController < ApplicationController
     unauthorized! unless can_create?(app.space.guid)
 
     begin
-      service_binding = ServiceBindingCreate.new.create(app, service_instance, message)
+      service_binding = ServiceBindingCreate.new.create(app, service_instance, message.type)
       render status: :created, json: service_binding_presenter.present_json(service_binding)
     rescue ServiceBindingCreate::ServiceInstanceNotBindable
       raise VCAP::Errors::ApiError.new_from_details('UnbindableService')
