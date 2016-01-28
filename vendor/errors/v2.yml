@@ -648,6 +648,11 @@
   http_code: 400
   message: "The route mapping is taken: %s"
 
+210007:
+  name: RouteMappingNotFound
+  http_code: 404
+  message: "The route mapping could not be found: %s"
+
 220001:
   name: InstancesError
   http_code: 400

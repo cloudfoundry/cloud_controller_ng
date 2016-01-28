@@ -23,6 +23,16 @@ resource 'Routes Mapping', type: [:api, :legacy_api] do
                       configured for the app will be chosen.', required: false
     end
 
+    context 'when a route mapping exists' do
+      include_context 'fields'
+
+      let!(:route_mapping) { VCAP::CloudController::RouteMapping.make(route: route, app: app_obj) }
+      let(:guid) { route_mapping.guid }
+
+      standard_model_get :route_mapping
+      standard_model_list :route_mapping, VCAP::CloudController::RouteMappingsController
+    end
+
     post '/v2/route_mappings' do
       include_context 'fields'
 

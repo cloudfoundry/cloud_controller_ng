@@ -11,6 +11,8 @@ module VCAP::CloudController
       attribute :app_port, Integer, default: nil
     end
 
+    query_parameters :app_guid, :route_guid
+
     def self.translate_validation_exception(e, attributes)
       port_errors = e.errors.on(:app_port)
       if port_errors && port_errors.include?(:diego_only)

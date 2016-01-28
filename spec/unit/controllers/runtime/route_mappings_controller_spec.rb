@@ -3,6 +3,11 @@ require 'spec_helper'
 module VCAP::CloudController
   describe VCAP::CloudController::RouteMappingsController do
     describe 'Route Mappings' do
+      describe 'Query Parameters' do
+        it { expect(described_class).to be_queryable_by(:app_guid) }
+        it { expect(described_class).to be_queryable_by(:route_guid) }
+      end
+
       describe 'POST /v2/route_mappings' do
         let(:route) { Route.make }
         let(:app_obj) { AppFactory.make(space: space) }
