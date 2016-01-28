@@ -347,8 +347,28 @@ module VCAP::CloudController
     alias_method_chain :docker_credentials_json, 'serialization'
 
     def system_env_json
-      vcap_services
+      services_hash = {}
+      parent_app_bindings = app ? app.service_bindings : []
+      (service_bindings + parent_app_bindings).each do |service_binding|
+        service_name                = service_binding.service.label
+        services_hash[service_name] ||= []
+        services_hash[service_name] << service_binding_env_values(service_binding)
+      end
+
+      { 'VCAP_SERVICES' => services_hash }
     end
+
+    def service_binding_env_values(service_binding)
+      {
+        'name'             => service_binding.service_instance.name,
+        'label'            => service_binding.service_instance.service.label,
+        'tags'             => service_binding.service_instance.merged_tags,
+        'plan'             => service_binding.service_instance.service_plan.name,
+        'credentials'      => service_binding.credentials,
+        'syslog_drain_url' => service_binding.syslog_drain_url
+      }
+    end
+    private :service_binding_env_values
 
     def vcap_application
       app_name = app.nil? ? name : app.name
@@ -734,27 +754,6 @@ module VCAP::CloudController
 
     def metadata_deserialized
       deserialized_values[:metadata]
-    end
-
-    WHITELIST_SERVICE_KEYS = %w(name label tags plan credentials syslog_drain_url).freeze
-
-    def service_binding_json(binding)
-      vcap_service = {}
-      WHITELIST_SERVICE_KEYS.each do |key|
-        vcap_service[key] = binding[key.to_sym] if binding[key.to_sym]
-      end
-      vcap_service
-    end
-
-    def vcap_services
-      services_hash = {}
-      service_bindings.each do |sb|
-        binding = ServiceBindingPresenter.new(sb).to_hash
-        service = service_binding_json(binding)
-        services_hash[binding[:label]] ||= []
-        services_hash[binding[:label]] << service
-      end
-      { 'VCAP_SERVICES' => services_hash }
     end
 
     def app_usage_event_repository
