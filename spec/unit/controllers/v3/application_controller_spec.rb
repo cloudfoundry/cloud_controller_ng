@@ -64,14 +64,14 @@ describe ApplicationController, type: :controller do
       get :index
 
       expect(response.status).to eq(403)
-      expect(MultiJson.load(response.body)['description']).to eq('You are not authorized to perform the requested action')
+      expect(parsed_body['description']).to eq('You are not authorized to perform the requested action')
     end
 
     it 'is required on show' do
       get :show, id: 1
 
       expect(response.status).to eq(403)
-      expect(MultiJson.load(response.body)['description']).to eq('You are not authorized to perform the requested action')
+      expect(parsed_body['description']).to eq('You are not authorized to perform the requested action')
     end
 
     it 'is not required on other actions' do
@@ -109,7 +109,7 @@ describe ApplicationController, type: :controller do
     it 'is required on other actions' do
       post :create
       expect(response.status).to eq(403)
-      expect(MultiJson.load(response.body)['description']).to eq('You are not authorized to perform the requested action')
+      expect(parsed_body['description']).to eq('You are not authorized to perform the requested action')
     end
 
     it 'is not required for admin' do
@@ -129,7 +129,7 @@ describe ApplicationController, type: :controller do
       get :index
 
       # finding request id inside the controller action and returning on the body
-      expect(MultiJson.load(response.body)['request_id']).to eq('expected-request-id')
+      expect(parsed_body['request_id']).to eq('expected-request-id')
     end
 
     it 'unsets the vcap request current_id after the request completes' do
@@ -152,7 +152,7 @@ describe ApplicationController, type: :controller do
       it 'raises an error' do
         get :index
         expect(response.status).to eq(403)
-        expect(MultiJson.load(response.body)['description']).to eq('You are not authorized to perform the requested action')
+        expect(parsed_body['description']).to eq('You are not authorized to perform the requested action')
       end
     end
 
@@ -188,7 +188,7 @@ describe ApplicationController, type: :controller do
       it 'raises NotAuthenticated' do
         get :index
         expect(response.status).to eq(401)
-        expect(MultiJson.load(response.body)['description']).to eq('Authentication error')
+        expect(parsed_body['description']).to eq('Authentication error')
       end
     end
 
@@ -198,7 +198,7 @@ describe ApplicationController, type: :controller do
       it 'raises InvalidAuthToken' do
         get :index
         expect(response.status).to eq(401)
-        expect(MultiJson.load(response.body)['description']).to eq('Invalid Auth Token')
+        expect(parsed_body['description']).to eq('Invalid Auth Token')
       end
     end
 
@@ -217,7 +217,7 @@ describe ApplicationController, type: :controller do
       it 'raises InvalidAuthToken' do
         get :index
         expect(response.status).to eq(401)
-        expect(MultiJson.load(response.body)['description']).to eq('Invalid Auth Token')
+        expect(parsed_body['description']).to eq('Invalid Auth Token')
       end
     end
   end

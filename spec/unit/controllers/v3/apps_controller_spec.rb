@@ -121,7 +121,7 @@ describe AppsV3Controller, type: :controller do
       get :show, guid: app_model.guid
 
       expect(response.status).to eq 200
-      expect(MultiJson.load(response.body)['guid']).to eq(app_model.guid)
+      expect(parsed_body['guid']).to eq(app_model.guid)
     end
 
     context 'admin' do
@@ -134,7 +134,7 @@ describe AppsV3Controller, type: :controller do
         get :show, guid: app_model.guid
 
         expect(response.status).to eq 200
-        expect(MultiJson.load(response.body)['guid']).to eq(app_model.guid)
+        expect(parsed_body['guid']).to eq(app_model.guid)
       end
     end
 
@@ -203,7 +203,7 @@ describe AppsV3Controller, type: :controller do
       app_model = space.app_models.last
 
       expect(response.status).to eq 201
-      expect(MultiJson.load(response.body)['guid']).to eq(app_model.guid)
+      expect(parsed_body['guid']).to eq(app_model.guid)
     end
 
     context 'when the user does not have write scope' do
@@ -230,7 +230,7 @@ describe AppsV3Controller, type: :controller do
         app_model = space.app_models.last
 
         expect(response.status).to eq 201
-        expect(MultiJson.load(response.body)['guid']).to eq(app_model.guid)
+        expect(parsed_body['guid']).to eq(app_model.guid)
       end
     end
 
@@ -316,7 +316,7 @@ describe AppsV3Controller, type: :controller do
         it 'uses the defaults and returns a 201 and the app' do
           post :create, body: req_body
 
-          response_body  = MultiJson.load(response.body)
+          response_body  = parsed_body
           lifecycle_data = response_body['lifecycle']['data']
 
           expect(response.status).to eq 201
@@ -357,7 +357,7 @@ describe AppsV3Controller, type: :controller do
             it 'creates the app with the lifecycle data, filling in defaults' do
               post :create, body: req_body
 
-              response_body  = MultiJson.load(response.body)
+              response_body  = parsed_body
               lifecycle_data = response_body['lifecycle']['data']
 
               expect(response.status).to eq 201
@@ -462,7 +462,7 @@ describe AppsV3Controller, type: :controller do
           app_model = space.app_models.last
 
           expect(response.status).to eq 201
-          expect(MultiJson.load(response.body)['guid']).to eq(app_model.guid)
+          expect(parsed_body['guid']).to eq(app_model.guid)
         end
       end
 
@@ -496,8 +496,8 @@ describe AppsV3Controller, type: :controller do
       put :update, guid: app_model.guid, body: req_body
 
       expect(response.status).to eq 200
-      expect(MultiJson.load(response.body)['guid']).to eq(app_model.guid)
-      expect(MultiJson.load(response.body)['name']).to eq('new-name')
+      expect(parsed_body['guid']).to eq(app_model.guid)
+      expect(parsed_body['name']).to eq('new-name')
     end
 
     context 'admin' do
@@ -509,8 +509,8 @@ describe AppsV3Controller, type: :controller do
         put :update, guid: app_model.guid, body: req_body
 
         expect(response.status).to eq 200
-        expect(MultiJson.load(response.body)['guid']).to eq(app_model.guid)
-        expect(MultiJson.load(response.body)['name']).to eq('new-name')
+        expect(parsed_body['guid']).to eq(app_model.guid)
+        expect(parsed_body['name']).to eq('new-name')
       end
     end
 
@@ -956,7 +956,7 @@ describe AppsV3Controller, type: :controller do
     it 'returns a 200 and the app' do
       put :start, guid: app_model.guid
 
-      response_body = MultiJson.load(response.body)
+      response_body = parsed_body
 
       expect(response.status).to eq 200
       expect(response_body['guid']).to eq(app_model.guid)
@@ -973,7 +973,7 @@ describe AppsV3Controller, type: :controller do
         it 'returns a 200 and the app' do
           put :start, guid: app_model.guid
 
-          response_body = MultiJson.load(response.body)
+          response_body = parsed_body
 
           expect(response.status).to eq 200
           expect(response_body['guid']).to eq app_model.guid
@@ -989,7 +989,7 @@ describe AppsV3Controller, type: :controller do
         it 'raises an ApiError with a 403 code' do
           put :start, guid: app_model.guid
 
-          response_body = MultiJson.load(response.body)
+          response_body = parsed_body
           expect(response_body['error_code']).to eq 'CF-NotAuthorized'
           expect(response.status).to eq 403
         end
@@ -1007,7 +1007,7 @@ describe AppsV3Controller, type: :controller do
         it 'returns a 404 ResourceNotFound error' do
           put :start, guid: app_model.guid
 
-          response_body = MultiJson.load(response.body)
+          response_body = parsed_body
           expect(response_body['error_code']).to eq 'CF-ResourceNotFound'
           expect(response.status).to eq 404
         end
@@ -1027,7 +1027,7 @@ describe AppsV3Controller, type: :controller do
         it 'raises ApiError NotAuthorized' do
           put :start, guid: app_model.guid
 
-          response_body = MultiJson.load(response.body)
+          response_body = parsed_body
           expect(response_body['error_code']).to eq 'CF-NotAuthorized'
           expect(response.status).to eq 403
         end
@@ -1042,7 +1042,7 @@ describe AppsV3Controller, type: :controller do
       it 'raises an API 404 error' do
         put :start, guid: app_model.guid
 
-        response_body = MultiJson.load(response.body)
+        response_body = parsed_body
         expect(response_body['error_code']).to eq 'CF-ResourceNotFound'
         expect(response.status).to eq 404
       end
@@ -1052,7 +1052,7 @@ describe AppsV3Controller, type: :controller do
       it 'raises an API 404 error' do
         put :start, guid: 'meowmeowmeow'
 
-        response_body = MultiJson.load(response.body)
+        response_body = parsed_body
         expect(response_body['error_code']).to eq 'CF-ResourceNotFound'
         expect(response.status).to eq 404
       end
@@ -1068,7 +1068,7 @@ describe AppsV3Controller, type: :controller do
       it 'returns an UnprocessableEntity error' do
         put :start, guid: app_model.guid
 
-        response_body = MultiJson.load(response.body)
+        response_body = parsed_body
         expect(response_body['error_code']).to eq 'CF-UnprocessableEntity'
         expect(response.status).to eq 422
       end
@@ -1090,7 +1090,7 @@ describe AppsV3Controller, type: :controller do
         it 'returns a 200 and the app' do
           put :start, guid: app_model.guid
 
-          response_body = MultiJson.load(response.body)
+          response_body = parsed_body
 
           expect(response.status).to eq 200
           expect(response_body['guid']).to eq(app_model.guid)
@@ -1126,7 +1126,7 @@ describe AppsV3Controller, type: :controller do
     it 'returns a 200 and the app' do
       put :stop, guid: app_model.guid
 
-      response_body = MultiJson.load(response.body)
+      response_body = parsed_body
 
       expect(response.status).to eq 200
       expect(response_body['guid']).to eq(app_model.guid)
@@ -1142,7 +1142,7 @@ describe AppsV3Controller, type: :controller do
       it 'returns a 200 and the app' do
         put :stop, guid: app_model.guid
 
-        response_body = MultiJson.load(response.body)
+        response_body = parsed_body
 
         expect(response.status).to eq 200
         expect(response_body['guid']).to eq(app_model.guid)
@@ -1243,7 +1243,7 @@ describe AppsV3Controller, type: :controller do
       get :show_environment, guid: app_model.guid
 
       expect(response.status).to eq 200
-      expect(MultiJson.load(response.body)['environment_variables']).to eq(app_model.environment_variables)
+      expect(parsed_body['environment_variables']).to eq(app_model.environment_variables)
     end
 
     context 'admin' do
@@ -1256,7 +1256,7 @@ describe AppsV3Controller, type: :controller do
         get :show_environment, guid: app_model.guid
 
         expect(response.status).to eq(200)
-        expect(MultiJson.load(response.body)['environment_variables']).to eq(app_model.environment_variables)
+        expect(parsed_body['environment_variables']).to eq(app_model.environment_variables)
       end
     end
 
@@ -1341,7 +1341,7 @@ describe AppsV3Controller, type: :controller do
     it 'returns 200 and the app' do
       put :assign_current_droplet, guid: app_model.guid, body: req_body
 
-      response_body = MultiJson.load(response.body)
+      response_body = parsed_body
 
       expect(response.status).to eq(200)
       expect(response_body['guid']).to eq(app_model.guid)
@@ -1357,7 +1357,7 @@ describe AppsV3Controller, type: :controller do
       it 'returns 200' do
         put :assign_current_droplet, guid: app_model.guid, body: req_body
 
-        response_body = MultiJson.load(response.body)
+        response_body = parsed_body
 
         expect(response.status).to eq(200)
         expect(response_body['guid']).to eq(app_model.guid)

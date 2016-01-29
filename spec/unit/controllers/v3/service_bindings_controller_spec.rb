@@ -58,10 +58,10 @@ describe ServiceBindingsController, type: :controller do
       service_binding = app_model.service_bindings.last
 
       expect(response.status).to eq 201
-      expect(MultiJson.load(response.body)['guid']).to eq(service_binding.guid)
-      expect(MultiJson.load(response.body)['type']).to eq(service_binding_type)
-      expect(MultiJson.load(response.body)['data']['syslog_drain_url']).to eq('syslog://syslog-drain.com')
-      expect(MultiJson.load(response.body)['data']['credentials']).to eq({ 'super' => 'secret' })
+      expect(parsed_body['guid']).to eq(service_binding.guid)
+      expect(parsed_body['type']).to eq(service_binding_type)
+      expect(parsed_body['data']['syslog_drain_url']).to eq('syslog://syslog-drain.com')
+      expect(parsed_body['data']['credentials']).to eq({ 'super' => 'secret' })
     end
 
     context 'admin' do
@@ -76,8 +76,8 @@ describe ServiceBindingsController, type: :controller do
         service_binding = app_model.service_bindings.last
 
         expect(response.status).to eq 201
-        expect(MultiJson.load(response.body)['guid']).to eq(service_binding.guid)
-        expect(MultiJson.load(response.body)['type']).to eq(service_binding_type)
+        expect(parsed_body['guid']).to eq(service_binding.guid)
+        expect(parsed_body['type']).to eq(service_binding_type)
       end
     end
 
@@ -236,8 +236,8 @@ describe ServiceBindingsController, type: :controller do
         service_binding = app_model.service_bindings.last
 
         expect(response.status).to eq 201
-        expect(MultiJson.load(response.body)['guid']).to eq(service_binding.guid)
-        expect(MultiJson.load(response.body)['type']).to eq(service_binding_type)
+        expect(parsed_body['guid']).to eq(service_binding.guid)
+        expect(parsed_body['type']).to eq(service_binding_type)
       end
 
       context 'when data includes unauthorized keys' do
@@ -326,10 +326,10 @@ describe ServiceBindingsController, type: :controller do
       get :show, guid: service_binding.guid
 
       expect(response.status).to eq 200
-      expect(MultiJson.load(response.body)['guid']).to eq(service_binding.guid)
-      expect(MultiJson.load(response.body)['type']).to eq(service_binding.type)
-      expect(MultiJson.load(response.body)['data']['syslog_drain_url']).to eq('syslog://syslog-drain.com')
-      expect(MultiJson.load(response.body)['data']['credentials']).to eq(service_binding.credentials)
+      expect(parsed_body['guid']).to eq(service_binding.guid)
+      expect(parsed_body['type']).to eq(service_binding.type)
+      expect(parsed_body['data']['syslog_drain_url']).to eq('syslog://syslog-drain.com')
+      expect(parsed_body['data']['credentials']).to eq(service_binding.credentials)
     end
 
     context 'admin' do
@@ -342,10 +342,10 @@ describe ServiceBindingsController, type: :controller do
         get :show, guid: service_binding.guid
 
         expect(response.status).to eq 200
-        expect(MultiJson.load(response.body)['guid']).to eq(service_binding.guid)
-        expect(MultiJson.load(response.body)['type']).to eq(service_binding.type)
-        expect(MultiJson.load(response.body)['data']['syslog_drain_url']).to eq('syslog://syslog-drain.com')
-        expect(MultiJson.load(response.body)['data']['credentials']).to eq(service_binding.credentials)
+        expect(parsed_body['guid']).to eq(service_binding.guid)
+        expect(parsed_body['type']).to eq(service_binding.type)
+        expect(parsed_body['data']['syslog_drain_url']).to eq('syslog://syslog-drain.com')
+        expect(parsed_body['data']['credentials']).to eq(service_binding.credentials)
       end
     end
 

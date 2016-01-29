@@ -16,7 +16,7 @@ describe DropletsController, type: :controller do
       get :show, guid: droplet.guid
 
       expect(response.status).to eq(200)
-      expect(MultiJson.load(response.body)['guid']).to eq(droplet.guid)
+      expect(parsed_body['guid']).to eq(droplet.guid)
     end
 
     context 'admin' do
@@ -29,7 +29,7 @@ describe DropletsController, type: :controller do
         get :show, guid: droplet.guid
 
         expect(response.status).to eq(200)
-        expect(MultiJson.load(response.body)['guid']).to eq(droplet.guid)
+        expect(parsed_body['guid']).to eq(droplet.guid)
       end
     end
 

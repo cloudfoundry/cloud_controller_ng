@@ -516,7 +516,7 @@ describe AppsProcessesController, type: :controller do
       get :show, guid: app_model.guid, type: app_process.type
 
       expect(response.status).to eq 200
-      expect(MultiJson.load(response.body)['guid']).to eq(app_process.guid)
+      expect(parsed_body['guid']).to eq(app_process.guid)
     end
 
     context 'admin' do
@@ -529,7 +529,7 @@ describe AppsProcessesController, type: :controller do
         get :show, guid: app_model.guid, type: app_process.type
 
         expect(response.status).to eq 200
-        expect(MultiJson.load(response.body)['guid']).to eq(app_process.guid)
+        expect(parsed_body['guid']).to eq(app_process.guid)
       end
     end
 
