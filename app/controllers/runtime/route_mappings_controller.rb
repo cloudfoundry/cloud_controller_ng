@@ -55,6 +55,12 @@ module VCAP::CloudController
                                    port #{app_port}") unless mappings.count == 0
     end
 
+    def delete(guid)
+      route_mapping = find_guid_and_validate_access(:delete, guid)
+
+      do_delete(route_mapping)
+    end
+
     define_messages
     define_routes
   end

@@ -31,6 +31,7 @@ resource 'Routes Mapping', type: [:api, :legacy_api] do
 
       standard_model_get :route_mapping
       standard_model_list :route_mapping, VCAP::CloudController::RouteMappingsController
+      standard_model_delete :route_mapping
     end
 
     post '/v2/route_mappings' do

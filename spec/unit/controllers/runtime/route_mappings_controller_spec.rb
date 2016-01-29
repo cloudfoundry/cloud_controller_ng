@@ -252,6 +252,37 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe 'DELETE /v2/route_mappings/:guid' do
+        let(:route) { Route.make }
+        let(:app_obj) { AppFactory.make(space: space) }
+        let(:space) { route.space }
+        let(:developer) { make_developer_for_space(space) }
+        let(:route_mapping) { RouteMapping.make(app_guid: app_obj.guid, route_guid: route.guid) }
+
+        it 'deletes the route mapping' do
+          delete "/v2/route_mappings/#{route_mapping.guid}", {}, headers_for(developer)
+
+          expect(last_response).to have_status_code(204)
+        end
+
+        it 'does not delete the associated app and route' do
+          delete "/v2/route_mappings/#{route_mapping.guid}", {}, headers_for(developer)
+
+          expect(last_response).to have_status_code(204)
+          expect(route).to exist
+          expect(app_obj).to exist
+        end
+
+        context 'when the route mapping does not exist' do
+          it 'raises an informative error' do
+            delete "/v2/route_mappings/nonexistent-guid", {}, headers_for(developer)
+
+            expect(last_response).to have_status_code(404)
+            expect(last_response.body).to include "RouteMappingNotFound"
+          end
+        end
+      end
     end
   end
 end
