@@ -12,7 +12,7 @@ module VCAP::CloudController
         droplet: app.droplet,
         command: message.command,
         app: app,
-        memory_in_mb: 2048
+        memory_in_mb: message.memory_in_mb
       )
     rescue Sequel::ValidationFailed => e
       raise InvalidTask.new(e.message)

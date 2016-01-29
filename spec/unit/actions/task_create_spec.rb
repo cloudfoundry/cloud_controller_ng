@@ -8,7 +8,7 @@ module VCAP::CloudController
       let(:droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::STAGED_STATE) }
       let(:command) { 'bundle exec rake panda' }
       let(:name) { 'my_task_name' }
-      let(:message) { TaskCreateMessage.new name: name, command: command, memory_in_mb: 2048 }
+      let(:message) { TaskCreateMessage.new name: name, command: command, memory_in_mb: 1024 }
 
       before do
         app.droplet = droplet
@@ -22,7 +22,7 @@ module VCAP::CloudController
         expect(task.droplet).to eq(droplet)
         expect(task.command).to eq(command)
         expect(task.name).to eq(name)
-        expect(task.memory_in_mb).to eq(2048)
+        expect(task.memory_in_mb).to eq(1024)
       end
 
       it "sets the task state to 'RUNNING'" do
