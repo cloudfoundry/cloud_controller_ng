@@ -23,7 +23,7 @@ describe AppsDropletsController, type: :controller do
 
       get :index, guid: app_model.guid
 
-      response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+      response_guids = parsed_body['resources'].map { |r| r['guid'] }
       expect(response.status).to eq(200)
       expect(response_guids).to match_array([droplet_1, droplet_2].map(&:guid))
     end
@@ -65,7 +65,7 @@ describe AppsDropletsController, type: :controller do
 
           get :index, guid: app_model.guid
 
-          response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+          response_guids = parsed_body['resources'].map { |r| r['guid'] }
           expect(response.status).to eq(200)
           expect(response_guids).to match_array([droplet_1, droplet_2].map(&:guid))
         end

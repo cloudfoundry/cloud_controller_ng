@@ -529,13 +529,13 @@ describe PackagesController, type: :controller do
     it 'lists the packages visible to the user' do
       get :index
 
-      response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+      response_guids = parsed_body['resources'].map { |r| r['guid'] }
       expect(response_guids).to match_array([user_package_1, user_package_2].map(&:guid))
     end
 
     it 'returns pagination links for /v3/packages' do
       get :index
-      expect(JSON.parse(response.body)['pagination']['first']['href']).to start_with('/v3/packages')
+      expect(parsed_body['pagination']['first']['href']).to start_with('/v3/packages')
     end
 
     context 'admin' do
@@ -547,7 +547,7 @@ describe PackagesController, type: :controller do
       it 'lists all the packages' do
         get :index
 
-        response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
         expect(response_guids).to match_array([user_package_1, user_package_2, admin_package].map(&:guid))
       end
     end
@@ -560,7 +560,7 @@ describe PackagesController, type: :controller do
       it 'paginates the response' do
         get :index, params
 
-        parsed_response = JSON.parse(response.body)
+        parsed_response = parsed_body
         response_guids = parsed_response['resources'].map { |r| r['guid'] }
         expect(parsed_response['pagination']['total_results']).to eq(2)
         expect(response_guids.length).to eq(per_page)

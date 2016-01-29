@@ -25,7 +25,7 @@ describe AppsPackagesController, type: :controller do
         expect(app_model.reload.packages.count).to eq(1)
         created_package = app_model.packages.first
 
-        response_guid = JSON.parse(response.body)['guid']
+        response_guid = parsed_body['guid']
         expect(response_guid).to eq created_package.guid
       end
 
@@ -44,7 +44,7 @@ describe AppsPackagesController, type: :controller do
           expect(app_model.reload.packages.count).to eq(1)
           created_package = app_model.packages.first
 
-          response_guid = JSON.parse(response.body)['guid']
+          response_guid = parsed_body['guid']
           expect(response_guid).to eq created_package.guid
         end
       end
@@ -174,7 +174,7 @@ describe AppsPackagesController, type: :controller do
       post :create, guid: target_app_model.guid, source_package_guid: original_package.guid
 
       copied_package = target_app_model.reload.packages.first
-      response_guid  = JSON.parse(response.body)['guid']
+      response_guid  = parsed_body['guid']
 
       expect(response.status).to eq 201
       expect(copied_package.type).to eq(original_package.type)
@@ -282,7 +282,7 @@ describe AppsPackagesController, type: :controller do
           post :create, guid: target_app_model.guid, source_package_guid: original_package.guid
 
           copied_package = target_app_model.reload.packages.first
-          response_guid  = JSON.parse(response.body)['guid']
+          response_guid  = parsed_body['guid']
 
           expect(response.status).to eq 201
           expect(copied_package.type).to eq(original_package.type)
@@ -354,7 +354,7 @@ describe AppsPackagesController, type: :controller do
 
       get :index, guid: app_model.guid
 
-      response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+      response_guids = parsed_body['resources'].map { |r| r['guid'] }
       expect(response.status).to eq 200
       expect(response_guids).to match_array([app_model_package_1, app_model_package_2].map(&:guid))
     end
@@ -375,7 +375,7 @@ describe AppsPackagesController, type: :controller do
         it 'returns a 200 and presents the response' do
           get :index, guid: app_model.guid
 
-          response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+          response_guids = parsed_body['resources'].map { |r| r['guid'] }
           expect(response.status).to eq 200
           expect(response_guids).to match_array([app_model_package_1, app_model_package_2].map(&:guid))
         end

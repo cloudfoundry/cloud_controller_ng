@@ -149,7 +149,7 @@ describe AppsRoutesController, type: :controller do
     it 'returns all the routes for the app' do
       get :index, guid: app_model.guid
 
-      response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+      response_guids = parsed_body['resources'].map { |r| r['guid'] }
       expect(response_guids).to match_array([route_1, route_2].map(&:guid))
     end
 

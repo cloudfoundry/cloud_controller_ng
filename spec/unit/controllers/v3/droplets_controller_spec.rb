@@ -201,13 +201,13 @@ describe DropletsController, type: :controller do
     it 'lists the droplets visible to the user' do
       get :index
 
-      response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+      response_guids = parsed_body['resources'].map { |r| r['guid'] }
       expect(response_guids).to match_array([user_droplet_1, user_droplet_2].map(&:guid))
     end
 
     it 'returns pagination links for /v3/droplets' do
       get :index
-      expect(JSON.parse(response.body)['pagination']['first']['href']).to start_with('/v3/droplets')
+      expect(parsed_body['pagination']['first']['href']).to start_with('/v3/droplets')
     end
 
     context 'when the user is an admin' do
@@ -218,7 +218,7 @@ describe DropletsController, type: :controller do
       it 'returns all droplets' do
         get :index
 
-        response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
         expect(response_guids).to match_array([user_droplet_1, user_droplet_2, admin_droplet].map(&:guid))
       end
     end

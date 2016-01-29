@@ -422,7 +422,7 @@ describe ServiceBindingsController, type: :controller do
       get :index
 
       expect(response.status).to eq 200
-      response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+      response_guids = parsed_body['resources'].map { |r| r['guid'] }
       expect(response_guids).to match_array([allowed_binding_1, allowed_binding_2, allowed_binding_3].map(&:guid))
     end
 
@@ -438,7 +438,7 @@ describe ServiceBindingsController, type: :controller do
         get :index
 
         expect(response.status).to eq 200
-        response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
         expect(response_guids).to match_array(expected_service_binding_guids)
       end
     end
@@ -451,7 +451,7 @@ describe ServiceBindingsController, type: :controller do
       it 'paginates the response' do
         get :index, params
 
-        parsed_response = JSON.parse(response.body)
+        parsed_response = parsed_body
         response_guids = parsed_response['resources'].map { |r| r['guid'] }
         expect(parsed_response['pagination']['total_results']).to eq(3)
         expect(response_guids.length).to eq(per_page)

@@ -28,7 +28,7 @@ describe AppsProcessesController, type: :controller do
 
       expect(response.status).to eq 200
 
-      response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+      response_guids = parsed_body['resources'].map { |r| r['guid'] }
       expect(response_guids).to match_array([app_1, app_2].map(&:guid))
     end
 
@@ -43,7 +43,7 @@ describe AppsProcessesController, type: :controller do
 
         expect(response.status).to eq 200
 
-        response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
         expect(response_guids).to match_array([app_1, app_2].map(&:guid))
       end
     end
@@ -246,7 +246,7 @@ describe AppsProcessesController, type: :controller do
       expect(app_process.disk_quota).to eq(200)
 
       expect(response.status).to eq(200)
-      expect(JSON.parse(response.body)['guid']).to eq(app_process.guid)
+      expect(parsed_body['guid']).to eq(app_process.guid)
     end
 
     context 'admin' do
@@ -268,7 +268,7 @@ describe AppsProcessesController, type: :controller do
         expect(app_process.disk_quota).to eq(200)
 
         expect(response.status).to eq(200)
-        expect(JSON.parse(response.body)['guid']).to eq(app_process.guid)
+        expect(parsed_body['guid']).to eq(app_process.guid)
       end
     end
 
@@ -318,7 +318,7 @@ describe AppsProcessesController, type: :controller do
           expect(app_process.disk_quota).to eq(200)
 
           expect(response.status).to eq(200)
-          expect(JSON.parse(response.body)['guid']).to eq(app_process.guid)
+          expect(parsed_body['guid']).to eq(app_process.guid)
         end
       end
     end

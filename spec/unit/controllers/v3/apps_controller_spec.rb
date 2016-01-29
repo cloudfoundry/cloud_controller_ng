@@ -24,7 +24,7 @@ describe AppsV3Controller, type: :controller do
     it 'returns 200 and lists the apps for spaces user is allowed to read' do
       get :index
 
-      response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+      response_guids = parsed_body['resources'].map { |r| r['guid'] }
       expect(response.status).to eq(200)
       expect(response_guids).to match_array([app_model_1.guid])
     end
@@ -45,7 +45,7 @@ describe AppsV3Controller, type: :controller do
       it 'fetches all the apps' do
         get :index
 
-        response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
         expect(response.status).to eq(200)
         expect(response_guids).to match_array([app_model_1, app_model_2, app_model_3].map(&:guid))
       end
