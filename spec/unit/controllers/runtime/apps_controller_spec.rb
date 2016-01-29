@@ -819,10 +819,7 @@ module VCAP::CloudController
     end
 
     describe 'downloading the droplet' do
-      let(:blobstore) do
-        CloudController::DependencyLocator.instance.droplet_blobstore
-      end
-      let(:app_obj) { AppFactory.make droplet_hash: nil } # explicitly unstaged app
+      let(:app_obj) { AppFactory.make }
 
       before do
         Fog.unmock!
@@ -830,6 +827,10 @@ module VCAP::CloudController
       end
 
       context 'with a local blobstore' do
+        let(:blobstore) do
+          CloudController::DependencyLocator.instance.droplet_blobstore
+        end
+
         context 'with a valid droplet' do
           before do
             app_obj.droplet_hash = 'abcdef'
@@ -934,23 +935,27 @@ module VCAP::CloudController
       context 'when the blobstore is not local' do
         before do
           allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
+          blob = instance_double(CloudController::Blobstore::FogBlob)
+          allow(blob).to receive(:public_download_url).and_return('http://example.com/somewhere/else')
+          allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
         end
 
         it 'should redirect to the url provided by the blobstore_url_generator' do
-          allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return('http://example.com/somewhere/else')
-          get "/v2/apps/#{app_obj.guid}/droplet/download", MultiJson.dump({}), json_headers(admin_headers) # don't forget headers for developer / user
+          get "/v2/apps/#{app_obj.guid}/droplet/download", MultiJson.dump({}), json_headers(admin_headers)
           expect(last_response).to be_redirect
           expect(last_response.header['Location']).to eq('http://example.com/somewhere/else')
         end
 
         it 'should return an error for non-existent apps' do
-          get '/v2/apps/bad/droplet/download', MultiJson.dump({}), json_headers(admin_headers) # don't forget headers for developer / user
+          get '/v2/apps/bad/droplet/download', MultiJson.dump({}), json_headers(admin_headers)
           expect(last_response.status).to eq(404)
         end
 
         it 'should return an error for an app without a droplet' do
-          allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return(nil)
-          get "/v2/apps/#{app_obj.guid}/droplet/download", MultiJson.dump({}), json_headers(admin_headers) # don't forget headers for developer / user
+          app_obj.droplet_hash = nil
+          app_obj.save
+
+          get "/v2/apps/#{app_obj.guid}/droplet/download", MultiJson.dump({}), json_headers(admin_headers)
           expect(last_response.status).to eq(404)
         end
       end
