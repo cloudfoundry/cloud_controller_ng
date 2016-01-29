@@ -356,23 +356,42 @@ module CloudController
       end
 
       describe '#cp_file_between_keys' do
-        it 'copies the file from the source key to the destination key' do
+        it 'creates an empty file at the destination location to ensure all folder paths are create before the copy' do
           allow(response).to receive_messages(status: 204, content: '')
+          allow(httpclient).to receive(:put).and_return(response)
           allow(httpclient).to receive(:request).and_return(response)
 
           client.cp_file_between_keys('foobar', 'bazbar')
 
-          expect(httpclient).to have_received(:request) do |*args|
-            method, uri, _, _, headers = args
-            expect(method).to eq(:copy)
-            expect(uri).to eq('http://localhost/admin/droplets/fo/ob/foobar')
-            expect(headers).to match(hash_including('Destination' => 'http://localhost/admin/droplets/ba/zb/bazbar'))
-          end
+          expect(httpclient).to have_received(:put).with('http://localhost/admin/droplets/ba/zb/bazbar', '', {})
+        end
+
+        it 'copies the file from the source key to the destination key' do
+          allow(response).to receive_messages(status: 204, content: '')
+          allow(httpclient).to receive(:put).and_return(response)
+          allow(httpclient).to receive(:request).and_return(response)
+
+          client.cp_file_between_keys('foobar', 'bazbar')
+
+          expect(httpclient).to have_received(:request).
+            with(
+              :copy,
+              'http://localhost/admin/droplets/fo/ob/foobar',
+              header: { 'Destination' => 'http://localhost/admin/droplets/ba/zb/bazbar' }
+            )
         end
 
         it 'should raise an exception when there is an error copying an object' do
-          allow(response).to receive_messages(status: 500, content: '')
+          allow(response).to receive_messages(status: 500, content: 'Internal Server Error')
+          allow(httpclient).to receive(:put).and_return(instance_double(HTTP::Message, status: 204, content: ''))
           allow(httpclient).to receive(:request).and_return(response)
+
+          expect { client.cp_file_between_keys('foobar', 'bazbar') }.to raise_error BlobstoreError, /Could not copy object/
+        end
+
+        it 'should raise an exception when there is an error creating the destination object' do
+          allow(response).to receive_messages(status: 500, content: 'Internal Server Error')
+          allow(httpclient).to receive(:put).and_return(response)
 
           expect { client.cp_file_between_keys('foobar', 'bazbar') }.to raise_error BlobstoreError, /Could not copy object/
         end
@@ -380,6 +399,7 @@ module CloudController
         context 'when the source key has no file associated with it' do
           it 'raises a FileNotFound Error' do
             allow(response).to receive_messages(status: 404, content: 'Not Found')
+            allow(httpclient).to receive(:put).and_return(instance_double(HTTP::Message, status: 204, content: ''))
             allow(httpclient).to receive(:request).and_return(response)
 
             expect {

@@ -92,9 +92,13 @@ module CloudController
       end
 
       def cp_file_between_keys(source_key, destination_key)
-        destination_header = { 'Destination' => url(destination_key) }
-        response           = @client.request(:copy, url(source_key), nil, nil, @headers.merge(destination_header))
+        destination_url    = url(destination_key)
+        destination_header = { 'Destination' => destination_url }
 
+        response = @client.put(destination_url, '', @headers)
+        raise BlobstoreError.new("Could not copy object while creating destination, #{response.status}/#{response.content}") if response.status != 201 && response.status != 204
+
+        response = @client.request(:copy, url(source_key), header: @headers.merge(destination_header))
         raise FileNotFound.new("Could not find object '#{source_key}', #{response.status}/#{response.content}") if (response.status == 404)
         raise BlobstoreError.new("Could not copy object, #{response.status}/#{response.content}") if response.status != 201 && response.status != 204
       end
