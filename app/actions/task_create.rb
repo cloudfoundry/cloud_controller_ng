@@ -7,11 +7,12 @@ module VCAP::CloudController
     def create(app, message)
       no_assigned_droplet! unless app.droplet
       TaskModel.create(
-        name:    message.name,
-        state:   TaskModel::RUNNING_STATE,
+        name: message.name,
+        state: TaskModel::RUNNING_STATE,
         droplet: app.droplet,
         command: message.command,
-        app:     app
+        app: app,
+        memory_in_mb: 2048
       )
     rescue Sequel::ValidationFailed => e
       raise InvalidTask.new(e.message)

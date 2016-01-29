@@ -7,7 +7,8 @@ module VCAP::CloudController
       it 'presents the task as json' do
         task = TaskModel.make(
           environment_variables: { 'some' => 'stuff' },
-          failure_reason: 'sup dawg'
+          failure_reason: 'sup dawg',
+          memory_in_mb: 2048
         )
 
         json_result = TaskPresenter.new.present_json(task)
@@ -25,6 +26,7 @@ module VCAP::CloudController
         expect(result['state']).to eq(task.state)
         expect(result['result']['failure_reason']).to eq 'sup dawg'
         expect(result['environment_variables']).to eq(task.environment_variables)
+        expect(result['memory_in_mb']).to eq(task.memory_in_mb)
         expect(result['links']).to eq(links)
       end
     end

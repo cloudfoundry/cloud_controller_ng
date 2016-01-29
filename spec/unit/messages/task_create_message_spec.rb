@@ -11,6 +11,7 @@ module VCAP::CloudController
           'environment_variables' => {
             'ENVVAR' => 'env-val'
           },
+          'memory_in_mb' => 2048
         }
       end
 
@@ -21,6 +22,7 @@ module VCAP::CloudController
         expect(message.name).to eq('mytask')
         expect(message.command).to eq('rake db:migrate && true')
         expect(message.environment_variables).to eq({ 'ENVVAR' => 'env-val' })
+        expect(message.memory_in_mb).to eq(2048)
       end
 
       it 'validates that there are not excess fields' do

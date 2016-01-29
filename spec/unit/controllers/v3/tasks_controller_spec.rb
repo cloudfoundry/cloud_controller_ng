@@ -33,6 +33,7 @@ describe TasksController, type: :controller do
       {
         "name": 'mytask',
         "command": 'rake db:migrate && true',
+        "memory_in_mb": 2048
       }
     end
     let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
@@ -49,8 +50,9 @@ describe TasksController, type: :controller do
       post :create, guid: app_model.guid, body: req_body
 
       expect(response.status).to eq 202
-      expect(JSON.parse(response.body)).to include('name' => 'mytask')
-      expect(JSON.parse(response.body)['state']).to eq('RUNNING')
+      expect(parsed_body['name']).to eq('mytask')
+      expect(parsed_body['state']).to eq('RUNNING')
+      expect(parsed_body['memory_in_mb']).to eq(2048)
     end
 
     it 'creates a task for the app' do
@@ -190,13 +192,14 @@ describe TasksController, type: :controller do
   end
 
   describe '#show' do
-    let!(:task) { VCAP::CloudController::TaskModel.make name: 'mytask', app_guid: app_model.guid }
+    let!(:task) { VCAP::CloudController::TaskModel.make name: 'mytask', app_guid: app_model.guid, memory_in_mb: 2048 }
 
     it 'returns a 200 and the task' do
       get :show, task_guid: task.guid
 
       expect(response.status).to eq 200
-      expect(JSON.parse(response.body)).to include('name' => 'mytask')
+      expect(parsed_body['name']).to eq('mytask')
+      expect(parsed_body['memory_in_mb']).to eq(2048)
     end
 
     context 'when providing an app guid' do
@@ -204,7 +207,7 @@ describe TasksController, type: :controller do
         get :show, task_guid: task.guid, app_guid: app_model.guid
 
         expect(response.status).to eq 200
-        expect(JSON.parse(response.body)).to include('name' => 'mytask')
+        expect(parsed_body).to include('name' => 'mytask')
       end
 
       context 'when the requested task does not belong to the provided app guid' do
@@ -281,15 +284,15 @@ describe TasksController, type: :controller do
 
       get :index
 
-      response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+      response_guids = parsed_body['resources'].map { |r| r['guid'] }
       expect(response.status).to eq(200)
-      expect(response_guids).to match_array([task_1, task_2].map(&:guid))
+      expect(response_guids).to match_array([task_1.guid, task_2.guid])
     end
 
     it 'provides the correct base url in the pagination links' do
       get :index
 
-      expect(JSON.parse(response.body)['pagination']['first']['href']).to include('/v3/tasks')
+      expect(parsed_body['pagination']['first']['href']).to include('/v3/tasks')
     end
 
     context 'when an app is specified' do
@@ -309,7 +312,7 @@ describe TasksController, type: :controller do
       it 'provides the correct base url in the pagination links' do
         get :index, app_guid: app_model.guid
 
-        expect(JSON.parse(response.body)['pagination']['first']['href']).to include("/v3/apps/#{app_model.guid}/tasks")
+        expect(parsed_body['pagination']['first']['href']).to include("/v3/apps/#{app_model.guid}/tasks")
       end
 
       context 'the app does not exist' do
@@ -351,7 +354,7 @@ describe TasksController, type: :controller do
 
         get :index
 
-        response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
         expect(response.status).to eq(200)
         expect(response_guids).to match_array([task_1, task_2, task_3].map(&:guid))
       end

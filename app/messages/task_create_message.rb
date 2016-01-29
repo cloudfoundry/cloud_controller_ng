@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class TaskCreateMessage < BaseMessage
-    ALLOWED_KEYS = [:name, :command, :environment_variables]
+    ALLOWED_KEYS = [:name, :command, :environment_variables, :memory_in_mb]
 
     attr_accessor(*ALLOWED_KEYS)
 
