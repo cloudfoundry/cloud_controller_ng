@@ -90,6 +90,12 @@ audit_events:
 failed_jobs:
   cutoff_age_in_days: <%= p("cc.failed_jobs.cutoff_age_in_days") %>
 
+orphaned_packages:
+  cutoff_age_in_days: <%= p("cc.orphaned_packages.cutoff_age_in_days") %>
+
+orphaned_droplets:
+  cutoff_age_in_days: <%= p("cc.orphaned_droplets.cutoff_age_in_days") %>
+
 pending_packages:
   frequency_in_seconds: <%= p("cc.pending_packages.frequency_in_seconds") %>
   expiration_in_seconds: <%= p("cc.pending_packages.expiration_in_seconds") %>
