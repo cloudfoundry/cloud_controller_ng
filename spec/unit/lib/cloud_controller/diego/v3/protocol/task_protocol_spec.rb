@@ -1,6 +1,6 @@
 require 'spec_helper'
+require 'cloud_controller/diego/v3/protocol/task_protocol'
 require_relative '../../lifecycle_protocol_shared'
-require_relative '../../../../../../../lib/cloud_controller/diego/v3/protocol/task_protocol'
 
 module VCAP::CloudController
   module Diego
@@ -37,12 +37,8 @@ module VCAP::CloudController
               }
             end
 
-            let(:local_dir) { Dir.mktmpdir }
-            let!(:blobstore) { CloudController::Blobstore::Client.new({ provider: 'Local', local_root: local_dir }, 'directory_key') }
-
             before do
-              allow(CloudController::DependencyLocator.instance).to receive(:blobstore_url_generator).and_return(blobstore)
-              allow(blobstore).to receive(:v3_droplet_download_url).and_return('www.droplet.url')
+              allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:v3_droplet_download_url).and_return('www.droplet.url')
             end
 
             context 'the task has a buildpack droplet' do

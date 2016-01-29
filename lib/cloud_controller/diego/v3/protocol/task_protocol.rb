@@ -17,7 +17,7 @@ module VCAP::CloudController
               env = VCAP::CloudController::Diego::Environment.hash_to_diego_env(task.droplet.environment_variables)
             end
 
-            blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator(true)
+            blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
 
             result = {
               'task_guid' => task.guid,
