@@ -1,16 +1,19 @@
 require 'rails_helper'
+require 'queries/task_list_fetcher'
 
-describe AppsTasksController, type: :controller do
-  let(:enabled) { true }
+describe TasksController, type: :controller do
+  let(:tasks_enabled) { true }
   let(:membership) { instance_double(VCAP::CloudController::Membership) }
   let(:app_model) { VCAP::CloudController::AppModel.make }
   let(:space) { app_model.space }
   let(:org) { space.organization }
 
   before do
-    VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: enabled, error_message: nil)
+    VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: tasks_enabled, error_message: nil)
+
     @request.env.merge!(headers_for(VCAP::CloudController::User.make))
-    allow_any_instance_of(AppsTasksController).to receive(:membership).and_return(membership)
+
+    allow_any_instance_of(TasksController).to receive(:membership).and_return(membership)
     allow(membership).to receive(:has_any_roles?).with(
       [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(true)
     allow(membership).to receive(:has_any_roles?).with(
@@ -61,7 +64,7 @@ describe AppsTasksController, type: :controller do
 
     describe 'access permissions' do
       context 'when the task_creation feature flag is disabled' do
-        let(:enabled) { false }
+        let(:tasks_enabled) { false }
 
         it 'raises 403 for non-admins' do
           post :create, guid: app_model.guid, body: req_body
@@ -190,30 +193,30 @@ describe AppsTasksController, type: :controller do
     let!(:task) { VCAP::CloudController::TaskModel.make name: 'mytask', app_guid: app_model.guid }
 
     it 'returns a 200 and the task' do
-      get :show, task_guid: task.guid, app_guid: app_model.guid
+      get :show, task_guid: task.guid
 
       expect(response.status).to eq 200
       expect(JSON.parse(response.body)).to include('name' => 'mytask')
     end
 
-    context 'when the requested task does not belong to the provided app guid' do
-      it 'returns a 404' do
-        other_app = VCAP::CloudController::AppModel.make space_guid: space.guid
-        other_task = VCAP::CloudController::TaskModel.make name: 'other_task', app_guid: other_app.guid
-        get :show, task_guid: other_task.guid, app_guid: app_model.guid
-
-        expect(response.status).to eq 404
-        expect(response.body).to include 'ResourceNotFound'
-        expect(response.body).to include 'Task not found'
-      end
-    end
-
-    context 'when only task guid is present' do
+    context 'when providing an app guid' do
       it 'returns a 200 and the task' do
-        get :show, task_guid: task.guid
+        get :show, task_guid: task.guid, app_guid: app_model.guid
 
         expect(response.status).to eq 200
         expect(JSON.parse(response.body)).to include('name' => 'mytask')
+      end
+
+      context 'when the requested task does not belong to the provided app guid' do
+        it 'returns a 404' do
+          other_app = VCAP::CloudController::AppModel.make space_guid: space.guid
+          other_task = VCAP::CloudController::TaskModel.make name: 'other_task', app_guid: other_app.guid
+          get :show, task_guid: other_task.guid, app_guid: app_model.guid
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'Task not found'
+        end
       end
     end
 
@@ -256,6 +259,126 @@ describe AppsTasksController, type: :controller do
       expect(response.status).to eq 404
       expect(response.body).to include 'ResourceNotFound'
       expect(response.body).to include 'Task not found'
+    end
+  end
+
+  describe '#index' do
+    before do
+      allow(membership).to receive(:space_guids_for_roles).with(
+        [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+         VCAP::CloudController::Membership::SPACE_MANAGER,
+         VCAP::CloudController::Membership::SPACE_AUDITOR]).and_return([space.guid])
+
+      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
+      allow(membership).to receive(:has_any_roles?).and_return(true)
+    end
+
+    it 'returns tasks the user has roles to see' do
+      task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
+      task_2 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
+      VCAP::CloudController::TaskModel.make
+
+      get :index
+
+      response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+      expect(response.status).to eq(200)
+      expect(response_guids).to match_array([task_1, task_2].map(&:guid))
+    end
+
+    it 'provides the correct base url in the pagination links' do
+      get :index
+
+      expect(JSON.parse(response.body)['pagination']['first']['href']).to include('/v3/tasks')
+    end
+
+    context 'when an app is specified' do
+      it 'uses the app as a filter' do
+        task_list_fetcher = VCAP::CloudController::TaskListFetcher.new
+        allow(VCAP::CloudController::TaskListFetcher).to receive(:new).and_return(task_list_fetcher)
+        allow(task_list_fetcher).to receive(:fetch).and_call_original
+
+        get :index, app_guid: app_model.guid
+
+        expect(task_list_fetcher).to have_received(:fetch) do |_, _, app_guid|
+          expect(app_guid).to eq(app_model.guid)
+        end
+        expect(response.status).to eq(200)
+      end
+
+      it 'provides the correct base url in the pagination links' do
+        get :index, app_guid: app_model.guid
+
+        expect(JSON.parse(response.body)['pagination']['first']['href']).to include("/v3/apps/#{app_model.guid}/tasks")
+      end
+
+      context 'the app does not exist' do
+        it 'returns a 404 Resource Not Found' do
+          get :index, app_guid: 'hello-i-do-not-exist'
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+        end
+      end
+
+      context 'when the user does not have permissions to read the app' do
+        before do
+          allow(membership).to receive(:has_any_roles?).with(
+            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+             VCAP::CloudController::Membership::SPACE_MANAGER,
+             VCAP::CloudController::Membership::SPACE_AUDITOR,
+             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        end
+
+        it 'returns a 404 Resource Not Found error' do
+          get :index, app_guid: app_model.guid
+
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.status).to eq 404
+        end
+      end
+    end
+
+    context 'admin' do
+      before do
+        @request.env.merge!(admin_headers)
+      end
+
+      it 'returns a 200 and all tasks belonging to the app' do
+        task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
+        task_2 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
+        task_3 = VCAP::CloudController::TaskModel.make
+
+        get :index
+
+        response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+        expect(response.status).to eq(200)
+        expect(response_guids).to match_array([task_1, task_2, task_3].map(&:guid))
+      end
+    end
+
+    describe 'query params errors' do
+      context 'invalid param format' do
+        it 'returns 400' do
+          get :index, per_page: 'meow'
+
+          expect(response.status).to eq 400
+          expect(response.body).to include('Per page is not a number')
+          expect(response.body).to include('BadQueryParameter')
+        end
+      end
+
+      context 'unknown query param' do
+        it 'returns 400' do
+          get :index, meow: 'bad-val', nyan: 'mow'
+
+          expect(response.status).to eq 400
+          expect(response.body).to include('BadQueryParameter')
+          expect(response.body).to include('Unknown query parameter(s)')
+          expect(response.body).to include('nyan')
+          expect(response.body).to include('meow')
+        end
+      end
     end
   end
 end

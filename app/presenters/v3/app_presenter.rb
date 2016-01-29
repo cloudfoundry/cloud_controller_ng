@@ -85,6 +85,7 @@ module VCAP::CloudController
         packages:               { href: "/v3/apps/#{app.guid}/packages" },
         droplet:                droplet_link,
         droplets:               { href: "/v3/apps/#{app.guid}/droplets" },
+        tasks:                  { href: "/v3/apps/#{app.guid}/tasks" },
         start:                  { href: "/v3/apps/#{app.guid}/start", method: 'PUT' },
         stop:                   { href: "/v3/apps/#{app.guid}/stop", method: 'PUT' },
         assign_current_droplet: { href: "/v3/apps/#{app.guid}/current_droplet", method: 'PUT' },

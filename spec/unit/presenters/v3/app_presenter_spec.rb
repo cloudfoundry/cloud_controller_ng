@@ -83,6 +83,13 @@ module VCAP::CloudController
           expect(result['links']['routes']['href']).to eq("/v3/apps/#{app.guid}/routes")
         end
 
+        it 'includes tasks links' do
+          json_result = AppPresenter.new.present_json(app)
+          result      = MultiJson.load(json_result)
+
+          expect(result['links']['tasks']['href']).to eq("/v3/apps/#{app.guid}/tasks")
+        end
+
         context 'droplets' do
           before do
             app.droplet = DropletModel.make(guid: '123')
@@ -129,7 +136,7 @@ module VCAP::CloudController
     end
 
     describe '#present_json_list' do
-      let(:pagination_presenter) { double(:pagination_presenter, present_pagination_hash: 'pagination_stuff') }
+      let(:pagination_presenter) { instance_double(PaginationPresenter, :pagination_presenter, present_pagination_hash: 'pagination_stuff') }
       let(:app_model1) { app }
       let(:app_model2) { app }
       let(:apps) { [app_model1, app_model2] }
