@@ -7,17 +7,18 @@ module VCAP::CloudController
       @user_email = user_email
     end
 
-    def add(app, route, process)
-      AppModelRoute.create(app: app, route: route, type: 'web')
+    def add(app, route, process_model)
+      process_type = process_model.nil? ? 'web' : process_model.type
+      AppModelRoute.create(app: app, route: route, type: process_type)
 
-      if !process.nil?
-        process.add_route(route)
-
-        if process.dea_update_pending?
-          Dea::Client.update_uris(process)
+      if !process_model.nil?
+        process_model.add_route(route)
+        if process_model.dea_update_pending?
+          Dea::Client.update_uris(process_model)
         end
       end
 
+      # TODO: Update event to match new route mappings
       Repositories::Runtime::AppEventRepository.new.record_map_route(app, route, @user.try(:guid), @user_email)
 
     rescue Sequel::ValidationFailed => e

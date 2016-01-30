@@ -1,14 +1,14 @@
 module VCAP::CloudController
   class AddRouteFetcher
-    def fetch(app_guid, route_guid)
+    def fetch(app_guid, route_guid, process_type)
       app = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
       return nil if app.nil?
 
-      web_process = app.processes_dataset.where(type: 'web').first
-      route       = routes_dataset(app.space_guid).where(:"#{Route.table_name}__guid" => route_guid).first
+      process = app.processes_dataset.where(type: process_type).first
+      route       = Route.where(guid: route_guid).first
 
       org = app.space ? app.space.organization : nil
-      [app, route, web_process, app.space, org]
+      [app, route, process, app.space, org]
     end
 
     private

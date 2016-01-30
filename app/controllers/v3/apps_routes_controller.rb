@@ -21,23 +21,6 @@ class AppsRoutesController < ApplicationController
     render :ok, json: RoutePresenter.new.present_json_list(routes, "/v3/apps/#{app_guid}/routes")
   end
 
-  def add_route
-    app_guid = params[:guid]
-
-    app, route, web_process, space, org = AddRouteFetcher.new.fetch(app_guid, params['route_guid'])
-    app_not_found! unless app && can_read?(space.guid, org.guid)
-    route_not_found! if route.nil?
-    unauthorized! unless can_write?(space.guid)
-
-    begin
-      AddRouteToApp.new(current_user, current_user_email).add(app, route, web_process)
-    rescue AddRouteToApp::InvalidRouteMapping => e
-      unprocessable!(e.message)
-    end
-
-    head :no_content
-  end
-
   def destroy
     app_guid = params[:guid]
 

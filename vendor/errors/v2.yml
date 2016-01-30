@@ -278,6 +278,11 @@
   http_code: 400
   message: "Routes can only be mapped to ports already enabled for the application."
 
+60024:
+  name: RouteMappingAlreadyExists
+  http_code: 400
+  message: "Route mapping already exists"
+
 70001:
   name: RuntimeInvalid
   http_code: 400
@@ -653,6 +658,11 @@
   http_code: 404
   message: "The route mapping could not be found: %s"
 
+210008:
+  name: RouteNotInSameSpaceAsApp
+  http_code: 400
+  message: "Routes must be in the same space as the app."
+
 220001:
   name: InstancesError
   http_code: 400
@@ -947,6 +957,12 @@
   name: UnableToDelete
   http_code: 400
   message: "Unable to perform delete action: %s"
+
+350003:
+  name: ProcessNotFound
+  http_code: 404
+  message: "The process could not be found: %s"
+
 
 360001:
   name: ServiceKeyNameTaken
