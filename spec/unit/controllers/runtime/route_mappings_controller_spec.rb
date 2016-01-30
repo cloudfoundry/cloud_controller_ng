@@ -276,10 +276,10 @@ module VCAP::CloudController
 
         context 'when the route mapping does not exist' do
           it 'raises an informative error' do
-            delete "/v2/route_mappings/nonexistent-guid", {}, headers_for(developer)
+            delete '/v2/route_mappings/nonexistent-guid', {}, headers_for(developer)
 
             expect(last_response).to have_status_code(404)
-            expect(last_response.body).to include "RouteMappingNotFound"
+            expect(last_response.body).to include 'RouteMappingNotFound'
           end
         end
       end
