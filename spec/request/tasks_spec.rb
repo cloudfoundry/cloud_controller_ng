@@ -38,7 +38,7 @@ describe 'Tasks' do
     it 'creates a task for an app with an assigned current droplet' do
       body = {
         name: 'best task ever',
-        command: 'be rake && true'
+        command: 'be rake && true',
       }
       post "/v3/apps/#{app_model.guid}/tasks", body, admin_headers
 
@@ -50,6 +50,7 @@ describe 'Tasks' do
       expect(parsed_body['name']).to eq('best task ever')
       expect(parsed_body['command']).to eq('be rake && true')
       expect(parsed_body['state']).to eq('RUNNING')
+      expect(parsed_body['memory_in_mb']).to eq(1024)
       expect(parsed_body['result']).to eq({ 'failure_reason' => nil })
 
       expect(parsed_body['links']['self']).to eq({ 'href' => "/v3/tasks/#{guid}" })

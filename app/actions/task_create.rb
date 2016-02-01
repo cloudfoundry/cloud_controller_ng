@@ -4,21 +4,33 @@ module VCAP::CloudController
     class TaskCreateError < StandardError; end
     class NoAssignedDroplet < TaskCreateError; end
 
+    def initialize(config)
+      @config = config
+    end
+
     def create(app, message)
       no_assigned_droplet! unless app.droplet
-      TaskModel.create(
+      task = TaskModel.create(
         name: message.name,
         state: TaskModel::RUNNING_STATE,
         droplet: app.droplet,
         command: message.command,
         app: app,
-        memory_in_mb: message.memory_in_mb
+        memory_in_mb: message.memory_in_mb || config[:default_app_memory],
       )
+      dependency_locator.nsync_client.desire_task(task)
+      task
     rescue Sequel::ValidationFailed => e
       raise InvalidTask.new(e.message)
     end
 
     private
+
+    attr_reader :config
+
+    def dependency_locator
+      CloudController::DependencyLocator.instance
+    end
 
     def no_assigned_droplet!
       raise NoAssignedDroplet.new('Task must have a droplet. Specify droplet or assign current droplet to app.')

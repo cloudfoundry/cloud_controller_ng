@@ -22,7 +22,7 @@ module VCAP::CloudController
             result = {
               'task_guid' => task.guid,
               'log_guid' => task.app.guid,
-              'memory_mb' => config[:default_app_memory],
+              'memory_mb' => task.memory_in_mb,
               'disk_mb' => config[:default_app_disk_in_mb],
               'environment' => env || nil,
               'egress_rules' => @egress_rules.running(task.app),

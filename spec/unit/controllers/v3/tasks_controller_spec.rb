@@ -37,12 +37,14 @@ describe TasksController, type: :controller do
       }
     end
     let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
+    let(:task) { Task.make }
 
     before do
       app_model.droplet = droplet
       app_model.save
 
-      allow(VCAP::CloudController::Diego::NsyncClient).to receive(:new).and_return(client)
+      locator = CloudController::DependencyLocator.instance
+      allow(locator).to receive(:nsync_client).and_return(client)
       allow(client).to receive(:desire_task).and_return(nil)
     end
 

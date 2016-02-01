@@ -223,7 +223,9 @@ module VCAP::CloudController::Diego
 
         it 'send the request with a proper json body' do
           expect { client.desire_task(task) }.not_to raise_error
-          expect(a_request(:post, client_url).with(body: desired_message, headers: content_type_header)).to have_been_made.once
+          expect(
+            a_request(:post, client_url).with(body: desired_message, headers: content_type_header)
+          ).to have_been_made.once
         end
 
         context 'when the task url is unavailable' do
