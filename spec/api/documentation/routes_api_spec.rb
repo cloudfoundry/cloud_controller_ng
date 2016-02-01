@@ -29,12 +29,12 @@ resource 'Routes', type: [:api, :legacy_api] do
     field :guid, 'The guid of the route.'
   end
 
-  describe 'Standard endpoints' do
-    path_description = 'The path for a route as raw text.'
-    path_description += ' 1) Paths must be between 2 and 128 characters'
-    path_description += ' 2) Paths must start with a /'
-    path_description += ' 3) Paths must not contain a "?"'
+  path_description = 'The path for a route as raw text.'
+  path_description += ' 1) Paths must be between 2 and 128 characters'
+  path_description += ' 2) Paths must start with a forward slash "/"'
+  path_description += ' 3) Paths must not contain a "?"'
 
+  describe 'Standard endpoints' do
     shared_context 'updatable_fields' do |opts|
       field :domain_guid, 'The guid of the associated domain', required: opts[:required], example_values: [Sham.guid]
       field :space_guid, 'The guid of the associated space', required: opts[:required], example_values: [Sham.guid]
@@ -132,7 +132,7 @@ EOF
     get '/v2/routes/reserved/domain/:domain_guid/host/:host?path=:path' do
       request_parameter :domain_guid, 'The guid of a domain'
       request_parameter :host, 'The host portion of the route'
-      request_parameter :path, 'The path of a route', required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
+      request_parameter :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
 
       example 'Check a Route exists' do
         explanation 'This endpoint returns a status code of 204 if the route exists, and 404 if it does not.'
