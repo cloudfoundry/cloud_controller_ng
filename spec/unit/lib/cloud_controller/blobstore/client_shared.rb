@@ -6,7 +6,7 @@ shared_examples_for 'a blobstore client' do
     end
   end
   let(:key) { 'blobstore-client-shared-key' }
-  let(:dest_path) { Dir::Tmpname.make_tmpname(Dir.tmpdir, nil) }
+  let(:dest_path) { Dir::Tmpname.make_tmpname(Dir.mktmpdir, nil) }
 
   after do
     tmpfile.unlink

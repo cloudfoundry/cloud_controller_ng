@@ -76,7 +76,7 @@ module CloudController
       end
 
       describe '#download_from_blobstore' do
-        let(:destination_path) { Dir::Tmpname.make_tmpname(Dir.tmpdir, nil) }
+        let(:destination_path) { Dir::Tmpname.make_tmpname(Dir.mktmpdir, nil) }
 
         after do
           File.delete(destination_path) if File.exist?(destination_path)
