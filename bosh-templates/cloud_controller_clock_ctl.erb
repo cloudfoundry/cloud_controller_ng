@@ -20,7 +20,6 @@ export LANG=en_US.UTF-8
 export NEWRELIC_ENABLE=false
 
 source /var/vcap/packages/common/utils.sh
-source $CC_JOB_DIR/bin/blobstore_waiter.sh
 
 case $1 in
 
@@ -35,8 +34,6 @@ chown vcap:vcap $LOG_DIR
 
 echo $$ > $PIDFILE
 chown vcap:vcap $PIDFILE
-
-wait_for_blobstore
 
 cd $CC_PACKAGE_DIR/cloud_controller_ng
 exec chpst -u vcap:vcap bundle exec rake clock:start
