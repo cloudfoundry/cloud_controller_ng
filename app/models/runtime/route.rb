@@ -72,20 +72,19 @@ module VCAP::CloudController
 
       validates_format /^([\w\-]+|\*)$/, :host if host && !host.empty?
 
-      if path.empty? && port == 0
-        validates_unique [:host, :domain_id]  do |ds|
-          ds.where(path: '', port: 0)
+      if path.empty?
+        # This is only for routes controller translate_validation_exception method
+        # in order to distinguish between hostname being taken and path being
+        # taken
+        validates_unique [:host, :domain_id, :port]  do |ds|
+          ds.where(path: '')
         end
-      elsif !path.empty? && port == 0
-        validates_unique [:host, :domain_id, :path]  do |ds|
-          ds.where(port: 0)
-        end
-      else # port > 0
-        validates_unique [:domain_id, :port]
+      else
+        validates_unique [:host, :domain_id, :path, :port]
       end
 
+      validate_host_and_domain_in_different_space
       validate_path
-
       validate_domain
       validate_total_routes
       validate_ports
@@ -186,6 +185,14 @@ module VCAP::CloudController
         if app.dea_update_pending?
           Dea::Client.update_uris(app)
         end
+      end
+    end
+
+    def validate_host_and_domain_in_different_space
+      return unless space && domain && domain.shared?
+
+      validates_unique [:domain_id, :host], message: :host_and_domain_taken_different_space do |ds|
+        ds.where(port: 0).exclude(space: space)
       end
     end
 

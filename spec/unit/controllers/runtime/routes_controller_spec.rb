@@ -353,6 +353,44 @@ module VCAP::CloudController
       end
 
       context 'when the domain is a HTTP Domain' do
+        context 'when the domain is a shared domain' do
+          let(:shared_domain) { SharedDomain.make }
+          let(:domain_guid) { shared_domain.guid }
+
+          context 'and a route already exists with the same host' do
+            before do
+              Route.make(domain: shared_domain, host: host, space: space)
+            end
+
+            context 'and a user tries to create another route in a different space' do
+              let(:another_space) { Space.make }
+              let(:route_attrs) { { 'port' => nil, 'host' => host, 'path' => '/foo' } }
+              let(:req) do
+                {
+                  domain_guid: shared_domain.guid,
+                  space_guid: another_space.guid,
+                  host: host,
+                  port: nil,
+                  path: '/foo'
+                }
+              end
+
+              before do
+                another_space.organization.add_user(user)
+                another_space.add_developer(user)
+              end
+
+              it 'fails with an RouteInvalid' do
+                post '/v2/routes', MultiJson.dump(req), headers_for(user)
+
+                expect(last_response).to have_status_code(400)
+                expect(decoded_response['description']).
+                    to include('Routes for this host and domain have been reserved for another space')
+              end
+            end
+          end
+        end
+
         context 'domain is invalid' do
           before do
             allow(tcp_route_validator).to receive(:validate).

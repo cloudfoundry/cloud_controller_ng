@@ -25,12 +25,12 @@ module VCAP::CloudController
     end
 
     def self.translate_validation_exception(e, attributes)
-      name_errors = e.errors.on([:host, :domain_id])
+      name_errors = e.errors.on([:host, :domain_id, :port])
       if name_errors && name_errors.include?(:unique)
         return Errors::ApiError.new_from_details('RouteHostTaken', attributes['host'])
       end
 
-      path_errors = e.errors.on([:host, :domain_id, :path])
+      path_errors = e.errors.on([:host, :domain_id, :path, :port])
       if path_errors && path_errors.include?(:unique)
         return Errors::ApiError.new_from_details('RoutePathTaken', attributes['path'])
       end
@@ -43,6 +43,12 @@ module VCAP::CloudController
       org_errors = e.errors.on(:organization)
       if org_errors && org_errors.include?(:total_routes_exceeded)
         return Errors::ApiError.new_from_details('OrgQuotaTotalRoutesExceeded')
+      end
+
+      host_and_domain_taken_error = e.errors.on([:domain_id, :host])
+      if host_and_domain_taken_error
+        return Errors::ApiError.new_from_details('RouteInvalid',
+                                                 'Routes for this host and domain have been reserved for another space.')
       end
 
       path_error = e.errors.on(:path)
