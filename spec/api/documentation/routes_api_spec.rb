@@ -40,7 +40,7 @@ resource 'Routes', type: [:api, :legacy_api] do
       field :space_guid, 'The guid of the associated space', required: opts[:required], example_values: [Sham.guid]
       field :host, 'The host portion of the route'
       field :port, 'The port of the route. Supported for domains of TCP router groups only.', required: false,
-                                                                                              valid_values: '1024-65535', example_values: [50000]
+                                                                                              valid_values: '1024-65535', example_values: [50000], experimental: true
       field :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
     end
 
@@ -66,7 +66,7 @@ resource 'Routes', type: [:api, :legacy_api] do
       param_description = <<EOF
 Set to `true` to generate a random port. Defaults to `false`. Supported for domains for TCP router groups only. Takes precedence over manually specified port.
 EOF
-      parameter :generate_port, param_description, valid_values: [true, false]
+      parameter :generate_port, param_description, valid_values: [true, false], experimental: true
 
       example 'Creating a Route' do
         body = MultiJson.dump(

@@ -9,7 +9,7 @@ resource 'Shared Domains', type: [:api, :legacy_api] do
   authenticated_request
 
   field :guid, 'The guid of the domain.', required: false
-  field :router_group_guid, 'The guid of the router group.', required: false
+  field :router_group_guid, 'The guid of the router group.', required: false, experimental: true
   field :name, 'The name of the domain.', required: true, example_values: ['example.com', 'foo.example.com']
 
   standard_model_list :shared_domain, VCAP::CloudController::SharedDomainsController
