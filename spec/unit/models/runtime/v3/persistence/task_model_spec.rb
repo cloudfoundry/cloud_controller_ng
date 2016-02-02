@@ -131,7 +131,7 @@ module VCAP::CloudController
           end
 
           describe 'when the quota has a memory_limit' do
-            let(:space) { SpaceQuotaDefinition.make(memory_limit: 20, organization: org) }
+            let(:quota) { SpaceQuotaDefinition.make(memory_limit: 20, organization: org) }
 
             it 'allows tasks that fit in the available space' do
               expect {
