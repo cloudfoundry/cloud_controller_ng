@@ -58,7 +58,8 @@ resource 'Service Instances', type: [:api, :legacy_api] do
     response_field 'space_url', 'The relative path to the space resource that this service instance belongs to.'
     response_field 'service_plan_url', 'The relative path to the service plan resource that this service instance belongs to.'
     response_field 'service_binding_url', 'The relative path to the service bindings that this service instance is bound to.'
-    response_field 'routes_url', 'Routes bound to the service instance. Requests to these routes will be forwarded to the service instance.'
+    response_field 'routes_url', 'Routes bound to the service instance. Requests to these routes will be forwarded to the service instance.',
+      experimental: true
     response_field 'tags', 'A list of tags for the service instance'
 
     standard_model_list :managed_service_instance, VCAP::CloudController::ServiceInstancesController, path: :service_instance
@@ -195,7 +196,7 @@ EOF
           stub_bind(service_instance)
         end
 
-        example 'Binding a Service Instance to a Route' do
+        example 'Binding a Service Instance to a Route (experimental)' do
           request_hash = {
               parameters: {
                   the_service_broker: 'wants this object'
@@ -216,7 +217,7 @@ EOF
           stub_unbind(binding)
         end
 
-        example 'Unbinding a service instance from a route' do
+        example 'Unbinding a service instance from a route (experimental)' do
           client.delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}.to_json, headers
           expect(status).to eq(204)
           expect(response_body).to be_empty
