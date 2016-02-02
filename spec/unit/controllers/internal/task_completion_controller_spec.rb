@@ -29,7 +29,7 @@ module VCAP::CloudController
         expect(last_response.body).to eq '{}'
 
         expect(task.reload.state).to eq 'SUCCEEDED'
-        expect(task.reload.failure_reason).to be_empty
+        expect(task.reload.failure_reason).to eq(nil)
       end
 
       context 'task fails' do

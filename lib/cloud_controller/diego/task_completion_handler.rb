@@ -12,8 +12,12 @@ module VCAP::CloudController
         task.class.db.transaction do
           task.lock!
 
-          task.state = payload[:failed] ?  task.state = TaskModel::FAILED_STATE : task.state = TaskModel::SUCCEEDED_STATE
-          task.failure_reason = payload[:failure_reason]
+          if payload[:failed]
+            task.state = TaskModel::FAILED_STATE
+            task.failure_reason = payload[:failure_reason]
+          else
+            task.state = TaskModel::SUCCEEDED_STATE
+          end
 
           task.save_changes(raise_on_save_failure: true)
         end

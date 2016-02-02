@@ -27,7 +27,7 @@ module VCAP::CloudController
           it 'marks the task as succeeded' do
             handler.complete_task(task, response)
             expect(task.reload.state).to eq TaskModel::SUCCEEDED_STATE
-            expect(task.reload.failure_reason).to be_empty
+            expect(task.reload.failure_reason).to eq(nil)
           end
 
           context 'when updating the task fails' do
