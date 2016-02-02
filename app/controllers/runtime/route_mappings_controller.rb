@@ -51,8 +51,9 @@ module VCAP::CloudController
         where(:"#{RouteMapping.table_name}__app_port" => app_port,
               :"#{App.table_name}__guid" => app_guid,
               :"#{Route.table_name}__guid" => route_guid)
-      raise RouteMappingTaken.new("Route #{route_guid} mapped to app #{app_guid} with
-                                   port #{app_port}") unless mappings.count == 0
+      unless mappings.count == 0
+        raise RouteMappingTaken.new("Route #{route_guid} is mapped to port #{app_port} of app #{app_guid}")
+      end
     end
 
     def delete(guid)

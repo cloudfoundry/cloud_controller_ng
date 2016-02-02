@@ -11,7 +11,6 @@ resource 'Routes Mapping', type: [:api, :legacy_api] do
 
   describe 'Standard endpoints' do
     shared_context 'fields' do |opts|
-      field :guid, 'The guid of the route mapping.'
       field :app_guid, 'The guid of the bound application.', required: true, example_values: [Sham.guid]
       field :route_guid, 'The guid of the bound route.', required: true, example_values: [Sham.guid]
       field :app_port, 'Port on which the application should
