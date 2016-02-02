@@ -48,7 +48,7 @@ class ServiceBindingsController < ApplicationController
     if roles.admin?
       paginated_result = ServiceBindingListFetcher.new.fetch_all(pagination_options)
     else
-      paginated_result = ServiceBindingListFetcher.new.fetch(pagination_options, space_guids_for_user)
+      paginated_result = ServiceBindingListFetcher.new.fetch(pagination_options, readable_space_guids_for_user)
     end
 
     render status: :ok, json: service_binding_presenter.present_json_list(paginated_result, '/v3/service_bindings')
@@ -60,8 +60,8 @@ class ServiceBindingsController < ApplicationController
     ServiceBindingModelPresenter.new
   end
 
-  def space_guids_for_user
-    membership.space_guids_for_roles([VCAP::CloudController::Membership::SPACE_DEVELOPER])
+  def readable_space_guids_for_user
+    membership.space_guids_for_roles(ROLES_FOR_READING)
   end
 
   def can_create?(space_guid)

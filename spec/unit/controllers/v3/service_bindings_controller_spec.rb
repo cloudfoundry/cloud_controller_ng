@@ -415,7 +415,12 @@ describe ServiceBindingsController, type: :controller do
 
     before do
       allow(membership).to receive(:space_guids_for_roles).
-        with([VCAP::CloudController::Membership::SPACE_DEVELOPER]).and_return(allowed_space.guid)
+        with(
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+           VCAP::CloudController::Membership::SPACE_MANAGER,
+           VCAP::CloudController::Membership::SPACE_AUDITOR,
+           VCAP::CloudController::Membership::ORG_MANAGER]
+        ).and_return(allowed_space.guid)
     end
 
     it 'returns a 200 and all service bindings the user is allowed to see' do
