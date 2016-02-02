@@ -475,6 +475,21 @@ module VCAP::CloudController
             expect(decoded_response['description']).to include('Custom app ports supported for Diego only. Enable Diego for the app or remove custom app ports.')
           end
         end
+
+        context 'when the app has existing custom ports' do
+          let(:app_obj) { AppFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
+          let(:route) { Route.make(space: app_obj.space) }
+          let(:route_mapping) { RouteMapping.make(app_id: app_obj.id, route_id: route.id) }
+
+          it 'removes the app ports from the route mapping' do
+            expect(RouteMapping.find(guid: route_mapping.guid).app_port).to eq 9090
+            put "/v2/apps/#{app_obj.guid}", '{ "diego": false }', json_headers(headers_for(developer))
+            expect(last_response).to have_status_code(201)
+            expect(decoded_response['entity']['ports']).to be nil
+            expect(decoded_response['entity']['diego']).to be false
+            expect(RouteMapping.find(guid: route_mapping.guid).app_port).to be_nil
+          end
+        end
       end
 
       context 'when app is dea app' do

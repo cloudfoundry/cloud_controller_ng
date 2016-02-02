@@ -196,6 +196,11 @@ module VCAP::CloudController
         Dea::Client.update_uris(app)
       end
 
+      previous_changes = app.previous_changes
+      if previous_changes && previous_changes.key?(:diego) && !app.diego?
+        RouteMapping.dataset.where('app_id = ?', app.id).update(app_port: nil)
+      end
+
       @app_event_repository.record_app_update(app, app.space, SecurityContext.current_user.guid, SecurityContext.current_user_email, request_attrs)
     end
 
