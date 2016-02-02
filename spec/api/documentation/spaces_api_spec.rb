@@ -89,7 +89,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         VCAP::CloudController::Route.make(domain: domain, space: space)
       end
 
-      standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :space
+      standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :space, exclude_parameters: ['organization_guid']
     end
 
     describe 'Developers' do

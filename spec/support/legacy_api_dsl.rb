@@ -120,7 +120,7 @@ module LegacyApiDsl
       end
 
       get root(path) do
-        standard_list_parameters controller, outer_model: outer_model
+        standard_list_parameters controller, outer_model: outer_model, exclude_parameters: options.fetch(:exclude_parameters, [])
         example_request "List all #{title}#{outer_model_description}" do
           expect(status).to eq 200
           standard_list_response parsed_response, model
@@ -197,8 +197,8 @@ module LegacyApiDsl
       end
     end
 
-    def standard_list_parameters(controller, outer_model: nil)
-      query_parameters = controller.query_parameters
+    def standard_list_parameters(controller, outer_model: nil, exclude_parameters: [])
+      query_parameters = controller.query_parameters - exclude_parameters
       if query_parameters.size > 0
         query_parameter_description = 'Parameters used to filter the result set.<br/>'
         query_parameter_description += 'Format queries as &lt;filter&gt;&lt;op&gt;&lt;value&gt;<br/>'
