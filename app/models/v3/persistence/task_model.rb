@@ -27,6 +27,20 @@ module VCAP::CloudController
       validate_environment_variables
       validates_presence :droplet
       validates_presence :name
+      validate_space_quotas
+    end
+
+    def validate_space_quotas
+      return unless space && space.space_quota_definition
+
+      unless space.has_remaining_memory(memory_in_mb)
+        errors.add(:memory_in_mb, 'space memory limit')
+      end
+
+      instance_memory_limit = space.instance_memory_limit
+      if instance_memory_limit != QuotaDefinition::UNLIMITED && memory_in_mb > instance_memory_limit
+        errors.add(:memory_in_mb, 'space instance memory limit')
+      end
     end
 
     def validate_environment_variables

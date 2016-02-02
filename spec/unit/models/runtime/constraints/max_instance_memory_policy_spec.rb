@@ -2,10 +2,10 @@ require 'spec_helper'
 
 describe MaxInstanceMemoryPolicy do
   let(:app) { VCAP::CloudController::AppFactory.make(memory: 100, state: 'STARTED') }
-  let(:quota_definition) { double(instance_memory_limit: 150) }
+  let(:policy_target) { double(instance_memory_limit: 150) }
   let(:error_name) { :random_memory_error }
 
-  subject(:validator) { MaxInstanceMemoryPolicy.new(app, quota_definition, error_name) }
+  subject(:validator) { MaxInstanceMemoryPolicy.new(app, policy_target, error_name) }
 
   it 'gives error when app memory exceeds instance memory limit' do
     app.memory = 200
@@ -17,6 +17,13 @@ describe MaxInstanceMemoryPolicy do
     expect(validator).to validate_without_error(app)
   end
 
+  context 'if the policy target is nil' do
+    let(:policy_target) { nil }
+    it 'does not give an error' do
+      expect(validator).to validate_without_error(app)
+    end
+  end
+
   context 'when quota definition is null' do
     let(:quota_definition) { nil }
 
@@ -26,10 +33,10 @@ describe MaxInstanceMemoryPolicy do
     end
   end
 
-  context 'when instance memory limit is -1' do
-    let(:quota_definition) { double(instance_memory_limit: -1) }
+  context 'when instance memory limit is unlimited' do
+    let(:policy_target) { double(instance_memory_limit: VCAP::CloudController::QuotaDefinition::UNLIMITED) }
 
-    it 'does not give error when instance memory limit is -1' do
+    it 'does not give error when instance memory limit is UNLIMITED' do
       app.memory = 200
       expect(validator).to validate_without_error(app)
     end

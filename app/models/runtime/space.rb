@@ -153,6 +153,14 @@ module VCAP::CloudController
       memory_remaining >= mem
     end
 
+    def instance_memory_limit
+      if space_quota_definition
+        space_quota_definition.instance_memory_limit
+      else
+        QuotaDefinition::UNLIMITED
+      end
+    end
+
     def in_suspended_org?
       organization.suspended?
     end
@@ -160,8 +168,18 @@ module VCAP::CloudController
     private
 
     def memory_remaining
-      memory_used = apps_dataset.where(state: 'STARTED').sum(Sequel.*(:memory, :instances)) || 0
+      memory_used = started_app_memory + running_task_memory
       space_quota_definition.memory_limit - memory_used
+    end
+
+    def running_task_memory
+      TaskModel.join(:apps_v3, id: :app_id).
+        where(state: TaskModel::RUNNING_STATE, apps_v3__space_guid: guid).
+        sum(:memory_in_mb) || 0
+    end
+
+    def started_app_memory
+      apps_dataset.where(state: 'STARTED').sum(Sequel.*(:memory, :instances)) || 0
     end
   end
 end

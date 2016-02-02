@@ -1,5 +1,7 @@
 module VCAP::CloudController
   class QuotaDefinition < Sequel::Model
+    UNLIMITED = -1
+
     one_to_many :organizations
 
     export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
@@ -18,9 +20,9 @@ module VCAP::CloudController
       validates_presence :memory_limit
 
       errors.add(:memory_limit, :less_than_zero) if memory_limit && memory_limit < 0
-      errors.add(:instance_memory_limit, :invalid_instance_memory_limit) if instance_memory_limit && instance_memory_limit < -1
-      errors.add(:total_private_domains, :invalid_total_private_domains) if total_private_domains && total_private_domains < -1
-      errors.add(:app_instance_limit, :invalid_app_instance_limit) if app_instance_limit && app_instance_limit < -1
+      errors.add(:instance_memory_limit, :invalid_instance_memory_limit) if instance_memory_limit && instance_memory_limit < UNLIMITED
+      errors.add(:total_private_domains, :invalid_total_private_domains) if total_private_domains && total_private_domains < UNLIMITED
+      errors.add(:app_instance_limit, :invalid_app_instance_limit) if app_instance_limit && app_instance_limit < UNLIMITED
     end
 
     def before_destroy

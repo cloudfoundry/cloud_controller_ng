@@ -360,6 +360,41 @@ module VCAP::CloudController
         expect(space.has_remaining_memory(50)).to eq(true)
         expect(space.has_remaining_memory(51)).to eq(false)
       end
+
+      it 'includes RUNNING tasks when determining available memory' do
+        app = AppModel.make(space_guid: space.guid)
+        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
+        TaskModel.make(app: app, memory_in_mb: 50, state: 'RUNNING')
+
+        expect(space.has_remaining_memory(50)).to eq(true)
+        expect(space.has_remaining_memory(51)).to eq(false)
+      end
+
+      it 'does not include non-RUNNING tasks when determining available memory' do
+        app = AppModel.make(space_guid: space.guid)
+        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
+        TaskModel.make(app: app, memory_in_mb: 50, state: 'SUCCEEDED')
+
+        expect(space.has_remaining_memory(51)).to eq(true)
+      end
+    end
+
+    describe '#instance_memory_limit' do
+      let(:org) { Organization.make }
+      let(:space_quota) { SpaceQuotaDefinition.make(instance_memory_limit: 50, organization: org) }
+      let(:space) { Space.make(space_quota_definition: space_quota, organization: org) }
+
+      it 'returns the instance memory limit from the quota' do
+        expect(space.instance_memory_limit).to eq(50)
+      end
+
+      context 'when the space does not have a quota' do
+        let(:space_quota) { nil }
+
+        it 'returns unlimited' do
+          expect(space.instance_memory_limit).to eq(QuotaDefinition::UNLIMITED)
+        end
+      end
     end
 
     describe '.having_developers' do

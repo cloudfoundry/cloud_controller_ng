@@ -4,7 +4,9 @@ module VCAP::CloudController
   describe TaskModel do
     describe 'validations' do
       let(:task) { TaskModel.make }
-      let(:app) { AppModel.make }
+      let(:org) { Organization.make }
+      let(:space) { Space.make organization: org }
+      let(:app) { AppModel.make space_guid: space.guid }
       let(:droplet) { DropletModel.make(app_guid: app.guid) }
 
       describe 'name' do
@@ -108,6 +110,82 @@ module VCAP::CloudController
                                   app: app,
                                   command: 'bundle exec rake db:migrate')
           }.to raise_error(Sequel::ValidationFailed, /name presence/)
+        end
+      end
+
+      describe 'quotas' do
+        describe 'space quotas' do
+          let(:space) { Space.make organization: org, space_quota_definition: quota }
+
+          context 'when there is no quota' do
+            let(:quota) { nil }
+
+            it 'allows tasks of any size' do
+              expect {
+                TaskModel.make(
+                  memory_in_mb: 21,
+                  app: app,
+                )
+              }.not_to raise_error
+            end
+          end
+
+          describe 'when the quota has a memory_limit' do
+            let(:space) { SpaceQuotaDefinition.make(memory_limit: 20, organization: org) }
+
+            it 'allows tasks that fit in the available space' do
+              expect {
+                TaskModel.make(
+                  memory_in_mb: 10,
+                  app: app,
+                )
+              }.not_to raise_error
+            end
+
+            it 'raises an error if the task does not fit in the remaining space' do
+              expect {
+                TaskModel.make(
+                  memory_in_mb: 21,
+                  app: app,
+                )
+              }.to raise_error Sequel::ValidationFailed, 'memory_in_mb space memory limit'
+            end
+          end
+
+          describe 'instance_memory_limit' do
+            let(:quota) { SpaceQuotaDefinition.make(instance_memory_limit: 2, organization: org) }
+
+            it 'allows tasks that fit in the instance memory limit' do
+              expect {
+                TaskModel.make(
+                  memory_in_mb: 1,
+                  app: app,
+                )
+              }.not_to raise_error
+            end
+
+            it 'raises an error if the task is larger than the instance memory limit' do
+              expect {
+                TaskModel.make(
+                  memory_in_mb: 3,
+                  app: app,
+                )
+              }.to raise_error Sequel::ValidationFailed, 'memory_in_mb space instance memory limit'
+            end
+
+            context 'when the quota is unlimited' do
+              let(:quota) { SpaceQuotaDefinition.make(instance_memory_limit: QuotaDefinition::UNLIMITED, organization: org) }
+
+              it 'allows tasks of all sizes' do
+                expect {
+                  TaskModel.make(
+                    memory_in_mb: 500,
+                    app: app,
+                  )
+                }.not_to raise_error
+              end
+            end
+          end
         end
       end
     end

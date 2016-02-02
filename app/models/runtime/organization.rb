@@ -133,6 +133,14 @@ module VCAP::CloudController
       memory_remaining >= mem
     end
 
+    def instance_memory_limit
+      if quota_definition
+        quota_definition.instance_memory_limit
+      else
+        QuotaDefinition::UNLIMITED
+      end
+    end
+
     def active?
       status == 'active'
     end

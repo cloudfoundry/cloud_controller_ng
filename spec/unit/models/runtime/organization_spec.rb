@@ -218,6 +218,23 @@ module VCAP::CloudController
       end
     end
 
+    describe '#instance_memory_limit' do
+      let(:quota) { QuotaDefinition.make(instance_memory_limit: 50) }
+      let(:org) { Organization.make quota_definition: quota }
+
+      it 'returns the instance memory limit from the quota' do
+        expect(org.instance_memory_limit).to eq(50)
+      end
+
+      context 'when the space does not have a quota' do
+        let(:quota) { nil }
+
+        it 'returns unlimited' do
+          expect(org.instance_memory_limit).to eq(QuotaDefinition::UNLIMITED)
+        end
+      end
+    end
+
     describe '#destroy' do
       subject(:org) { Organization.make }
 

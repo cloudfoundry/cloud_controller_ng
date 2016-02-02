@@ -141,8 +141,6 @@ module VCAP::CloudController
         it 'validates org and space using MaxInstanceMemoryPolicy' do
           max_instance_memory_policies = app.validation_policies.select { |policy| policy.instance_of? MaxInstanceMemoryPolicy }
           expect(max_instance_memory_policies.length).to eq(2)
-          targets = max_instance_memory_policies.collect(&:quota_definition)
-          expect(targets).to match_array([org.quota_definition, space.space_quota_definition])
         end
 
         it 'validates org and space using MaxAppInstancesPolicy' do
