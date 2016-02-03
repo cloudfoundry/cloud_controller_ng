@@ -25,12 +25,60 @@ module VCAP::CloudController
         expect(message.memory_in_mb).to eq(2048)
       end
 
-      it 'validates that there are not excess fields' do
-        body.merge! 'bogus': 'field'
-        message = TaskCreateMessage.create(body)
+      describe 'validations' do
+        it 'validates that there are not excess fields' do
+          body.merge! 'bogus': 'field'
+          message = TaskCreateMessage.create(body)
 
-        expect(message).to_not be_valid
-        expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
+          expect(message).to_not be_valid
+          expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
+        end
+
+        describe 'memory_in_mb' do
+          it 'can be nil' do
+            body.delete 'memory_in_mb'
+
+            message = TaskCreateMessage.create(body)
+
+            expect(message).to be_valid
+          end
+
+          it 'must be numerical' do
+            body.merge! 'memory_in_mb': 'trout'
+
+            message = TaskCreateMessage.create(body)
+
+            expect(message).to_not be_valid
+            expect(message.errors.full_messages).to include('Memory in mb is not a number')
+          end
+
+          it 'may not have a floating point' do
+            body.merge! 'memory_in_mb': 4.5
+
+            message = TaskCreateMessage.create(body)
+
+            expect(message).to_not be_valid
+            expect(message.errors.full_messages).to include('Memory in mb must be an integer')
+          end
+
+          it 'may not be negative' do
+            body.merge! 'memory_in_mb': -1
+
+            message = TaskCreateMessage.create(body)
+
+            expect(message).to_not be_valid
+            expect(message.errors.full_messages).to include('Memory in mb must be greater than 0')
+          end
+
+          it 'may not be zero' do
+            body.merge! 'memory_in_mb': 0
+
+            message = TaskCreateMessage.create(body)
+
+            expect(message).to_not be_valid
+            expect(message.errors.full_messages).to include('Memory in mb must be greater than 0')
+          end
+        end
       end
 
       context 'when environment_variables is not a hash' do

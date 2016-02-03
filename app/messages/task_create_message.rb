@@ -9,6 +9,7 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator
 
     validates :environment_variables, hash: true, allow_nil: true
+    validates :memory_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
 
     def self.create(body)
       TaskCreateMessage.new(body.symbolize_keys)
