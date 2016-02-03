@@ -14,6 +14,7 @@ module VCAP::CloudController
     one_through_one :space, join_table: AppModel.table_name,
                             left_key: :guid, left_primary_key: :app_guid,
                             right_key: :space_guid, right_primary_key: :guid
+    encrypt :environment_variables, salt: :salt, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
 
     private
