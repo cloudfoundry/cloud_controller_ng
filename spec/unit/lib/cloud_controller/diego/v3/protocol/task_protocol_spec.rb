@@ -44,8 +44,7 @@ module VCAP::CloudController
             end
 
             let(:expected_envs) { [{ 'name' => 'VCAP_APPLICATION', 'value' => 'utako' }, { 'name' => 'VCAP_SERVICES', 'value' => 'simon' }] }
-            let(:memory_in_mb) { 2048 }
-            let(:task) { TaskModel.make(app_guid: app.guid, droplet_guid: droplet.guid, command: 'be rake my panda', memory_in_mb: memory_in_mb) }
+            let(:task) { TaskModel.make(app_guid: app.guid, droplet_guid: droplet.guid, command: 'be rake my panda', memory_in_mb: 2048) }
 
             context 'the task has a buildpack droplet' do
               let(:app) { AppModel.make }
@@ -64,7 +63,7 @@ module VCAP::CloudController
                   'rootfs' => app.lifecycle_data.stack,
                   'log_guid' => app.guid,
                   'environment' => expected_envs,
-                  'memory_mb' => memory_in_mb,
+                  'memory_mb' => task.memory_in_mb,
                   'disk_mb' => 1024,
                   'egress_rules' => ['running_egress_rule'],
                   'droplet_uri' => 'www.droplet.url',
@@ -86,7 +85,7 @@ module VCAP::CloudController
                   'task_guid' => task.guid,
                   'log_guid' => app.guid,
                   'environment' => expected_envs,
-                  'memory_mb' => memory_in_mb,
+                  'memory_mb' => task.memory_in_mb,
                   'disk_mb' => 1024,
                   'egress_rules' => ['running_egress_rule'],
                   'docker_path' => 'cloudfoundry/capi-docker',

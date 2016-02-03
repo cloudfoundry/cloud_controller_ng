@@ -2,8 +2,9 @@ module VCAP::CloudController
   module Diego
     module V3
       class Environment
-        def initialize(app, space, initial_env={})
+        def initialize(app, task, space, initial_env={})
           @app         = app
+          @task        = task
           @space       = space
           @initial_env = initial_env || {}
         end
@@ -16,7 +17,7 @@ module VCAP::CloudController
             merge(additional_variables.try(:stringify_keys)).
             merge({
               'VCAP_APPLICATION' => vcap_application,
-              'MEMORY_LIMIT'     => default_memory_limit,
+              'MEMORY_LIMIT'     => @task.memory_in_mb,
               'VCAP_SERVICES'    => {}
             })
         end
@@ -29,7 +30,7 @@ module VCAP::CloudController
 
           {
             'limits'              => {
-              'mem'  => default_memory_limit,
+              'mem'  => @task.memory_in_mb,
               'disk' => default_disk_limit,
               'fds'  => Config.config[:instance_file_descriptor_limit] || 16384,
             },
@@ -46,25 +47,8 @@ module VCAP::CloudController
           }
         end
 
-        def default_memory_limit
-          Config.config[:default_app_memory]
-        end
-
         def default_disk_limit
           Config.config[:default_app_disk_in_mb]
-        end
-
-        def self.hash_to_diego_env(hash)
-          hash.map do |k, v|
-            case v
-            when Array, Hash
-              v = MultiJson.dump(v)
-            else
-              v = v.to_s
-            end
-
-            { 'name' => k, 'value' => v }
-          end
         end
       end
     end

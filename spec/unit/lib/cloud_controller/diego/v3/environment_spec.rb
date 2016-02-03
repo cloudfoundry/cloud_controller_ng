@@ -6,13 +6,13 @@ module VCAP::CloudController::Diego
     describe Environment do
       let(:app_env_vars) { { 'ENV_VAR_2' => 'jeff' } }
       let(:app) { VCAP::CloudController::AppModel.make(environment_variables: app_env_vars, name: 'utako') }
+      let(:task) { VCAP::CloudController::TaskModel.make(name: 'my-task', command: 'echo foo', memory_in_mb: 1024) }
       let(:space) { app.space }
-      let(:memory_limit) { 128 }
       let(:disk_limit) { 512 }
       let(:expected_vcap_application) do
         {
           'limits'           => {
-            'mem'  => memory_limit,
+            'mem'  => task.memory_in_mb,
             'disk' => disk_limit,
             'fds'  => TestConfig.config[:instance_file_descriptor_limit] || 16384,
           },
@@ -32,16 +32,15 @@ module VCAP::CloudController::Diego
       describe '#build' do
         before do
           TestConfig.config[:instance_file_descriptor_limit] = 100
-          TestConfig.config[:default_app_memory] = memory_limit
           TestConfig.config[:default_app_disk_in_mb] = disk_limit
         end
 
         it 'returns the correct environment hash for a v3 app' do
-          constructed_envs = V3::Environment.new(app, space).build
+          constructed_envs = V3::Environment.new(app, task, space).build
 
           expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
           expect(constructed_envs).to include({ 'VCAP_SERVICES' => {} })
-          expect(constructed_envs).to include({ 'MEMORY_LIMIT' => memory_limit })
+          expect(constructed_envs).to include({ 'MEMORY_LIMIT' => task.memory_in_mb })
           expect(constructed_envs).to include({ 'ENV_VAR_2' => 'jeff' })
         end
 
@@ -49,11 +48,11 @@ module VCAP::CloudController::Diego
           running_envs = { 'ENV_VAR_2' => 'lily', 'PUPPIES' => 'frolicking' }
 
           it 'merges the app envs over the running env vars' do
-            constructed_envs = V3::Environment.new(app, space, running_envs).build
+            constructed_envs = V3::Environment.new(app, task, space, running_envs).build
 
             expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
             expect(constructed_envs).to include({ 'VCAP_SERVICES' => {} })
-            expect(constructed_envs).to include({ 'MEMORY_LIMIT' => memory_limit })
+            expect(constructed_envs).to include({ 'MEMORY_LIMIT' => task.memory_in_mb })
             expect(constructed_envs).to include({ 'ENV_VAR_2' => 'jeff' })
             expect(constructed_envs).to include({ 'PUPPIES' => 'frolicking' })
           end
@@ -64,11 +63,11 @@ module VCAP::CloudController::Diego
             running_envs    = { 'SILLY' => 'lily', 'PUPPIES' => 'frolicking' }
             additional_envs = { 'ENV_VAR_2' => 'not jeff', 'NICE' => 'shirt' }
 
-            constructed_envs = V3::Environment.new(app, space, running_envs).build(additional_envs)
+            constructed_envs = V3::Environment.new(app, task, space, running_envs).build(additional_envs)
             expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
             expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
             expect(constructed_envs).to include({ 'VCAP_SERVICES' => {} })
-            expect(constructed_envs).to include({ 'MEMORY_LIMIT' => memory_limit })
+            expect(constructed_envs).to include({ 'MEMORY_LIMIT' => task.memory_in_mb })
             expect(constructed_envs).to include({ 'ENV_VAR_2' => 'not jeff' })
             expect(constructed_envs).to include({ 'SILLY' => 'lily' })
             expect(constructed_envs).to include({ 'PUPPIES' => 'frolicking' })
@@ -80,7 +79,7 @@ module VCAP::CloudController::Diego
           let(:expected_vcap_application) do
             {
               'limits'           => {
-                'mem'  => memory_limit,
+                'mem'  => task.memory_in_mb,
                 'disk' => disk_limit,
                 'fds'  => TestConfig.config[:instance_file_descriptor_limit] || 16384,
               },
@@ -106,26 +105,8 @@ module VCAP::CloudController::Diego
           end
 
           it 'includes the uris as part of vcap application' do
-            expect(V3::Environment.new(app, space).build).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
+            expect(V3::Environment.new(app, task, space).build).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
           end
-        end
-      end
-
-      describe '#hash_to_diego_env' do
-        let(:hash) do
-          {
-            'SILLY' => 'lily',
-            'PUPPIES' => 'frolicking',
-            'NICE' => 'shirt'
-          }
-        end
-
-        it 'returns a diego-friendly environment variable representation' do
-          diego_env = V3::Environment.hash_to_diego_env(hash)
-
-          expect(diego_env).to include({ 'name' => 'SILLY', 'value' => 'lily' })
-          expect(diego_env).to include({ 'name' => 'PUPPIES', 'value' => 'frolicking' })
-          expect(diego_env).to include({ 'name' => 'NICE', 'value' => 'shirt' })
         end
       end
     end
