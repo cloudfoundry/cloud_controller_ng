@@ -37,12 +37,12 @@ module VCAP::CloudController
       return unless space && space.space_quota_definition
 
       unless space.has_remaining_memory(memory_in_mb)
-        errors.add(:memory_in_mb, 'space memory limit')
+        errors.add(:memory_in_mb, 'exceeds space memory quota')
       end
 
       instance_memory_limit = space.instance_memory_limit
       if instance_memory_limit != QuotaDefinition::UNLIMITED && memory_in_mb > instance_memory_limit
-        errors.add(:memory_in_mb, 'space instance memory limit')
+        errors.add(:memory_in_mb, 'exceeds space instance memory quota')
       end
     end
 
@@ -50,12 +50,12 @@ module VCAP::CloudController
       return unless organization && organization.quota_definition
 
       unless organization.has_remaining_memory(memory_in_mb)
-        errors.add(:memory_in_mb, 'org memory limit')
+        errors.add(:memory_in_mb, 'exceeds organization memory quota')
       end
 
       instance_memory_limit = organization.instance_memory_limit
       if instance_memory_limit != QuotaDefinition::UNLIMITED && memory_in_mb > instance_memory_limit
-        errors.add(:memory_in_mb, 'org instance memory limit')
+        errors.add(:memory_in_mb, 'exceeds organization instance memory quota')
       end
     end
 

@@ -148,7 +148,7 @@ module VCAP::CloudController
                   memory_in_mb: 21,
                   app: app,
                 )
-              }.to raise_error Sequel::ValidationFailed, 'memory_in_mb space memory limit'
+              }.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds space memory quota'
             end
           end
 
@@ -170,7 +170,7 @@ module VCAP::CloudController
                   memory_in_mb: 3,
                   app: app,
                 )
-              }.to raise_error Sequel::ValidationFailed, 'memory_in_mb space instance memory limit'
+              }.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds space instance memory quota'
             end
 
             context 'when the quota is unlimited' do
@@ -222,7 +222,7 @@ module VCAP::CloudController
                   memory_in_mb: 21,
                   app: app,
                 )
-              }.to raise_error Sequel::ValidationFailed, 'memory_in_mb org memory limit'
+              }.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds organization memory quota'
             end
           end
 
@@ -244,7 +244,7 @@ module VCAP::CloudController
                   memory_in_mb: 3,
                   app: app,
                 )
-              }.to raise_error Sequel::ValidationFailed, 'memory_in_mb org instance memory limit'
+              }.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds organization instance memory quota'
             end
 
             context 'when the quota is unlimited' do
