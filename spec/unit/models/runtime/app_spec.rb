@@ -119,7 +119,7 @@ module VCAP::CloudController
         expect_validator(MinDiskQuotaPolicy)
         expect_validator(MetadataPolicy)
         expect_validator(MinMemoryPolicy)
-        expect_validator(MaxInstanceMemoryPolicy)
+        expect_validator(AppMaxInstanceMemoryPolicy)
         expect_validator(InstancesPolicy)
         expect_validator(HealthCheckPolicy)
         expect_validator(CustomBuildpackPolicy)
@@ -132,14 +132,12 @@ module VCAP::CloudController
         let(:space) { Space.make(organization: org, space_quota_definition: SpaceQuotaDefinition.make(organization: org)) }
 
         it 'validates org and space using MaxMemoryPolicy' do
-          max_memory_policies = app.validation_policies.select { |policy| policy.instance_of? MaxMemoryPolicy }
+          max_memory_policies = app.validation_policies.select { |policy| policy.instance_of? AppMaxMemoryPolicy }
           expect(max_memory_policies.length).to eq(2)
-          targets = max_memory_policies.collect(&:policy_target)
-          expect(targets).to match_array([org, space])
         end
 
         it 'validates org and space using MaxInstanceMemoryPolicy' do
-          max_instance_memory_policies = app.validation_policies.select { |policy| policy.instance_of? MaxInstanceMemoryPolicy }
+          max_instance_memory_policies = app.validation_policies.select { |policy| policy.instance_of? AppMaxInstanceMemoryPolicy }
           expect(max_instance_memory_policies.length).to eq(2)
         end
 

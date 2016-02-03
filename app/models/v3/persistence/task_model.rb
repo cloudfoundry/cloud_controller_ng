@@ -34,29 +34,13 @@ module VCAP::CloudController
     end
 
     def validate_space_quotas
-      return unless space && space.space_quota_definition
-
-      unless space.has_remaining_memory(memory_in_mb)
-        errors.add(:memory_in_mb, 'exceeds space memory quota')
-      end
-
-      instance_memory_limit = space.instance_memory_limit
-      if instance_memory_limit != QuotaDefinition::UNLIMITED && memory_in_mb > instance_memory_limit
-        errors.add(:memory_in_mb, 'exceeds space instance memory quota')
-      end
+      TaskMaxMemoryPolicy.new(self, space, 'exceeds space memory quota').validate
+      TaskMaxInstanceMemoryPolicy.new(self, space, 'exceeds space instance memory quota').validate
     end
 
     def validate_org_quotas
-      return unless organization && organization.quota_definition
-
-      unless organization.has_remaining_memory(memory_in_mb)
-        errors.add(:memory_in_mb, 'exceeds organization memory quota')
-      end
-
-      instance_memory_limit = organization.instance_memory_limit
-      if instance_memory_limit != QuotaDefinition::UNLIMITED && memory_in_mb > instance_memory_limit
-        errors.add(:memory_in_mb, 'exceeds organization instance memory quota')
-      end
+      TaskMaxMemoryPolicy.new(self, organization, 'exceeds organization memory quota').validate
+      TaskMaxInstanceMemoryPolicy.new(self, organization, 'exceeds organization instance memory quota').validate
     end
 
     def validate_environment_variables
