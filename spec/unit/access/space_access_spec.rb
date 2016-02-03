@@ -101,7 +101,7 @@ module VCAP::CloudController
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
-      let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
+      let(:roles) { double(:roles, admin?: false, none?: true, present?: false) }
       it_behaves_like :no_access
     end
 

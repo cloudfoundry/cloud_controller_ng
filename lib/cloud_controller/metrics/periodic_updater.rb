@@ -50,7 +50,7 @@ module VCAP::CloudController::Metrics
 
       total                      = 0
       pending_job_count_by_queue = jobs_by_queue_with_count.each_with_object({}) do |row, hash|
-        total                    += row[:count]
+        total += row[:count]
         hash[row[:queue].to_sym] = row[:count]
       end
 
@@ -68,7 +68,7 @@ module VCAP::CloudController::Metrics
 
       total                = 0
       failed_jobs_by_queue = jobs_by_queue_with_count.each_with_object({}) do |row, hash|
-        total                    += row[:count]
+        total += row[:count]
         hash[row[:queue].to_sym] = row[:count]
       end
 

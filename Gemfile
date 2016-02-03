@@ -62,7 +62,6 @@ group :test do
   gem 'rspec-its'
   gem 'rspec-rails'
   gem 'rubocop'
-  gem 'astrolabe'
   gem 'timecop'
   gem 'webmock'
 end

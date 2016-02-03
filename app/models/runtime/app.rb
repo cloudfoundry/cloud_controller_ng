@@ -21,7 +21,7 @@ module VCAP::CloudController
     def after_initialize
       default_instances = db_schema[:instances][:default].to_i
 
-      self.instances ||=  default_instances
+      self.instances ||= default_instances
       self.memory ||= VCAP::CloudController::Config.config[:default_app_memory]
     end
 
@@ -221,7 +221,6 @@ module VCAP::CloudController
 
     def needs_package_in_current_state?
       started?
-      # started? && ((column_changed?(:state)) || (!new? && footprint_changed?))
     end
 
     def in_suspended_org?

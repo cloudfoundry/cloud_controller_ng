@@ -32,9 +32,9 @@ module VCAP::CloudController
     def initialize(params)
       super(params)
 
-      @page            ||= PAGE_DEFAULT
-      @per_page        ||= PER_PAGE_DEFAULT
-      @order_by        ||= ORDER_DEFAULT
+      @page ||= PAGE_DEFAULT
+      @per_page ||= PER_PAGE_DEFAULT
+      @order_by ||= ORDER_DEFAULT
       @order_direction ||= DIRECTION_DEFAULT
     end
 

@@ -4,9 +4,7 @@ AllCops:
     - Rakefile
   Exclude:
     - vendor/**/*
-
-RegexpLiteral:
-  MaxSlashes: 1
+    - db/migrations/**/*
 
 UnusedMethodArgument:
   Enabled: false
@@ -25,7 +23,7 @@ LineLength:
 
 MethodLength:
   Max: 60
- 
+
 Metrics/AbcSize:
   Max: 30
 
@@ -38,7 +36,7 @@ CyclomaticComplexity:
 Style/ClassAndModuleChildren:
   Enabled: false
 
-Style/Blocks:
+Style/BlockDelimiters:
   Enabled: false
 
 Style/TrailingComma:
@@ -133,4 +131,16 @@ Style/EachWithObject:
   Enabled: false
 
 StructInheritance:
+  Enabled: false
+
+Performance/Sample:
+  Enabled: false
+
+ClosingParenthesisIndentation:
+  Enabled: false
+
+ModuleLength:
+  Enabled: false
+
+Style/TrailingUnderscoreVariable:
   Enabled: false

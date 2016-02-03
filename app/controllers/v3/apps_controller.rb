@@ -24,8 +24,11 @@ class AppsV3Controller < ApplicationController
     pagination_options = PaginationOptions.from_params(query_params)
     invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
-    paginated_result = roles.admin? ? AppListFetcher.new.fetch_all(pagination_options, message) :
-      VCAP::CloudController::AppListFetcher.new.fetch(pagination_options, message, allowed_space_guids)
+    paginated_result = if roles.admin?
+                         AppListFetcher.new.fetch_all(pagination_options, message)
+                       else
+                         VCAP::CloudController::AppListFetcher.new.fetch(pagination_options, message, allowed_space_guids)
+                       end
 
     render status: :ok, json: AppPresenter.new.present_json_list(paginated_result, message)
   end

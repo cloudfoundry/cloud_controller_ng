@@ -1,4 +1,4 @@
-class ErrorsController <  ApplicationController
+class ErrorsController < ApplicationController
   def not_found
     error =  VCAP::Errors::ApiError.new_from_details('NotFound')
     presenter = ErrorPresenter.new(error, Rails.env.test?)

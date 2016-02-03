@@ -4,13 +4,12 @@ RSpec::Matchers.define :match_object do |expected|
   end
 
   failure_message do |actual|
+    break if actual == expected
     object_eq(actual, expected)
     @error_message.join("\n")
   end
 
   def object_eq(actual, expected, path=[])
-    return if actual == expected
-
     @error_message ||= []
 
     types = [actual, expected].map(&:class).uniq
@@ -30,23 +29,23 @@ RSpec::Matchers.define :match_object do |expected|
 
     elsif types.size == 1 # same class
       @error_message << "Mismatched values in #{path}:"
-      @error_message <<  "\t  actual=#{actual}"
-      @error_message <<  "\texpected=#{expected}"
+      @error_message << "\t  actual=#{actual}"
+      @error_message << "\texpected=#{expected}"
 
     else
-      @error_message <<  "Mismatched types in #{path}:"
-      @error_message <<  "\t  actual=#{types[0]} value=#{actual.inspect}"
-      @error_message <<  "\texpected=#{types[1]} value=#{expected.inspect}"
+      @error_message << "Mismatched types in #{path}:"
+      @error_message << "\t  actual=#{types[0]} value=#{actual.inspect}"
+      @error_message << "\texpected=#{types[1]} value=#{expected.inspect}"
     end
   end
 
   def compare_arrays(actual, expected, path, context=actual)
     if expected.size != actual.size
-      @error_message <<  "Extra/missing elements in #{path}:"
-      @error_message <<  "\tactual=#{actual.size} expected=#{expected.size}"
-      @error_message <<  "\textra=#{actual - expected}"
-      @error_message <<  "\tmissing=#{expected - actual}"
-      @error_message <<  "\tcontext=#{context}"
+      @error_message << "Extra/missing elements in #{path}:"
+      @error_message << "\tactual=#{actual.size} expected=#{expected.size}"
+      @error_message << "\textra=#{actual - expected}"
+      @error_message << "\tmissing=#{expected - actual}"
+      @error_message << "\tcontext=#{context}"
       false
     else
       true
