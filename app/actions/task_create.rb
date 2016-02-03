@@ -1,3 +1,5 @@
+require 'cloud_controller/diego/v3/environment'
+
 module VCAP::CloudController
   class TaskCreate
     class InvalidTask < StandardError; end
@@ -17,6 +19,7 @@ module VCAP::CloudController
         command: message.command,
         app: app,
         memory_in_mb: message.memory_in_mb || config[:default_app_memory],
+        environment_variables: message.environment_variables
       )
       dependency_locator.nsync_client.desire_task(task)
       task

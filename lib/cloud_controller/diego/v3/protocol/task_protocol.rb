@@ -13,32 +13,31 @@ module VCAP::CloudController
           end
 
           def task_request(task, config)
-            if task.droplet.environment_variables
-              env = VCAP::CloudController::Diego::Environment.hash_to_diego_env(task.droplet.environment_variables)
-            end
+            app = task.app
+            droplet = task.droplet
 
             blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
 
             result = {
               'task_guid' => task.guid,
-              'log_guid' => task.app.guid,
+              'log_guid' => app.guid,
               'memory_mb' => task.memory_in_mb,
               'disk_mb' => config[:default_app_disk_in_mb],
-              'environment' => env || nil,
-              'egress_rules' => @egress_rules.running(task.app),
+              'environment' => envs_for_diego(app, task) || nil,
+              'egress_rules' => @egress_rules.running(app),
               'completion_callback' => task_completion_callback(task, config),
-              'lifecycle' => task.app.lifecycle_type,
+              'lifecycle' => app.lifecycle_type,
               'command' => task.command,
             }
 
-            if task.app.lifecycle_type == Lifecycles::BUILDPACK
+            if app.lifecycle_type == Lifecycles::BUILDPACK
               result = result.merge({
-                'rootfs' => task.app.lifecycle_data.stack,
-                'droplet_uri' => blobstore_url_generator.v3_droplet_download_url(task.droplet),
+                'rootfs' => app.lifecycle_data.stack,
+                'droplet_uri' => blobstore_url_generator.v3_droplet_download_url(droplet),
               })
-            elsif task.app.lifecycle_type == Lifecycles::DOCKER
+            elsif app.lifecycle_type == Lifecycles::DOCKER
               result = result.merge(
-                'docker_path' => task.droplet.docker_receipt_image,
+                'docker_path' => droplet.docker_receipt_image,
               )
             end
 
@@ -47,11 +46,25 @@ module VCAP::CloudController
 
           private
 
+          def envs_for_diego(app, task)
+            running_envs = VCAP::CloudController::EnvironmentVariableGroup.running.environment_json
+            envs = VCAP::CloudController::Diego::V3::Environment.new(app, app.space, running_envs).build(task.environment_variables)
+            diego_envs = VCAP::CloudController::Diego::V3::Environment.hash_to_diego_env(envs)
+
+            logger.debug2("task environment: #{diego_envs.map { |e| e['name'] }}")
+
+            diego_envs
+          end
+
           def task_completion_callback(task, config)
             auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"
             host_port = "#{config[:internal_service_hostname]}:#{config[:external_port]}"
             path      = "/internal/v3/tasks/#{task.guid}/completed"
             "http://#{auth}@#{host_port}#{path}"
+          end
+
+          def logger
+            @logger ||= Steno.logger('cc.diego.task_protocol')
           end
         end
       end

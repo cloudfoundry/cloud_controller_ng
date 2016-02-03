@@ -39,6 +39,9 @@ describe 'Tasks' do
       body = {
         name: 'best task ever',
         command: 'be rake && true',
+        environment_variables: {
+          unicorn: 'magic'
+        }
       }
       post "/v3/apps/#{app_model.guid}/tasks", body, admin_headers
 
@@ -52,6 +55,7 @@ describe 'Tasks' do
       expect(parsed_body['state']).to eq('RUNNING')
       expect(parsed_body['memory_in_mb']).to eq(1024)
       expect(parsed_body['result']).to eq({ 'failure_reason' => nil })
+      expect(parsed_body['environment_variables']).to eq({ 'unicorn' => 'magic' })
 
       expect(parsed_body['links']['self']).to eq({ 'href' => "/v3/tasks/#{guid}" })
       expect(parsed_body['links']['app']).to eq({ 'href' => "/v3/apps/#{app_model.guid}" })
@@ -61,7 +65,7 @@ describe 'Tasks' do
 
   describe 'GET /v3/tasks/:guid' do
     it 'returns a json representation of the task with the requested guid' do
-      task = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', app_guid: app_model.guid
+      task = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', environment_variables: { unicorn: 'magic' }, app_guid: app_model.guid
       task_guid = task.guid
 
       get "/v3/tasks/#{task_guid}", {}, admin_headers
@@ -73,13 +77,14 @@ describe 'Tasks' do
       expect(parsed_body['command']).to eq('echo task')
       expect(parsed_body['state']).to eq('RUNNING')
       expect(parsed_body['result']).to eq({ 'failure_reason' => nil })
+      expect(parsed_body['environment_variables']).to eq({ 'unicorn' => 'magic' })
     end
   end
 
   describe 'GET /v3/apps/:guid/tasks/:guid' do
     it 'returns a json representation of the task with the requested guid' do
       app_guid = app_model.guid
-      task = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', app_guid: app_guid
+      task = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', environment_variables: { unicorn: 'magic' }, app_guid: app_guid
       task_guid = task.guid
 
       get "/v3/apps/#{app_guid}/tasks/#{task_guid}", {}, admin_headers
@@ -91,6 +96,7 @@ describe 'Tasks' do
       expect(parsed_body['command']).to eq('echo task')
       expect(parsed_body['state']).to eq('RUNNING')
       expect(parsed_body['result']).to eq({ 'failure_reason' => nil })
+      expect(parsed_body['environment_variables']).to eq({ 'unicorn' => 'magic' })
     end
   end
 end

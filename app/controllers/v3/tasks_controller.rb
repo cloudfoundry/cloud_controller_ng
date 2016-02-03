@@ -38,9 +38,11 @@ class TasksController < ApplicationController
 
     app_guid = params[:guid]
     app = AppModel.where(guid: app_guid).eager(:space, space: :organization).first
+    app_not_found! unless app
+    space = app.space
 
-    app_not_found! unless app && can_read?(app.space.guid, app.space.organization.guid)
-    unauthorized! unless can_create?(app.space.guid)
+    app_not_found! unless can_read?(space.guid, space.organization.guid)
+    unauthorized! unless can_create?(space.guid)
 
     task = TaskCreate.new(configuration).create(app, message)
 

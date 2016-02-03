@@ -3,8 +3,8 @@ require 'presenters/system_env_presenter'
 
 module VCAP::CloudController::Diego
   describe Environment do
-    let(:app) do
-      app = VCAP::CloudController::AppFactory.make
+    let(:app) { VCAP::CloudController::AppFactory.make }
+    before do
       app.environment_json = {
         APP_KEY1: 'APP_VAL1',
         APP_KEY2: { nested: 'data' },
@@ -35,8 +35,9 @@ module VCAP::CloudController::Diego
     end
 
     context 'when an initial environment is provided' do
+      initial_env = { 'a' => 'b', 'last' => 'one' }
+
       it 'is added first' do
-        initial_env = { 'a' => 'b', 'last' => 'one' }
         expect(Environment.new(app, initial_env).as_json.slice(0..1)).to eq([
           { 'name' => 'a', 'value' => 'b' },
           { 'name' => 'last', 'value' => 'one' },

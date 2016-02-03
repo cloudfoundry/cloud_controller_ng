@@ -5,12 +5,14 @@ module VCAP::CloudController
   describe TaskCreate do
     describe '#create' do
       let(:app) { AppModel.make }
+      let(:space) { app.space }
       let(:droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::STAGED_STATE) }
       let(:command) { 'bundle exec rake panda' }
       let(:name) { 'my_task_name' }
-      let(:message) { TaskCreateMessage.new name: name, command: command, memory_in_mb: 1024 }
+      let(:message) { TaskCreateMessage.new name: name, command: command, memory_in_mb: 1024, environment_variables: environment_variables }
       let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
       let(:config) { {} }
+      let(:environment_variables) { { 'unicorn' => 'magic' } }
 
       before do
         locator = CloudController::DependencyLocator.instance
@@ -30,6 +32,7 @@ module VCAP::CloudController
         expect(task.name).to eq(name)
         expect(task.memory_in_mb).to eq(1024)
         expect(TaskModel.count).to eq(1)
+        expect(task.environment_variables).to eq(environment_variables)
       end
 
       it "sets the task state to 'RUNNING'" do
