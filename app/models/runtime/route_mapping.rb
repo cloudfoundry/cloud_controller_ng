@@ -17,6 +17,10 @@ module VCAP::CloudController
       super
     end
 
+    def self.user_visibility_filter(user)
+      { app: App.user_visible(user) }
+    end
+
     def validate
       if self.app_port && !app.diego
         errors.add(:app_port, :diego_only)

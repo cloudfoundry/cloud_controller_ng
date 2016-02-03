@@ -8,6 +8,93 @@ module VCAP::CloudController
         it { expect(described_class).to be_queryable_by(:route_guid) }
       end
 
+      describe 'Permissions' do
+        include_context 'permissions'
+
+        before do
+          @app_a = AppFactory.make(space: @space_a)
+          @app_b = AppFactory.make(space: @space_b)
+          @route_a = Route.make(space: @space_a)
+          @route_b = Route.make(space: @space_b)
+          @obj_a = RouteMapping.make(app_guid: @app_a.guid, route_guid: @route_a.guid)
+          @obj_b = RouteMapping.make(app_guid: @app_b.guid, route_guid: @route_b.guid)
+        end
+
+        describe 'Org Level Permissions' do
+          describe 'OrgManager' do
+            let(:member_a) { @org_a_manager }
+            let(:member_b) { @org_b_manager }
+
+            include_examples 'permission enumeration', 'OrgManager',
+                             name: 'route_mapping',
+                             path: '/v2/route_mappings',
+                             enumerate: 1
+          end
+
+          describe 'OrgUser' do
+            let(:member_a) { @org_a_member }
+            let(:member_b) { @org_b_member }
+
+            include_examples 'permission enumeration', 'OrgUser',
+                             name: 'route_mapping',
+                             path: '/v2/route_mappings',
+                             enumerate: 0
+          end
+
+          describe 'BillingManager' do
+            let(:member_a) { @org_a_billing_manager }
+            let(:member_b) { @org_b_billing_manager }
+
+            include_examples 'permission enumeration', 'BillingManager',
+                             name: 'route_mapping',
+                             path: '/v2/route_mappings',
+                             enumerate: 0
+          end
+
+          describe 'Auditor' do
+            let(:member_a) { @org_a_auditor }
+            let(:member_b) { @org_b_auditor }
+
+            include_examples 'permission enumeration', 'Auditor',
+                             name: 'route_mapping',
+                             path: '/v2/route_mappings',
+                             enumerate: 0
+          end
+        end
+
+        describe 'App Space Level Permissions' do
+          describe 'SpaceManager' do
+            let(:member_a) { @space_a_manager }
+            let(:member_b) { @space_b_manager }
+
+            include_examples 'permission enumeration', 'SpaceManager',
+                             name: 'route_mapping',
+                             path: '/v2/route_mappings',
+                             enumerate: 1
+          end
+
+          describe 'Developer' do
+            let(:member_a) { @space_a_developer }
+            let(:member_b) { @space_b_developer }
+
+            include_examples 'permission enumeration', 'Developer',
+                             name: 'route_mapping',
+                             path: '/v2/route_mappings',
+                             enumerate: 1
+          end
+
+          describe 'SpaceAuditor' do
+            let(:member_a) { @space_a_auditor }
+            let(:member_b) { @space_b_auditor }
+
+            include_examples 'permission enumeration', 'SpaceAuditor',
+                             name: 'route_mapping',
+                             path: '/v2/route_mappings',
+                             enumerate: 1
+          end
+        end
+      end
+
       describe 'POST /v2/route_mappings' do
         let(:route) { Route.make }
         let(:app_obj) { AppFactory.make(space: space) }
