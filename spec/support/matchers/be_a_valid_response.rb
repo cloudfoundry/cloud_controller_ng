@@ -11,7 +11,7 @@ RSpec::Matchers.define :be_a_response_like do |expected|
           expect(actual[expected_key][index]).to be_a_response_like(nested_expected_value)
         end
       else
-        bad_key!(expected_key) if actual[expected_key] != expected_value
+        bad_key!(expected_key) unless values_match? expected_value, actual[expected_key]
         expect(actual[expected_key]).to match(expected_value)
       end
     end
@@ -23,7 +23,7 @@ RSpec::Matchers.define :be_a_response_like do |expected|
           expect(expected[actual_key][index]).to be_a_response_like(nested_actual_value)
         end
       else
-        bad_key!(actual_key) if expected[actual_key] != actual_value
+        bad_key!(actual_key) unless values_match? expected[actual_key], actual_value
         expect(expected[actual_key]).to match(actual_value)
       end
     end
