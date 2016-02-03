@@ -61,7 +61,9 @@ describe 'Tasks' do
         'result'                => {
           'failure_reason' => nil
         },
-        'links'                 => {
+        'created_at' => iso8601,
+        'updated_at' => nil,
+        'links' => {
           'self'    => {
             'href' => "/v3/tasks/#{guid}"
           },
@@ -105,6 +107,8 @@ describe 'Tasks' do
         'result'                => {
           'failure_reason' => nil
         },
+        'created_at' => iso8601,
+        'updated_at' => nil,
         'links'                 => {
           'self'    => {
             'href' => "/v3/tasks/#{task_guid}"
@@ -149,6 +153,8 @@ describe 'Tasks' do
         'result'                => {
           'failure_reason' => nil
         },
+        'created_at' => iso8601,
+        'updated_at' => nil,
         'links'                 => {
           'self'    => {
             'href' => "/v3/tasks/#{guid}"

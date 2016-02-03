@@ -31,6 +31,8 @@ module VCAP::CloudController
         memory_in_mb:   task.memory_in_mb,
         environment_variables:   task.environment_variables || {},
         result:  { failure_reason: task.failure_reason },
+        created_at: task.created_at,
+        updated_at: task.updated_at,
         links:   build_links(task)
       }
     end

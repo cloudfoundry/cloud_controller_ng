@@ -8,7 +8,8 @@ module VCAP::CloudController
         task = TaskModel.make(
           environment_variables: { 'some' => 'stuff' },
           failure_reason: 'sup dawg',
-          memory_in_mb: 2048
+          memory_in_mb: 2048,
+          updated_at: Time.now,
         )
 
         json_result = TaskPresenter.new.present_json(task)
@@ -27,6 +28,8 @@ module VCAP::CloudController
         expect(result['result']['failure_reason']).to eq 'sup dawg'
         expect(result['environment_variables']).to eq(task.environment_variables)
         expect(result['memory_in_mb']).to eq(task.memory_in_mb)
+        expect(result['created_at']).to eq(task.created_at.iso8601)
+        expect(result['updated_at']).to eq(task.updated_at.iso8601)
         expect(result['links']).to eq(links)
       end
     end
