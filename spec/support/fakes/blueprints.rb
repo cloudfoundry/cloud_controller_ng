@@ -86,6 +86,7 @@ module VCAP::CloudController
     droplet { DropletModel.make(app_guid: app.guid) }
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::RUNNING_STATE }
+    memory_in_mb { 256 }
   end
 
   User.blueprint do

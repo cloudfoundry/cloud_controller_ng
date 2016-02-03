@@ -152,7 +152,7 @@ module VCAP::CloudController
             end
           end
 
-          describe 'instance_memory_limit' do
+          describe 'when the quota has an instance_memory_limit' do
             let(:quota) { SpaceQuotaDefinition.make(instance_memory_limit: 2, organization: org) }
 
             it 'allows tasks that fit in the instance memory limit' do
@@ -175,6 +175,80 @@ module VCAP::CloudController
 
             context 'when the quota is unlimited' do
               let(:quota) { SpaceQuotaDefinition.make(instance_memory_limit: QuotaDefinition::UNLIMITED, organization: org) }
+
+              it 'allows tasks of all sizes' do
+                expect {
+                  TaskModel.make(
+                    memory_in_mb: 500,
+                    app: app,
+                  )
+                }.not_to raise_error
+              end
+            end
+          end
+        end
+
+        describe 'org quotas' do
+          let(:org) { Organization.make quota_definition: quota }
+
+          context 'when there is no quota' do
+            let(:quota) { nil }
+
+            it 'allows tasks of any size' do
+              expect {
+                TaskModel.make(
+                  memory_in_mb: 21,
+                  app: app,
+                )
+              }.not_to raise_error
+            end
+          end
+
+          describe 'when the quota has a memory_limit' do
+            let(:quota) { QuotaDefinition.make(memory_limit: 20) }
+
+            it 'allows tasks that fit in the available space' do
+              expect {
+                TaskModel.make(
+                  memory_in_mb: 10,
+                  app: app,
+                )
+              }.not_to raise_error
+            end
+
+            it 'raises an error if the task does not fit in the remaining space' do
+              expect {
+                TaskModel.make(
+                  memory_in_mb: 21,
+                  app: app,
+                )
+              }.to raise_error Sequel::ValidationFailed, 'memory_in_mb org memory limit'
+            end
+          end
+
+          describe 'when the quota has an instance_memory_limit' do
+            let(:quota) { QuotaDefinition.make(instance_memory_limit: 2) }
+
+            it 'allows tasks that fit in the instance memory limit' do
+              expect {
+                TaskModel.make(
+                  memory_in_mb: 1,
+                  app: app,
+                )
+              }.not_to raise_error
+            end
+
+            it 'raises an error if the task is larger than the instance memory limit' do
+              expect {
+                TaskModel.make(
+                  memory_in_mb: 3,
+                  app: app,
+                )
+              }.to raise_error Sequel::ValidationFailed, 'memory_in_mb org instance memory limit'
+            end
+
+            context 'when the quota is unlimited' do
+              let(:quota) { QuotaDefinition.make(instance_memory_limit: QuotaDefinition::UNLIMITED) }
 
               it 'allows tasks of all sizes' do
                 expect {

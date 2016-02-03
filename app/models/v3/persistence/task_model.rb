@@ -16,6 +16,8 @@ module VCAP::CloudController
                             right_key: :space_guid, right_primary_key: :guid
     serializes_via_json :environment_variables
 
+    private
+
     def validate
       validates_includes TASK_STATES, :state
       validates_format TASK_NAME_REGEX, :name
@@ -27,6 +29,7 @@ module VCAP::CloudController
       validate_environment_variables
       validates_presence :droplet
       validates_presence :name
+      validate_org_quotas
       validate_space_quotas
     end
 
@@ -43,10 +46,27 @@ module VCAP::CloudController
       end
     end
 
+    def validate_org_quotas
+      return unless organization && organization.quota_definition
+
+      unless organization.has_remaining_memory(memory_in_mb)
+        errors.add(:memory_in_mb, 'org memory limit')
+      end
+
+      instance_memory_limit = organization.instance_memory_limit
+      if instance_memory_limit != QuotaDefinition::UNLIMITED && memory_in_mb > instance_memory_limit
+        errors.add(:memory_in_mb, 'org instance memory limit')
+      end
+    end
+
     def validate_environment_variables
       return unless environment_variables
       validator = VCAP::CloudController::Validators::EnvironmentVariablesValidator.new({ attributes: [:environment_variables] })
       validator.validate_each(self, :environment_variables, environment_variables)
+    end
+
+    def organization
+      space && space.organization
     end
   end
 end
