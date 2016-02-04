@@ -411,11 +411,10 @@ module VCAP::CloudController
 
     def status_from_operation_state(service_instance)
       if service_instance.last_operation.state == 'in progress'
-        state = HTTP::ACCEPTED
+        HTTP::ACCEPTED
       else
-        state = HTTP::CREATED
+        HTTP::CREATED
       end
-      state
     end
 
     def convert_flag_to_bool(flag)

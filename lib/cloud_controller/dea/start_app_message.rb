@@ -6,8 +6,6 @@ module VCAP::CloudController
       def initialize(app, index, config, blobstore_url_generator)
         super()
 
-        droplet_download_url = nil
-        droplet_hash = nil
         # Grab the v3 droplet if the app is a v3 process
         if app.app.nil?
           droplet_download_url = blobstore_url_generator.droplet_download_url(app)
