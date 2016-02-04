@@ -117,7 +117,7 @@ module VCAP::CloudController
         service_instances,
         "/v2/spaces/#{guid}/service_instances",
         @opts,
-        {}
+        params
       )
     end
 

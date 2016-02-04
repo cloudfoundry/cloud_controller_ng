@@ -25,6 +25,8 @@ module VCAP::CloudController
     # in the #get_filtered_dataset_for_enumeration method because ModelControl does not support
     # searching on parameters that are not directly associated with the model
 
+    preserve_query_parameters :return_user_provided_service_instances
+
     define_messages
     define_routes
 

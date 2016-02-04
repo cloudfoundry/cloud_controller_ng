@@ -246,6 +246,13 @@ module VCAP::CloudController
             }
             expect(user_provided_service_instance_response.fetch('entity').fetch('service_bindings_url')).to include('user_provided_service_instance')
           end
+
+          it 'presents pagination link urls with the return_user_provided_service_instances param' do
+            get "v2/spaces/#{space.guid}/service_instances", { return_user_provided_service_instances: true, 'results-per-page': 1 }, headers_for(developer)
+
+            next_url = decoded_response.fetch('next_url')
+            expect(next_url).to include('return_user_provided_service_instances=true')
+          end
         end
 
         describe 'when return_user_provided_service_instances flag is not present' do
