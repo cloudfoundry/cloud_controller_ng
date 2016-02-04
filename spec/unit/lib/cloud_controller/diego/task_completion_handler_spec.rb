@@ -30,6 +30,16 @@ module VCAP::CloudController
             expect(task.reload.failure_reason).to eq(nil)
           end
 
+          it 'creates an AppUsageEvent with state TASK_STOPPED' do
+            expect {
+              handler.complete_task(task, response)
+            }.to change { AppUsageEvent.count }.by(1)
+
+            event = AppUsageEvent.last
+            expect(event.state).to eq('TASK_STOPPED')
+            expect(event.task_guid).to eq(task.guid)
+          end
+
           context 'when updating the task fails' do
             let(:save_error) { StandardError.new('save-error') }
 

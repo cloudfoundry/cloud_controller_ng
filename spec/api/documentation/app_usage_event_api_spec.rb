@@ -13,37 +13,35 @@ resource 'App Usage Events', type: [:api, :legacy_api] do
     standard_model_get :app_usage_event
 
     get '/v2/app_usage_events' do
-      field :guid, 'The guid of the event.', required: false
-
-      field :state,
-        "The desired state of the app or 'BUILDPACK_SET' when buildpack info has been set.",
-        required: false,
-        readonly: true,
-        valid_values: ['STARTED', 'STOPPED', 'BUILDPACK_SET']
-
-      field :package_state, 'The state of the package.', required: false, readonly: true, valid_values: ['PENDING', 'STAGED', ' FAILED']
-      field :instance_count, 'How many instance of the app.', required: false, readonly: true
-      field :memory_in_mb_per_instance, 'How much memory per app instance.', required: false, readonly: true, example_values: %w(128 256 512)
       field :app_guid, 'The GUID of the app.', required: false, readonly: true
       field :app_name, 'The name of the app.', required: false, readonly: true
-      field :org_guid, 'The GUID of the organization.', required: false, readonly: true
-      field :space_guid, 'The GUID of the space.', required: false, readonly: true
-      field :space_name, 'The name of the space.', required: false, readonly: true
       field :buildpack_guid, 'The GUID of the buildpack used to stage the app.', required: false, readonly: true
-      field :parent_app_guid, 'The GUID for a parent v3 application if one exists', required: false, readonly: true, experimental: true
-      field :parent_app_name, 'The name for a parent v3 application if one exists', required: false, readonly: true, experimental: true
-      field :process_type, 'The process_type for applictions.', required: false, readonly: true, experimental: true
-
       field :buildpack_name,
         'The name of the buildpack or the URL of the custom buildpack used to stage the app.',
-        required: false,
-        readonly: true,
+        required:       false,
+        readonly:       true,
         example_values: %w(https://example.com/buildpack.git admin_buildpack)
-
       field :created_at,
         'The timestamp when the event is recorded. It is possible that later events may have earlier created_at values.',
         required: false,
         readonly: true
+      field :guid, 'The guid of the event.', required: false
+      field :instance_count, 'How many instance of the app.', required: false, readonly: true
+      field :memory_in_mb_per_instance, 'How much memory per app instance.', required: false, readonly: true, example_values: %w(128 256 512)
+      field :org_guid, 'The GUID of the organization.', required: false, readonly: true
+      field :package_state, 'The state of the package.', required: false, readonly: true, valid_values: ['PENDING', 'STAGED', ' FAILED']
+      field :parent_app_guid, 'The GUID for a parent v3 application if one exists', required: false, readonly: true, experimental: true
+      field :parent_app_name, 'The name for a parent v3 application if one exists', required: false, readonly: true, experimental: true
+      field :process_type, 'The process_type for applications.', required: false, readonly: true, experimental: true
+      field :space_guid, 'The GUID of the space.', required: false, readonly: true
+      field :space_name, 'The name of the space.', required: false, readonly: true
+      field :state,
+        "The desired state of the app or 'BUILDPACK_SET' when buildpack info has been set.",
+        required:     false,
+        readonly:     true,
+        valid_values: ['STARTED', 'STOPPED', 'BUILDPACK_SET', 'TASK_STARTED', 'TASK_STOPPED']
+      field :task_guid, 'The GUID of the task if one exists.', required: false, readonly: true, experimental: true
+      field :task_name, 'The NAME of the task if one exists.', required: false, readonly: true, experimental: true
 
       standard_list_parameters VCAP::CloudController::AppUsageEventsController
 
@@ -71,7 +69,9 @@ resource 'App Usage Events', type: [:api, :legacy_api] do
           org_guid:                  event2.org_guid,
           parent_app_guid:           nil,
           parent_app_name:           nil,
-          process_type:              'web'
+          process_type:              'web',
+          task_guid:                 nil,
+          task_name:                 nil
       end
     end
   end

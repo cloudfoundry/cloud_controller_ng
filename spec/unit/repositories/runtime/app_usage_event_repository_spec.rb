@@ -80,7 +80,7 @@ module VCAP::CloudController
         context 'when an admin buildpack is associated with the app' do
           let(:buildpack) { Buildpack.make }
           before do
-            app.admin_buildpack = buildpack
+            app.admin_buildpack         = buildpack
             app.detected_buildpack_guid = buildpack.guid
             app.detected_buildpack_name = buildpack.name
           end
@@ -153,6 +153,49 @@ module VCAP::CloudController
         end
       end
 
+      describe '#create_from_task' do
+        let(:task) { TaskModel.make(memory_in_mb: 222) }
+        let(:state) { 'TEST_STATE' }
+
+        it 'creates an AppUsageEvent' do
+          expect {
+            repository.create_from_task(task, state)
+          }.to change { AppUsageEvent.count }.by(1)
+        end
+
+        describe 'the created event' do
+          it 'sets the state to what is passed in' do
+            event = repository.create_from_task(task, state)
+            expect(event.state).to eq('TEST_STATE')
+          end
+
+          it 'sets the attributes based on the task' do
+            event = repository.create_from_task(task, state)
+
+            expect(event.memory_in_mb_per_instance).to eq(222)
+            expect(event.instance_count).to eq(1)
+            expect(event.app_guid).to eq('')
+            expect(event.app_name).to eq('')
+            expect(event.space_guid).to eq(task.space.guid)
+            expect(event.space_guid).to be_present
+            expect(event.space_name).to eq(task.space.name)
+            expect(event.space_name).to be_present
+            expect(event.org_guid).to eq(task.space.organization.guid)
+            expect(event.org_guid).to be_present
+            expect(event.buildpack_guid).to be_nil
+            expect(event.buildpack_name).to be_nil
+            expect(event.package_state).to eq('STAGED')
+            expect(event.parent_app_guid).to eq(task.app.guid)
+            expect(event.parent_app_guid).to be_present
+            expect(event.parent_app_name).to eq(task.app.name)
+            expect(event.parent_app_name).to be_present
+            expect(event.process_type).to be_nil
+            expect(event.task_guid).to eq(task.guid)
+            expect(event.task_name).to eq(task.name)
+          end
+        end
+      end
+
       describe '#purge_and_reseed_started_apps!' do
         let(:app) { AppFactory.make }
 
@@ -199,8 +242,8 @@ module VCAP::CloudController
             let(:buildpack) { Buildpack.make }
 
             before do
-              app.buildpack = buildpack.name
-              app.detected_buildpack = 'Detect script output'
+              app.buildpack               = buildpack.name
+              app.detected_buildpack      = 'Detect script output'
               app.detected_buildpack_guid = buildpack.guid
               app.detected_buildpack_name = buildpack.name
               app.save
@@ -224,7 +267,7 @@ module VCAP::CloudController
           old = Time.now.utc - 999.days
 
           3.times do
-            event = repository.create_from_app(App.make)
+            event            = repository.create_from_app(App.make)
             event.created_at = old
             event.save
           end
