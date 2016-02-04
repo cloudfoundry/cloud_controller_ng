@@ -52,13 +52,15 @@ module VCAP::CloudController
 
         let(:router_groups) do
           [
-            RoutingApi::RouterGroup.new({ 'guid' => 'router-group-guid1' }),
-            RoutingApi::RouterGroup.new({ 'guid' => 'random-guid-2' }),
+            RoutingApi::RouterGroup.new({ 'guid' => 'router-group-guid1', 'type' => 'tcp' }),
+            RoutingApi::RouterGroup.new({ 'guid' => 'random-guid-2', 'type' => 'tcp' }),
           ]
         end
 
         before do
           allow(routing_api_client).to receive(:router_groups).and_return(router_groups)
+          allow(routing_api_client).to receive(:router_group).with('router-group-guid1').
+                                           and_return(RoutingApi::RouterGroup.new({ 'guid' => 'router-group-guid1', 'type' => 'tcp' }))
         end
 
         it 'validates that the router_group_guid is a valid guid for a Router Group' do
@@ -67,8 +69,37 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(201)
 
           expect(routing_api_client).to have_received(:router_groups).exactly(1).times
-          domain = SharedDomain.last
-          expect(domain.router_group_guid).to eq 'router-group-guid1'
+
+          domain_hash = JSON.parse(last_response.body)['entity']
+          expect(domain_hash['name']).to eq('shareddomain.com')
+          expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
+          expect(domain_hash['router_group_type']).to eq('tcp')
+        end
+
+        it 'includes router_group_type in the response' do
+          SharedDomain.make(name: 'shareddomain.com', router_group_guid: 'router-group-guid1')
+
+          get '/v2/shared_domains', nil, json_headers(admin_headers)
+
+          expect(last_response).to have_status_code(200)
+
+          domain_hash = JSON.parse(last_response.body)['resources'].last['entity']
+          expect(domain_hash['name']).to eq('shareddomain.com')
+          expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
+          expect(domain_hash['router_group_type']).to eq('tcp')
+        end
+
+        it 'includes router_group_type in the response for a particular domain' do
+          domain = SharedDomain.make(name: 'shareddomain.com', router_group_guid: 'router-group-guid1')
+
+          get "/v2/shared_domains/#{domain.guid}", nil, json_headers(admin_headers)
+
+          expect(last_response).to have_status_code(200)
+
+          domain_hash = JSON.parse(last_response.body)['entity']
+          expect(domain_hash['name']).to eq('shareddomain.com')
+          expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
+          expect(domain_hash['router_group_type']).to eq('tcp')
         end
 
         context 'when the routing api client raises a UaaUnavailable error' do

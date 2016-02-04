@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe SharedDomain, type: :model do
-    subject { described_class.make name: 'test.example.com', router_group_guid: 'my-router-group-guid' }
+    subject { described_class.make name: 'test.example.com', router_group_guid: 'my-router-group-guid', router_group_type: 'tcp' }
 
     it { is_expected.to have_timestamp_columns }
 
@@ -16,7 +16,8 @@ module VCAP::CloudController
         expect(subject.as_summary_json).to eq(
           guid: subject.guid,
           name: 'test.example.com',
-          router_group_guid: 'my-router-group-guid')
+          router_group_guid: 'my-router-group-guid',
+          router_group_type: 'tcp')
       end
     end
 
@@ -78,6 +79,19 @@ module VCAP::CloudController
     describe 'addable_to_organization!' do
       it 'does not raise error' do
         expect { subject.addable_to_organization!(Organization.new) }.to_not raise_error
+      end
+    end
+
+    describe '#export_attrs' do
+      let(:shared_domain) { SharedDomain.make }
+
+      it 'does not include router_group_type when router_group_type has not been set' do
+        expect(shared_domain.export_attrs).to_not include(:router_group_type)
+      end
+
+      it 'includes router_group_type when router_group_type has been set' do
+        shared_domain.router_group_type = 'tcp'
+        expect(shared_domain.transient_attrs).to include(:router_group_type)
       end
     end
   end

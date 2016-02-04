@@ -233,6 +233,20 @@ describe CloudController::DependencyLocator do
     end
   end
 
+  describe '#router_group_type_populating_collection_renderer' do
+    it 'returns paginated collection renderer with a RouterGroupTypePopulator transformer' do
+      renderer = locator.router_group_type_populating_collection_renderer
+      expect(renderer.collection_transformer).to be_a(VCAP::CloudController::RouterGroupTypePopulator)
+    end
+
+    it 'uses the routing_api_client for the populator' do
+      routing_api_client = double('routing api client')
+      expect(locator).to receive(:routing_api_client).and_return(routing_api_client)
+      renderer = locator.router_group_type_populating_collection_renderer
+      expect(renderer.collection_transformer.routing_api_client).to eq(routing_api_client)
+    end
+  end
+
   describe '#username_lookup_uaa_client' do
     it 'returns a uaa client with credentials for lookuping up usernames' do
       uaa_client = locator.username_lookup_uaa_client

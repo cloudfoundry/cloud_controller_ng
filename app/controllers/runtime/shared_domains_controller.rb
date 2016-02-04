@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class SharedDomainsController < RestController::ModelController
     def self.dependencies
-      [:routing_api_client]
+      [:routing_api_client, :router_group_type_populating_collection_renderer]
     end
 
     define_attributes do
@@ -14,6 +14,8 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @routing_api_client = dependencies.fetch(:routing_api_client)
+      @serializer = VCAP::CloudController::RestController::PreloadedObjectSerializer.new
+      @router_group_type_populating_collection_renderer = dependencies.fetch(:router_group_type_populating_collection_renderer)
     end
 
     def before_create
@@ -33,8 +35,41 @@ module VCAP::CloudController
       end
     end
 
+    def after_create(domain)
+      super(domain)
+      unless domain.nil?
+        unless domain.router_group_guid.nil?
+          rtr_grp = @routing_api_client.router_group(domain.router_group_guid)
+          domain.router_group_type = rtr_grp.type unless rtr_grp.nil?
+        end
+      end
+    end
+
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
+    end
+
+    get '/v2/shared_domains', :enumerate_shared_domains
+    def enumerate_shared_domains
+      validate_access(:index, model)
+      @router_group_type_populating_collection_renderer.render_json(
+        self.class,
+          get_filtered_dataset_for_enumeration(model, SharedDomain.dataset, self.class.query_parameters, @opts),
+          self.class.path,
+          @opts,
+          {},
+      )
+    end
+
+    get '/v2/shared_domains/:guid', :get_shared_domain
+    def get_shared_domain(guid)
+      domain = SharedDomain.find(guid: guid)
+      validate_access(:read, domain)
+      unless domain.router_group_guid.nil?
+        rtr_grp = @routing_api_client.router_group(domain.router_group_guid)
+        domain.router_group_type = rtr_grp.type unless rtr_grp.nil?
+      end
+      object_renderer.render_json(self.class, domain, @opts)
     end
 
     define_messages

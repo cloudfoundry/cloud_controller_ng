@@ -46,10 +46,16 @@ module VCAP::CloudController::RestController
       # if they are part of STI. Attributes exported by the object
       # are the ones that are expected in the response.
       # (e.g. Domain vs SharedDomain < Domain)
+      export_attributes = obj.model.export_attrs
+      if obj.respond_to? :transient_attrs
+        obj.transient_attrs.each { |attr| eager_loaded_object.send("#{attr}=", obj.send(attr)) }
+        export_attributes += obj.transient_attrs
+      end
+
       hash = @serializer.serialize(
         controller,
         eager_loaded_object,
-        opts.merge(export_attrs: obj.model.export_attrs),
+        opts.merge(export_attrs: export_attributes),
       )
 
       MultiJson.dump(hash, pretty: opts.fetch(:pretty, true))

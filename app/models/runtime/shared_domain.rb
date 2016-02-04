@@ -9,12 +9,14 @@ module VCAP::CloudController
     export_attributes :name, :router_group_guid
     import_attributes :name, :router_group_guid
     strip_attributes :name
+    attr_accessor :router_group_type
 
     def as_summary_json
       {
         guid: guid,
         name: name,
         router_group_guid: router_group_guid,
+        router_group_type: router_group_type
       }
     end
 
@@ -42,6 +44,11 @@ module VCAP::CloudController
     end
 
     def addable_to_organization!(organization)
+    end
+
+    def transient_attrs
+      return [:router_group_type] unless router_group_type.nil?
+      []
     end
   end
 end
