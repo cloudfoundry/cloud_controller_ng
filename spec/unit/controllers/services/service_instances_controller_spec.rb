@@ -62,10 +62,19 @@ module VCAP::CloudController
       end
 
       describe 'Org Level Permissions' do
-        user_sees_empty_enumerate('OrgManager',     :@org_a_manager,         :@org_b_manager)
         user_sees_empty_enumerate('OrgUser',        :@org_a_member,          :@org_b_member)
         user_sees_empty_enumerate('BillingManager', :@org_a_billing_manager, :@org_b_billing_manager)
         user_sees_empty_enumerate('Auditor',        :@org_a_auditor,         :@org_b_auditor)
+
+        describe 'OrgManager' do
+          let(:member_a) { @org_a_manager }
+          let(:member_b) { @org_b_manager }
+
+          include_examples 'permission enumeration', 'OrgManager',
+            name: 'managed service instance',
+            path: '/v2/service_instances',
+            enumerate: 1
+        end
       end
 
       describe 'App Space Level Permissions' do

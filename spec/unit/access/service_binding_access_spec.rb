@@ -35,7 +35,7 @@ module VCAP::CloudController
 
     context 'organization manager (defensive)' do
       before { org.add_manager(user) }
-      it_behaves_like :no_access
+      it_behaves_like :read_only_access
     end
 
     context 'organization billing manager (defensive)' do

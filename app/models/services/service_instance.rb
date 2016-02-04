@@ -53,6 +53,7 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       Sequel.or([
+        [:space, managed_organizations_spaces_dataset(user.managed_organizations_dataset)],
         [:space, user.spaces_dataset],
         [:space, user.audited_spaces_dataset],
         [:space, user.managed_spaces_dataset],
@@ -166,6 +167,10 @@ module VCAP::CloudController
 
     def service_instance_usage_event_repository
       @repository ||= Repositories::Services::ServiceUsageEventRepository.new
+    end
+
+    def self.managed_organizations_spaces_dataset(managed_organizations_dataset)
+      VCAP::CloudController::Space.dataset.filter({ organization_id: managed_organizations_dataset.select(:organization_id) })
     end
   end
 end

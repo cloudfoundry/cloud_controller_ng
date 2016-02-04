@@ -107,7 +107,7 @@ module VCAP::CloudController
 
     context 'organization manager (defensive)' do
       before { org.add_manager(user) }
-      it_behaves_like :no_access
+      it_behaves_like :read_only_access
 
       it 'does not allow the user to read the permissions of the service instance' do
         expect(subject).to_not allow_op_on_object(:read_permissions, object)
