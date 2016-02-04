@@ -445,6 +445,16 @@ module VCAP::CloudController
               end
             end
           end
+
+          context 'when the service instance has been purged' do
+            it 'exits without exploding' do
+              service_instance.destroy
+
+              expect {
+                run_job(job)
+              }.not_to raise_error
+            end
+          end
         end
 
         describe '#job_name_in_configuration' do
