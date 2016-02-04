@@ -11,6 +11,7 @@ module VCAP::CloudController
 
         def build(additional_variables={})
           app_env = @app.environment_variables || {}
+          additional_variables ||= {}
 
           @initial_env.
             merge(app_env).
