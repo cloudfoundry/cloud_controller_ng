@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     include VCAP::CloudController::LockCheck
 
-    def create(app_model, service_instance, type)
+    def create(app_model, service_instance, type, arbitrary_parameters)
       service_binding = ServiceBindingModel.new(service_instance: service_instance,
                                                 app: app_model,
                                                 credentials: {},
@@ -19,7 +19,7 @@ module VCAP::CloudController
 
       raise_if_locked(service_binding.service_instance)
 
-      raw_attrs = service_instance.client.bind(service_binding)
+      raw_attrs = service_instance.client.bind(service_binding, arbitrary_parameters)
       attrs = raw_attrs.tap { |r| r.delete(:route_service_url) }
 
       service_binding.set_all(attrs)

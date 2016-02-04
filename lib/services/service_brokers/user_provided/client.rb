@@ -3,7 +3,7 @@ module VCAP::Services
     def provision(_)
     end
 
-    def bind(binding, arbitrary_parameters: {})
+    def bind(binding, _arbitrary_parameters)
       if binding.class.name.demodulize == 'RouteBinding'
         {
           route_service_url: binding.service_instance.route_service_url,

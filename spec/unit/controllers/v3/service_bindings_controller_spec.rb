@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'actions/service_binding_create'
 
 describe ServiceBindingsController, type: :controller do
   let(:membership) { instance_double(VCAP::CloudController::Membership) }
@@ -62,6 +63,33 @@ describe ServiceBindingsController, type: :controller do
       expect(parsed_body['type']).to eq(service_binding_type)
       expect(parsed_body['data']['syslog_drain_url']).to eq('syslog://syslog-drain.com')
       expect(parsed_body['data']['credentials']).to eq({ 'super' => 'secret' })
+    end
+
+    describe 'arbitrary parameters' do
+      let(:req_body) do
+        {
+          type: service_binding_type,
+          relationships: {
+            app: { guid: app_model.guid },
+            service_instance: { guid: service_instance.guid }
+          },
+          data: {
+            parameters: { 'arbi' => 'trary', 'par' => 'ameters' }
+          }
+        }
+      end
+
+      it 'passes them to ServiceBindingCreate' do
+        service_binding_create = VCAP::CloudController::ServiceBindingCreate.new
+        allow(service_binding_create).to receive(:create).and_call_original
+        allow(VCAP::CloudController::ServiceBindingCreate).to receive(:new).and_return service_binding_create
+
+        post :create, body: req_body
+
+        expect(service_binding_create).to have_received(:create) do |_, _, _, arbitrary_parameters|
+          expect(arbitrary_parameters).to eq('arbi' => 'trary', 'par' => 'ameters')
+        end
+      end
     end
 
     context 'admin' do

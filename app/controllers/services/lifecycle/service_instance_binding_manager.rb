@@ -117,7 +117,7 @@ module VCAP::CloudController
 
     def bind(binding_obj, arbitrary_parameters)
       raise_if_locked(binding_obj.service_instance)
-      binding_obj.client.bind(binding_obj, arbitrary_parameters: arbitrary_parameters)
+      binding_obj.client.bind(binding_obj, arbitrary_parameters)
     end
 
     def unbind(binding_obj)

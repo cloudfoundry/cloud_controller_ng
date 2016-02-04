@@ -28,6 +28,11 @@ module VCAP::CloudController
         relationships.try(:[], :service_instance).try(:[], :guid)
     end
 
+    def parameters
+      data.try(:[], 'parameters') ||
+        data.try(:[], :parameters)
+    end
+
     class Relationships < BaseMessage
       attr_accessor :service_instance
       attr_accessor :app

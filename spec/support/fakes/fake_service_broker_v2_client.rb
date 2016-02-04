@@ -1,5 +1,5 @@
 class FakeServiceBrokerV2Client
-  def initialize(attrs)
+  def initialize(_attrs)
   end
 
   def catalog
@@ -18,7 +18,7 @@ class FakeServiceBrokerV2Client
     }
   end
 
-  def provision(instance, arbitrary_parameters: {}, accepts_incomplete: false)
+  def provision(_instance, arbitrary_parameters: {}, accepts_incomplete: false)
     {
       instance:       {
         credentials:   {},
@@ -32,7 +32,7 @@ class FakeServiceBrokerV2Client
     }
   end
 
-  def bind(binding, arbitrary_parameters: {})
+  def bind(_binding, _arbitrary_parameters)
     {
       credentials: { 'username' => 'cool_user' }
     }

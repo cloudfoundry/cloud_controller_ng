@@ -25,6 +25,7 @@ module VCAP::CloudController
       let(:logger) { double(:logger) }
       let(:current_user) { double(:current_user, guid: 'some-guid') }
       let(:current_user_email) { 'are@youreddy.com' }
+      let(:arbitrary_parameters) { {} }
 
       before do
         credentials = { 'credentials' => '{}' }.to_json
@@ -41,7 +42,7 @@ module VCAP::CloudController
       end
 
       it 'creates a v3 Service Binding' do
-        service_binding = service_binding_create.create(app_model, service_instance, message.type)
+        service_binding = service_binding_create.create(app_model, service_instance, message.type, arbitrary_parameters)
 
         expect(ServiceBindingModel.count).to eq(1)
         expect(service_binding.app_guid).to eq(app_model.guid)
@@ -54,7 +55,7 @@ module VCAP::CloudController
           to receive(:record_service_binding_event).
           with(:create, instance_of(ServiceBindingModel))
 
-        service_binding_create.create(app_model, service_instance, message)
+        service_binding_create.create(app_model, service_instance, message.type, arbitrary_parameters)
       end
 
       context 'when the instance has another operation in progress' do
@@ -62,7 +63,7 @@ module VCAP::CloudController
           ServiceInstanceOperation.make(service_instance_id: service_instance.id, state: 'in progress')
 
           expect {
-            service_binding_create.create(app_model, service_instance, message)
+            service_binding_create.create(app_model, service_instance, message.type, arbitrary_parameters)
           }.to raise_error do |e|
             expect(e).to be_a(Errors::ApiError)
             expect(e.message).to include('in progress')
@@ -78,7 +79,7 @@ module VCAP::CloudController
 
         it 'raises ServiceInstanceNotBindable' do
           expect {
-            service_binding_create.create(app_model, service_instance, message)
+            service_binding_create.create(app_model, service_instance, message.type, arbitrary_parameters)
           }.to raise_error(ServiceBindingCreate::ServiceInstanceNotBindable)
         end
       end
@@ -90,7 +91,7 @@ module VCAP::CloudController
 
         it 'raises InvalidServiceBinding' do
           expect {
-            service_binding_create.create(app_model, service_instance, message.type)
+            service_binding_create.create(app_model, service_instance, message.type, arbitrary_parameters)
           }.to raise_error(ServiceBindingCreate::InvalidServiceBinding)
         end
       end
@@ -103,7 +104,7 @@ module VCAP::CloudController
 
           it 'does not create a binding' do
             expect {
-              service_binding_create.create(app_model, service_instance, message.type)
+              service_binding_create.create(app_model, service_instance, message.type, arbitrary_parameters)
             }.to raise_error VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse
 
             expect(ServiceBindingModel.count).to eq 0
@@ -121,7 +122,7 @@ module VCAP::CloudController
             allow(logger).to receive(:info)
 
             expect {
-              service_binding_create.create(app_model, service_instance, message)
+              service_binding_create.create(app_model, service_instance, message.type, arbitrary_parameters)
             }.to raise_error('meow')
           end
 

@@ -790,6 +790,7 @@ module VCAP::Services::ServiceBrokers::V2
           app: app
         )
       end
+      let(:arbitrary_parameters) { {} }
 
       let(:response_data) do
         {
@@ -811,14 +812,14 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'makes a put request with correct path' do
-        client.bind(binding)
+        client.bind(binding, arbitrary_parameters)
 
         expect(http_client).to have_received(:put).
           with("/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}", anything)
       end
 
       it 'makes a put request with correct message' do
-        client.bind(binding)
+        client.bind(binding, arbitrary_parameters)
 
         expect(http_client).to have_received(:put).
           with(anything,
@@ -830,7 +831,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'sets the credentials on the binding' do
-        attributes = client.bind(binding)
+        attributes = client.bind(binding, arbitrary_parameters)
         # ensure attributes return match ones for the database
         binding.set_all(attributes)
         binding.save
@@ -842,9 +843,10 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the caller provides an arbitrary parameters in an optional request_attrs hash' do
+        let(:arbitrary_parameters) { { 'name' => 'value' } }
+
         it 'make a put request with correct message and arbitrary parameters' do
-          arbitrary_parameters = { 'name' => 'value' }
-          client.bind(binding, arbitrary_parameters: arbitrary_parameters)
+          client.bind(binding, arbitrary_parameters)
           expect(http_client).to have_received(:put).
               with(anything,
                 plan_id:    binding.service_plan.broker_provided_id,
@@ -860,7 +862,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:binding) { VCAP::CloudController::RouteBinding.make }
 
         it 'does not send the app_guid in the request' do
-          client.bind(binding)
+          client.bind(binding, arbitrary_parameters)
 
           expect(http_client).to have_received(:put).
               with(anything,
@@ -884,7 +886,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'sets the syslog_drain_url on the binding' do
-          attributes = client.bind(binding)
+          attributes = client.bind(binding, arbitrary_parameters)
           # ensure attributes return match ones for the database
           binding.set_all(attributes)
           binding.save
@@ -899,7 +901,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           it 'raises an error and initiates orphan mitigation' do
             expect {
-              client.bind(binding)
+              client.bind(binding, arbitrary_parameters)
             }.to raise_error(Errors::ServiceBrokerInvalidSyslogDrainUrl)
 
             expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
@@ -915,7 +917,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'does not set the syslog_drain_url on the binding' do
-          client.bind(binding)
+          client.bind(binding, arbitrary_parameters)
           expect(binding.syslog_drain_url).to_not be
         end
       end
@@ -942,7 +944,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
-                client.bind(binding)
+                client.bind(binding, arbitrary_parameters)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_bind).
@@ -964,7 +966,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
-                client.bind(binding)
+                client.bind(binding, arbitrary_parameters)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
@@ -976,7 +978,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
-                client.bind(binding)
+                client.bind(binding, arbitrary_parameters)
               }.to raise_error(Errors::ServiceBrokerBadResponse)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)

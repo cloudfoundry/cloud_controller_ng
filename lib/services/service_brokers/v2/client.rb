@@ -102,7 +102,7 @@ module VCAP::Services::ServiceBrokers::V2
       raise e
     end
 
-    def bind(binding, arbitrary_parameters: {})
+    def bind(binding, arbitrary_parameters)
       path = service_binding_resource_path(binding.guid, binding.service_instance.guid)
       body = {
         service_id:    binding.service.broker_provided_id,

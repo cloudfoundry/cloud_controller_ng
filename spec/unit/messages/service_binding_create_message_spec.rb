@@ -259,6 +259,45 @@ module VCAP::CloudController
         end
       end
 
+      describe 'parameters' do
+        context 'when data is not provided' do
+          let(:symbolized_body) { {} }
+
+          it 'is nil' do
+            message = ServiceBindingCreateMessage.new(symbolized_body)
+            expect(message.parameters).to be_nil
+          end
+        end
+
+        context 'when data is provided but parameters are not' do
+          let(:symbolized_body) do
+            {
+              data: {}
+            }
+          end
+
+          it 'is nil' do
+            message = ServiceBindingCreateMessage.new(symbolized_body)
+            expect(message.parameters).to be_nil
+          end
+        end
+
+        context 'when provided' do
+          let(:symbolized_body) do
+            {
+              data: {
+                parameters: { cool: 'parameters' }
+              }
+            }
+          end
+
+          it 'is accessible' do
+            message = ServiceBindingCreateMessage.new(symbolized_body)
+            expect(message.parameters).to eq(cool: 'parameters')
+          end
+        end
+      end
+
       context 'data' do
         context 'when data is not a hash' do
           let(:symbolized_body) do
