@@ -112,7 +112,10 @@ describe 'v3 service bindings' do
 
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
-        FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
+        fb = FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
+        fb.credentials = { 'username' => 'managed_username' }
+        fb.syslog_drain_url = 'syslog://mydrain.example.com'
+        fb
       end
     end
 
@@ -128,17 +131,46 @@ describe 'v3 service bindings' do
         }.to_json,
         user_headers
       )
-      service_binding_guid = MultiJson.load(last_response.body)['guid']
+
+      parsed_response = MultiJson.load(last_response.body)
+      guid = parsed_response['guid']
+
+      expected_response = {
+        'guid'       => guid,
+        'type'       => 'app',
+        'data'       => {
+          'credentials'      => {
+            'username' => 'managed_username'
+          },
+          'syslog_drain_url' => 'syslog://mydrain.example.com'
+        },
+        'created_at' => iso8601,
+        'updated_at' => nil,
+        'links'      => {
+          'self'             => {
+            'href' => "/v3/service_bindings/#{guid}"
+          },
+          'service_instance' => {
+            'href' => "/v2/service_instances/#{service_instance_guid}"
+          },
+          'app'              => {
+            'href' => "/v3/apps/#{app_guid}"
+          }
+        }
+      }
 
       expect(last_response.status).to eq(201)
+      expect(parsed_response).to be_a_response_like(expected_response)
+      expect(VCAP::CloudController::ServiceBindingModel.find(guid: guid)).to be_present
 
       get(
-        "/v3/service_bindings/#{service_binding_guid}",
+        "/v3/service_bindings/#{guid}",
         nil,
         user_headers
       )
 
-      expect(MultiJson.load(last_response.body)['data']['credentials']['username']).to eq('cool_user')
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 
@@ -147,11 +179,13 @@ describe 'v3 service bindings' do
       post(
         '/v2/user_provided_service_instances',
         {
-          name:       'test_ups',
-          space_guid: space_guid,
-          credentials: {
+          name:             'test_ups',
+          space_guid:       space_guid,
+          credentials:      {
             'username': 'user_provided_username'
-          }
+          },
+          syslog_drain_url: 'syslog://drain.url.com'
+
         }.to_json,
         user_headers
       )
@@ -171,17 +205,50 @@ describe 'v3 service bindings' do
         }.to_json,
         user_headers
       )
-      service_binding_guid = MultiJson.load(last_response.body)['guid']
+
+      parsed_response = MultiJson.load(last_response.body)
+      guid = parsed_response['guid']
+
+      expected_response = {
+        'guid'       => guid,
+        'type'       => 'app',
+        'data'       => {
+          'credentials'      => {
+            'username' => 'user_provided_username'
+          },
+          'syslog_drain_url' => 'syslog://drain.url.com'
+        },
+        'created_at' => iso8601,
+        'updated_at' => nil,
+        'links'      => {
+          'self'             => {
+            'href' => "/v3/service_bindings/#{guid}"
+          },
+          'service_instance' => {
+            'href' => "/v2/service_instances/#{service_instance_guid}"
+          },
+          'app'              => {
+            'href' => "/v3/apps/#{app_guid}"
+          }
+        }
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
 
       expect(last_response.status).to eq(201)
+      expect(parsed_response).to be_a_response_like(expected_response)
+      expect(VCAP::CloudController::ServiceBindingModel.find(guid: guid)).to be_present
 
       get(
-        "/v3/service_bindings/#{service_binding_guid}",
+        "/v3/service_bindings/#{guid}",
         nil,
         user_headers
       )
 
-      expect(MultiJson.load(last_response.body)['data']['credentials']['username']).to eq('user_provided_username')
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 end

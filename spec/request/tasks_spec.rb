@@ -39,17 +39,16 @@ describe 'Tasks' do
   describe 'POST /v3/apps/:guid/tasks' do
     it 'creates a task for an app with an assigned current droplet' do
       body = {
-        name: 'best task ever',
-        command: 'be rake && true',
-        environment_variables: {
-          unicorn: 'magic'
-        },
-        memory_in_mb: 1234,
+        name:                  'best task ever',
+        command:               'be rake && true',
+        environment_variables: { unicorn: 'magic' },
+        memory_in_mb:          1234,
       }
 
       post "/v3/apps/#{app_model.guid}/tasks", body, developer_headers
 
-      guid = VCAP::CloudController::TaskModel.last.guid
+      parsed_response = MultiJson.load(last_response.body)
+      guid            = parsed_response['guid']
 
       expected_response = {
         'guid'                  => guid,
@@ -61,9 +60,9 @@ describe 'Tasks' do
         'result'                => {
           'failure_reason' => nil
         },
-        'created_at' => iso8601,
-        'updated_at' => nil,
-        'links' => {
+        'created_at'            => iso8601,
+        'updated_at'            => nil,
+        'links'                 => {
           'self'    => {
             'href' => "/v3/tasks/#{guid}"
           },
@@ -76,22 +75,21 @@ describe 'Tasks' do
         }
       }
 
-      parsed_response = JSON.load(last_response.body)
-
       expect(last_response.status).to eq(202)
       expect(parsed_response).to be_a_response_like(expected_response)
+      expect(VCAP::CloudController::TaskModel.find(guid: guid)).to be_present
     end
   end
 
   describe 'GET /v3/tasks/:guid' do
     it 'returns a json representation of the task with the requested guid' do
-      task = VCAP::CloudController::TaskModel.make(
-        name: 'task',
-        command: 'echo task',
-        app_guid: app_model.guid,
-        droplet: app_model.droplet,
+      task      = VCAP::CloudController::TaskModel.make(
+        name:                  'task',
+        command:               'echo task',
+        app_guid:              app_model.guid,
+        droplet:               app_model.droplet,
         environment_variables: { unicorn: 'magic' },
-        memory_in_mb: 5,
+        memory_in_mb:          5,
       )
       task_guid = task.guid
 
@@ -107,8 +105,8 @@ describe 'Tasks' do
         'result'                => {
           'failure_reason' => nil
         },
-        'created_at' => iso8601,
-        'updated_at' => nil,
+        'created_at'            => iso8601,
+        'updated_at'            => nil,
         'links'                 => {
           'self'    => {
             'href' => "/v3/tasks/#{task_guid}"
@@ -122,7 +120,7 @@ describe 'Tasks' do
         }
       }
 
-      parsed_response = JSON.load(last_response.body)
+      parsed_response = MultiJson.load(last_response.body)
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
@@ -132,12 +130,12 @@ describe 'Tasks' do
   describe 'GET /v3/apps/:guid/tasks/:guid' do
     it 'returns a json representation of the task with the requested guid' do
       task = VCAP::CloudController::TaskModel.make(
-        name:         'task',
-        command:      'echo task',
-        app:          app_model,
-        droplet:      app_model.droplet,
+        name:                  'task',
+        command:               'echo task',
+        app:                   app_model,
+        droplet:               app_model.droplet,
         environment_variables: { unicorn: 'magic' },
-        memory_in_mb: 5,
+        memory_in_mb:          5,
       )
       guid = task.guid
 
@@ -153,8 +151,8 @@ describe 'Tasks' do
         'result'                => {
           'failure_reason' => nil
         },
-        'created_at' => iso8601,
-        'updated_at' => nil,
+        'created_at'            => iso8601,
+        'updated_at'            => nil,
         'links'                 => {
           'self'    => {
             'href' => "/v3/tasks/#{guid}"
@@ -168,7 +166,7 @@ describe 'Tasks' do
         }
       }
 
-      parsed_response = JSON.load(last_response.body)
+      parsed_response = MultiJson.load(last_response.body)
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
