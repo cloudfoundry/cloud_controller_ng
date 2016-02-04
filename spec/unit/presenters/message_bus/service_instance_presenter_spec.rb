@@ -16,22 +16,18 @@ describe ServiceInstancePresenter do
 
       let(:service) { VCAP::CloudController::Service.make(tags: ['relational', 'mysql']) }
 
-      specify do
-        expect(subject.keys).to include(:label)
-        expect(subject.keys).to include(:provider)
-        expect(subject.keys).to include(:vendor)
-        expect(subject.keys).to include(:plan)
-        expect(subject.keys).to include(:name)
-        expect(subject).to have_key(:tags)
-      end
+      it { is_expected.to have_key(:label) }
+      it { is_expected.to have_key(:provider) }
+      it { is_expected.to have_key(:plan) }
+      it { is_expected.to have_key(:name) }
+      it { is_expected.to have_key(:tags) }
 
       specify do
-        expect(subject.fetch(:label)).to eq(service_instance.service.label)
-        expect(subject.fetch(:provider)).to eq(service_instance.service.provider)
-        expect(subject.fetch(:vendor)).to eq(service_instance.service.label)
-        expect(subject.fetch(:plan)).to eq(service_instance.service_plan.name)
-        expect(subject.fetch(:name)).to eq(service_instance.name)
-        expect(subject.fetch(:tags)).to eq(['relational', 'mysql', 'meow'])
+        expect(subject[:label]).to eq(service_instance.service.label)
+        expect(subject[:provider]).to eq(service_instance.service.provider)
+        expect(subject[:plan]).to eq(service_instance.service_plan.name)
+        expect(subject[:name]).to eq(service_instance.name)
+        expect(subject[:tags]).to eq(['relational', 'mysql', 'meow'])
       end
     end
 
@@ -39,13 +35,9 @@ describe ServiceInstancePresenter do
       let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
 
       specify do
-        expect(subject.keys).to eq([:label, :name, :tags])
-      end
-
-      specify do
-        expect(subject.fetch(:label)).to eq('user-provided')
-        expect(subject.fetch(:name)).to eq(service_instance.name)
-        expect(subject.fetch(:tags)).to eq([])
+        expect(subject[:label]).to eq('user-provided')
+        expect(subject[:name]).to eq(service_instance.name)
+        expect(subject[:tags]).to eq([])
       end
     end
   end

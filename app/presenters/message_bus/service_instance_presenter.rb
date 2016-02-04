@@ -34,7 +34,6 @@ class ServiceInstancePresenter
       {
         label: @service_instance.service.label,
         provider: @service_instance.service.provider,
-        vendor: @service_instance.service.label,
         plan: @service_instance.service_plan.name,
         name: @service_instance.name,
         tags: @service_instance.merged_tags

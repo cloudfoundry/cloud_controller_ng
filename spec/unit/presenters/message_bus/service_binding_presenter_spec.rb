@@ -39,17 +39,14 @@ describe ServiceBindingPresenter do
       describe '#to_hash' do
         subject { ServiceBindingPresenter.new(service_binding).to_hash }
 
-        specify do
-          expect(subject).to be_instance_of(Hash)
-          expect(subject).to have_key(:label)
-          expect(subject).to have_key(:name)
-          expect(subject).to have_key(:credentials)
-          expect(subject).to have_key(:options)
-          expect(subject).to have_key(:plan)
-          expect(subject).to have_key(:provider)
-          expect(subject).to have_key(:vendor)
-          expect(subject).to have_key(:tags)
-        end
+        it { is_expected.to be_instance_of(Hash) }
+        it { is_expected.to have_key(:label) }
+        it { is_expected.to have_key(:name) }
+        it { is_expected.to have_key(:credentials) }
+        it { is_expected.to have_key(:options) }
+        it { is_expected.to have_key(:plan) }
+        it { is_expected.to have_key(:provider) }
+        it { is_expected.to have_key(:tags) }
 
         specify do
           expect(subject.fetch(:credentials)).to eq(service_binding.credentials)
@@ -81,13 +78,11 @@ describe ServiceBindingPresenter do
     describe '#to_hash' do
       subject { ServiceBindingPresenter.new(service_binding).to_hash }
 
-      specify do
-        expect(subject).to be_instance_of(Hash)
-        expect(subject).to have_key(:label)
-        expect(subject).to have_key(:credentials)
-        expect(subject).to have_key(:options)
-        expect(subject).to have_key(:tags)
-      end
+      it { is_expected.to be_instance_of(Hash) }
+      it { is_expected.to have_key(:label) }
+      it { is_expected.to have_key(:credentials) }
+      it { is_expected.to have_key(:options) }
+      it { is_expected.to have_key(:tags) }
     end
   end
 end

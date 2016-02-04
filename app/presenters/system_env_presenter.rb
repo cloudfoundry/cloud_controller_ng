@@ -4,7 +4,7 @@ class SystemEnvPresenter
   end
 
   def system_env
-    { 'VCAP_SERVICES' => service_binding_env_variables(service_bindings) }
+    {VCAP_SERVICES: service_binding_env_variables(service_bindings)}
   end
 
   private
@@ -23,50 +23,12 @@ class SystemEnvPresenter
 
   def service_binding_env_values(service_binding)
     {
-      'credentials'      => service_binding.credentials,
-      'syslog_drain_url' => service_binding.syslog_drain_url
-    }.merge(service_instance_presenter(service_binding.service_instance))
-  end
-
-  def service_instance_presenter(service_instance)
-    if service_instance.is_gateway_service
-      @presenter = ManagedPresenter.new(service_instance)
-    else
-      @presenter = ProvidedPresenter.new(service_instance)
-    end
+      credentials: service_binding.credentials,
+      syslog_drain_url: service_binding.syslog_drain_url
+    }.merge(ServiceInstancePresenter.new(service_binding.service_instance))
   end
 
   def service_binding_label(service_binding)
-    service_instance_presenter(service_binding.service_instance).to_hash['label']
-  end
-
-  class ProvidedPresenter
-    def initialize(service_instance)
-      @service_instance = service_instance
-    end
-
-    def to_hash
-      {
-        'label' => 'user-provided',
-        'name'  => @service_instance.name,
-        'tags'  => @service_instance.tags
-      }
-    end
-  end
-
-  class ManagedPresenter
-    def initialize(service_instance)
-      @service_instance = service_instance
-    end
-
-    def to_hash
-      {
-        'label'    => @service_instance.service.label,
-        'provider' => @service_instance.service.provider,
-        'plan'     => @service_instance.service_plan.name,
-        'name'     => @service_instance.name,
-        'tags'     => @service_instance.merged_tags
-      }
-    end
+    ServiceInstancePresenter.new(service_binding.service_instance).to_hash[:label]
   end
 end
