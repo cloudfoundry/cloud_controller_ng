@@ -36,6 +36,7 @@ RSpec.configure do |rspec_config|
   rspec_config.expect_with(:rspec) { |config| config.syntax = :expect }
   rspec_config.include Rack::Test::Methods
   rspec_config.include ModelCreation
+  rspec_config.include TimeHelpers
 
   rspec_config.include ServiceBrokerHelpers
   rspec_config.include ControllerHelpers, type: :v2_controller, file_path: EscapedPath.join(%w(spec unit controllers))

@@ -3,7 +3,6 @@ require 'presenters/v3/droplet_presenter'
 
 module VCAP::CloudController
   describe DropletPresenter do
-    let(:iso8601) { /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.freeze }
     let(:droplet) do
       DropletModel.make(
         :buildpack,

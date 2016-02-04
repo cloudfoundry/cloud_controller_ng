@@ -3,7 +3,6 @@ require 'awesome_print'
 require 'rspec_api_documentation/dsl'
 
 resource 'App Routes (Experimental)', type: :api do
-  let(:iso8601) { /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.freeze }
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user)['HTTP_AUTHORIZATION'] }
   header 'AUTHORIZATION', :user_header
