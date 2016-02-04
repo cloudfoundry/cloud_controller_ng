@@ -75,7 +75,7 @@ module VCAP::CloudController
 
       context 'when the mapping is invalid' do
         before do
-          allow(AppModelRoute).to receive(:create).and_raise(Sequel::ValidationFailed.new('shizzle'))
+          allow(RouteMappingModel).to receive(:create).and_raise(Sequel::ValidationFailed.new('shizzle'))
         end
 
         it 'raises an InvalidRouteMapping error' do

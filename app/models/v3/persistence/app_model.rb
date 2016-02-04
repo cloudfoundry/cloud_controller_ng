@@ -3,7 +3,7 @@ module VCAP::CloudController
     include Serializer
     APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
-    many_to_many :routes, join_table: :apps_v3_routes, left_key: :app_v3_id
+    many_to_many :routes, join_table: :route_mappings, left_key: :app_v3_id
     one_to_many :service_bindings, class: 'VCAP::CloudController::ServiceBindingModel', key: :app_id
     one_to_many :tasks, class: 'VCAP::CloudController::TaskModel', key: :app_id
 
@@ -88,6 +88,10 @@ module VCAP::CloudController
       if droplet && droplet.state != DropletModel::STAGED_STATE
         errors.add(:droplet, 'must be in staged state')
       end
+    end
+
+    def _add_route(route, hash={})
+      model.db[:route_mappings].insert(hash.merge(app_v3_id: id, route_id: route.id, guid: SecureRandom.uuid))
     end
   end
 end

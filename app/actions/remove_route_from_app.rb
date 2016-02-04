@@ -16,7 +16,7 @@ module VCAP::CloudController
 
       Repositories::Runtime::AppEventRepository.new.record_unmap_route(@app_model, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
 
-      AppModelRoute.where(route: route, app: @app_model).destroy
+      RouteMappingModel.where(route: route, app: @app_model).destroy
     end
   end
 end

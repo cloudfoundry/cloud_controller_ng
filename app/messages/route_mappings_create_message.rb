@@ -1,7 +1,7 @@
 require 'messages/base_message'
 
 module VCAP::CloudController
-  class AppRouteMappingsCreateMessage < BaseMessage
+  class RouteMappingsCreateMessage < BaseMessage
     ALLOWED_KEYS = [:relationships]
 
     attr_accessor(*ALLOWED_KEYS)
@@ -12,7 +12,7 @@ module VCAP::CloudController
     validates :process_type, string: true, allow_nil: true
 
     def self.create_from_http_request(body)
-      AppRouteMappingsCreateMessage.new(body.symbolize_keys)
+      RouteMappingsCreateMessage.new(body.symbolize_keys)
     end
 
     def process

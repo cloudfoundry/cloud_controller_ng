@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     def add(app, route, process_model)
       process_type = process_model.nil? ? 'web' : process_model.type
-      AppModelRoute.create(app: app, route: route, type: process_type)
+      route_mapping = RouteMappingModel.create(app: app, route: route, process_type: process_type)
 
       if !process_model.nil?
         process_model.add_route(route)
@@ -20,6 +20,7 @@ module VCAP::CloudController
 
       # TODO: Update event to match new route mappings
       Repositories::Runtime::AppEventRepository.new.record_map_route(app, route, @user.try(:guid), @user_email)
+      route_mapping
 
     rescue Sequel::ValidationFailed => e
       if e.errors && e.errors.on([:app_v3_id, :route_id]).include?(:unique)

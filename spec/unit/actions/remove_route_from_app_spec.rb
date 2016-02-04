@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:route) { Route.make(space: space) }
 
       it 'removes the route from the app' do
-        AppModelRoute.create(app: app, route: route, type: 'web')
+        RouteMappingModel.create(app: app, route: route, process_type: 'web')
         remove_route_from_app.remove(route)
         expect(app.reload.routes).to be_empty
       end

@@ -15,8 +15,8 @@ describe AppsRoutesController, type: :controller do
       @request.env.merge!(headers_for(VCAP::CloudController::User.make))
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
-      VCAP::CloudController::AppModelRoute.create(app: app_model, route: route_1, type: 'web')
-      VCAP::CloudController::AppModelRoute.create(app: app_model, route: route_2, type: 'web')
+      VCAP::CloudController::RouteMappingModel.create(app: app_model, route: route_1, process_type: 'web')
+      VCAP::CloudController::RouteMappingModel.create(app: app_model, route: route_2, process_type: 'web')
     end
 
     it 'returns a 200' do
@@ -98,7 +98,7 @@ describe AppsRoutesController, type: :controller do
       @request.env.merge!(headers_for(VCAP::CloudController::User.make))
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
-      VCAP::CloudController::AppModelRoute.create(app: app_model, route: route, type: 'web')
+      VCAP::CloudController::RouteMappingModel.create(app: app_model, route: route, process_type: 'web')
     end
 
     it 'returns a 204' do
@@ -126,7 +126,7 @@ describe AppsRoutesController, type: :controller do
       let(:another_app) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
 
       before do
-        VCAP::CloudController::AppModelRoute.create(app: another_app, route: route, type: 'web')
+        VCAP::CloudController::RouteMappingModel.create(app: another_app, route: route, process_type: 'web')
       end
 
       it 'removes only the mapping from the current app' do

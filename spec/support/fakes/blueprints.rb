@@ -377,6 +377,11 @@ module VCAP::CloudController
     error_message { Sham.error_message }
   end
 
+  RouteMappingModel.blueprint do
+    app { AppModel.make }
+    route { Route.make(space: app.space) }
+  end
+
   TestModel.blueprint do
     required_attr true
   end

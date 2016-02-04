@@ -1,13 +1,14 @@
-require 'messages/app_route_mappings_create_message'
+require 'messages/route_mappings_create_message'
+require 'presenters/v3/route_mapping_presenter'
 
-class AppsRouteMappingsController < ApplicationController
+class RouteMappingsController < ApplicationController
   include AppSubresource
 
   def create
-    message = AppRouteMappingsCreateMessage.create_from_http_request(params[:body])
+    message = RouteMappingsCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    app_guid = params['guid']
+    app_guid = params['app_guid']
     process_type = message.process_type || 'web'
 
     app, route, process, space, org = AddRouteFetcher.new.fetch(
@@ -17,19 +18,20 @@ class AppsRouteMappingsController < ApplicationController
     )
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
-    route_not_found! unless route
-    process_not_found!(process_type) unless !process.nil?
-    app_route_space_mismatch! unless route.space_guid == app.space_guid
-    route_mapping_already_exists(process, route)
     unauthorized! unless can_write?(space.guid)
 
+    route_not_found! unless route
+    app_route_space_mismatch! unless route.space_guid == app.space_guid
+
+    route_mapping_already_exists(process, route)
+
     begin
-      AddRouteToApp.new(current_user, current_user_email).add(app, route, process)
+      route_mapping = AddRouteToApp.new(current_user, current_user_email).add(app, route, process)
     rescue AddRouteToApp::InvalidRouteMapping => e
       unprocessable!(e.message)
     end
 
-    render status: :created, json: {}
+    render status: :created, json: RouteMappingPresenter.new.present_json(route_mapping)
   end
 
   def route_mapping_already_exists(process, requested_route)

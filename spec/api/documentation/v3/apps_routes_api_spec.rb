@@ -1,3 +1,4 @@
+# TODO: route-mapping: delete this file in favor of request/route_mappings_spec after making sure all tests moved
 require 'rails_helper'
 require 'awesome_print'
 require 'rspec_api_documentation/dsl'

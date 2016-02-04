@@ -71,8 +71,10 @@ Rails.application.routes.draw do
   delete '/apps/:guid/routes', to: 'apps_routes#destroy'
   put '/apps/:guid/routes', to: 'apps_routes#add_route'
 
-  # apps_route_mappings
-  post '/v3/apps/:guid/route_mappings', to: 'apps_route_mappings#create'
+  # route_mappings
+  post '/v3/apps/:app_guid/route_mappings', to: 'route_mappings#create'
+
+  post '/apps/:app_guid/route_mappings', to: 'route_mappings#create'
 
   # apps_processes
   get '/v3/apps/:guid/processes', to: 'apps_processes#index'

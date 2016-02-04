@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'messages/app_route_mappings_create_message'
+require 'messages/route_mappings_create_message'
 
 module VCAP::CloudController
-  describe AppRouteMappingsCreateMessage do
+  describe RouteMappingsCreateMessage do
     let(:body) do
       {
         'relationships' => {
@@ -13,15 +13,15 @@ module VCAP::CloudController
     end
 
     it 'returns the correct AppRouteMappingsCreateMessage' do
-      message = AppRouteMappingsCreateMessage.create_from_http_request(body)
+      message = RouteMappingsCreateMessage.create_from_http_request(body)
 
-      expect(message).to be_a(AppRouteMappingsCreateMessage)
+      expect(message).to be_a(RouteMappingsCreateMessage)
       expect(message.route_guid).to eq('some-route-guid')
       expect(message.process_type).to eq('web')
     end
 
     it 'converts requested keys to symbols' do
-      message = AppRouteMappingsCreateMessage.create_from_http_request(body)
+      message = RouteMappingsCreateMessage.create_from_http_request(body)
       expect(message.requested?(:relationships)).to be_truthy
     end
 
@@ -38,7 +38,7 @@ module VCAP::CloudController
         end
 
         it 'is not valid' do
-          message = AppRouteMappingsCreateMessage.new(body)
+          message = RouteMappingsCreateMessage.new(body)
 
           expect(message).not_to be_valid
           expect(message.errors[:base]).to include("Unknown field(s): 'unexpected'")
@@ -56,7 +56,7 @@ module VCAP::CloudController
             }
           end
           it 'is not valid' do
-            message = AppRouteMappingsCreateMessage.new(body)
+            message = RouteMappingsCreateMessage.new(body)
             expect(message).not_to be_valid
           end
         end
@@ -71,7 +71,7 @@ module VCAP::CloudController
             }
           end
           it 'is not valid' do
-            message = AppRouteMappingsCreateMessage.new(body)
+            message = RouteMappingsCreateMessage.new(body)
             expect(message).not_to be_valid
           end
         end
@@ -89,7 +89,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            message = AppRouteMappingsCreateMessage.new(body)
+            message = RouteMappingsCreateMessage.new(body)
             expect(message).not_to be_valid
           end
         end
@@ -103,7 +103,7 @@ module VCAP::CloudController
             }
           end
           it 'is valid' do
-            message = AppRouteMappingsCreateMessage.new(body)
+            message = RouteMappingsCreateMessage.new(body)
             expect(message).to be_valid
           end
         end
@@ -119,7 +119,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            message = AppRouteMappingsCreateMessage.new(body)
+            message = RouteMappingsCreateMessage.new(body)
             expect(message).not_to be_valid
           end
         end
@@ -135,7 +135,7 @@ module VCAP::CloudController
           end
 
           it 'is valid' do
-            message = AppRouteMappingsCreateMessage.new(body)
+            message = RouteMappingsCreateMessage.new(body)
             expect(message).to be_valid
           end
         end

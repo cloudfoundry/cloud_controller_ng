@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe AppsRouteMappingsController, type: :controller do
+describe RouteMappingsController, type: :controller do
   let(:membership) { instance_double(VCAP::CloudController::Membership) }
 
   describe '#create' do
@@ -26,19 +26,17 @@ describe AppsRouteMappingsController, type: :controller do
     end
 
     it 'successfully creates a route mapping' do
-      post :create, guid: app.guid, body: req_body
+      post :create, app_guid: app.guid, body: req_body
 
       expect(response.status).to eq(201)
-
-      app.reload
-      expect(app.routes).to include(route)
+      expect(parsed_body['guid']).to eq(VCAP::CloudController::RouteMappingModel.last.guid)
     end
 
     context 'when there is a validation error' do
       let(:process_type) { true }
 
       it 'raises an unprocessable error' do
-        post :create, guid: app.guid, body: req_body
+        post :create, app_guid: app.guid, body: req_body
 
         expect(response.body).to include 'UnprocessableEntity'
       end
@@ -53,7 +51,7 @@ describe AppsRouteMappingsController, type: :controller do
       end
 
       it 'defaults to "web"' do
-        post :create, guid: app.guid, body: req_body
+        post :create, app_guid: app.guid, body: req_body
 
         expect(route_fetcher).to have_received(:fetch).with(app.guid, route.guid, 'web')
       end
@@ -68,20 +66,9 @@ describe AppsRouteMappingsController, type: :controller do
       end
 
       it 'fetches the requested process type' do
-        post :create, guid: app.guid, body: req_body
+        post :create, app_guid: app.guid, body: req_body
 
         expect(route_fetcher).to have_received(:fetch).with(app.guid, route.guid, 'worker')
-      end
-    end
-
-    context 'when the requested process is not found' do
-      let(:process_type) { 'some-other-type' }
-
-      it 'should raise a 404 not found error' do
-        post :create, guid: app.guid, body: req_body
-
-        expect(response.status).to eq(404)
-        expect(response.body).to include('process could not be found')
       end
     end
 
@@ -95,7 +82,7 @@ describe AppsRouteMappingsController, type: :controller do
       end
 
       it 'raises an API 404 error' do
-        post :create, guid: app.guid, body: req_body
+        post :create, app_guid: app.guid, body: req_body
 
         expect(response.status).to eq 404
         expect(response.body).to include('ResourceNotFound')
@@ -105,7 +92,7 @@ describe AppsRouteMappingsController, type: :controller do
 
     context 'when the requested app does not exist' do
       it 'raises an API 404 error' do
-        post :create, guid: 'bogus-app-guid', body: req_body
+        post :create, app_guid: 'bogus-app-guid', body: req_body
 
         expect(response.status).to eq 404
         expect(response.body).to include 'ResourceNotFound'
@@ -119,7 +106,7 @@ describe AppsRouteMappingsController, type: :controller do
       end
 
       it 'raises an ApiError with a 403 code' do
-        post :create, guid: app.guid, body: req_body
+        post :create, app_guid: app.guid, body: req_body
 
         expect(response.status).to eq(403)
         expect(response.body).to include('NotAuthorized')
@@ -136,7 +123,7 @@ describe AppsRouteMappingsController, type: :controller do
       end
 
       it 'returns a 404 ResourceNotFound error' do
-        post :create, guid: app.guid, body: req_body
+        post :create, app_guid: app.guid, body: req_body
 
         expect(response.status).to eq 404
         expect(response.body).to include 'ResourceNotFound'
@@ -157,7 +144,7 @@ describe AppsRouteMappingsController, type: :controller do
       end
 
       it 'raises ApiError NotAuthorized' do
-        post :create, guid: app.guid, body: req_body
+        post :create, app_guid: app.guid, body: req_body
 
         expect(response.status).to eq 403
         expect(response.body).to include 'NotAuthorized'
@@ -172,7 +159,7 @@ describe AppsRouteMappingsController, type: :controller do
       end
 
       it 'returns an UnprocessableEntity error' do
-        post :create, guid: app.guid, body: req_body
+        post :create, app_guid: app.guid, body: req_body
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -186,7 +173,7 @@ describe AppsRouteMappingsController, type: :controller do
       end
 
       it 'returns 201' do
-        post :create, guid: app.guid, body: req_body
+        post :create, app_guid: app.guid, body: req_body
 
         expect(response.status).to eq(201)
       end
@@ -204,7 +191,7 @@ describe AppsRouteMappingsController, type: :controller do
       end
 
       it 'raises ApiError InvalidRequest' do
-        post :create, guid: app.guid, body: req_body
+        post :create, app_guid: app.guid, body: req_body
 
         expect(response.status).to eq 400
         expect(response.body).to include 'RouteNotInSameSpaceAsApp'
@@ -213,11 +200,11 @@ describe AppsRouteMappingsController, type: :controller do
 
     context 'when the route mapping already exists' do
       before do
-        post :create, guid: app.guid, body: req_body
+        post :create, app_guid: app.guid, body: req_body
       end
 
       it 'does not create it again' do
-        post :create, guid: app.guid, body: req_body
+        post :create, app_guid: app.guid, body: req_body
         expect(response.status).to eq 400
         expect(response.body).to include 'RouteMappingAlreadyExists'
       end
