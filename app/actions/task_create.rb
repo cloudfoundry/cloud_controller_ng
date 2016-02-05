@@ -18,7 +18,7 @@ module VCAP::CloudController
       TaskModel.db.transaction do
         task = TaskModel.create(
           name:                  message.name,
-          state:                 TaskModel::RUNNING_STATE,
+          state:                 TaskModel::PENDING_STATE,
           droplet:               app.droplet,
           command:               message.command,
           app:                   app,

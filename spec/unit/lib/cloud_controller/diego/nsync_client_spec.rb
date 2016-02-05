@@ -216,7 +216,7 @@ module VCAP::CloudController::Diego
           stub_request(:post, client_url).to_return(status: 202, body: '')
         end
 
-        it 'keeps the task state as RUNNING' do
+        it 'sets the task state as RUNNING' do
           expect { client.desire_task(task) }.not_to raise_error
           expect(task.state).to eq('RUNNING')
         end

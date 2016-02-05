@@ -54,7 +54,7 @@ describe 'Tasks' do
         'guid'                  => guid,
         'name'                  => 'best task ever',
         'command'               => 'be rake && true',
-        'state'                 => 'RUNNING',
+        'state'                 => 'PENDING',
         'memory_in_mb'          => 1234,
         'environment_variables' => { 'unicorn' => 'magic' },
         'result'                => {

@@ -55,7 +55,7 @@ describe TasksController, type: :controller do
 
       expect(response.status).to eq 202
       expect(parsed_body['name']).to eq('mytask')
-      expect(parsed_body['state']).to eq('RUNNING')
+      expect(parsed_body['state']).to eq('PENDING')
       expect(parsed_body['memory_in_mb']).to eq(2048)
     end
 

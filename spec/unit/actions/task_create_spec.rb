@@ -39,10 +39,10 @@ module VCAP::CloudController
         expect(task.environment_variables).to eq(environment_variables)
       end
 
-      it "sets the task state to 'RUNNING'" do
+      it "sets the task state to 'PENDING'" do
         task = task_create_action.create(app, message, user_guid, user_email)
 
-        expect(task.state).to eq(TaskModel::RUNNING_STATE)
+        expect(task.state).to eq(TaskModel::PENDING_STATE)
       end
 
       it 'tells diego to make the task' do
