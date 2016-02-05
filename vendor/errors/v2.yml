@@ -588,6 +588,11 @@
   http_code: 503
   message: "Task workers are unavailable: %s"
 
+170021:
+  name: InvalidTaskRequest
+  http_code: 422
+  message: "The task request is invalid: %s"
+
 180002:
   name: ServiceGatewayError
   http_code: 503

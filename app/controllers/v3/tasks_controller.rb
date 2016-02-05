@@ -6,6 +6,7 @@ require 'messages/tasks_list_message'
 require 'presenters/v3/task_presenter'
 require 'controllers/v3/mixins/app_subresource'
 require 'cloud_controller/diego/nsync_client'
+require 'actions/task_cancel'
 
 class TasksController < ApplicationController
   include AppSubresource
@@ -51,6 +52,24 @@ class TasksController < ApplicationController
     unprocessable!(e)
   end
 
+  def cancel
+    query_options = { guid: params[:task_guid] }
+    if params[:app_guid].present?
+      query_options[:app_id] = AppModel.select(:id).where(guid: params[:app_guid])
+    end
+    task = TaskModel.where(query_options).eager(:space, space: :organization).first
+
+    task_not_found! unless task && can_read?(task.space.guid, task.space.organization.guid)
+    unauthorized! unless can_cancel?(task.space.guid)
+    if task.state == TaskModel::SUCCEEDED_STATE || task.state == TaskModel::FAILED_STATE
+      invalid_task_request!("Task state is #{task.state} and therefore cannot be canceled")
+    end
+
+    TaskCancel.new.cancel(task)
+
+    render status: :accepted, json: TaskPresenter.new.present_json(task.reload)
+  end
+
   def show
     query_options = { guid: params[:task_guid] }
     if params[:app_guid].present?
@@ -77,7 +96,12 @@ class TasksController < ApplicationController
     resource_not_found!(:task)
   end
 
+  def invalid_task_request!(message)
+    raise VCAP::Errors::ApiError.new_from_details('InvalidTaskRequest', message)
+  end
+
   def can_create?(space_guid)
     roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
   end
+  alias_method :can_cancel?, :can_create?
 end

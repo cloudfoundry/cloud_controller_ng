@@ -172,4 +172,41 @@ describe 'Tasks' do
       expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
+
+  describe 'PUT /v3/tasks/:guid/cancel' do
+    it 'returns a json representation of the task with the requested guid' do
+      task = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', environment_variables: { unicorn: 'magic' }, app_guid: app_model.guid
+      task_guid = task.guid
+
+      put "/v3/tasks/#{task_guid}/cancel", {}, admin_headers
+
+      expect(last_response.status).to eq(202)
+      parsed_body = JSON.load(last_response.body)
+      expect(parsed_body['guid']).to eq(task_guid)
+      expect(parsed_body['name']).to eq('task')
+      expect(parsed_body['command']).to eq('echo task')
+      expect(parsed_body['state']).to eq('CANCELING')
+      expect(parsed_body['result']).to eq({ 'failure_reason' => nil })
+      expect(parsed_body['environment_variables']).to eq({ 'unicorn' => 'magic' })
+    end
+  end
+
+  describe 'PUT /v3/apps/:guid/tasks/:guid/cancel' do
+    it 'returns a json representation of the task with the requested guid' do
+      app_guid = app_model.guid
+      task = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', environment_variables: { unicorn: 'magic' }, app_guid: app_guid
+      task_guid = task.guid
+
+      put "/v3/apps/#{app_guid}/tasks/#{task_guid}/cancel", {}, admin_headers
+
+      expect(last_response.status).to eq(202)
+      parsed_body = JSON.load(last_response.body)
+      expect(parsed_body['guid']).to eq(task_guid)
+      expect(parsed_body['name']).to eq('task')
+      expect(parsed_body['command']).to eq('echo task')
+      expect(parsed_body['state']).to eq('CANCELING')
+      expect(parsed_body['result']).to eq({ 'failure_reason' => nil })
+      expect(parsed_body['environment_variables']).to eq({ 'unicorn' => 'magic' })
+    end
+  end
 end

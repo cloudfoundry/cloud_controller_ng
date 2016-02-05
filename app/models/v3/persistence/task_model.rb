@@ -6,7 +6,8 @@ module VCAP::CloudController
       SUCCEEDED_STATE = 'SUCCEEDED',
       FAILED_STATE = 'FAILED',
       PENDING_STATE = 'PENDING',
-      RUNNING_STATE = 'RUNNING'
+      RUNNING_STATE = 'RUNNING',
+      CANCELING_STATE = 'CANCELING'
     ].map(&:freeze).freeze
     COMMAND_MAX_LENGTH = 4096.freeze
 

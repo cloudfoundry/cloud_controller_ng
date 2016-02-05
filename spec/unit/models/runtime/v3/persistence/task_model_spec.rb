@@ -57,6 +57,11 @@ module VCAP::CloudController
           expect(task).to be_valid
         end
 
+        it 'can be CANCELING' do
+          task.state = 'CANCELING'
+          expect(task).to be_valid
+        end
+
         it 'can be SUCCEEDED' do
           task.state = 'SUCCEEDED'
           expect(task).to be_valid
