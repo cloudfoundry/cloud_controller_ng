@@ -4,7 +4,7 @@ class SystemEnvPresenter
   end
 
   def system_env
-    {VCAP_SERVICES: service_binding_env_variables(service_bindings)}
+    { VCAP_SERVICES: service_binding_env_variables(service_bindings) }
   end
 
   private
