@@ -64,7 +64,7 @@ module VCAP::CloudController
 
       describe 'unlocking with a delayed job' do
         it 'enqueues the job' do
-          job = Jobs::Services::ServiceInstanceStateFetch.new(nil, nil, nil, nil, nil)
+          job = Jobs::Services::ServiceInstanceStateFetch.new(nil, nil, nil, nil, nil, nil)
           updater_lock.enqueue_unlock!(job)
           expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceStateFetch
         end

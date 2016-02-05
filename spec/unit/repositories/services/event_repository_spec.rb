@@ -11,6 +11,16 @@ module VCAP::CloudController
         allow(repository).to receive(:logger).and_return(logger)
       end
 
+      describe 'attributes' do
+        it 'has user' do
+          expect(repository.user).to eq(user)
+        end
+
+        it 'has user_email' do
+          expect(repository.current_user_email).to eq(email)
+        end
+      end
+
       describe 'record_service_plan_visibility_event' do
         let(:service_plan_visibility) { VCAP::CloudController::ServicePlanVisibility.make }
 

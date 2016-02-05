@@ -66,14 +66,14 @@ module VCAP::CloudController
 
       describe 'unlocking with a delayed job' do
         it 'updates the attributes on the service instance' do
-          job = double(Jobs::Services::ServiceInstanceStateFetch)
+          job = instance_double(Jobs::Services::ServiceInstanceStateFetch)
           new_description = 'new description'
           deleter_lock.enqueue_unlock!({ last_operation: { description: new_description } }, job)
           expect(service_instance.last_operation.description).to eq new_description
         end
 
         it 'enqueues the job' do
-          job = Jobs::Services::ServiceInstanceStateFetch.new(nil, nil, nil, nil, nil)
+          job = Jobs::Services::ServiceInstanceStateFetch.new(nil, nil, nil, nil, nil, nil)
           deleter_lock.enqueue_unlock!({}, job)
           expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceStateFetch
         end

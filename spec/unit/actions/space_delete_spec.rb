@@ -175,10 +175,8 @@ module VCAP::CloudController
             context 'when deleting a service instance associated with a private broker fails' do
               before do
                 error = [VCAP::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', 'fake-name')]
-
-                service_instance_delete = ServiceInstanceDelete.new
+                service_instance_delete = instance_double(ServiceInstanceDelete, delete: error)
                 allow(ServiceInstanceDelete).to receive(:new).and_return(service_instance_delete)
-                allow(service_instance_delete).to receive(:delete).and_return(error)
               end
 
               it 'deletes all but the associated broker' do

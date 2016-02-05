@@ -45,7 +45,8 @@ module VCAP::CloudController
     def delete_service_instances(space_model)
       service_instance_deleter = ServiceInstanceDelete.new(
         accepts_incomplete: true,
-        multipart_delete: true
+        multipart_delete: true,
+        event_repository: @services_event_repository
       )
       service_instance_deleter.delete(space_model.service_instances_dataset)
     end

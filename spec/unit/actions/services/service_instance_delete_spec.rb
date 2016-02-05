@@ -3,7 +3,9 @@ require 'actions/services/service_instance_delete'
 
 module VCAP::CloudController
   describe ServiceInstanceDelete do
-    subject(:service_instance_delete) { ServiceInstanceDelete.new }
+    let(:event_repository) { Repositories::Services::EventRepository.new(user: user, user_email: user_email) }
+
+    subject(:service_instance_delete) { ServiceInstanceDelete.new(event_repository: event_repository) }
 
     describe '#delete' do
       let!(:service_instance_1) { ManagedServiceInstance.make(:routing) }
@@ -77,7 +79,6 @@ module VCAP::CloudController
 
       context 'when accepts_incomplete is true' do
         let(:service_instance) { ManagedServiceInstance.make }
-        let(:event_repository) { Repositories::Services::EventRepository.new(user: user, user_email: user_email) }
         let(:multipart_delete) { false }
 
         subject(:service_instance_delete) do

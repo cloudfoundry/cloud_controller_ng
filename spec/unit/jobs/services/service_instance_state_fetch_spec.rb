@@ -30,16 +30,8 @@ module VCAP::CloudController
 
         let(:name) { 'fake-name' }
 
-        let(:service_event_repository) do
-          Repositories::Services::EventRepository.new(service_event_repository_opts)
-        end
-
-        let(:service_event_repository_opts) do
-          {
-            user_email: 'fake@mail.foo',
-            user: User.make,
-          }
-        end
+        let(:user) { User.make }
+        let(:user_email) { 'fake@mail.foo' }
 
         let(:status) { 200 }
         let(:state) { 'succeeded' }
@@ -63,7 +55,8 @@ module VCAP::CloudController
             name,
             client_attrs,
             service_instance.guid,
-            service_event_repository,
+            user.guid,
+            user_email,
             request_attrs,
           )
         end
@@ -96,21 +89,6 @@ module VCAP::CloudController
 
             it 'enqueues the job using the maximum polling interval' do
               expect(job.poll_interval).to eq 24.hours
-            end
-          end
-
-          context 'when the caller provides repository_opts instead of a repository' do
-            it 'uses the opts to construct a repository' do
-              job =  VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
-                name,
-                client_attrs,
-                service_instance.guid,
-                nil,
-                request_attrs,
-                nil,
-                service_event_repository_opts
-              )
-              expect(job.services_event_repository).to be_a Repositories::Services::EventRepository
             end
           end
         end
@@ -231,10 +209,10 @@ module VCAP::CloudController
               end
             end
 
-            context 'when there is no repository' do
-              let(:service_event_repository) { nil }
-
+            context 'when the user has gone away' do
               it 'should not create an audit event' do
+                user.destroy
+
                 run_job(job)
 
                 expect(Event.find(type: 'audit.service_instance.create')).to be_nil

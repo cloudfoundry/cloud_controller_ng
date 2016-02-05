@@ -3,7 +3,9 @@ require 'actions/services/service_instance_update'
 
 module VCAP::CloudController
   describe ServiceInstanceUpdate do
-    let(:services_event_repo) { double(Repositories::Services::EventRepository).as_null_object }
+    let(:services_event_repo) do
+      instance_double(Repositories::Services::EventRepository, record_service_instance_event: nil, user: User.make, current_user_email: 'fake@email.com')
+    end
     let(:service_instance_update) do
       ServiceInstanceUpdate.new(
         accepts_incomplete: false,

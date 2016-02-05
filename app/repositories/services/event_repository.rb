@@ -2,6 +2,8 @@ module VCAP::CloudController
   module Repositories
     module Services
       class EventRepository
+        attr_reader :user, :current_user_email
+
         def initialize(user:, user_email:)
           @user = user
           @current_user_email = user_email
@@ -224,8 +226,8 @@ module VCAP::CloudController
         def user_actor
           {
             actor_type: 'user',
-            actor: @user.guid,
-            actor_name: @current_user_email
+            actor: user.guid,
+            actor_name: current_user_email
           }
         end
 

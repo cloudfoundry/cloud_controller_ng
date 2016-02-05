@@ -4,13 +4,14 @@ module VCAP::CloudController
       class ServiceInstanceStateFetch < VCAP::CloudController::Jobs::CCJob
         attr_accessor :name, :client_attrs, :service_instance_guid, :services_event_repository, :request_attrs, :poll_interval, :end_timestamp
 
-        def initialize(name, client_attrs, service_instance_guid, services_event_repository, request_attrs, end_timestamp=nil, services_event_repository_opts=nil)
-          @name = name
-          @client_attrs = client_attrs
+        def initialize(name, client_attrs, service_instance_guid, user_guid, user_email, request_attrs, end_timestamp=nil)
+          @name                  = name
+          @client_attrs          = client_attrs
           @service_instance_guid = service_instance_guid
-          get_repository(services_event_repository, services_event_repository_opts)
-          @request_attrs = request_attrs
-          @end_timestamp = end_timestamp || new_end_timestamp
+          @request_attrs         = request_attrs
+          @end_timestamp         = end_timestamp || new_end_timestamp
+          @user_email            = user_email
+          @user_guid             = user_guid
           update_polling_interval
         end
 
@@ -43,10 +44,10 @@ module VCAP::CloudController
           Time.now + VCAP::CloudController::Config.config[:broker_client_max_async_poll_duration_minutes].minutes
         end
 
-        def get_repository(services_event_repository, services_event_repository_opts)
-          @services_event_repository = services_event_repository
-          if services_event_repository_opts && !@services_event_repository
-            @services_event_repository = Repositories::Services::EventRepository.new(services_event_repository_opts)
+        def get_repository(user_guid, user_email)
+          user = User.find(guid: user_guid)
+          if user
+            Repositories::Services::EventRepository.new(user: user, user_email: user_email)
           end
         end
 
@@ -59,7 +60,7 @@ module VCAP::CloudController
 
             if service_instance.last_operation.state == 'succeeded'
               apply_proposed_changes(service_instance)
-              record_event(@services_event_repository, service_instance, @request_attrs)
+              record_event(service_instance, @request_attrs)
             end
           end
         end
@@ -69,7 +70,7 @@ module VCAP::CloudController
           if Time.now + @poll_interval > end_timestamp
             ManagedServiceInstance.first(guid: service_instance_guid).save_and_update_operation(
               last_operation: {
-                state: 'failed',
+                state:       'failed',
                 description: 'Service Broker failed to provision within the required time.',
               }
             )
@@ -78,7 +79,8 @@ module VCAP::CloudController
           end
         end
 
-        def record_event(services_event_repository, service_instance, request_attrs)
+        def record_event(service_instance, request_attrs)
+          services_event_repository = get_repository(@user_guid, @user_email)
           return unless services_event_repository
           type = service_instance.last_operation.type.to_sym
           services_event_repository.record_service_instance_event(type, service_instance, request_attrs)
@@ -100,8 +102,8 @@ module VCAP::CloudController
 
         def update_polling_interval
           default_poll_interval = VCAP::CloudController::Config.config[:broker_client_default_async_poll_interval_seconds]
-          poll_interval = [default_poll_interval, 24.hours].min
-          @poll_interval = poll_interval
+          poll_interval         = [default_poll_interval, 24.hours].min
+          @poll_interval        = poll_interval
         end
       end
     end
