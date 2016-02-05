@@ -44,7 +44,7 @@ class TasksController < ApplicationController
     app_not_found! unless can_read?(space.guid, space.organization.guid)
     unauthorized! unless can_create?(space.guid)
 
-    task = TaskCreate.new(configuration).create(app, message)
+    task = TaskCreate.new(configuration).create(app, message, SecurityContext.current_user.guid, SecurityContext.current_user_email)
 
     render status: :accepted, json: TaskPresenter.new.present_json(task)
   rescue TaskCreate::InvalidTask, TaskCreate::TaskCreateError => e

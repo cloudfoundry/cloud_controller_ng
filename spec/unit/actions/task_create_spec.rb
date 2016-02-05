@@ -15,6 +15,8 @@ module VCAP::CloudController
       let(:message) { TaskCreateMessage.new name: name, command: command, memory_in_mb: 1024, environment_variables: environment_variables }
       let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
       let(:environment_variables) { { 'unicorn' => 'magic' } }
+      let(:user_guid) { 'user-guid' }
+      let(:user_email) { 'user-email' }
 
       before do
         locator = CloudController::DependencyLocator.instance
@@ -26,7 +28,7 @@ module VCAP::CloudController
       end
 
       it 'creates and returns a task using the given app and its droplet' do
-        task = task_create_action.create(app, message)
+        task = task_create_action.create(app, message, user_guid, user_email)
 
         expect(task.app).to eq(app)
         expect(task.droplet).to eq(droplet)
@@ -38,23 +40,32 @@ module VCAP::CloudController
       end
 
       it "sets the task state to 'RUNNING'" do
-        task = task_create_action.create(app, message)
+        task = task_create_action.create(app, message, user_guid, user_email)
 
         expect(task.state).to eq(TaskModel::RUNNING_STATE)
       end
 
       it 'tells diego to make the task' do
-        task = task_create_action.create(app, message)
+        task = task_create_action.create(app, message, user_guid, user_email)
 
         expect(client).to have_received(:desire_task).with(task)
       end
 
       it 'creates an app usage event for TASK_STARTED' do
-        task = task_create_action.create(app, message)
+        task = task_create_action.create(app, message, user_guid, user_email)
 
         event = AppUsageEvent.last
         expect(event.state).to eq('TASK_STARTED')
         expect(event.task_guid).to eq(task.guid)
+      end
+
+      it 'creates a task create audit event' do
+        task = task_create_action.create(app, message, user_guid, user_email)
+
+        event = Event.last
+        expect(event.type).to eq('audit.app.task.create')
+        expect(event.metadata['task_guid']).to eq(task.guid)
+        expect(event.actee).to eq(app.guid)
       end
 
       describe 'default values' do
@@ -63,7 +74,7 @@ module VCAP::CloudController
         it 'sets memory_in_mb to configured :default_app_memory' do
           config[:default_app_memory] = 1234
 
-          task = task_create_action.create(app, message)
+          task = task_create_action.create(app, message, user_guid, user_email)
 
           expect(task.memory_in_mb).to eq(1234)
         end
@@ -74,7 +85,7 @@ module VCAP::CloudController
 
         it 'raises a NoAssignedDroplet error' do
           expect {
-            task_create_action.create(app_with_no_droplet, message)
+            task_create_action.create(app_with_no_droplet, message, user_guid, user_email)
           }.to raise_error(TaskCreate::NoAssignedDroplet, 'Task must have a droplet. Specify droplet or assign current droplet to app.')
         end
       end
@@ -86,7 +97,7 @@ module VCAP::CloudController
 
         it 'raises an InvalidTask error' do
           expect {
-            task_create_action.create(app, message)
+            task_create_action.create(app, message, user_guid, user_email)
           }.to raise_error(TaskCreate::InvalidTask, 'booooooo')
         end
       end

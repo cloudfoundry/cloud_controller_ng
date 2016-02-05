@@ -40,7 +40,6 @@ describe TasksController, type: :controller do
       }
     end
     let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
-    let(:task) { Task.make }
 
     before do
       app_model.droplet = droplet
@@ -67,6 +66,20 @@ describe TasksController, type: :controller do
 
       expect(app_model.reload.tasks.count).to eq(1)
       expect(app_model.tasks.first).to eq(VCAP::CloudController::TaskModel.last)
+    end
+
+    it 'passes user info to the task creator' do
+      task = VCAP::CloudController::TaskModel.make
+      task_create = instance_double(VCAP::CloudController::TaskCreate, create: task)
+      allow(VCAP::CloudController::TaskCreate).to receive(:new).and_return(task_create)
+
+      user_double = instance_double(VCAP::CloudController::User, guid: 'user-guid')
+      allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(user_double)
+      allow(VCAP::CloudController::SecurityContext).to receive(:current_user_email).and_return('user-email')
+
+      post :create, guid: app_model.guid, body: req_body
+
+      expect(task_create).to have_received(:create).with(anything, anything, 'user-guid', 'user-email')
     end
 
     describe 'access permissions' do

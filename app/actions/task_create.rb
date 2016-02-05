@@ -1,4 +1,5 @@
 require 'cloud_controller/diego/v3/environment'
+require 'repositories/runtime/task_event_repository'
 
 module VCAP::CloudController
   class TaskCreate
@@ -10,7 +11,7 @@ module VCAP::CloudController
       @config = config
     end
 
-    def create(app, message)
+    def create(app, message, user_guid, user_email)
       no_assigned_droplet! unless app.droplet
 
       task = nil
@@ -26,6 +27,7 @@ module VCAP::CloudController
         )
 
         app_usage_event_repository.create_from_task(task, 'TASK_STARTED')
+        task_event_repository.record_task_create(task, user_guid, user_email)
       end
 
       dependency_locator.nsync_client.desire_task(task)
@@ -49,6 +51,10 @@ module VCAP::CloudController
 
     def app_usage_event_repository
       Repositories::Runtime::AppUsageEventRepository.new
+    end
+
+    def task_event_repository
+      Repositories::Runtime::TaskEventRepository.new
     end
   end
 end
