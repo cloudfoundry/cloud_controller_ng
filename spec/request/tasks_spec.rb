@@ -54,14 +54,14 @@ describe 'Tasks' do
         'guid'                  => guid,
         'name'                  => 'best task ever',
         'command'               => 'be rake && true',
-        'state'                 => 'PENDING',
+        'state'                 => 'RUNNING',
         'memory_in_mb'          => 1234,
         'environment_variables' => { 'unicorn' => 'magic' },
         'result'                => {
           'failure_reason' => nil
         },
         'created_at'            => iso8601,
-        'updated_at'            => nil,
+        'updated_at'            => iso8601,
         'links'                 => {
           'self'    => {
             'href' => "/v3/tasks/#{guid}"

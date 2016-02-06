@@ -31,7 +31,9 @@ module VCAP::CloudController
           raise Errors::ApiError.new_from_details('TaskError', error_message(response))
         end
 
-        return nil
+        mark_task_as_running(task)
+
+        nil
       rescue => e
         fail_task(task)
         raise e
@@ -134,6 +136,14 @@ module VCAP::CloudController
         task.db.transaction do
           task.lock!
           task.state = TaskModel::FAILED_STATE
+          task.save
+        end
+      end
+
+      def mark_task_as_running(task)
+        task.db.transaction do
+          task.lock!
+          task.state = TaskModel::RUNNING_STATE
           task.save
         end
       end

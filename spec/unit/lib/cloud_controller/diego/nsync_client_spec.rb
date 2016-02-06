@@ -185,7 +185,7 @@ module VCAP::CloudController::Diego
     describe '#desire_task' do
       let(:content_type_header) { { 'Content-Type' => 'application/json' } }
       let(:droplet) { VCAP::CloudController::DropletModel.make(droplet_hash: 'some-fake-key') }
-      let(:task) { VCAP::CloudController::TaskModel.make(droplet: droplet) }
+      let(:task) { VCAP::CloudController::TaskModel.make(droplet: droplet, state: 'PENDING') }
       let(:config) { {} }
       let(:client_url) { "#{config[:diego_nsync_url]}/v1/tasks" }
 

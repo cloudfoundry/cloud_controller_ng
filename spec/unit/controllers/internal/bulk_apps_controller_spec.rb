@@ -56,17 +56,17 @@ module VCAP::CloudController
 
         it 'requires a token in query string' do
           get '/internal/bulk/apps', {
-                                       'batch_size' => 20,
-                                   }
+            'batch_size' => 20,
+          }
 
           expect(last_response.status).to eq(400)
         end
 
         it 'returns a populated token for the initial request (which has an empty bulk token)' do
           get '/internal/bulk/apps', {
-                                       'batch_size' => 3,
-                                       'token' => '{}',
-                                   }
+            'batch_size' => 3,
+            'token' => '{}',
+          }
 
           expect(last_response.status).to eq(200)
           expect(decoded_response['token']).to eq({ 'id' => app_table_entry(3).id })
@@ -74,9 +74,9 @@ module VCAP::CloudController
 
         it 'returns apps in the response body' do
           get '/internal/bulk/apps', {
-                                       'batch_size' => 20,
-                                       'token' => { id: app_table_entry(2).id }.to_json,
-                                   }
+            'batch_size' => 20,
+            'token' => { id: app_table_entry(2).id }.to_json,
+          }
 
           expect(last_response.status).to eq(200)
           expect(decoded_response['apps'].size).to eq(3)
@@ -120,9 +120,9 @@ module VCAP::CloudController
 
           it 'uses the desire app message format' do
             get '/internal/bulk/apps', {
-                                         'batch_size' => 100,
-                                         'token' => { id: 0 }.to_json,
-                                     }
+              'batch_size' => 100,
+              'token' => { id: 0 }.to_json,
+            }
 
             expect(last_response.status).to eq(200)
             expect(decoded_response['apps'].size).to eq(6)
@@ -137,10 +137,10 @@ module VCAP::CloudController
         context 'when a format=cache parameter is set' do
           it 'uses the cache data format' do
             get '/internal/bulk/apps', {
-                                         'batch_size' => 1,
-                                         'format' => 'fingerprint',
-                                         'token' => { id: 0 }.to_json,
-                                     }
+              'batch_size' => 1,
+              'format' => 'fingerprint',
+              'token' => { id: 0 }.to_json,
+            }
 
             expect(last_response.status).to eq(200)
             expect(decoded_response['fingerprints'].size).to eq(1)
@@ -149,9 +149,9 @@ module VCAP::CloudController
 
             message = decoded_response['fingerprints'][0]
             expect(message).to match_object({
-                                                'process_guid' => Diego::ProcessGuid.from_app(app),
-                                                'etag' => app.updated_at.to_f.to_s
-                                            })
+              'process_guid' => Diego::ProcessGuid.from_app(app),
+              'etag' => app.updated_at.to_f.to_s
+            })
           end
         end
 
@@ -164,9 +164,9 @@ module VCAP::CloudController
 
           it 'only returns staged apps' do
             get '/internal/bulk/apps', {
-                                         'batch_size' => App.count,
-                                         'token' => '{}',
-                                     }
+              'batch_size' => App.count,
+              'token' => '{}',
+            }
 
             expect(last_response.status).to eq(200)
             expect(decoded_response['apps'].size).to eq(App.count - 1)
@@ -180,9 +180,9 @@ module VCAP::CloudController
 
           it 'does not return apps in the STOPPED state' do
             get '/internal/bulk/apps', {
-                                         'batch_size' => App.count,
-                                         'token' => '{}',
-                                     }
+              'batch_size' => App.count,
+              'token' => '{}',
+            }
 
             expect(last_response.status).to eq(200)
             expect(decoded_response['apps'].size).to eq(App.count - 1)
@@ -197,9 +197,9 @@ module VCAP::CloudController
 
           it 'only returns diego apps' do
             get '/internal/bulk/apps', {
-                                         'batch_size' => App.count,
-                                         'token' => '{}',
-                                       }
+              'batch_size' => App.count,
+              'token' => '{}',
+            }
 
             expect(last_response.status).to eq(200)
             expect(decoded_response['apps'].size).to eq(App.count - 1)
@@ -219,9 +219,9 @@ module VCAP::CloudController
 
           it 'does return docker apps' do
             get '/internal/bulk/apps', {
-                                         'batch_size' => App.count,
-                                         'token' => '{}',
-                                       }
+              'batch_size' => App.count,
+              'token' => '{}',
+            }
 
             expect(last_response.status).to eq(200)
             expect(decoded_response['apps'].size).to eq(App.count)
@@ -232,9 +232,9 @@ module VCAP::CloudController
           it 'respects the batch_size parameter' do
             [3, 5].each { |size|
               get '/internal/bulk/apps', {
-                                           'batch_size' => size,
-                                           'token' => { id: 0 }.to_json,
-                                         }
+                'batch_size' => size,
+                'token' => { id: 0 }.to_json,
+              }
 
               expect(last_response.status).to eq(200)
               expect(decoded_response['apps'].size).to eq(size)
@@ -243,9 +243,9 @@ module VCAP::CloudController
 
           it 'returns non-intersecting apps when token is supplied' do
             get '/internal/bulk/apps', {
-                                         'batch_size' => 2,
-                                         'token' => { id: 0 }.to_json,
-                                       }
+              'batch_size' => 2,
+              'token' => { id: 0 }.to_json,
+            }
 
             expect(last_response.status).to eq(200)
 
@@ -253,9 +253,9 @@ module VCAP::CloudController
             expect(saved_apps.size).to eq(2)
 
             get '/internal/bulk/apps', {
-                                         'batch_size' => 2,
-                                         'token' => MultiJson.dump(decoded_response['token']),
-                                       }
+              'batch_size' => 2,
+              'token' => MultiJson.dump(decoded_response['token']),
+            }
 
             expect(last_response.status).to eq(200)
 
@@ -273,9 +273,9 @@ module VCAP::CloudController
             token = '{}'
             while apps.size < total_size
               get '/internal/bulk/apps', {
-                                           'batch_size' => 2,
-                                           'token' => MultiJson.dump(token),
-                                       }
+                'batch_size' => 2,
+                'token' => MultiJson.dump(token),
+              }
 
               expect(last_response.status).to eq(200)
               token = decoded_response['token']
@@ -284,9 +284,9 @@ module VCAP::CloudController
 
             expect(apps.size).to eq(total_size)
             get '/internal/bulk/apps', {
-                                         'batch_size' => 2,
-                                         'token' => MultiJson.dump(token),
-                                     }
+              'batch_size' => 2,
+              'token' => MultiJson.dump(token),
+            }
 
             expect(last_response.status).to eq(200)
             expect(decoded_response['apps'].size).to eq(0)

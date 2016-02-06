@@ -1,6 +1,7 @@
 require 'cloud_controller/diego/buildpack/v3/buildpack_entry_generator'
 require 'cloud_controller/diego/environment'
 require 'cloud_controller/diego/staging_request'
+require 'cloud_controller/diego/task_completion_callback_generator'
 require 'cloud_controller/diego/buildpack/lifecycle_data'
 
 module VCAP::CloudController
@@ -17,6 +18,7 @@ module VCAP::CloudController
             droplet = task.droplet
 
             blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
+            task_completion_callback = VCAP::CloudController::Diego::TaskCompletionCallbackGenerator.new(config).generate(task)
 
             result = {
               'task_guid' => task.guid,
@@ -25,7 +27,7 @@ module VCAP::CloudController
               'disk_mb' => config[:default_app_disk_in_mb],
               'environment' => envs_for_diego(app, task) || nil,
               'egress_rules' => @egress_rules.running(app),
-              'completion_callback' => task_completion_callback(task, config),
+              'completion_callback' => task_completion_callback,
               'lifecycle' => app.lifecycle_type,
               'command' => task.command,
             }
@@ -56,11 +58,7 @@ module VCAP::CloudController
             diego_envs
           end
 
-          def task_completion_callback(task, config)
-            auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"
-            host_port = "#{config[:internal_service_hostname]}:#{config[:external_port]}"
-            path      = "/internal/v3/tasks/#{task.guid}/completed"
-            "http://#{auth}@#{host_port}#{path}"
+          def task_completion_callback(task)
           end
 
           def logger
