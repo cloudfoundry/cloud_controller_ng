@@ -14,7 +14,6 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @routing_api_client = dependencies.fetch(:routing_api_client)
-      @serializer = VCAP::CloudController::RestController::PreloadedObjectSerializer.new
       @router_group_type_populating_collection_renderer = dependencies.fetch(:router_group_type_populating_collection_renderer)
     end
 
