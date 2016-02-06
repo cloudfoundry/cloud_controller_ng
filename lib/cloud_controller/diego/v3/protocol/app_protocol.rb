@@ -1,5 +1,5 @@
 require 'cloud_controller/diego/buildpack/v3/buildpack_entry_generator'
-require 'cloud_controller/diego/environment'
+require 'cloud_controller/diego/normal_env_hash_to_diego_env_array_philosopher'
 require 'cloud_controller/diego/staging_request'
 require 'cloud_controller/diego/buildpack/lifecycle_data'
 
@@ -14,7 +14,7 @@ module VCAP::CloudController
           end
 
           def stage_package_request(package, config, staging_details)
-            env = VCAP::CloudController::Diego::Environment.hash_to_diego_env(staging_details.environment_variables)
+            env = VCAP::CloudController::Diego::NormalEnvHashToDiegoEnvArrayPhilosopher.muse(staging_details.environment_variables)
             logger.debug2("staging environment: #{env.map { |e| e['name'] }}")
 
             lifecycle_type, lifecycle_data = @lifecycle_protocol.lifecycle_data(package, staging_details)

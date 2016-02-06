@@ -72,7 +72,7 @@ module VCAP::CloudController
                 memory_mb:           staging_details.memory_limit,
                 disk_mb:             staging_details.disk_limit,
                 file_descriptors:    30,
-                environment:         VCAP::CloudController::Diego::Environment.hash_to_diego_env(staging_details.environment_variables),
+                environment:         VCAP::CloudController::Diego::NormalEnvHashToDiegoEnvArrayPhilosopher.muse(staging_details.environment_variables),
                 egress_rules:        ['staging_egress_rule'],
                 timeout:             90,
                 lifecycle:           'fake',

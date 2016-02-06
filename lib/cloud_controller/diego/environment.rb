@@ -6,25 +6,20 @@ module VCAP::CloudController
       EXCLUDE = [:users]
 
       def initialize(app, initial_env={})
-        @app = app
+        @app         = app
         @initial_env = initial_env || {}
       end
 
       def as_json(_={})
-        env = []
-        add_hash_to_env(@initial_env, env)
+        diego_env =
+          @initial_env.
+            merge(VCAP_APPLICATION: vcap_application, MEMORY_LIMIT: "#{app.memory}m").
+            merge(SystemEnvPresenter.new(app.all_service_bindings).system_env).
+            merge(app.environment_json || {})
 
-        env << { 'name' => 'VCAP_APPLICATION', 'value' => vcap_application.to_json }
-        env << { 'name' => 'VCAP_SERVICES', 'value' => SystemEnvPresenter.new(app.all_service_bindings).system_env['VCAP_SERVICES'].to_json }
-        env << { 'name' => 'MEMORY_LIMIT', 'value' => "#{app.memory}m" }
+        diego_env = diego_env.merge(DATABASE_URL: app.database_uri) if app.database_uri
 
-        db_uri = app.database_uri
-        env << { 'name' => 'DATABASE_URL', 'value' => db_uri } if db_uri
-
-        app_env_json = app.environment_json || {}
-        add_hash_to_env(app_env_json, env)
-
-        env
+        NormalEnvHashToDiegoEnvArrayPhilosopher.muse(diego_env)
       end
 
       private
@@ -35,23 +30,6 @@ module VCAP::CloudController
         env = app.vcap_application
         EXCLUDE.each { |k| env.delete(k) }
         env
-      end
-
-      def self.hash_to_diego_env(hash)
-        hash.map do |k, v|
-          case v
-          when Array, Hash
-            v = MultiJson.dump(v)
-          else
-            v = v.to_s
-          end
-
-          { 'name' => k, 'value' => v }
-        end
-      end
-
-      def add_hash_to_env(hash, env)
-        env.concat(self.class.hash_to_diego_env(hash))
       end
     end
   end

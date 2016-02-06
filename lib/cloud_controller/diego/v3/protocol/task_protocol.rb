@@ -1,5 +1,5 @@
 require 'cloud_controller/diego/buildpack/v3/buildpack_entry_generator'
-require 'cloud_controller/diego/environment'
+require 'cloud_controller/diego/normal_env_hash_to_diego_env_array_philosopher'
 require 'cloud_controller/diego/staging_request'
 require 'cloud_controller/diego/task_completion_callback_generator'
 require 'cloud_controller/diego/buildpack/lifecycle_data'
@@ -51,7 +51,7 @@ module VCAP::CloudController
           def envs_for_diego(app, task)
             running_envs = VCAP::CloudController::EnvironmentVariableGroup.running.environment_json
             envs = VCAP::CloudController::Diego::V3::Environment.new(app, task, app.space, running_envs).build(task.environment_variables)
-            diego_envs = VCAP::CloudController::Diego::Environment.hash_to_diego_env(envs)
+            diego_envs = VCAP::CloudController::Diego::NormalEnvHashToDiegoEnvArrayPhilosopher.muse(envs)
 
             logger.debug2("task environment: #{diego_envs.map { |e| e['name'] }}")
 
