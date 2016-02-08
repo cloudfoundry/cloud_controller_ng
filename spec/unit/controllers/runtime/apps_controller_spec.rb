@@ -438,21 +438,30 @@ module VCAP::CloudController
       end
 
       context 'switch from dea to diego' do
+        let(:app_obj) { AppFactory.make(instances: 1, diego: false) }
+        let(:developer) { make_developer_for_space(app_obj.space) }
+        let(:route) { Route.make(space: app_obj.space) }
+        let(:route_mapping) { RouteMapping.make(app_id: app_obj.id, route_id: route.id) }
+
         context 'when user does not specify any ports' do
           it 'sets ports to 8080' do
+            expect(RouteMapping.find(guid: route_mapping.guid).app_port).to be_nil
             put "/v2/apps/#{app_obj.guid}", '{ "diego": true }', json_headers(headers_for(developer))
             expect(last_response.status).to eq(201)
             expect(decoded_response['entity']['ports']).to match([8080])
             expect(decoded_response['entity']['diego']).to be true
+            expect(RouteMapping.find(guid: route_mapping.guid).app_port).to eq(8080)
           end
         end
 
         context 'when user specifies ports' do
           it 'sets ports to user specified values' do
+            expect(RouteMapping.find(guid: route_mapping.guid).app_port).to be_nil
             put "/v2/apps/#{app_obj.guid}", '{ "diego": true, "ports": [9090,5222] }', json_headers(headers_for(developer))
             expect(last_response.status).to eq(201)
             expect(decoded_response['entity']['ports']).to match([9090, 5222])
             expect(decoded_response['entity']['diego']).to be true
+            expect(RouteMapping.find(guid: route_mapping.guid).app_port).to eq(9090)
           end
         end
       end

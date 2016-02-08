@@ -197,11 +197,27 @@ module VCAP::CloudController
       end
 
       previous_changes = app.previous_changes
-      if previous_changes && previous_changes.key?(:diego) && !app.diego?
+
+      if diego_to_dea(previous_changes, app.diego?)
         RouteMapping.dataset.where('app_id = ?', app.id).update(app_port: nil)
       end
 
+      if dea_to_diego(previous_changes, app.diego?)
+        port = app.ports.size > 0 ? app.ports.first : DEFAULT_HTTP_PORT
+        RouteMapping.dataset.where('app_id = ?', app.id).update(app_port: port)
+      end
+
       @app_event_repository.record_app_update(app, app.space, SecurityContext.current_user.guid, SecurityContext.current_user_email, request_attrs)
+    end
+
+    def dea_to_diego(previous_changes, new_diego_flag)
+      # there was a change and switching to diego is true
+      !previous_changes.nil? && previous_changes.key?(:diego) && new_diego_flag
+    end
+
+    def diego_to_dea(previous_changes, new_diego_flag)
+      # there was a change and switching to diego is false
+      !previous_changes.nil? && previous_changes.key?(:diego) && !new_diego_flag
     end
 
     define_messages

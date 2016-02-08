@@ -25,7 +25,9 @@ module VCAP::CloudController
       self.memory ||= VCAP::CloudController::Config.config[:default_app_memory]
     end
 
-    DEFAULT_PORTS = [8080].freeze
+    DEFAULT_HTTP_PORT = 8080
+    DEFAULT_PORTS = [DEFAULT_HTTP_PORT].freeze
+
     APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
     one_to_many :droplets
