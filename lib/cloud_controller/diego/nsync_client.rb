@@ -39,9 +39,22 @@ module VCAP::CloudController
         raise e
       end
 
-      #TODO during cross team pairing:
       def cancel_task(task)
+        if @url.nil?
+          raise Errors::ApiError.new_from_details('InvalidTaskAddress', 'Diego Task URL does not exist.')
+        end
 
+        logger.info('cancel.task.request', task_guid: task.guid)
+
+        path = "/v1/tasks/#{task.guid}"
+
+        response = http_client.delete(path, REQUEST_HEADERS)
+
+        if response.code != '202'
+          logger.warn('Non-202 status code from task cancel', task_guid: task.guid, error: error_message(response))
+        end
+
+        nil
       end
 
       def desire_app(process_guid, desire_message)

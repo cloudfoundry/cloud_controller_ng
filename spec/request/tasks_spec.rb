@@ -178,6 +178,8 @@ describe 'Tasks' do
       task = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', environment_variables: { unicorn: 'magic' }, app_guid: app_model.guid
       task_guid = task.guid
 
+      stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/tasks/#{task_guid}").to_return(status: 202)
+
       put "/v3/tasks/#{task_guid}/cancel", {}, admin_headers
 
       expect(last_response.status).to eq(202)
@@ -196,6 +198,8 @@ describe 'Tasks' do
       app_guid = app_model.guid
       task = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', environment_variables: { unicorn: 'magic' }, app_guid: app_guid
       task_guid = task.guid
+
+      stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/tasks/#{task_guid}").to_return(status: 202)
 
       put "/v3/apps/#{app_guid}/tasks/#{task_guid}/cancel", {}, admin_headers
 

@@ -250,5 +250,59 @@ module VCAP::CloudController::Diego
         end
       end
     end
+
+    describe '#cancel_task' do
+      let(:content_type_header) { { 'Content-Type' => 'application/json' } }
+      let(:task) { VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::CANCELING_STATE) }
+      let(:config) { {} }
+      let(:client_url) { "#{config[:diego_nsync_url]}/v1/tasks/#{task.guid}" }
+
+      context 'when the config is missing a diego task url' do
+        it 'leaves the state as CANCELING and returns an error' do
+          expect { client.cancel_task(task) }.to raise_error VCAP::Errors::ApiError, /Diego Task URL does not exist/
+          expect(task.state).to eq(VCAP::CloudController::TaskModel::CANCELING_STATE)
+        end
+      end
+
+      context 'when there is a valid config' do
+        let(:config) do
+          {
+            diego_nsync_url: 'http://nsync.service.cf.internal:8787',
+            internal_api: {
+              auth_user: 'my-cool-user',
+              auth_password: 'my-not-so-cool-password'
+            },
+            internal_service_hostname: 'hostname'
+          }
+        end
+
+        before do
+          stub_request(:delete, client_url).to_return(status: 202, body: '')
+        end
+
+        it 'keeps the task state as CANCELING' do
+          expect { client.cancel_task(task) }.not_to raise_error
+          expect(task.state).to eq(VCAP::CloudController::TaskModel::CANCELING_STATE)
+        end
+
+        it 'sends the proper DELETE request to nsync' do
+          expect { client.cancel_task(task) }.not_to raise_error
+          expect(
+            a_request(:delete, client_url).with(body: '', headers: content_type_header)
+          ).to have_been_made.once
+        end
+
+        context 'when we do not receive a 202 from the task endpoint' do
+          before do
+            stub_request(:delete, client_url).to_return(status: 500, body: '')
+          end
+
+          it 'does not raise an error' do
+            expect { client.cancel_task(task) }.not_to raise_error
+            expect(task.state).to eq('CANCELING')
+          end
+        end
+      end
+    end
   end
 end

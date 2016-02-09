@@ -405,6 +405,14 @@ describe TasksController, type: :controller do
 
   describe '#cancel' do
     let!(:task) { VCAP::CloudController::TaskModel.make name: 'usher', app_guid: app_model.guid }
+    let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
+
+    before do
+      locator = CloudController::DependencyLocator.instance
+      allow(locator).to receive(:nsync_client).and_return(client)
+      allow(client).to receive(:cancel_task).and_return(nil)
+    end
+
     it 'returns a 202' do
       put :cancel, task_guid: task.guid
 
@@ -424,7 +432,7 @@ describe TasksController, type: :controller do
     end
 
     context 'when the task has already succeeded or failed' do
-      let(:task_to_cancel) { VCAP::CloudController::TaskModel.make(name: 'ursulina', app_guid: app_model.guid, state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE)}
+      let(:task_to_cancel) { VCAP::CloudController::TaskModel.make(name: 'ursulina', app_guid: app_model.guid, state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE) }
       it 'returns a 422 InvalidTaskRequest' do
         put :cancel, task_guid: task_to_cancel.guid
 
@@ -436,10 +444,10 @@ describe TasksController, type: :controller do
     context 'when the user does not have read permissions on the app space' do
       before do
         allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-              VCAP::CloudController::Membership::SPACE_MANAGER,
-              VCAP::CloudController::Membership::SPACE_AUDITOR,
-              VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+           VCAP::CloudController::Membership::SPACE_MANAGER,
+           VCAP::CloudController::Membership::SPACE_AUDITOR,
+           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
       end
 
       it 'returns a 404 ResourceNotFound' do
@@ -454,12 +462,12 @@ describe TasksController, type: :controller do
     context 'when the user can see the task but does not have write permissions' do
       before do
         allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
         allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-              VCAP::CloudController::Membership::SPACE_MANAGER,
-              VCAP::CloudController::Membership::SPACE_AUDITOR,
-              VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+           VCAP::CloudController::Membership::SPACE_MANAGER,
+           VCAP::CloudController::Membership::SPACE_AUDITOR,
+           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
       end
 
       it 'returns a 403 NotAuthorized' do

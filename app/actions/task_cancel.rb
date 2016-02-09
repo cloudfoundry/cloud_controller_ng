@@ -1,6 +1,5 @@
 module VCAP::CloudController
   class TaskCancel
-
     def cancel(task)
       TaskModel.db.transaction do
         task.lock!
