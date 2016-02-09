@@ -74,9 +74,11 @@ Rails.application.routes.draw do
   # route_mappings
   post '/v3/apps/:app_guid/route_mappings', to: 'route_mappings#create'
   get '/v3/apps/:app_guid/route_mappings/:route_mapping_guid', to: 'route_mappings#show'
+  get '/v3/apps/:app_guid/route_mappings', to: 'route_mappings#index'
 
   post '/apps/:app_guid/route_mappings', to: 'route_mappings#create'
   get '/apps/:app_guid/route_mappings/:route_mapping_guid', to: 'route_mappings#show'
+  get '/apps/:app_guid/route_mappings', to: 'route_mappings#index'
 
   # apps_processes
   get '/v3/apps/:guid/processes', to: 'apps_processes#index'

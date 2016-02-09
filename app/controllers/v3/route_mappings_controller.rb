@@ -1,8 +1,26 @@
 require 'messages/route_mappings_create_message'
+require 'messages/route_mappings_list_message'
+require 'queries/route_mapping_list_fetcher'
 require 'presenters/v3/route_mapping_presenter'
 
 class RouteMappingsController < ApplicationController
   include AppSubresource
+
+  def index
+    app_guid = params[:app_guid]
+    app, space, org = AppFetcher.new.fetch(app_guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+
+    message = RouteMappingsListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    pagination_options = PaginationOptions.from_params(query_params)
+    invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
+
+    paginated_result = RouteMappingListFetcher.new.fetch(pagination_options, app_guid)
+
+    render :ok, json: RouteMappingPresenter.new.present_json_list(paginated_result, "/v3/apps/#{app_guid}/route_mappings", message)
+  end
 
   def create
     message = RouteMappingsCreateMessage.create_from_http_request(params[:body])

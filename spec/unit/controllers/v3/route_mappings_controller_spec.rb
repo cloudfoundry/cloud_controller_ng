@@ -256,4 +256,79 @@ describe RouteMappingsController, type: :controller do
       end
     end
   end
+
+  describe '#index' do
+    before do
+      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
+      allow(membership).to receive(:has_any_roles?).and_return(true)
+    end
+
+    it 'returns route mappings the user has roles to see' do
+      route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app_guid: app.guid)
+      route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app_guid: app.guid)
+      VCAP::CloudController::RouteMappingModel.make
+
+      get :index, app_guid: app.guid
+
+      response_guids = parsed_body['resources'].map { |r| r['guid'] }
+      expect(response.status).to eq(200)
+      expect(response_guids).to match_array([route_mapping_1.guid, route_mapping_2.guid])
+    end
+
+    context 'when the app does not exist' do
+      it 'raises an API 404 error' do
+        get :index, app_guid: 'bogus-guid'
+
+        expect(response.body).to include 'ResourceNotFound'
+        expect(response.body).to include 'App not found'
+        expect(response.status).to eq 404
+      end
+    end
+
+    context 'when the user does not the required roles' do
+      before do
+        allow(membership).to receive(:has_any_roles?).with(
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+           VCAP::CloudController::Membership::SPACE_MANAGER,
+           VCAP::CloudController::Membership::SPACE_AUDITOR,
+           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
+          and_return(false)
+      end
+
+      it 'raises an API 404 error' do
+        get :index, app_guid: app.guid
+
+        expect(response.status).to eq 404
+        expect(response.body).to include 'ResourceNotFound'
+        expect(response.body).to include 'App not found'
+      end
+    end
+
+    context 'when the user does not have read scope' do
+      before do
+        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))
+      end
+
+      it 'raises an ApiError with a 403 code' do
+        get :index, app_guid: app.guid
+
+        expect(response.status).to eq 403
+        expect(response.body).to include 'NotAuthorized'
+      end
+    end
+
+    context 'admin' do
+      before do
+        @request.env.merge!(admin_headers)
+        allow(membership).to receive(:has_any_roles?).and_return(false)
+      end
+
+      it 'succeeds' do
+        get :index, app_guid: app.guid
+
+        expect(response.status).to eq 200
+      end
+    end
+  end
 end

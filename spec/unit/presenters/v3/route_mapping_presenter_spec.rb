@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'presenters/v3/route_mapping_presenter'
+require 'messages/route_mappings_list_message'
 
 module VCAP::CloudController
   describe RouteMappingPresenter do
@@ -55,6 +56,27 @@ module VCAP::CloudController
             expect(result['links']['process']).to be_nil
           end
         end
+      end
+    end
+
+    describe '#present_json_list' do
+      let(:pagination_presenter) { instance_double(PaginationPresenter, present_pagination_hash: 'pagination_stuff') }
+      let(:options) { { page: 1, per_page: 2 } }
+      let(:app) { AppModel.make }
+      let(:route_mapping_1) { RouteMappingModel.make(app: app) }
+      let(:route_mapping_2) { RouteMappingModel.make(app: app) }
+      let(:presenter) { RouteMappingPresenter.new(pagination_presenter) }
+      let(:route_mappings) { [route_mapping_1, route_mapping_2] }
+      let(:total_results) { 2 }
+      let(:paginated_result) { PaginatedResult.new(route_mappings, total_results, PaginationOptions.new(options)) }
+      let(:message) { instance_double(RouteMappingsListMessage, to_param_hash: {}) }
+
+      it 'presents the route mappings as a json array under resources' do
+        json_result = presenter.present_json_list(paginated_result, "/v3/apps/#{app.guid}/route_mappings", message)
+        result = MultiJson.load(json_result)
+        guids = result['resources'].collect { |route_mapping_json| route_mapping_json['guid'] }
+
+        expect(guids).to eq([route_mapping_1.guid, route_mapping_2.guid])
       end
     end
   end
