@@ -4,6 +4,7 @@ require 'queries/route_mapping_list_fetcher'
 require 'queries/add_route_fetcher'
 require 'presenters/v3/route_mapping_presenter'
 require 'actions/add_route_to_app'
+require 'actions/remove_route_mapping'
 
 class RouteMappingsController < ApplicationController
   include AppSubresource
@@ -51,8 +52,23 @@ class RouteMappingsController < ApplicationController
 
   def show
     route_mapping = RouteMappingModel.where(guid: params[:route_mapping_guid]).first
-    resource_not_found!(:route_mapping) unless route_mapping && can_read?(route_mapping.space.guid, route_mapping.space.organization.guid)
+    route_mapping_not_found! unless route_mapping && can_read?(route_mapping.space.guid, route_mapping.space.organization.guid)
     render status: :ok, json: RouteMappingPresenter.new.present_json(route_mapping)
+  end
+
+  def destroy
+    route_mapping = RouteMappingModel.where(guid: params['route_mapping_guid']).eager(:app, :route, :space, space: :organization, app: :processes).all.first
+
+    route_mapping_not_found! unless route_mapping && can_read?(route_mapping.space.guid, route_mapping.space.organization.guid)
+    app_not_found! unless route_mapping.app && route_mapping.app.guid == params['app_guid']
+    unauthorized! unless can_delete?(route_mapping.space.guid)
+
+    RemoveRouteMapping.new(current_user, current_user_email).remove(route_mapping)
+    head :no_content
+  end
+
+  def route_mapping_not_found!
+    resource_not_found!(:route_mapping)
   end
 
   def route_not_found!
@@ -62,4 +78,5 @@ class RouteMappingsController < ApplicationController
   def can_write?(space_guid)
     roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
   end
+  alias_method :can_delete?, :can_write?
 end

@@ -286,7 +286,7 @@ describe RouteMappingsController, type: :controller do
       end
     end
 
-    context 'when the user does not the required roles' do
+    context 'when the user is not one of the required roles' do
       before do
         allow(membership).to receive(:has_any_roles?).with(
           [VCAP::CloudController::Membership::SPACE_DEVELOPER,
@@ -328,6 +328,84 @@ describe RouteMappingsController, type: :controller do
         get :index, app_guid: app.guid
 
         expect(response.status).to eq 200
+      end
+    end
+  end
+
+  describe '#destroy' do
+    before do
+      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
+      allow(membership).to receive(:has_any_roles?).and_return(true)
+    end
+
+    let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route) }
+
+    it 'successfully deletes the specified route mapping' do
+      delete :destroy, app_guid: app.guid, route_mapping_guid: route_mapping.guid
+
+      expect(response.status).to eq 204
+      expect(route_mapping.exists?).to be_falsey
+    end
+
+    context 'admin' do
+      before do
+        @request.env.merge!(admin_headers)
+        allow(membership).to receive(:has_any_roles?).and_return(false)
+      end
+
+      it 'succeeds' do
+        delete :destroy, app_guid: app.guid, route_mapping_guid: route_mapping.guid
+
+        expect(response.status).to eq 204
+      end
+    end
+
+    context 'when the app does not exist' do
+      it 'raises an API 404 error' do
+        delete :destroy, app_guid: 'not-exist', route_mapping_guid: route_mapping.guid
+
+        expect(response.body).to include 'ResourceNotFound'
+        expect(response.body).to include 'App not found'
+        expect(response.status).to eq 404
+      end
+    end
+
+    context 'when the route mapping does not exist' do
+      it 'raises an API 404 error' do
+        delete :destroy, app_guid: app.guid, route_mapping_guid: 'not-real'
+
+        expect(response.body).to include 'ResourceNotFound'
+        expect(response.body).to include 'Route mapping not found'
+        expect(response.status).to eq 404
+      end
+    end
+
+    context 'when the user is not a space developer' do
+      before do
+        allow(membership).to receive(:has_any_roles?).with(
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
+            and_return(false)
+      end
+
+      it 'raises an API 403 error' do
+        delete :destroy, app_guid: app.guid, route_mapping_guid: route_mapping.guid
+
+        expect(response.status).to eq 403
+        expect(response.body).to include 'NotAuthorized'
+      end
+    end
+
+    context 'when the user does not have write scope' do
+      before do
+        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))
+      end
+
+      it 'raises an ApiError with a 403 code' do
+        delete :destroy, app_guid: app.guid, route_mapping_guid: route_mapping.guid
+
+        expect(response.status).to eq 403
+        expect(response.body).to include 'NotAuthorized'
       end
     end
   end
