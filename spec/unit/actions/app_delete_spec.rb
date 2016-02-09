@@ -32,8 +32,8 @@ module VCAP::CloudController
 
         context 'when the app has associated routes' do
           before do
-            app.add_route(Route.make)
-            app.add_route(Route.make)
+            RouteMappingModel.make(app: app, route: Route.make)
+            RouteMappingModel.make(app: app, route: Route.make)
           end
 
           it 'removes the association and deletes the app' do

@@ -32,7 +32,7 @@ module VCAP::CloudController
   AppModel.blueprint do
     guid       { Sham.guid }
     name       { Sham.name }
-    space_guid { Space.make.guid }
+    space      { Space.make }
   end
 
   AppModel.blueprint(:buildpack) do
@@ -380,6 +380,7 @@ module VCAP::CloudController
   RouteMappingModel.blueprint do
     app { AppModel.make }
     route { Route.make(space: app.space) }
+    process_type { 'web' }
   end
 
   TestModel.blueprint do

@@ -16,7 +16,7 @@ module VCAP::CloudController
       end
 
       context 'when a web process is present' do
-        let!(:process) { AppFactory.make(app: app, space: space, type: 'web') }
+        let(:process) { AppFactory.make(app: app, space: space, type: 'web') }
         before do
           AddRouteToApp.new(nil, nil).add(app, route, process)
           expect(process.reload.routes).to eq([route])

@@ -190,23 +190,11 @@ describe RouteMappingsController, type: :controller do
         }
       end
 
-      it 'raises ApiError InvalidRequest' do
+      it 'raises UnprocessableRequest' do
         post :create, app_guid: app.guid, body: req_body
 
-        expect(response.status).to eq 400
-        expect(response.body).to include 'RouteNotInSameSpaceAsApp'
-      end
-    end
-
-    context 'when the route mapping already exists' do
-      before do
-        post :create, app_guid: app.guid, body: req_body
-      end
-
-      it 'does not create it again' do
-        post :create, app_guid: app.guid, body: req_body
-        expect(response.status).to eq 400
-        expect(response.body).to include 'RouteMappingAlreadyExists'
+        expect(response.status).to eq 422
+        expect(response.body).to include 'belong to the same space'
       end
     end
   end

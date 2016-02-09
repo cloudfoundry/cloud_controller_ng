@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   describe AddRouteToApp do
     let(:add_route_to_app) { AddRouteToApp.new(user, user_email) }
-    let(:space) { Space.make }
+    let(:space) { app.space }
     let(:app) { AppModel.make }
     let(:user) { double(:user, guid: '7') }
     let(:user_email) { '1@2.3' }
@@ -19,8 +19,9 @@ module VCAP::CloudController
 
       it 'does not allow for duplicate route association' do
         add_route_to_app.add(app, route, process)
-        expect {}
-        add_route_to_app.add(app, route, process)
+        expect {
+          add_route_to_app.add(app, route, process)
+        }.to raise_error(AddRouteToApp::InvalidRouteMapping, /a duplicate route mapping already exists/)
         expect(app.reload.routes).to eq([route])
       end
 
@@ -53,7 +54,7 @@ module VCAP::CloudController
         expect(process.reload.routes).to eq([route])
       end
 
-      context 'recording events' do
+      describe 'recording events' do
         let(:event_repository) { double(Repositories::Runtime::AppEventRepository) }
 
         before do
@@ -82,6 +83,17 @@ module VCAP::CloudController
           expect {
             add_route_to_app.add(app, route, process)
           }.to raise_error(AddRouteToApp::InvalidRouteMapping, 'shizzle')
+        end
+      end
+
+      context 'when the app and route are in different spaces' do
+        let(:route) { Route.make(space: Space.make) }
+
+        it 'raises InvalidRouteMapping' do
+          expect {
+            add_route_to_app.add(app, route, process)
+          }.to raise_error(AddRouteToApp::InvalidRouteMapping, /the app and route must belong to the same space/)
+          expect(app.reload.routes).to be_empty
         end
       end
     end

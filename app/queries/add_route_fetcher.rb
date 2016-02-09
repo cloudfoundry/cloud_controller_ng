@@ -5,7 +5,7 @@ module VCAP::CloudController
       return nil if app.nil?
 
       process = app.processes_dataset.where(type: process_type).first
-      route       = Route.where(guid: route_guid).first
+      route   = Route.where(guid: route_guid).first
 
       org = app.space ? app.space.organization : nil
       [app, route, process, app.space, org]
@@ -14,8 +14,7 @@ module VCAP::CloudController
     private
 
     def routes_dataset(space_guid)
-      ds = Route.dataset
-      ds.select_all(Route.table_name).
+      Route.dataset.select_all(Route.table_name).
         join(Space.table_name, id: :space_id).
         where(:"#{Space.table_name}__guid" => space_guid)
     end

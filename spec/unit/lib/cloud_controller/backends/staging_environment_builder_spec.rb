@@ -59,15 +59,14 @@ module VCAP::CloudController
 
       context 'when the app has a route associated with it' do
         it 'includes the uris as part of vcap_application' do
-          route1           = Route.make(space: space)
-          route2           = Route.make(space: space)
-          add_route_to_app = AddRouteToApp.new(nil, nil)
-          add_route_to_app.add(app, route1, nil)
-          add_route_to_app.add(app, route2, nil)
+          route1 = Route.make(space: space)
+          route2 = Route.make(space: space)
+          RouteMappingModel.make(app: app, route: route1)
+          RouteMappingModel.make(app: app, route: route2)
 
           environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit)
-          expect(environment_variables['VCAP_APPLICATION']['uris']).to match([route1.fqdn, route2.fqdn])
-          expect(environment_variables['VCAP_APPLICATION']['application_uris']).to match([route1.fqdn, route2.fqdn])
+          expect(environment_variables['VCAP_APPLICATION']['uris']).to match_array([route1.fqdn, route2.fqdn])
+          expect(environment_variables['VCAP_APPLICATION']['application_uris']).to match_array([route1.fqdn, route2.fqdn])
         end
       end
 

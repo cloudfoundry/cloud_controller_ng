@@ -12,14 +12,12 @@ describe 'Route Mappings' do
     VCAP::CloudController::RackAppBuilder.new.build test_config, request_metrics
   end
 
-  let(:iso8601) { /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.freeze }
-
   let(:space) { VCAP::CloudController::Space.make }
-  let!(:org) { space.organization }
+  let(:org) { space.organization }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
   let(:process) { VCAP::CloudController::App.make(space: space, app_guid: app_model.guid, type: 'worker') }
   let(:route) { VCAP::CloudController::Route.make(space: space) }
-  let!(:developer) { make_developer_for_space(space) }
+  let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) do
     headers_for(developer)
   end
@@ -42,14 +40,14 @@ describe 'Route Mappings' do
       guid = VCAP::CloudController::RouteMappingModel.last.guid
 
       expected_response = {
-        'guid' =>       guid,
+        'guid'       => guid,
         'created_at' => iso8601,
         'updated_at' => nil,
 
-        'links' =>      {
-          'self' =>    { 'href' => "/v3/apps/#{app_model.guid}/route_mappings/#{guid}" },
-          'app' =>     { 'href' => "/v3/apps/#{app_model.guid}" },
-          'route' =>   { 'href' => "/v2/routes/#{route.guid}" },
+        'links'      => {
+          'self'    => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings/#{guid}" },
+          'app'     => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'route'   => { 'href' => "/v2/routes/#{route.guid}" },
           'process' => { 'href' => "/v3/apps/#{app_model.guid}/processes/#{process.type}" }
         }
       }
@@ -74,6 +72,7 @@ describe 'Route Mappings' do
         actor:             developer.guid,
         actor_type:        'user',
         space_guid:        space.guid,
+        metadata:          { route_guid: route.guid }.to_json,
         organization_guid: space.organization.guid,
       })
     end
