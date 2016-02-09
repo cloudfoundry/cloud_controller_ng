@@ -1,7 +1,9 @@
 require 'messages/route_mappings_create_message'
 require 'messages/route_mappings_list_message'
 require 'queries/route_mapping_list_fetcher'
+require 'queries/add_route_fetcher'
 require 'presenters/v3/route_mapping_presenter'
+require 'actions/add_route_to_app'
 
 class RouteMappingsController < ApplicationController
   include AppSubresource
