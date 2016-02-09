@@ -29,6 +29,12 @@ class RouteMappingsController < ApplicationController
     render status: :created, json: RouteMappingPresenter.new.present_json(route_mapping)
   end
 
+  def show
+    route_mapping = RouteMappingModel.where(guid: params[:route_mapping_guid]).first
+    resource_not_found!(:route_mapping) unless route_mapping && can_read?(route_mapping.space.guid, route_mapping.space.organization.guid)
+    render status: :ok, json: RouteMappingPresenter.new.present_json(route_mapping)
+  end
+
   def route_not_found!
     resource_not_found!(:route)
   end

@@ -77,4 +77,31 @@ describe 'Route Mappings' do
       })
     end
   end
+
+  describe 'GET /v3/apps/:app_guid/route_mappings/:route_mapping_guid' do
+    let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'worker') }
+
+    it 'retrieves the requests route mapping' do
+      get "/v3/apps/#{app_model.guid}/route_mappings/#{route_mapping.guid}", {}, developer_headers
+
+      expected_response = {
+        'guid'       => route_mapping.guid,
+        'created_at' => iso8601,
+        'updated_at' => nil,
+
+        'links'      => {
+          'self'    => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings/#{route_mapping.guid}" },
+          'app'     => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'route'   => { 'href' => "/v2/routes/#{route.guid}" },
+          'process' => { 'href' => "/v3/apps/#{app_model.guid}/processes/#{process.type}" }
+        }
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      # verify response
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
 end

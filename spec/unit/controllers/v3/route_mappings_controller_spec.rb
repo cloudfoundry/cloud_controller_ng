@@ -2,14 +2,14 @@ require 'rails_helper'
 
 describe RouteMappingsController, type: :controller do
   let(:membership) { instance_double(VCAP::CloudController::Membership) }
+  let(:app) { VCAP::CloudController::AppModel.make }
+  let(:space) { app.space }
+  let(:org) { space.organization }
+  let!(:app_process) { VCAP::CloudController::App.make(app_guid: app.guid, type: 'web', space_guid: space.guid) }
+  let(:route) { VCAP::CloudController::Route.make(space: space) }
+  let(:process_type) { 'web' }
 
   describe '#create' do
-    let(:app) { VCAP::CloudController::AppModel.make }
-    let(:space) { app.space }
-    let(:org) { space.organization }
-    let!(:app_process) { VCAP::CloudController::App.make(app_guid: app.guid, type: 'web', space_guid: space.guid) }
-    let(:route) { VCAP::CloudController::Route.make(space: space) }
-    let(:process_type) { 'web' }
     let(:req_body) do
       {
         relationships: {
@@ -195,6 +195,64 @@ describe RouteMappingsController, type: :controller do
 
         expect(response.status).to eq 422
         expect(response.body).to include 'belong to the same space'
+      end
+    end
+  end
+
+  describe '#show' do
+    let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route) }
+
+    before do
+      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
+      allow(membership).to receive(:has_any_roles?).and_return(true)
+    end
+
+    it 'successfully get a route mapping' do
+      get :show, app_guid: app.guid, route_mapping_guid: route_mapping.guid
+
+      expect(response.status).to eq(200)
+      expect(parsed_body['guid']).to eq(VCAP::CloudController::RouteMappingModel.last.guid)
+    end
+
+    it 'returns a 404 if the route mapping does not exist' do
+      get :show, app_guid: app.guid, route_mapping_guid: 'fake-guid'
+
+      expect(response.status).to eq(404)
+      expect(response.body).to include 'ResourceNotFound'
+      expect(response.body).to include 'Route mapping not found'
+    end
+
+    describe 'access permissions' do
+      context 'when the user does not have read scope' do
+        before do
+          @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: [])))
+        end
+
+        it 'raises 403' do
+          get :show, app_guid: app.guid, route_mapping_guid: route_mapping.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include 'NotAuthorized'
+        end
+      end
+
+      context 'when the user does not have read permissions on the app space' do
+        before do
+          allow(membership).to receive(:has_any_roles?).with(
+            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+             VCAP::CloudController::Membership::SPACE_MANAGER,
+             VCAP::CloudController::Membership::SPACE_AUDITOR,
+             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        end
+
+        it 'returns a 404 ResourceNotFound' do
+          get :show, app_guid: app.guid, route_mapping_guid: route_mapping.guid
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'Route mapping not found'
+        end
       end
     end
   end
