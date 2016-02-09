@@ -93,21 +93,21 @@ module VCAP::CloudController::Diego
         context 'when the app has a route associated with it' do
           let(:expected_vcap_application) do
             {
-              'limits'           => {
+              'limits'              => {
                 'mem'  => task.memory_in_mb,
                 'disk' => disk_limit,
                 'fds'  => TestConfig.config[:instance_file_descriptor_limit] || 16384,
               },
-              'application_id'   => app.guid,
+              'application_id'      => app.guid,
               'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-              'application_name' => app.name,
-              'application_uris'    => [route1.fqdn, route2.fqdn],
-              'version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-              'uris'                => [route1.fqdn, route2.fqdn],
-              'name'             => app.name,
-              'space_name'       => space.name,
-              'space_id'         => space.guid,
-              'users'            => nil
+              'application_name'    => app.name,
+              'application_uris'    => match_array([route1.fqdn, route2.fqdn]),
+              'version'             => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+              'uris'                => match_array([route1.fqdn, route2.fqdn]),
+              'name'                => app.name,
+              'space_name'          => space.name,
+              'space_id'            => space.guid,
+              'users'               => nil
             }
           end
           let(:route1) { VCAP::CloudController::Route.make(space: space) }
