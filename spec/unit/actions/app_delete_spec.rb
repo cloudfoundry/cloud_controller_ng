@@ -36,12 +36,14 @@ module VCAP::CloudController
             RouteMappingModel.make(app: app, route: Route.make)
           end
 
-          it 'removes the association and deletes the app' do
+          it 'removes the route mappings and deletes the app' do
+            expect(RouteMappingModel.count).to eq(2)
             expect(app.routes.count).to eq(2)
             expect {
               app_delete.delete(app_dataset)
             }.to change { AppModel.count }.by(-1)
             expect { app.refresh }.to raise_error Sequel::Error, 'Record not found'
+            expect(RouteMappingModel.count).to eq(0)
           end
         end
 
