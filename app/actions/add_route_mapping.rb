@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class AddRouteToApp
+  class AddRouteMapping
     class InvalidRouteMapping < StandardError; end
 
     DUPLICATE_MESSAGE     = 'a duplicate route mapping already exists'

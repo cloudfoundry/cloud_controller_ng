@@ -114,7 +114,7 @@ module VCAP::CloudController::Diego
           let(:route2) { VCAP::CloudController::Route.make(space: space) }
 
           before do
-            add_route_to_app = VCAP::CloudController::AddRouteToApp.new(nil, nil)
+            add_route_to_app = VCAP::CloudController::AddRouteMapping.new(nil, nil)
             add_route_to_app.add(app, route1, nil)
             add_route_to_app.add(app, route2, nil)
           end

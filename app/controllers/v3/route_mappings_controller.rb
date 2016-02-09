@@ -3,7 +3,7 @@ require 'messages/route_mappings_list_message'
 require 'queries/route_mapping_list_fetcher'
 require 'queries/add_route_fetcher'
 require 'presenters/v3/route_mapping_presenter'
-require 'actions/add_route_to_app'
+require 'actions/add_route_mapping'
 require 'actions/remove_route_mapping'
 
 class RouteMappingsController < ApplicationController
@@ -42,8 +42,8 @@ class RouteMappingsController < ApplicationController
     route_not_found! unless route
 
     begin
-      route_mapping = AddRouteToApp.new(current_user, current_user_email).add(app, route, process)
-    rescue AddRouteToApp::InvalidRouteMapping => e
+      route_mapping = AddRouteMapping.new(current_user, current_user_email).add(app, route, process)
+    rescue AddRouteMapping::InvalidRouteMapping => e
       unprocessable!(e.message)
     end
 

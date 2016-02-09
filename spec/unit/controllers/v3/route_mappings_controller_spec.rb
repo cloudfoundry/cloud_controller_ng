@@ -153,9 +153,9 @@ describe RouteMappingsController, type: :controller do
 
     context 'when the mapping is invalid' do
       before do
-        add_route_to_app = instance_double(VCAP::CloudController::AddRouteToApp)
-        allow(VCAP::CloudController::AddRouteToApp).to receive(:new).and_return(add_route_to_app)
-        allow(add_route_to_app).to receive(:add).and_raise(VCAP::CloudController::AddRouteToApp::InvalidRouteMapping.new('shablam'))
+        add_route_to_app = instance_double(VCAP::CloudController::AddRouteMapping)
+        allow(VCAP::CloudController::AddRouteMapping).to receive(:new).and_return(add_route_to_app)
+        allow(add_route_to_app).to receive(:add).and_raise(VCAP::CloudController::AddRouteMapping::InvalidRouteMapping.new('shablam'))
       end
 
       it 'returns an UnprocessableEntity error' do
