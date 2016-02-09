@@ -18,6 +18,10 @@ module VCAP::CloudController
 
     describe '#staging' do
       context 'when the corresponding db object does not exist' do
+        before do
+          EnvironmentVariableGroup.dataset.destroy
+        end
+
         it 'creates a new database object with the right name' do
           expect(EnvironmentVariableGroup).to receive(:create).with(name: 'staging')
           EnvironmentVariableGroup.staging
@@ -37,8 +41,13 @@ module VCAP::CloudController
       end
 
       context 'when the corresponding db object exists' do
+        before do
+          staging_group = EnvironmentVariableGroup.find(name: 'staging')
+          staging_group.environment_json = { 'abc' => 123 }
+          staging_group.save
+        end
+
         it 'returns the existing object' do
-          EnvironmentVariableGroup.make(name: 'staging', environment_json: { 'abc' => 123 })
           expect(EnvironmentVariableGroup.staging.environment_json).to eq('abc' => 123)
         end
       end
@@ -46,6 +55,10 @@ module VCAP::CloudController
 
     describe '#running' do
       context 'when the corresponding db object does not exist' do
+        before do
+          EnvironmentVariableGroup.dataset.destroy
+        end
+
         it 'creates a new database object with the right name' do
           expect(EnvironmentVariableGroup).to receive(:create).with(name: 'running')
           EnvironmentVariableGroup.running
@@ -65,8 +78,13 @@ module VCAP::CloudController
       end
 
       context 'when the corresponding db object exists' do
+        before do
+          running_group = EnvironmentVariableGroup.find(name: 'running')
+          running_group.environment_json = { 'abc' => 123 }
+          running_group.save
+        end
+
         it 'returns the existing object' do
-          EnvironmentVariableGroup.make(name: 'running', environment_json: { 'abc' => 123 })
           expect(EnvironmentVariableGroup.running.environment_json).to eq('abc' => 123)
         end
       end

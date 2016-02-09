@@ -8,6 +8,7 @@ module VCAP::CloudController
         system_org = create_seed_organizations(config)
         create_seed_domains(config, system_org)
         create_seed_lockings
+        create_seed_environment_variable_groups
       end
 
       def create_seed_quota_definitions(config)
@@ -95,6 +96,20 @@ module VCAP::CloudController
 
       def create_seed_lockings
         Locking.find_or_create(name: 'buildpacks')
+      end
+
+      def create_seed_environment_variable_groups
+        begin
+          EnvironmentVariableGroup.running
+        rescue Sequel::UniqueConstraintViolation
+          # swallow error, nothing to seed so we have succeeded
+        end
+
+        begin
+          EnvironmentVariableGroup.staging
+        rescue Sequel::UniqueConstraintViolation
+          # swallow error, nothing to seed so we have succeeded
+        end
       end
     end
   end

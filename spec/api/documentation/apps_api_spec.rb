@@ -183,8 +183,13 @@ resource 'Apps', type: [:api, :legacy_api] do
     let(:app_obj) { VCAP::CloudController::AppFactory.make(detected_buildpack: 'buildpack-name', environment_json: { env_var: 'env_val' }) }
 
     before do
-      VCAP::CloudController::EnvironmentVariableGroup.make name: :staging, environment_json: { STAGING_ENV: 'staging_value' }
-      VCAP::CloudController::EnvironmentVariableGroup.make name: :running, environment_json: { RUNNING_ENV: 'running_value' }
+      group = VCAP::CloudController::EnvironmentVariableGroup.staging
+      group.environment_json = { STAGING_ENV: 'staging_value' }
+      group.save
+
+      group = VCAP::CloudController::EnvironmentVariableGroup.running
+      group.environment_json = { RUNNING_ENV: 'running_value' }
+      group.save
     end
 
     example 'Get the env for an App' do

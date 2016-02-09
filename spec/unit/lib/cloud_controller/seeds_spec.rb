@@ -373,5 +373,39 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '.create_seed_environment_variable_groups' do
+      context 'when there are not running and staging environment variable groups' do
+        before do
+          EnvironmentVariableGroup.dataset.destroy
+        end
+
+        it 'creates the running and staging environment variable groups' do
+          expect(EnvironmentVariableGroup.find(name: 'running')).to be_nil
+          expect(EnvironmentVariableGroup.find(name: 'staging')).to be_nil
+          Seeds.create_seed_environment_variable_groups
+          expect(EnvironmentVariableGroup.find(name: 'running')).not_to be_nil
+          expect(EnvironmentVariableGroup.find(name: 'staging')).not_to be_nil
+        end
+
+        context 'if another instance of CC wins a race and creates the group while we are creating the group' do
+          it 'continues gracefully when running already exists' do
+            allow(EnvironmentVariableGroup).to receive(:running).and_raise(Sequel::UniqueConstraintViolation.new)
+
+            expect {
+              Seeds.create_seed_environment_variable_groups
+            }.not_to raise_error
+          end
+
+          it 'continues gracefully when staging already exists' do
+            allow(EnvironmentVariableGroup).to receive(:staging).and_raise(Sequel::UniqueConstraintViolation.new)
+
+            expect {
+              Seeds.create_seed_environment_variable_groups
+            }.not_to raise_error
+          end
+        end
+      end
+    end
   end
 end

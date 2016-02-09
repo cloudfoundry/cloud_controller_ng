@@ -671,8 +671,14 @@ resource 'Apps (Experimental)', type: :api do
     before do
       space.organization.add_user(user)
       space.add_developer(user)
-      VCAP::CloudController::EnvironmentVariableGroup.make name: :staging, environment_json: { STAGING_ENV: 'staging_value' }
-      VCAP::CloudController::EnvironmentVariableGroup.make name: :running, environment_json: { RUNNING_ENV: 'running_value' }
+
+      group = VCAP::CloudController::EnvironmentVariableGroup.staging
+      group.environment_json = { STAGING_ENV: 'staging_value' }
+      group.save
+
+      group = VCAP::CloudController::EnvironmentVariableGroup.running
+      group.environment_json = { RUNNING_ENV: 'running_value' }
+      group.save
     end
 
     let(:guid) { app_model.guid }

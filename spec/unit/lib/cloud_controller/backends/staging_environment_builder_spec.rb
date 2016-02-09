@@ -14,7 +14,10 @@ module VCAP::CloudController
       let(:lifecycle) { instance_double(BuildpackLifecycle, staging_environment_variables: { 'CF_STACK' => stack }) }
 
       before do
-        EnvironmentVariableGroup.make(name: :staging, environment_json: { 'another' => 'var', 'STAGING_ENV' => 'staging_value' })
+        staging_group = EnvironmentVariableGroup.staging
+        staging_group.environment_json = { 'another' => 'var', 'STAGING_ENV' => 'staging_value' }
+        staging_group.save
+
         app.environment_variables = app.environment_variables.merge({ 'another' => 'override' })
         app.save
       end

@@ -705,7 +705,9 @@ module VCAP::CloudController
 
         context 'when the staging env variable group is set' do
           before do
-            EnvironmentVariableGroup.make name: :staging, environment_json: { POTATO: 'delicious' }
+            staging_group = EnvironmentVariableGroup.staging
+            staging_group.environment_json = { POTATO: 'delicious' }
+            staging_group.save
           end
 
           it 'returns staging_env_json with those variables'do
@@ -720,7 +722,9 @@ module VCAP::CloudController
 
         context 'when the running env variable group is set' do
           before do
-            EnvironmentVariableGroup.make name: :running, environment_json: { PIE: 'sweet' }
+            running_group = EnvironmentVariableGroup.running
+            running_group.environment_json = { PIE: 'sweet' }
+            running_group.save
           end
 
           it 'returns staging_env_json with those variables'do
