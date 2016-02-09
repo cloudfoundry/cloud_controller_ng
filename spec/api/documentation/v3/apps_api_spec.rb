@@ -91,7 +91,7 @@ resource 'Apps (Experimental)', type: :api do
               'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
               'droplets'               => { 'href' => "/v3/apps/#{app_model3.guid}/droplets" },
               'tasks'                  => { 'href' => "/v3/apps/#{app_model3.guid}/tasks" },
-              'routes'                 => { 'href' => "/v3/apps/#{app_model3.guid}/routes" },
+              'route_mappings'         => { 'href' => "/v3/apps/#{app_model3.guid}/route_mappings" },
               'start'                  => { 'href' => "/v3/apps/#{app_model3.guid}/start", 'method' => 'PUT' },
               'stop'                   => { 'href' => "/v3/apps/#{app_model3.guid}/stop", 'method' => 'PUT' },
               'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model3.guid}/current_droplet", 'method' => 'PUT' }
@@ -119,7 +119,7 @@ resource 'Apps (Experimental)', type: :api do
               'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
               'droplets'               => { 'href' => "/v3/apps/#{app_model2.guid}/droplets" },
               'tasks'                  => { 'href' => "/v3/apps/#{app_model2.guid}/tasks" },
-              'routes'                 => { 'href' => "/v3/apps/#{app_model2.guid}/routes" },
+              'route_mappings'         => { 'href' => "/v3/apps/#{app_model2.guid}/route_mappings" },
               'start'                  => { 'href' => "/v3/apps/#{app_model2.guid}/start", 'method' => 'PUT' },
               'stop'                   => { 'href' => "/v3/apps/#{app_model2.guid}/stop", 'method' => 'PUT' },
               'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model2.guid}/current_droplet", 'method' => 'PUT' }
@@ -219,7 +219,7 @@ resource 'Apps (Experimental)', type: :api do
           'droplet'                => { 'href' => "/v3/droplets/#{droplet_guid}" },
           'droplets'               => { 'href' => "/v3/apps/#{guid}/droplets" },
           'tasks'                  => { 'href' => "/v3/apps/#{guid}/tasks" },
-          'routes'                 => { 'href' => "/v3/apps/#{guid}/routes" },
+          'route_mappings'         => { 'href' => "/v3/apps/#{guid}/route_mappings" },
           'start'                  => { 'href' => "/v3/apps/#{guid}/start", 'method' => 'PUT' },
           'stop'                   => { 'href' => "/v3/apps/#{guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
@@ -299,7 +299,7 @@ resource 'Apps (Experimental)', type: :api do
           'space'                  => { 'href' => "/v2/spaces/#{space_guid}" },
           'droplets'               => { 'href' => "/v3/apps/#{expected_guid}/droplets" },
           'tasks'                  => { 'href' => "/v3/apps/#{expected_guid}/tasks" },
-          'routes'                 => { 'href' => "/v3/apps/#{expected_guid}/routes" },
+          'route_mappings'         => { 'href' => "/v3/apps/#{expected_guid}/route_mappings" },
           'start'                  => { 'href' => "/v3/apps/#{expected_guid}/start", 'method' => 'PUT' },
           'stop'                   => { 'href' => "/v3/apps/#{expected_guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{expected_guid}/current_droplet", 'method' => 'PUT' }
@@ -311,15 +311,15 @@ resource 'Apps (Experimental)', type: :api do
       expect(parsed_response).to be_a_response_like(expected_response)
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type:              'audit.app.create',
-        actee:             expected_guid,
-        actee_type:        'v3-app',
-        actee_name:        name,
-        actor:             user.guid,
-        actor_type:        'user',
-        space_guid:        space_guid,
-        organization_guid: space.organization.guid,
-      })
+            type:              'audit.app.create',
+            actee:             expected_guid,
+            actee_type:        'v3-app',
+            actee_name:        name,
+            actor:             user.guid,
+            actor_type:        'user',
+            space_guid:        space_guid,
+            organization_guid: space.organization.guid,
+          })
     end
 
     describe 'docker app' do
@@ -361,7 +361,7 @@ resource 'Apps (Experimental)', type: :api do
             'space'                  => { 'href' => "/v2/spaces/#{space_guid}" },
             'droplets'               => { 'href' => "/v3/apps/#{expected_guid}/droplets" },
             'tasks'                  => { 'href' => "/v3/apps/#{expected_guid}/tasks" },
-            'routes'                 => { 'href' => "/v3/apps/#{expected_guid}/routes" },
+            'route_mappings'         => { 'href' => "/v3/apps/#{expected_guid}/route_mappings" },
             'start'                  => { 'href' => "/v3/apps/#{expected_guid}/start", 'method' => 'PUT' },
             'stop'                   => { 'href' => "/v3/apps/#{expected_guid}/stop", 'method' => 'PUT' },
             'assign_current_droplet' => { 'href' => "/v3/apps/#{expected_guid}/current_droplet", 'method' => 'PUT' }
@@ -373,15 +373,15 @@ resource 'Apps (Experimental)', type: :api do
         expect(parsed_response).to be_a_response_like(expected_response)
         event = VCAP::CloudController::Event.last
         expect(event.values).to include({
-          type:              'audit.app.create',
-          actee:             expected_guid,
-          actee_type:        'v3-app',
-          actee_name:        name,
-          actor:             user.guid,
-          actor_type:        'user',
-          space_guid:        space_guid,
-          organization_guid: space.organization.guid,
-        })
+              type:              'audit.app.create',
+              actee:             expected_guid,
+              actee_type:        'v3-app',
+              actee_name:        name,
+              actor:             user.guid,
+              actor_type:        'user',
+              space_guid:        space_guid,
+              organization_guid: space.organization.guid,
+            })
       end
     end
   end
@@ -449,7 +449,7 @@ resource 'Apps (Experimental)', type: :api do
           'space'                  => { 'href' => "/v2/spaces/#{space_guid}" },
           'droplets'               => { 'href' => "/v3/apps/#{app_model.guid}/droplets" },
           'tasks'                  => { 'href' => "/v3/apps/#{app_model.guid}/tasks" },
-          'routes'                 => { 'href' => "/v3/apps/#{app_model.guid}/routes" },
+          'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
           'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
@@ -461,15 +461,15 @@ resource 'Apps (Experimental)', type: :api do
       expect(parsed_response).to be_a_response_like(expected_response)
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type:              'audit.app.update',
-        actee:             app_model.guid,
-        actee_type:        'v3-app',
-        actee_name:        name,
-        actor:             user.guid,
-        actor_type:        'user',
-        space_guid:        space_guid,
-        organization_guid: space.organization.guid
-      })
+            type:              'audit.app.update',
+            actee:             app_model.guid,
+            actee_type:        'v3-app',
+            actee_name:        name,
+            actor:             user.guid,
+            actor_type:        'user',
+            space_guid:        space_guid,
+            organization_guid: space.organization.guid
+          })
 
       metadata_request = { 'name' => 'new_name', 'environment_variables' => 'PRIVATE DATA HIDDEN',
                            'lifecycle'               => { 'type' => 'buildpack', 'data' => { 'buildpack' => buildpack, 'stack' => stack.name } } }
@@ -500,15 +500,15 @@ resource 'Apps (Experimental)', type: :api do
       expect { process.refresh }.to raise_error Sequel::Error, 'Record not found'
       event = VCAP::CloudController::Event.last(2).first
       expect(event.values).to include({
-        type:              'audit.app.delete-request',
-        actee:             app_model.guid,
-        actee_type:        'v3-app',
-        actee_name:        app_model.name,
-        actor:             user.guid,
-        actor_type:        'user',
-        space_guid:        space_guid,
-        organization_guid: space.organization.guid
-      })
+            type:              'audit.app.delete-request',
+            actee:             app_model.guid,
+            actee_type:        'v3-app',
+            actee_name:        app_model.name,
+            actor:             user.guid,
+            actor_type:        'user',
+            space_guid:        space_guid,
+            organization_guid: space.organization.guid
+          })
     end
   end
 
@@ -557,7 +557,7 @@ resource 'Apps (Experimental)', type: :api do
           'droplet'                => { 'href' => "/v3/droplets/#{droplet_guid}" },
           'droplets'               => { 'href' => "/v3/apps/#{guid}/droplets" },
           'tasks'                  => { 'href' => "/v3/apps/#{guid}/tasks" },
-          'routes'                 => { 'href' => "/v3/apps/#{app_model.guid}/routes" },
+          'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
           'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
@@ -569,15 +569,15 @@ resource 'Apps (Experimental)', type: :api do
       expect(parsed_response).to be_a_response_like(expected_response)
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type:              'audit.app.start',
-        actee:             guid,
-        actee_type:        'v3-app',
-        actee_name:        app_model.name,
-        actor:             user.guid,
-        actor_type:        'user',
-        space_guid:        space_guid,
-        organization_guid: space.organization.guid,
-      })
+            type:              'audit.app.start',
+            actee:             guid,
+            actee_type:        'v3-app',
+            actee_name:        app_model.name,
+            actor:             user.guid,
+            actor_type:        'user',
+            space_guid:        space_guid,
+            organization_guid: space.organization.guid,
+          })
     end
   end
 
@@ -626,7 +626,7 @@ resource 'Apps (Experimental)', type: :api do
           'droplet'                => { 'href' => "/v3/droplets/#{droplet_guid}" },
           'droplets'               => { 'href' => "/v3/apps/#{guid}/droplets" },
           'tasks'                  => { 'href' => "/v3/apps/#{guid}/tasks" },
-          'routes'                 => { 'href' => "/v3/apps/#{app_model.guid}/routes" },
+          'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
           'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
@@ -638,15 +638,15 @@ resource 'Apps (Experimental)', type: :api do
       expect(parsed_response).to be_a_response_like(expected_response)
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type:              'audit.app.stop',
-        actee:             guid,
-        actee_type:        'v3-app',
-        actee_name:        app_model.name,
-        actor:             user.guid,
-        actor_type:        'user',
-        space_guid:        space_guid,
-        organization_guid: space.organization.guid,
-      })
+            type:              'audit.app.stop',
+            actee:             guid,
+            actee_type:        'v3-app',
+            actee_name:        app_model.name,
+            actor:             user.guid,
+            actor_type:        'user',
+            space_guid:        space_guid,
+            organization_guid: space.organization.guid,
+          })
     end
   end
 
@@ -672,11 +672,11 @@ resource 'Apps (Experimental)', type: :api do
       space.organization.add_user(user)
       space.add_developer(user)
 
-      group = VCAP::CloudController::EnvironmentVariableGroup.staging
+      group                  = VCAP::CloudController::EnvironmentVariableGroup.staging
       group.environment_json = { STAGING_ENV: 'staging_value' }
       group.save
 
-      group = VCAP::CloudController::EnvironmentVariableGroup.running
+      group                  = VCAP::CloudController::EnvironmentVariableGroup.running
       group.environment_json = { RUNNING_ENV: 'running_value' }
       group.save
     end
@@ -696,17 +696,17 @@ resource 'Apps (Experimental)', type: :api do
         'environment_variables' => {
           'SOME_KEY' => 'some_val'
         },
-        'system_env_json' => {
+        'system_env_json'       => {
           'VCAP_SERVICES' => {
             service_instance.service.label => [
               {
-                'name' => service_instance.name,
-                'label' => service_instance.service.label,
-                'tags' => ['50% off'],
-                'plan' => service_instance.service_plan.name,
-                'credentials' => service_binding.credentials,
+                'name'             => service_instance.name,
+                'label'            => service_instance.service.label,
+                'tags'             => ['50% off'],
+                'plan'             => service_instance.service_plan.name,
+                'credentials'      => service_binding.credentials,
                 'syslog_drain_url' => 'https://syslog.example.com/drain',
-                'provider' => nil
+                'provider'         => nil
               }
             ]
           }
@@ -784,7 +784,7 @@ resource 'Apps (Experimental)', type: :api do
           'droplet'                => { 'href' => "/v3/droplets/#{droplet_guid}" },
           'droplets'               => { 'href' => "/v3/apps/#{guid}/droplets" },
           'tasks'                  => { 'href' => "/v3/apps/#{guid}/tasks" },
-          'routes'                 => { 'href' => "/v3/apps/#{app_model.guid}/routes" },
+          'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
           'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
@@ -796,15 +796,15 @@ resource 'Apps (Experimental)', type: :api do
       expect(parsed_response).to match(expected_response)
       event = VCAP::CloudController::Event.where(actor: user.guid).first
       expect(event.values).to include({
-        type:              'audit.app.droplet_mapped',
-        actee:             app_model.guid,
-        actee_type:        'v3-app',
-        actee_name:        app_model.name,
-        actor:             user.guid,
-        actor_type:        'user',
-        space_guid:        space_guid,
-        organization_guid: space.organization.guid
-      })
+            type:              'audit.app.droplet_mapped',
+            actee:             app_model.guid,
+            actee_type:        'v3-app',
+            actee_name:        app_model.name,
+            actor:             user.guid,
+            actor_type:        'user',
+            space_guid:        space_guid,
+            organization_guid: space.organization.guid
+          })
       expect(event.metadata).to eq({ 'request' => { 'droplet_guid' => droplet.guid } })
       expect(app_model.reload.processes).not_to be_empty
     end

@@ -76,11 +76,11 @@ module VCAP::CloudController
           expect(result['links']['assign_current_droplet']['method']).to eq('PUT')
         end
 
-        it 'includes routes links' do
+        it 'includes route_mappings links' do
           json_result = AppPresenter.new.present_json(app)
           result      = MultiJson.load(json_result)
 
-          expect(result['links']['routes']['href']).to eq("/v3/apps/#{app.guid}/routes")
+          expect(result['links']['route_mappings']['href']).to eq("/v3/apps/#{app.guid}/route_mappings")
         end
 
         it 'includes tasks links' do
