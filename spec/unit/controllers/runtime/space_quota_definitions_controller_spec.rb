@@ -13,6 +13,7 @@ module VCAP::CloudController
           instance_memory_limit:      { type: 'integer' },
           organization_guid:          { type: 'string', required: true },
           app_instance_limit:         { type: 'integer' },
+          app_task_limit:             { type: 'integer', required: false, default: 5}
         })
       end
 
@@ -26,6 +27,7 @@ module VCAP::CloudController
           app_instance_limit:         { type: 'integer' },
           instance_memory_limit:      { type: 'integer' },
           organization_guid:          { type: 'string' },
+          app_task_limit:             { type: 'integer' }
         })
       end
     end

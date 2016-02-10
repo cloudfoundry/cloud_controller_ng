@@ -27,6 +27,9 @@ resource 'Space Quota Definitions', type: [:api, :legacy_api] do
       'How many app instances a space can create. (-1 represents an unlimited amount)',
       example_values: [-1, 10, 23], default: -1
     field :organization_guid, 'The owning organization of the space quota', required: opts[:required], example_values: [Sham.guid]
+    field :app_task_limit, 'The number of tasks that can be run per app. (-1 represents an unlimited amount)',
+      default: 5,
+      example_values: [-1, 5, 10]
   end
 
   standard_model_list :space_quota_definition, VCAP::CloudController::SpaceQuotaDefinitionsController

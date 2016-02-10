@@ -8,6 +8,7 @@ module VCAP::CloudController
       attribute :memory_limit,               Integer
       attribute :instance_memory_limit,      Integer, default: nil
       attribute :app_instance_limit,         Integer, default: nil
+      attribute :app_task_limit,             Integer, default: 5
 
       to_one :organization
       to_many :spaces, exclude_in: [:create, :update]

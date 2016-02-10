@@ -47,7 +47,7 @@ module VCAP::CloudController
       end
 
       describe 'app_instance_limit' do
-        it 'cannot less than -1' do
+        it 'cannot be less than -1' do
           space_quota_definition.app_instance_limit = -2
           expect(space_quota_definition).not_to be_valid
           expect(space_quota_definition.errors.on(:app_instance_limit)).to include(:invalid_app_instance_limit)
@@ -56,17 +56,28 @@ module VCAP::CloudController
           expect(space_quota_definition).to be_valid
         end
       end
+
+      describe 'app_task_limit' do
+        it 'cannot be less than -1' do
+          space_quota_definition.app_task_limit = -2
+          expect(space_quota_definition).not_to be_valid
+          expect(space_quota_definition.errors.on(:app_task_limit)).to include(:invalid_app_task_limit)
+
+          space_quota_definition.app_task_limit = -1
+          expect(space_quota_definition).to be_valid
+        end
+      end
     end
 
     describe 'Serialization' do
       it do
         is_expected.to export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-          :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit
+          :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit
       end
 
       it do
         is_expected.to import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-          :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit
+          :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit
       end
     end
 

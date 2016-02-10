@@ -1,14 +1,16 @@
 module VCAP::CloudController
   class SpaceQuotaDefinition < Sequel::Model
+    UNLIMITED = -1
+
     class OrganizationAlreadySet < RuntimeError; end
 
     many_to_one :organization, before_set: :validate_change_organization
     one_to_many :spaces
 
     export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-      :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit
+      :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit
     import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-      :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit
+      :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit
 
     add_association_dependencies spaces: :nullify
 
@@ -23,7 +25,8 @@ module VCAP::CloudController
 
       errors.add(:memory_limit, :less_than_zero) if memory_limit && memory_limit < 0
       errors.add(:instance_memory_limit, :invalid_instance_memory_limit) if instance_memory_limit && instance_memory_limit < -1
-      errors.add(:app_instance_limit, :invalid_app_instance_limit) if app_instance_limit && app_instance_limit < -1
+      errors.add(:app_instance_limit, :invalid_app_instance_limit) if app_instance_limit && app_instance_limit < UNLIMITED
+      errors.add(:app_task_limit, :invalid_app_task_limit) if app_task_limit && app_task_limit < UNLIMITED
     end
 
     def validate_change_organization(new_org)

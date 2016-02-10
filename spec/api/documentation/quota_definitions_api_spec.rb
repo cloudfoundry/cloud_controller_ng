@@ -31,6 +31,9 @@ resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
     field :app_instance_limit,
       'How many app instances an organization can create. (-1 represents an unlimited amount)',
       example_values: [-1, 10, 23], default: -1
+    field :app_task_limit, 'The number of tasks that can be run per app. (-1 represents an unlimited amount)',
+      default: -1,
+      example_values: [-1, 10]
   end
 
   standard_model_list(:quota_definition, VCAP::CloudController::QuotaDefinitionsController, title: 'Organization Quota Definitions')
@@ -40,10 +43,11 @@ resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
   post '/v2/quota_definitions' do
     include_context 'updatable_fields', required: true
     example 'Creating a Organization Quota Definition' do
-      client.post '/v2/quota_definitions', fields_json(instance_memory_limit: 10_240, app_instance_limit: 10), headers
+      client.post '/v2/quota_definitions', fields_json(instance_memory_limit: 10_240, app_instance_limit: 10, app_task_limit: 5), headers
+
       expect(status).to eq(201)
 
-      standard_entity_response parsed_response, :quota_definition, instance_memory_limit: 10_240, app_instance_limit: 10
+      standard_entity_response parsed_response, :quota_definition, instance_memory_limit: 10_240, app_instance_limit: 10, app_task_limit: 5
     end
   end
 
