@@ -94,7 +94,8 @@ module VCAP::CloudController
 
       @route_event_repository.record_route_delete_request(route, SecurityContext.current_user, SecurityContext.current_user_email, recursive_delete?)
 
-      do_delete(route)
+      model_deletion_job = Jobs::Runtime::ModelDeletion.new(route.class, route.guid)
+      enqueue_deletion_job(model_deletion_job)
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)

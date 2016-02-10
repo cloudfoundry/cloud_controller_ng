@@ -8,6 +8,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :domain }
       it { is_expected.to have_associated :space, associated_instance: ->(route) { Space.make(organization: route.domain.owning_organization) } }
       it { is_expected.to have_associated :apps, associated_instance: ->(route) { App.make(space: route.space) } }
+      it { is_expected.to have_associated :route_mappings, associated_instance: ->(route) { RouteMappingModel.make(app: AppModel.make(space: route.space), route: route) } }
 
       context 'when bound to a service instance' do
         let(:route) { Route.make }
@@ -96,6 +97,20 @@ module VCAP::CloudController
             route.domain = PrivateDomain.make(owning_organization: space.organization)
             expect(route.valid?).to be_falsey
           end
+        end
+      end
+
+      context 'deleting with route mappings' do
+        it 'removes the associated route mappings' do
+          route = Route.make
+          app = AppModel.make(space: route.space)
+          mapping1 = RouteMappingModel.make(route: route, app: app, process_type: 'thing')
+          mapping2 = RouteMappingModel.make(route: route, app: app, process_type: 'other')
+
+          route.destroy
+
+          expect(mapping1.exists?).to be_falsey
+          expect(mapping2.exists?).to be_falsey
         end
       end
     end

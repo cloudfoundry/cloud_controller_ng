@@ -12,7 +12,7 @@ module VCAP::CloudController
     many_to_one :domain
     many_to_one :space, after_set: :validate_changed_space
 
-    many_to_many :app_models, join_table: :route_mappings
+    one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', key: :route_guid, primary_key: :guid
 
     many_to_many :apps,
       before_add:   :validate_app,
@@ -22,7 +22,7 @@ module VCAP::CloudController
     one_to_one :route_binding
     one_through_one :service_instance, join_table: :route_bindings
 
-    add_association_dependencies apps: :nullify
+    add_association_dependencies apps: :nullify, route_mappings: :destroy
 
     export_attributes :host, :path, :domain_guid, :space_guid, :service_instance_guid, :port
     import_attributes :host, :path, :domain_guid, :space_guid, :app_guids, :port
