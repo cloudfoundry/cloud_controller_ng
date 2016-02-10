@@ -12,6 +12,10 @@ module VCAP::CloudController
       let(:memory_limit) { 12340 }
       let(:disk_limit) { 32100 }
       let(:lifecycle) { instance_double(BuildpackLifecycle, staging_environment_variables: { 'CF_STACK' => stack }) }
+      let(:service) { Service.make(label: 'elephantsql-n/a', provider: 'cool-provider') }
+      let(:service_plan) { ServicePlan.make(service: service) }
+      let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-vip-uat', tags: ['excellent']) }
+      let!(:service_binding) { ServiceBindingModel.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com') }
 
       before do
         staging_group = EnvironmentVariableGroup.staging
@@ -25,13 +29,14 @@ module VCAP::CloudController
       it 'records the environment variables used for staging' do
         environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit)
 
+        expect(environment_variables['VCAP_SERVICES'][service.label][0]).to have_key(:credentials)
         expect(environment_variables).to match({
               'another'          => 'override',
               'APP_VAR'          => 'is here',
               'STAGING_ENV'      => 'staging_value',
               'CF_STACK'         => stack,
               'MEMORY_LIMIT'     => memory_limit,
-              'VCAP_SERVICES'    => {},
+              'VCAP_SERVICES'    => be_an_instance_of(Hash),
               'VCAP_APPLICATION' => {
                 'limits'              => {
                   'mem'  => memory_limit,
