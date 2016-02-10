@@ -43,6 +43,11 @@ module VCAP::CloudController
       super
     end
 
+    def after_destroy
+      app.handle_remove_route(route)
+      super
+    end
+
     def app_port
       if :app_port.nil?
         unless app.ports.blank?

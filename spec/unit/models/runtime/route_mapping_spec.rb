@@ -131,15 +131,26 @@ module VCAP::CloudController
 
     describe 'apps association' do
       let(:route) { Route.make }
-      let!(:app) do
+      let(:app) do
         AppFactory.make(space: route.space)
       end
 
-      describe 'when adding an app' do
+      describe 'when adding a route mapping' do
         it 'marks the apps routes as changed and creates an audit event' do
           expect(app).to receive(:handle_add_route).and_call_original
           expect {
             RouteMapping.make(app: app, route: route)
+          }.to change { Event.count }.by(1)
+        end
+      end
+
+      describe 'when deleting a route mapping' do
+        let!(:route_mapping) { RouteMapping.make(app: app, route: route) }
+
+        it 'marks the apps routes as changed and creates an audit event' do
+          expect_any_instance_of(App).to receive(:handle_remove_route).and_call_original
+          expect {
+            route_mapping.destroy
           }.to change { Event.count }.by(1)
         end
       end
@@ -182,7 +193,6 @@ module VCAP::CloudController
         let(:app) { AppFactory.make(space: route.space, diego: true, ports: [1111]) }
 
         before do
-          allow(AppObserver).to receive(:routes_changed).with(app)
           process_guid = Diego::ProcessGuid.from_app(app)
           stub_request(:delete, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}").to_return(status: 202)
         end

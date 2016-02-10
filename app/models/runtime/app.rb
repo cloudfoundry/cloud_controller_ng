@@ -636,7 +636,7 @@ module VCAP::CloudController
     end
 
     def handle_add_route(route)
-      mark_routes_changed(route)
+      mark_routes_changed
       if is_v2?
         Repositories::Runtime::AppEventRepository.new.record_map_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
       end
@@ -647,14 +647,14 @@ module VCAP::CloudController
     end
 
     def handle_remove_route(route)
-      mark_routes_changed(route)
+      mark_routes_changed
       if is_v2?
         Repositories::Runtime::AppEventRepository.new.record_unmap_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
       end
     end
 
     def handle_update_route(route)
-      mark_routes_changed(route)
+      mark_routes_changed
     end
 
     def ports
@@ -704,7 +704,7 @@ module VCAP::CloudController
       exposed_ports
     end
 
-    def mark_routes_changed(_=nil)
+    def mark_routes_changed
       routes_already_changed = @routes_changed
       @routes_changed = true
 
