@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class DropletDelete
     def delete(droplets)
-      droplets = [droplets] unless droplets.is_a?(Array)
+      droplets = Array(droplets)
 
       droplets.each do |droplet|
         if droplet.blobstore_key

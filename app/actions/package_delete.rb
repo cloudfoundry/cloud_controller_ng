@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class PackageDelete
     def delete(packages)
-      packages = [packages] unless packages.is_a?(Array)
+      packages = Array(packages)
 
       packages.each do |package|
         blobstore_delete = Jobs::Runtime::BlobstoreDelete.new(package.guid, :package_blobstore, nil)

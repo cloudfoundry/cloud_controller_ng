@@ -4,6 +4,7 @@ require 'actions/package_delete'
 require 'actions/task_delete'
 require 'actions/droplet_delete'
 require 'actions/process_delete'
+require 'actions/route_mapping_delete'
 
 module VCAP::CloudController
   class AppDelete
@@ -16,15 +17,10 @@ module VCAP::CloudController
     end
 
     def delete(apps)
-      apps = [apps] unless apps.is_a?(Array)
+      apps = Array(apps)
 
       apps.each do |app|
-        PackageDelete.new.delete(packages_to_delete(app))
-        TaskDelete.new.delete(tasks_to_delete(app))
-        DropletDelete.new.delete(droplets_to_delete(app))
-        ProcessDelete.new.delete(processes_to_delete(app))
-        delete_buildpack_cache(app)
-        app.remove_all_routes
+        delete_subresources(app)
 
         Repositories::Runtime::AppEventRepository.new.record_app_delete_request(
           app,
@@ -38,6 +34,19 @@ module VCAP::CloudController
     end
 
     private
+
+    def delete_subresources(app)
+      PackageDelete.new.delete(packages_to_delete(app))
+      TaskDelete.new.delete(tasks_to_delete(app))
+      DropletDelete.new.delete(droplets_to_delete(app))
+      ProcessDelete.new.delete(processes_to_delete(app))
+      RouteMappingDelete.new(user_guid, user_email).delete(route_mappings_to_delete(app))
+      delete_buildpack_cache(app)
+    end
+
+    def route_mappings_to_delete(app)
+      RouteMappingModel.where(app_guid: app.guid)
+    end
 
     def delete_buildpack_cache(app)
       delete_job = Jobs::V3::BuildpackCacheDelete.new(app.guid)

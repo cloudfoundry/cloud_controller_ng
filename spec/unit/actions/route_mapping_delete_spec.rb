@@ -11,6 +11,18 @@ module VCAP::CloudController
     let!(:route_mapping) { RouteMappingModel.create(app: app, route: route, process_type: 'other') }
 
     describe '#delete' do
+      it 'can delete a single route mapping' do
+        route_mapping_delete.delete(route_mapping)
+        expect(route_mapping.exists?).to be_falsey
+      end
+
+      it 'can delete multiple route mappings' do
+        route_mapping_2 = RouteMappingModel.make app: app
+        route_mapping_delete.delete([route_mapping, route_mapping_2])
+        expect(route_mapping.exists?).to be_falsey
+        expect(route_mapping_2.exists?).to be_falsey
+      end
+
       it 'deletes the route from the app' do
         expect(app.reload.routes).not_to be_empty
         route_mapping_delete.delete(route_mapping)

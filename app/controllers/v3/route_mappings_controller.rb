@@ -63,7 +63,7 @@ class RouteMappingsController < ApplicationController
     app_not_found! unless route_mapping.app && route_mapping.app.guid == params['app_guid']
     unauthorized! unless can_delete?(route_mapping.space.guid)
 
-    RouteMappingDelete.new(current_user, current_user_email).remove(route_mapping)
+    RouteMappingDelete.new(current_user, current_user_email).delete(route_mapping)
     head :no_content
   end
 

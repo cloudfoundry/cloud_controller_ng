@@ -5,25 +5,29 @@ module VCAP::CloudController
       @user_email = user_email
     end
 
-    def delete(route_mapping)
-      logger.debug("removing route mapping: #{route_mapping.inspect}")
+    def delete(route_mappings)
+      route_mappings = Array(route_mappings)
 
-      process = nil
+      route_mappings.each do |route_mapping|
+        logger.debug("removing route mapping: #{route_mapping.inspect}")
 
-      RouteMapping.db.transaction do
-        process = delete_route_from_process(route_mapping)
+        process = nil
 
-        event_repository.record_unmap_route(
-          route_mapping.app,
-          route_mapping.route,
-          @user.try(:guid),
-          @user_email
-        )
+        RouteMapping.db.transaction do
+          process = delete_route_from_process(route_mapping)
 
-        route_mapping.destroy
+          event_repository.record_unmap_route(
+            route_mapping.app,
+            route_mapping.route,
+            @user.try(:guid),
+            @user_email
+          )
+
+          route_mapping.destroy
+        end
+
+        notify_dea_of_route_changes(process)
       end
-
-      notify_dea_of_route_changes(process)
     end
 
     private
