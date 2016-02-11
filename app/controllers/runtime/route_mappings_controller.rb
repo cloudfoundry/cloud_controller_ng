@@ -32,6 +32,19 @@ module VCAP::CloudController
       raise Errors::ApiError.new_from_details(e.class.name.demodulize, e.message)
     end
 
+    def after_create(route_mapping)
+      super
+      app_guid = request_attrs['app_guid']
+      app_port = request_attrs['app_port']
+      if app_port.blank?
+        app = App.find(guid: app_guid)
+        if !app.nil? && !app.ports.blank?
+          port = app.ports[0]
+          add_warning("Route has been mapped to app port #{port}.")
+        end
+      end
+    end
+
     def get_app_port(app_guid)
       app_port = request_attrs['app_port']
       if app_port.blank?

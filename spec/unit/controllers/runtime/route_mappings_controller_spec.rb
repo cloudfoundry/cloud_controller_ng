@@ -148,6 +148,9 @@ module VCAP::CloudController
 
               expect(last_response).to have_status_code(201)
               expect(decoded_response['entity']['app_port']).to eq(8080)
+
+              warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+              expect(warning).to include('Route has been mapped to app port 8080.')
             end
 
             context 'when another mapping with the same port already exists' do
@@ -251,6 +254,8 @@ module VCAP::CloudController
 
               expect(last_response).to have_status_code(201)
               expect(decoded_response['entity']['app_port']).to eq(9090)
+
+              expect(last_response.headers['X-Cf-Warnings']).to be_nil
             end
 
             context 'when the same route mapping with the same port is specified' do
