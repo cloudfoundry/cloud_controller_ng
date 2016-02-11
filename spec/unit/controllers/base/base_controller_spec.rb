@@ -8,6 +8,8 @@ module VCAP::CloudController
     let(:sinatra) { nil }
 
     class TestController < RestController::BaseController
+      allow_unauthenticated_access only: [:test_unauthenticated, :test_basic_auth]
+
       def test_endpoint
         'test_response'
       end
@@ -43,14 +45,13 @@ module VCAP::CloudController
       end
       define_route :get, '/test_invalid_relation_error', :test_invalid_relation_error
 
-      allow_unauthenticated_access only: :test_unauthenticated
       def test_unauthenticated
         'unauthenticated_response'
       end
       define_route :get, '/test_unauthenticated', :test_unauthenticated
 
       authenticate_basic_auth('/test_basic_auth') do
-        ['username', 'password']
+        ['username', "p'a\"ss%40%3A%3Fwo!r%24d"]
       end
       def test_basic_auth
         'basic_auth_response'
@@ -194,22 +195,45 @@ module VCAP::CloudController
         end
 
         context 'when the endpoint requires basic auth' do
+          let(:unencoded_password) { "p'a\"ss@:?wo!r$d" }
+          let(:encoded_password) { URI.escape(unencoded_password, "%#{URI::REGEXP::PATTERN::RESERVED}") }
+
+          it 'this is just a check around our encoding and decoding assumptions' do
+            expect(URI.decode(encoded_password)).to eq(unencoded_password)
+          end
+
           it 'returns NotAuthenticated if username and password are not provided' do
             get '/test_basic_auth'
+            expect(last_response.status).to eq 401
             expect(decoded_response['code']).to eq 10002
           end
 
           it 'returns NotAuthenticated if username and password are wrong' do
             authorize 'username', 'letmein'
+
             get '/test_basic_auth'
+            expect(last_response.status).to eq 401
             expect(decoded_response['code']).to eq 10002
           end
 
-          it 'does not raise NotAuthorized if username and password is correct' do
-            authorize 'username', 'password'
+          context 'when the dea returns percent-encoded staging credentials' do
+            it 'successfully authenticates' do
+              authorize 'username', encoded_password
 
-            get '/test_basic_auth'
-            expect(last_response.body).to_not eq 'basic_auth_response'
+              get '/test_basic_auth'
+              expect(last_response.status).to eq 200
+              expect(last_response.body).to eq 'basic_auth_response'
+            end
+          end
+
+          context 'when diego returns percent-decoded staging credentials' do
+            it 'successfully authenticates' do
+              authorize 'username', unencoded_password
+
+              get '/test_basic_auth'
+              expect(last_response.status).to eq 200
+              expect(last_response.body).to eq 'basic_auth_response'
+            end
           end
         end
       end
