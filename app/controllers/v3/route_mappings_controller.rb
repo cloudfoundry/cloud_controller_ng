@@ -4,7 +4,7 @@ require 'queries/route_mapping_list_fetcher'
 require 'queries/add_route_fetcher'
 require 'presenters/v3/route_mapping_presenter'
 require 'actions/add_route_mapping'
-require 'actions/remove_route_mapping'
+require 'actions/route_mapping_delete'
 
 class RouteMappingsController < ApplicationController
   include AppSubresource
@@ -63,7 +63,7 @@ class RouteMappingsController < ApplicationController
     app_not_found! unless route_mapping.app && route_mapping.app.guid == params['app_guid']
     unauthorized! unless can_delete?(route_mapping.space.guid)
 
-    RemoveRouteMapping.new(current_user, current_user_email).remove(route_mapping)
+    RouteMappingDelete.new(current_user, current_user_email).remove(route_mapping)
     head :no_content
   end
 
