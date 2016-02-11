@@ -63,14 +63,27 @@ module VCAP::CloudController
         end
       end
 
-      context 'when task has already been marked as succeeded' do
-        let(:task) { TaskModel.make(state: 'SUCCEEDED') }
+      context 'when task is already in a completed state at the time the completion callback is evaluated' do
+        context 'when task is already succeeded' do
+          let(:task) { TaskModel.make(state: 'SUCCEEDED') }
 
-        it 'responds with a 400 status code' do
-          post url, MultiJson.dump(task_response)
+          it 'responds with a 400 status code' do
+            post url, MultiJson.dump(task_response)
 
-          expect(last_response.status).to eq(400)
-          expect(last_response.body).to match(/InvalidRequest/)
+            expect(last_response.status).to eq(400)
+            expect(last_response.body).to match(/InvalidRequest/)
+          end
+        end
+
+        context 'when task is already failed' do
+          let(:task) { TaskModel.make(state: 'FAILED') }
+
+          it 'responds with a 400 status code' do
+            post url, MultiJson.dump(task_response)
+
+            expect(last_response.status).to eq(400)
+            expect(last_response.body).to match(/InvalidRequest/)
+          end
         end
       end
 

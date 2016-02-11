@@ -21,7 +21,7 @@ module VCAP::CloudController
       task = TaskModel.find(guid: task_guid)
       raise Errors::ApiError.new_from_details('NotFound') unless task
       raise Errors::ApiError.new_from_details('InvalidRequest') if task_guid != task_response[:task_guid]
-      raise Errors::ApiError.new_from_details('InvalidRequest') if task.state != TaskModel::RUNNING_STATE
+      raise Errors::ApiError.new_from_details('InvalidRequest') if [TaskModel::SUCCEEDED_STATE, TaskModel::FAILED_STATE].include? task.state
 
       Diego::TaskCompletionHandler.new.complete_task(task, task_response)
 
