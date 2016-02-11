@@ -52,7 +52,11 @@ module VCAP::CloudController
               :"#{App.table_name}__guid" => app_guid,
               :"#{Route.table_name}__guid" => route_guid)
       unless mappings.count == 0
-        raise RouteMappingTaken.new("Route #{route_guid} is mapped to port #{app_port} of app #{app_guid}")
+        error_message =  "Route #{route_guid} is mapped to "
+        error_message += "port #{app_port} of " unless app_port.blank?
+        error_message += "app #{app_guid}"
+
+        raise RouteMappingTaken.new(error_message)
       end
     end
 

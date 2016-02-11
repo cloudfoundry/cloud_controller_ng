@@ -262,6 +262,7 @@ module VCAP::CloudController
                 post '/v2/route_mappings', body, headers_for(developer)
                 expect(last_response).to have_status_code(400)
                 expect(decoded_response['code']).to eq(210006)
+                expect(decoded_response['description']).to include('port 9090')
               end
             end
 
@@ -335,6 +336,25 @@ module VCAP::CloudController
 
               expect(last_response).to have_status_code(400)
               expect(decoded_response['description']).to include('App ports are supported for Diego apps only')
+            end
+          end
+
+          context 'when same route mapping is specified' do
+            let(:body) do
+              {
+                  app_guid: app_obj.guid,
+                  route_guid: route.guid
+              }.to_json
+            end
+
+            it 'does not create another route mapping' do
+              post '/v2/route_mappings', body, headers_for(developer)
+              expect(last_response).to have_status_code(201)
+
+              post '/v2/route_mappings', body, headers_for(developer)
+              expect(last_response).to have_status_code(400)
+              expect(decoded_response['code']).to eq(210006)
+              expect(decoded_response['description']).to_not include('port')
             end
           end
         end
