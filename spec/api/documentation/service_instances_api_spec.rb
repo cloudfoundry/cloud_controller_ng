@@ -188,12 +188,12 @@ EOF
       let(:route) { VCAP::CloudController::Route.make(space: service_instance.space) }
       let!(:route_binding) { VCAP::CloudController::RouteBinding.make(service_instance: service_instance) }
 
-      field :parameters, 'Arbitrary parameters to pass along to the service broker. Must be a JSON object.', required: false
-
       put '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
         before do
           stub_bind(service_instance)
         end
+
+        field :parameters, 'Arbitrary parameters to pass along to the service broker. Must be a JSON object.', required: false
 
         example 'Binding a Service Instance to a Route' do
           request_hash = {
@@ -217,7 +217,7 @@ EOF
         end
 
         example 'Unbinding a service instance from a route' do
-          client.delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}.to_json, headers
+          client.delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers
           expect(status).to eq(204)
           expect(response_body).to be_empty
         end

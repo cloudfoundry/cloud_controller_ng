@@ -77,8 +77,6 @@ resource 'User Provided Service Instances', type: [:api, :legacy_api] do
         associated_route.save
       end
 
-      field :route_guid, 'The guid of the route'
-
       standard_model_list :routes, VCAP::CloudController::RoutesController, outer_model: :user_provided_service_instance
       nested_model_associate :route, :user_provided_service_instance
 
