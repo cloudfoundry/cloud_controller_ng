@@ -49,6 +49,8 @@ module VCAP::CloudController
                key: :droplet_hash,
                primary_key: :droplet_hash
 
+    one_to_many :route_mappings
+
     add_association_dependencies routes: :nullify, events: :delete, droplets: :destroy
 
     export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,

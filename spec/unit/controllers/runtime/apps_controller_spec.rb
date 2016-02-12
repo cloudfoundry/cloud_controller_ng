@@ -104,6 +104,7 @@ module VCAP::CloudController
             events:           [:get, :put, :delete],
             service_bindings: [:get, :put, :delete],
             routes:           [:get, :put, :delete],
+            route_mappings:   [:get],
           })
       end
 
@@ -645,6 +646,48 @@ module VCAP::CloudController
 
           delete_app
           expect(app_event_repository).not_to have_received(:record_app_delete_request)
+        end
+      end
+    end
+
+    describe 'route mapping' do
+      let!(:app_obj) { AppFactory.make(instances: 1, diego: true) }
+      let!(:developer) { make_developer_for_space(app_obj.space) }
+      let!(:route) { Route.make(space: app_obj.space) }
+      let!(:route_mapping) { RouteMapping.make(app_id: app_obj.id, route_id: route.id) }
+
+      context 'GET' do
+        it 'returns the route mapping' do
+          get "/v2/apps/#{app_obj.guid}/route_mappings", '{}', json_headers(headers_for(developer))
+          expect(last_response.status).to eql(200)
+          parsed_body = parse(last_response.body)
+
+          p parsed_body
+
+          expect(parsed_body['resources'].first['entity']['route_guid']).to eq(route.guid)
+          expect(parsed_body['resources'].first['entity']['app_guid']).to eq(app_obj.guid)
+        end
+      end
+
+      context 'POST' do
+        it 'returns 404' do
+          post "/v2/apps/#{app_obj.guid}/route_mappings", '{}', json_headers(headers_for(developer))
+          expect(last_response.status).to eql(404)
+        end
+      end
+
+      context 'PUT' do
+        it 'returns 404' do
+          put "/v2/apps/#{app_obj.guid}/route_mappings/#{route_mapping.guid}", '{}', json_headers(headers_for(developer))
+          expect(last_response.status).to eql(404)
+        end
+      end
+
+      context 'DELETE' do
+        it 'returns 404' do
+          delete "/v2/apps/#{app_obj.guid}/route_mappings/#{route_mapping.guid}", '', json_headers(headers_for(developer))
+          p last_response.body
+          expect(last_response.status).to eql(404)
         end
       end
     end

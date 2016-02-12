@@ -66,6 +66,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :space }
       it { is_expected.to have_associated :stack }
       it { is_expected.to have_associated :routes, associated_instance: ->(app) { Route.make(space: app.space) } }
+      it { is_expected.to have_associated :route_mappings, associated_instance: -> (app) { RouteMapping.make(app_id: app.id, route_id: Route.make(space: app.space).id) } }
 
       context 'with Docker app' do
         before do
