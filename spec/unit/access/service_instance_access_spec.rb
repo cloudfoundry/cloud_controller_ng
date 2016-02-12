@@ -9,7 +9,8 @@ module VCAP::CloudController
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:service) { VCAP::CloudController::Service.make }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+    let(:service_plan_active) { true }
+    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, active: service_plan_active) }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan, space: space) }
 
     before do
@@ -92,6 +93,22 @@ module VCAP::CloudController
 
         it 'allows all operations except create' do
           expect { subject.create?(service_instance) }.to raise_error(VCAP::Errors::ApiError, /service_instance_creation/)
+        end
+      end
+
+      context 'updating a service instance that is currently part of an invisible plan' do
+        let(:service_plan_active) { false }
+
+        it 'is allowed' do
+          expect(subject).to allow_op_on_object(:read_for_update, service_instance)
+        end
+      end
+
+      context 'updating a service instance to become part of an invisible plan' do
+        let(:service_plan_active) { false }
+
+        it 'is not allowed' do
+          expect(subject).to_not allow_op_on_object(:update, service_instance)
         end
       end
     end

@@ -8,13 +8,13 @@ module VCAP::CloudController
     end
 
     def read_for_update?(service_instance, params=nil)
-      update?(service_instance, params)
+      return true if admin_user?
+      return false if service_instance.in_suspended_org?
+      service_instance.space.has_developer?(context.user)
     end
 
     def update?(service_instance, params=nil)
-      return true if admin_user?
-      return false if service_instance.in_suspended_org?
-      service_instance.space.has_developer?(context.user) && allowed?(service_instance)
+      read_for_update?(service_instance, params) && allowed?(service_instance)
     end
 
     def delete?(service_instance)

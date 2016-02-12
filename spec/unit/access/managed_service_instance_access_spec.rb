@@ -25,7 +25,7 @@ module VCAP::CloudController
       it_behaves_like :full_access
 
       context 'service plan' do
-        it 'allowed when the service plan is not visibile' do
+        it 'allowed when the service plan is not visible' do
           new_plan = VCAP::CloudController::ServicePlan.make(active: false)
 
           object.service_plan = new_plan
@@ -41,7 +41,7 @@ module VCAP::CloudController
       end
 
       context 'service plan' do
-        it 'allows when the service plan is visibile' do
+        it 'allows when the service plan is visible' do
           new_plan = VCAP::CloudController::ServicePlan.make(service: service)
           object.service_plan = new_plan
           expect(subject.create?(object)).to be_truthy
@@ -49,13 +49,19 @@ module VCAP::CloudController
           expect(subject.update?(object)).to be_truthy
         end
 
-        it 'fails when the service plan is not visibile' do
+        it 'fails when assigning to a service plan that is not visible' do
           new_plan = VCAP::CloudController::ServicePlan.make(active: false)
 
           object.service_plan = new_plan
           expect(subject.create?(object)).to be_falsey
-          expect(subject.read_for_update?(object)).to be_falsey
           expect(subject.update?(object)).to be_falsey
+        end
+
+        it 'succeeds when updating from a service plan that is not visible' do
+          new_plan = VCAP::CloudController::ServicePlan.make(active: false)
+
+          object.service_plan = new_plan
+          expect(subject.read_for_update?(object)).to be_truthy
         end
       end
     end

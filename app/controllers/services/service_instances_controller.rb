@@ -113,7 +113,7 @@ module VCAP::CloudController
       not_found!(guid) if !service_instance
 
       validate_access(:read_for_update, service_instance)
-      validate_access(:update, service_instance)
+      validate_access(:update, projected_service_instance(service_instance))
 
       validate_space_update(related_objects[:space])
       validate_plan_update(related_objects[:plan], related_objects[:service])
@@ -443,6 +443,10 @@ module VCAP::CloudController
       end
 
       space_ids
+    end
+
+    def projected_service_instance(service_instance)
+      service_instance.clone.set_all(request_attrs.select { |k, _v| ServiceInstanceUpdate::KEYS_TO_UPDATE_CC.include? k })
     end
   end
 end
