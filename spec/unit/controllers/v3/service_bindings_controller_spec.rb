@@ -530,4 +530,87 @@ describe ServiceBindingsController, type: :controller do
       end
     end
   end
+
+  describe 'destroy' do
+    let(:service_binding) { VCAP::CloudController::ServiceBindingModel.make(syslog_drain_url: 'syslog://syslog-drain.com') }
+    let(:space) { service_binding.space }
+
+    before do
+      stub_unbind(service_binding)
+    end
+
+    it 'returns a 204' do
+      delete :destroy, guid: service_binding.guid
+      expect(response.status).to eq 204
+      expect(service_binding.exists?).to be_falsey
+    end
+
+    context 'permissions' do
+      context 'admin with no other roles' do
+        before do
+          @request.env.merge!(admin_headers)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 204 and deletes the service binding' do
+          delete :destroy, guid: service_binding.guid
+          expect(response.status).to eq 204
+          expect(service_binding.exists?).to be_falsey
+        end
+      end
+
+      context 'when the service binding does not exist' do
+        it 'returns a 404' do
+          delete :destroy, guid: 'fake-guid'
+
+          expect(response.status).to eq 404
+        end
+      end
+
+      context 'when the user has read-only permissions' do
+        before do
+          allow(membership).to receive(:has_any_roles?).
+            with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
+            and_return(false)
+        end
+
+        it 'returns a 403 Not Authorized and does NOT delete the binding' do
+          delete :destroy, guid: service_binding.guid
+
+          expect(response.status).to eq 403
+          expect(response.body).to include 'NotAuthorized'
+          expect(service_binding.exists?).to be_truthy
+        end
+      end
+
+      context 'when the user does not have the write scope' do
+        before do
+          @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))
+        end
+
+        it 'returns a 403 NotAuthorized error and does NOT delete the binding' do
+          delete :destroy, guid: service_binding.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+          expect(service_binding.exists?).to be_truthy
+        end
+      end
+
+      context 'when the user does not have read permissions' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 404 and does NOT delete the binding' do
+          delete :destroy, guid: service_binding.guid
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'Service binding not found'
+          expect(service_binding.exists?).to be_truthy
+        end
+      end
+    end
+  end
 end

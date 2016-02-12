@@ -64,11 +64,6 @@ Rails.application.routes.draw do
   delete '/droplets/:guid', to: 'droplets#destroy'
 
   # route_mappings
-  post '/v3/apps/:app_guid/route_mappings', to: 'route_mappings#create'
-  get '/v3/apps/:app_guid/route_mappings/:route_mapping_guid', to: 'route_mappings#show'
-  get '/v3/apps/:app_guid/route_mappings', to: 'route_mappings#index'
-  delete '/v3/apps/:app_guid/route_mappings/:route_mapping_guid', to: 'route_mappings#destroy'
-
   post '/apps/:app_guid/route_mappings', to: 'route_mappings#create'
   get '/apps/:app_guid/route_mappings/:route_mapping_guid', to: 'route_mappings#show'
   get '/apps/:app_guid/route_mappings', to: 'route_mappings#index'
@@ -100,12 +95,6 @@ Rails.application.routes.draw do
   get '/apps/:guid/droplets', to: 'apps_droplets#index'
 
   # tasks
-  get '/v3/tasks', to: 'tasks#index'
-  get '/v3/apps/:app_guid/tasks', to: 'tasks#index'
-  get '/v3/tasks/:task_guid', to: 'tasks#show'
-  get '/v3/apps/:app_guid/tasks/:task_guid', to: 'tasks#show'
-  post '/v3/apps/:guid/tasks', to: 'tasks#create'
-
   get '/tasks', to: 'tasks#index'
   get '/apps/:app_guid/tasks', to: 'tasks#index'
   get '/tasks/:task_guid', to: 'tasks#show'
@@ -113,13 +102,10 @@ Rails.application.routes.draw do
   post '/apps/:guid/tasks', to: 'tasks#create'
 
   # service_bindings
-  post '/v3/service_bindings', to: 'service_bindings#create'
-  get '/v3/service_bindings/:guid', to: 'service_bindings#show'
-  get '/v3/service_bindings', to: 'service_bindings#index'
-
   post '/service_bindings', to: 'service_bindings#create'
   get '/service_bindings/:guid', to: 'service_bindings#show'
   get '/service_bindings', to: 'service_bindings#index'
+  delete '/service_bindings/:guid', to: 'service_bindings#destroy'
 
   # errors
   match '404', to: 'errors#not_found', via: :all

@@ -172,6 +172,17 @@ describe 'v3 service bindings' do
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
+
+    describe 'DELETE /v3/service_bindings/:guid' do
+      let!(:service_binding) { VCAP::CloudController::ServiceBindingModel.make }
+
+      it 'deletes the service binding and returns a 204' do
+        delete "/v3/service_bindings/#{service_binding.guid}", {}, admin_headers
+
+        expect(last_response.status).to eq(204)
+        expect(service_binding.exists?).to be_falsey
+      end
+    end
   end
 
   describe 'when the service is user provided' do
@@ -249,6 +260,34 @@ describe 'v3 service bindings' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    describe 'DELETE /v3/service_bindings/:guid' do
+      let(:service_binding_guid) do
+        post(
+          '/v3/service_bindings',
+          {
+            type:          'app',
+            relationships: {
+              app:              { guid: app_guid },
+              service_instance: { guid: service_instance_guid },
+            }
+          }.to_json,
+          user_headers
+        )
+
+        MultiJson.load(last_response.body)['guid']
+      end
+
+      it 'deletes the service binding and returns a 204' do
+        delete "/v3/service_bindings/#{service_binding_guid}", {}, admin_headers
+
+        expect(last_response.status).to eq(204)
+
+        get "/v3/service_bindings/#{service_binding_guid}", {}, admin_headers
+
+        expect(last_response.status).to eq(404)
+      end
     end
   end
 end

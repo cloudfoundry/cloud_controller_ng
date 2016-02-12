@@ -10,12 +10,12 @@ module VCAP::CloudController
     include VCAP::CloudController::LockCheck
 
     def create(app_model, service_instance, type, arbitrary_parameters)
+      raise ServiceInstanceNotBindable unless service_instance.bindable?
       service_binding = ServiceBindingModel.new(service_instance: service_instance,
                                                 app: app_model,
                                                 credentials: {},
                                                 type: type)
       raise InvalidServiceBinding unless service_binding.valid?
-      raise ServiceInstanceNotBindable unless service_instance.bindable?
 
       raise_if_locked(service_binding.service_instance)
 

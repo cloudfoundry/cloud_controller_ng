@@ -43,4 +43,7 @@ class FakeServiceBrokerV2Client
       syslog_drain_url: syslog_drain_url,
     }
   end
+
+  def unbind(_binding)
+  end
 end

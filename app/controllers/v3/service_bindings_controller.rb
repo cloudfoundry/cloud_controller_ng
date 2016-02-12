@@ -4,6 +4,7 @@ require 'presenters/v3/service_binding_model_presenter'
 require 'messages/service_binding_create_message'
 require 'messages/service_bindings_list_message'
 require 'actions/service_binding_create'
+require 'actions/service_binding_delete'
 require 'controllers/v3/mixins/app_subresource'
 
 class ServiceBindingsController < ApplicationController
@@ -54,6 +55,20 @@ class ServiceBindingsController < ApplicationController
     render status: :ok, json: service_binding_presenter.present_json_list(paginated_result, '/v3/service_bindings')
   end
 
+  def destroy
+    service_binding = VCAP::CloudController::ServiceBindingModel.find(guid: params[:guid])
+
+    service_binding_not_found! unless service_binding && can_read?(service_binding.space.guid, service_binding.space.organization.guid)
+    unauthorized! unless can_delete?(service_binding.space.guid)
+
+    ServiceBindingModelDelete.new.synchronous_delete(service_binding)
+
+    head :no_content
+
+  rescue ServiceBindingModelDelete::FailedToDelete => e
+    unprocessable!(e.message)
+  end
+
   private
 
   def service_binding_presenter
@@ -67,6 +82,7 @@ class ServiceBindingsController < ApplicationController
   def can_create?(space_guid)
     roles.admin? || membership.has_any_roles?([VCAP::CloudController::Membership::SPACE_DEVELOPER], space_guid)
   end
+  alias_method :can_delete?, :can_create?
 
   def service_instance_not_found!
     resource_not_found!(:service_instance)
