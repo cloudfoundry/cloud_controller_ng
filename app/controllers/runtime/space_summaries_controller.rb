@@ -40,7 +40,7 @@ module VCAP::CloudController
       space.apps.collect do |app|
         {
           guid:              app.guid,
-          urls:              app.routes.map(&:fqdn),
+          urls:              app.routes.map(&:uri),
           routes:            app.routes.map(&:as_summary_json),
           service_count:     app.service_bindings_dataset.count,
           service_names:     app.service_bindings_dataset.map(&:service_instance).map(&:name),

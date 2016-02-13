@@ -34,7 +34,7 @@ module VCAP::CloudController
         get "/v2/spaces/#{space.guid}/summary", '', admin_headers
         expected_app_hash = [{
           guid: app_obj.guid,
-          urls: [first_route.fqdn, second_route.fqdn],
+          urls: [first_route.uri, second_route.uri],
           routes: [
             first_route.as_summary_json,
             second_route.as_summary_json
