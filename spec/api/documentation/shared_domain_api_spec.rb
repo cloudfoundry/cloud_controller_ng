@@ -8,11 +8,6 @@ resource 'Shared Domains', type: [:api, :legacy_api] do
 
   authenticated_request
 
-  field :guid, 'The guid of the domain.', required: false
-  field :router_group_guid, 'The guid of the router group.', required: false, experimental: true
-  field :router_group_type, 'The type of the router group.', required: false, experimental: true
-  field :name, 'The name of the domain.', required: true, example_values: ['example.com', 'foo.example.com']
-
   standard_model_list :shared_domain, VCAP::CloudController::SharedDomainsController
   standard_model_get :shared_domain
   standard_model_delete :shared_domain
@@ -38,6 +33,9 @@ resource 'Shared Domains', type: [:api, :legacy_api] do
   end
 
   post '/v2/shared_domains' do
+    field :name, 'The name of the domain.', required: true, example_values: ['example.com', 'foo.example.com']
+    field :router_group_guid, 'The guid of the router group.', required: false, experimental: true
+
     example 'Create a Shared Domain' do
       client.post '/v2/shared_domains', fields_json(router_group_guid: 'my-random-guid'), headers
 
