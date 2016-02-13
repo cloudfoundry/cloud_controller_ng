@@ -275,6 +275,24 @@ module VCAP::CloudController
               end
             end
           end
+
+          describe 'when the quota has an app_task_limit' do
+            let(:quota) { QuotaDefinition.make(app_task_limit: 1) }
+
+            it 'allows tasks that is within app tasks limit' do
+              expect { TaskModel.make(app: app) }.not_to raise_error
+            end
+
+            context 'when the number of running tasks is equal to the app task limit' do
+              before do
+                TaskModel.make(state: TaskModel::RUNNING_STATE, app: app)
+              end
+
+              it 'raises an error' do
+                expect { TaskModel.make(app: app) }.to raise_error Sequel::ValidationFailed, 'app_task_limit quota exceeded'
+              end
+            end
+          end
         end
       end
     end

@@ -14,6 +14,12 @@ module VCAP::CloudController
     one_to_many :apps,
                 dataset: -> { App.filter(space: spaces) }
 
+    one_to_many :app_models,
+                dataset: -> { AppModel.filter(space: spaces) }
+
+    one_to_many :tasks,
+                dataset: -> { TaskModel.filter(app: app_models) }
+
     one_to_many :app_events,
                 dataset: -> { VCAP::CloudController::AppEvent.filter(app: apps) }
 
@@ -134,11 +140,15 @@ module VCAP::CloudController
     end
 
     def instance_memory_limit
-      if quota_definition
-        quota_definition.instance_memory_limit
-      else
-        QuotaDefinition::UNLIMITED
-      end
+      quota_definition ? quota_definition.instance_memory_limit : QuotaDefinition::UNLIMITED
+    end
+
+    def app_task_limit
+      quota_definition ? quota_definition.app_task_limit : QuotaDefinition::UNLIMITED
+    end
+
+    def meets_max_task_limit?
+      app_task_limit == running_and_pending_tasks_count
     end
 
     def active?
@@ -179,6 +189,10 @@ module VCAP::CloudController
     def memory_remaining
       memory_used = apps_dataset.where(state: 'STARTED').sum(Sequel.*(:memory, :instances)) || 0
       quota_definition.memory_limit - memory_used
+    end
+
+    def running_and_pending_tasks_count
+      tasks_dataset.where(state: [TaskModel::PENDING_STATE, TaskModel::RUNNING_STATE]).count
     end
   end
 end

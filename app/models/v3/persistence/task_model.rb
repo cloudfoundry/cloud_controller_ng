@@ -43,6 +43,7 @@ module VCAP::CloudController
     def validate_org_quotas
       TaskMaxMemoryPolicy.new(self, organization, 'exceeds organization memory quota').validate
       TaskMaxInstanceMemoryPolicy.new(self, organization, 'exceeds organization instance memory quota').validate
+      MaxAppTasksPolicy.new(self, organization, 'quota exceeded').validate
     end
 
     def validate_environment_variables
