@@ -39,6 +39,7 @@ resource 'User Provided Service Instances', type: [:api, :legacy_api] do
       field :name, 'A name for the service instance', required: true, example_values: ['my-user-provided-instance']
       field :syslog_drain_url, 'The url for the syslog_drain to direct to', required: false, example_values: ['syslog://example.com']
       field :credentials, 'A hash that can be used to store credentials', required: false, example_values: [{ somekey: 'somevalue' }.to_s]
+      field :route_service_url, 'URL to which requests for bound routes will be forwarded.', required: false, example_values: ['https://logger.example.com']
 
       example 'Updating a User Provided Service Instance' do
         request_hash = {
