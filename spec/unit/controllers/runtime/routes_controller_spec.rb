@@ -222,6 +222,13 @@ module VCAP::CloudController
         expect(decoded_response['code']).to eq(210001)
       end
 
+      it 'returns RouteInvalid when port is specified with an http domain' do
+        post '/v2/routes', MultiJson.dump(domain_guid: http_domain.guid, space_guid: space.guid, port: 8080), headers_for(user)
+
+        expect(last_response.status).to eq(400)
+        expect(last_response.body).to include('Port is supported for domains of TCP router groups only.')
+      end
+
       it 'returns RouteInvalid when generate_port is queried with an http domain' do
         post '/v2/routes?generate_port=true', MultiJson.dump(domain_guid: http_domain.guid, space_guid: space.guid), headers_for(user)
 
