@@ -392,7 +392,46 @@ module VCAP::CloudController
         let(:space_quota) { nil }
 
         it 'returns unlimited' do
-          expect(space.instance_memory_limit).to eq(QuotaDefinition::UNLIMITED)
+          expect(space.instance_memory_limit).to eq(SpaceQuotaDefinition::UNLIMITED)
+        end
+      end
+    end
+
+    describe '#app_task_limit' do
+      let(:org) { Organization.make }
+      let(:space_quota) { SpaceQuotaDefinition.make(app_task_limit: 1, organization: org) }
+      let(:space) { Space.make(space_quota_definition: space_quota, organization: org) }
+
+      it 'returns the app task limit from the quota' do
+        expect(space.app_task_limit).to eq(1)
+      end
+
+      context 'when the space does not have a quota' do
+        let(:space_quota) { nil }
+
+        it 'returns unlimited' do
+          expect(space.app_task_limit).to eq(SpaceQuotaDefinition::UNLIMITED)
+        end
+      end
+    end
+
+    describe '#meets_max_task_limit?' do
+      let(:org) { Organization.make }
+      let(:space_quota) { SpaceQuotaDefinition.make(app_task_limit: 1, organization: org) }
+      let(:space) { Space.make(space_quota_definition: space_quota, organization: org) }
+      let(:app_model) { AppModel.make(space_guid: space.guid) }
+
+      it 'returns false when the app task limit is not exceeded' do
+        expect(space.meets_max_task_limit?).to be false
+      end
+
+      context 'number of pending and running tasks equals the limit' do
+        before do
+          TaskModel.make(app: app_model, state: TaskModel::RUNNING_STATE)
+        end
+
+        it 'returns true' do
+          expect(space.meets_max_task_limit?).to be true
         end
       end
     end

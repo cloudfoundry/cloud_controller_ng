@@ -21,6 +21,8 @@ module VCAP::CloudController
     one_to_many :managed_service_instances
     one_to_many :service_brokers
     one_to_many :routes
+    one_to_many :tasks,
+                dataset: -> { TaskModel.filter(app: app_models) }
     many_to_many :security_groups,
     dataset: -> {
       SecurityGroup.left_join(:security_groups_spaces, security_group_id: :id).
@@ -157,8 +159,20 @@ module VCAP::CloudController
       if space_quota_definition
         space_quota_definition.instance_memory_limit
       else
-        QuotaDefinition::UNLIMITED
+        SpaceQuotaDefinition::UNLIMITED
       end
+    end
+
+    def app_task_limit
+      if space_quota_definition
+        space_quota_definition.app_task_limit
+      else
+        SpaceQuotaDefinition::UNLIMITED
+      end
+    end
+
+    def meets_max_task_limit?
+      app_task_limit == running_and_pending_tasks_count
     end
 
     def in_suspended_org?
@@ -180,6 +194,10 @@ module VCAP::CloudController
 
     def started_app_memory
       apps_dataset.where(state: 'STARTED').sum(Sequel.*(:memory, :instances)) || 0
+    end
+
+    def running_and_pending_tasks_count
+      tasks_dataset.where(state: [TaskModel::PENDING_STATE, TaskModel::RUNNING_STATE]).count
     end
   end
 end
