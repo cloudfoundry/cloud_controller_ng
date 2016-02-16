@@ -39,7 +39,7 @@ module VCAP::CloudController
       unless domain.nil?
         unless domain.router_group_guid.nil?
           rtr_grp = @routing_api_client.router_group(domain.router_group_guid)
-          domain.router_group_type = rtr_grp.type unless rtr_grp.nil?
+          domain.router_group_types = rtr_grp.types unless rtr_grp.nil?
         end
       end
     end
@@ -66,7 +66,7 @@ module VCAP::CloudController
       validate_access(:read, domain)
       unless domain.router_group_guid.nil?
         rtr_grp = @routing_api_client.router_group(domain.router_group_guid)
-        domain.router_group_type = rtr_grp.type unless rtr_grp.nil?
+        domain.router_group_types = rtr_grp.types unless rtr_grp.nil?
       end
       object_renderer.render_json(self.class, domain, @opts)
     end

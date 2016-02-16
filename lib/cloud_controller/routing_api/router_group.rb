@@ -1,9 +1,10 @@
 module VCAP::CloudController::RoutingApi
   class RouterGroup
-    attr_reader :guid, :type
+    attr_reader :guid, :types
     def initialize(hash)
       @guid = hash['guid']
-      @type = hash['type']
+      @types = []
+      @types.push(hash['type'])
     end
 
     def ==(other)

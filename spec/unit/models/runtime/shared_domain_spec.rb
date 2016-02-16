@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe SharedDomain, type: :model do
-    subject { described_class.make name: 'test.example.com', router_group_guid: 'my-router-group-guid', router_group_type: 'tcp' }
+    subject { described_class.make name: 'test.example.com', router_group_guid: 'my-router-group-guid', router_group_types: ['tcp'] }
 
     it { is_expected.to have_timestamp_columns }
 
@@ -17,7 +17,7 @@ module VCAP::CloudController
           guid: subject.guid,
           name: 'test.example.com',
           router_group_guid: 'my-router-group-guid',
-          router_group_type: 'tcp')
+          router_group_types: ['tcp'])
       end
     end
 
@@ -85,13 +85,13 @@ module VCAP::CloudController
     describe '#export_attrs' do
       let(:shared_domain) { SharedDomain.make }
 
-      it 'does not include router_group_type when router_group_type has not been set' do
-        expect(shared_domain.export_attrs).to_not include(:router_group_type)
+      it 'does not include router_group_types when router_group_types has not been set' do
+        expect(shared_domain.export_attrs).to_not include(:router_group_types)
       end
 
-      it 'includes router_group_type when router_group_type has been set' do
-        shared_domain.router_group_type = 'tcp'
-        expect(shared_domain.transient_attrs).to include(:router_group_type)
+      it 'includes router_group_types when router_group_types has been set' do
+        shared_domain.router_group_types = ['tcp']
+        expect(shared_domain.transient_attrs).to include(:router_group_types)
       end
     end
   end

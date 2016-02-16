@@ -98,7 +98,7 @@ module VCAP::CloudController
             { 'guid' => domain.guid,
               'name' => domain.name,
               'router_group_guid' => domain.router_group_guid,
-              'router_group_type' => domain.router_group_type,
+              'router_group_types' => domain.router_group_types,
             }
           end
 

@@ -30,10 +30,10 @@ module VCAP::CloudController
 
       it 'populates domains with router group types from Routing API' do
         router_group_type_populator.transform(domains)
-        expect(domain1.router_group_type).to eq('tcp')
-        expect(domain2.router_group_type).to eq('http')
-        expect(domain3.router_group_type).to be_nil
-        expect(domain4.router_group_type).to be_nil
+        expect(domain1.router_group_types).to eq(['tcp'])
+        expect(domain2.router_group_types).to eq(['http'])
+        expect(domain3.router_group_types).to be_nil
+        expect(domain4.router_group_types).to be_nil
       end
     end
   end
