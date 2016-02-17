@@ -1,5 +1,7 @@
 # rubocop:disable CyclomaticComplexity
 
+require 'actions/routing/route_delete'
+
 module VCAP::CloudController
   class RoutesController < RestController::ModelController
     define_attributes do
@@ -15,11 +17,12 @@ module VCAP::CloudController
     query_parameters :host, :domain_guid, :organization_guid, :path, :port
 
     def self.dependencies
-      [:routing_api_client, :route_event_repository]
+      [:app_event_repository, :routing_api_client, :route_event_repository]
     end
 
     def inject_dependencies(dependencies)
       super
+      @app_event_repository = dependencies.fetch(:app_event_repository)
       @routing_api_client = dependencies.fetch(:routing_api_client)
       @route_event_repository = dependencies.fetch(:route_event_repository)
     end
@@ -88,14 +91,22 @@ module VCAP::CloudController
 
     def delete(guid)
       route = find_guid_and_validate_access(:delete, guid)
-      if !recursive_delete? && route.service_instance.present?
-        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_instance', route.class.table_name)
+
+      route_delete_action = RouteDelete.new(
+        app_event_repository:   app_event_repository,
+        route_event_repository: route_event_repository,
+        user:                   SecurityContext.current_user,
+        user_email:             SecurityContext.current_user_email)
+
+      if async?
+        job = route_delete_action.delete_async(route: route, recursive: recursive_delete?)
+        [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
+      else
+        route_delete_action.delete_sync(route: route, recursive: recursive_delete?)
+        [HTTP::NO_CONTENT, nil]
       end
-
-      @route_event_repository.record_route_delete_request(route, SecurityContext.current_user, SecurityContext.current_user_email, recursive_delete?)
-
-      model_deletion_job = Jobs::Runtime::ModelDeletion.new(route.class, route.guid)
-      enqueue_deletion_job(model_deletion_job)
+    rescue RouteDelete::ServiceInstanceAssociationError
+      raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_instance', route.class.table_name)
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
@@ -173,51 +184,54 @@ module VCAP::CloudController
 
     define_messages
     define_routes
-  end
 
-  private
+    private
 
-  def overwrite_port!
-    if @request_attrs['port']
-      add_warning('Specified port ignored. Random port generated.')
+    attr_reader :app_event_repository, :route_event_repository
+
+    def overwrite_port!
+      if @request_attrs['port']
+        add_warning('Specified port ignored. Random port generated.')
+      end
+
+      @request_attrs = @request_attrs.deep_dup
+      @request_attrs['port'] = PortGenerator.new(@request_attrs).generate_port
+      @request_attrs.freeze
     end
 
-    @request_attrs = @request_attrs.deep_dup
-    @request_attrs['port'] = PortGenerator.new(@request_attrs).generate_port
-    @request_attrs.freeze
-  end
-
-  def convert_flag_to_bool(flag)
-    raise Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag
-    flag == 'true'
-  end
-
-  def validate_route(domain_guid)
-    RouteValidator.new(@routing_api_client, domain_guid, assemble_route_attrs).validate
-  rescue RouteValidator::ValidationError => e
-    raise Errors::ApiError.new_from_details(e.class.name.demodulize, e.message)
-  rescue RoutingApi::Client::RoutingApiUnavailable
-    raise Errors::ApiError.new_from_details('RoutingApiUnavailable')
-  rescue RoutingApi::Client::UaaUnavailable
-    raise Errors::ApiError.new_from_details('UaaUnavailable')
-  end
-
-  def path_errors(path_error, attributes)
-    if path_error.include?(:single_slash)
-      return Errors::ApiError.new_from_details('PathInvalid', 'the path cannot be a single slash')
-    elsif path_error.include?(:missing_beginning_slash)
-      return Errors::ApiError.new_from_details('PathInvalid', 'the path must start with a "/"')
-    elsif path_error.include?(:path_contains_question)
-      return Errors::ApiError.new_from_details('PathInvalid', 'illegal "?" character')
-    elsif path_error.include?(:invalid_path)
-      return Errors::ApiError.new_from_details('PathInvalid', attributes['path'])
+    def convert_flag_to_bool(flag)
+      raise Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag
+      flag == 'true'
     end
-  end
 
-  def assemble_route_attrs
-    port = request_attrs['port']
-    host = request_attrs['host']
-    path = request_attrs['path']
-    { 'port' => port, 'host' => host, 'path' => path }
+    def validate_route(domain_guid)
+      RouteValidator.new(@routing_api_client, domain_guid, assemble_route_attrs).validate
+    rescue RouteValidator::ValidationError => e
+      raise Errors::ApiError.new_from_details(e.class.name.demodulize, e.message)
+    rescue RoutingApi::Client::RoutingApiUnavailable
+      raise Errors::ApiError.new_from_details('RoutingApiUnavailable')
+    rescue RoutingApi::Client::UaaUnavailable
+      raise Errors::ApiError.new_from_details('UaaUnavailable')
+    end
+
+    def assemble_route_attrs
+      port = request_attrs['port']
+      host = request_attrs['host']
+      path = request_attrs['path']
+      { 'port' => port, 'host' => host, 'path' => path }
+    end
+
+    def self.path_errors(path_error, attributes)
+      if path_error.include?(:single_slash)
+        return Errors::ApiError.new_from_details('PathInvalid', 'the path cannot be a single slash')
+      elsif path_error.include?(:missing_beginning_slash)
+        return Errors::ApiError.new_from_details('PathInvalid', 'the path must start with a "/"')
+      elsif path_error.include?(:path_contains_question)
+        return Errors::ApiError.new_from_details('PathInvalid', 'illegal "?" character')
+      elsif path_error.include?(:invalid_path)
+        return Errors::ApiError.new_from_details('PathInvalid', attributes['path'])
+      end
+    end
+    private_class_method :path_errors
   end
 end

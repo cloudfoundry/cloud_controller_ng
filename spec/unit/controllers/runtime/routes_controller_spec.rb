@@ -7,6 +7,8 @@ module VCAP::CloudController
     let(:tcp_group_2) { 'tcp-group-2' }
     let(:http_group) { 'http-group' }
 
+    let(:user) { User.make }
+
     let(:router_groups) do
       [
         RoutingApi::RouterGroup.new({ 'guid' => tcp_group_1, 'type' => 'tcp' }),
@@ -14,10 +16,13 @@ module VCAP::CloudController
         RoutingApi::RouterGroup.new({ 'guid' => http_group, 'type' => 'http' }),
       ]
     end
+    let(:app_event_repository) { instance_double(Repositories::Runtime::AppEventRepository) }
+    let(:route_event_repository) { instance_double(Repositories::Runtime::RouteEventRepository) }
 
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
-                                                                and_return(routing_api_client)
+      allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).and_return(routing_api_client)
+      allow(CloudController::DependencyLocator.instance).to receive(:app_event_repository).and_return(app_event_repository)
+      allow(CloudController::DependencyLocator.instance).to receive(:route_event_repository).and_return(route_event_repository)
       allow(routing_api_client).to receive(:router_group).with(tcp_group_1).and_return(router_groups[0])
       allow(routing_api_client).to receive(:router_group).with(tcp_group_2).and_return(router_groups[1])
       allow(routing_api_client).to receive(:router_group).with(http_group).and_return(router_groups[2])
@@ -282,6 +287,7 @@ module VCAP::CloudController
 
       context 'with Docker app' do
         before do
+          allow(route_event_repository).to receive(:record_route_update)
           FeatureFlag.create(name: 'diego_docker', enabled: true)
         end
 
@@ -300,6 +306,7 @@ module VCAP::CloudController
 
           it 'associates the route with the app' do
             put "/v2/routes/#{route.guid}/apps/#{docker_app.guid}", MultiJson.dump(guid: route.guid), json_headers(admin_headers)
+
             expect(last_response.status).to eq(201)
           end
         end
@@ -307,32 +314,69 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/routes/:guid' do
-      context 'with route services bound to the route' do
-        let(:route_binding) { RouteBinding.make }
-        let(:route) { route_binding.route }
+      let(:route) { Route.make }
 
-        context 'with recursive=true' do
-          before do
-            stub_unbind(route_binding)
-          end
+      before do
+        allow(route_event_repository).to receive(:record_route_delete_request)
+        allow(app_event_repository).to receive(:record_unmap_route)
+      end
 
-          it 'deletes the route and associated binding' do
-            delete "v2/routes/#{route.guid}?recursive=true", {}, admin_headers
+      it 'deletes the route' do
+        delete "v2/routes/#{route.guid}", {}, admin_headers_for(user)
 
-            expect(Route.find(guid: route.guid)).not_to be
-            expect(RouteBinding.find(guid: route_binding.guid)).not_to be
-          end
+        expect(last_response.status).to eq 204
+        expect(route.exists?).to be_falsey
+      end
+
+      context 'when async=true' do
+        it 'deletes the route in a background job' do
+          delete "v2/routes/#{route.guid}?async=true", {}, admin_headers_for(user)
+
+          expect(last_response.status).to eq 202
+          expect(route.exists?).to be_truthy
+
+          execute_all_jobs
+
+          expect(route.exists?).to be_falsey
+        end
+      end
+
+      context 'when recursive=true' do
+        let(:route_delete) { instance_double(RouteDelete) }
+
+        before do
+          allow(RouteDelete).to receive(:new).and_return(route_delete)
         end
 
-        context 'without recursive=true' do
-          it 'raises an error and does not delete anything' do
-            delete "v2/routes/#{route.guid}", {}, admin_headers
+        it 'passes recursive true to async deletes' do
+          allow(route_delete).to receive(:delete_async)
+          delete "v2/routes/#{route.guid}?recursive=true&async=true", {}, admin_headers_for(user)
+          expect(route_delete).to have_received(:delete_async).with(route: route, recursive: true)
+        end
 
-            expect(last_response).to have_status_code 400
-            expect(last_response.body).to include 'AssociationNotEmpty'
-            expect(last_response.body).to include
-            'Please delete the service_instance associations for your routes'
-          end
+        it 'passes recursive true to sync deletes' do
+          allow(route_delete).to receive(:delete_sync)
+          delete "v2/routes/#{route.guid}?recursive=true&async=false", {}, admin_headers_for(user)
+          expect(route_delete).to have_received(:delete_sync).with(route: route, recursive: true)
+        end
+      end
+
+      context 'when a ServiceInstanceAssociationError is raised' do
+        before do
+          route_delete = instance_double(RouteDelete)
+          allow(route_delete).to receive(:delete_sync).
+                                   with(route: route, recursive: false).
+                                   and_raise(RouteDelete::ServiceInstanceAssociationError.new)
+          allow(RouteDelete).to receive(:new).and_return(route_delete)
+        end
+
+        it 'raises an error and does not delete anything' do
+          delete "v2/routes/#{route.guid}", {}, admin_headers
+
+          expect(last_response).to have_status_code 400
+          expect(last_response.body).to include 'AssociationNotEmpty'
+          expect(last_response.body).to include
+          'Please delete the service_instance associations for your routes'
         end
       end
     end
@@ -354,6 +398,7 @@ module VCAP::CloudController
       let(:tcp_route_validator) { double('tcp_route_validator', validate: nil) }
 
       before do
+        allow(route_event_repository).to receive(:record_route_create)
         space.organization.add_user(user)
         space.add_developer(user)
         allow(RouteValidator).to receive(:new).with(routing_api_client, domain_guid, route_attrs).and_return(tcp_route_validator)
@@ -548,6 +593,7 @@ module VCAP::CloudController
         space.organization.add_user(user)
         space.add_developer(user)
         allow(RouteValidator).to receive(:new).with(routing_api_client, domain_guid, route_attrs).and_return(tcp_route_validator)
+        allow(route_event_repository).to receive(:record_route_update)
       end
 
       describe 'tcp routes' do

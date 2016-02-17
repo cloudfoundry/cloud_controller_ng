@@ -62,7 +62,7 @@ require 'models/services/route_binding'
 require 'models/job'
 
 require 'models/v3/persistence/app_model'
-require 'models/v3/persistence/route_mapping'
+require 'models/v3/persistence/route_mapping_model'
 require 'models/v3/persistence/package_model'
 require 'models/v3/persistence/droplet_model'
 require 'models/v3/persistence/buildpack_lifecycle_data_model'
