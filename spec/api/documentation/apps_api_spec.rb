@@ -167,7 +167,7 @@ resource 'Apps', type: [:api, :legacy_api] do
       let(:associated_route) { VCAP::CloudController::Route.make(space: app_obj.space) }
       let(:associated_route_guid) { associated_route.guid }
 
-      standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :app
+      standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :app, exclude_parameters: ['organization_guid']
 
       context 'has route guid param' do
         parameter :route_guid, 'The guid of the route'
