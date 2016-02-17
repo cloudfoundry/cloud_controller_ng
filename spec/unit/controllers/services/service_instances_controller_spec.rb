@@ -616,16 +616,12 @@ module VCAP::CloudController
               end
 
               Timecop.travel(before_poll_timeout) do
-                successes, failures = Delayed::Worker.new.work_off
-                expect(successes).to eq 1
-                expect(failures).to eq 0
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
                 expect(Delayed::Job.count).to eq 1
               end
 
               Timecop.travel(after_poll_timeout) do
-                successes, failures = Delayed::Worker.new.work_off
-                expect(successes).to eq 1
-                expect(failures).to eq 0
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
                 expect(Delayed::Job.count).to eq 0
               end
 
@@ -853,7 +849,7 @@ module VCAP::CloudController
               expect(orphan_mitigation_job).not_to be_nil
               expect(orphan_mitigation_job).to be_a_fully_wrapped_job_of Jobs::Services::DeleteOrphanedInstance
 
-              expect(Delayed::Worker.new.work_off).to eq([1, 0])
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(1)
             end
 
@@ -876,7 +872,7 @@ module VCAP::CloudController
                 expect(orphan_mitigation_job).not_to be_nil
                 expect(orphan_mitigation_job).to be_a_fully_wrapped_job_of Jobs::Services::DeleteOrphanedInstance
 
-                expect(Delayed::Worker.new.work_off).to eq([1, 0])
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
                 expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(1)
                 expect(a_request(:get, %r{#{service_broker_url_regex}/last_operation})).not_to have_been_made.times(1)
 
@@ -1597,7 +1593,7 @@ module VCAP::CloudController
 
             it 'updates the service instance operation to indicate it has failed' do
               Timecop.freeze(Time.now + 5.minutes) do
-                expect(Delayed::Worker.new.work_off).to eq([1, 0])
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
               end
 
               service_instance.reload
@@ -1642,7 +1638,7 @@ module VCAP::CloudController
 
             it 'creates a service audit event for updating the service instance' do
               Timecop.freeze(Time.now + 5.minutes) do
-                expect(Delayed::Worker.new.work_off).to eq([1, 0])
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
               end
 
               event = VCAP::CloudController::Event.first(type: 'audit.service_instance.update')
@@ -2146,7 +2142,7 @@ module VCAP::CloudController
 
               expect(last_response).to have_status_code 202
               Timecop.freeze Time.now + 30.minutes do
-                expect(Delayed::Worker.new.work_off).to eq [1, 0]
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
               end
             end
 
@@ -2280,9 +2276,7 @@ module VCAP::CloudController
             expect(decoded_response['entity']['guid']).to be
             expect(decoded_response['entity']['status']).to eq 'queued'
 
-            successes, failures = Delayed::Worker.new.work_off
-            expect(successes).to eq 1
-            expect(failures).to eq 0
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
             expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
           end
 
@@ -2293,7 +2287,7 @@ module VCAP::CloudController
             event = VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')
             expect(event).to be_nil
 
-            expect(Delayed::Worker.new.work_off).to eq([1, 0])
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')
             expect(event.type).to eq('audit.service_instance.delete')
@@ -2334,7 +2328,7 @@ module VCAP::CloudController
               expect(last_response).to have_status_code 204
               expect(service_instance.exists?).to be_falsey
 
-              expect(Delayed::Worker.new.work_off).to eq([1, 0])
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
             end
           end
 
@@ -2348,8 +2342,7 @@ module VCAP::CloudController
               expect(last_response).to have_status_code 202
               expect(decoded_response['entity']['status']).to eq 'queued'
 
-              successes, failures = Delayed::Worker.new.work_off
-              expect(successes + failures).to eq 1
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
               service_instance = ServiceInstance.find(guid: service_instance_guid)
               expect(service_instance).to_not be_nil

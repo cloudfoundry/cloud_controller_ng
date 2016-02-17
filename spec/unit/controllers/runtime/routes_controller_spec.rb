@@ -335,7 +335,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq 202
           expect(route.exists?).to be_truthy
 
-          execute_all_jobs
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
           expect(route.exists?).to be_falsey
         end

@@ -300,8 +300,7 @@ module VCAP::CloudController
                 Delayed::Job.count
               }.by(1)
 
-              successes, failures = Delayed::Worker.new.work_off
-              expect([successes, failures]).to eq [0, 1]
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
               app_obj.refresh
               expect(app_obj.package_hash).to be_nil
@@ -321,11 +320,10 @@ module VCAP::CloudController
                 expect {
                   put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, headers_for(user)
                 }.to change {
-                       Delayed::Job.count
-                     }.by(1)
+                  Delayed::Job.count
+                }.by(1)
 
-                successes, failures = Delayed::Worker.new.work_off
-                expect([successes, failures]).to eq [0, 1]
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
                 app_obj.refresh
                 expect(app_obj.package_hash).to be_nil
@@ -340,11 +338,10 @@ module VCAP::CloudController
                 expect {
                   put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, headers_for(user)
                 }.to change {
-                       Delayed::Job.count
-                     }.by(1)
+                  Delayed::Job.count
+                }.by(1)
 
-                successes, failures = Delayed::Worker.new.work_off
-                expect([successes, failures]).to eq [0, 1]
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
                 app_obj.refresh
                 expect(app_obj.package_hash).to be_nil

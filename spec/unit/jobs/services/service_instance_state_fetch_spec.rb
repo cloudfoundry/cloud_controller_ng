@@ -63,7 +63,7 @@ module VCAP::CloudController
 
         def run_job(job)
           Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
-          expect(Delayed::Worker.new.work_off).to eq [1, 0]
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
         end
 
         describe '#initialize' do
@@ -269,7 +269,7 @@ module VCAP::CloudController
 
               Timecop.freeze(Time.now + 1.hour) do
                 Delayed::Job.last.invoke_job
-                expect(Delayed::Worker.new.work_off).to eq([1, 0])
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
               end
             end
 
@@ -332,13 +332,13 @@ module VCAP::CloudController
             before do
               run_job(job)
               Timecop.travel(Time.now + max_duration.minutes + 1.minute) do
-                expect(Delayed::Worker.new.work_off).to eq([1, 0])
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
               end
             end
 
             it 'should not enqueue another fetch job' do
               Timecop.freeze(Time.now + max_duration.minutes + 1.minute) do
-                expect(Delayed::Worker.new.work_off).to eq([0, 0])
+                execute_all_jobs(expected_successes: 0, expected_failures: 0)
               end
             end
 
@@ -358,7 +358,7 @@ module VCAP::CloudController
               run_job(job)
 
               Timecop.freeze(Time.now + job.poll_interval * 2)
-              expect(Delayed::Worker.new.work_off).to eq([0, 0])
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
             end
           end
 
@@ -372,12 +372,12 @@ module VCAP::CloudController
 
               # should run enqueued job
               Timecop.travel(Time.now + max_duration.minutes - 1.minute) do
-                expect(Delayed::Worker.new.work_off).to eq([1, 0])
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
               end
 
               # should not run enqueued job
               Timecop.travel(Time.now + max_duration.minutes) do
-                expect(Delayed::Worker.new.work_off).to eq([0, 0])
+                execute_all_jobs(expected_successes: 0, expected_failures: 0)
               end
             end
 
@@ -409,17 +409,17 @@ module VCAP::CloudController
               first_run_time = Time.now
 
               Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: first_run_time }).enqueue
-              expect(Delayed::Worker.new.work_off).to eq([1, 0])
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(Delayed::Job.count).to eq(1)
 
               old_next_run_time = first_run_time + default_polling_interval.seconds + 1.second
               Timecop.travel(old_next_run_time) do
-                expect(Delayed::Worker.new.work_off).to eq([0, 0])
+                execute_all_jobs(expected_successes: 0, expected_failures: 0)
               end
 
               new_next_run_time = first_run_time + new_polling_interval.seconds + 1.second
               Timecop.travel(new_next_run_time) do
-                expect(Delayed::Worker.new.work_off).to eq([1, 0])
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
               end
             end
           end

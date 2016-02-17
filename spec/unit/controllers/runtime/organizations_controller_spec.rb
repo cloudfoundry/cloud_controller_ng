@@ -714,7 +714,7 @@ module VCAP::CloudController
               expect(last_response).to have_status_code(202)
               job_guid = decoded_response['metadata']['guid']
 
-              expect(Delayed::Worker.new.work_off).to eq([0, 1])
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
               get "/v2/jobs/#{job_guid}", {}, json_headers(admin_headers)
               expect(decoded_response['entity']['status']).to eq 'failed'
@@ -737,7 +737,7 @@ module VCAP::CloudController
               expect(last_response).to have_status_code(202)
               job_guid = decoded_response['metadata']['guid']
 
-              expect(Delayed::Worker.new.work_off).to eq([0, 1])
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
               get "/v2/jobs/#{job_guid}", {}, json_headers(admin_headers)
               expect(decoded_response['entity']['status']).to eq 'failed'

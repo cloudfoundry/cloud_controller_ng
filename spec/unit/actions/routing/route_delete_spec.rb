@@ -122,7 +122,7 @@ module VCAP::CloudController
         job = route_delete_action.delete_async(route: route, recursive: false)
 
         expect(job).to be_a_fully_wrapped_job_of(Jobs::Runtime::ModelDeletion)
-        execute_all_jobs
+        execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
         expect(route.exists?).to be_falsey
       end

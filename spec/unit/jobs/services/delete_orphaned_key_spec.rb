@@ -23,7 +23,7 @@ module VCAP::CloudController
 
         it 'deletes the key' do
           Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
-          expect(Delayed::Worker.new.work_off).to eq [1, 0]
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
           expect(client).to have_received(:unbind).with(service_key)
         end
@@ -47,7 +47,7 @@ module VCAP::CloudController
       describe 'exponential backoff when the job fails' do
         def run_job
           expect(Delayed::Job.count).to eq 1
-          expect(Delayed::Worker.new.work_off).to eq [0, 1]
+          execute_all_jobs(expected_successes: 0, expected_failures: 1)
         end
 
         it 'retries 10 times, doubling its back_off time with each attempt' do
@@ -68,7 +68,7 @@ module VCAP::CloudController
 
           Timecop.travel(run_at_time)
           run_job
-          expect(Delayed::Worker.new.work_off).to eq [0, 0] # not running any jobs
+          execute_all_jobs(expected_successes: 0, expected_failures: 0) # not running any jobs
 
           expect(run_at_time).to be_within(1.minute).of(start + (2**11).minutes - 2.minutes)
         end

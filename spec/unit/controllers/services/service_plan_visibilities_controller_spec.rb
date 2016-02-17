@@ -161,9 +161,7 @@ module VCAP::CloudController
           expect(decoded_response['entity']['guid']).to be
           expect(decoded_response['entity']['status']).to eq 'queued'
 
-          successes, failures = Delayed::Worker.new.work_off
-          expect(successes).to eq 1
-          expect(failures).to eq 0
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
           event = Event.first(type: 'audit.service_plan_visibility.delete')
           expect(event).to be
