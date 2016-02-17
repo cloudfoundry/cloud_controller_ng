@@ -9,6 +9,11 @@ module VCAP::CloudController::Diego
       let(:task) { VCAP::CloudController::TaskModel.make(name: 'my-task', command: 'echo foo', memory_in_mb: 1024) }
       let(:space) { app.space }
       let(:disk_limit) { 512 }
+      let(:service) { VCAP::CloudController::Service.make(label: 'elephantsql-n/a', provider: 'cool-provider') }
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-vip-uat', tags: ['excellent']) }
+      let!(:service_binding) { VCAP::CloudController::ServiceBindingModel.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com') }
+
       let(:expected_vcap_application) do
         {
           'limits'           => {
@@ -35,11 +40,17 @@ module VCAP::CloudController::Diego
           TestConfig.config[:default_app_disk_in_mb] = disk_limit
         end
 
+        it "returns the app's service binding environment variables" do
+          constructed_envs = V3::Environment.new(app, task, space).build
+
+          expect(constructed_envs['VCAP_SERVICES'][service.label][0]).to have_key(:credentials)
+        end
+
         it 'returns the correct environment hash for a v3 app' do
           constructed_envs = V3::Environment.new(app, task, space).build
 
           expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
-          expect(constructed_envs).to include({ 'VCAP_SERVICES' => {} })
+          expect(constructed_envs).to include({ 'VCAP_SERVICES' => be_an_instance_of(Hash) })
           expect(constructed_envs).to include({ 'MEMORY_LIMIT' => task.memory_in_mb })
           expect(constructed_envs).to include({ 'ENV_VAR_2' => 'jeff' })
         end
@@ -51,7 +62,7 @@ module VCAP::CloudController::Diego
             constructed_envs = V3::Environment.new(app, task, space, running_envs).build
 
             expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
-            expect(constructed_envs).to include({ 'VCAP_SERVICES' => {} })
+            expect(constructed_envs).to include({ 'VCAP_SERVICES' => be_an_instance_of(Hash) })
             expect(constructed_envs).to include({ 'MEMORY_LIMIT' => task.memory_in_mb })
             expect(constructed_envs).to include({ 'ENV_VAR_2' => 'jeff' })
             expect(constructed_envs).to include({ 'PUPPIES' => 'frolicking' })
@@ -66,7 +77,7 @@ module VCAP::CloudController::Diego
             constructed_envs = V3::Environment.new(app, task, space, running_envs).build(additional_envs)
             expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
             expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
-            expect(constructed_envs).to include({ 'VCAP_SERVICES' => {} })
+            expect(constructed_envs).to include({ 'VCAP_SERVICES' => be_an_instance_of(Hash) })
             expect(constructed_envs).to include({ 'MEMORY_LIMIT' => task.memory_in_mb })
             expect(constructed_envs).to include({ 'ENV_VAR_2' => 'not jeff' })
             expect(constructed_envs).to include({ 'SILLY' => 'lily' })
@@ -82,7 +93,7 @@ module VCAP::CloudController::Diego
             constructed_envs = V3::Environment.new(app, task, space, running_envs).build(nil)
             expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
             expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
-            expect(constructed_envs).to include({ 'VCAP_SERVICES' => {} })
+            expect(constructed_envs).to include({ 'VCAP_SERVICES' => be_an_instance_of(Hash) })
             expect(constructed_envs).to include({ 'MEMORY_LIMIT' => task.memory_in_mb })
             expect(constructed_envs).to include({ 'ENV_VAR_2' => 'jeff' })
             expect(constructed_envs).to include({ 'SILLY' => 'lily' })
