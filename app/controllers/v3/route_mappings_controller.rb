@@ -5,6 +5,7 @@ require 'queries/add_route_fetcher'
 require 'presenters/v3/route_mapping_presenter'
 require 'actions/add_route_mapping'
 require 'actions/route_mapping_delete'
+require 'controllers/v3/mixins/app_subresource'
 
 class RouteMappingsController < ApplicationController
   include AppSubresource
