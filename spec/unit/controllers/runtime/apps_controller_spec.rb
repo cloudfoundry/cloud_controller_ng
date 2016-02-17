@@ -661,9 +661,6 @@ module VCAP::CloudController
           get "/v2/apps/#{app_obj.guid}/route_mappings", '{}', json_headers(headers_for(developer))
           expect(last_response.status).to eql(200)
           parsed_body = parse(last_response.body)
-
-          p parsed_body
-
           expect(parsed_body['resources'].first['entity']['route_guid']).to eq(route.guid)
           expect(parsed_body['resources'].first['entity']['app_guid']).to eq(app_obj.guid)
         end
@@ -686,7 +683,6 @@ module VCAP::CloudController
       context 'DELETE' do
         it 'returns 404' do
           delete "/v2/apps/#{app_obj.guid}/route_mappings/#{route_mapping.guid}", '', json_headers(headers_for(developer))
-          p last_response.body
           expect(last_response.status).to eql(404)
         end
       end
