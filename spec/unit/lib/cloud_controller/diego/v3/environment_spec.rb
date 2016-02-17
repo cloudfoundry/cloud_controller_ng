@@ -114,9 +114,8 @@ module VCAP::CloudController::Diego
           let(:route2) { VCAP::CloudController::Route.make(space: space) }
 
           before do
-            add_route_to_app = VCAP::CloudController::AddRouteMapping.new(nil, nil)
-            add_route_to_app.add(app, route1, nil)
-            add_route_to_app.add(app, route2, nil)
+            VCAP::CloudController::RouteMappingModel.make(app: app, route: route1)
+            VCAP::CloudController::RouteMappingModel.make(app: app, route: route2)
           end
 
           it 'includes the uris as part of vcap application' do

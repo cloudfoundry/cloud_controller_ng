@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AddRouteMapping do
-    let(:add_route_to_app) { described_class.new(user, user_email) }
+  describe RouteMappingCreate do
+    let(:route_mapping_create) { described_class.new(user, user_email) }
     let(:space) { app.space }
     let(:app) { AppModel.make }
     let(:user) { double(:user, guid: '7') }
@@ -13,20 +13,20 @@ module VCAP::CloudController
       let(:route) { Route.make(space: space) }
 
       it 'associates the app to the route' do
-        add_route_to_app.add(app, route, process)
+        route_mapping_create.add(app, route, process)
         expect(app.reload.routes).to eq([route])
       end
 
       it 'does not allow for duplicate route association' do
-        add_route_to_app.add(app, route, process)
+        route_mapping_create.add(app, route, process)
         expect {
-          add_route_to_app.add(app, route, process)
-        }.to raise_error(AddRouteMapping::InvalidRouteMapping, /a duplicate route mapping already exists/)
+          route_mapping_create.add(app, route, process)
+        }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /a duplicate route mapping already exists/)
         expect(app.reload.routes).to eq([route])
       end
 
       it 'associates the route to the process' do
-        add_route_to_app.add(app, route, process)
+        route_mapping_create.add(app, route, process)
         expect(process.reload.routes).to eq([route])
       end
 
@@ -34,7 +34,7 @@ module VCAP::CloudController
         process.update(state: 'STARTED')
         process.update(package_state: 'STAGED')
         expect(Dea::Client).to receive(:update_uris).with(process)
-        add_route_to_app.add(app, route, process)
+        route_mapping_create.add(app, route, process)
         expect(process.reload.routes).to eq([route])
       end
 
@@ -42,7 +42,7 @@ module VCAP::CloudController
         process.update(state: 'STOPPED')
         process.update(package_state: 'STAGED')
         expect(Dea::Client).not_to receive(:update_uris).with(process)
-        add_route_to_app.add(app, route, process)
+        route_mapping_create.add(app, route, process)
         expect(process.reload.routes).to eq([route])
       end
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
         process.update(state: 'STARTED')
         process.update(package_state: 'PENDING')
         expect(Dea::Client).not_to receive(:update_uris).with(process)
-        add_route_to_app.add(app, route, process)
+        route_mapping_create.add(app, route, process)
         expect(process.reload.routes).to eq([route])
       end
 
@@ -63,7 +63,7 @@ module VCAP::CloudController
         end
 
         it 'creates an event for adding a route to an app' do
-          route_mapping = add_route_to_app.add(app, route, process)
+          route_mapping = route_mapping_create.add(app, route, process)
 
           expect(event_repository).to have_received(:record_map_route).with(
             app,
@@ -82,8 +82,8 @@ module VCAP::CloudController
 
         it 'raises an InvalidRouteMapping error' do
           expect {
-            add_route_to_app.add(app, route, process)
-          }.to raise_error(AddRouteMapping::InvalidRouteMapping, 'shizzle')
+            route_mapping_create.add(app, route, process)
+          }.to raise_error(RouteMappingCreate::InvalidRouteMapping, 'shizzle')
         end
       end
 
@@ -92,8 +92,8 @@ module VCAP::CloudController
 
         it 'raises InvalidRouteMapping' do
           expect {
-            add_route_to_app.add(app, route, process)
-          }.to raise_error(AddRouteMapping::InvalidRouteMapping, /the app and route must belong to the same space/)
+            route_mapping_create.add(app, route, process)
+          }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /the app and route must belong to the same space/)
           expect(app.reload.routes).to be_empty
         end
       end
