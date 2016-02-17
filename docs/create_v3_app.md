@@ -68,7 +68,7 @@
 
 1. Map the route to your app ([docs](http://apidocs.cloudfoundry.org/release-candidate/app_routes_(experimental)/map_a_route.html)):
 
-  `cf curl /v3/apps/[your-app-guid]/routes -X PUT -d '{"route_guid": "[your-route-guid]"}'`
+  `cf curl /v3/apps/[your-app-guid]/route_mappings -X POST -d '{"relationships": {"route": {"guid": "[your-route-guid]"} } }'`
 
 1. Start your app ([docs](http://apidocs.cloudfoundry.org/release-candidate/apps_(experimental)/starting_an_app.html)):
 
