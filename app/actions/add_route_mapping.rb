@@ -21,7 +21,14 @@ module VCAP::CloudController
         update_deas(process_model)
       end
 
-      Repositories::Runtime::AppEventRepository.new.record_map_route(app, route, @user.try(:guid), @user_email)
+      app_event_repository.record_map_route(
+        app,
+        route,
+        @user.try(:guid),
+        @user_email,
+        route_mapping: route_mapping
+      )
+
       route_mapping
 
     rescue Sequel::ValidationFailed => e
@@ -42,6 +49,10 @@ module VCAP::CloudController
       if process_model.dea_update_pending?
         Dea::Client.update_uris(process_model)
       end
+    end
+
+    def app_event_repository
+      Repositories::Runtime::AppEventRepository.new
     end
   end
 end

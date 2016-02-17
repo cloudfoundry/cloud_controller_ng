@@ -20,7 +20,8 @@ module VCAP::CloudController
             route_mapping.app,
             route_mapping.route,
             @user.try(:guid),
-            @user_email
+            @user_email,
+            route_mapping: route_mapping
           )
 
           route_mapping.destroy

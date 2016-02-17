@@ -63,14 +63,15 @@ module VCAP::CloudController
         end
 
         it 'creates an event for adding a route to an app' do
-          expect(event_repository).to receive(:record_map_route).with(
+          route_mapping = add_route_to_app.add(app, route, process)
+
+          expect(event_repository).to have_received(:record_map_route).with(
             app,
             route,
             user.guid,
             user_email,
+            route_mapping: route_mapping
           )
-
-          add_route_to_app.add(app, route, process)
         end
       end
 

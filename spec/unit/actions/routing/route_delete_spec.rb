@@ -55,8 +55,8 @@ module VCAP::CloudController
 
           route_delete_action.delete_sync(route: route, recursive: recursive)
 
-          expect(app_event_repository).to have_received(:record_unmap_route).with(app, route, user.guid, user_email).once
-          expect(app_event_repository).to have_received(:record_unmap_route).with(app_2, route, user.guid, user_email).once
+          expect(app_event_repository).to have_received(:record_unmap_route).with(app, route, user.guid, user_email, route_mapping: route_mapping).once
+          expect(app_event_repository).to have_received(:record_unmap_route).with(app_2, route, user.guid, user_email, route_mapping: route_mapping_2).once
         end
       end
 

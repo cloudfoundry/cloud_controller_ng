@@ -228,6 +228,18 @@ module VCAP::CloudController
             expect(event.metadata[:route_guid]).to eq(route.guid)
           end
         end
+
+        context 'and route mapping exists' do
+          let(:app) { AppModel.make(space: route.space) }
+          let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
+
+          it 'creates a new app.map_route audit event with appropriate metadata' do
+            event = app_event_repository.record_map_route(app, route, nil, nil, route_mapping: route_mapping)
+            expect(event.metadata[:route_guid]).to eq(route.guid)
+            expect(event.metadata[:route_mapping_guid]).to eq(route_mapping.guid)
+            expect(event.metadata[:process_type]).to eq('potato')
+          end
+        end
       end
 
       describe '#record_unmap_route' do
@@ -261,6 +273,18 @@ module VCAP::CloudController
             expect(event.actee_type).to eq('app')
             expect(event.actee).to eq(app.guid)
             expect(event.metadata[:route_guid]).to eq(route.guid)
+          end
+        end
+
+        context 'and route mapping exists' do
+          let(:app) { AppModel.make(space: route.space) }
+          let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
+
+          it 'creates a new app.map_route audit event with appropriate metadata' do
+            event = app_event_repository.record_unmap_route(app, route, nil, nil, route_mapping: route_mapping)
+            expect(event.metadata[:route_guid]).to eq(route.guid)
+            expect(event.metadata[:route_mapping_guid]).to eq(route_mapping.guid)
+            expect(event.metadata[:process_type]).to eq('potato')
           end
         end
       end

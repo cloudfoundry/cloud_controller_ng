@@ -85,6 +85,7 @@ module VCAP::CloudController
               route,
               user.guid,
               user_email,
+              route_mapping: route_mapping
             )
           end
         end

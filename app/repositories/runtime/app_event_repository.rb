@@ -68,15 +68,27 @@ module VCAP::CloudController
           create_app_audit_event('audit.app.delete-request', app, space, actor, metadata)
         end
 
-        def record_map_route(app, route, actor_guid, actor_name)
+        def record_map_route(app, route, actor_guid, actor_name, route_mapping: nil)
           actor_hash = actor_guid.nil? ? SYSTEM_ACTOR_HASH : { guid: actor_guid, name: actor_name, type: 'user' }
           metadata = { route_guid: route.guid }
+          if route_mapping
+            metadata.merge!({
+              route_mapping_guid: route_mapping.guid,
+              process_type:       route_mapping.process_type
+            })
+          end
           create_app_audit_event('audit.app.map-route', app, app.space, actor_hash, metadata)
         end
 
-        def record_unmap_route(app, route, actor_guid, actor_name)
+        def record_unmap_route(app, route, actor_guid, actor_name, route_mapping: nil)
           actor_hash = actor_guid.nil? ? SYSTEM_ACTOR_HASH : { guid: actor_guid, name: actor_name, type: 'user' }
           metadata = { route_guid: route.guid }
+          if route_mapping
+            metadata.merge!({
+              route_mapping_guid: route_mapping.guid,
+              process_type:       route_mapping.process_type
+            })
+          end
           create_app_audit_event('audit.app.unmap-route', app, app.space, actor_hash, metadata)
         end
 

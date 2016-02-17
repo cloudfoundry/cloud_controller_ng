@@ -65,14 +65,18 @@ describe 'Route Mappings' do
       # verify audit event
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type:              'audit.app.map-route',
-        actee:             app_model.guid,
-        actee_type:        'v3-app',
-        actee_name:        app_model.name,
-        actor:             developer.guid,
-        actor_type:        'user',
-        space_guid:        space.guid,
-        metadata:          { route_guid: route.guid }.to_json,
+        type:       'audit.app.map-route',
+        actee:      app_model.guid,
+        actee_type: 'v3-app',
+        actee_name: app_model.name,
+        actor:      developer.guid,
+        actor_type: 'user',
+        space_guid: space.guid,
+        metadata:   {
+                      route_guid:         route.guid,
+                      route_mapping_guid: guid,
+                      process_type:       'worker'
+                    }.to_json,
         organization_guid: space.organization.guid,
       })
     end
@@ -158,7 +162,7 @@ describe 'Route Mappings' do
   end
 
   describe 'DELETE /v3/apps/:app_guid/route_mappings/:route_mapping_guid' do
-    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route) }
+    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'buckeyes') }
 
     it 'deletes the specified route mapping' do
       delete "/v3/apps/#{app_model.guid}/route_mappings/#{route_mapping.guid}", {}, developer_headers
@@ -170,16 +174,20 @@ describe 'Route Mappings' do
       # verify audit event
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-            type:              'audit.app.unmap-route',
-            actee:             app_model.guid,
-            actee_type:        'v3-app',
-            actee_name:        app_model.name,
-            actor:             developer.guid,
-            actor_type:        'user',
-            space_guid:        space.guid,
-            metadata:          { route_guid: route.guid }.to_json,
-            organization_guid: space.organization.guid,
-          })
+        type:       'audit.app.unmap-route',
+        actee:      app_model.guid,
+        actee_type: 'v3-app',
+        actee_name: app_model.name,
+        actor:      developer.guid,
+        actor_type: 'user',
+        space_guid: space.guid,
+        metadata:   {
+                      route_guid:         route.guid,
+                      route_mapping_guid: route_mapping.guid,
+                      process_type:       'buckeyes'
+                    }.to_json,
+        organization_guid: space.organization.guid,
+      })
     end
   end
 end
