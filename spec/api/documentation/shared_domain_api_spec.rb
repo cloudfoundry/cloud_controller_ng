@@ -5,6 +5,7 @@ resource 'Shared Domains', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:guid) { VCAP::CloudController::SharedDomain.first.guid }
   let!(:domains) { 3.times { VCAP::CloudController::SharedDomain.make } }
+  let!(:tcp_domains) { 1.times { VCAP::CloudController::SharedDomain.make router_group_guid: 'my-random-guid' } }
 
   authenticated_request
 
@@ -56,7 +57,7 @@ resource 'Shared Domains', type: [:api, :legacy_api] do
       let(:q) { 'name:shared-domain.com' }
 
       before do
-        VCAP::CloudController::SharedDomain.make name: 'shared-domain.com'
+        VCAP::CloudController::SharedDomain.make name: 'shared-domain.com', router_group_guid: 'my-random-guid'
       end
 
       example 'Filtering Shared Domains by name' do
