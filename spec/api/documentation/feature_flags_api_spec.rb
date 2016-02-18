@@ -11,7 +11,7 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
     parameter :name, 'The name of the feature flag',
       valid_values: ['user_org_creation', 'app_bits_upload', 'private_domain_creation', 'app_scaling',
                      'route_creation', 'service_instance_creation', 'diego_docker', 'set_roles_by_username',
-                     'unset_roles_by_username', 'task_creation (experimental)']
+                     'unset_roles_by_username', 'task_creation (experimental), space_scoped_private_broker_creation (experimental)']
   end
 
   shared_context 'updatable_fields' do
@@ -26,7 +26,7 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
       client.get '/v2/config/feature_flags', {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(10)
+      expect(parsed_response.length).to eq(11)
       expect(parsed_response).to include(
         {
           'name'          => 'user_org_creation',
@@ -267,6 +267,23 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
           'enabled'       => false,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/task_creation'
+        })
+    end
+  end
+
+  get '/v2/config/feature_flags/space_scoped_private_broker_creation' do
+    example 'Get the Space Scoped Private Broker Creation feature flag (experimental)' do
+      explanation '''When enabled, space developers can create space scoped private brokers.
+                     When disabled, only admin users can create create space scoped private brokers.'''
+      client.get '/v2/config/feature_flags/space_scoped_private_broker_creation', {}, headers
+
+      expect(status).to eq(200)
+      expect(parsed_response).to eq(
+        {
+          'name'          => 'space_scoped_private_broker_creation',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/space_scoped_private_broker_creation'
         })
     end
   end

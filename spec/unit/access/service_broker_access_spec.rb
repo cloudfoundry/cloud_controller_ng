@@ -19,7 +19,16 @@ module VCAP::CloudController
       SecurityContext.clear
     end
 
-    it_should_behave_like :admin_full_access
+    context 'admin' do
+      include_context :admin_setup
+      it_behaves_like :full_access
+
+      context 'when FeatureFlag space_scoped_private_broker_creation is false' do
+        before { FeatureFlag.make(name: 'space_scoped_private_broker_creation', enabled: false, error_message: nil) }
+
+        it_behaves_like :full_access
+      end
+    end
 
     context 'organization manager (defensive)' do
       before { org.add_manager(user) }
@@ -39,7 +48,20 @@ module VCAP::CloudController
         space.add_developer user
       end
       it_behaves_like :no_access
-      it { is_expected.to allow_op_on_object :create, broker_with_space }
+
+      context 'when FeatureFlag space_scoped_private_broker_creation is true' do
+        before { FeatureFlag.make(name: 'space_scoped_private_broker_creation', enabled: true, error_message: nil) }
+        it { is_expected.to allow_op_on_object :create, broker_with_space }
+      end
+
+      context 'when FeatureFlag space_scoped_private_broker_creation is false' do
+        before { FeatureFlag.make(name: 'space_scoped_private_broker_creation', enabled: false, error_message: nil) }
+
+        it 'does not allow the create' do
+          expect { subject.create?(broker_with_space) }.to raise_error(VCAP::Errors::ApiError, /space_scoped_private_broker_creation/)
+        end
+      end
+
       it { is_expected.to allow_op_on_object :update, broker_with_space }
       it { is_expected.to allow_op_on_object :delete, broker_with_space }
       it { is_expected.to allow_op_on_object :index, VCAP::CloudController::ServiceBroker }
