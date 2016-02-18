@@ -36,7 +36,8 @@ resource 'Service Plans', type: [:api, :legacy_api] do
       standard_model_list :managed_service_instance,
                           VCAP::CloudController::ServiceInstancesController,
                           outer_model: :service_plan,
-                          path: :service_instances
+                          path: :service_instances,
+                          exclude_parameters: ['organization_guid']
     end
   end
 end
