@@ -42,11 +42,10 @@ resource 'Services', type: [:api, :legacy_api] do
 
     field :provider, 'The name of the service provider (used only by v1 service gateways)', required: true, deprecated: true, example_values: ['MySql Provider']
     field :version, 'The version of the service (used only by v1 service gateways)', required: true, deprecated: true, example_values: ['2.0']
-    field :url, 'The url of ther service provider (used only by v1 service gateways)', required: true, deprecated: true, example_values: ['http://myql.provider.com']
+    field :url, 'The url of the service provider (used only by v1 service gateways)', required: true, deprecated: true, example_values: ['http://myql.provider.com']
     field :service_broker_guid, 'The guid of the v2 service broker associated with the service', required: false, deprecated: false
     field :plan_updateable, 'A boolean describing that an instance of this service can be updated to a different plan', default: false
-
-    standard_model_list(:services, VCAP::CloudController::ServicesController)
+    standard_model_list(:services, VCAP::CloudController::ServicesController, exclude_parameters: ['provider'])
     standard_model_get(:services)
 
     delete '/v2/services/:guid' do

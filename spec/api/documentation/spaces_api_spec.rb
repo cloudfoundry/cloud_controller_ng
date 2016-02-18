@@ -315,7 +315,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         VCAP::CloudController::ServicePlanVisibility.make(service_plan: some_service.service_plans.first, organization: space.organization)
       end
 
-      standard_model_list :service, VCAP::CloudController::ServicesController, outer_model: :space, path: :service
+      standard_model_list :service, VCAP::CloudController::ServicesController, outer_model: :space, path: :service, exclude_parameters: ['provider']
     end
 
     describe 'Events' do
