@@ -72,6 +72,10 @@ resource 'Spaces', type: [:api, :legacy_api] do
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
   let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: service_instance) }
 
+  before do
+    service_instance.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+  end
+
   authenticated_request
 
   get '/v2/spaces/:guid/summary' do
