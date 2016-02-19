@@ -47,15 +47,20 @@ resource 'Services', type: [:api, :legacy_api] do
     field :plan_updateable, 'A boolean describing that an instance of this service can be updated to a different plan', default: false
     standard_model_list(:services, VCAP::CloudController::ServicesController, exclude_parameters: ['provider'])
     standard_model_get(:services)
+  end
 
-    delete '/v2/services/:guid' do
-      request_parameter :async, "Will run the delete request in a background job. Recommended: 'true'."
-      request_parameter :purge, 'Recursively remove a service and child objects from Cloud Foundry database without making requests to a service broker'
+  delete '/v2/services/:guid' do
+    request_parameter :async, "Will run the delete request in a background job. Recommended: 'true'."
+    request_parameter :purge, 'Recursively remove a service and child objects from Cloud Foundry database without making requests to a service broker'
 
-      example 'Delete a Particular Service' do
-        client.delete "/v2/services/#{guid}", {}, headers
-        expect(status).to eq 204
-      end
+    example 'Delete a Particular Service' do
+      explanation <<-EOD
+          Deleting with async not set to true will return a 204 status code and an empty response body.
+      EOD
+
+      allow_any_instance_of(VCAP::CloudController::RestController::BaseController).to receive(:async?).and_return(true)
+      client.delete "/v2/services/#{guid}", {}, headers
+      expect(status).to eq 202
     end
   end
 
