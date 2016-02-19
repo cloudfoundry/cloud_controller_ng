@@ -38,7 +38,10 @@ resource 'Apps', type: [:api, :legacy_api] do
     field :health_check_timeout, 'Timeout for health checking of an staged app when starting up'
 
     field :diego, 'Use diego to stage and to run when available', default: false, valid_values: [true, false]
-    field :enable_ssh, 'Enable SSHing into the app. Supported for Diego only.', default: 'false if SSH is disabled globally or on the space, true if enabled for both', valid_values: [true, false]
+    field :enable_ssh,
+      'Enable SSHing into the app. Supported for Diego only.',
+      default: 'false if SSH is disabled globally or on the space, true if enabled for both',
+      valid_values: [true, false]
     field :docker_image,
       'Name of the Docker image containing the app',
       default:        nil,
