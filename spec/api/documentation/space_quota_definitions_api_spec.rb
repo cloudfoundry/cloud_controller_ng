@@ -15,8 +15,8 @@ resource 'Space Quota Definitions', type: [:api, :legacy_api] do
   shared_context 'updatable_fields' do |opts|
     field :name, 'The name for the Space Quota Definition.', required: opts[:required], example_values: ['gold_quota']
     field :non_basic_services_allowed, 'If a space can have non basic services', required: opts[:required], valid_values: [true, false]
-    field :total_services, 'How many services a space can have.', required: opts[:required], example_values: [5, 201]
-    field :total_routes, 'How many routes a space can have.', required: opts[:required], example_values: [10, 23]
+    field :total_services, 'How many services a space can have. (-1 represents an unlimited amount)', required: opts[:required], example_values: [-1, 5, 201]
+    field :total_routes, 'How many routes a space can have. (-1 represents an unlimited amount)', required: opts[:required], example_values: [-1, 10, 23]
     field :memory_limit, 'How much memory in megabytes a space can have.', required: opts[:required], example_values: [5_120, 10_024]
 
     field :instance_memory_limit,
