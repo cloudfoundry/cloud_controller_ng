@@ -219,18 +219,41 @@ resource 'Apps', type: [:api, :legacy_api] do
 
     example 'Get the instance information for a STARTED App' do
       explanation <<-EOD
-        Get status for each instance of an App using the app guid.
+        Get status for each instance of an App using the app guid. Note: Provided example response is for apps running on Diego.
+
+        For apps running on DEAs, instance information will appear as follows:
+        {
+          "0": {
+            "state": "RUNNING",
+            "since": 1403140717.984577,
+            "debug_ip": null,
+            "debug_port": null,
+            "console_ip": null,
+            "console_port": null
+          }
+        }.
       EOD
 
       instances = {
         0 => {
           state:        'RUNNING',
           since:        1403140717.984577,
-          debug_ip:     nil,
-          debug_port:   nil,
-          console_ip:   nil,
-          console_port: nil
+          uptime:       2405
         },
+        1 => {
+          state:        'STARTING',
+          since:        3625363939.984577,
+          uptime:       1394
+        },
+        2 => {
+          state:        'CRASHED',
+          since:        2514251828.984577,
+          uptime:       283
+        },
+        3 => {
+          state:        'DOWN',
+          uptime:       9172
+        }
       }
 
       instances_reporters = double(:instances_reporters)
