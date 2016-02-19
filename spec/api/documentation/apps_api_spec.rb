@@ -37,11 +37,10 @@ resource 'Apps', type: [:api, :legacy_api] do
     field :health_check_type, "Type of health check to perform. 'none' is deprecated and an alias to 'process'.", default: 'port', valid_values: ['port', 'process', 'none']
     field :health_check_timeout, 'Timeout for health checking of an staged app when starting up'
 
-    field :diego, 'Use diego to stage and to run when available', default: false, experimental: true, valid_values: [true, false]
+    field :diego, 'Use diego to stage and to run when available', default: false, valid_values: [true, false]
     field :docker_image,
       'Name of the Docker image containing the app',
       default:        nil,
-      experimental:   true,
       example_values: ['cloudfoundry/helloworld', 'registry.example.com:5000/user/repository/tag']
     field :docker_credentials_json, 'Docker credentials for pulling docker image.',
       default:        {},
