@@ -69,7 +69,8 @@ module VCAP::CloudController
                   'droplet_uri' => 'www.droplet.url',
                   'lifecycle' => Lifecycles::BUILDPACK,
                   'command' => 'be rake my panda',
-                  'completion_callback' => "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed"
+                  'completion_callback' => "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed",
+                  'log_source' => 'App/TASK/' + task.name
                 })
               end
             end
@@ -91,7 +92,8 @@ module VCAP::CloudController
                   'docker_path' => 'cloudfoundry/capi-docker',
                   'lifecycle' => Lifecycles::DOCKER,
                   'command' => 'be rake my panda',
-                  'completion_callback' => "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed"
+                  'completion_callback' => "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed",
+                  'log_source' => 'App/TASK/' + task.name
                 })
               end
             end

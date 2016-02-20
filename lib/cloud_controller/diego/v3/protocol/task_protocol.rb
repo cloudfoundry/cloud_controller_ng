@@ -30,6 +30,7 @@ module VCAP::CloudController
               'completion_callback' => task_completion_callback,
               'lifecycle' => app.lifecycle_type,
               'command' => task.command,
+              'log_source' => 'App/TASK/' + task.name
             }
 
             if app.lifecycle_type == Lifecycles::BUILDPACK
