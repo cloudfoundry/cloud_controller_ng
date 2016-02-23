@@ -133,7 +133,12 @@ module VCAP::CloudController
       if @blobstore.local?
         @blob_sender.send_blob(app.guid, 'droplet', droplet.blob, self)
       else
-        redirect droplet.blob.public_download_url
+        begin
+          redirect droplet.blob.public_download_url
+        rescue CloudController::Blobstore::SigningRequestError => e
+          logger.error("failed to get download url: #{e.message}")
+          raise VCAP::Errors::ApiError.new_from_details('BlobstoreUnavailable')
+        end
       end
     end
 

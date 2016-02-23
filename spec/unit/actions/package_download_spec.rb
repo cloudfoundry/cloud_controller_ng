@@ -20,16 +20,16 @@ module VCAP::CloudController
       end
 
       let(:download_location) { 'http://package.download.url' }
-      let(:blob_double) { instance_double(CloudController::Blobstore::FogBlob) }
+      let(:blob) { instance_double(CloudController::Blobstore::FogBlob) }
 
       before do
-        allow(blobstore_client).to receive(:blob).and_return(blob_double)
+        allow(blobstore_client).to receive(:blob).and_return(blob)
       end
 
       context 'the storage is not local' do
         before do
           allow(blobstore_client).to receive(:local?).and_return(false)
-          allow(blob_double).to receive(:public_download_url).and_return(download_location)
+          allow(blob).to receive(:public_download_url).and_return(download_location)
         end
 
         it 'fetches and returns the download URL' do
@@ -37,12 +37,24 @@ module VCAP::CloudController
           expect(url).to eq(download_location)
           expect(file).to be_nil
         end
+
+        context 'when a SigningRequestError is raised' do
+          before do
+            allow(blob).to receive(:public_download_url).and_raise(CloudController::Blobstore::SigningRequestError.new)
+          end
+
+          it 'returns nil' do
+            file, url = package_download.download(package)
+            expect(url).to be_nil
+            expect(file).to be_nil
+          end
+        end
       end
 
       context 'the storage is local' do
         before do
           allow(blobstore_client).to receive(:local?).and_return(true)
-          allow(blob_double).to receive(:local_path).and_return(download_location)
+          allow(blob).to receive(:local_path).and_return(download_location)
         end
 
         it 'reports the file path' do

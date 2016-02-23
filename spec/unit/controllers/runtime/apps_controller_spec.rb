@@ -1030,9 +1030,10 @@ module VCAP::CloudController
       end
 
       context 'when the blobstore is not local' do
+        let(:blob) { instance_double(CloudController::Blobstore::FogBlob) }
+
         before do
           allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
-          blob = instance_double(CloudController::Blobstore::FogBlob)
           allow(blob).to receive(:public_download_url).and_return('http://example.com/somewhere/else')
           allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
         end
@@ -1054,6 +1055,18 @@ module VCAP::CloudController
 
           get "/v2/apps/#{app_obj.guid}/droplet/download", MultiJson.dump({}), json_headers(admin_headers)
           expect(last_response.status).to eq(404)
+        end
+
+        context 'when a SigningRequestError is raised' do
+          before do
+            allow(blob).to receive(:public_download_url).and_raise(CloudController::Blobstore::SigningRequestError.new)
+          end
+
+          it 'raises a BlobstoreUnavailable' do
+            get "/v2/apps/#{app_obj.guid}/droplet/download", MultiJson.dump({}), json_headers(admin_headers)
+            expect(last_response.status).to eq(502)
+            expect(last_response.body).to include('BlobstoreUnavailable')
+          end
         end
       end
     end

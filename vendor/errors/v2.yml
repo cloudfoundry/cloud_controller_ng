@@ -478,6 +478,11 @@
   http_code: 400
   message: "Downloading blobs can only be done directly to the blobstore."
 
+150006:
+  name: BlobstoreUnavailable
+  http_code: 502
+  message: "Failed to perform operation due to blobstore unavailability."
+
 160001:
   name: AppBitsUploadInvalid
   http_code: 400

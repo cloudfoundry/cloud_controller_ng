@@ -233,6 +233,18 @@ describe PackagesController, type: :controller do
         expect(response.status).to eq(302)
         expect(response.headers['Location']).to eq(download_location)
       end
+
+      context 'when the redirect url is nil' do
+        before do
+          allow_any_instance_of(VCAP::CloudController::PackageDownload).to receive(:download).and_return(nil)
+        end
+
+        it 'raises a BlobstoreUnavailable' do
+          get :download, guid: package.guid
+          expect(response.status).to eq(502)
+          expect(response.body).to include('BlobstoreUnavailable')
+        end
+      end
     end
 
     context 'when the package is not of type bits' do

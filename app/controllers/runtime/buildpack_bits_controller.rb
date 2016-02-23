@@ -49,7 +49,12 @@ module VCAP::CloudController
       if @buildpack_blobstore.local?
         send_local_blob(blob)
       else
-        return [HTTP::FOUND, { 'Location' => blob.public_download_url }, nil]
+        begin
+          redirect blob.public_download_url
+        rescue CloudController::Blobstore::SigningRequestError => e
+          logger.error("failed to get download url: #{e.message}")
+          raise VCAP::Errors::ApiError.new_from_details('BlobstoreUnavailable')
+        end
       end
     end
 

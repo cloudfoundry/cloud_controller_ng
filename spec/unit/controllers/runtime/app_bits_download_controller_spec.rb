@@ -75,6 +75,18 @@ module VCAP::CloudController
           get '/v2/apps/abcd/download', {}, headers_for(developer)
           expect(last_response.status).to eq(404)
         end
+
+        context 'when a SigningRequestError is raised' do
+          before do
+            allow_any_instance_of(CloudController::Blobstore::FogBlob).to receive(:public_download_url).and_raise(CloudController::Blobstore::SigningRequestError.new)
+          end
+
+          it 'raises a BlobstoreUnavailable' do
+            get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(developer)
+            expect(last_response.status).to eq(502)
+            expect(last_response.body).to include('BlobstoreUnavailable')
+          end
+        end
       end
 
       context 'user app download' do

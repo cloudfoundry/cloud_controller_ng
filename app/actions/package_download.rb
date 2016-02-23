@@ -12,7 +12,12 @@ module VCAP::CloudController
       if blobstore.local?
         return blob.local_path, nil
       else
-        return nil, blob.public_download_url
+        begin
+          return nil, blob.public_download_url
+        rescue CloudController::Blobstore::SigningRequestError => e
+          logger.error("failed to get download url: #{e.message}")
+          return nil
+        end
       end
     end
 

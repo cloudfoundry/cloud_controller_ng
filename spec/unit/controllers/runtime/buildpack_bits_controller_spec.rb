@@ -208,9 +208,8 @@ module VCAP::CloudController
 
         before do
           TestConfig.override(staging_config)
+          VCAP::CloudController::Buildpack.create_from_hash({ name: 'get_binary_buildpack', key: 'xyz', position: 0 })
         end
-
-        before { VCAP::CloudController::Buildpack.create_from_hash({ name: 'get_binary_buildpack', key: 'xyz', position: 0 }) }
 
         it 'returns NOT AUTHENTICATED (401) users without correct basic auth' do
           get "/v2/buildpacks/#{test_buildpack.guid}/download", '{}'
@@ -229,6 +228,20 @@ module VCAP::CloudController
           authorize(staging_user, staging_password)
           get "/v2/buildpacks/#{test_buildpack.guid}/download"
           expect(last_response.status).to eq(404)
+        end
+
+        context 'when a SigningRequestError is raised' do
+          before do
+            allow_any_instance_of(CloudController::Blobstore::FogBlob).to receive(:public_download_url).and_raise(CloudController::Blobstore::SigningRequestError.new)
+          end
+
+          it 'raises a BlobstoreUnavailable' do
+            put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip }, admin_headers
+            authorize(staging_user, staging_password)
+            get "/v2/buildpacks/#{test_buildpack.guid}/download"
+            expect(last_response.status).to eq(502)
+            expect(last_response.body).to include('BlobstoreUnavailable')
+          end
         end
 
         context 'when blobstore is local' do

@@ -70,6 +70,8 @@ class PackagesController < ApplicationController
       send_file(file_path_for_download)
     elsif url_for_response
       redirect_to url_for_response
+    else
+      blobstore_unavailable!
     end
   end
 
@@ -142,6 +144,10 @@ class PackagesController < ApplicationController
 
   def staging_in_progress!
     raise VCAP::Errors::ApiError.new_from_details('StagingInProgress')
+  end
+
+  def blobstore_unavailable!
+    raise VCAP::Errors::ApiError.new_from_details('BlobstoreUnavailable')
   end
 
   def package_presenter
