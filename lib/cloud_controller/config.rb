@@ -42,6 +42,9 @@ module VCAP::CloudController
         :failed_jobs => {
           cutoff_age_in_days: Fixnum
         },
+        :completed_tasks => {
+          cutoff_age_in_days: Fixnum
+        },
         :default_app_memory => Fixnum,
         :default_app_disk_in_mb => Fixnum,
         optional(:maximum_app_disk_in_mb) => Fixnum,

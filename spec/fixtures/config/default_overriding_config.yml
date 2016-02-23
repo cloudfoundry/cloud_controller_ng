@@ -30,6 +30,9 @@ audit_events:
 failed_jobs:
   cutoff_age_in_days: 31
 
+completed_tasks:
+  cutoff_age_in_days: 31
+
 default_app_memory: 1024 #mb
 
 default_health_check_timeout: 30 #seconds
