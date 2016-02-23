@@ -8,9 +8,11 @@ module VCAP::CloudController
     one_to_many :spaces
 
     export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-      :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit
+      :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
+      :total_service_keys
     import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-      :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit
+      :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
+      :total_service_keys
 
     add_association_dependencies spaces: :nullify
 
@@ -21,12 +23,14 @@ module VCAP::CloudController
       validates_presence :total_routes
       validates_presence :memory_limit
       validates_presence :organization
+      validates_presence :total_service_keys
       validates_unique [:organization_id, :name]
 
       errors.add(:memory_limit, :less_than_zero) if memory_limit && memory_limit < 0
       errors.add(:instance_memory_limit, :invalid_instance_memory_limit) if instance_memory_limit && instance_memory_limit < -1
       errors.add(:app_instance_limit, :invalid_app_instance_limit) if app_instance_limit && app_instance_limit < UNLIMITED
       errors.add(:app_task_limit, :invalid_app_task_limit) if app_task_limit && app_task_limit < UNLIMITED
+      errors.add(:total_service_keys, :invalid_total_service_keys) if total_service_keys && total_service_keys < UNLIMITED
     end
 
     def validate_change_organization(new_org)

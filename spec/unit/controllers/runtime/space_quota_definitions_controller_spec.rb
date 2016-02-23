@@ -8,6 +8,7 @@ module VCAP::CloudController
           name:                       { type: 'string', required: true },
           non_basic_services_allowed: { type: 'bool', required: true },
           total_services:             { type: 'integer', required: true },
+          total_service_keys:         { type: 'integer', required: true },
           total_routes:               { type: 'integer', required: true },
           memory_limit:               { type: 'integer', required: true },
           instance_memory_limit:      { type: 'integer' },
@@ -22,6 +23,7 @@ module VCAP::CloudController
           name:                       { type: 'string' },
           non_basic_services_allowed: { type: 'bool' },
           total_services:             { type: 'integer' },
+          total_service_keys:         { type: 'integer' },
           total_routes:               { type: 'integer' },
           memory_limit:               { type: 'integer' },
           app_instance_limit:         { type: 'integer' },
@@ -146,7 +148,7 @@ module VCAP::CloudController
       let(:org) { Organization.make }
 
       it 'returns SpaceQuotaDefinitionInvalid' do
-        sqd_json = { name: '', non_basic_services_allowed: true, total_services: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
+        sqd_json = { name: '', non_basic_services_allowed: true, total_services: 1, total_service_keys: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
         post '/v2/space_quota_definitions', MultiJson.dump(sqd_json), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
@@ -156,7 +158,7 @@ module VCAP::CloudController
 
       it 'returns SpaceQuotaDefinitionNameTaken errors on unique name errors' do
         SpaceQuotaDefinition.make(name: 'foo', organization: org)
-        sqd_json = { name: 'foo', non_basic_services_allowed: true, total_services: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
+        sqd_json = { name: 'foo', non_basic_services_allowed: true, total_services: 1, total_service_keys: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
         post '/v2/space_quota_definitions', MultiJson.dump(sqd_json), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)

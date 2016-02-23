@@ -4,6 +4,7 @@ module VCAP::CloudController
       attribute :name,                       String
       attribute :non_basic_services_allowed, Message::Boolean
       attribute :total_services,             Integer
+      attribute :total_service_keys,         Integer
       attribute :total_routes,               Integer
       attribute :memory_limit,               Integer
       attribute :instance_memory_limit,      Integer, default: nil
