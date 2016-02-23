@@ -68,30 +68,6 @@ module VCAP::CloudController
       it { is_expected.to have_associated :routes, associated_instance: ->(app) { Route.make(space: app.space) } }
       it { is_expected.to have_associated :route_mappings, associated_instance: -> (app) { RouteMapping.make(app_id: app.id, route_id: Route.make(space: app.space).id) } }
 
-      context 'when an app has multiple ports bound to the same route' do
-        let(:app) { AppFactory.make(space: space, diego: true, ports: [8080, 9090]) }
-        let(:route) { Route.make(host: 'host2', space: space, path: '/my%20path') }
-        let!(:route_mapping1) { RouteMapping.make(app: app, route: route, app_port: 8080) }
-        let!(:route_mapping2) { RouteMapping.make(app: app, route: route, app_port: 9090) }
-
-        it 'returns a single associated route' do
-          expect(app.routes.size).to eq 1
-        end
-      end
-
-      context 'when associating a route with a diego app' do
-        let(:app) { AppFactory.make(space: space, diego: true, ports: [8080, 9090]) }
-        let(:route) { Route.make(host: 'host2', space: space, path: '/my%20path') }
-
-        before do
-          app.add_route(route)
-        end
-
-        it 'maps the route to the first app port in the ports field of the app' do
-          expect(app.route_mappings.first.app_port).to eq(8080)
-        end
-      end
-
       context 'with Docker app' do
         before do
           FeatureFlag.create(name: 'diego_docker', enabled: true)
@@ -1943,13 +1919,14 @@ module VCAP::CloudController
           app.add_route(route_with_service)
           app.add_route(route_without_service)
 
-          expected_http = [
-            { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080 },
-            { 'hostname' => route_without_service.uri, 'port' => 8080 }
-          ]
+          expected_hash = {
+            'http_routes' => [
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url },
+              { 'hostname' => route_without_service.uri }
+            ]
+          }
 
-          expect(app.routing_info.keys).to match_array ['http_routes']
-          expect(app.routing_info['http_routes']).to match_array expected_http
+          expect(app.routing_info).to match expected_hash
         end
       end
 
@@ -1958,12 +1935,13 @@ module VCAP::CloudController
         let!(:route_mapping) { RouteMapping.make(app: app, route: route_with_service, app_port: 9090) }
 
         it 'returns the app port in routing info' do
-          expected_http = [
-            { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
-          ]
+          expected_hash = {
+            'http_routes' => [
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
+            ]
+          }
 
-          expect(app.routing_info.keys).to match_array ['http_routes']
-          expect(app.routing_info['http_routes']).to match_array expected_http
+          expect(app.routing_info).to match expected_hash
         end
       end
 
@@ -1973,13 +1951,14 @@ module VCAP::CloudController
         let!(:route_mapping2) { RouteMapping.make(app: app, route: route_with_service, app_port: 9090) }
 
         it 'returns the app port in routing info' do
-          expected_http = [
-            { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080 },
-            { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
-          ]
+          expected_hash = {
+            'http_routes' => [
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080 },
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
+            ]
+          }
 
-          expect(app.routing_info.keys).to match_array ['http_routes']
-          expect(app.routing_info['http_routes']).to match_array expected_http
+          expect(app.routing_info).to match expected_hash
         end
       end
 
@@ -1989,13 +1968,14 @@ module VCAP::CloudController
         let!(:route_mapping2) { RouteMapping.make(app: app, route: route_with_service, app_port: 9090) }
 
         it 'returns the app port in routing info' do
-          expected_http = [
-            { 'hostname' => route_without_service.uri, 'port' => 9090 },
-            { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
-          ]
+          expected_hash = {
+            'http_routes' => [
+              { 'hostname' => route_without_service.uri, 'port' => 9090 },
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
+            ]
+          }
 
-          expect(app.routing_info.keys).to match_array ['http_routes']
-          expect(app.routing_info['http_routes']).to match_array expected_http
+          expect(app.routing_info).to match expected_hash
         end
       end
 
@@ -2005,12 +1985,14 @@ module VCAP::CloudController
         let!(:route_mapping2) { RouteMapping.make(app: app, route: route_with_service, app_port: 9090) }
 
         it 'returns the app port in routing info' do
-          expected_http = [
-            { 'hostname' => route_without_service.uri, 'port' => 8080 },
-            { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
-          ]
-          expect(app.routing_info.keys).to match_array ['http_routes']
-          expect(app.routing_info['http_routes']).to match_array expected_http
+          expected_hash = {
+            'http_routes' => [
+              { 'hostname' => route_without_service.uri, 'port' => 8080 },
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
+            ]
+          }
+
+          expect(app.routing_info).to match expected_hash
         end
       end
 
@@ -2022,12 +2004,13 @@ module VCAP::CloudController
           let!(:route_mapping) { RouteMapping.make(app: app, route: tcp_route, app_port: 9090) }
 
           it 'returns the app port in routing info' do
-            expected_tcp = [
-              { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 9090 },
-            ]
+            expected_hash = {
+              'tcp_routes' => [
+                { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 9090 },
+              ]
+            }
 
-            expect(app.routing_info.keys).to match_array ['tcp_routes']
-            expect(app.routing_info['tcp_routes']).to match_array expected_tcp
+            expect(app.routing_info).to match expected_hash
           end
         end
 
@@ -2039,13 +2022,14 @@ module VCAP::CloudController
           let!(:route_mapping_2) { RouteMapping.make(app: app, route: tcp_route, app_port: 5555) }
 
           it 'returns the app ports in routing info' do
-            expected_tcp = [
-              { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 9090 },
-              { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 5555 },
-            ]
+            expected_hash = {
+              'tcp_routes' => [
+                { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 9090 },
+                { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 5555 },
+              ]
+            }
 
-            expect(app.routing_info.keys).to match_array ['tcp_routes']
-            expect(app.routing_info['tcp_routes']).to match_array expected_tcp
+            expect(app.routing_info).to match expected_hash
           end
         end
 
@@ -2058,17 +2042,18 @@ module VCAP::CloudController
           let!(:route_mapping_2) { RouteMapping.make(app: app, route: tcp_route_2, app_port: 9090) }
 
           it 'returns the app ports in routing info' do
-            expected_routes = [
-              { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route_1.port, 'container_port' => 9090 },
-              { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route_2.port, 'container_port' => 9090 },
-            ]
+            expected_hash = {
+              'tcp_routes' => [
+                { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route_1.port, 'container_port' => 9090 },
+                { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route_2.port, 'container_port' => 9090 },
+              ]
+            }
 
-            expect(app.routing_info.keys).to match_array ['tcp_routes']
-            expect(app.routing_info['tcp_routes']).to match_array expected_routes
+            expect(app.routing_info).to match expected_hash
           end
         end
 
-        context 'with different app ports mapped to different routes' do
+        context 'with app ports of same app mapped to different routes' do
           let(:app) { AppFactory.make(space: space, diego: true, ports: [9090, 5555]) }
           let(:domain) { SharedDomain.make(name: 'tcpdomain.com', router_group_guid: 'router-group-guid-1') }
           let(:tcp_route_1) { Route.make(domain: domain, space: space, port: 52000) }
@@ -2077,13 +2062,14 @@ module VCAP::CloudController
           let!(:route_mapping_2) { RouteMapping.make(app: app, route: tcp_route_2, app_port: 5555) }
 
           it 'returns the multiple route mappings in routing info' do
-            expected_routes = [
-              { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route_1.port, 'container_port' => 9090 },
-              { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route_2.port, 'container_port' => 5555 },
-            ]
+            expected_hash = {
+              'tcp_routes' => [
+                { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route_1.port, 'container_port' => 9090 },
+                { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route_2.port, 'container_port' => 5555 },
+              ]
+            }
 
-            expect(app.routing_info.keys).to match_array ['tcp_routes']
-            expect(app.routing_info['tcp_routes']).to match_array expected_routes
+            expect(app.routing_info).to match expected_hash
           end
         end
       end
@@ -2097,18 +2083,17 @@ module VCAP::CloudController
         let!(:tcp_route_mapping) { RouteMapping.make(app: app, route: tcp_route, app_port: 5555) }
 
         it 'returns the app port in routing info' do
-          expected_http = [
-            { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080 },
-            { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
-          ]
+          expected_hash = {
+            'http_routes' => [
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080 },
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
+            ],
+            'tcp_routes' => [
+              { 'router_group_guid' => tcp_domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 5555 },
+            ]
+          }
 
-          expected_tcp = [
-            { 'router_group_guid' => tcp_domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 5555 },
-          ]
-
-          expect(app.routing_info.keys).to match_array ['tcp_routes', 'http_routes']
-          expect(app.routing_info['tcp_routes']).to match_array expected_tcp
-          expect(app.routing_info['http_routes']).to match_array expected_http
+          expect(app.routing_info).to match expected_hash
         end
       end
     end

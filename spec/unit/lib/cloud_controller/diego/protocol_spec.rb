@@ -191,12 +191,9 @@ module VCAP::CloudController
             ],
             'routing_info' => {
               'http_routes' => [
-                { 'hostname' => route_without_service.uri,
-                  'port' => app.ports[0],
-                },
+                { 'hostname' => route_without_service.uri },
                 { 'hostname' => route_with_service.uri,
-                  'route_service_url' => route_with_service.route_binding.route_service_url,
-                  'port' => app.ports[0],
+                  'route_service_url' => route_with_service.route_binding.route_service_url
                 }
               ]
             },
