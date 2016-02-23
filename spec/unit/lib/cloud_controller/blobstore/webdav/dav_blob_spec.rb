@@ -7,17 +7,16 @@ module CloudController
       subject(:blob) { DavBlob.new(httpmessage: httpmessage, key: 'fo/ob/foobar', signer: signer) }
       let(:httpmessage) { instance_double(HTTP::Message, headers: {}) }
       let(:key) { 'fo/ob/foobar' }
-      let(:signer) do
-        NginxSecureLinkSigner.new(
-          secret:               'some-secret',
-          internal_host:        'http://blobstore.private.com',
-          internal_path_prefix: '/read',
-          public_host:          'https://blobstore.public.com',
-          public_path_prefix:   '/read'
-        )
-      end
+      let(:signer) { instance_double(NginxSecureLinkSigner) }
 
-      it_behaves_like 'a blob'
+      describe 'being a blob' do
+        before do
+          allow(signer).to receive(:sign_public_url)
+          allow(signer).to receive(:sign_internal_url)
+        end
+
+        it_behaves_like 'a blob'
+      end
 
       describe 'attributes' do
         let(:headers) { { 'ETag' => 'the-etag', 'Last-Modified' => 'modified-date', 'Content-Length' => 123455 } }
@@ -43,21 +42,27 @@ module CloudController
       end
 
       describe 'internal_download_url' do
-        it 'generates a signed expiring url with expiration of 1 hour' do
-          # using nginx method defined here: http://nginx.org/en/docs/http/ngx_http_secure_link_module.html
+        before do
+          allow(signer).to receive(:sign_internal_url)
+        end
 
+        it 'requests a signed expiring url with expiration of 1 hour' do
           Timecop.freeze(Time.utc(2008, 1, 1, 12, 0, 0)) do
-            expect(blob.internal_download_url).to eq('http://blobstore.private.com/read/fo/ob/foobar?expires=1199192400&md5=3RBuMi1CauNAw8thvmZfPw')
+            blob.internal_download_url
+            expect(signer).to have_received(:sign_internal_url).with(path: 'fo/ob/foobar', expires: 1199192400)
           end
         end
       end
 
       describe 'public_download_url' do
-        it 'generates a signed expiring url with expiration of 1 hour' do
-          # using nginx method defined here: http://nginx.org/en/docs/http/ngx_http_secure_link_module.html
+        before do
+          allow(signer).to receive(:sign_public_url)
+        end
 
+        it 'generates a signed expiring url with expiration of 1 hour' do
           Timecop.freeze(Time.utc(2008, 1, 1, 12, 0, 0)) do
-            expect(blob.public_download_url).to eq('https://blobstore.public.com/read/fo/ob/foobar?expires=1199192400&md5=3RBuMi1CauNAw8thvmZfPw')
+            blob.public_download_url
+            expect(signer).to have_received(:sign_public_url).with(path: 'fo/ob/foobar', expires: 1199192400)
           end
         end
       end

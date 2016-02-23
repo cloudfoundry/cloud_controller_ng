@@ -1,47 +1,62 @@
 module CloudController
   module Blobstore
     class NginxSecureLinkSigner
-      def initialize(secret:, internal_host:, internal_path_prefix: nil, public_host:, public_path_prefix: nil)
-        @secret               = secret
-        @internal_host        = internal_host
+      class SigningRequestError < StandardError; end
+
+      def initialize(internal_endpoint:, internal_path_prefix: nil,
+        public_endpoint:, public_path_prefix: nil, basic_auth_user:, basic_auth_password:)
+
+        @internal_uri         = URI(internal_endpoint)
         @internal_path_prefix = internal_path_prefix
-        @public_host          = public_host
+        @public_uri           = URI(public_endpoint)
         @public_path_prefix   = public_path_prefix
+
+        @client = HTTPClient.new
+
+        @headers = {}
+        @headers['Authorization'] = 'Basic ' + Base64.strict_encode64("#{basic_auth_user}:#{basic_auth_password}").strip
       end
 
       def sign_internal_url(expires:, path:)
-        path       = File.join([@internal_path_prefix, path].compact)
-        md5        = generate_md5(@secret, expires, path)
-        url        = URI(@internal_host)
-        url.scheme = 'http'
-        url.path   = path
-        url.query  = { md5: md5, expires: expires }.to_query
-        url.to_s
+        request_uri  = uri(expires: expires, path: File.join([@internal_path_prefix, path].compact))
+        response_uri = make_request(uri: request_uri)
+
+        signed_uri        = @internal_uri.clone
+        signed_uri.path   = response_uri.path
+        signed_uri.query  = response_uri.query
+        signed_uri.to_s
       end
 
       def sign_public_url(expires:, path:)
-        path       = File.join([@public_path_prefix, path].compact)
-        md5        = generate_md5(@secret, expires, path)
-        url        = URI(@public_host)
-        url.scheme = 'https'
-        url.path   = path
-        url.query  = { md5: md5, expires: expires }.to_query
-        url.to_s
+        request_uri  = uri(expires: expires, path: File.join([@public_path_prefix, path].compact))
+        response_uri = make_request(uri: request_uri)
+
+        signed_uri        = @public_uri.clone
+        signed_uri.scheme = 'https'
+        signed_uri.path   = response_uri.path
+        signed_uri.query  = response_uri.query
+        signed_uri.to_s
       end
 
       private
 
-      def generate_md5(secret, expires, path)
-        # using nginx secure link generation
-        # see: http://nginx.org/en/docs/http/ngx_http_secure_link_module.html
-        #
-        # from that site, the bash generation is:
-        #  echo -n '1199192400/fo/ob/bar some-secret' | \
-        #  openssl md5 -binary | openssl base64 | tr +/ -_ | tr -d =
+      def make_request(uri:)
+        response = @client.get(uri, header: @headers)
 
-        s   = "#{expires}#{path} #{secret}"
-        enc = Base64.encode64(Digest::MD5.digest(s))
-        enc.tr('+/', '-_').delete('=').chomp
+        raise SigningRequestError.new("Could not get a signed url, #{response.status}/#{response.content}") unless response.status == 200
+
+        URI(response.content)
+      end
+
+      def uri(expires:, path:)
+        uri       = @internal_uri.clone
+        uri.path  = '/sign'
+        uri.query = {
+          expires: expires,
+          path:    File.join(['/', path])
+        }.to_query
+
+        uri.to_s
       end
     end
   end

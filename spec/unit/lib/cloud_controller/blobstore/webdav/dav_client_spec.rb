@@ -10,8 +10,7 @@ module CloudController
       let(:options) do
         {
           private_endpoint: 'http://localhost',
-          public_endpoint:  'http://localhost.public',
-          secret:           'some-secret'
+          public_endpoint:  'http://localhost.public'
         }
       end
       let(:directory_key) { 'droplets' }

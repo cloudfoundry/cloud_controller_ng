@@ -59,7 +59,7 @@ module CloudController
         let(:blobstore_type) { 'webdav' }
 
         before do
-          options.merge!(webdav_config: {})
+          options.merge!(webdav_config: { private_endpoint: 'http://private.example.com', public_endpoint: 'http://public.example.com' })
         end
 
         it 'provides a webdav client' do

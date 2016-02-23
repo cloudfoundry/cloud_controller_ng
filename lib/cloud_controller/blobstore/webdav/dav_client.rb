@@ -25,13 +25,13 @@ module CloudController
             Base64.strict_encode64("#{user}:#{password}").strip
         end
 
-        path_prefix = File.join(['/read', @directory_key])
-        @signer     = NginxSecureLinkSigner.new(
-          secret:               @options[:secret],
-          internal_host:        @options[:private_endpoint],
-          internal_path_prefix: path_prefix,
-          public_host:          @options[:public_endpoint],
-          public_path_prefix:   path_prefix
+        @signer = NginxSecureLinkSigner.new(
+          internal_endpoint:    @options[:private_endpoint],
+          internal_path_prefix: @directory_key,
+          public_endpoint:      @options[:public_endpoint],
+          public_path_prefix:   @directory_key,
+          basic_auth_user:      user,
+          basic_auth_password:  password
         )
       end
 
