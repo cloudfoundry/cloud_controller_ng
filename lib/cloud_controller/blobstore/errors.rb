@@ -11,5 +11,8 @@ module CloudController
 
     class UnsafeDelete < StandardError
     end
+
+    class SigningRequestError < BlobstoreError
+    end
   end
 end

@@ -40,7 +40,7 @@ module CloudController
 
       let(:app) { VCAP::CloudController::AppFactory.make }
 
-      describe 'app package' do
+      describe '#app_package_download_url' do
         it 'gives out signed url to remote blobstore for appbits' do
           expect(url_generator.app_package_download_url(app)).to eql(internal_url)
           expect(package_blobstore).to have_received(:blob).with(app.guid)
@@ -65,9 +65,19 @@ module CloudController
             expect(url_generator.droplet_download_url(app)).to be_nil
           end
         end
+
+        context 'when a SigningRequestError is raised' do
+          before do
+            allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
+          end
+
+          it 'returns nil' do
+            expect(url_generator.app_package_download_url(app)).to be_nil
+          end
+        end
       end
 
-      describe 'buildpack cache' do
+      describe '#buildpack_cache_download_url' do
         it 'gives out signed url to remote blobstore for buildpack cache' do
           expect(url_generator.buildpack_cache_download_url(app)).to eql(internal_url)
           expect(buildpack_cache_blobstore).to have_received(:blob).with(app.buildpack_cache_key)
@@ -82,9 +92,19 @@ module CloudController
             expect(url_generator.buildpack_cache_download_url(app)).to be_nil
           end
         end
+
+        context 'when a SigningRequestError is raised' do
+          before do
+            allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
+          end
+
+          it 'returns nil' do
+            expect(url_generator.buildpack_cache_download_url(app)).to be_nil
+          end
+        end
       end
 
-      describe 'admin buildpacks' do
+      describe '#admin_buildpack_download_url' do
         let(:buildpack) { VCAP::CloudController::Buildpack.make }
 
         it 'gives out signed url to remote blobstore for admin buildpack' do
@@ -101,9 +121,19 @@ module CloudController
             expect(url_generator.admin_buildpack_download_url(buildpack)).to be_nil
           end
         end
+
+        context 'when a SigningRequestError is raised' do
+          before do
+            allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
+          end
+
+          it 'returns nil' do
+            expect(url_generator.admin_buildpack_download_url(buildpack)).to be_nil
+          end
+        end
       end
 
-      describe 'droplets' do
+      describe '#droplet_download_url' do
         before do
           allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).
             and_return(droplet_blobstore)
@@ -123,10 +153,20 @@ module CloudController
             expect(url_generator.droplet_download_url(app)).to be_nil
           end
         end
+
+        context 'when a SigningRequestError is raised' do
+          before do
+            allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
+          end
+
+          it 'returns nil' do
+            expect(url_generator.droplet_download_url(app)).to be_nil
+          end
+        end
       end
 
       context 'v3 urls' do
-        describe 'droplet' do
+        describe '#v3_droplet_download_url' do
           let(:droplet) { VCAP::CloudController::DropletModel.make }
 
           it 'gives out signed url to remote blobstore from the blob' do
@@ -143,9 +183,19 @@ module CloudController
               expect(url_generator.v3_droplet_download_url(droplet)).to be_nil
             end
           end
+
+          context 'when a SigningRequestError is raised' do
+            before do
+              allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
+            end
+
+            it 'returns nil' do
+              expect(url_generator.v3_droplet_download_url(droplet)).to be_nil
+            end
+          end
         end
 
-        describe 'app buildpack cache' do
+        describe '#v3_app_buildpack_cache_download_url' do
           let(:app_model) { double(:app_model, guid: Sham.guid) }
           let(:stack) { Sham.name }
 
@@ -163,9 +213,19 @@ module CloudController
               expect(url_generator.v3_app_buildpack_cache_download_url(app_model.guid, stack)).to be_nil
             end
           end
+
+          context 'when a SigningRequestError is raised' do
+            before do
+              allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
+            end
+
+            it 'returns nil' do
+              expect(url_generator.v3_app_buildpack_cache_download_url(app_model.guid, stack)).to be_nil
+            end
+          end
         end
 
-        describe 'package' do
+        describe '#package_download_url' do
           let(:package) { VCAP::CloudController::PackageModel.make }
 
           it 'gives out signed url to remote blobstore for package' do
@@ -178,6 +238,16 @@ module CloudController
 
             it 'returns nil' do
               expect(url_generator.package_download_url(package)).to be_nil
+            end
+          end
+
+          context 'when a SigningRequestError is raised' do
+            before do
+              allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
+            end
+
+            it 'returns nil' do
+              expect(url_generator.package_download_url(app)).to be_nil
             end
           end
         end

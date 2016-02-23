@@ -1,8 +1,6 @@
 module CloudController
   module Blobstore
     class NginxSecureLinkSigner
-      class SigningRequestError < StandardError; end
-
       def initialize(internal_endpoint:, internal_path_prefix: nil,
         public_endpoint:, public_path_prefix: nil, basic_auth_user:, basic_auth_password:)
 

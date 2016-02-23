@@ -18,49 +18,63 @@ module CloudController
         blob = @package_blobstore.blob(app.guid)
         return nil unless blob
 
-        blob.internal_download_url
-      end
-
-      def package_download_url(package)
-        blob = @package_blobstore.blob(package.guid)
-        return nil unless blob
-
-        blob.internal_download_url
+        url_for_blob(blob)
       end
 
       def buildpack_cache_download_url(app)
         blob = @buildpack_cache_blobstore.blob(app.buildpack_cache_key)
         return nil unless blob
 
-        blob.internal_download_url
-      end
-
-      def v3_app_buildpack_cache_download_url(app_guid, stack)
-        blob = @buildpack_cache_blobstore.blob("#{app_guid}/#{stack}")
-        return nil unless blob
-
-        blob.internal_download_url
+        url_for_blob(blob)
       end
 
       def admin_buildpack_download_url(buildpack)
         blob = @admin_buildpack_blobstore.blob(buildpack.key)
         return nil unless blob
 
-        blob.internal_download_url
+        url_for_blob(blob)
       end
 
       def droplet_download_url(app)
         droplet = app.current_droplet
         return nil unless droplet
         blob = droplet.blob
-        blob.internal_download_url if blob
+        url_for_blob(blob) if blob
       end
 
+      # V3 downloads
       def v3_droplet_download_url(droplet)
         blob = @droplet_blobstore.blob(droplet.blobstore_key)
         return nil unless blob
 
+        url_for_blob(blob)
+      end
+
+      def v3_app_buildpack_cache_download_url(app_guid, stack)
+        blob = @buildpack_cache_blobstore.blob("#{app_guid}/#{stack}")
+        return nil unless blob
+
+        url_for_blob(blob)
+      end
+
+      def package_download_url(package)
+        blob = @package_blobstore.blob(package.guid)
+        return nil unless blob
+
+        url_for_blob(blob)
+      end
+
+      private
+
+      def url_for_blob(blob)
         blob.internal_download_url
+      rescue SigningRequestError => e
+        logger.error("failed to get download url: #{e.message}")
+        return nil
+      end
+
+      def logger
+        @logger ||= Steno.logger('cc.blobstore.internal_url_generator')
       end
     end
   end

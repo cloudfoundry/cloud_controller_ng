@@ -68,7 +68,7 @@ module CloudController
           it 'raises an error' do
             expect {
               signer.sign_internal_url(expires: expires, path: 'some/path')
-            }.to raise_error(NginxSecureLinkSigner::SigningRequestError, /Could not get a signed url/)
+            }.to raise_error(SigningRequestError, /Could not get a signed url/)
           end
         end
       end
@@ -118,7 +118,7 @@ module CloudController
           it 'raises an error' do
             expect {
               signer.sign_public_url(expires: expires, path: 'some/path')
-            }.to raise_error(NginxSecureLinkSigner::SigningRequestError, /Could not get a signed url/)
+            }.to raise_error(SigningRequestError, /Could not get a signed url/)
           end
         end
       end
