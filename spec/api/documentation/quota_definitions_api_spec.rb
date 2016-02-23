@@ -33,6 +33,7 @@ resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
       example_values: [-1, 10, 23], default: -1
     field :app_task_limit, 'The number of tasks that can be run per app. (-1 represents an unlimited amount)',
       default: -1,
+      experimental: true,
       example_values: [-1, 10]
   end
 
