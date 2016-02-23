@@ -15,11 +15,9 @@ module VCAP::CloudController
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', key: :route_guid, primary_key: :guid
 
     many_to_many :apps,
-                 distinct: true,
-                 order: Sequel.asc(:id),
-                 before_add:   :validate_app,
-                 after_add:    :handle_add_app,
-                 after_remove: :handle_remove_app
+      before_add:   :validate_app,
+      after_add:    :handle_add_app,
+      after_remove: :handle_remove_app
 
     one_to_one :route_binding
     one_through_one :service_instance, join_table: :route_bindings
@@ -140,9 +138,7 @@ module VCAP::CloudController
     end
 
     def _add_app(app, hash={})
-      app_port = app.ports.first if app.diego? && !app.ports.nil?
-
-      model.db[:apps_routes].insert(hash.merge(app_id: app.id, app_port: app_port, route_id: id, guid: SecureRandom.uuid))
+      model.db[:apps_routes].insert(hash.merge(app_id: app.id, route_id: id, guid: SecureRandom.uuid))
     end
 
     def validate_changed_space(new_space)

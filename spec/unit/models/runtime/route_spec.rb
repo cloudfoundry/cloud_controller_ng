@@ -113,31 +113,6 @@ module VCAP::CloudController
           expect(mapping2.exists?).to be_falsey
         end
       end
-      context 'when mapping app to route' do
-        let(:route) { Route.make }
-
-        before do
-          route.add_app(app)
-        end
-
-        context 'when it is a diego app' do
-          let(:app) { AppFactory.make(space: route.space, diego: true) }
-
-          it 'uses the first port of the app as the app_port' do
-            route_mapping = RouteMapping.find(app: app, route: route)
-            expect(route_mapping.app_port).to eq(8080)
-          end
-        end
-
-        context 'when it is dea app' do
-          let(:app) { AppFactory.make(space: route.space, diego: false) }
-
-          it 'sets the app_port as nil' do
-            route_mapping = RouteMapping.find(app: app, route: route)
-            expect(route_mapping.app_port).to be_nil
-          end
-        end
-      end
     end
 
     describe 'Validations' do
@@ -773,7 +748,7 @@ module VCAP::CloudController
     describe 'apps association' do
       let(:route) { Route.make }
       let!(:app) do
-        AppFactory.make({ space: route.space, diego: true, ports: [8080, 9090] })
+        AppFactory.make({ space: route.space })
       end
 
       describe 'when adding an app' do
@@ -782,15 +757,6 @@ module VCAP::CloudController
           expect {
             route.add_app(app)
           }.to change { Event.count }.by(1)
-        end
-
-        context 'when a app is bound to multiple ports' do
-          let!(:route_mapping1) { RouteMapping.make(app: app, route: route, app_port: 8080) }
-          let!(:route_mapping2) { RouteMapping.make(app: app, route: route, app_port: 9090) }
-
-          it 'returns a single app association' do
-            expect(route.apps.length).to eq(1)
-          end
         end
       end
 
