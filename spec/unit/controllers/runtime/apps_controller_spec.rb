@@ -539,6 +539,36 @@ module VCAP::CloudController
             expect(decoded_response['entity']['diego']).to be true
           end
         end
+
+        context 'when updating an app with existing route mapping' do
+          let(:route) { Route.make(space: app_obj.space) }
+          let!(:route_mapping) { RouteMapping.make(id: 1, app_id: app_obj.id, route_id: route.id, app_port: 9090) }
+          let!(:route_mapping2) { RouteMapping.make(id: 2, app_id: app_obj.id, route_id: route.id, app_port: 5222) }
+
+          context 'when new app ports contains all existing route port mappings' do
+            it 'updates the ports' do
+              put "/v2/apps/#{app_obj.guid}", '{ "ports":[9090, 5222, 1234] }', json_headers(headers_for(developer))
+              expect(last_response.status).to eq(201)
+              expect(decoded_response['entity']['ports']).to match([9090, 5222, 1234])
+            end
+          end
+
+          context 'when new app ports partially contains existing route port mappings' do
+            it 'returns 400' do
+              put "/v2/apps/#{app_obj.guid}", '{ "ports":[5222, 1234] }', json_headers(headers_for(developer))
+              expect(last_response.status).to eq(400)
+              expect(decoded_response['description']).to include('App ports ports may not be removed while routes are mapped to them.')
+            end
+          end
+
+          context 'when new app ports do not contain existing route mapping port' do
+            it 'returns 400' do
+              put "/v2/apps/#{app_obj.guid}", '{ "ports":[1234] }', json_headers(headers_for(developer))
+              expect(last_response.status).to eq(400)
+              expect(decoded_response['description']).to include('App ports ports may not be removed while routes are mapped to them.')
+            end
+          end
+        end
       end
 
       describe 'events' do
