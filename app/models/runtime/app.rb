@@ -643,11 +643,8 @@ module VCAP::CloudController
     end
 
     def _add_route(route, hash={})
-      if !self.ports.blank?
-        model.db[:apps_routes].insert(hash.merge(app_id: id, app_port: self.ports.first, route_id: route.id, guid: SecureRandom.uuid))
-      else
-        model.db[:apps_routes].insert(hash.merge(app_id: id, route_id: route.id, guid: SecureRandom.uuid))
-      end
+      port = self.ports.first unless self.ports.blank?
+      model.db[:apps_routes].insert(hash.merge(app_id: id, route_id: route.id, app_port: port, guid: SecureRandom.uuid))
     end
 
     def handle_remove_route(route)
@@ -676,9 +673,8 @@ module VCAP::CloudController
     private
 
     def route_id_app_ports_map
-      route_mappings = RouteMapping.select_all(RouteMapping.table_name).where(:"#{RouteMapping.table_name}__app_id" => self.id)
       route_app_port_map = {}
-      route_mappings.each do |route_map|
+      self.route_mappings(true).each do |route_map|
         route_app_port_map[route_map.route_id] = [] if route_app_port_map[route_map.route_id].nil?
         unless route_map.app_port.nil?
           route_app_port_map[route_map.route_id].push(route_map.app_port)

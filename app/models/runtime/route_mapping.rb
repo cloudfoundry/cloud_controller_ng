@@ -14,6 +14,10 @@ module VCAP::CloudController
         RouteMapping.dataset.where('guid is null and id = ?', self.id).update(guid: SecureRandom.uuid)
         reload
       end
+      if self.app_port.blank? && self.exists? && app.diego?
+        RouteMapping.dataset.where('app_port is null and id = ?', self.id).update(app_port: app.ports.first)
+        reload
+      end
       super
     end
 
@@ -45,15 +49,6 @@ module VCAP::CloudController
 
     def after_destroy
       app.handle_remove_route(route)
-      super
-    end
-
-    def app_port
-      if :app_port.nil?
-        unless app.ports.blank?
-          return app.ports[0]
-        end
-      end
       super
     end
   end

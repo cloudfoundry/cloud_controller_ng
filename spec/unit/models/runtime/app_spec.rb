@@ -1939,10 +1939,12 @@ module VCAP::CloudController
       end
 
       context 'with no app ports specified' do
-        it 'returns the mapped http routes associated with the app' do
+        before do
           app.add_route(route_with_service)
           app.add_route(route_without_service)
+        end
 
+        it 'returns the mapped http routes associated with the app' do
           expected_http = [
             { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080 },
             { 'hostname' => route_without_service.uri, 'port' => 8080 }
@@ -2320,6 +2322,8 @@ module VCAP::CloudController
           }
         end
         let(:app) { AppFactory.make(app_hash) }
+        let(:route) { Route.make(host: 'host', space: app.space) }
+        let!(:route_mapping) { RouteMapping.make(app: app, route: route) }
 
         it 'should not update the version' do
           app.diego = false
@@ -2361,14 +2365,17 @@ module VCAP::CloudController
 
       context 'switching from dea to diego' do
         let(:app) { App.create_from_hash(name: 'test', space_guid: space.guid, diego: false) }
+        let(:route) { Route.make(host: 'host', space: space) }
 
         context 'and no ports specified' do
           before do
+            RouteMapping.make(app: app, route: route)
             app.update_from_hash(diego: true)
           end
 
           it 'defaults to 8080' do
             expect(app.reload.ports).to eq [8080]
+            expect(app.route_mappings.first.app_port).to eq 8080
           end
         end
 
