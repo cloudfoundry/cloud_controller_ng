@@ -40,6 +40,8 @@ module VCAP::CloudController
     one_through_one :organization, join_table: :spaces, left_key: :id, left_primary_key: :space_id, right_key: :organization_id
 
     many_to_many :routes,
+                 distinct: true,
+                 order: Sequel.asc(:id),
                  before_add: :validate_route,
                  after_add: :handle_add_route,
                  after_remove: :handle_remove_route
@@ -465,27 +467,23 @@ module VCAP::CloudController
     end
 
     def routing_info
-      route_mappings = RouteMapping.select_all(RouteMapping.table_name).where(:"#{RouteMapping.table_name}__app_id" => self.id)
-      route_app_port_map = {}
-      route_mappings.each do |route_map|
-        unless route_map.app_port.nil?
-          route_app_port_map[route_map.route_id] = [] if route_app_port_map[route_map.route_id].nil?
-          route_app_port_map[route_map.route_id].push(route_map.app_port)
-        end
-      end
+      route_app_port_map = route_id_app_ports_map
+
       http_info = []
       tcp_info = []
       routes.each do |r|
-        if r.domain.router_group_guid.nil?
-          info = { 'hostname' => r.uri }
-          info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
-          info['port'] = route_app_port_map[r.id].shift unless route_app_port_map[r.id].blank?
-          http_info.push(info)
-        elsif !route_app_port_map[r.id].blank?
-          info = { 'router_group_guid' => r.domain.router_group_guid }
-          info['external_port'] = r.port
-          info['container_port'] = route_app_port_map[r.id].shift
-          tcp_info.push(info)
+        route_app_port_map[r.id].each do |app_port|
+          if r.domain.router_group_guid.nil?
+            info = { 'hostname' => r.uri }
+            info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
+            info['port'] = app_port
+            http_info.push(info)
+          elsif !route_app_port_map[r.id].blank?
+            info = { 'router_group_guid' => r.domain.router_group_guid }
+            info['external_port'] = r.port
+            info['container_port'] = app_port
+            tcp_info.push(info)
+          end
         end
       end
       route_info = {}
@@ -645,7 +643,11 @@ module VCAP::CloudController
     end
 
     def _add_route(route, hash={})
-      model.db[:apps_routes].insert(hash.merge(app_id: id, route_id: route.id, guid: SecureRandom.uuid))
+      if !self.ports.blank?
+        model.db[:apps_routes].insert(hash.merge(app_id: id, app_port: self.ports.first, route_id: route.id, guid: SecureRandom.uuid))
+      else
+        model.db[:apps_routes].insert(hash.merge(app_id: id, route_id: route.id, guid: SecureRandom.uuid))
+      end
     end
 
     def handle_remove_route(route)
@@ -672,6 +674,19 @@ module VCAP::CloudController
     end
 
     private
+
+    def route_id_app_ports_map
+      route_mappings = RouteMapping.select_all(RouteMapping.table_name).where(:"#{RouteMapping.table_name}__app_id" => self.id)
+      route_app_port_map = {}
+      route_mappings.each do |route_map|
+        route_app_port_map[route_map.route_id] = [] if route_app_port_map[route_map.route_id].nil?
+        unless route_map.app_port.nil?
+          route_app_port_map[route_map.route_id].push(route_map.app_port)
+        end
+      end
+
+      route_app_port_map
+    end
 
     def changed_from_diego_to_dea
       column_changed?(:diego) && initial_value(:diego) && !diego
