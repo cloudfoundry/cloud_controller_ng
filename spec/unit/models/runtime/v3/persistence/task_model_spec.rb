@@ -214,6 +214,14 @@ module VCAP::CloudController
               expect { TaskModel.make(app: app) }.not_to raise_error
             end
 
+            it 'allows tasks to be updated if the limit is reached' do
+              task = TaskModel.make(app: app, state: TaskModel::PENDING_STATE)
+
+              task.state = TaskModel::RUNNING_STATE
+
+              expect { task.save }.not_to raise_error
+            end
+
             context 'when the number of running tasks is equal to the app task limit' do
               before do
                 TaskModel.make(state: TaskModel::RUNNING_STATE, app: app)
@@ -304,6 +312,14 @@ module VCAP::CloudController
 
             it 'allows tasks that is within app tasks limit' do
               expect { TaskModel.make(app: app) }.not_to raise_error
+            end
+
+            it 'allows tasks to be updated if the limit is reached' do
+              task = TaskModel.make(app: app, state: TaskModel::PENDING_STATE)
+
+              task.state = TaskModel::RUNNING_STATE
+
+              expect { task.save }.not_to raise_error
             end
 
             context 'when the number of running tasks is equal to the app task limit' do

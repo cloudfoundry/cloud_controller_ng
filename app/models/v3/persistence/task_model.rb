@@ -39,13 +39,13 @@ module VCAP::CloudController
     def validate_space_quotas
       TaskMaxMemoryPolicy.new(self, space, 'exceeds space memory quota').validate
       TaskMaxInstanceMemoryPolicy.new(self, space, 'exceeds space instance memory quota').validate
-      MaxAppTasksPolicy.new(self, space, 'quota exceeded').validate
+      new? && MaxAppTasksPolicy.new(self, space, 'quota exceeded').validate
     end
 
     def validate_org_quotas
       TaskMaxMemoryPolicy.new(self, organization, 'exceeds organization memory quota').validate
       TaskMaxInstanceMemoryPolicy.new(self, organization, 'exceeds organization instance memory quota').validate
-      MaxAppTasksPolicy.new(self, organization, 'quota exceeded').validate
+      new? && MaxAppTasksPolicy.new(self, organization, 'quota exceeded').validate
     end
 
     def validate_environment_variables
