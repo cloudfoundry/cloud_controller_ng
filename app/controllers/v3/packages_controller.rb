@@ -33,7 +33,7 @@ class PackagesController < ApplicationController
       paginated_result = PackageListFetcher.new.fetch(pagination_options, space_guids)
     end
 
-    render stats: :ok, json: package_presenter.present_json_list(paginated_result, '/v3/packages')
+    render status: :ok, json: package_presenter.present_json_list(paginated_result, '/v3/packages')
   end
 
   def upload
