@@ -45,7 +45,7 @@ class TasksController < ApplicationController
     app_not_found! unless can_read?(space.guid, space.organization.guid)
     unauthorized! unless can_create?(space.guid)
 
-    task = TaskCreate.new(configuration).create(app, message, SecurityContext.current_user.guid, SecurityContext.current_user_email)
+    task = TaskCreate.new(configuration).create(app, message, current_user.guid, current_user_email)
 
     render status: :accepted, json: TaskPresenter.new.present_json(task)
   rescue TaskCreate::InvalidTask, TaskCreate::TaskCreateError => e
@@ -65,7 +65,7 @@ class TasksController < ApplicationController
       invalid_task_request!("Task state is #{task.state} and therefore cannot be canceled")
     end
 
-    TaskCancel.new.cancel(task)
+    TaskCancel.new.cancel(task: task, user: current_user, email: current_user_email)
 
     render status: :accepted, json: TaskPresenter.new.present_json(task.reload)
   end
