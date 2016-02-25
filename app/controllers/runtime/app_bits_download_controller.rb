@@ -20,7 +20,7 @@ module VCAP::CloudController
       end
 
       if @blobstore.local?
-        @blob_sender.send_blob(guid, 'AppPackage', blob, self)
+        @blob_sender.send_blob(blob, self)
       else
         begin
           redirect blob.public_download_url

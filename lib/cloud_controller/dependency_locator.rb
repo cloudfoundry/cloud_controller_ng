@@ -231,9 +231,9 @@ module CloudController
 
     def blob_sender
       if @config[:nginx][:use_nginx]
-        CloudController::BlobSender::NginxLocalBlobSender.new(missing_blob_handler)
+        CloudController::BlobSender::NginxLocalBlobSender.new
       else
-        CloudController::BlobSender::DefaultLocalBlobSender.new(missing_blob_handler)
+        CloudController::BlobSender::DefaultLocalBlobSender.new
       end
     end
 

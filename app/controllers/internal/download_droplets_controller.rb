@@ -34,7 +34,7 @@ module VCAP::CloudController
         end
 
         @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless droplet && blob
-        @blob_sender.send_blob(app.guid, blob_name, blob, self)
+        @blob_sender.send_blob(blob, self)
       else
         url = nil
         if app.is_v3?

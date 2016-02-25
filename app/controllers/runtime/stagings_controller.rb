@@ -41,7 +41,7 @@ module VCAP::CloudController
         logger.error "could not find package for #{guid}"
         raise ApiError.new_from_details('AppPackageNotFound', guid)
       end
-      @blob_sender.send_blob(app.guid, 'AppPackage', blob, self)
+      @blob_sender.send_blob(blob, self)
     end
 
     post "#{DROPLET_PATH}/:guid/upload", :upload_droplet
@@ -80,7 +80,7 @@ module VCAP::CloudController
       if @blobstore.local?
         droplet = app.current_droplet
         @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless droplet && droplet.blob
-        @blob_sender.send_blob(app.guid, blob_name, droplet.blob, self)
+        @blob_sender.send_blob(droplet.blob, self)
       else
         url = @blobstore_url_generator.droplet_download_url(app)
         @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless url
@@ -110,7 +110,7 @@ module VCAP::CloudController
       blob_name = 'buildpack cache'
 
       @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless blob
-      @blob_sender.send_blob(app.guid, blob_name, blob, self)
+      @blob_sender.send_blob(blob, self)
     end
 
     ##  V3
@@ -127,7 +127,7 @@ module VCAP::CloudController
         logger.error "could not find package for #{guid}"
         raise ApiError.new_from_details('NotFound', guid)
       end
-      @blob_sender.send_blob(guid, 'Package', blob, self)
+      @blob_sender.send_blob(blob, self)
     end
 
     post "#{V3_DROPLET_PATH}/:guid/upload", :upload_package_droplet
@@ -172,7 +172,7 @@ module VCAP::CloudController
       blob_name = 'buildpack cache'
 
       @missing_blob_handler.handle_missing_blob!(guid, blob_name) unless blob
-      @blob_sender.send_blob(guid, blob_name, blob, self)
+      @blob_sender.send_blob(blob, self)
     end
 
     get "#{V3_DROPLET_PATH}/:guid/download", :download_v3_droplet
@@ -186,7 +186,7 @@ module VCAP::CloudController
       blob_name = "droplet_#{droplet.guid}"
 
       @missing_blob_handler.handle_missing_blob!(droplet.blobstore_key, blob_name) unless blob
-      @blob_sender.send_blob(guid, blob_name, blob, self)
+      @blob_sender.send_blob(blob, self)
     end
 
     private

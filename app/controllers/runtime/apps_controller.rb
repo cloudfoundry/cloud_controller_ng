@@ -131,7 +131,7 @@ module VCAP::CloudController
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}") unless droplet && droplet.blob
 
       if @blobstore.local?
-        @blob_sender.send_blob(app.guid, 'droplet', droplet.blob, self)
+        @blob_sender.send_blob(droplet.blob, self)
       else
         begin
           redirect droplet.blob.public_download_url

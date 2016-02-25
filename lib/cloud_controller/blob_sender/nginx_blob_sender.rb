@@ -1,13 +1,8 @@
 module CloudController
   module BlobSender
     class NginxLocalBlobSender
-      def initialize(missing_blob_handler)
-        @missing_blob_handler = missing_blob_handler
-      end
-
-      def send_blob(app_guid, blob_name, blob, controller)
+      def send_blob(blob, controller)
         url = blob.internal_download_url
-        @missing_blob_handler.handle_missing_blob!(app_guid, blob_name) unless url
         logger.debug "nginx redirect #{url}"
         [200, { 'X-Accel-Redirect' => url }, '']
       end
