@@ -192,59 +192,26 @@ describe PackagesController, type: :controller do
   end
 
   describe '#download' do
-    let(:file_path) { nil }
-    let(:download_location) { nil }
-    let(:package) { VCAP::CloudController::PackageModel.make }
+    let(:package) { VCAP::CloudController::PackageModel.make(state: 'READY') }
     let(:space) { package.space }
     let(:org) { space.organization }
 
     before do
+      blob = instance_double(CloudController::Blobstore::FogBlob, public_download_url: 'http://package.example.com')
+      allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
+      allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
+
       allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
       @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make)))
-      allow_any_instance_of(VCAP::CloudController::PackageDownload).to receive(:download).and_return([file_path, download_location])
-      package.state = 'READY'
-      package.save
     end
 
-    context 'when the package exists on NFS' do
-      let(:file_path) { '/a/file/path/on/cc' }
-      let(:download_location) { nil }
+    it 'returns 302 and the redirect' do
+      get :download, guid: package.guid
 
-      it 'begins a download' do
-        allow(controller).to receive(:send_file)
-        allow(controller).to receive(:render).and_return(nil)
-
-        get :download, guid: package.guid
-
-        expect(response.status).to eq(200)
-        expect(controller).to have_received(:send_file).with(file_path)
-      end
-    end
-
-    context 'when the package exists on S3' do
-      let(:file_path) { nil }
-      let(:download_location) { 'http://package.download.url' }
-
-      it 'returns 302 and the redirect' do
-        get :download, guid: package.guid
-
-        expect(response.status).to eq(302)
-        expect(response.headers['Location']).to eq(download_location)
-      end
-
-      context 'when the redirect url is nil' do
-        before do
-          allow_any_instance_of(VCAP::CloudController::PackageDownload).to receive(:download).and_return(nil)
-        end
-
-        it 'raises a BlobstoreUnavailable' do
-          get :download, guid: package.guid
-          expect(response.status).to eq(502)
-          expect(response.body).to include('BlobstoreUnavailable')
-        end
-      end
+      expect(response.status).to eq(302)
+      expect(response.headers['Location']).to eq('http://package.example.com')
     end
 
     context 'when the package is not of type bits' do
@@ -327,7 +294,7 @@ describe PackagesController, type: :controller do
         get :download, guid: package.guid
 
         expect(response.status).to eq(302)
-        expect(response.headers['Location']).to eq(download_location)
+        expect(response.headers['Location']).to eq('http://package.example.com')
       end
     end
   end

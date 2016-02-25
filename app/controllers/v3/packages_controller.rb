@@ -3,7 +3,6 @@ require 'presenters/v3/droplet_presenter'
 require 'queries/package_list_fetcher'
 require 'actions/package_stage_action'
 require 'actions/package_delete'
-require 'actions/package_download'
 require 'actions/package_upload'
 require 'messages/package_upload_message'
 require 'messages/droplet_create_message'
@@ -65,14 +64,8 @@ class PackagesController < ApplicationController
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     unprocessable!('Package has no bits to download.') unless package.state == 'READY'
 
-    file_path_for_download, url_for_response = PackageDownload.new.download(package)
-    if file_path_for_download
-      send_file(file_path_for_download)
-    elsif url_for_response
-      redirect_to url_for_response
-    else
-      blobstore_unavailable!
-    end
+    blob = blobstore.blob(package.guid)
+    BlobDispatcher.new(blob_sender: blob_sender, controller: self).send_or_redirect(local: blobstore.local?, blob: blob)
   end
 
   def show
@@ -146,10 +139,6 @@ class PackagesController < ApplicationController
     raise VCAP::Errors::ApiError.new_from_details('StagingInProgress')
   end
 
-  def blobstore_unavailable!
-    raise VCAP::Errors::ApiError.new_from_details('BlobstoreUnavailable')
-  end
-
   def package_presenter
     @package_presenter ||= PackagePresenter.new
   end
@@ -160,5 +149,13 @@ class PackagesController < ApplicationController
 
   def stagers
     CloudController::DependencyLocator.instance.stagers
+  end
+
+  def blob_sender
+    CloudController::DependencyLocator.instance.blob_sender
+  end
+
+  def blobstore
+    CloudController::DependencyLocator.instance.package_blobstore
   end
 end

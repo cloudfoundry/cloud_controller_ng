@@ -5,7 +5,7 @@ module VCAP::CloudController
     subject(:dispatcher) { described_class.new(blob_sender: blob_sender, controller: controller) }
 
     let(:blob_sender) { instance_double(CloudController::BlobSender::DefaultLocalBlobSender, send_blob: nil) }
-    let(:controller) { instance_double(RestController::ModelController) }
+    let(:controller) { instance_double(RestController::BaseController) }
 
     describe '#send_or_redirect' do
       let(:blob) { instance_double(CloudController::Blobstore::FogBlob) }
@@ -25,13 +25,31 @@ module VCAP::CloudController
 
         before do
           allow(blob).to receive(:public_download_url).and_return('some download url')
-          allow(controller).to receive(:redirect)
         end
 
-        it 'redirects the controller to the public_download_url' do
-          dispatcher.send_or_redirect(local: local, blob: blob)
+        context 'when the controller is v2' do
+          before do
+            allow(controller).to receive(:redirect)
+          end
 
-          expect(controller).to have_received(:redirect).with('some download url')
+          it 'redirects the controller to the public_download_url' do
+            dispatcher.send_or_redirect(local: local, blob: blob)
+
+            expect(controller).to have_received(:redirect).with('some download url')
+          end
+        end
+
+        context 'when the controller is v3' do
+          let(:controller) { ApplicationController.new }
+
+          before do
+            allow(controller).to receive(:redirect_to)
+          end
+
+          it 'redirects the controller to the public_download_url' do
+            dispatcher.send_or_redirect(local: local, blob: blob)
+            expect(controller).to have_received(:redirect_to).with('some download url')
+          end
         end
 
         context 'when SigningRequestError is raisesd' do

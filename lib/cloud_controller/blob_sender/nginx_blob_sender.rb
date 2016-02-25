@@ -4,7 +4,14 @@ module CloudController
       def send_blob(blob, controller)
         url = blob.internal_download_url
         logger.debug "nginx redirect #{url}"
-        [200, { 'X-Accel-Redirect' => url }, '']
+
+        if controller.is_a?(ActionController::Base)
+          controller.response_body    = nil
+          controller.status           = 200
+          controller.response.headers['X-Accel-Redirect'] = url
+        else
+          return [200, { 'X-Accel-Redirect' => url }, '']
+        end
       end
 
       def logger
