@@ -130,19 +130,14 @@ module VCAP::CloudController
       droplet = app.current_droplet
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}") unless droplet && droplet.blob
 
-      if @blobstore.local?
-        @blob_sender.send_blob(droplet.blob, self)
-      else
-        begin
-          redirect droplet.blob.public_download_url
-        rescue CloudController::Blobstore::SigningRequestError => e
-          logger.error("failed to get download url: #{e.message}")
-          raise VCAP::Errors::ApiError.new_from_details('BlobstoreUnavailable')
-        end
-      end
+      blob_dispatcher.send_or_redirect(local: @blobstore.local?, blob: droplet.blob)
     end
 
     private
+
+    def blob_dispatcher
+      BlobDispatcher.new(blob_sender: @blob_sender, controller: self)
+    end
 
     def before_create
       space = VCAP::CloudController::Space[guid: request_attrs['space_guid']]

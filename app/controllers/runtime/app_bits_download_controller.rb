@@ -19,16 +19,7 @@ module VCAP::CloudController
         raise Errors::ApiError.new_from_details('AppPackageNotFound', guid)
       end
 
-      if @blobstore.local?
-        @blob_sender.send_blob(blob, self)
-      else
-        begin
-          redirect blob.public_download_url
-        rescue CloudController::Blobstore::SigningRequestError => e
-          logger.error("failed to get download url: #{e.message}")
-          raise VCAP::Errors::ApiError.new_from_details('BlobstoreUnavailable')
-        end
-      end
+      blob_dispatcher.send_or_redirect(local: @blobstore.local?, blob: blob)
     end
 
     private
@@ -36,6 +27,10 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       @blob_sender = dependencies.fetch(:blob_sender)
       @blobstore = dependencies.fetch(:package_blobstore)
+    end
+
+    def blob_dispatcher
+      BlobDispatcher.new(blob_sender: @blob_sender, controller: self)
     end
   end
 end

@@ -3,89 +3,33 @@ require 'spec_helper'
 module VCAP::CloudController
   describe AppBitsDownloadController do
     describe 'GET /v2/app/:id/download' do
-      let(:tmpdir) { Dir.mktmpdir }
       let(:app_obj) { AppFactory.make }
-      let(:app_obj_without_pkg) { AppFactory.make }
       let(:user) { make_user_for_space(app_obj.space) }
       let(:developer) { make_developer_for_space(app_obj.space) }
-      let(:developer2) { make_developer_for_space(app_obj_without_pkg.space) }
-
-      before do
-        TestConfig.config
-        tmpdir = Dir.mktmpdir
-        zipname = File.join(tmpdir, 'test.zip')
-        TestZip.create(zipname, 10, 1024)
-        Jobs::Runtime::AppBitsPacker.new(app_obj.guid, zipname, []).perform
-        FileUtils.rm_rf(tmpdir)
-      end
-
-      context 'when app is local' do
-        let(:workspace) { Dir.mktmpdir }
-        let(:blobstore_config) do
-          {
-            packages: {
-              fog_connection: {
-                provider: 'Local',
-                local_root: Dir.mktmpdir('packages', workspace)
-              },
-              app_package_directory_key: 'cc-packages',
-            },
-            resource_pool: {
-              resource_directory_key: 'cc-resources',
-              fog_connection: {
-                provider: 'Local',
-                local_root: Dir.mktmpdir('resourse_pool', workspace)
-              }
-            },
-          }
-        end
-
-        before do
-          Fog.unmock!
-          TestConfig.override(blobstore_config)
-          guid = app_obj.guid
-          tmpdir = Dir.mktmpdir
-          zipname = File.join(tmpdir, 'test.zip')
-          TestZip.create(zipname, 10, 1024)
-          Jobs::Runtime::AppBitsPacker.new(guid, zipname, []).perform
-        end
-
-        context 'when using nginx' do
-          it 'redirects to correct nginx URL' do
-            get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(developer)
-            expect(last_response.status).to eq(200)
-            app_bit_path = last_response.headers.fetch('X-Accel-Redirect')
-            File.exist?(File.join(workspace, app_bit_path))
-          end
-        end
-      end
 
       context 'dev app download' do
         it 'should return 404 for an app without a package' do
-          get "/v2/apps/#{app_obj_without_pkg.guid}/download", {}, headers_for(developer2)
+          get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(developer)
           expect(last_response.status).to eq(404)
         end
 
-        it 'should return 302 for valid packages' do
-          get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(developer)
-          expect(last_response.status).to eq(302)
+        context 'when the package is valid' do
+          let(:blob) { instance_double(CloudController::Blobstore::FogBlob) }
+
+          before do
+            allow(blob).to receive(:public_download_url).and_return('http://example.com/somewhere/else')
+            allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
+          end
+
+          it 'should return 302' do
+            get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(developer)
+            expect(last_response.status).to eq(302)
+          end
         end
 
         it 'should return 404 for non-existent apps' do
           get '/v2/apps/abcd/download', {}, headers_for(developer)
           expect(last_response.status).to eq(404)
-        end
-
-        context 'when a SigningRequestError is raised' do
-          before do
-            allow_any_instance_of(CloudController::Blobstore::FogBlob).to receive(:public_download_url).and_raise(CloudController::Blobstore::SigningRequestError.new)
-          end
-
-          it 'raises a BlobstoreUnavailable' do
-            get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(developer)
-            expect(last_response.status).to eq(502)
-            expect(last_response.body).to include('BlobstoreUnavailable')
-          end
         end
       end
 

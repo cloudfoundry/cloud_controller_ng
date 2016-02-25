@@ -229,51 +229,6 @@ module VCAP::CloudController
           get "/v2/buildpacks/#{test_buildpack.guid}/download"
           expect(last_response.status).to eq(404)
         end
-
-        context 'when a SigningRequestError is raised' do
-          before do
-            allow_any_instance_of(CloudController::Blobstore::FogBlob).to receive(:public_download_url).and_raise(CloudController::Blobstore::SigningRequestError.new)
-          end
-
-          it 'raises a BlobstoreUnavailable' do
-            put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip }, admin_headers
-            authorize(staging_user, staging_password)
-            get "/v2/buildpacks/#{test_buildpack.guid}/download"
-            expect(last_response.status).to eq(502)
-            expect(last_response.body).to include('BlobstoreUnavailable')
-          end
-        end
-
-        context 'when blobstore is local' do
-          let(:buildpacks_root) { Dir.mktmpdir('buildpacks', tmpdir) }
-          let(:blobstore_config) do
-            {
-              buildpacks: {
-                buildpack_directory_key: 'cc-buildpacks',
-                fog_connection: {
-                  provider: 'Local',
-                  local_root: buildpacks_root,
-                },
-              },
-            }
-          end
-
-          context 'when using nginx' do
-            before do
-              TestConfig.override(staging_config.merge(blobstore_config))
-              Fog.unmock!
-            end
-
-            it 'redirects to correct nginx URL' do
-              put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip }, admin_headers
-              authorize(staging_user, staging_password)
-              get "/v2/buildpacks/#{test_buildpack.guid}/download"
-              expect(last_response.status).to eq(200)
-              buildpack_bits = last_response.headers.fetch('X-Accel-Redirect')
-              expect(File.exist?(File.join(buildpacks_root, buildpack_bits))).to be_truthy
-            end
-          end
-        end
       end
     end
   end

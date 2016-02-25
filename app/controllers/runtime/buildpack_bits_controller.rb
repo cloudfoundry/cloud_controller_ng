@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class BuildpackBitsController < RestController::ModelController
     def self.dependencies
-      [:buildpack_blobstore, :upload_handler]
+      [:buildpack_blobstore, :upload_handler, :blob_sender]
     end
 
     path_base 'buildpacks'
@@ -46,37 +46,22 @@ module VCAP::CloudController
       blob = buildpack_blobstore.blob(obj.key) if obj && obj.key
       raise Errors::ApiError.new_from_details('NotFound', guid) unless blob
 
-      if @buildpack_blobstore.local?
-        send_local_blob(blob)
-      else
-        begin
-          redirect blob.public_download_url
-        rescue CloudController::Blobstore::SigningRequestError => e
-          logger.error("failed to get download url: #{e.message}")
-          raise VCAP::Errors::ApiError.new_from_details('BlobstoreUnavailable')
-        end
-      end
+      blob_dispatcher.send_or_redirect(local: @buildpack_blobstore.local?, blob: blob)
     end
 
     private
 
     attr_reader :buildpack_blobstore, :upload_handler
 
+    def blob_dispatcher
+      BlobDispatcher.new(blob_sender: @blob_sender, controller: self)
+    end
+
     def inject_dependencies(dependencies)
       super
       @buildpack_blobstore = dependencies[:buildpack_blobstore]
       @upload_handler = dependencies[:upload_handler]
-    end
-
-    def send_local_blob(blob)
-      if @config[:nginx][:use_nginx]
-
-        url = blob.internal_download_url
-        logger.debug "nginx redirect #{url}"
-        return [200, { 'X-Accel-Redirect' => url }, '']
-      else
-        return send_file blob.local_path
-      end
+      @blob_sender = dependencies[:blob_sender]
     end
   end
 end
