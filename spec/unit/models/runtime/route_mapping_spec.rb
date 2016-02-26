@@ -65,6 +65,12 @@ module VCAP::CloudController
             mapping.save
             expect(mapping.app_port).to eq(8080)
           end
+
+          it 'saves the app port to the database' do
+            mapping = RouteMapping.new(app: app_obj, route: route)
+            mapping.save
+            expect(mapping.saved_app_port).to eq(8080)
+          end
         end
 
         context 'and an app port is specified' do
@@ -119,6 +125,38 @@ module VCAP::CloudController
       end
     end
 
+    describe 'Docker mappings' do
+      let(:app_obj) { App.make(diego: true, docker_image: 'some-docker-image', package_state: 'PENDING') }
+      let(:route) { Route.make(space: app_obj.space) }
+
+      context 'when the app has no docker ports' do
+        it 'returns the default app_port' do
+          mapping = RouteMapping.new(app: app_obj, route: route)
+          mapping.save
+          expect(mapping.app_port).to eq 8080
+        end
+      end
+
+      context 'when the app has docker ports' do
+        let(:app_obj) do
+          app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
+          app.add_droplet(Droplet.new(
+                            app: app,
+                            droplet_hash: 'the-droplet-hash',
+                            execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
+                          ))
+          app.droplet_hash = 'the-droplet-hash'
+          app
+        end
+
+        it 'returns a the first port' do
+          mapping = RouteMapping.new(app: app_obj, route: route)
+          mapping.save
+          expect(mapping.app_port).to eq 1024
+        end
+      end
+    end
+
     describe 'apps association' do
       let(:route) { Route.make }
       let(:app) do
@@ -142,6 +180,22 @@ module VCAP::CloudController
           expect {
             route_mapping.destroy
           }.to change { Event.count }.by(1)
+        end
+      end
+
+      context 'when a dea app is moved to diego' do
+        let!(:app) { AppFactory.make(diego: false) }
+        let!(:route) { Route.make(space: app.space) }
+
+        before do
+          RouteMapping.make(app: app, route: route)
+          app.diego = true
+          app.save
+        end
+
+        it 'sets the app_port to the first port of the app' do
+          route_mapping = RouteMapping.last
+          expect(route_mapping.saved_app_port).to eq 8080
         end
       end
 

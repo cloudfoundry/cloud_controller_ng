@@ -643,7 +643,7 @@ module VCAP::CloudController
     end
 
     def _add_route(route, hash={})
-      port = self.ports.first unless self.ports.blank?
+      port = self.ports.first if !self.ports.blank? && !self.docker_image.present?
       model.db[:apps_routes].insert(hash.merge(app_id: id, route_id: route.id, app_port: port, guid: SecureRandom.uuid))
     end
 

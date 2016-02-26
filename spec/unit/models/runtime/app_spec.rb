@@ -2802,9 +2802,22 @@ module VCAP::CloudController
 
       context 'docker app' do
         context 'when app is not staged' do
+          let(:app) { App.make(diego: true, docker_image: 'some-docker-image', package_state: 'PENDING') }
+
           it 'returns the ports that were specified during creation' do
-            app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'PENDING')
             expect(app.ports).to eq([8080])
+          end
+
+          context 'when the app has a route' do
+            let(:route) { Route.make(space: app.space) }
+            before do
+              app.add_route(route)
+            end
+
+            it 'should not save app_port to the route mappings' do
+              route_mapping = RouteMapping.last
+              expect(route_mapping.saved_app_port).to be_nil
+            end
           end
         end
 

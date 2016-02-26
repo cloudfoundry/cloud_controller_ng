@@ -140,7 +140,7 @@ module VCAP::CloudController
     end
 
     def _add_app(app, hash={})
-      app_port = app.ports.first if app.diego? && !app.ports.nil?
+      app_port = app.ports.first if !app.ports.blank? && !app.docker_image.present?
 
       model.db[:apps_routes].insert(hash.merge(app_id: app.id, app_port: app_port, route_id: id, guid: SecureRandom.uuid))
     end

@@ -807,6 +807,22 @@ module VCAP::CloudController
             expect(route.apps.length).to eq(1)
           end
         end
+
+        context 'when the app is a docker app' do
+          let(:app) { App.make(diego: true, docker_image: 'some-docker-image', package_state: 'PENDING') }
+
+          context 'when the app has a route' do
+            let(:route) { Route.make(space: app.space) }
+            before do
+              route.add_app(app)
+            end
+
+            it 'should not save app_port to the route mappings' do
+              route_mapping = RouteMapping.last
+              expect(route_mapping.saved_app_port).to be_nil
+            end
+          end
+        end
       end
 
       describe 'when removing an app' do

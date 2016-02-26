@@ -14,7 +14,7 @@ module VCAP::CloudController
         RouteMapping.dataset.where('guid is null and id = ?', self.id).update(guid: SecureRandom.uuid)
         reload
       end
-      if self.app_port.blank? && self.exists? && app.diego?
+      if self.saved_app_port.blank? && self.exists? && app.diego? && !app.docker_image.present?
         RouteMapping.dataset.where('app_port is null and id = ?', self.id).update(app_port: app.ports.first)
         reload
       end
@@ -35,7 +35,7 @@ module VCAP::CloudController
     end
 
     def before_save
-      if !self.app_port && app.diego
+      if !self.saved_app_port && app.diego && !app.docker_image.present?
         self.app_port = app.ports.first
       end
       app.validate_route(route)
@@ -50,6 +50,15 @@ module VCAP::CloudController
     def after_destroy
       app.handle_remove_route(route)
       super
+    end
+
+    alias_method :saved_app_port, :app_port
+    def app_port
+      saved_port = super
+      if !app.nil?
+        saved_port = app.ports.first if saved_port.nil? && !app.ports.blank?
+      end
+      saved_port
     end
   end
 end
