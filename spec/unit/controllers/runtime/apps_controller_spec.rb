@@ -446,23 +446,23 @@ module VCAP::CloudController
 
         context 'when user does not specify any ports' do
           it 'sets ports to 8080' do
-            expect(RouteMapping.find(guid: route_mapping.guid).app_port).to be_nil
+            expect(route_mapping.app_port).to be_nil
             put "/v2/apps/#{app_obj.guid}", '{ "diego": true }', json_headers(headers_for(developer))
             expect(last_response.status).to eq(201)
             expect(decoded_response['entity']['ports']).to match([8080])
             expect(decoded_response['entity']['diego']).to be true
-            expect(RouteMapping.find(guid: route_mapping.guid).app_port).to eq(8080)
+            expect(route_mapping.reload.app_port).to eq(8080)
           end
         end
 
         context 'when user specifies ports' do
           it 'sets ports to user specified values' do
-            expect(RouteMapping.find(guid: route_mapping.guid).app_port).to be_nil
+            expect(route_mapping.app_port).to be_nil
             put "/v2/apps/#{app_obj.guid}", '{ "diego": true, "ports": [9090,5222] }', json_headers(headers_for(developer))
             expect(last_response.status).to eq(201)
             expect(decoded_response['entity']['ports']).to match([9090, 5222])
             expect(decoded_response['entity']['diego']).to be true
-            expect(RouteMapping.find(guid: route_mapping.guid).app_port).to eq(9090)
+            expect(route_mapping.reload.app_port).to eq(9090)
           end
         end
       end
@@ -492,12 +492,29 @@ module VCAP::CloudController
           let(:route_mapping) { RouteMapping.make(app_id: app_obj.id, route_id: route.id) }
 
           it 'removes the app ports from the route mapping' do
-            expect(RouteMapping.find(guid: route_mapping.guid).app_port).to eq 9090
             put "/v2/apps/#{app_obj.guid}", '{ "diego": false }', json_headers(headers_for(developer))
             expect(last_response).to have_status_code(201)
             expect(decoded_response['entity']['ports']).to be nil
             expect(decoded_response['entity']['diego']).to be false
-            expect(RouteMapping.find(guid: route_mapping.guid).app_port).to be_nil
+          end
+        end
+
+        context 'when the app is mapped to multiple ports' do
+          let(:app_obj) { AppFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
+          let(:route) { Route.make(space: app_obj.space) }
+          let!(:route_mapping_1) { RouteMapping.make(app: app_obj, route: route, app_port: 9090) }
+          let!(:route_mapping_2) { RouteMapping.make(app: app_obj, route: route, app_port: 5222) }
+          let(:error_message) do
+            'The app has routes mapped to multiple ports. ' \
+            'Multiple ports are supported for Diego only. ' \
+            'Please unmap routes from all but one app port. ' \
+            'Multiple routes can be mapped to the same port if desired.'
+          end
+
+          it 'returns an error' do
+            put "/v2/apps/#{app_obj.guid}", '{ "diego": false }', json_headers(headers_for(developer))
+            expect(last_response).to have_status_code(400)
+            expect(decoded_response['description']).to include(error_message)
           end
         end
       end

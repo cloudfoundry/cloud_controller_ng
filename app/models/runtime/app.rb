@@ -690,7 +690,7 @@ module VCAP::CloudController
     end
 
     def changed_from_diego_to_dea
-      column_changed?(:diego) && initial_value(:diego) && !diego
+      column_changed?(:diego) && initial_value(:diego).present? && !diego
     end
 
     # HACK: We manually call the Serializer here because the plugin uses the
@@ -723,7 +723,7 @@ module VCAP::CloudController
     end
 
     def update_route_mappings_ports
-      self.route_mappings_dataset.update(:app_port => nil) unless self.route_mappings.nil?
+      self.route_mappings_dataset.update(app_port: nil) unless self.route_mappings.nil?
     end
 
     def mark_routes_changed

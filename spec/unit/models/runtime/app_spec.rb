@@ -2318,7 +2318,7 @@ module VCAP::CloudController
             state: 'STARTED',
             space_guid: space.guid,
             diego: true,
-            ports: [8080,2345]
+            ports: [8080, 2345]
           }
         end
         let(:app) { AppFactory.make(app_hash) }

@@ -5,7 +5,7 @@ describe DiegoToDeaPolicy do
     {
       name: 'test',
       diego: true,
-      ports: [8081,8082]
+      ports: [8081, 8082]
     }
   end
   let(:app) { VCAP::CloudController::AppFactory.make(app_hash) }

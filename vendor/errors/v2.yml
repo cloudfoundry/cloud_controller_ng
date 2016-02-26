@@ -278,6 +278,11 @@
   http_code: 400
   message: "Routes can only be mapped to ports already enabled for the application."
 
+60024:
+  name: MultipleAppPortsMappedDiegoToDea
+  http_code: 400
+  message: "The app has routes mapped to multiple ports. Multiple ports are supported for Diego only. Please unmap routes from all but one app port. Multiple routes can be mapped to the same port if desired."
+
 70001:
   name: RuntimeInvalid
   http_code: 400

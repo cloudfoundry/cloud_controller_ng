@@ -61,6 +61,7 @@ module VCAP::CloudController
       app_instance_limit_errors = e.errors.on(:app_instance_limit)
       state_errors           = e.errors.on(:state)
       docker_errors          = e.errors.on(:docker)
+      diego_to_dea_errors    = e.errors.on(:diego_to_dea)
 
       if space_and_name_errors && space_and_name_errors.include?(:unique)
         Errors::ApiError.new_from_details('AppNameTaken', attributes['name'])
@@ -78,6 +79,8 @@ module VCAP::CloudController
         Errors::ApiError.new_from_details('AppInvalid', 'Invalid app state provided')
       elsif docker_errors && docker_errors.include?(:docker_disabled)
         Errors::ApiError.new_from_details('DockerDisabled')
+      elsif diego_to_dea_errors
+        Errors::ApiError.new_from_details('MultipleAppPortsMappedDiegoToDea')
       else
         Errors::ApiError.new_from_details('AppInvalid', e.errors.full_messages)
       end
@@ -199,10 +202,6 @@ module VCAP::CloudController
 
       previous_changes = app.previous_changes
 
-      if diego_to_dea(previous_changes, app.diego?)
-        RouteMapping.dataset.where('app_id = ?', app.id).update(app_port: nil)
-      end
-
       if dea_to_diego(previous_changes, app.diego?)
         port = app.ports.size > 0 ? app.ports.first : DEFAULT_HTTP_PORT
         RouteMapping.dataset.where('app_id = ?', app.id).update(app_port: port)
@@ -214,11 +213,6 @@ module VCAP::CloudController
     def dea_to_diego(previous_changes, new_diego_flag)
       # there was a change and switching to diego is true
       !previous_changes.nil? && previous_changes.key?(:diego) && new_diego_flag
-    end
-
-    def diego_to_dea(previous_changes, new_diego_flag)
-      # there was a change and switching to diego is false
-      !previous_changes.nil? && previous_changes.key?(:diego) && !new_diego_flag
     end
 
     define_messages
