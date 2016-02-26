@@ -38,7 +38,7 @@ resource 'Routes', type: [:api, :legacy_api] do
     shared_context 'updatable_fields' do |opts|
       field :domain_guid, 'The guid of the associated domain', required: opts[:required], example_values: [Sham.guid]
       field :space_guid, 'The guid of the associated space', required: opts[:required], example_values: [Sham.guid]
-      field :host, 'The host portion of the route'
+      field :host, 'The host portion of the route. Required for shared-domains.'
       field :port, 'The port of the route. Supported for domains of TCP router groups only.', required: false,
                                                                                               valid_values: '1024-65535', example_values: [50000], experimental: true
       field :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
@@ -131,7 +131,7 @@ EOF
     end
     get '/v2/routes/reserved/domain/:domain_guid/host/:host?path=:path' do
       request_parameter :domain_guid, 'The guid of a domain'
-      request_parameter :host, 'The host portion of the route'
+      request_parameter :host, 'The host portion of the route. Required for shared-domains.'
       request_parameter :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
 
       example 'Check a Route exists' do

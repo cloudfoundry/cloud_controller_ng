@@ -376,15 +376,30 @@ module VCAP::CloudController
           }.to raise_error(Sequel::ValidationFailed)
         end
 
-        it 'should not allow route to match existing domain' do
-          SharedDomain.make name: 'bar.foo.com'
-          expect {
-            Route.make(
-              space: space,
-              domain: SharedDomain.make(name: 'foo.com'),
-              host: 'bar'
-            )
-          }.to raise_error(Sequel::ValidationFailed, /domain_conflict/)
+        context 'shared domains' do
+          it 'should not allow route to match existing domain' do
+            SharedDomain.make name: 'bar.foo.com'
+            expect {
+              Route.make(
+                space: space,
+                domain: SharedDomain.make(name: 'foo.com'),
+                host: 'bar'
+              )
+            }.to raise_error(Sequel::ValidationFailed, /domain_conflict/)
+          end
+
+          context 'when the host is missing' do
+            it 'raises an informative error' do
+              domain = SharedDomain.make name: 'bar.foo.com'
+              expect {
+                Route.make(
+                  space: space,
+                  domain: domain,
+                  host: nil
+                )
+              }.to raise_error(Sequel::ValidationFailed, /host is required for shared-domains/)
+            end
+          end
         end
       end
 
