@@ -11,13 +11,13 @@ module VCAP::CloudController
         task_event_repository.record_task_cancel(task, user.guid, email)
       end
 
-      dependency_locator.nsync_client.cancel_task(task)
+      nsync_client.cancel_task(task)
     end
 
     private
 
-    def dependency_locator
-      CloudController::DependencyLocator.instance
+    def nsync_client
+      CloudController::DependencyLocator.instance.nsync_client
     end
 
     def task_event_repository

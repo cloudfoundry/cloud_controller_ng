@@ -73,7 +73,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated tasks' do
-          task_model = TaskModel.make(app_guid: app.guid, name: 'task1')
+          task_model = TaskModel.make(app_guid: app.guid, name: 'task1', state: TaskModel::SUCCEEDED_STATE)
 
           expect {
             app_delete.delete(app_dataset)
