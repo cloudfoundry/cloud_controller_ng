@@ -24,7 +24,6 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :total_routes }
       it { is_expected.to validate_presence :memory_limit }
       it { is_expected.to validate_presence :organization }
-      it { is_expected.to validate_presence :total_service_keys }
       it { is_expected.to validate_uniqueness [:organization_id, :name] }
 
       describe 'memory_limits' do

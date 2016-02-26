@@ -8,7 +8,7 @@ module VCAP::CloudController
           name:                       { type: 'string', required: true },
           non_basic_services_allowed: { type: 'bool', required: true },
           total_services:             { type: 'integer', required: true },
-          total_service_keys:         { type: 'integer', required: true },
+          total_service_keys:         { type: 'integer', default: -1 },
           total_routes:               { type: 'integer', required: true },
           memory_limit:               { type: 'integer', required: true },
           instance_memory_limit:      { type: 'integer' },

@@ -23,7 +23,6 @@ module VCAP::CloudController
       validates_presence :total_routes
       validates_presence :memory_limit
       validates_presence :organization
-      validates_presence :total_service_keys
       validates_unique [:organization_id, :name]
 
       errors.add(:memory_limit, :less_than_zero) if memory_limit && memory_limit < 0
