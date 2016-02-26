@@ -3,7 +3,6 @@ require 'spec_helper'
 module VCAP::CloudController
   describe VCAP::CloudController::Dea::Client do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
-    let(:stager_pool) { double(:stager_pool) }
     let(:dea_pool) { double(:dea_pool) }
     let(:num_service_instances) { 3 }
     let(:app) do
@@ -24,7 +23,7 @@ module VCAP::CloudController
     end
 
     before do
-      Dea::Client.configure(TestConfig.config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
+      Dea::Client.configure(TestConfig.config, message_bus, dea_pool, blobstore_url_generator)
     end
 
     describe '.run' do
@@ -62,7 +61,6 @@ module VCAP::CloudController
         expect(dea_pool).to receive(:find_dea).twice.and_return('dea_123')
         expect(dea_pool).to receive(:mark_app_started).twice.with(dea_id: 'dea_123', app_id: app.guid)
         expect(dea_pool).to receive(:reserve_app_memory).twice.with('dea_123', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).twice.with('dea_123', app.memory)
         expect(message_bus).to receive(:publish).with(
           'dea.dea_123.start',
           hash_including(
@@ -86,7 +84,6 @@ module VCAP::CloudController
           expect(dea_pool).to receive(:find_dea).and_return(nil, nil, 'dea_123')
           expect(dea_pool).to receive(:mark_app_started).once.with(dea_id: 'dea_123', app_id: app.guid)
           expect(dea_pool).to receive(:reserve_app_memory).once.with('dea_123', app.memory)
-          expect(stager_pool).to receive(:reserve_app_memory).once.with('dea_123', app.memory)
 
           expect(message_bus).to receive(:publish).once.with(
             'dea.dea_123.start',
@@ -109,7 +106,6 @@ module VCAP::CloudController
         expect(dea_pool).to receive(:find_dea).once.and_return('dea_123')
         expect(dea_pool).to receive(:mark_app_started).once.with(dea_id: 'dea_123', app_id: app.guid)
         expect(dea_pool).to receive(:reserve_app_memory).once.with('dea_123', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).once.with('dea_123', app.memory)
         expect(message_bus).to receive(:publish).with(
           'dea.dea_123.start',
           hash_including(
@@ -158,8 +154,6 @@ module VCAP::CloudController
         expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'def', app_id: app.guid)
         expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
         expect(dea_pool).to receive(:reserve_app_memory).with('def', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).with('def', app.memory)
         expect(message_bus).to receive(:publish).with('dea.abc.start', kind_of(Hash))
         expect(message_bus).to receive(:publish).with('dea.def.start', kind_of(Hash))
 
@@ -174,21 +168,18 @@ module VCAP::CloudController
         expect(dea_pool).not_to receive(:mark_app_started).with(dea_id: 'def', app_id: app.guid)
         expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
         expect(dea_pool).not_to receive(:reserve_app_memory).with('def', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        expect(stager_pool).not_to receive(:reserve_app_memory).with('def', app.memory)
 
         Dea::Client.start(app, instances_to_start: 1)
       end
 
       it 'sends a dea start message that includes cc_partition' do
         TestConfig.override(cc_partition: 'ngFTW')
-        Dea::Client.configure(TestConfig.config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
+        Dea::Client.configure(TestConfig.config, message_bus, dea_pool, blobstore_url_generator)
 
         app.instances = 1
         expect(dea_pool).to receive(:find_dea).and_return('abc')
         expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'abc', app_id: app.guid)
         expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).with('abc', app.memory)
         expect(message_bus).to receive(:publish).with('dea.abc.start', hash_including(cc_partition: 'ngFTW'))
 
         Dea::Client.start(app)
@@ -200,7 +191,6 @@ module VCAP::CloudController
         expect(dea_pool).to receive(:find_dea).with(include(mem: 512)).and_return('abc')
         expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'abc', app_id: app.guid)
         expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).with('abc', app.memory)
         Dea::Client.start(app)
       end
 
@@ -210,7 +200,6 @@ module VCAP::CloudController
         expect(dea_pool).to receive(:find_dea).with(include(disk: 13)).and_return('abc')
         expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'abc', app_id: app.guid)
         expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).with('abc', app.memory)
         Dea::Client.start(app)
       end
     end
@@ -840,12 +829,6 @@ module VCAP::CloudController
           expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
           expect(dea_pool).to receive(:reserve_app_memory).with('def', app.memory)
           expect(dea_pool).to receive(:reserve_app_memory).with('efg', app.memory)
-          expect(stager_pool).
-            to receive(:reserve_app_memory).with('abc', app.memory)
-          expect(stager_pool).
-            to receive(:reserve_app_memory).with('def', app.memory)
-          expect(stager_pool).
-            to receive(:reserve_app_memory).with('efg', app.memory)
 
           expect(message_bus).to receive(:publish).with('dea.abc.start', kind_of(Hash))
           expect(message_bus).to receive(:publish).with('dea.def.start', kind_of(Hash))

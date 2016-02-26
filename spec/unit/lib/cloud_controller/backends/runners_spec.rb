@@ -19,10 +19,6 @@ module VCAP::CloudController
       instance_double(Dea::Pool)
     end
 
-    let(:stager_pool) do
-      instance_double(Dea::StagerPool)
-    end
-
     let(:package_hash) do
       'fake-package-hash'
     end
@@ -52,7 +48,7 @@ module VCAP::CloudController
     end
 
     subject(:runners) do
-      Runners.new(config, message_bus, dea_pool, stager_pool)
+      Runners.new(config, message_bus, dea_pool)
     end
 
     def make_diego_app(options={})

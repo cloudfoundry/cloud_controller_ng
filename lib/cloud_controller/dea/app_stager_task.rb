@@ -8,12 +8,11 @@ module VCAP::CloudController
       attr_reader :config
       attr_reader :message_bus
 
-      def initialize(config, message_bus, app, dea_pool, stager_pool, blobstore_url_generator)
+      def initialize(config, message_bus, app, dea_pool, blobstore_url_generator)
         @config = config
         @message_bus = message_bus
         @app = app
         @dea_pool = dea_pool
-        @stager_pool = stager_pool
         @blobstore_url_generator = blobstore_url_generator
       end
 
@@ -22,7 +21,7 @@ module VCAP::CloudController
       end
 
       def stage(&completion_callback)
-        @stager_id = @stager_pool.find_stager(@app.stack.name, staging_task_memory_mb, staging_task_disk_mb)
+        @stager_id = @dea_pool.find_stager(@app.stack.name, staging_task_memory_mb, staging_task_disk_mb)
         raise Errors::ApiError.new_from_details('StagingError', 'no available stagers') unless @stager_id
 
         subject = "staging.#{@stager_id}.start"
@@ -37,7 +36,6 @@ module VCAP::CloudController
         @completion_callback = completion_callback
 
         @dea_pool.reserve_app_memory(@stager_id, staging_task_memory_mb)
-        @stager_pool.reserve_app_memory(@stager_id, staging_task_memory_mb)
 
         logger.info('staging.begin', app_guid: @app.guid)
         staging_msg = staging_request

@@ -294,8 +294,7 @@ module VCAP::CloudController
         expect(VCAP::CloudController::Runners).to receive(:new).with(
           @test_config,
           message_bus,
-          instance_of(Dea::Pool),
-          instance_of(Dea::StagerPool))
+          instance_of(Dea::Pool))
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)
       end
@@ -305,15 +304,7 @@ module VCAP::CloudController
           @test_config,
           message_bus,
           instance_of(Dea::Pool),
-          instance_of(Dea::StagerPool),
           instance_of(Runners))
-        Config.configure_components(@test_config)
-        Config.configure_components_depending_on_message_bus(message_bus)
-      end
-
-      it 'creates the dea stager pool' do
-        expect(Dea::StagerPool).to receive(:new).and_call_original
-
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)
       end

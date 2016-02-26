@@ -16,11 +16,10 @@ require 'cloud_controller/diego/v3/protocol/app_protocol'
 
 module VCAP::CloudController
   class Stagers
-    def initialize(config, message_bus, dea_pool, stager_pool, runners)
+    def initialize(config, message_bus, dea_pool, runners)
       @config      = config
       @message_bus = message_bus
       @dea_pool    = dea_pool
-      @stager_pool = stager_pool
       @runners     = runners
     end
 
@@ -55,7 +54,7 @@ module VCAP::CloudController
     private
 
     def dea_stager(app)
-      Dea::Stager.new(app, @config, @message_bus, @dea_pool, @stager_pool, @runners)
+      Dea::Stager.new(app, @config, @message_bus, @dea_pool, @runners)
     end
 
     def diego_stager(app)

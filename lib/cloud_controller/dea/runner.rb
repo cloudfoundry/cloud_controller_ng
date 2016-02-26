@@ -1,13 +1,12 @@
 module VCAP::CloudController
   module Dea
     class Runner
-      def initialize(app, config, message_bus, dea_pool, stager_pool)
+      def initialize(app, config, message_bus, dea_pool)
         @logger ||= Steno.logger('cc.dea.backend')
         @app = app
         @config = config
         @message_bus = message_bus
         @dea_pool = dea_pool
-        @stager_pool = stager_pool
       end
 
       def scale

@@ -7,6 +7,7 @@ module VCAP::CloudController
       def initialize(config, message_bus)
         @advertise_timeout = config[:dea_advertisement_timeout_in_seconds]
         @message_bus = message_bus
+        @percentage_of_top_stagers = (config[:placement_top_stager_percentage] || 0) / 100.0
         @dea_advertisements = []
       end
 
@@ -53,6 +54,16 @@ module VCAP::CloudController
         end
       end
 
+      def find_stager(stack, memory, disk)
+        mutex.synchronize do
+          validate_stack_availability(stack)
+
+          prune_stale_deas
+          best_ad = top_n_stagers_for(memory, disk, stack).sample
+          best_ad && best_ad.dea_id
+        end
+      end
+
       def mark_app_started(opts)
         dea_id = opts[:dea_id]
         app_id = opts[:app_id]
@@ -79,6 +90,20 @@ module VCAP::CloudController
 
       def mutex
         @mutex ||= Mutex.new
+      end
+
+      def validate_stack_availability(stack)
+        unless @dea_advertisements.any? { |ad| ad.has_stack?(stack) }
+          raise Errors::ApiError.new_from_details('StackNotFound', "The requested app stack #{stack} is not available on this system.")
+        end
+      end
+
+      def top_n_stagers_for(memory, disk, stack)
+        @dea_advertisements.select do |advertisement|
+          advertisement.meets_needs?(memory, stack) && advertisement.has_sufficient_disk?(disk)
+        end.sort do |advertisement_a, advertisement_b|
+          advertisement_a.available_memory <=> advertisement_b.available_memory
+        end.last([5, @percentage_of_top_stagers * @dea_advertisements.size].max.to_i)
       end
     end
   end

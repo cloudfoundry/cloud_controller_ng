@@ -79,8 +79,6 @@ require 'cloud_controller/diego/nsync_client'
 require 'cloud_controller/diego/stager_client'
 require 'cloud_controller/diego/tps_client'
 
-require 'cloud_controller/dea/stager_pool'
-
 require 'cloud_controller/dea/hm9000/client'
 require 'cloud_controller/dea/hm9000/legacy_client'
 require 'cloud_controller/dea/hm9000/respondent'

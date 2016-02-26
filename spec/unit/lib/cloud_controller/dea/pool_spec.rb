@@ -4,6 +4,18 @@ module VCAP::CloudController
   describe VCAP::CloudController::Dea::Pool do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     subject { Dea::Pool.new(TestConfig.config, message_bus) }
+    let(:available_disk) { 100 }
+    let(:dea_advertise_msg) do
+      {
+        'id' => 'dea-id',
+        'stacks' => ['stack'],
+        'available_memory' => 1024,
+        'available_disk' => available_disk,
+        'app_id_to_count' => {
+          'other-app-id' => 1
+        }
+      }
+    end
 
     describe '#register_subscriptions' do
       let(:dea_advertise_msg) do
@@ -40,18 +52,6 @@ module VCAP::CloudController
     end
 
     describe '#find_dea' do
-      let(:dea_advertise_msg) do
-        {
-          'id' => 'dea-id',
-          'stacks' => ['stack'],
-          'available_memory' => 1024,
-          'available_disk' => available_disk,
-          'app_id_to_count' => {
-            'other-app-id' => 1
-          }
-        }
-      end
-
       def dea_advertisement(options)
         dea_advertisement = {
           'id' => options[:dea],
@@ -100,8 +100,6 @@ module VCAP::CloudController
       let(:dea_in_user_defined_zone_with_1_instance_and_256m_memory) do
         dea_advertisement dea: 'dea-id8', memory: 256, instance_count: 1, zone: 'zone1'
       end
-
-      let(:available_disk) { 100 }
 
       describe 'dea availability' do
         it 'only finds registered deas' do
@@ -386,6 +384,114 @@ module VCAP::CloudController
 
             expect(subject.find_dea(mem: 64, stack: 'stack', app_id: 'foo')).to be_nil
           end
+        end
+      end
+    end
+
+    describe '#find_stager' do
+      describe 'stager availability' do
+        it 'raises if there are no stagers with that stack' do
+          subject.process_advertise_message(dea_advertise_msg)
+          expect { subject.find_stager('unknown-stack-name', 0, 0) }.to raise_error(Errors::ApiError, /The stack could not be found/)
+        end
+
+        it 'only finds registered stagers' do
+          expect { subject.find_stager('stack', 0, 0) }.to raise_error(Errors::ApiError, /The stack could not be found/)
+          subject.process_advertise_message(dea_advertise_msg)
+          expect(subject.find_stager('stack', 0, 0)).to eq('dea-id')
+        end
+      end
+
+      context 'placement percentage' do
+        let(:placement_percentage) { 15 }
+        before { TestConfig.override({ placement_top_stager_percentage: placement_percentage }) }
+
+        it 'samples out of the top 15% stagers' do
+          (0..99).to_a.shuffle.each do |i|
+            subject.process_advertise_message(
+              'id' => "staging-id-#{i}",
+              'stacks' => ['stack-name'],
+              'available_memory' => 1024 * i,
+            )
+          end
+
+          samples = []
+          1000.times do
+            samples.push(subject.find_stager('stack-name', 1024, 0))
+          end
+          expect(samples.uniq.size).to be_within(1).of(placement_percentage)
+        end
+      end
+
+      describe 'staging advertisement expiration' do
+        it 'purges expired DEAs' do
+          Timecop.freeze do
+            subject.process_advertise_message(dea_advertise_msg)
+
+            Timecop.travel(9)
+            expect(subject.find_stager('stack', 1024, 0)).to eq('dea-id')
+
+            Timecop.travel(1)
+            expect(subject.find_stager('stack', 1024, 0)).to be_nil
+          end
+        end
+
+        context 'when an the expiration timeout is specified' do
+          before { TestConfig.override({ dea_advertisement_timeout_in_seconds: 15 }) }
+
+          it 'purges expired DEAs' do
+            Timecop.freeze do
+              subject.process_advertise_message(dea_advertise_msg)
+
+              Timecop.travel(11)
+              expect(subject.find_stager('stack', 1024, 0)).to eq('dea-id')
+
+              Timecop.travel(5)
+              expect(subject.find_stager('stack', 1024, 0)).to be_nil
+            end
+          end
+        end
+      end
+
+      describe 'memory capacity' do
+        it 'only finds stagers that can satisfy memory request' do
+          subject.process_advertise_message(dea_advertise_msg)
+          expect(subject.find_stager('stack', 1025, 0)).to be_nil
+          expect(subject.find_stager('stack', 1024, 0)).to eq('dea-id')
+        end
+
+        it 'samples out of the top 5 stagers with enough memory' do
+          (0..9).to_a.shuffle.each do |i|
+            subject.process_advertise_message(
+              'id' => "staging-id-#{i}",
+              'stacks' => ['stack-name'],
+              'available_memory' => 1024 * i,
+            )
+          end
+
+          correct_stagers = (5..9).map { |i| "staging-id-#{i}" }
+
+          10.times do
+            expect(correct_stagers).to include(subject.find_stager('stack-name', 1024, 0))
+          end
+        end
+      end
+
+      describe 'stack availability' do
+        it 'only finds deas that can satisfy stack request' do
+          subject.process_advertise_message(dea_advertise_msg)
+          expect { subject.find_stager('unknown-stack-name', 0, 0) }.to raise_error(Errors::ApiError, /The stack could not be found/)
+          expect(subject.find_stager('stack', 0, 0)).to eq('dea-id')
+        end
+      end
+
+      describe 'disk availability' do
+        let(:available_disk) { 512 }
+
+        it 'only finds deas that have enough disk' do
+          subject.process_advertise_message(dea_advertise_msg)
+          expect(subject.find_stager('stack', 1024, 512)).not_to be_nil
+          expect(subject.find_stager('stack', 1024, 513)).to be_nil
         end
       end
     end
