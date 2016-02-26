@@ -15,6 +15,7 @@ resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
     field :name, 'The name for the Organization Quota Definition.', required: opts[:required], example_values: ['gold_quota']
     field :non_basic_services_allowed, 'If an organization can have non basic services', required: opts[:required], valid_values: [true, false]
     field :total_services, 'How many services an organization can have. (-1 represents an unlimited amount)', required: opts[:required], example_values: [-1, 5, 201]
+    field :total_service_keys, 'How many service keys an organization can have. (-1 represents an unlimited amount)', example_values: [-1, 5, 201], default: -1
     field :total_routes, 'How many routes an organization can have. (-1 represents an unlimited amount)', required: opts[:required], example_values: [-1, 10, 23]
     field :total_private_domains,
       'How many private domains an organization can have. (-1 represents an unlimited amount)',

@@ -24,6 +24,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :total_routes }
       it { is_expected.to validate_presence :memory_limit }
       it { is_expected.to validate_presence :organization }
+      it { is_expected.to validate_presence :total_service_keys }
       it { is_expected.to validate_uniqueness [:organization_id, :name] }
 
       describe 'memory_limits' do
@@ -67,17 +68,28 @@ module VCAP::CloudController
           expect(space_quota_definition).to be_valid
         end
       end
+
+      it 'total_service_keys cannot be less than -1' do
+        space_quota_definition.total_service_keys = -2
+        expect(space_quota_definition).not_to be_valid
+        expect(space_quota_definition.errors.on(:total_service_keys)).to include(:invalid_total_service_keys)
+
+        space_quota_definition.total_service_keys = -1
+        expect(space_quota_definition).to be_valid
+      end
     end
 
     describe 'Serialization' do
       it do
         is_expected.to export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-          :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit
+          :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
+          :total_service_keys
       end
 
       it do
         is_expected.to import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-          :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit
+          :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
+          :total_service_keys
       end
     end
 

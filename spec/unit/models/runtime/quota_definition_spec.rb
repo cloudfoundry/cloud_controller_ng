@@ -70,16 +70,25 @@ module VCAP::CloudController
       end
     end
 
+    it 'total_service_keys cannot be less than -1' do
+      quota_definition.total_service_keys = -2
+      expect(quota_definition).not_to be_valid
+      expect(quota_definition.errors.on(:total_service_keys)).to include(:invalid_total_service_keys)
+
+      quota_definition.total_service_keys = -1
+      expect(quota_definition).to be_valid
+    end
+
     describe 'Serialization' do
       it {
         is_expected.to export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
                                          :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
-                                         :app_instance_limit, :app_task_limit
+                                         :app_instance_limit, :app_task_limit, :total_service_keys
       }
       it {
         is_expected.to import_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
                                          :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
-                                         :app_instance_limit, :app_task_limit
+                                         :app_instance_limit, :app_task_limit, :total_service_keys
       }
     end
 
