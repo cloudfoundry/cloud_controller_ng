@@ -220,13 +220,13 @@ module VCAP::CloudController
       domain_change = column_change(:domain_id)
       return false if !new? && domain_change && domain_change[0] != domain_change[1]
 
-      return false if (space && !domain.usable_by_organization?(space.organization))  # domain is not usable by the org
+      return false if space && !domain.usable_by_organization?(space.organization)  # domain is not usable by the org
 
       true
     end
 
     def valid_host_for_shared_domain
-      return false if (domain && domain.shared? && (!host.present? && !old_port.present?))    # domain is shared and no host is present
+      return false if domain && domain.shared? && (!host.present? && !old_port.present?)    # domain is shared and no host is present
       true
     end
 
