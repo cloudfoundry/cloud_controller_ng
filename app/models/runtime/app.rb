@@ -117,7 +117,8 @@ module VCAP::CloudController
         HealthCheckPolicy.new(self, health_check_timeout),
         CustomBuildpackPolicy.new(self, custom_buildpacks_enabled?),
         DockerPolicy.new(self),
-        PortsPolicy.new(self)
+        PortsPolicy.new(self),
+        DiegoToDeaPolicy.new(self, changed_from_diego_to_dea)
       ]
     end
 
@@ -157,6 +158,11 @@ module VCAP::CloudController
       @ports_changed_by_user = changed_columns.include?(:ports)
       update_ports(nil) if changed_from_diego_to_dea && !changed_columns.include?(:ports)
       super
+    end
+
+    def after_validation
+      super
+      update_route_mappings_ports if changed_from_diego_to_dea
     end
 
     def before_save
@@ -714,6 +720,10 @@ module VCAP::CloudController
         end
       end
       exposed_ports
+    end
+
+    def update_route_mappings_ports
+      self.route_mappings_dataset.update(:app_port => nil) unless self.route_mappings.nil?
     end
 
     def mark_routes_changed

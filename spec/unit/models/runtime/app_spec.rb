@@ -2318,16 +2318,19 @@ module VCAP::CloudController
             state: 'STARTED',
             space_guid: space.guid,
             diego: true,
-            ports: [2345]
+            ports: [8080,2345]
           }
         end
         let(:app) { AppFactory.make(app_hash) }
         let(:route) { Route.make(host: 'host', space: app.space) }
-        let!(:route_mapping) { RouteMapping.make(app: app, route: route) }
+        let!(:route_mapping_1) { RouteMapping.make(app: app, route: route) }
+        let!(:route_mapping_2) { RouteMapping.make(app: app, route: route) }
+
+        before do
+          app.diego = false
+        end
 
         it 'should not update the version' do
-          app.diego = false
-
           expect {
             app.save
             app.reload
@@ -2335,7 +2338,6 @@ module VCAP::CloudController
         end
 
         it 'should update the version when the user updates a version-updating field' do
-          app.diego = false
           app.memory = 17
 
           expect {
@@ -2344,21 +2346,41 @@ module VCAP::CloudController
           }.to change { app.version }
         end
 
-        context 'no ports are specified' do
+        it 'fails validations when ports are specified at the same time' do
+          app.ports = [45453]
+
+          expect {
+            app.save
+            app.reload
+          }.to raise_error Sequel::ValidationFailed
+        end
+
+        it 'should set ports to nil' do
+          expect(app.save.reload.ports).to be_nil
+        end
+
+        context 'app with one or more routes and one port' do
           before do
-            app.update_from_hash(diego: false)
+            app.diego = false
+            app.save
           end
 
-          it 'sets the ports to nil' do
-            expect(app.reload.ports).to be_nil
+          it 'should set ports to nil' do
+            expect(route_mapping_1.reload.app_port).to be_nil
+            expect(route_mapping_2.reload.app_port).to be_nil
           end
         end
 
-        context 'and ports are specified' do
-          it 'fails validations' do
+        context 'app with one or more routes and multiple ports' do
+          before do
+            route_mapping_2.app_port = 2345
+            app.diego = false
+          end
+
+          it 'should add an error' do
             expect {
-              app.update_from_hash(diego: false, ports: [45453])
-            }.to raise_error Sequel::ValidationFailed
+              app.save
+            }.to raise_error Sequel::ValidationFailed, /Multiple app ports not allowed/
           end
         end
       end
