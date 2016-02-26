@@ -22,7 +22,7 @@ module VCAP::CloudController
         begin
           tries ||= 3
           response = http_client.post(path, task_request, REQUEST_HEADERS)
-        rescue Errno::ECONNREFUSED => e
+        rescue Errno::ECONNREFUSED, SocketError => e
           retry unless (tries -= 1).zero?
           raise Errors::ApiError.new_from_details('TaskWorkersUnavailable', e)
         end
@@ -69,7 +69,7 @@ module VCAP::CloudController
         begin
           tries ||= 3
           response = http_client.put(path, desire_message, REQUEST_HEADERS)
-        rescue Errno::ECONNREFUSED => e
+        rescue Errno::ECONNREFUSED, SocketError => e
           retry unless (tries -= 1).zero?
           raise Errors::ApiError.new_from_details('RunnerUnavailable', e)
         end
@@ -95,7 +95,7 @@ module VCAP::CloudController
         begin
           tries ||= 3
           response = http_client.delete(path, REQUEST_HEADERS)
-        rescue Errno::ECONNREFUSED => e
+        rescue Errno::ECONNREFUSED, SocketError => e
           retry unless (tries -= 1).zero?
           raise Errors::ApiError.new_from_details('RunnerUnavailable', e)
         end
@@ -124,7 +124,7 @@ module VCAP::CloudController
         begin
           tries ||= 3
           response = http_client.delete(path, REQUEST_HEADERS)
-        rescue Errno::ECONNREFUSED => e
+        rescue Errno::ECONNREFUSED, SocketError => e
           retry unless (tries -= 1).zero?
           raise Errors::ApiError.new_from_details('RunnerUnavailable', e)
         end
