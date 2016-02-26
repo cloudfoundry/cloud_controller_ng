@@ -193,6 +193,7 @@ module VCAP::CloudController::Diego
         it 'sets the state to FAILED and returns an error' do
           expect { client.desire_task(task) }.to raise_error VCAP::Errors::ApiError, /Diego Task URL does not exist/
           expect(task.state).to eq('FAILED')
+          expect(task.failure_reason).to eq('Unable to request task to be run')
         end
       end
 
@@ -235,6 +236,7 @@ module VCAP::CloudController::Diego
             expect { client.desire_task(task) }.to raise_error(VCAP::Errors::ApiError, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
             expect(task.state).to eq('FAILED')
+            expect(task.failure_reason).to eq('Unable to request task to be run')
           end
         end
 
@@ -246,6 +248,7 @@ module VCAP::CloudController::Diego
           it 'raises a TaskError' do
             expect { client.desire_task(task) }.to raise_error(VCAP::Errors::ApiError, /task failed: 500/i)
             expect(task.state).to eq('FAILED')
+            expect(task.failure_reason).to eq('Unable to request task to be run')
           end
         end
       end
