@@ -48,7 +48,14 @@ module VCAP::CloudController
 
         path = "/v1/tasks/#{task.guid}"
 
-        response = http_client.delete(path, REQUEST_HEADERS)
+        begin
+          tries ||= 3
+          response = http_client.delete(path, REQUEST_HEADERS)
+        rescue Errno::ECONNREFUSED, SocketError => e
+          retry unless (tries -= 1).zero?
+          logger.warn('Failed to request task cancel', task_guid: task.guid, error: e)
+          return
+        end
 
         if response.code != '202'
           logger.warn('Non-202 status code from task cancel', task_guid: task.guid, error: error_message(response))

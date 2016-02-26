@@ -295,6 +295,16 @@ module VCAP::CloudController::Diego
           ).to have_been_made.once
         end
 
+        context 'when the task url is unavailable' do
+          it 'retries and eventually raises TaskWorkerUnavailable' do
+            stub = stub_request(:delete, client_url).to_raise(Errno::ECONNREFUSED)
+
+            expect { client.cancel_task(task) }.not_to raise_error
+            expect(stub).to have_been_requested.times(3)
+            expect(task.state).to eq('CANCELING')
+          end
+        end
+
         context 'when we do not receive a 202 from the task endpoint' do
           before do
             stub_request(:delete, client_url).to_return(status: 500, body: '')
