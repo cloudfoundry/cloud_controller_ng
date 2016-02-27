@@ -21,7 +21,7 @@
 #Actually NGX host and port
 local_route: <%= discover_external_ip %>
 external_port: <%= p("cc.external_port") %>
-internal_service_hostname: cloud-controller-ng.service.cf.internal
+internal_service_hostname: <%= p("cc.internal_service_hostname") %>
 
 pid_filename: /this/isnt/used/by/the/worker
 newrelic_enabled: <%= !!properties.cc.newrelic.license_key %>
