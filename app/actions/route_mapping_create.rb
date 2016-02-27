@@ -10,11 +10,10 @@ module VCAP::CloudController
       @user_email = user_email
     end
 
-    def add(app, route, process_model)
+    def add(app, route, process_model, desired_process_type)
       validate_space!(app, route)
 
-      process_type  = process_model.nil? ? 'web' : process_model.type
-      route_mapping = RouteMappingModel.create(app: app, route: route, process_type: process_type)
+      route_mapping = RouteMappingModel.create(app: app, route: route, process_type: desired_process_type)
 
       if !process_model.nil?
         process_model.add_route(route)

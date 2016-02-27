@@ -60,15 +60,23 @@ describe RouteMappingsController, type: :controller do
     context 'when process type is provided in the request' do
       let(:process_type) { 'worker' }
       let(:route_fetcher) { instance_double(VCAP::CloudController::AddRouteFetcher) }
+      let(:route_mapping_create) { VCAP::CloudController::RouteMappingCreate.new('admin', 'admin@example.com') }
       before do
         allow(VCAP::CloudController::AddRouteFetcher).to receive(:new).and_return(route_fetcher)
-        allow(route_fetcher).to receive(:fetch)
+        allow(route_fetcher).to receive(:fetch).and_return [app, route, app_process, space, org]
       end
 
       it 'fetches the requested process type' do
         post :create, app_guid: app.guid, body: req_body
 
         expect(route_fetcher).to have_received(:fetch).with(app.guid, route.guid, 'worker')
+      end
+
+      it 'creates the specified process type' do
+        expect_any_instance_of(VCAP::CloudController::RouteMappingCreate).to receive(:add).with(app, route, app_process, 'worker').and_call_original
+        post :create, app_guid: app.guid, body: req_body
+
+        expect(VCAP::CloudController::RouteMappingModel.first.process_type).to eq 'worker'
       end
     end
 

@@ -43,7 +43,7 @@ class RouteMappingsController < ApplicationController
     route_not_found! unless route
 
     begin
-      route_mapping = RouteMappingCreate.new(current_user, current_user_email).add(app, route, process)
+      route_mapping = RouteMappingCreate.new(current_user, current_user_email).add(app, route, process, process_type)
     rescue RouteMappingCreate::InvalidRouteMapping => e
       unprocessable!(e.message)
     end
