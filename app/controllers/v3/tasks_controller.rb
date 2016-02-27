@@ -45,7 +45,12 @@ class TasksController < ApplicationController
     app_not_found! unless can_read?(space.guid, space.organization.guid)
     unauthorized! unless can_create?(space.guid)
 
-    task = TaskCreate.new(configuration).create(app, message, current_user.guid, current_user_email)
+    if message.droplet_guid.present?
+      droplet = app.droplet_dataset.where(guid: message.droplet_guid).first
+      droplet_not_found! unless droplet
+    end
+
+    task = TaskCreate.new(configuration).create(app, message, current_user.guid, current_user_email, droplet: droplet)
 
     render status: :accepted, json: TaskPresenter.new.present_json(task)
   rescue TaskCreate::InvalidTask, TaskCreate::TaskCreateError => e
@@ -94,6 +99,10 @@ class TasksController < ApplicationController
 
   def task_not_found!
     resource_not_found!(:task)
+  end
+
+  def droplet_not_found!
+    resource_not_found!(:droplet)
   end
 
   def invalid_task_request!(message)

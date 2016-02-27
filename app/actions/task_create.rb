@@ -11,15 +11,16 @@ module VCAP::CloudController
       @config = config
     end
 
-    def create(app, message, user_guid, user_email)
-      no_assigned_droplet! unless app.droplet
+    def create(app, message, user_guid, user_email, droplet: nil)
+      droplet ||= app.droplet
+      no_assigned_droplet! unless droplet
 
       task = nil
       TaskModel.db.transaction do
         task = TaskModel.create(
           name:                  message.name,
           state:                 TaskModel::PENDING_STATE,
-          droplet:               app.droplet,
+          droplet:               droplet,
           command:               message.command,
           app:                   app,
           memory_in_mb:          message.memory_in_mb || config[:default_app_memory],

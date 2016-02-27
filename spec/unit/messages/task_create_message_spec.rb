@@ -8,6 +8,7 @@ module VCAP::CloudController
         {
           'name': 'mytask',
           'command': 'rake db:migrate && true',
+          'droplet_guid': Sham.guid,
           'environment_variables' => {
             'ENVVAR' => 'env-val'
           },
@@ -32,6 +33,24 @@ module VCAP::CloudController
 
           expect(message).to_not be_valid
           expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
+        end
+
+        describe 'droplet_guid' do
+          it 'can be nil' do
+            body.delete 'droplet_guid'
+
+            message = TaskCreateMessage.create(body)
+
+            expect(message).to be_valid
+          end
+
+          it 'must be a valid guid' do
+            body.merge! 'droplet_guid': 32913
+
+            message = TaskCreateMessage.create(body)
+
+            expect(message).to_not be_valid
+          end
         end
 
         describe 'memory_in_mb' do

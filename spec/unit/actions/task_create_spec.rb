@@ -101,6 +101,16 @@ module VCAP::CloudController
           }.to raise_error(TaskCreate::InvalidTask, 'booooooo')
         end
       end
+
+      context 'when a custom droplet is specified' do
+        let(:custom_droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::STAGED_STATE) }
+
+        it 'creates the task with the specified droplet' do
+          task = task_create_action.create(app, message, user_guid, user_email, droplet: custom_droplet)
+
+          expect(task.droplet).to eq(custom_droplet)
+        end
+      end
     end
   end
 end

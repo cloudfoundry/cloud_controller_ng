@@ -79,7 +79,7 @@ describe TasksController, type: :controller do
 
       post :create, guid: app_model.guid, body: req_body
 
-      expect(task_create).to have_received(:create).with(anything, anything, 'user-guid', 'user-email')
+      expect(task_create).to have_received(:create).with(anything, anything, 'user-guid', 'user-email', droplet: nil)
     end
 
     describe 'access permissions' do
@@ -162,18 +162,6 @@ describe TasksController, type: :controller do
       end
     end
 
-    context 'when the app does not have an assigned droplet' do
-      let(:droplet) { nil }
-
-      it 'returns a 422 and a helpful error' do
-        post :create, guid: app_model.guid, body: req_body
-
-        expect(response.status).to eq 422
-        expect(response.body).to include 'UnprocessableEntity'
-        expect(response.body).to include 'Task must have a droplet. Specify droplet or assign current droplet to app.'
-      end
-    end
-
     context 'when the user has requested an invalid field' do
       it 'returns a 400 and a helpful error' do
         req_body[:invalid] = 'field'
@@ -205,6 +193,75 @@ describe TasksController, type: :controller do
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
+      end
+    end
+
+    describe 'droplets' do
+      context 'when a droplet guid is not provided' do
+        it "successfully creates the task on the app's droplet" do
+          post :create, guid: app_model.guid, body: req_body
+
+          expect(response.status).to eq(202)
+          expect(parsed_body['droplet']).to include(droplet.guid)
+        end
+
+        context 'and the app does not have an assigned droplet' do
+          let(:droplet) { nil }
+
+          it 'returns a 422 and a helpful error' do
+            post :create, guid: app_model.guid, body: req_body
+
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
+            expect(response.body).to include 'Task must have a droplet. Specify droplet or assign current droplet to app.'
+          end
+        end
+      end
+
+      context 'when a custom droplet guid is provided' do
+        let(:custom_droplet) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+
+        it 'successfully creates a task on the specifed droplet' do
+          post :create, guid: app_model.guid, body: {
+            "name": 'mytask',
+            "command": 'rake db:migrate && true',
+            "droplet_guid": custom_droplet.guid
+          }
+
+          expect(response.status).to eq 202
+          expect(parsed_body['droplet_guid']).to eq(custom_droplet.guid)
+          expect(parsed_body['droplet_guid']).to_not eq(droplet.guid)
+        end
+
+        context 'and the droplet is not found' do
+          it 'returns a 404' do
+            post :create, guid: app_model.guid, body: {
+              "name": 'mytask',
+              "command": 'rake db:migrate && true',
+              "droplet_guid": 'fake-droplet-guid'
+            }
+
+            expect(response.status).to eq 404
+            expect(response.body).to include 'ResourceNotFound'
+            expect(response.body).to include 'Droplet not found'
+          end
+        end
+
+        context 'and the droplet does not belong to the app' do
+          let(:custom_droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+
+          it 'returns a 404' do
+            post :create, guid: app_model.guid, body: {
+              "name": 'mytask',
+              "command": 'rake db:migrate && true',
+              "droplet_guid": custom_droplet.guid
+            }
+
+            expect(response.status).to eq 404
+            expect(response.body).to include 'ResourceNotFound'
+            expect(response.body).to include 'Droplet not found'
+          end
+        end
       end
     end
   end
