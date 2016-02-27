@@ -596,7 +596,7 @@ module VCAP::CloudController
           context 'and the worker never gets a success response during polling' do
             let!(:now) { Time.now }
             let(:max_poll_duration) { VCAP::CloudController::Config.config[:broker_client_max_async_poll_duration_minutes] }
-            let(:before_poll_timeout) { now + (max_poll_duration / 2).minutes  }
+            let(:before_poll_timeout) { now + (max_poll_duration / 2).minutes }
             let(:after_poll_timeout) { now + max_poll_duration.minutes + 1.minutes }
 
             before do
@@ -1825,7 +1825,7 @@ module VCAP::CloudController
             let(:response_body) { '{"description": "error message"}' }
 
             before do
-              stub_request(:patch,  "#{service_broker_url}?accepts_incomplete=true").
+              stub_request(:patch, "#{service_broker_url}?accepts_incomplete=true").
                 with(headers: { 'Accept' => 'application/json' }).
                 to_return(status: 500, body: response_body, headers: { 'Content-Type' => 'application/json' })
             end

@@ -9,7 +9,6 @@ require 'repositories/services/event_repository'
 
 # Config template for cloud controller
 module VCAP::CloudController
-  # rubocop:disable ClassLength
   class Config < VCAP::Config
     define_schema do
       {
@@ -66,7 +65,7 @@ module VCAP::CloudController
         :uaa => {
           :url                => String,
           :resource_id        => String,
-          optional(:symmetric_secret)   => String,
+          optional(:symmetric_secret) => String,
         },
 
         :logging => {
@@ -335,7 +334,7 @@ module VCAP::CloudController
       def run_initializers_in_directory(config, path)
         Dir.glob(File.expand_path(path, __FILE__)).each do |file|
           require file
-          method = File.basename(file).sub('.rb', '').gsub('-', '_')
+          method = File.basename(file).sub('.rb', '').tr('-', '_')
           CCInitializers.send(method, config)
         end
       end

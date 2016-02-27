@@ -181,7 +181,7 @@ resource 'Droplets (Experimental)', type: :api do
             'next'          => nil,
             'previous'      => nil,
           },
-          'resources'  => [
+          'resources' => [
             {
               'guid'                   => droplet2.guid,
               'state'                  => VCAP::CloudController::DropletModel::STAGED_STATE,
@@ -197,7 +197,7 @@ resource 'Droplets (Experimental)', type: :api do
               'disk_limit'             => droplet2.disk_limit,
               'result'                 => {
                 'hash'                 => { 'type' => 'sha1', 'value' => 'my-hash' },
-                'buildpack'            =>  'https://github.com/cloudfoundry/detected-buildpack.git',
+                'buildpack'            => 'https://github.com/cloudfoundry/detected-buildpack.git',
                 'stack'                => nil,
                 'process_types'        => { 'web' => 'started' },
                 'execution_metadata'   => 'black-box-secrets'
@@ -232,7 +232,7 @@ resource 'Droplets (Experimental)', type: :api do
               'environment_variables'  => droplet1.environment_variables,
               'created_at'             => iso8601,
               'updated_at'             => iso8601,
-              'links'                 => {
+              'links' => {
                 'self'      => { 'href' => "/v3/droplets/#{droplet1.guid}" },
                 'package'   => { 'href' => "/v3/packages/#{package.guid}" },
                 'buildpack' => { 'href' => "/v2/buildpacks/#{buildpack.guid}" },

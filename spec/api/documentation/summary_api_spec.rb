@@ -8,7 +8,7 @@ resource 'Apps', type: [:api, :legacy_api] do
   let(:app_obj) { VCAP::CloudController::AppFactory.make space: space, droplet_hash: nil, package_state: 'PENDING' }
   let(:user) { make_developer_for_space(app_obj.space) }
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
-  let(:route1)  { VCAP::CloudController::Route.make(space: space) }
+  let(:route1) { VCAP::CloudController::Route.make(space: space) }
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
   let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: service_instance) }
 
@@ -48,7 +48,7 @@ resource 'Apps', type: [:api, :legacy_api] do
     example 'Get App summary' do
       app_obj.add_route(route1)
       service_binding.save
-      client.get "/v2/apps/#{app_obj.guid}/summary", {},  headers
+      client.get "/v2/apps/#{app_obj.guid}/summary", {}, headers
 
       expect(status).to eq 200
 
@@ -68,7 +68,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
   let(:app_obj) { VCAP::CloudController::AppFactory.make space: space, droplet_hash: nil, package_state: 'PENDING' }
   let(:user) { make_developer_for_space(app_obj.space) }
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
-  let(:route1)  { VCAP::CloudController::Route.make(space: space) }
+  let(:route1) { VCAP::CloudController::Route.make(space: space) }
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
   let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: service_instance) }
 

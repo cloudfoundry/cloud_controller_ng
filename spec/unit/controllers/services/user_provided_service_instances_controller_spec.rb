@@ -182,7 +182,7 @@ module VCAP::CloudController
 
       context 'when the new service instance name is taken' do
         let(:service_instance_attrs) { { name: 'foo', space: space } }
-        let(:service_instance)  { UserProvidedServiceInstance.make(service_instance_attrs) }
+        let(:service_instance) { UserProvidedServiceInstance.make(service_instance_attrs) }
 
         let(:req_dup) do
           {

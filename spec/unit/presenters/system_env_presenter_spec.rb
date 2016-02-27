@@ -66,7 +66,7 @@ module VCAP::CloudController
           let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'rabbit-instance') }
           let!(:service_binding) do
             ServiceBindingModel.create(app: parent_app, service_instance: service_instance,
-                                       type:                         'app', credentials: { 'url' => 'www.service.com/foo' }, syslog_drain_url: 'logs.go-here-2.com')
+                                       type: 'app', credentials: { 'url' => 'www.service.com/foo' }, syslog_drain_url: 'logs.go-here-2.com')
           end
 
           before do

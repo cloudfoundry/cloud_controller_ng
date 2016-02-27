@@ -44,7 +44,7 @@ describe 'Service Broker' do
     }]
   }}
 
-  let(:catalog_with_two_plans)  {{
+  let(:catalog_with_two_plans) {{
     services:
     [{
       id:          'service-guid-here',
@@ -645,7 +645,7 @@ HEREDOC
         expect(
           a_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').
           with(
-            body:  expected_json_body
+            body: expected_json_body
         )).to have_been_made
       end
     end

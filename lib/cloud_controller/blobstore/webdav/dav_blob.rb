@@ -12,12 +12,12 @@ module CloudController
       end
 
       def internal_download_url
-        expires   = Time.now.utc.to_i + 3600
+        expires = Time.now.utc.to_i + 3600
         @signer.sign_internal_url(path: @key, expires: expires)
       end
 
       def public_download_url
-        expires   = Time.now.utc.to_i + 3600
+        expires = Time.now.utc.to_i + 3600
         @signer.sign_public_url(path: @key, expires: expires)
       end
 

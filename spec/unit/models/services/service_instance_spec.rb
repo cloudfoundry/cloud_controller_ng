@@ -250,7 +250,7 @@ module VCAP::CloudController
 
     describe '#in_suspended_org?' do
       let(:space) { VCAP::CloudController::Space.make }
-      subject(:service_instance) {  VCAP::CloudController::ServiceInstance.new(space: space) }
+      subject(:service_instance) { VCAP::CloudController::ServiceInstance.new(space: space) }
 
       context 'when in a suspended organization' do
         before { allow(space).to receive(:in_suspended_org?).and_return(true) }

@@ -33,7 +33,7 @@ resource 'Packages (Experimental)', type: :api do
     let!(:package1) { VCAP::CloudController::PackageModel.make(type: type1, app_guid: app_model.guid) }
     let!(:package2) do
       VCAP::CloudController::PackageModel.make(type: type2, app_guid: app_model.guid,
-                                               state:  VCAP::CloudController::PackageModel::READY_STATE,
+                                               state: VCAP::CloudController::PackageModel::READY_STATE,
                                                )
     end
     let!(:package3) { VCAP::CloudController::PackageModel.make(type: type3, app_guid: app_model.guid) }
@@ -63,7 +63,7 @@ resource 'Packages (Experimental)', type: :api do
             'next'          => { 'href' => '/v3/packages?page=2&per_page=2' },
             'previous'      => nil,
           },
-          'resources'  => [
+          'resources' => [
             {
               'guid'       => package1.guid,
               'type'       => 'bits',
@@ -74,12 +74,12 @@ resource 'Packages (Experimental)', type: :api do
               'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
               'created_at' => iso8601,
               'updated_at' => nil,
-              'links'     => {
+              'links' => {
                 'self'   => { 'href' => "/v3/packages/#{package1.guid}" },
                 'upload' => { 'href' => "/v3/packages/#{package1.guid}/upload", 'method' => 'POST' },
                 'download' => { 'href' => "/v3/packages/#{package1.guid}/download", 'method' => 'GET' },
                 'stage' => { 'href' => "/v3/packages/#{package1.guid}/droplets", 'method' => 'POST' },
-                'app'    => { 'href' => "/v3/apps/#{package1.app_guid}" },
+                'app' => { 'href' => "/v3/apps/#{package1.app_guid}" },
               }
             },
             {
@@ -134,12 +134,12 @@ resource 'Packages (Experimental)', type: :api do
         'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
         'created_at' => iso8601,
         'updated_at' => nil,
-        'links'     => {
+        'links' => {
           'self'   => { 'href' => "/v3/packages/#{guid}" },
           'upload' => { 'href' => "/v3/packages/#{guid}/upload", 'method' => 'POST' },
           'download' => { 'href' => "/v3/packages/#{guid}/download", 'method' => 'GET' },
           'stage' => { 'href' => "/v3/packages/#{guid}/droplets", 'method' => 'POST' },
-          'app'    => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'app' => { 'href' => "/v3/apps/#{app_model.guid}" },
         }
       }
 
@@ -164,7 +164,7 @@ resource 'Packages (Experimental)', type: :api do
     describe 'creating a package' do
       let(:guid) { app_model.guid }
       let(:type) { 'docker' }
-      let(:data) do  # 'docker://cloudfoundry/runtime-ci'
+      let(:data) do # 'docker://cloudfoundry/runtime-ci'
         {
           image: 'registry/image:latest'
         }
@@ -322,12 +322,12 @@ resource 'Packages (Experimental)', type: :api do
         'state'      => VCAP::CloudController::PackageModel::PENDING_STATE,
         'created_at' => iso8601,
         'updated_at' => iso8601,
-        'links'     => {
+        'links' => {
           'self'   => { 'href' => "/v3/packages/#{package_model.guid}" },
           'upload' => { 'href' => "/v3/packages/#{package_model.guid}/upload", 'method' => 'POST' },
           'download' => { 'href' => "/v3/packages/#{package_model.guid}/download", 'method' => 'GET' },
           'stage' => { 'href' => "/v3/packages/#{package_model.guid}/droplets", 'method' => 'POST' },
-          'app'    => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'app' => { 'href' => "/v3/apps/#{app_model.guid}" },
         }
       }
 

@@ -83,7 +83,7 @@ module VCAP::CloudController::Metrics
               size:        19,
               num_waiting: 2,
             },
-            resultqueue:      {
+            resultqueue: {
               size:        8,
               num_waiting: 1,
             },

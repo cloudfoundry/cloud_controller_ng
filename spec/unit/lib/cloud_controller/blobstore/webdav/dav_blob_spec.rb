@@ -31,7 +31,7 @@ module CloudController
               etag:          'the-etag',
               last_modified: 'modified-date',
               content_length: 123455,
-              created_at:    nil,
+              created_at: nil,
             }
           )
         end

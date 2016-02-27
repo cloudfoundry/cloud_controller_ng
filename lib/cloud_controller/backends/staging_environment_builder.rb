@@ -23,7 +23,7 @@ module VCAP::CloudController
       version = SecureRandom.uuid
       uris    = app.routes.map(&:fqdn)
       {
-        'limits'              => {
+        'limits' => {
           'mem'  => memory_limit,
           'disk' => disk_limit,
           'fds'  => Config.config[:instance_file_descriptor_limit] || 16384,

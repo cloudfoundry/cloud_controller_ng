@@ -571,9 +571,9 @@ module VCAP::Services::SSO
     end
 
     context 'for service instances' do
-      let(:service_instance) {  VCAP::CloudController::ManagedServiceInstance.make }
-      let(:service_broker) {  service_instance.service_plan.service.service_broker }
-      let(:dashboard_client) {  VCAP::CloudController::ServiceInstanceDashboardClient }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:service_broker) { service_instance.service_plan.service.service_broker }
+      let(:dashboard_client) { VCAP::CloudController::ServiceInstanceDashboardClient }
       let(:manager) { DashboardClientManager.new(service_instance, services_event_repository, dashboard_client) }
       let(:client_id) { 'client-id-1' }
       let(:client_info) do

@@ -23,8 +23,8 @@ resource 'Service Usage Events', type: [:api, :legacy_api] do
     field :service_plan_guid, 'The GUID for the service plan.', required: false, readonly: true
     field :service_plan_name, 'The name for the service plan.', required: false, readonly: true
     field :service_guid, 'The GUID of the service.', required: false, readonly: true
-    field :created_at, 'The timestamp of the event creation.',  required: false, readonly: true
-    field :service_label, 'The name of the service.',  required: false, readonly: true
+    field :created_at, 'The timestamp of the event creation.', required: false, readonly: true
+    field :service_label, 'The name of the service.', required: false, readonly: true
 
     standard_list_parameters VCAP::CloudController::ServiceUsageEventsController
 

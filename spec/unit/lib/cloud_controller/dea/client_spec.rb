@@ -698,7 +698,7 @@ module VCAP::CloudController
           version: app.version,
         }
 
-        starting_instance  = {
+        starting_instance = {
           'index' => 1,
           'state' => 'STARTING',
           'state_timestamp' => 2,
@@ -708,7 +708,7 @@ module VCAP::CloudController
           'console_port' => 1002,
         }
 
-        running_instance  = {
+        running_instance = {
           'index' => 2,
           'state' => 'RUNNING',
           'state_timestamp' => 3,
@@ -758,8 +758,8 @@ module VCAP::CloudController
           version: app.version,
         }
 
-        starting_instance  = {
-          'index' => -1,  # -1 is out of range.
+        starting_instance = {
+          'index' => -1, # -1 is out of range.
           'state_timestamp' => 1,
           'debug_ip' => '1.2.3.4',
           'debug_port' => 1001,
@@ -767,8 +767,8 @@ module VCAP::CloudController
           'console_port' => 1002,
         }
 
-        running_instance  = {
-          'index' => 2,  # 2 is out of range.
+        running_instance = {
+          'index' => 2, # 2 is out of range.
           'state' => 'RUNNING',
           'state_timestamp' => 2,
           'debug_ip' => '2.3.4.5',

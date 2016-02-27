@@ -10,7 +10,7 @@ module VCAP::CloudController
           'environment_variables' => {
             'ENVVAR' => 'env-val'
           },
-          'relationships'         => {
+          'relationships' => {
             'space' => { 'guid' => 'some-guid' }
           },
           'lifecycle' => {
@@ -264,7 +264,7 @@ module VCAP::CloudController
         describe 'lifecycle data validations' do
           context 'when lifecycle data is not provided' do
             let(:params) do
-              { lifecycle: { type: 'buildpack'  } }
+              { lifecycle: { type: 'buildpack' } }
             end
 
             it 'is not valid' do
@@ -277,7 +277,7 @@ module VCAP::CloudController
 
           context 'when lifecycle data is not a hash' do
             let(:params) do
-              { lifecycle: { type: 'buildpack', data: 'blah blah'  } }
+              { lifecycle: { type: 'buildpack', data: 'blah blah' } }
             end
 
             it 'is not valid' do

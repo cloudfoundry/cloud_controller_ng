@@ -39,7 +39,7 @@ module VCAP::CloudController
     guid       { Sham.guid }
     name       { Sham.name }
     space_guid { Space.make.guid }
-    buildpack_lifecycle_data  { BuildpackLifecycleDataModel.make(app: object.save) }
+    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(app: object.save) }
   end
 
   AppModel.blueprint(:docker) do
@@ -76,7 +76,7 @@ module VCAP::CloudController
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
     app_guid { AppModel.make.guid }
-    buildpack_lifecycle_data  { BuildpackLifecycleDataModel.make(droplet: object.save) }
+    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(droplet: object.save) }
   end
 
   TaskModel.blueprint do
@@ -90,7 +90,7 @@ module VCAP::CloudController
   end
 
   User.blueprint do
-    guid              { Sham.uaa_id }
+    guid { Sham.uaa_id }
   end
 
   Organization.blueprint do
@@ -100,7 +100,7 @@ module VCAP::CloudController
   end
 
   Domain.blueprint do
-    name                { Sham.domain }
+    name { Sham.domain }
   end
 
   Droplet.blueprint do
@@ -114,11 +114,11 @@ module VCAP::CloudController
   end
 
   SharedDomain.blueprint do
-    name                { Sham.domain }
+    name { Sham.domain }
   end
 
   Route.blueprint do
-    space             { Space.make }
+    space { Space.make }
 
     domain do
       PrivateDomain.make(
@@ -163,7 +163,7 @@ module VCAP::CloudController
   end
 
   ManagedServiceInstance.blueprint(:routing) do
-    service_plan      { ServicePlan.make(:routing) }
+    service_plan { ServicePlan.make(:routing) }
   end
 
   UserProvidedServiceInstance.blueprint do
@@ -206,13 +206,13 @@ module VCAP::CloudController
   end
 
   RouteBinding.blueprint do
-    service_instance  { ManagedServiceInstance.make(:routing) }
+    service_instance { ManagedServiceInstance.make(:routing) }
     route { Route.make space: service_instance.space }
     route_service_url { Sham.url }
   end
 
   RouteMapping.blueprint do
-    app  { AppFactory.make }
+    app { AppFactory.make }
     route { Route.make(space: app.space) }
   end
 
@@ -233,7 +233,7 @@ module VCAP::CloudController
   ServiceKey.blueprint do
     credentials       { Sham.service_credentials }
     service_instance  { ManagedServiceInstance.make }
-    name               { Sham.name }
+    name { Sham.name }
   end
 
   ServiceBroker.blueprint do

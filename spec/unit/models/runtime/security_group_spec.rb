@@ -67,7 +67,7 @@ module VCAP::CloudController
           end
 
           context 'when log is not present' do
-            let(:rule) { build_transport_rule('protocol' => protocol)  }
+            let(:rule) { build_transport_rule('protocol' => protocol) }
 
             it 'is valid' do
               expect(subject).to be_valid
@@ -592,7 +592,7 @@ module VCAP::CloudController
                 end
 
                 context 'when log is not present' do
-                  let(:rule) { build_all_rule  }
+                  let(:rule) { build_all_rule }
 
                   it 'is valid' do
                     expect(subject).to be_valid

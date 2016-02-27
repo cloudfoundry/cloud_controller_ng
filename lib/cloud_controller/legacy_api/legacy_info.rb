@@ -54,7 +54,7 @@ module VCAP::CloudController
     end
 
     def self.setup_routes
-      get '/info',          :info
+      get '/info', :info
     end
 
     setup_routes

@@ -38,7 +38,7 @@ module CloudFoundry
             end
 
             it 'delegates to the initial request' do
-              request_headers       = {
+              request_headers = {
                 'HTTP_ORIGIN'                        => origin,
                 'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => 'GET',
                 'REQUEST_METHOD'                     => 'OPTIONS'
@@ -65,7 +65,7 @@ module CloudFoundry
             end
 
             it 'delegates to the initial request' do
-              request_headers       = {
+              request_headers = {
                 'HTTP_ORIGIN'                        => origin,
                 'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => 'GET',
                 'REQUEST_METHOD'                     => 'OPTIONS'

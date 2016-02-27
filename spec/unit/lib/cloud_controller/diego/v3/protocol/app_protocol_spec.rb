@@ -51,7 +51,7 @@ module VCAP::CloudController
                   auth_user:     user,
                   auth_password: password
                 },
-                staging:                   {
+                staging: {
                   minimum_staging_memory_mb:             128,
                   minimum_staging_file_descriptor_limit: 30,
                   timeout_in_seconds:                    90,

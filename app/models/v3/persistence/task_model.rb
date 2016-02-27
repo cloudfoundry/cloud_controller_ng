@@ -9,7 +9,7 @@ module VCAP::CloudController
       RUNNING_STATE = 'RUNNING',
       CANCELING_STATE = 'CANCELING'
     ].map(&:freeze).freeze
-    COMMAND_MAX_LENGTH = 4096.freeze
+    COMMAND_MAX_LENGTH = 4096
 
     many_to_one :app, class: 'VCAP::CloudController::AppModel'
     many_to_one :droplet, class: 'VCAP::CloudController::DropletModel'

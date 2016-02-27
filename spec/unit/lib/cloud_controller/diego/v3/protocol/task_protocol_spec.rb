@@ -26,7 +26,7 @@ module VCAP::CloudController
             let(:external_port) { 8080 }
             let(:config) do
               {
-                internal_api:              {
+                internal_api: {
                   auth_user:     user,
                   auth_password: password,
                 },

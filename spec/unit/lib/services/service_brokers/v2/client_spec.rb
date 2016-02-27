@@ -826,7 +826,7 @@ module VCAP::Services::ServiceBrokers::V2
              plan_id:    binding.service_plan.broker_provided_id,
              service_id: binding.service.broker_provided_id,
              app_guid:   binding.app_guid,
-             bind_resource:      binding.required_parameters
+             bind_resource: binding.required_parameters
         )
       end
 
@@ -853,7 +853,7 @@ module VCAP::Services::ServiceBrokers::V2
                 service_id: binding.service.broker_provided_id,
                 app_guid:   binding.app_guid,
                 parameters: arbitrary_parameters,
-                bind_resource:      binding.required_parameters
+                bind_resource: binding.required_parameters
               )
         end
       end
@@ -868,7 +868,7 @@ module VCAP::Services::ServiceBrokers::V2
               with(anything,
                 plan_id:    binding.service_plan.broker_provided_id,
                 service_id: binding.service.broker_provided_id,
-                bind_resource:      binding.required_parameters
+                bind_resource: binding.required_parameters
               )
         end
       end

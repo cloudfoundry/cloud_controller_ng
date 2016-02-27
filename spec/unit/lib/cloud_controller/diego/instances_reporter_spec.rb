@@ -330,7 +330,7 @@ module VCAP::CloudController
                   'mem_quota'  => app[:memory] * 1024 * 1024,
                   'disk_quota' => app[:disk_quota] * 1024 * 1024,
                   'fds_quota' => app.file_descriptors,
-                  'usage'      => {
+                  'usage' => {
                     'time' => usage_time,
                     'cpu'  => 80,
                     'mem'  => 128,
@@ -349,7 +349,7 @@ module VCAP::CloudController
                   'mem_quota'  => app[:memory] * 1024 * 1024,
                   'disk_quota' => app[:disk_quota] * 1024 * 1024,
                   'fds_quota' => app.file_descriptors,
-                  'usage'      => {
+                  'usage' => {
                     'time' => usage_time,
                     'cpu'  => 70,
                     'mem'  => 128,
@@ -368,7 +368,7 @@ module VCAP::CloudController
                   'mem_quota'  => app[:memory] * 1024 * 1024,
                   'disk_quota' => app[:disk_quota] * 1024 * 1024,
                   'fds_quota' => app.file_descriptors,
-                  'usage'      => {
+                  'usage' => {
                     'time' => usage_time,
                     'cpu'  => 80,
                     'mem'  => 256,
@@ -408,7 +408,7 @@ module VCAP::CloudController
               'mem_quota'  => app[:memory] * 1024 * 1024,
               'disk_quota' => app[:disk_quota] * 1024 * 1024,
               'fds_quota' => app.file_descriptors,
-              'usage'      => {
+              'usage' => {
                 'time' => usage_time,
                 'cpu'  => 0,
                 'mem'  => 0,

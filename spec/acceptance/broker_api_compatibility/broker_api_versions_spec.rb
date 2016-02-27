@@ -3,11 +3,11 @@ require 'spec_helper'
 describe 'Broker API Versions' do
   let(:spec_sha) do
     {
-      'broker_api_v2.0_spec.rb' => '0df671d34c80f0d847eaa2974220794a',
+      'broker_api_v2.0_spec.rb' => 'e2fc8fa36c6794c8a56f032a3dcc8f00',
       'broker_api_v2.1_spec.rb' => '4d031aeec862463e7a4b9d74702ac254',
       'broker_api_v2.2_spec.rb' => '29d240c39137cc654c1aeff6e0e2abf1',
-      'broker_api_v2.3_spec.rb' => '784b3ca4f7afbac4428c55a37b82b7e4',
-      'broker_api_v2.4_spec.rb' => '9be296cb6ce21259cafa15c9a6f06004',
+      'broker_api_v2.3_spec.rb' => 'a2c1cbefdc9f5ccb3054e0646e3825d9',
+      'broker_api_v2.4_spec.rb' => '5ad08dddf1869af9f5918bdd9d1736e8',
       'broker_api_v2.5_spec.rb' => '5babf49a7cee063016bb6bc024b8d290',
       'broker_api_v2.6_spec.rb' => '13f4c11e90402cf4ca4c32e3f1145771',
       'broker_api_v2.7_spec.rb' => '52ee5118e7214e2f0de4be311c7448b1',

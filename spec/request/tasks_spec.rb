@@ -63,10 +63,10 @@ describe 'Tasks' do
         'created_at'            => iso8601,
         'updated_at'            => iso8601,
         'links'                 => {
-          'self'    => {
+          'self' => {
             'href' => "/v3/tasks/#{guid}"
           },
-          'app'     => {
+          'app' => {
             'href' => "/v3/apps/#{app_model.guid}"
           },
           'droplet' => {
@@ -108,10 +108,10 @@ describe 'Tasks' do
         'created_at'            => iso8601,
         'updated_at'            => nil,
         'links'                 => {
-          'self'    => {
+          'self' => {
             'href' => "/v3/tasks/#{task_guid}"
           },
-          'app'     => {
+          'app' => {
             'href' => "/v3/apps/#{app_model.guid}"
           },
           'droplet' => {
@@ -154,10 +154,10 @@ describe 'Tasks' do
         'created_at'            => iso8601,
         'updated_at'            => nil,
         'links'                 => {
-          'self'    => {
+          'self' => {
             'href' => "/v3/tasks/#{guid}"
           },
-          'app'     => {
+          'app' => {
             'href' => "/v3/apps/#{app_model.guid}"
           },
           'droplet' => {

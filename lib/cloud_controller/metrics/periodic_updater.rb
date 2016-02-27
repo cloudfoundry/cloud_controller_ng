@@ -102,7 +102,7 @@ module VCAP::CloudController::Metrics
             size:        threadqueue.size,
             num_waiting: threadqueue.is_a?(Array) ? 0 : threadqueue.num_waiting,
           },
-          resultqueue:      {
+          resultqueue: {
             size:        resultqueue.size,
             num_waiting: resultqueue.is_a?(Array) ? 0 : resultqueue.num_waiting,
           },
