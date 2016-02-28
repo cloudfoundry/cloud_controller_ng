@@ -2730,7 +2730,7 @@ module VCAP::CloudController
         end
 
         context 'when modifying multiple routes at one time' do
-          let(:routes) { 3.times.collect { Route.make domain: domain, space: subject.space } }
+          let(:routes) { Array.new(3) { Route.make domain: domain, space: subject.space } }
 
           before do
             allow(AppObserver).to receive(:updated).with(subject)

@@ -155,8 +155,6 @@ Style/IndentArray:
 Style/Alias:
   EnforcedStyle: prefer_alias_method
 
-Performance/TimesMap:
-  Enabled: false
 Style/ConditionalAssignment:
   Enabled: false
 Style/IndentAssignment:

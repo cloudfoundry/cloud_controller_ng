@@ -358,11 +358,7 @@ describe 'Sequel::Plugins::VcapRelations' do
       bottom_klass.many_to_one :middle
     end
 
-    let!(:bottoms) do
-      10.times.collect do
-        bottom_klass.create
-      end
-    end
+    let!(:bottoms) { Array.new(10) { bottom_klass.create } }
 
     let!(:middle) do
       middle_klass.create.tap do |m|
@@ -401,11 +397,7 @@ describe 'Sequel::Plugins::VcapRelations' do
     let!(:middle) { middle_klass.create(guid: 'middle-guid') }
     let!(:other_middle) { middle_klass.create(guid: 'other_middle_guid') }
 
-    let!(:bottoms) do
-      10.times.collect do
-        bottom_klass.create(middle: middle)
-      end
-    end
+    let!(:bottoms) { Array.new(1) { bottom_klass.create(middle: middle) } }
 
     context 'the default behaviour' do
       def initialize_relations

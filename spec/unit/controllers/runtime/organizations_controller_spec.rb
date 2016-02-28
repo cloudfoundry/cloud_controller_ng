@@ -266,8 +266,8 @@ module VCAP::CloudController
 
       describe 'get /v2/organizations/:guid/services?q=active:<t|f>' do
         before(:each) do
-          @active = 3.times.map { Service.make(active: true).tap { |svc| ServicePlan.make(service: svc) } }
-          @inactive = 2.times.map { Service.make(active: false).tap { |svc| ServicePlan.make(service: svc) } }
+          @active = Array.new(3) { Service.make(active: true).tap { |svc| ServicePlan.make(service: svc) } }
+          @inactive = Array.new(2) { Service.make(active: false).tap { |svc| ServicePlan.make(service: svc) } }
         end
 
         it 'can remove inactive services' do
