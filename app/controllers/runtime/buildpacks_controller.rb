@@ -35,6 +35,10 @@ module VCAP::CloudController
       response
     end
 
+    def self.not_found_exception_name
+      'NotFound'
+    end
+
     private
 
     attr_reader :buildpack_blobstore
@@ -42,10 +46,6 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @buildpack_blobstore = dependencies[:buildpack_blobstore]
-    end
-
-    def self.not_found_exception_name
-      'NotFound'
     end
 
     define_messages

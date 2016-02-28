@@ -31,12 +31,12 @@ module VCAP::CloudController
     define_routes
 
     def self.translate_validation_exception(e, attributes)
-      space_and_name_errors = errors_on(e, [:space_id, :name])
-      quota_errors = errors_on(e, :quota)
-      service_plan_errors = errors_on(e, :service_plan)
-      service_instance_errors = errors_on(e, :service_instance)
-      service_instance_name_errors = errors_on(e, :name)
-      service_instance_tags_errors = errors_on(e, :tags)
+      space_and_name_errors = e.errors.on([:space_id, :name]).to_a
+      quota_errors = e.errors.on(:quota).to_a
+      service_plan_errors = e.errors.on(:service_plan).to_a
+      service_instance_errors = e.errors.on(:service_instance).to_a
+      service_instance_name_errors = e.errors.on(:name).to_a
+      service_instance_tags_errors = e.errors.on(:tags).to_a
 
       if space_and_name_errors.include?(:unique)
         return Errors::ApiError.new_from_details('ServiceInstanceNameTaken', attributes['name'])
@@ -418,10 +418,6 @@ module VCAP::CloudController
     def convert_flag_to_bool(flag)
       raise Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag
       flag == 'true'
-    end
-
-    def self.errors_on(e, fields)
-      e.errors.on(fields).to_a
     end
 
     def select_spaces_based_on_org_filters(org_filters)

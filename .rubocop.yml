@@ -165,8 +165,6 @@ Performance/RedundantMatch:
   Enabled: false
 Performance/RedundantBlockCall:
   Enabled: false
-Lint/IneffectiveAccessModifier:
-  Enabled: false
 Style/MultilineMethodCallIndentation:
   Enabled: false
 Style/IfInsideElse:
