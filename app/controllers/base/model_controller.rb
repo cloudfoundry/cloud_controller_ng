@@ -126,14 +126,14 @@ module VCAP::CloudController::RestController
       validate_access(:index, associated_model, { related_obj: obj, related_model: model })
 
       filtered_dataset =
-      Query.filtered_dataset_from_query_params(
-        associated_model,
-        obj.user_visible_relationship_dataset(name,
-                                              VCAP::CloudController::SecurityContext.current_user,
-                                              SecurityContext.admin?),
-        associated_controller.query_parameters,
-        @opts
-      )
+        Query.filtered_dataset_from_query_params(
+          associated_model,
+          obj.user_visible_relationship_dataset(name,
+                                                VCAP::CloudController::SecurityContext.current_user,
+                                                SecurityContext.admin?),
+          associated_controller.query_parameters,
+          @opts
+        )
 
       associated_controller_instance = CloudController::ControllerFactory.new(@config, @logger, @env, @params, @body, @sinatra).create_controller(associated_controller)
 

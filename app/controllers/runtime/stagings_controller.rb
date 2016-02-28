@@ -204,11 +204,11 @@ module VCAP::CloudController
 
     def upload_path
       @upload_path ||=
-          if HashUtils.dig(config, :nginx, :use_nginx)
-            params['droplet_path']
-          elsif (tempfile = HashUtils.dig(params, 'upload', 'droplet', :tempfile))
-            tempfile.path
-          end
+        if HashUtils.dig(config, :nginx, :use_nginx)
+          params['droplet_path']
+        elsif (tempfile = HashUtils.dig(params, 'upload', 'droplet', :tempfile))
+          tempfile.path
+        end
     end
 
     def check_app_exists(app, guid)
