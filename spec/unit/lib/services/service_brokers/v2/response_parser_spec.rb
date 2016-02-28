@@ -73,11 +73,7 @@ module VCAP::Services
             let(:call_method) do
               ->(response_parser, method_name, path, fake_response, service_param) do
                 if service_param
-                  if service_param == :syslog
-                    service = syslog_service
-                  else
-                    service = non_syslog_service
-                  end
+                  service = (service_param == :syslog) ? syslog_service : non_syslog_service
                   response_parser.send(method_name, path, fake_response, service_guid: service.guid)
                 else
                   response_parser.send(method_name, path, fake_response)

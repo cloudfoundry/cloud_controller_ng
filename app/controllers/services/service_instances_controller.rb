@@ -230,11 +230,7 @@ module VCAP::CloudController
     def add_related(guid, name, other_guid)
       return super(guid, name, other_guid) if name != :routes
 
-      if body.string.blank?
-        req_body = '{}'
-      else
-        req_body = body
-      end
+      req_body = body.string.blank? ? '{}' : body
 
       json_msg = VCAP::CloudController::RouteBindingMessage.decode(req_body)
       @request_attrs = json_msg.extract(stringify_keys: true)
@@ -431,15 +427,15 @@ module VCAP::CloudController
     def select_spaces_based_on_org_filters(org_filters)
       space_ids = Space.select(:spaces__id).left_join(:organizations, id: :spaces__organization_id)
       org_filters.each do |_, comparison, value|
-        if value.blank?
-          space_ids = space_ids.where(organizations__guid: nil)
-        elsif comparison == ':'
-          space_ids = space_ids.where(organizations__guid: value)
-        elsif comparison == ' IN '
-          space_ids = space_ids.where(organizations__guid: value.split(','))
-        else
-          space_ids = space_ids.where("organizations.guid #{comparison} ?", value)
-        end
+        space_ids = if value.blank?
+                      space_ids.where(organizations__guid: nil)
+                    elsif comparison == ':'
+                      space_ids.where(organizations__guid: value)
+                    elsif comparison == ' IN '
+                      space_ids.where(organizations__guid: value.split(','))
+                    else
+                      space_ids.where("organizations.guid #{comparison} ?", value)
+                    end
       end
 
       space_ids

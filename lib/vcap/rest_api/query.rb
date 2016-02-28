@@ -100,11 +100,7 @@ module VCAP::RestAPI
 
     def query_filter(key, comparison, val)
       foreign_key_association = foreign_key_association(key)
-      if comparison == ' IN '
-        values = val.split(',')
-      else
-        values = [val]
-      end
+      values = (comparison == ' IN ') ? val.split(',') : [val]
 
       return clean_up_foreign_key(key, values, foreign_key_association) if foreign_key_association
 

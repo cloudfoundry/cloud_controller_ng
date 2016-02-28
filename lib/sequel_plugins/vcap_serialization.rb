@@ -22,15 +22,13 @@ module Sequel::Plugins::VcapSerialization
       attrs.each do |k|
         if opts[:only].nil? || opts[:only].include?(k)
           value = send(k)
-          if value.respond_to?(:nil_object?) && value.nil_object?
-            hash[k.to_s] = nil
-          else
-            if !redact_vals.nil? && redact_vals.include?(k.to_s)
-              hash[k.to_s] = { redacted_message: '[PRIVATE DATA HIDDEN]' }
-            else
-              hash[k.to_s] = value
-            end
-          end
+          hash[k.to_s] = if value.respond_to?(:nil_object?) && value.nil_object?
+                           nil
+                         elsif !redact_vals.nil? && redact_vals.include?(k.to_s)
+                           { redacted_message: '[PRIVATE DATA HIDDEN]' }
+                         else
+                           value
+                         end
         end
       end
       hash

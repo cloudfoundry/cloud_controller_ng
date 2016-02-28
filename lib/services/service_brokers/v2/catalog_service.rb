@@ -97,11 +97,11 @@ module VCAP::Services::ServiceBrokers::V2
     def build_plans
       return unless plans_data
 
-      if plans_data.is_a?(Array)
-        @plans = @plans_data.map { |attrs| CatalogPlan.new(self, attrs) }
-      else
-        @plans = @plans_data
-      end
+      @plans = if plans_data.is_a?(Array)
+                 @plans_data.map { |attrs| CatalogPlan.new(self, attrs) }
+               else
+                 @plans_data
+               end
     end
 
     def validate_at_least_one_plan_present!

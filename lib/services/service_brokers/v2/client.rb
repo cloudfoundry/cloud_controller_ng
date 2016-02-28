@@ -46,11 +46,7 @@ module VCAP::Services::ServiceBrokers::V2
       }
 
       state = last_operation_hash['state']
-      if state
-        return_values[:last_operation][:state] = state
-      else
-        return_values[:last_operation][:state] = 'succeeded'
-      end
+      return_values[:last_operation][:state] = state || 'succeeded'
 
       return_values
     rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e

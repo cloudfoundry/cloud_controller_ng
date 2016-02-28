@@ -59,11 +59,11 @@ module VCAP::CloudController
     end
 
     def update_broker(accepts_incomplete, request_attrs, service_instance, previous_values)
-      if request_attrs.key?('service_plan_guid')
-        service_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
-      else
-        service_plan = service_instance.service_plan
-      end
+      service_plan = if request_attrs.key?('service_plan_guid')
+                       ServicePlan.find(guid: request_attrs['service_plan_guid'])
+                     else
+                       service_instance.service_plan
+                     end
 
       response, err = service_instance.client.update(
         service_instance,

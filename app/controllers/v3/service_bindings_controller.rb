@@ -46,11 +46,11 @@ class ServiceBindingsController < ApplicationController
     pagination_options = PaginationOptions.from_params(query_params)
     invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
-    if roles.admin?
-      paginated_result = ServiceBindingListFetcher.new.fetch_all(pagination_options)
-    else
-      paginated_result = ServiceBindingListFetcher.new.fetch(pagination_options, readable_space_guids_for_user)
-    end
+    paginated_result = if roles.admin?
+                         ServiceBindingListFetcher.new.fetch_all(pagination_options)
+                       else
+                         ServiceBindingListFetcher.new.fetch(pagination_options, readable_space_guids_for_user)
+                       end
 
     render status: :ok, json: service_binding_presenter.present_json_list(paginated_result, '/v3/service_bindings')
   end

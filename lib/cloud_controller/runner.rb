@@ -187,11 +187,11 @@ module VCAP::CloudController
     end
 
     def start_thin_server(app)
-      if @config[:nginx][:use_nginx]
-        @thin_server = Thin::Server.new(@config[:nginx][:instance_socket], signals: false)
-      else
-        @thin_server = Thin::Server.new(@config[:external_host], @config[:external_port], signals: false)
-      end
+      @thin_server = if @config[:nginx][:use_nginx]
+                       Thin::Server.new(@config[:nginx][:instance_socket], signals: false)
+                     else
+                       Thin::Server.new(@config[:external_host], @config[:external_port], signals: false)
+                     end
 
       @thin_server.app = app
       trap_signals

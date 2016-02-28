@@ -1,10 +1,10 @@
 class ServiceInstancePresenter
   def initialize(service_instance)
-    if service_instance.is_gateway_service
-      @presenter = ManagedPresenter.new(service_instance)
-    else
-      @presenter = ProvidedPresenter.new(service_instance)
-    end
+    @presenter = if service_instance.is_gateway_service
+                   ManagedPresenter.new(service_instance)
+                 else
+                   ProvidedPresenter.new(service_instance)
+                 end
   end
 
   def to_hash

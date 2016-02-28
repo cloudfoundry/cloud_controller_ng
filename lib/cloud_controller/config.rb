@@ -319,11 +319,11 @@ module VCAP::CloudController
           # When Rails is present, NewRelic adds itself to the Rails initializers instead
           # of initializing immediately.
 
-          if Rails.env.test? && !ENV['NRCONFIG']
-            opts = { env: ENV['NEW_RELIC_ENV'] || 'production', monitor_mode: false }
-          else
-            opts = { env: ENV['NEW_RELIC_ENV'] || 'production' }
-          end
+          opts = if Rails.env.test? && !ENV['NRCONFIG']
+                   { env: ENV['NEW_RELIC_ENV'] || 'production', monitor_mode: false }
+                 else
+                   { env: ENV['NEW_RELIC_ENV'] || 'production' }
+                 end
 
           NewRelic::Agent.manual_start(opts)
           run_initializers_in_directory(config, '../../../config/newrelic/initializers/*.rb')
