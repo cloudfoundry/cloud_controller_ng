@@ -18,7 +18,7 @@ module ControllerHelpers
     { protocol: 'http',  config_setting: :https_required_for_admins, user: 'admin', success: false },
     { protocol: 'https', config_setting: :https_required_for_admins, user: 'user',  success: true },
     { protocol: 'https', config_setting: :https_required_for_admins, user: 'admin', success: true }
-  ]
+  ].freeze
 
   def self.description_for_inline_depth(depth, pagination=50)
     if depth

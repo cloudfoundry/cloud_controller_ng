@@ -1,5 +1,5 @@
 class MaxDiskQuotaPolicy
-  ERROR_MSG = 'too much disk requested (must be less than %s)'
+  ERROR_MSG = 'too much disk requested (must be less than %s)'.freeze
 
   def initialize(app, max_mb)
     @app = app

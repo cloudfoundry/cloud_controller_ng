@@ -22,7 +22,7 @@ module VCAP::CloudController
 
     private
 
-    DEFAULT_HASHING_ALGORITHM = 'sha1'
+    DEFAULT_HASHING_ALGORITHM = 'sha1'.freeze
 
     def droplet_hash(droplet)
       {

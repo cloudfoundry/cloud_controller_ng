@@ -3,7 +3,7 @@ require 'messages/lifecycles/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
   class AppCreateMessage < BaseMessage
-    ALLOWED_KEYS = [:name, :environment_variables, :relationships, :lifecycle]
+    ALLOWED_KEYS = [:name, :environment_variables, :relationships, :lifecycle].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 

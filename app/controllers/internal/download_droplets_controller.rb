@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     include VCAP::Errors
 
-    DROPLET_V2_PATH = '/internal/v2/droplets'
+    DROPLET_V2_PATH = '/internal/v2/droplets'.freeze
 
     # Endpoint does its own basic auth
     allow_unauthenticated_access

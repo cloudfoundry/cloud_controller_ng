@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class RouteMappingsCreateMessage < BaseMessage
-    ALLOWED_KEYS = [:relationships]
+    ALLOWED_KEYS = [:relationships].freeze
 
     attr_accessor(*ALLOWED_KEYS)
     validates_with NoAdditionalKeysValidator

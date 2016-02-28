@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class AppsListMessage < BaseMessage
-    ALLOWED_KEYS = [:names, :guids, :organization_guids, :space_guids, :page, :per_page, :order_by]
+    ALLOWED_KEYS = [:names, :guids, :organization_guids, :space_guids, :page, :per_page, :order_by].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 

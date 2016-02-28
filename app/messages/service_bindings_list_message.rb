@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class ServiceBindingsListMessage < BaseMessage
-    ALLOWED_KEYS = [:page, :per_page, :order_by]
+    ALLOWED_KEYS = [:page, :per_page, :order_by].freeze
     VALID_ORDER_BY_KEYS = /created_at|updated_at/
 
     attr_accessor(*ALLOWED_KEYS)

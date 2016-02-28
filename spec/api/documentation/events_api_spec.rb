@@ -42,7 +42,7 @@ resource 'Events', type: [:api, :legacy_api] do
     audit.route.create
     audit.route.update
     audit.route.delete-request
-  )
+  ).freeze
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   authenticated_request
 

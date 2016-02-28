@@ -2,8 +2,8 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class ServiceBindingCreateMessage < BaseMessage
-    ALLOWED_KEYS = [:type, :relationships, :data]
-    ALLOWED_TYPES = ['app']
+    ALLOWED_KEYS = [:type, :relationships, :data].freeze
+    ALLOWED_TYPES = ['app'].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 

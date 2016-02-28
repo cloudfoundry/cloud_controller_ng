@@ -103,7 +103,7 @@ module VCAP::CloudController
       @logger ||= Steno.logger('cc.models.service_binding')
     end
 
-    DEFAULT_BINDING_OPTIONS = '{}'
+    DEFAULT_BINDING_OPTIONS = '{}'.freeze
 
     def binding_options
       MultiJson.load(super || DEFAULT_BINDING_OPTIONS)

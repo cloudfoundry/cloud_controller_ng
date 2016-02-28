@@ -2,7 +2,7 @@ require 'actions/services/locks/updater_lock'
 
 module VCAP::CloudController
   class ServiceInstanceUpdate
-    KEYS_TO_UPDATE_CC_ONLY = %w(tags name space_guid)
+    KEYS_TO_UPDATE_CC_ONLY = %w(tags name space_guid).freeze
     KEYS_TO_UPDATE_CC = KEYS_TO_UPDATE_CC_ONLY + ['service_plan_guid']
 
     def initialize(accepts_incomplete: false, services_event_repository: nil)

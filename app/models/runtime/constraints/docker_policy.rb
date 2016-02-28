@@ -1,6 +1,6 @@
 class DockerPolicy
-  BUILDPACK_DETECTED_ERROR_MSG = 'incompatible with buildpack'
-  DOCKER_CREDENTIALS_ERROR_MSG = 'user, password and email required'
+  BUILDPACK_DETECTED_ERROR_MSG = 'incompatible with buildpack'.freeze
+  DOCKER_CREDENTIALS_ERROR_MSG = 'user, password and email required'.freeze
 
   def initialize(app)
     @errors = app.errors

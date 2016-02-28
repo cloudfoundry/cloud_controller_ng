@@ -3,7 +3,7 @@ require 'presenters/system_env_presenter'
 module VCAP::CloudController
   module Diego
     class Environment
-      EXCLUDE = [:users]
+      EXCLUDE = [:users].freeze
 
       def initialize(app, initial_env={})
         @app         = app

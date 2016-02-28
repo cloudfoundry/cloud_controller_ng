@@ -80,7 +80,7 @@ module VCAP::CloudController
       :memory,
       :package_state,
       :version
-    ]
+    ].freeze
 
     def dea_apps_hm9k(batch_size, last_id)
       query = App.

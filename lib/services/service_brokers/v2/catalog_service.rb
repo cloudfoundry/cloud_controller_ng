@@ -2,7 +2,7 @@ module VCAP::Services::ServiceBrokers::V2
   class CatalogService
     include CatalogValidationHelper
 
-    SUPPORTED_REQUIRES_VALUES = ['syslog_drain', 'route_forwarding']
+    SUPPORTED_REQUIRES_VALUES = ['syslog_drain', 'route_forwarding'].freeze
 
     attr_reader :service_broker, :broker_provided_id, :metadata, :name,
       :description, :bindable, :tags, :plans, :requires, :dashboard_client, :errors, :plan_updateable

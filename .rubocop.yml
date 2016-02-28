@@ -154,8 +154,6 @@ Style/IndentArray:
   EnforcedStyle: consistent
 Style/Alias:
   EnforcedStyle: prefer_alias_method
-Style/MutableConstant:
-  Enabled: false
 
 Performance/TimesMap:
   Enabled: false

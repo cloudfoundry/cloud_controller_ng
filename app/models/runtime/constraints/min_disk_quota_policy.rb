@@ -1,5 +1,5 @@
 class MinDiskQuotaPolicy
-  ERROR_MSG = 'too little disk requested (must be greater than or equal to zero)'
+  ERROR_MSG = 'too little disk requested (must be greater than or equal to zero)'.freeze
 
   def initialize(app)
     @app = app

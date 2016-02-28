@@ -7,9 +7,9 @@ module VCAP::CloudController
                            :environment_json,
                            :environment_variables,
                            :docker_credentials_json,
-                           :encrypted_docker_credentials_json]
+                           :encrypted_docker_credentials_json].freeze
         CENSORED_MESSAGE = 'PRIVATE DATA HIDDEN'.freeze
-        SYSTEM_ACTOR_HASH = { guid: 'system', type: 'system', name: 'system' }
+        SYSTEM_ACTOR_HASH = { guid: 'system', type: 'system', name: 'system' }.freeze
 
         def create_app_exit_event(app, droplet_exited_payload)
           Loggregator.emit(app.guid, "App instance exited with guid #{app.guid} payload: #{droplet_exited_payload}")

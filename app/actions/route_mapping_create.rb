@@ -2,8 +2,8 @@ module VCAP::CloudController
   class RouteMappingCreate
     class InvalidRouteMapping < StandardError; end
 
-    DUPLICATE_MESSAGE     = 'a duplicate route mapping already exists'
-    INVALID_SPACE_MESSAGE = 'the app and route must belong to the same space'
+    DUPLICATE_MESSAGE     = 'a duplicate route mapping already exists'.freeze
+    INVALID_SPACE_MESSAGE = 'the app and route must belong to the same space'.freeze
 
     def initialize(user, user_email)
       @user       = user

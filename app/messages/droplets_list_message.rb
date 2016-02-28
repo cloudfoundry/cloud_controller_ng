@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class DropletsListMessage < BaseMessage
-    ALLOWED_KEYS = [:app_guids, :states, :page, :per_page, :order_by]
+    ALLOWED_KEYS = [:app_guids, :states, :page, :per_page, :order_by].freeze
     VALID_ORDER_BY_KEYS = /created_at|updated_at/
 
     attr_accessor(*ALLOWED_KEYS)

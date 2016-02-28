@@ -56,7 +56,7 @@ module VCAP::Services
         507 => 'Insufficient Storage',
         508 => 'Loop Detected',
         511 => 'Network Authentication Required',
-      }
+      }.freeze
 
       def initialize(attrs={})
         @code = attrs.fetch(:code)

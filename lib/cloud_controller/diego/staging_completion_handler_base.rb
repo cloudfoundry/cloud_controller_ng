@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Diego
     class StagingCompletionHandlerBase
-      DEFAULT_STAGING_ERROR = 'StagingError'
+      DEFAULT_STAGING_ERROR = 'StagingError'.freeze
 
       def initialize(runners, logger, logger_prefix)
         @runners = runners
