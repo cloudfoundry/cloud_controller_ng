@@ -35,7 +35,7 @@ module VCAP::CloudController
         let(:record) { SampleActiveModel.new }
 
         it 'behaves like an ActiveModel::Validator' do
-          expect(complete_validator.is_a? ActiveModel::Validator).to eq true
+          expect(complete_validator.is_a?(ActiveModel::Validator)).to eq true
         end
 
         it 'must override should_validate?' do
