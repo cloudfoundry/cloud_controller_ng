@@ -48,7 +48,7 @@ module VCAP::CloudController
       if match
         instance = match.captures[0].to_i
         Dea::Client.get_file_uri_for_active_instance_by_index(app, path, instance)
-      elsif search_param.match(/^[0-9a-zA-z]+$/)
+      elsif search_param =~ /^[0-9a-zA-z]+$/
         Dea::Client.get_file_uri_by_instance_guid(app, path, search_param)
       else
         msg = "Request failed for app: #{app.name}, path: #{path || '/'}"
