@@ -49,7 +49,7 @@ module VCAP::CloudController
             end
 
             it 'returns only newly requested memory' do
-              expected      = app.memory
+              expected = app.memory
               app.instances += 1
 
               expect(subject.additional_memory_requested).to eq(expected)
@@ -105,7 +105,7 @@ module VCAP::CloudController
         end
 
         it 'returns the memory * instances of the db row' do
-          expected      = app.instances * app.memory
+          expected = app.instances * app.memory
           app.instances += 5
           app.memory += 100
 

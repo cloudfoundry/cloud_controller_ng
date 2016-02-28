@@ -67,8 +67,6 @@ module VCAP::CloudController
       end
     end
 
-    private
-
     def self.translate_validation_exception(e, attributes)
       unique_errors = e.errors.on([:app_id, :service_instance_id])
       if unique_errors && unique_errors.include?(:unique)

@@ -1,5 +1,3 @@
-# rubocop:disable CyclomaticComplexity
-
 require 'actions/routing/route_delete'
 
 module VCAP::CloudController

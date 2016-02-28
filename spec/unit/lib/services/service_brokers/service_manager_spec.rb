@@ -153,7 +153,7 @@ module VCAP::Services::ServiceBrokers
           'free' => service_plan.free,
           'description' => service_plan.description,
           'service_guid' => service_plan.service.guid,
-          'extra' => "{\"cost\":\"0.0\"}",
+          'extra' => '{"cost":"0.0"}',
           'unique_id' => service_plan.unique_id,
           'public' => service_plan.public,
           'active' => service_plan.active
@@ -372,7 +372,6 @@ module VCAP::Services::ServiceBrokers
 
               it 'adds a formatted warning' do
                 service_manager.sync_services_and_plans(catalog)
-                # rubocop:disable LineLength
                 expect(service_manager.warnings).to include(<<HEREDOC)
 Warning: Service plans are missing from the broker's catalog (#{broker.broker_url}/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.
 #{service_name}
@@ -381,14 +380,12 @@ Warning: Service plans are missing from the broker's catalog (#{broker.broker_ur
 #{missing_service2_name}
   #{missing_service2_plan_name}
 HEREDOC
-                # rubocop:enable LineLength
               end
             end
 
             context 'when there are no existing service instances' do
               it 'does not add a formatted warning' do
                 service_manager.sync_services_and_plans(catalog)
-                # rubocop:disable LineLength
                 expect(service_manager.warnings).to_not include(<<HEREDOC)
 Warning: Service plans are missing from the broker's catalog (#{broker.broker_url}/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.
 #{service_name}
@@ -397,7 +394,6 @@ Warning: Service plans are missing from the broker's catalog (#{broker.broker_ur
 #{missing_service2_name}
   #{missing_service2_plan_name}
 HEREDOC
-                # rubocop:enable LineLength
               end
             end
           end

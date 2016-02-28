@@ -1088,7 +1088,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when the caller does not pass the accepts_incomplete flag' do
         it 'returns a last_operation hash with a state defaulted to `succeeded`' do
-          attrs, _  = client.deprovision(instance)
+          attrs, _ = client.deprovision(instance)
           expect(attrs).to eq({
             last_operation: {
               type: 'delete',

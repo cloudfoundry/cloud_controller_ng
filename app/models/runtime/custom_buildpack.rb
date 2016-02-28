@@ -8,7 +8,7 @@ module VCAP::CloudController
       MultiJson.dump(url)
     end
 
-    URI_REGEXP = /\A#{URI.regexp}\Z/.freeze
+    URI_REGEXP = /\A#{URI.regexp}\Z/
 
     def valid?
       @errors = []

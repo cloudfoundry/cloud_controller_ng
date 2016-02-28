@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class AppModel < Sequel::Model(:apps_v3)
     include Serializer
-    APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+    APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
 
     many_to_many :routes, join_table: :route_mappings, left_key: :app_guid, left_primary_key: :guid, right_primary_key: :guid, right_key: :route_guid
     one_to_many :service_bindings, class: 'VCAP::CloudController::ServiceBindingModel', key: :app_id

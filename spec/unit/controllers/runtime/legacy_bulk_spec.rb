@@ -69,7 +69,7 @@ module VCAP::CloudController
         it 'returns results in the response body' do
           get '/bulk/apps', {
             'batch_size' => 20,
-            'bulk_token' => "{\"id\":20}",
+            'bulk_token' => '{"id":20}',
           }
           expect(last_response.status).to eq(200)
           expect(decoded_response['results']).not_to be_nil
@@ -78,7 +78,7 @@ module VCAP::CloudController
         it 'returns results that are valid json' do
           get '/bulk/apps', {
             'batch_size' => 100,
-            'bulk_token' => "{\"id\":0}",
+            'bulk_token' => '{"id":0}',
           }
           expect(last_response.status).to eq(200)
           decoded_response['results'].each { |key, value|
@@ -92,7 +92,7 @@ module VCAP::CloudController
           [3, 5].each { |size|
             get '/bulk/apps', {
               'batch_size' => size,
-              'bulk_token' => "{\"id\":0}",
+              'bulk_token' => '{"id":0}',
             }
             expect(decoded_response['results'].size).to eq(size)
           }
@@ -101,7 +101,7 @@ module VCAP::CloudController
         it 'returns non-intersecting results when token is supplied' do
           get '/bulk/apps', {
             'batch_size' => 2,
-            'bulk_token' => "{\"id\":0}",
+            'bulk_token' => '{"id":0}',
           }
           saved_results = decoded_response['results'].dup
           expect(saved_results.size).to eq(2)

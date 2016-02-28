@@ -83,7 +83,7 @@ describe 'Tasks' do
 
   describe 'GET /v3/tasks/:guid' do
     it 'returns a json representation of the task with the requested guid' do
-      task      = VCAP::CloudController::TaskModel.make(
+      task = VCAP::CloudController::TaskModel.make(
         name:                  'task',
         command:               'echo task',
         app_guid:              app_model.guid,

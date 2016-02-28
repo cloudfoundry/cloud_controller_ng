@@ -29,7 +29,7 @@ describe ErrorPresenter do
 
   describe '#log_message' do
     it 'logs the response code and unsanitized error hash' do
-      expect(presenter.log_message).to eq("Request failed: 500: {\"fake\"=>\"insane\"}")
+      expect(presenter.log_message).to eq('Request failed: 500: {"fake"=>"insane"}')
     end
   end
 

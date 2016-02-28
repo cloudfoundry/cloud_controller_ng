@@ -27,7 +27,7 @@ module CloudFoundry
             let(:origin) { 'http://corblimey.com' }
 
             it 'does not return any Access-Control headers' do
-              request_headers       = {
+              request_headers = {
                 'HTTP_ORIGIN'                        => origin,
                 'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => 'GET',
                 'REQUEST_METHOD'                     => 'OPTIONS'
@@ -54,7 +54,7 @@ module CloudFoundry
             let(:origin) { 'http://talkoncorners.com.extra' }
 
             it 'does not return any Access-Control headers' do
-              request_headers       = {
+              request_headers = {
                 'HTTP_ORIGIN'                        => origin,
                 'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => 'GET',
                 'REQUEST_METHOD'                     => 'OPTIONS'
@@ -82,7 +82,7 @@ module CloudFoundry
 
             context 'but no Access-Control-Request-Method header is present' do
               it 'does not return any Access-Control headers' do
-                request_headers       = {
+                request_headers = {
                   'HTTP_ORIGIN'    => origin,
                   'REQUEST_METHOD' => 'OPTIONS'
                 }
@@ -92,7 +92,7 @@ module CloudFoundry
               end
 
               it 'delegates to the initial request' do
-                request_headers       = {
+                request_headers = {
                   'HTTP_ORIGIN'    => origin,
                   'REQUEST_METHOD' => 'OPTIONS'
                 }

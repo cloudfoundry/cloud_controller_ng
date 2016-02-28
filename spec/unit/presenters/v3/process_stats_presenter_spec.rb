@@ -41,8 +41,8 @@ module VCAP::CloudController
               'mem_quota'  => process[:memory] * 1024 * 1024,
               'disk_quota' => process[:disk_quota] * 1024 * 1024,
               'fds_quota' => process.file_descriptors,
-              'usage'      => {
-                'time' =>  '2015-03-13 16:54:48 -0800',
+              'usage' => {
+                'time' => '2015-03-13 16:54:48 -0800',
                 'cpu'  => 70,
                 'mem'  => 128,
                 'disk' => 1024,

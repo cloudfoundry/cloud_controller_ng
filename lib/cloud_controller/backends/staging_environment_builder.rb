@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class StagingEnvironmentBuilder
     def build(app, space, lifecycle, memory_limit, disk_limit, vars_from_message=nil)
-      app_env           = app.environment_variables || {}
+      app_env = app.environment_variables || {}
       vars_from_message ||= {}
       staging_var_group = EnvironmentVariableGroup.staging.environment_json
 

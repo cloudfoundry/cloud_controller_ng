@@ -1,4 +1,5 @@
 AllCops:
+  TargetRubyVersion: 2.2
   Include:
     - Gemfile
     - Rakefile
@@ -39,7 +40,10 @@ Style/ClassAndModuleChildren:
 Style/BlockDelimiters:
   Enabled: false
 
-Style/TrailingComma:
+Style/TrailingCommaInLiteral:
+  Enabled: false
+
+Style/TrailingCommaInArguments:
   Enabled: false
 
 Style/BracesAroundHashParameters:
@@ -143,4 +147,49 @@ ModuleLength:
   Enabled: false
 
 Style/TrailingUnderscoreVariable:
+  Enabled: false
+
+# 0.36.0
+Style/IndentArray:
+  EnforcedStyle: consistent
+Style/Alias:
+  EnforcedStyle: prefer_alias_method
+Style/MutableConstant:
+  Enabled: false
+
+Performance/TimesMap:
+  Enabled: false
+Style/ConditionalAssignment:
+  Enabled: false
+Style/IndentAssignment:
+  Enabled: false
+Style/UnneededInterpolation:
+  Enabled: false
+Performance/Casecmp:
+  Enabled: false
+Performance/RangeInclude:
+  Enabled: false
+Performance/RedundantMerge:
+  Enabled: false
+Performance/RedundantMatch:
+  Enabled: false
+Performance/RedundantBlockCall:
+  Enabled: false
+Lint/ImplicitStringConcatenation:
+  Enabled: false
+Style/RedundantParentheses:
+  Enabled: false
+Style/NestedParenthesizedCalls:
+  Enabled: false
+Lint/IneffectiveAccessModifier:
+  Enabled: false
+Style/MultilineMethodCallIndentation:
+  Enabled: false
+Style/IfInsideElse:
+  Enabled: false
+
+# 0.37.0
+Style/ZeroLengthPredicate:
+  Enabled: false
+Style/SpaceAroundKeyword:
   Enabled: false

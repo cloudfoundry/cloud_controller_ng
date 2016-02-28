@@ -37,12 +37,12 @@ module VCAP::CloudController
         options = { page: 1, per_page: 2, order_by: 'name', order_direction: 'asc' }
         app_model2.update(name: 'a')
         app_model1.update(name: 'b')
-        pagination_options      = PaginationOptions.new(options)
+        pagination_options = PaginationOptions.new(options)
         paginated_result = paginator.get_page(dataset, pagination_options)
         expect(paginated_result.records.first.guid).to eq(app_model2.guid)
 
         app_model2.update(name: 'c')
-        pagination_options      = PaginationOptions.new(options)
+        pagination_options = PaginationOptions.new(options)
         paginated_result = paginator.get_page(dataset, pagination_options)
         expect(paginated_result.records.first.guid).to eq(app_model1.guid)
       end
