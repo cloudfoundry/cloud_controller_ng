@@ -153,7 +153,7 @@ module VCAP::Services::ServiceBrokers::V2
         service_id: instance.service.broker_provided_id,
         plan_id:    instance.service_plan.broker_provided_id,
       }
-      body.merge!(accepts_incomplete: true) if accepts_incomplete
+      body[:accepts_incomplete] = true if accepts_incomplete
       response = @http_client.delete(path, body)
 
       parsed_response = @response_parser.parse_deprovision(path, response) || {}

@@ -102,7 +102,7 @@ module VCAP::CloudController
 
     def to_hash(opts={})
       if !VCAP::CloudController::SecurityContext.admin? && !space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
-        opts.merge!({ redact: ['credentials'] })
+        opts[:redact] = ['credentials']
       end
       hash = super(opts)
       hash
