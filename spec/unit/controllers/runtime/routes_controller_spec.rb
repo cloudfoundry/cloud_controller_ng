@@ -38,24 +38,24 @@ module VCAP::CloudController
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes({
-                                                                 host: { type: 'string', default: '' },
-                                                                 domain_guid: { type: 'string', required: true },
-                                                                 space_guid: { type: 'string', required: true },
-                                                                 app_guids: { type: '[string]' },
-                                                                 path: { type: 'string' },
-                                                                 port: { type: 'integer' }
-                                                             })
+        expect(described_class).to have_creatable_attributes(
+          host: { type: 'string', default: '' },
+          domain_guid: { type: 'string', required: true },
+          space_guid: { type: 'string', required: true },
+          app_guids: { type: '[string]' },
+          path: { type: 'string' },
+          port: { type: 'integer' }
+        )
       end
       it do
-        expect(described_class).to have_updatable_attributes({
-                                                                 host: { type: 'string' },
-                                                                 domain_guid: { type: 'string' },
-                                                                 space_guid: { type: 'string' },
-                                                                 app_guids: { type: '[string]' },
-                                                                 path: { type: 'string' },
-                                                                 port: { type: 'integer' }
-                                                             })
+        expect(described_class).to have_updatable_attributes(
+          host: { type: 'string' },
+          domain_guid: { type: 'string' },
+          space_guid: { type: 'string' },
+          app_guids: { type: '[string]' },
+          path: { type: 'string' },
+          port: { type: 'integer' }
+        )
       end
     end
 
