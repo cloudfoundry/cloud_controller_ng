@@ -227,7 +227,7 @@ module VCAP::Services
         end
 
         def self.response_not_understood(expected_state, actual_state)
-          actual_state = (actual_state) ? "'#{actual_state}'" : 'null'
+          actual_state = actual_state ? "'#{actual_state}'" : 'null'
           'The service broker returned an invalid response for the request to service-broker.com/v2/service_instances/GUID: ' \
           "expected state was '#{expected_state}', broker returned #{actual_state}."
         end

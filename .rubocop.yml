@@ -165,8 +165,6 @@ Performance/RedundantMatch:
   Enabled: false
 Performance/RedundantBlockCall:
   Enabled: false
-Style/RedundantParentheses:
-  Enabled: false
 Style/NestedParenthesizedCalls:
   Enabled: false
 Lint/IneffectiveAccessModifier:

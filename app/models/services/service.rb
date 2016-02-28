@@ -69,7 +69,7 @@ module VCAP::CloudController
       def space_visible(space, user)
         if space.has_member? user
           private_brokers_for_space = ServiceBroker.filter(space_id: space.id)
-          dataset.filter(service_broker: (private_brokers_for_space))
+          dataset.filter(service_broker: private_brokers_for_space)
         else
           dataset.filter(id: nil)
         end

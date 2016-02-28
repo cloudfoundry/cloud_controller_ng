@@ -35,7 +35,7 @@ module VCAP::CloudController
     def allowed?(service_instance)
       return true if admin_user?
 
-      case (service_instance.type)
+      case service_instance.type
       when 'managed_service_instance'
         ManagedServiceInstanceAccess.new(context).allowed?(service_instance)
       when 'user_provided_service_instance'
