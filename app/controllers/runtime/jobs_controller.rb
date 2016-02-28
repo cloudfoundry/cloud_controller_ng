@@ -4,7 +4,7 @@ module VCAP::CloudController
   class JobsController < RestController::ModelController
     path_base 'jobs'
 
-    get "#{path_guid}", :read
+    get path_guid, :read
     def read(guid)
       raise VCAP::Errors::ApiError.new_from_details('InsufficientScope') unless authenticated?
       job = Delayed::Job[guid: guid]

@@ -185,7 +185,7 @@ module VCAP::CloudController::RestController
     def do_related(verb, guid, name, other_guid)
       logger.debug "cc.association.#{verb}", guid: guid, assocation: name, other_guid: other_guid
 
-      singular_name = "#{name.to_s.singularize}"
+      singular_name = name.to_s.singularize
 
       @request_attrs = { singular_name => other_guid }
 

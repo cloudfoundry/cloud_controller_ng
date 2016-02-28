@@ -165,7 +165,7 @@ module Sequel::Plugins::VcapRelations
         ids.each { |i| send("add_#{singular_name}", i) }
       end
 
-      define_method("#{guids_attr}") do
+      define_method(guids_attr) do
         send(name).collect(&:guid)
       end
 

@@ -18,7 +18,7 @@ module VCAP::CloudController::Diego
       context 'when there is a tps url configured' do
         context 'and the first attempt returns lrp status' do
           before do
-            stub_request(:get, "#{tps_status_url}").to_return(
+            stub_request(:get, tps_status_url).to_return(
               status: 200,
               body: [
                 {
@@ -77,7 +77,7 @@ module VCAP::CloudController::Diego
 
         context 'when the TPS endpoint is unavailable' do
           it 'retries and eventually raises InstancesUnavailable' do
-            stub = stub_request(:get, "#{tps_status_url}").to_raise(Errno::ECONNREFUSED)
+            stub = stub_request(:get, tps_status_url).to_raise(Errno::ECONNREFUSED)
 
             expect { client.lrp_instances(app) }.to raise_error(VCAP::Errors::InstancesUnavailable, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
@@ -86,7 +86,7 @@ module VCAP::CloudController::Diego
 
         context 'when the TPS endpoint 404s' do
           before do
-            stub_request(:get, "#{tps_status_url}").to_return(status: 404, body: 'Could not find it')
+            stub_request(:get, tps_status_url).to_return(status: 404, body: 'Could not find it')
           end
 
           it 'returns an empty array' do
@@ -96,7 +96,7 @@ module VCAP::CloudController::Diego
 
         context 'when the TPS endpoint fails' do
           before do
-            stub_request(:get, "#{tps_status_url}").to_return(status: 500, body: 'This Broke')
+            stub_request(:get, tps_status_url).to_return(status: 500, body: 'This Broke')
           end
 
           it 'raises InstancesUnavailable' do
@@ -150,7 +150,7 @@ module VCAP::CloudController::Diego
 
         context 'and the first attempt returns instance info with stats' do
           before do
-            stub_request(:get, "#{tps_stats_url}").with(
+            stub_request(:get, tps_stats_url).with(
               headers: { 'Authorization' => 'my-token' }
             ).to_return(
               status: 200,
@@ -218,7 +218,7 @@ module VCAP::CloudController::Diego
 
         context 'when the TPS endpoint is unavailable' do
           it 'retries and eventually raises InstancesUnavailable' do
-            stub = stub_request(:get, "#{tps_stats_url}").to_raise(Errno::ECONNREFUSED)
+            stub = stub_request(:get, tps_stats_url).to_raise(Errno::ECONNREFUSED)
 
             expect {
               client.lrp_instances_stats(app)
@@ -229,7 +229,7 @@ module VCAP::CloudController::Diego
 
         context 'when the TPS endpoint 404s' do
           before do
-            stub_request(:get, "#{tps_stats_url}").to_return(status: 404, body: 'Could not find it')
+            stub_request(:get, tps_stats_url).to_return(status: 404, body: 'Could not find it')
           end
 
           it 'returns an empty array' do
@@ -239,7 +239,7 @@ module VCAP::CloudController::Diego
 
         context 'when the TPS endpoint fails' do
           before do
-            stub_request(:get, "#{tps_stats_url}").to_return(status: 500, body: ' ')
+            stub_request(:get, tps_stats_url).to_return(status: 500, body: ' ')
           end
 
           it 'raises InstancesUnavailable' do
@@ -289,7 +289,7 @@ module VCAP::CloudController::Diego
       context 'when there is a tps url configured' do
         context 'and the first attempt returns' do
           before do
-            stub_request(:get, "#{tps_bulk_status_url}").to_return(
+            stub_request(:get, tps_bulk_status_url).to_return(
               status: 200,
               body: {
                 ProcessGuid.from_app(app) => [
@@ -346,7 +346,7 @@ module VCAP::CloudController::Diego
           end
 
           it 'does not make a request' do
-            stub = stub_request(:get, "#{tps_bulk_status_url}").to_raise("this shouldn't be called")
+            stub = stub_request(:get, tps_bulk_status_url).to_raise("this shouldn't be called")
 
             expect { client.bulk_lrp_instances([]) }.not_to raise_error
             expect(stub).not_to have_been_requested
@@ -355,7 +355,7 @@ module VCAP::CloudController::Diego
 
         context 'when the TPS endpoint is unavailable' do
           it 'retries and eventually raises InstancesUnavailable' do
-            stub = stub_request(:get, "#{tps_bulk_status_url}").to_raise(Errno::ECONNREFUSED)
+            stub = stub_request(:get, tps_bulk_status_url).to_raise(Errno::ECONNREFUSED)
 
             expect { client.bulk_lrp_instances([app, app2]) }.to raise_error(VCAP::Errors::InstancesUnavailable, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
@@ -364,7 +364,7 @@ module VCAP::CloudController::Diego
 
         context 'when the TPS endpoint fails' do
           before do
-            stub_request(:get, "#{tps_bulk_status_url}").to_return(status: 500, body: 'This Broke')
+            stub_request(:get, tps_bulk_status_url).to_return(status: 500, body: 'This Broke')
           end
 
           it 'raises InstancesUnavailable' do

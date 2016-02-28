@@ -109,7 +109,7 @@ module VCAP::CloudController::BrokerApiHelper
 
   def async_provision_service(status: 202)
     stub_request(:put, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).
-      to_return(status: status, body: "#{{ dashboard_url: 'https://your.service.com/dashboard' }.to_json}")
+      to_return(status: status, body: { dashboard_url: 'https://your.service.com/dashboard' }.to_json)
 
     body = {
       name: 'test-service',
@@ -141,7 +141,7 @@ module VCAP::CloudController::BrokerApiHelper
   def provision_service(opts={})
     return_code = opts.delete(:return_code) || 201
     stub_request(:put, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).
-      to_return(status: return_code, body: "#{{ dashboard_url: 'https://your.service.com/dashboard' }.to_json}")
+      to_return(status: return_code, body: { dashboard_url: 'https://your.service.com/dashboard' }.to_json)
 
     body = {
       name: 'test-service',

@@ -155,8 +155,6 @@ Style/IndentArray:
 Style/Alias:
   EnforcedStyle: prefer_alias_method
 
-Style/UnneededInterpolation:
-  Enabled: false
 Performance/Casecmp:
   Enabled: false
 Performance/RangeInclude:

@@ -1126,7 +1126,7 @@ module VCAP::CloudController
 
       context 'when the request is synchronous' do
         before do
-          stub_request(:patch, "#{service_broker_url}").
+          stub_request(:patch, service_broker_url).
             to_return(status: status, body: response_body)
         end
 

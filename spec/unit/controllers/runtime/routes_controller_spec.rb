@@ -544,7 +544,7 @@ module VCAP::CloudController
                   post '/v2/routes?generate_port=false', MultiJson.dump(req), headers_for(user)
 
                   expect(last_response.status).to eq(400)
-                  expect(last_response.body).to include("#{no_port_error}")
+                  expect(last_response.body).to include(no_port_error)
                 end
               end
             end
@@ -564,7 +564,7 @@ module VCAP::CloudController
                   expect(last_response.status).to eq(201)
                   expect(last_response.body).to include("\"port\": #{generated_port}")
                   expect(last_response.headers).to include('X-CF-Warnings')
-                  expect(last_response.headers['X-CF-Warnings']).to include("#{port_override_warning}")
+                  expect(last_response.headers['X-CF-Warnings']).to include(port_override_warning)
                 end
               end
 
