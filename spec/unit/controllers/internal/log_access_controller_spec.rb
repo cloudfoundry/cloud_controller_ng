@@ -36,7 +36,7 @@ module VCAP::CloudController
       context 'when the user is unauthorized' do
         it 'returns 403' do
           expect(log_access_controller).to receive(:check_read_permissions!).
-              and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+            and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
           expect {
             log_access_controller.lookup(guid)
           }.to raise_error do |error|

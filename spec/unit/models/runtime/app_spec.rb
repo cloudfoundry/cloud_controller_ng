@@ -2182,7 +2182,7 @@ module VCAP::CloudController
               app.add_route_by_guid(route_with_service.guid)
               app.save
             }.to raise_error(Errors::InvalidRouteRelation).
-            with_message("The requested route relation is invalid: #{route_with_service.guid} - Route services are only supported for apps on Diego")
+              with_message("The requested route relation is invalid: #{route_with_service.guid} - Route services are only supported for apps on Diego")
           end
         end
       end

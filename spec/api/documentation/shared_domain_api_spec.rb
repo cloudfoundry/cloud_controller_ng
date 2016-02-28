@@ -26,11 +26,11 @@ resource 'Shared Domains', type: [:api, :legacy_api] do
 
   before do
     allow_any_instance_of(CF::UAA::TokenIssuer).to receive(:client_credentials_grant).
-                                                       and_return(double('token_info', auth_header: 'bearer AUTH_HEADER'))
+      and_return(double('token_info', auth_header: 'bearer AUTH_HEADER'))
 
     stub_request(:get, routing_api_url).
-        with(headers: { 'Authorization' => 'bearer AUTH_HEADER' }).
-        to_return(status: 200, body: routing_api_body)
+      with(headers: { 'Authorization' => 'bearer AUTH_HEADER' }).
+      to_return(status: 200, body: routing_api_body)
   end
 
   post '/v2/shared_domains' do

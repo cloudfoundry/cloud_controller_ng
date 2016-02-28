@@ -59,8 +59,8 @@ module VCAP::CloudController
 
       def organization_visible(organization)
         service_ids = ServicePlan.
-          organization_visible(organization).
-          inject([]) { |ids_so_far, service_plan| ids_so_far << service_plan.service_id }
+                      organization_visible(organization).
+                      inject([]) { |ids_so_far, service_plan| ids_so_far << service_plan.service_id }
         dataset.filter(id: service_ids)
       end
 

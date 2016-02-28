@@ -53,7 +53,7 @@ module VCAP::CloudController
     def stub_catalog(broker_url: nil)
       url = broker_url || broker_catalog_url
       stub_request(:get, url).
-          to_return(status: 200, body: catalog_json.to_json)
+        to_return(status: 200, body: catalog_json.to_json)
     end
 
     let(:non_admin_headers) do

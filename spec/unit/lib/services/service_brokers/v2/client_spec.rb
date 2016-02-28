@@ -694,10 +694,10 @@ module VCAP::Services::ServiceBrokers::V2
         client.create_service_key(key)
 
         expect(http_client).to have_received(:put).
-                                   with(anything,
-                                        plan_id:    key.service_plan.broker_provided_id,
-                                        service_id: key.service.broker_provided_id
-                               )
+          with(anything,
+            plan_id:    key.service_plan.broker_provided_id,
+            service_id: key.service.broker_provided_id
+          )
       end
 
       it 'sets the credentials on the key' do
@@ -716,11 +716,11 @@ module VCAP::Services::ServiceBrokers::V2
           arbitrary_parameters = { 'name' => 'value' }
           client.create_service_key(key, arbitrary_parameters: arbitrary_parameters)
           expect(http_client).to have_received(:put).
-                                     with(anything,
-                                          plan_id:    key.service_plan.broker_provided_id,
-                                          service_id: key.service.broker_provided_id,
-                                          parameters: arbitrary_parameters
-                                 )
+            with(anything,
+              plan_id:    key.service_plan.broker_provided_id,
+              service_id: key.service.broker_provided_id,
+              parameters: arbitrary_parameters
+            )
         end
       end
 
@@ -741,7 +741,7 @@ module VCAP::Services::ServiceBrokers::V2
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_key).
-                                              with(client_attrs, key)
+                with(client_attrs, key)
             end
           end
         end
@@ -848,13 +848,13 @@ module VCAP::Services::ServiceBrokers::V2
         it 'make a put request with correct message and arbitrary parameters' do
           client.bind(binding, arbitrary_parameters)
           expect(http_client).to have_received(:put).
-              with(anything,
-                plan_id:    binding.service_plan.broker_provided_id,
-                service_id: binding.service.broker_provided_id,
-                app_guid:   binding.app_guid,
-                parameters: arbitrary_parameters,
-                bind_resource: binding.required_parameters
-              )
+            with(anything,
+              plan_id:    binding.service_plan.broker_provided_id,
+              service_id: binding.service.broker_provided_id,
+              app_guid:   binding.app_guid,
+              parameters: arbitrary_parameters,
+              bind_resource: binding.required_parameters
+            )
         end
       end
 
@@ -865,11 +865,11 @@ module VCAP::Services::ServiceBrokers::V2
           client.bind(binding, arbitrary_parameters)
 
           expect(http_client).to have_received(:put).
-              with(anything,
-                plan_id:    binding.service_plan.broker_provided_id,
-                service_id: binding.service.broker_provided_id,
-                bind_resource: binding.required_parameters
-              )
+            with(anything,
+              plan_id:    binding.service_plan.broker_provided_id,
+              service_id: binding.service.broker_provided_id,
+              bind_resource: binding.required_parameters
+            )
         end
       end
 
@@ -1018,12 +1018,12 @@ module VCAP::Services::ServiceBrokers::V2
         client.unbind(binding)
 
         expect(http_client).to have_received(:delete).
-            with(anything,
-              {
-                plan_id: binding.service_plan.broker_provided_id,
-                service_id: binding.service.broker_provided_id,
-              }
-            )
+          with(anything,
+            {
+              plan_id: binding.service_plan.broker_provided_id,
+              service_id: binding.service.broker_provided_id,
+            }
+          )
       end
 
       context 'when the broker returns a 204 NO CONTENT' do
@@ -1047,7 +1047,7 @@ module VCAP::Services::ServiceBrokers::V2
           expect {
             client.unbind(binding)
           }.to raise_error(Errors::ServiceBrokerBadResponse).
-                 with_message("Service instance #{binding.service_instance.name}: Service broker error: Could not delete instance")
+            with_message("Service instance #{binding.service_instance.name}: Service broker error: Could not delete instance")
         end
       end
     end
@@ -1162,7 +1162,7 @@ module VCAP::Services::ServiceBrokers::V2
           expect {
             client.deprovision(instance)
           }.to raise_error(Errors::ServiceBrokerBadResponse).
-                 with_message("Service instance #{instance.name}: Service broker error: Could not delete instance")
+            with_message("Service instance #{instance.name}: Service broker error: Could not delete instance")
         end
       end
     end

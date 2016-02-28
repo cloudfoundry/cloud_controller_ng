@@ -66,13 +66,10 @@ module VCAP::CloudController
 
       def space_guids_where_visible(user)
         Space.join(:spaces_developers, space_id: :id, user_id: user.id).select(:spaces__guid).
-        union(
-          Space.join(:spaces_managers, space_id: :id, user_id: user.id).select(:spaces__guid)
-        ).union(
-          Space.join(:spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__guid)
-        ).union(
-          Space.join(:organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid)
-        ).select(:space_guid)
+          union(Space.join(:spaces_managers, space_id: :id, user_id: user.id).select(:spaces__guid)).
+          union(Space.join(:spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__guid)).
+          union(Space.join(:organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid)).
+          select(:space_guid)
       end
     end
 

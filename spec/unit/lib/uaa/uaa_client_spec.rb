@@ -83,11 +83,11 @@ module VCAP::CloudController
           'totalresults' => 2 }
 
         WebMock::API.stub_request(:get, "#{url}/ids/Users").
-        with(query: { 'filter' => 'id eq "111" or id eq "222"' }).
-        to_return(
-          status: 200,
-          headers: { 'content-type' => 'application/json' },
-          body: response_body.to_json)
+          with(query: { 'filter' => 'id eq "111" or id eq "222"' }).
+          to_return(
+            status: 200,
+            headers: { 'content-type' => 'application/json' },
+            body: response_body.to_json)
 
         mapping = uaa_client.usernames_for_ids([userid_1, userid_2])
         expect(mapping[userid_1]).to eq('user_1')

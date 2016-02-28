@@ -23,7 +23,7 @@ describe 'Service Broker API integration' do
     def request_has_version_header(method, url)
       expect(a_request(method, url).
           with { |request| expect(request.headers[api_header]).to match(api_accepted_version) }).
-          to have_been_made
+        to have_been_made
     end
 
     shared_examples 'broker errors' do

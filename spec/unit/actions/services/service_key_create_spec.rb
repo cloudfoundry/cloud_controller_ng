@@ -62,7 +62,7 @@ module VCAP::CloudController
           context 'when the orphan mitigation unbind fails' do
             before do
               stub_request(:delete, service_binding_url_pattern).
-                  to_return(status: 500, body: {}.to_json)
+                to_return(status: 500, body: {}.to_json)
             end
 
             it 'logs that the unbind failed' do

@@ -16,7 +16,7 @@ module VCAP::CloudController::RoutingApi
         uri = URI(routing_api_url)
         uri.path = path
         stub_request(:get, uri.to_s).
-            to_return(status: status, body: body)
+          to_return(status: status, body: body)
 
         allow(token_issuer).to receive(:client_credentials_grant).and_return(token_info)
         allow(token_info).to receive(:auth_header).and_return('bearer my-token')
@@ -49,7 +49,7 @@ module VCAP::CloudController::RoutingApi
           expect(response).to eq [expected_router_group1, expected_router_group2]
 
           expect(a_request(:get, routing_api_url + path)).
-              to have_been_made.times(1)
+            to have_been_made.times(1)
         end
 
         it 'sends an authorization token with the request' do
@@ -57,7 +57,7 @@ module VCAP::CloudController::RoutingApi
 
           expect(a_request(:get, routing_api_url + path).
                      with(headers: { 'Authorization' => 'bearer my-token' })).
-              to have_been_made.times(1)
+            to have_been_made.times(1)
 
           expect(token_issuer).to have_received(:client_credentials_grant)
           expect(token_info).to have_received(:auth_header)
@@ -80,7 +80,7 @@ module VCAP::CloudController::RoutingApi
               }.to raise_error Client::UaaUnavailable
 
               expect(a_request(:get, routing_api_url + path)).
-                  to have_been_made.times(0)
+                to have_been_made.times(0)
             end
           end
 
@@ -95,7 +95,7 @@ module VCAP::CloudController::RoutingApi
               }.to raise_error Client::UaaUnavailable
 
               expect(a_request(:get, routing_api_url + path)).
-                  to have_been_made.times(0)
+                to have_been_made.times(0)
             end
           end
         end
@@ -106,7 +106,7 @@ module VCAP::CloudController::RoutingApi
             uri.path = path
 
             stub_request(:get, uri.to_s).
-                to_return(status: 500, body: '')
+              to_return(status: 500, body: '')
           end
 
           it 'raises a error' do
@@ -115,7 +115,7 @@ module VCAP::CloudController::RoutingApi
             }.to raise_error Client::RoutingApiUnavailable
 
             expect(a_request(:get, routing_api_url + path)).
-                to have_been_made.times(1)
+              to have_been_made.times(1)
           end
         end
 
@@ -147,7 +147,7 @@ module VCAP::CloudController::RoutingApi
             uri.path = path
 
             stub_request(:get, uri.to_s).
-                to_return(status: 200, body: '{\/adf[{')
+              to_return(status: 200, body: '{\/adf[{')
           end
 
           it 'returns a RoutingApiUnavailable error' do
@@ -156,7 +156,7 @@ module VCAP::CloudController::RoutingApi
             }.to raise_error Client::RoutingApiUnavailable
 
             expect(a_request(:get, routing_api_url + path)).
-                to have_been_made.times(1)
+              to have_been_made.times(1)
           end
         end
       end

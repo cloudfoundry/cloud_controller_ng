@@ -61,7 +61,7 @@ module VCAP::CloudController
         }
 
         stub_request(:delete, %r{/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}}).
-        to_return(status: 200, body: '{}')
+          to_return(status: 200, body: '{}')
 
         post('/v2/service_bindings',
           { app_guid: app_guid, service_instance_guid: service_instance_guid }.to_json,

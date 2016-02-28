@@ -41,8 +41,8 @@ module VCAP::CloudController
       super
       validates_presence :owning_organization
       exclude_domains_from_same_org = Domain.dataset.
-        exclude(owning_organization_id: owning_organization_id).
-        or(SHARED_DOMAIN_CONDITION)
+                                      exclude(owning_organization_id: owning_organization_id).
+                                      or(SHARED_DOMAIN_CONDITION)
       errors.add(:name, :overlapping_domain) if exclude_domains_from_same_org.filter(Sequel.like(:name, "%.#{name}")).count > 0
 
       validate_total_private_domains

@@ -393,7 +393,7 @@ describe RouteMappingsController, type: :controller do
       before do
         allow(membership).to receive(:has_any_roles?).with(
           [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-            and_return(false)
+          and_return(false)
       end
 
       it 'raises an API 403 error' do

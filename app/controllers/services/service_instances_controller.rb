@@ -95,7 +95,7 @@ module VCAP::CloudController
       end
 
       service_instance = ServiceInstanceCreate.new(@services_event_repository, logger).
-                             create(request_attrs, accepts_incomplete)
+                         create(request_attrs, accepts_incomplete)
 
       route_service_warning(service_instance) unless route_services_enabled?
 

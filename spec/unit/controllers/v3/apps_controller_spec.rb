@@ -249,7 +249,7 @@ describe AppsV3Controller, type: :controller do
       before do
         allow_any_instance_of(VCAP::CloudController::AppCreate).
           to receive(:create).
-                and_raise(VCAP::CloudController::AppCreate::InvalidApp.new('ya done goofed'))
+          and_raise(VCAP::CloudController::AppCreate::InvalidApp.new('ya done goofed'))
       end
 
       it 'returns an UnprocessableEntity error' do
@@ -833,8 +833,8 @@ describe AppsV3Controller, type: :controller do
            VCAP::CloudController::Membership::SPACE_AUDITOR,
            VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
         allow(membership).to receive(:has_any_roles?).
-                               with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-                               and_return(false)
+          with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
+          and_return(false)
       end
 
       it 'raises ApiError NotAuthorized' do
@@ -1062,7 +1062,7 @@ describe AppsV3Controller, type: :controller do
       before do
         allow_any_instance_of(VCAP::CloudController::AppStart).
           to receive(:start).
-                and_raise(VCAP::CloudController::AppStart::InvalidApp.new)
+          and_raise(VCAP::CloudController::AppStart::InvalidApp.new)
       end
 
       it 'returns an UnprocessableEntity error' do
@@ -1188,10 +1188,10 @@ describe AppsV3Controller, type: :controller do
              VCAP::CloudController::Membership::SPACE_MANAGER,
              VCAP::CloudController::Membership::SPACE_AUDITOR,
              VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-                                 and_return(true)
+            and_return(true)
           allow(membership).to receive(:has_any_roles?).
-                                 with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-                                 and_return(false)
+            with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
+            and_return(false)
         end
 
         it 'raises ApiError NotAuthorized' do
@@ -1298,9 +1298,9 @@ describe AppsV3Controller, type: :controller do
              VCAP::CloudController::Membership::SPACE_MANAGER,
              VCAP::CloudController::Membership::SPACE_AUDITOR,
              VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-                                 and_return(true)
+            and_return(true)
           allow(membership).to receive(:has_any_roles?).
-                                 with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
+            with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
         end
 
         it 'raises ApiError NotAuthorized' do
@@ -1401,7 +1401,7 @@ describe AppsV3Controller, type: :controller do
       before do
         allow_any_instance_of(VCAP::CloudController::SetCurrentDroplet).
           to receive(:update_to).
-                and_raise(VCAP::CloudController::SetCurrentDroplet::InvalidApp.new('app is broked'))
+          and_raise(VCAP::CloudController::SetCurrentDroplet::InvalidApp.new('app is broked'))
       end
 
       it 'returns an UnprocessableEntity error' do
@@ -1447,7 +1447,7 @@ describe AppsV3Controller, type: :controller do
              VCAP::CloudController::Membership::SPACE_MANAGER,
              VCAP::CloudController::Membership::SPACE_AUDITOR,
              VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-                                 and_return(false)
+            and_return(false)
         end
 
         it 'returns a 404 ResourceNotFound' do
@@ -1465,10 +1465,10 @@ describe AppsV3Controller, type: :controller do
              VCAP::CloudController::Membership::SPACE_MANAGER,
              VCAP::CloudController::Membership::SPACE_AUDITOR,
              VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-                                 and_return(true)
+            and_return(true)
           allow(membership).to receive(:has_any_roles?).with(
             [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-                                 and_return(false)
+            and_return(false)
         end
 
         it 'returns a 403 NotAuthorized' do
