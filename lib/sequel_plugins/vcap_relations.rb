@@ -187,8 +187,8 @@ module Sequel::Plugins::VcapRelations
       define_method("remove_#{singular_name}") do |other|
         if other.is_a?(Integer)
           super(other) if send(ids_attr).include? other
-        else
-          super(other) if send(name).include? other
+        elsif send(name).include? other
+          super(other)
         end
       end
     end
