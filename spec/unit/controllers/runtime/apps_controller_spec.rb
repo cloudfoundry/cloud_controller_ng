@@ -763,7 +763,7 @@ module VCAP::CloudController
           let!(:service_instance) { ManagedServiceInstance.make(space: app_obj.space) }
           let!(:service_binding) { ServiceBinding.make(app: app_obj, service_instance: service_instance) }
 
-          it 'returns system environment with VCAP_SERVICES'do
+          it 'returns system environment with VCAP_SERVICES' do
             get "/v2/apps/#{app_obj.guid}/env", '{}', json_headers(headers_for(developer, { scopes: ['cloud_controller.read'] }))
             expect(last_response.status).to eql(200)
 
@@ -779,7 +779,7 @@ module VCAP::CloudController
             staging_group.save
           end
 
-          it 'returns staging_env_json with those variables'do
+          it 'returns staging_env_json with those variables' do
             get "/v2/apps/#{app_obj.guid}/env", '{}', json_headers(headers_for(developer, { scopes: ['cloud_controller.read'] }))
             expect(last_response.status).to eql(200)
 
@@ -796,7 +796,7 @@ module VCAP::CloudController
             running_group.save
           end
 
-          it 'returns staging_env_json with those variables'do
+          it 'returns staging_env_json with those variables' do
             get "/v2/apps/#{app_obj.guid}/env", '{}', json_headers(headers_for(developer, { scopes: ['cloud_controller.read'] }))
             expect(last_response.status).to eql(200)
 
