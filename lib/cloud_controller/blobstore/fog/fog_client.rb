@@ -154,19 +154,19 @@ module CloudController
         end
       end
 
-      def each_slice(files, batch_size, &blk)
+      def each_slice(files, batch_size)
         batch = []
         files.each do |f|
           batch << f
 
           if batch.length == batch_size
-            blk.call(batch)
+            yield(batch)
             batch = []
           end
         end
 
         if batch.length > 0
-          blk.call(batch)
+          yield(batch)
         end
       end
 

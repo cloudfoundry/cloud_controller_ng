@@ -276,9 +276,9 @@ module VCAP::CloudController::RestController
         end
       end
 
-      def authenticate_basic_auth(path, &block)
+      def authenticate_basic_auth(path)
         controller.before path do
-          credentials = block.call
+          credentials = yield
 
           unless CloudController::BasicAuth::BasicAuthAuthenticator.valid?(env, credentials) ||
                   CloudController::BasicAuth::DeaBasicAuthAuthenticator.valid?(env, credentials)

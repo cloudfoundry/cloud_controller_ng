@@ -617,7 +617,7 @@ module VCAP::CloudController
       end
     end
 
-    def stub_schedule_sync(&before_resolve)
+    def stub_schedule_sync
       allow(EM).to receive(:schedule_sync) do |&blk|
         promise = VCAP::Concurrency::Promise.new
 
@@ -631,8 +631,8 @@ module VCAP::CloudController
           promise.fail(e)
         end
 
-        # Call before_resolve block before trying to resolve the promise
-        before_resolve.call
+        # Yield before trying to resolve the promise
+        yield
 
         promise.resolve
       end

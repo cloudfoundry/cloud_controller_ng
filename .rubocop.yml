@@ -157,8 +157,6 @@ Style/Alias:
 
 Performance/Casecmp:
   Enabled: false
-Performance/RedundantBlockCall:
-  Enabled: false
 
 # 0.37.0
 Style/ZeroLengthPredicate:
