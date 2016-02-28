@@ -157,8 +157,6 @@ Style/Alias:
 
 Performance/Casecmp:
   Enabled: false
-Performance/RangeInclude:
-  Enabled: false
 Performance/RedundantMerge:
   Enabled: false
 Performance/RedundantMatch:
