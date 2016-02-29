@@ -22,7 +22,7 @@ module VCAP::CloudController
 
     def stub_requests(broker)
       stub_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
-          to_return(status: unbind_status, body: unbind_body.to_json)
+        to_return(status: unbind_status, body: unbind_body.to_json)
     end
 
     context '#delete' do

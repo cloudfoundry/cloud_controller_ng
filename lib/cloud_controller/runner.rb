@@ -187,11 +187,11 @@ module VCAP::CloudController
     end
 
     def start_thin_server(app)
-      if @config[:nginx][:use_nginx]
-        @thin_server = Thin::Server.new(@config[:nginx][:instance_socket], signals: false)
-      else
-        @thin_server = Thin::Server.new(@config[:external_host], @config[:external_port], signals: false)
-      end
+      @thin_server = if @config[:nginx][:use_nginx]
+                       Thin::Server.new(@config[:nginx][:instance_socket], signals: false)
+                     else
+                       Thin::Server.new(@config[:external_host], @config[:external_port], signals: false)
+                     end
 
       @thin_server.app = app
       trap_signals
@@ -233,11 +233,11 @@ module VCAP::CloudController
     end
 
     def statsd_client
-      @statsd_client ||= (
-        logger.info("configuring statsd server at #{@config[:statsd_host]}:#{@config[:statsd_port]}")
-        Statsd.logger = Steno.logger('statsd.client')
-        Statsd.new(@config[:statsd_host], @config[:statsd_port].to_i)
-      )
+      return @statsd_client if @statsd_client
+
+      logger.info("configuring statsd server at #{@config[:statsd_host]}:#{@config[:statsd_port]}")
+      Statsd.logger = Steno.logger('statsd.client')
+      @statsd_client = Statsd.new(@config[:statsd_host], @config[:statsd_port].to_i)
     end
 
     def collect_diagnostics

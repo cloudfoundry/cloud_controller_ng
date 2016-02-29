@@ -27,13 +27,13 @@ module VCAP::CloudController
 
         it 'contains a populated vcap_services' do
           expect(system_env_presenter.system_env[:VCAP_SERVICES]).not_to eq({})
-          expect(system_env_presenter.system_env[:VCAP_SERVICES]).to have_key("#{service.label}")
-          expect(system_env_presenter.system_env[:VCAP_SERVICES]["#{service.label}"]).to have(1).services
+          expect(system_env_presenter.system_env[:VCAP_SERVICES]).to have_key(service.label)
+          expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label]).to have(1).services
         end
 
         it 'includes service binding information' do
-          expect(system_env_presenter.system_env[:VCAP_SERVICES]["#{service.label}"]).to have(1).items
-          expect(system_env_presenter.system_env[:VCAP_SERVICES]["#{service.label}"].first).to eq(
+          expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label]).to have(1).items
+          expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label].first).to eq(
             credentials: service_binding.credentials,
             syslog_drain_url: 'logs.go-here.com',
             label: 'elephantsql-n/a',
@@ -75,7 +75,7 @@ module VCAP::CloudController
 
           it 'includes the services from the parent' do
             expect(system_env_presenter.system_env[:VCAP_SERVICES]).not_to eq({})
-            expect(system_env_presenter.system_env[:VCAP_SERVICES]).to have_key("#{service.label}")
+            expect(system_env_presenter.system_env[:VCAP_SERVICES]).to have_key(service.label)
           end
 
           it 'includes service binding information' do
@@ -100,8 +100,8 @@ module VCAP::CloudController
 
           it 'should group services by label' do
             expect(system_env_presenter.system_env[:VCAP_SERVICES]).to have(2).groups
-            expect(system_env_presenter.system_env[:VCAP_SERVICES]["#{service.label}"]).to have(2).services
-            expect(system_env_presenter.system_env[:VCAP_SERVICES]["#{service_alt.label}"]).to have(1).service
+            expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label]).to have(2).services
+            expect(system_env_presenter.system_env[:VCAP_SERVICES][service_alt.label]).to have(1).service
           end
         end
       end

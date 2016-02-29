@@ -91,7 +91,7 @@ resource 'Packages (Experimental)', type: :api do
               'state'      => VCAP::CloudController::PackageModel::READY_STATE,
               'created_at' => iso8601,
               'updated_at' => nil,
-              'links'     => {
+              'links' => {
                 'self' => { 'href' => "/v3/packages/#{package2.guid}" },
                 'app'  => { 'href' => "/v3/apps/#{package2.app_guid}" },
                 'stage' => { 'href' => "/v3/packages/#{package2.guid}/droplets", 'method' => 'POST' },
@@ -194,7 +194,7 @@ resource 'Packages (Experimental)', type: :api do
           'state'      => 'READY',
           'created_at' => iso8601,
           'updated_at' => nil,
-          'links'     => {
+          'links' => {
             'self' => { 'href' => "/v3/packages/#{package.guid}" },
             'app'  => { 'href' => "/v3/apps/#{guid}" },
             'stage' => { 'href' => "/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
@@ -249,7 +249,7 @@ resource 'Packages (Experimental)', type: :api do
           'state'      => 'READY',
           'created_at' => iso8601,
           'updated_at' => nil,
-          'links'     => {
+          'links' => {
             'self' => { 'href' => "/v3/packages/#{package.guid}" },
             'app'  => { 'href' => "/v3/apps/#{guid}" },
             'stage' => { 'href' => "/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },

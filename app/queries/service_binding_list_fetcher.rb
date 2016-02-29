@@ -2,8 +2,8 @@ module VCAP::CloudController
   class ServiceBindingListFetcher
     def fetch(pagination_options, space_guids)
       dataset = ServiceBindingModel.select_all(:v3_service_bindings).
-        join(:service_instances, id: :service_instance_id).
-        join(:spaces, id: :space_id, guid: space_guids)
+                join(:service_instances, id: :service_instance_id).
+                join(:spaces, id: :space_id, guid: space_guids)
       paginate(dataset, pagination_options)
     end
 

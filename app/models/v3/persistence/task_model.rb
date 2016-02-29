@@ -1,13 +1,13 @@
 module VCAP::CloudController
   class TaskModel < Sequel::Model(:tasks)
     include Serializer
-    TASK_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+    TASK_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
     TASK_STATES = [
-      SUCCEEDED_STATE = 'SUCCEEDED',
-      FAILED_STATE = 'FAILED',
-      PENDING_STATE = 'PENDING',
-      RUNNING_STATE = 'RUNNING',
-      CANCELING_STATE = 'CANCELING'
+      SUCCEEDED_STATE = 'SUCCEEDED'.freeze,
+      FAILED_STATE = 'FAILED'.freeze,
+      PENDING_STATE = 'PENDING'.freeze,
+      RUNNING_STATE = 'RUNNING'.freeze,
+      CANCELING_STATE = 'CANCELING'.freeze
     ].map(&:freeze).freeze
     COMMAND_MAX_LENGTH = 4096
 

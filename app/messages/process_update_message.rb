@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class ProcessUpdateMessage < BaseMessage
-    ALLOWED_KEYS = [:command]
+    ALLOWED_KEYS = [:command].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 

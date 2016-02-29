@@ -70,13 +70,13 @@ module VCAP::CloudController
 
     describe '#number_of_starting_and_running_instances_for_apps' do
       let(:running_apps) do
-        3.times.map do
+        Array.new(3) do
           AppFactory.make(state: 'STARTED', package_state: 'STAGED', package_hash: 'abc')
         end
       end
 
       let(:stopped_apps) do
-        3.times.map do
+        Array.new(3) do
           AppFactory.make(state: 'STOPPED', package_state: 'STAGED', package_hash: 'xyz')
         end
       end
@@ -168,7 +168,7 @@ module VCAP::CloudController
 
       describe 'started apps that failed to stage' do
         let(:staging_failed_apps) do
-          3.times.map do
+          Array.new(3) do
             AppFactory.make(state: 'STARTED', package_state: 'FAILED', package_hash: 'abc')
           end
         end

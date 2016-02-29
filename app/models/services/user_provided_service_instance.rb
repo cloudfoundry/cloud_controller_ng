@@ -33,12 +33,10 @@ module VCAP::CloudController
 
       if invalid_url?
         errors.add(:service_instance, :route_service_url_invalid)
-      else
-        if not_https?
-          errors.add(:service_instance, :route_service_url_not_https)
-        elsif not_valid_host?
-          errors.add(:service_instance, :route_service_url_invalid)
-        end
+      elsif not_https?
+        errors.add(:service_instance, :route_service_url_not_https)
+      elsif not_valid_host?
+        errors.add(:service_instance, :route_service_url_invalid)
       end
     end
   end

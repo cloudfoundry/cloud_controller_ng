@@ -15,7 +15,7 @@ module VCAP::CloudController
       it 'generates a port' do
         port = generator1.generate_port
 
-        expect((1024..65535).include?(port)).to eq(true)
+        expect((1024..65535).cover?(port)).to eq(true)
       end
 
       it 'runs out of ports' do

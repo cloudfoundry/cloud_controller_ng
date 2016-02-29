@@ -31,7 +31,7 @@ describe 'Service Broker API integration' do
 
           Delayed::Worker.new.work_off
 
-          expect((a_request(:get, "#{service_instance_url(service_instance)}/last_operation"))).to have_been_made
+          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation")).to have_been_made
 
           expect(service_instance.reload.last_operation.state).to eq 'succeeded'
           expect(service_instance.reload.last_operation.type).to eq 'update'
@@ -60,7 +60,7 @@ describe 'Service Broker API integration' do
           Delayed::Worker.new.work_off
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          expect((a_request(:get, "#{service_instance_url(service_instance)}/last_operation"))).to have_been_made
+          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation")).to have_been_made
 
           expect(service_instance.reload.last_operation.state).to eq 'failed'
           expect(service_instance.reload.last_operation.type).to eq 'update'
@@ -84,7 +84,7 @@ describe 'Service Broker API integration' do
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
           Delayed::Worker.new.work_off
-          expect((a_request(:get, "#{service_instance_url(service_instance)}/last_operation"))).to have_been_made
+          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation")).to have_been_made
 
           expect { service_instance.reload }.to raise_error(Sequel::Error)
         end
@@ -111,7 +111,7 @@ describe 'Service Broker API integration' do
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
           Delayed::Worker.new.work_off
-          expect((a_request(:get, "#{service_instance_url(service_instance)}/last_operation"))).to have_been_made
+          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation")).to have_been_made
 
           expect(service_instance.reload.last_operation.state).to eq 'failed'
           expect(service_instance.reload.last_operation.type).to eq 'delete'
@@ -131,7 +131,7 @@ describe 'Service Broker API integration' do
 
           Delayed::Worker.new.work_off
 
-          expect((a_request(:get, "#{service_instance_url(service_instance)}/last_operation"))).to have_been_made
+          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation")).to have_been_made
 
           expect(service_instance.reload.last_operation.state).to eq 'succeeded'
           expect(service_instance.reload.last_operation.type).to eq 'create'
@@ -161,7 +161,7 @@ describe 'Service Broker API integration' do
           Delayed::Worker.new.work_off
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          expect((a_request(:get, "#{service_instance_url(service_instance)}/last_operation"))).to have_been_made
+          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation")).to have_been_made
 
           expect(service_instance.reload.last_operation.state).to eq 'failed'
           expect(service_instance.reload.last_operation.type).to eq 'create'

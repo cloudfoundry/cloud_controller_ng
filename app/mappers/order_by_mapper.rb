@@ -24,7 +24,7 @@ module VCAP::CloudController
 
       private
 
-      PREFIX_TO_DIRECTION = { '+' => 'asc', '-' => 'desc' }
+      PREFIX_TO_DIRECTION = { '+' => 'asc', '-' => 'desc' }.freeze
       DIRECTION_TO_PREFIX = PREFIX_TO_DIRECTION.invert
 
       def user_provided_direction?(first_character)

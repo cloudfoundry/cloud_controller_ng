@@ -102,7 +102,7 @@ module VCAP::CloudController
 
     def to_hash(opts={})
       if !VCAP::CloudController::SecurityContext.admin? && !space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
-        opts.merge!({ redact: ['credentials'] })
+        opts[:redact] = ['credentials']
       end
       hash = super(opts)
       hash
@@ -153,6 +153,10 @@ module VCAP::CloudController
       false
     end
 
+    def self.managed_organizations_spaces_dataset(managed_organizations_dataset)
+      VCAP::CloudController::Space.dataset.filter({ organization_id: managed_organizations_dataset.select(:organization_id) })
+    end
+
     private
 
     def validate_service_binding(service_binding)
@@ -167,10 +171,6 @@ module VCAP::CloudController
 
     def service_instance_usage_event_repository
       @repository ||= Repositories::Services::ServiceUsageEventRepository.new
-    end
-
-    def self.managed_organizations_spaces_dataset(managed_organizations_dataset)
-      VCAP::CloudController::Space.dataset.filter({ organization_id: managed_organizations_dataset.select(:organization_id) })
     end
   end
 end

@@ -29,9 +29,9 @@ module VCAP::CloudController
 
     def stub_requests(broker)
       stub_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
-          to_return(status: bind_status, body: bind_body.to_json)
+        to_return(status: bind_status, body: bind_body.to_json)
       stub_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
-          to_return(status: unbind_status, body: unbind_body.to_json)
+        to_return(status: unbind_status, body: unbind_body.to_json)
     end
 
     def bind_url_regex(opts={})
@@ -255,7 +255,7 @@ module VCAP::CloudController
               post '/v2/service_keys', req, headers_for(developer)
 
               expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
-                  to_not have_been_made
+                to_not have_been_made
             end
 
             it 'should show an error message for create key operation' do

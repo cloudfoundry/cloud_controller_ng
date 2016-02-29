@@ -162,8 +162,8 @@ module CloudController
         @logger ||= Steno.logger('cc.blobstore.dav_client')
       end
 
-      def with_retries(retries, log_prefix, log_data, &blk)
-        blk.call
+      def with_retries(retries, log_prefix, log_data)
+        yield
       rescue StandardError => e
         logger.debug("#{log_prefix}-retry",
           {

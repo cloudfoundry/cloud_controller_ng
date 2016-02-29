@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class AppsDropletsListMessage < BaseMessage
-    ALLOWED_KEYS = [:states, :page, :per_page, :order_by]
+    ALLOWED_KEYS = [:states, :page, :per_page, :order_by].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 

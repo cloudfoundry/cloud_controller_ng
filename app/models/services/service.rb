@@ -59,8 +59,8 @@ module VCAP::CloudController
 
       def organization_visible(organization)
         service_ids = ServicePlan.
-          organization_visible(organization).
-          inject([]) { |ids_so_far, service_plan| ids_so_far << service_plan.service_id }
+                      organization_visible(organization).
+                      inject([]) { |ids_so_far, service_plan| ids_so_far << service_plan.service_id }
         dataset.filter(id: service_ids)
       end
 
@@ -69,7 +69,7 @@ module VCAP::CloudController
       def space_visible(space, user)
         if space.has_member? user
           private_brokers_for_space = ServiceBroker.filter(space_id: space.id)
-          dataset.filter(service_broker: (private_brokers_for_space))
+          dataset.filter(service_broker: private_brokers_for_space)
         else
           dataset.filter(id: nil)
         end

@@ -65,10 +65,10 @@ module VCAP::CloudController
           }
 
           usage_query = App.join(:spaces, id: :apps__space_id).
-            join(:organizations, id: :spaces__organization_id).
-            select(*column_map.values).
-            where(apps__state: 'STARTED').
-            order(:apps__id)
+                        join(:organizations, id: :spaces__organization_id).
+                        select(*column_map.values).
+                        where(apps__state: 'STARTED').
+                        order(:apps__id)
 
           AppUsageEvent.insert(column_map.keys, usage_query)
         end

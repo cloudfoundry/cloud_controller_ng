@@ -42,7 +42,7 @@ module VCAP::CloudController
           results = fetcher.fetch(pagination_options, space_guids).records
 
           expect(results.length).to eq(PackageModel.where(space: Space.where(guid: space_guids)).count)
-          expect(results.length).to be < (PackageModel.count)
+          expect(results.length).to be < PackageModel.count
           expect(results).to include(package)
           expect(results).to include(package2)
         end

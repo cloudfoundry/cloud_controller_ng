@@ -12,16 +12,16 @@ module VCAP::CloudController
     def list
       id_for_next_token = nil
       apps_with_bindings = App.
-        select_all(:apps).
-        join(:service_bindings, app_id: :id).
-        where('apps.id > ?', last_id).
-        where('syslog_drain_url IS NOT NULL').
-        where("syslog_drain_url != ''").
-        order(:app_id).
-        distinct(:app_id).
-        limit(batch_size).
-        eager(:service_bindings).
-        all
+                           select_all(:apps).
+                           join(:service_bindings, app_id: :id).
+                           where('apps.id > ?', last_id).
+                           where('syslog_drain_url IS NOT NULL').
+                           where("syslog_drain_url != ''").
+                           order(:app_id).
+                           distinct(:app_id).
+                           limit(batch_size).
+                           eager(:service_bindings).
+                           all
 
       drain_urls = apps_with_bindings.each_with_object({}) do |app, hash|
         drains = app.service_bindings.map(&:syslog_drain_url).reject(&:blank?)

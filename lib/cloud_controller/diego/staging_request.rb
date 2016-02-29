@@ -35,7 +35,7 @@ module VCAP::CloudController
             environment:              [
               { 'name' => String, 'value' => String },
             ],
-            optional(:egress_rules)   => Array,
+            optional(:egress_rules) => Array,
             timeout:                  Fixnum,
             log_guid:                 String,
             lifecycle:                String,

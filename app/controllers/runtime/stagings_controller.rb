@@ -12,13 +12,13 @@ module VCAP::CloudController
 
     include VCAP::Errors
 
-    STAGING_PATH = '/staging'
+    STAGING_PATH = '/staging'.freeze
 
-    DROPLET_PATH                 = "#{STAGING_PATH}/droplets"
-    BUILDPACK_CACHE_PATH         = "#{STAGING_PATH}/buildpack_cache"
+    DROPLET_PATH                 = "#{STAGING_PATH}/droplets".freeze
+    BUILDPACK_CACHE_PATH         = "#{STAGING_PATH}/buildpack_cache".freeze
 
-    V3_APP_BUILDPACK_CACHE_PATH  = "#{STAGING_PATH}/v3/buildpack_cache"
-    V3_DROPLET_PATH              = "#{STAGING_PATH}/v3/droplets"
+    V3_APP_BUILDPACK_CACHE_PATH  = "#{STAGING_PATH}/v3/buildpack_cache".freeze
+    V3_DROPLET_PATH              = "#{STAGING_PATH}/v3/droplets".freeze
 
     # Endpoint does its own basic auth
     allow_unauthenticated_access
@@ -204,11 +204,11 @@ module VCAP::CloudController
 
     def upload_path
       @upload_path ||=
-          if HashUtils.dig(config, :nginx, :use_nginx)
-            params['droplet_path']
-          elsif (tempfile = HashUtils.dig(params, 'upload', 'droplet', :tempfile))
-            tempfile.path
-          end
+        if HashUtils.dig(config, :nginx, :use_nginx)
+          params['droplet_path']
+        elsif (tempfile = HashUtils.dig(params, 'upload', 'droplet', :tempfile))
+          tempfile.path
+        end
     end
 
     def check_app_exists(app, guid)

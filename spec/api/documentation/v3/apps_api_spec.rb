@@ -711,7 +711,7 @@ resource 'Apps (Experimental)', type: :api do
             ]
           }
         },
-        'application_env_json'  => {
+        'application_env_json' => {
           'VCAP_APPLICATION' => {
             'limits' => {
               # 'mem' => 1024,

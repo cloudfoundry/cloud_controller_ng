@@ -7,7 +7,7 @@ module VCAP::CloudController
     class UnauthorizedAccessToPrivateDomain < RuntimeError; end
     class OrganizationAlreadySet < RuntimeError; end
 
-    SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+    SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
 
     define_user_group :developers, reciprocal: :spaces, before_add: :validate_developer
     define_user_group :managers, reciprocal: :managed_spaces, before_add: :validate_manager

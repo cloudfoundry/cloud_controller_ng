@@ -176,7 +176,7 @@ describe TasksController, type: :controller do
 
     context 'when the user has requested an invalid field' do
       it 'returns a 400 and a helpful error' do
-        req_body.merge! invalid: 'field'
+        req_body[:invalid] = 'field'
 
         post :create, guid: app_model.guid, body: req_body
 
@@ -189,7 +189,7 @@ describe TasksController, type: :controller do
     context 'when there is a validation failure' do
       it 'returns a 422 and a helpful error' do
         stub_const('VCAP::CloudController::TaskModel::COMMAND_MAX_LENGTH', 6)
-        req_body.merge! command: 'a' * 7
+        req_body[:command] = 'a' * 7
 
         post :create, guid: app_model.guid, body: req_body
 

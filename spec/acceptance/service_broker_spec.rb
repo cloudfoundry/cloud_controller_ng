@@ -435,7 +435,7 @@ describe 'Service Broker' do
       end
 
       it 'can update the service broker name' do
-        put("/v2/service_brokers/#{@service_broker_guid}", "{\"name\":\"new_broker_name\"}",
+        put("/v2/service_brokers/#{@service_broker_guid}", '{"name":"new_broker_name"}',
             json_headers(admin_headers))
 
         expect(last_response).to have_status_code(200)
@@ -539,13 +539,11 @@ describe 'Service Broker' do
 
           warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
 
-          # rubocop:disable LineLength
           expect(warning).to eq(<<HEREDOC)
 Warning: Service plans are missing from the broker's catalog (http://#{stubbed_broker_host}/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.
 #{service_name}
   small
 HEREDOC
-          # rubocop:enable LineLength
         end
       end
 

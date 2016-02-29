@@ -1,4 +1,5 @@
 AllCops:
+  TargetRubyVersion: 2.2
   Include:
     - Gemfile
     - Rakefile
@@ -6,80 +7,96 @@ AllCops:
     - vendor/**/*
     - db/migrations/**/*
 
-UnusedMethodArgument:
-  Enabled: false
-
-Style/Documentation:
-  Enabled: false
-
-Style/SpaceAroundEqualsInParameterDefault:
-  EnforcedStyle: no_space
-
-Style/SignalException:
-  Enabled: false
-
-LineLength:
-  Max: 180
-
-MethodLength:
-  Max: 60
-
-Metrics/AbcSize:
-  Max: 30
-
-Style/DoubleNegation:
-  Enabled: false
-
-CyclomaticComplexity:
-  Max: 12
-
-Style/ClassAndModuleChildren:
-  Enabled: false
-
-Style/BlockDelimiters:
-  Enabled: false
-
-Style/TrailingComma:
-  Enabled: false
-
-Style/BracesAroundHashParameters:
-  Enabled: false
-
-Style/IndentHash:
-  Enabled: false
-
-Style/DotPosition:
-  EnforcedStyle: trailing
-
-Style/AlignParameters:
-  Enabled: false
-
-Style/NumericLiterals:
-  Enabled: false
-
-Style/MultilineOperationIndentation:
-  Enabled: false
-
-Style/WordArray:
-  Enabled: false
-
-Style/GuardClause:
-  Enabled: false
-
 Lint/AmbiguousRegexpLiteral:
+  Enabled: false
+
+# enable me for #85546748
+Lint/HandleExceptions:
   Enabled: false
 
 Lint/UnusedBlockArgument:
   Enabled: false
 
+Lint/UnusedMethodArgument:
+  Enabled: false
+
 Metrics/AbcSize:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Max: 12
+
+Metrics/LineLength:
+  Max: 180
+
+Metrics/MethodLength:
+  Max: 60
+
+Metrics/ModuleLength:
+  Enabled: false
+
+Metrics/ParameterLists:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Performance/Casecmp:
+  Enabled: false
+
+Performance/Sample:
+  Enabled: false
+
+Style/Alias:
+  EnforcedStyle: prefer_alias_method
+
+Style/AlignParameters:
+  Enabled: false
+
+Style/BlockDelimiters:
+  Enabled: false
+
+Style/BracesAroundHashParameters:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/ClosingParenthesisIndentation:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/DotPosition:
+  EnforcedStyle: trailing
+
+Style/DoubleNegation:
+  Enabled: false
+
+Style/EachWithObject:
+  Enabled: false
+
+Style/FormatString:
+  EnforcedStyle: sprintf
+
+Style/GuardClause:
   Enabled: false
 
 Style/IfUnlessModifier:
   Enabled: false
 
-Style/RaiseArgs:
-  EnforcedStyle: compact
+Style/IndentArray:
+  EnforcedStyle: consistent
+
+Style/IndentHash:
+  Enabled: false
+
+Style/Lambda:
+  Enabled: false
 
 Style/MultilineBlockChain:
   Enabled: false
@@ -87,23 +104,7 @@ Style/MultilineBlockChain:
 Style/MultilineBlockLayout:
   Enabled: false
 
-Metrics/ClassLength:
-  Enabled: false
-
-Style/RescueModifier:
-  Enabled: false
-
-Style/RedundantSelf:
-  Enabled: false
-
-# enable me for #85546748
-Lint/HandleExceptions:
-  Enabled: false
-
-Metrics/PerceivedComplexity:
-  Enabled: false
-
-Style/PredicateName:
+Style/MultilineOperationIndentation:
   Enabled: false
 
 Style/NegatedIf:
@@ -112,35 +113,47 @@ Style/NegatedIf:
 Style/Next:
   Enabled: false
 
-Metrics/ParameterLists:
+Style/NumericLiterals:
   Enabled: false
 
-Style/Lambda:
+Style/PredicateName:
   Enabled: false
 
-Style/FormatString:
-  EnforcedStyle: sprintf
+Style/RaiseArgs:
+  EnforcedStyle: compact
+
+Style/RedundantSelf:
+  Enabled: false
+
+Style/RescueModifier:
+  Enabled: false
+
+Style/SignalException:
+  Enabled: false
 
 Style/SingleLineBlockParams:
+  Enabled: false
+
+Style/SpaceAroundEqualsInParameterDefault:
+  EnforcedStyle: no_space
+
+Style/StructInheritance:
+  Enabled: false
+
+Style/TrailingCommaInArguments:
+  Enabled: false
+
+Style/TrailingCommaInLiteral:
+  Enabled: false
+
+Style/TrailingUnderscoreVariable:
   Enabled: false
 
 Style/TrivialAccessors:
   Enabled: false
 
-Style/EachWithObject:
+Style/WordArray:
   Enabled: false
 
-StructInheritance:
-  Enabled: false
-
-Performance/Sample:
-  Enabled: false
-
-ClosingParenthesisIndentation:
-  Enabled: false
-
-ModuleLength:
-  Enabled: false
-
-Style/TrailingUnderscoreVariable:
+Style/ZeroLengthPredicate:
   Enabled: false

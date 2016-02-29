@@ -42,12 +42,12 @@ module VCAP::CloudController
           prune_stale_deas
 
           best_dea_ad = EligibleAdvertisementFilter.new(@dea_advertisements, criteria[:app_id]).
-              only_with_disk(criteria[:disk] || 0).
-              only_meets_needs(criteria[:mem], criteria[:stack]).
-              only_in_zone_with_fewest_instances.
-              only_fewest_instances_of_app.
-              upper_half_by_memory.
-              sample
+                        only_with_disk(criteria[:disk] || 0).
+                        only_meets_needs(criteria[:mem], criteria[:stack]).
+                        only_in_zone_with_fewest_instances.
+                        only_fewest_instances_of_app.
+                        upper_half_by_memory.
+                        sample
 
           best_dea_ad && best_dea_ad.dea_id
         end

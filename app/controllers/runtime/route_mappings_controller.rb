@@ -59,11 +59,11 @@ module VCAP::CloudController
 
     def validate_route_mapping(app_guid, app_port, route_guid)
       mappings = RouteMapping.dataset.select_all(RouteMapping.table_name).
-        join(App.table_name, id: :app_id).
-        join(Route.table_name, id: :"#{RouteMapping.table_name}__route_id").
-        where(:"#{RouteMapping.table_name}__app_port" => app_port,
-              :"#{App.table_name}__guid" => app_guid,
-              :"#{Route.table_name}__guid" => route_guid)
+                 join(App.table_name, id: :app_id).
+                 join(Route.table_name, id: :"#{RouteMapping.table_name}__route_id").
+                 where(:"#{RouteMapping.table_name}__app_port" => app_port,
+                       :"#{App.table_name}__guid" => app_guid,
+                       :"#{Route.table_name}__guid" => route_guid)
       unless mappings.count == 0
         error_message =  "Route #{route_guid} is mapped to "
         error_message += "port #{app_port} of " unless app_port.blank?

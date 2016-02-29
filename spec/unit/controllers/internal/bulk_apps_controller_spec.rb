@@ -295,7 +295,7 @@ module VCAP::CloudController
       end
     end
 
-    describe 'POST' '/internal/bulk/apps' do
+    describe 'POST /internal/bulk/apps' do
       context 'without credentials' do
         it 'rejects the request as unauthorized' do
           post '/internal/bulk/apps', {}

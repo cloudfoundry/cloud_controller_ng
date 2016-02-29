@@ -72,11 +72,11 @@ class AttributeValidator
       error_string << "\nExpected #{attribute_name} to have default value #{expected_default.inspect}, but has default #{controller_default.inspect}"
     end
     @attributes_with_required_mismatch.each do |attribute_name, expected_to_be_required|
-      if expected_to_be_required
-        error_string << "\nExpected #{attribute_name} to be required but was not"
-      else
-        error_string << "\nExpected #{attribute_name} not to be required but it was"
-      end
+      error_string << if expected_to_be_required
+                        "\nExpected #{attribute_name} to be required but was not"
+                      else
+                        "\nExpected #{attribute_name} not to be required but it was"
+                      end
     end
     @attributes_with_bad_type.each do |attribute_name, expected_type, controller_type|
       error_string << "\nExpected #{attribute_name} to be of type #{expected_type}, but has type #{controller_type}"

@@ -31,12 +31,12 @@ module VCAP::CloudController
     define_routes
 
     def self.translate_validation_exception(e, attributes)
-      space_and_name_errors = errors_on(e, [:space_id, :name])
-      quota_errors = errors_on(e, :quota)
-      service_plan_errors = errors_on(e, :service_plan)
-      service_instance_errors = errors_on(e, :service_instance)
-      service_instance_name_errors = errors_on(e, :name)
-      service_instance_tags_errors = errors_on(e, :tags)
+      space_and_name_errors = e.errors.on([:space_id, :name]).to_a
+      quota_errors = e.errors.on(:quota).to_a
+      service_plan_errors = e.errors.on(:service_plan).to_a
+      service_instance_errors = e.errors.on(:service_instance).to_a
+      service_instance_name_errors = e.errors.on(:name).to_a
+      service_instance_tags_errors = e.errors.on(:tags).to_a
 
       if space_and_name_errors.include?(:unique)
         return Errors::ApiError.new_from_details('ServiceInstanceNameTaken', attributes['name'])
@@ -95,7 +95,7 @@ module VCAP::CloudController
       end
 
       service_instance = ServiceInstanceCreate.new(@services_event_repository, logger).
-                             create(request_attrs, accepts_incomplete)
+                         create(request_attrs, accepts_incomplete)
 
       route_service_warning(service_instance) unless route_services_enabled?
 
@@ -230,11 +230,7 @@ module VCAP::CloudController
     def add_related(guid, name, other_guid)
       return super(guid, name, other_guid) if name != :routes
 
-      if body.string.blank?
-        req_body = '{}'
-      else
-        req_body = body
-      end
+      req_body = body.string.blank? ? '{}' : body
 
       json_msg = VCAP::CloudController::RouteBindingMessage.decode(req_body)
       @request_attrs = json_msg.extract(stringify_keys: true)
@@ -424,22 +420,18 @@ module VCAP::CloudController
       flag == 'true'
     end
 
-    def self.errors_on(e, fields)
-      e.errors.on(fields).to_a
-    end
-
     def select_spaces_based_on_org_filters(org_filters)
       space_ids = Space.select(:spaces__id).left_join(:organizations, id: :spaces__organization_id)
       org_filters.each do |_, comparison, value|
-        if value.blank?
-          space_ids = space_ids.where(organizations__guid: nil)
-        elsif comparison == ':'
-          space_ids = space_ids.where(organizations__guid: value)
-        elsif comparison == ' IN '
-          space_ids = space_ids.where(organizations__guid: value.split(','))
-        else
-          space_ids = space_ids.where("organizations.guid #{comparison} ?", value)
-        end
+        space_ids = if value.blank?
+                      space_ids.where(organizations__guid: nil)
+                    elsif comparison == ':'
+                      space_ids.where(organizations__guid: value)
+                    elsif comparison == ' IN '
+                      space_ids.where(organizations__guid: value.split(','))
+                    else
+                      space_ids.where("organizations.guid #{comparison} ?", value)
+                    end
       end
 
       space_ids

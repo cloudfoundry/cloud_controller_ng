@@ -21,7 +21,7 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       buildpack_errors = e.errors.on(:name)
       if buildpack_errors && buildpack_errors.include?(:unique)
-        Errors::ApiError.new_from_details('BuildpackNameTaken', "#{attributes['name']}")
+        Errors::ApiError.new_from_details('BuildpackNameTaken', attributes['name'])
       else
         Errors::ApiError.new_from_details('BuildpackInvalid', e.errors.full_messages)
       end
@@ -35,6 +35,10 @@ module VCAP::CloudController
       response
     end
 
+    def self.not_found_exception_name
+      'NotFound'
+    end
+
     private
 
     attr_reader :buildpack_blobstore
@@ -42,10 +46,6 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @buildpack_blobstore = dependencies[:buildpack_blobstore]
-    end
-
-    def self.not_found_exception_name
-      'NotFound'
     end
 
     define_messages

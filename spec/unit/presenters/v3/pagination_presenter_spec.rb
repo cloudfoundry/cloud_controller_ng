@@ -44,7 +44,7 @@ module VCAP::CloudController
 
       it 'sets first and last page to 1 if there is 1 page' do
         paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(options))
-        result      = presenter.present_pagination_hash(paginated_result, base_url)
+        result = presenter.present_pagination_hash(paginated_result, base_url)
 
         last_url  = result[:last][:href]
         first_url = result[:first][:href]
@@ -55,7 +55,7 @@ module VCAP::CloudController
       it 'includes the filters in the result urls' do
         filters = double('filters', to_param_hash: { facet1: 'value1' })
         paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(options))
-        result      = presenter.present_pagination_hash(paginated_result, base_url, filters)
+        result = presenter.present_pagination_hash(paginated_result, base_url, filters)
 
         first_url = result[:first][:href]
         expect(first_url).to eq("/v3/cloudfoundry/is-great?facet1=value1&page=1&per_page=#{per_page}")

@@ -205,10 +205,10 @@ module VCAP::CloudController
           changes
         end
 
-        def with_audit_event(object, actor, actee, &saveBlock)
+        def with_audit_event(object, actor, actee)
           type = event_type(object, actee[:actee_type])
           metadata = changes_for_modified_model(object)
-          result = saveBlock.call
+          result = yield
 
           actee[:actee] = object.guid
           create_event(type, actor, actee, metadata)

@@ -13,7 +13,7 @@ module VCAP::CloudController
     def expire_droplets!(app)
       return unless is_v3? app
       dataset = DropletModel.where(state: DropletModel::STAGED_STATE, app_guid: app.guid).
-                            exclude(guid: app.droplet_guid)
+                exclude(guid: app.droplet_guid)
       return if dataset.count < droplets_storage_count
       data_to_expire = filter_dataset(dataset, droplets_storage_count)
 
@@ -24,7 +24,7 @@ module VCAP::CloudController
       return unless is_v3? app
       current_package_guid = app.droplet ? app.droplet.package.guid : nil
       dataset = PackageModel.where(state: PackageModel::READY_STATE, app_guid: app.guid).
-                            exclude(guid: current_package_guid)
+                exclude(guid: current_package_guid)
       return if dataset.count < packages_storage_count
       data_to_expire = filter_dataset(dataset, packages_storage_count)
 

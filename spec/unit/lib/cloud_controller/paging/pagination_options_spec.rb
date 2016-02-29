@@ -31,7 +31,7 @@ module VCAP::CloudController
         end
 
         it 'descending if order by is prepended with "-"' do
-          params.merge!({ 'order_by' => '-updated_at' })
+          params['order_by'] = '-updated_at'
           result = PaginationOptions.from_params(params)
 
           expect(result.order_by).to eq('updated_at')
@@ -39,7 +39,7 @@ module VCAP::CloudController
         end
 
         it 'defaults to ascending' do
-          params.merge!({ 'order_by' => 'updated_at' })
+          params['order_by'] = 'updated_at'
           result = PaginationOptions.from_params(params)
 
           expect(result.order_by).to eq('updated_at')

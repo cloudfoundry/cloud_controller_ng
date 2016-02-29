@@ -2,7 +2,7 @@ require 'cloud_controller/dea/client'
 
 module VCAP::CloudController
   class Route < Sequel::Model
-    ROUTE_REGEX = /\A#{URI.regexp}\Z/.freeze
+    ROUTE_REGEX = /\A#{URI.regexp}\Z/
 
     class InvalidDomainRelation < VCAP::Errors::InvalidRelation; end
     class InvalidAppRelation < VCAP::Errors::InvalidRelation; end

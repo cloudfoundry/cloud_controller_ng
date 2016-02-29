@@ -8,7 +8,7 @@ module VCAP::CloudController::RestController
 
     def normalize_quotes(string)
       return string unless dataset.db.database_type == :postgres
-      string.tr('`', "\"")
+      string.tr('`', '"')
     end
 
     describe '#apply' do
@@ -24,7 +24,7 @@ module VCAP::CloudController::RestController
         let(:opts) { {} }
 
         it 'orders by id in ascending order' do
-          expect(sql).to eq(normalize_quotes 'SELECT * FROM `test_models` ORDER BY `id` ASC')
+          expect(sql).to eq(normalize_quotes('SELECT * FROM `test_models` ORDER BY `id` ASC'))
         end
       end
 
@@ -32,7 +32,7 @@ module VCAP::CloudController::RestController
         let(:opts) { { order_by: 'field' } }
 
         it 'orders by the specified column' do
-          expect(sql).to eq(normalize_quotes 'SELECT * FROM `test_models` ORDER BY `field` ASC')
+          expect(sql).to eq(normalize_quotes('SELECT * FROM `test_models` ORDER BY `field` ASC'))
         end
       end
 
@@ -40,7 +40,7 @@ module VCAP::CloudController::RestController
         let(:opts) { { order_by: ['field', 'id'] } }
 
         it 'orders by the specified column' do
-          expect(sql).to eq(normalize_quotes 'SELECT * FROM `test_models` ORDER BY `field` ASC, `id` ASC')
+          expect(sql).to eq(normalize_quotes('SELECT * FROM `test_models` ORDER BY `field` ASC, `id` ASC'))
         end
       end
 
@@ -49,14 +49,14 @@ module VCAP::CloudController::RestController
         let(:opts) { { order_direction: 'desc' }.merge(order_by) }
 
         it 'orders by id in the specified direction' do
-          expect(sql).to eq(normalize_quotes 'SELECT * FROM `test_models` ORDER BY `id` DESC')
+          expect(sql).to eq(normalize_quotes('SELECT * FROM `test_models` ORDER BY `id` DESC'))
         end
 
         context 'when order_by has multiple values' do
           let(:order_by) { { order_by: ['field', 'id'] } }
 
           it 'orders by the specified column' do
-            expect(sql).to eq(normalize_quotes 'SELECT * FROM `test_models` ORDER BY `field` DESC, `id` DESC')
+            expect(sql).to eq(normalize_quotes('SELECT * FROM `test_models` ORDER BY `field` DESC, `id` DESC'))
           end
         end
       end

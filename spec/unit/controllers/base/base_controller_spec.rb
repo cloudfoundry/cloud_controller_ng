@@ -16,7 +16,7 @@ module VCAP::CloudController
       define_route :get, '/test_endpoint', :test_endpoint
 
       def test_i18n
-        "#{I18n.locale}"
+        I18n.locale.to_s
       end
       define_route :get, '/test_i18n', :test_i18n
 

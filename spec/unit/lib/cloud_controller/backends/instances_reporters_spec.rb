@@ -100,11 +100,11 @@ module VCAP::CloudController
 
       it 'delegates to the proper reporter' do
         expect(dea_reporter).to receive(:number_of_starting_and_running_instances_for_apps).
-                                    with([dea_app]).and_return({ 1 => {} })
+          with([dea_app]).and_return({ 1 => {} })
         expect(diego_reporter).to receive(:number_of_starting_and_running_instances_for_apps).
-                                      with([diego_app]).and_return({ 2 => {} })
+          with([diego_app]).and_return({ 2 => {} })
         expect(instances_reporters.number_of_starting_and_running_instances_for_apps(apps)).
-            to eq({ 1 => {}, 2 => {} })
+          to eq({ 1 => {}, 2 => {} })
       end
     end
   end

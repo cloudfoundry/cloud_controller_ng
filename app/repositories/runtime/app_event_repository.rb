@@ -7,9 +7,9 @@ module VCAP::CloudController
                            :environment_json,
                            :environment_variables,
                            :docker_credentials_json,
-                           :encrypted_docker_credentials_json]
+                           :encrypted_docker_credentials_json].freeze
         CENSORED_MESSAGE = 'PRIVATE DATA HIDDEN'.freeze
-        SYSTEM_ACTOR_HASH = { guid: 'system', type: 'system', name: 'system' }
+        SYSTEM_ACTOR_HASH = { guid: 'system', type: 'system', name: 'system' }.freeze
 
         def create_app_exit_event(app, droplet_exited_payload)
           Loggregator.emit(app.guid, "App instance exited with guid #{app.guid} payload: #{droplet_exited_payload}")
@@ -72,10 +72,8 @@ module VCAP::CloudController
           actor_hash = actor_guid.nil? ? SYSTEM_ACTOR_HASH : { guid: actor_guid, name: actor_name, type: 'user' }
           metadata = { route_guid: route.guid }
           if route_mapping
-            metadata.merge!({
-              route_mapping_guid: route_mapping.guid,
-              process_type:       route_mapping.process_type
-            })
+            metadata[:route_mapping_guid] = route_mapping.guid
+            metadata[:process_type] = route_mapping.process_type
           end
           create_app_audit_event('audit.app.map-route', app, app.space, actor_hash, metadata)
         end
@@ -84,10 +82,8 @@ module VCAP::CloudController
           actor_hash = actor_guid.nil? ? SYSTEM_ACTOR_HASH : { guid: actor_guid, name: actor_name, type: 'user' }
           metadata = { route_guid: route.guid }
           if route_mapping
-            metadata.merge!({
-              route_mapping_guid: route_mapping.guid,
-              process_type:       route_mapping.process_type
-            })
+            metadata[:route_mapping_guid] = route_mapping.guid
+            metadata[:process_type] = route_mapping.process_type
           end
           create_app_audit_event('audit.app.unmap-route', app, app.space, actor_hash, metadata)
         end

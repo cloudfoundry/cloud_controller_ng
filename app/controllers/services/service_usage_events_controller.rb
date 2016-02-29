@@ -8,7 +8,7 @@ module VCAP::CloudController
 
     get '/v2/service_usage_events', :enumerate
 
-    get "#{path_guid}", :read
+    get path_guid, :read
 
     post '/v2/service_usage_events/destructively_purge_all_and_reseed_existing_instances', :reset
     def reset

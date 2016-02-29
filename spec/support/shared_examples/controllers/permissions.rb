@@ -66,8 +66,8 @@ shared_examples 'permission enumeration' do |perm_name, opts|
         guids = decoded_response['resources'].map { |o| o['metadata']['guid'] }
         if respond_to?(:enumeration_expectation_a)
           expect(guids.sort).to eq enumeration_expectation_a.map(&:guid).sort
-        else
-          expect(guids).to include(@obj_a.guid) if expected_count > 0
+        elsif expected_count > 0
+          expect(guids).to include(@obj_a.guid)
         end
       end
     end

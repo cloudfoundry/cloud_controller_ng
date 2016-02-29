@@ -52,11 +52,11 @@ module VCAP::CloudController
 
     def diego_apps_cache_data(batch_size, last_id)
       diego_apps = App.select(:id, :guid, :version, :updated_at).
-        where('id > ?', last_id).
-        where(state: 'STARTED').
-        where(package_state: 'STAGED').
-        where('deleted_at IS NULL').
-        where(diego: true)
+                   where('id > ?', last_id).
+                   where(state: 'STARTED').
+                   where(package_state: 'STAGED').
+                   where('deleted_at IS NULL').
+                   where(diego: true)
       diego_apps = filter_docker_apps(diego_apps) unless FeatureFlag.enabled?('diego_docker')
       diego_apps.order(:id).
         limit(batch_size).
@@ -65,11 +65,11 @@ module VCAP::CloudController
 
     def dea_apps(batch_size, last_id)
       query = App.
-        where('id > ?', last_id).
-        where('deleted_at IS NULL').
-        order(:id).
-        where(diego: false).
-        limit(batch_size)
+              where('id > ?', last_id).
+              where('deleted_at IS NULL').
+              order(:id).
+              where(diego: false).
+              limit(batch_size)
 
       query.all
     end
@@ -80,18 +80,18 @@ module VCAP::CloudController
       :memory,
       :package_state,
       :version
-    ]
+    ].freeze
 
     def dea_apps_hm9k(batch_size, last_id)
       query = App.
-        where('id > ?', last_id).
-        where('deleted_at IS NULL').
-        order(:id).
-        where(diego: false).
-        where(state: 'STARTED').
-        exclude(package_state: 'FAILED').
-        limit(batch_size).
-        select_map([:id, :guid, :instances, :state, :memory, :package_state, :version, :created_at, :updated_at])
+              where('id > ?', last_id).
+              where('deleted_at IS NULL').
+              order(:id).
+              where(diego: false).
+              where(state: 'STARTED').
+              exclude(package_state: 'FAILED').
+              limit(batch_size).
+              select_map([:id, :guid, :instances, :state, :memory, :package_state, :version, :created_at, :updated_at])
 
       app_hashes = query.map do |row|
         hash = {}

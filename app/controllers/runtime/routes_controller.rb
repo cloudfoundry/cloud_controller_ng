@@ -1,5 +1,3 @@
-# rubocop:disable CyclomaticComplexity
-
 require 'actions/routing/route_delete'
 
 module VCAP::CloudController
@@ -147,15 +145,10 @@ module VCAP::CloudController
       domain = Domain[guid: domain_guid]
       if domain
         path = params['path']
-        count = 0
+        routes = Route.where(domain: domain, host: host)
+        routes = routes.where(path: path) if path
 
-        if path.nil?
-          count = Route.where(domain: domain, host: host).count
-        else
-          count = Route.where(domain: domain, host: host, path: path).count
-        end
-
-        return [HTTP::NO_CONTENT, nil] if count > 0
+        return [HTTP::NO_CONTENT, nil] if routes.count > 0
       end
       [HTTP::NOT_FOUND, nil]
     end

@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class Organization < Sequel::Model
-    ORG_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
-    ORG_STATUS_VALUES = %w(active suspended)
+    ORG_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
+    ORG_STATUS_VALUES = %w(active suspended).freeze
 
     one_to_many :spaces
 

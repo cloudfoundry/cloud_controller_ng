@@ -137,7 +137,7 @@ module VCAP::CloudController
 
     describe '.at_last_position' do
       let!(:buildpacks) do
-        4.times.map { |i| Buildpack.create(name: "name_#{100 - i}", position: i + 1) }
+        Array.new(4) { |i| Buildpack.create(name: "name_#{100 - i}", position: i + 1) }
       end
 
       it 'gets the last position' do
@@ -189,7 +189,7 @@ module VCAP::CloudController
 
       context 'when other buildpacks exist' do
         let!(:buildpacks) do
-          4.times.map { |i| Buildpack.make(name: "name_#{100 - i}", position: i + 1) }
+          Array.new(4) { |i| Buildpack.make(name: "name_#{100 - i}", position: i + 1) }
         end
 
         context 'with a specified position' do
@@ -276,7 +276,7 @@ module VCAP::CloudController
 
     describe '.update' do
       let!(:buildpacks) do
-        4.times.map { |i| Buildpack.create(name: "name_#{100 - i}", position: i + 1) }
+        Array.new(4) { |i| Buildpack.create(name: "name_#{100 - i}", position: i + 1) }
       end
 
       it "locks the buildpacks so we don't get duplicate positions" do

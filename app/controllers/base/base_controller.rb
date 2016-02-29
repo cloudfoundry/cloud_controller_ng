@@ -8,7 +8,7 @@ require 'cloud_controller/basic_auth/dea_basic_auth_authenticator'
 module VCAP::CloudController::RestController
   # The base class for all api endpoints.
   class BaseController
-    V2_ROUTE_PREFIX = '/v2'
+    V2_ROUTE_PREFIX = '/v2'.freeze
 
     include VCAP::CloudController
     include VCAP::Errors
@@ -276,9 +276,9 @@ module VCAP::CloudController::RestController
         end
       end
 
-      def authenticate_basic_auth(path, &block)
+      def authenticate_basic_auth(path)
         controller.before path do
-          credentials = block.call
+          credentials = yield
 
           unless CloudController::BasicAuth::BasicAuthAuthenticator.valid?(env, credentials) ||
                   CloudController::BasicAuth::DeaBasicAuthAuthenticator.valid?(env, credentials)

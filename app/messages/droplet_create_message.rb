@@ -4,7 +4,7 @@ require 'messages/lifecycles/docker_lifecycle_data_message'
 
 module VCAP::CloudController
   class DropletCreateMessage < BaseMessage
-    ALLOWED_KEYS = [:memory_limit, :disk_limit, :environment_variables, :lifecycle]
+    ALLOWED_KEYS = [:memory_limit, :disk_limit, :environment_variables, :lifecycle].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 

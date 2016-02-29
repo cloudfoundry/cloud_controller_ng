@@ -27,7 +27,7 @@ module VCAP::CloudController
 
       describe 'validations' do
         it 'validates that there are not excess fields' do
-          body.merge! 'bogus': 'field'
+          body[:bogus] = 'field'
           message = TaskCreateMessage.create(body)
 
           expect(message).to_not be_valid
@@ -44,7 +44,7 @@ module VCAP::CloudController
           end
 
           it 'must be numerical' do
-            body.merge! 'memory_in_mb': 'trout'
+            body[:memory_in_mb] = 'trout'
 
             message = TaskCreateMessage.create(body)
 
@@ -53,7 +53,7 @@ module VCAP::CloudController
           end
 
           it 'may not have a floating point' do
-            body.merge! 'memory_in_mb': 4.5
+            body[:memory_in_mb] = 4.5
 
             message = TaskCreateMessage.create(body)
 
@@ -62,7 +62,7 @@ module VCAP::CloudController
           end
 
           it 'may not be negative' do
-            body.merge! 'memory_in_mb': -1
+            body[:memory_in_mb] = -1
 
             message = TaskCreateMessage.create(body)
 
@@ -71,7 +71,7 @@ module VCAP::CloudController
           end
 
           it 'may not be zero' do
-            body.merge! 'memory_in_mb': 0
+            body[:memory_in_mb] = 0
 
             message = TaskCreateMessage.create(body)
 

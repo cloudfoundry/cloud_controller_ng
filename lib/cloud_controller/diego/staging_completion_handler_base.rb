@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Diego
     class StagingCompletionHandlerBase
-      DEFAULT_STAGING_ERROR = 'StagingError'
+      DEFAULT_STAGING_ERROR = 'StagingError'.freeze
 
       def initialize(runners, logger, logger_prefix)
         @runners = runners
@@ -23,7 +23,7 @@ module VCAP::CloudController
 
       def handle_failure(staging_guid, payload)
         begin
-          self.class.error_parser.validate(payload)
+          error_parser.validate(payload)
         rescue Membrane::SchemaValidationError => e
           logger.error('diego.staging.failure.invalid-message', staging_guid: staging_guid, payload: payload, error: e.to_s)
           raise Errors::ApiError.new_from_details('InvalidRequest', payload)
@@ -90,7 +90,7 @@ module VCAP::CloudController
         true
       end
 
-      def self.error_parser
+      def error_parser
         @error_schema ||= Membrane::SchemaParser.parse do
           {
             error: {

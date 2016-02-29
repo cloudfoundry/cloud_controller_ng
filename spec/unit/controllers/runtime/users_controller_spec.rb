@@ -15,7 +15,7 @@ module VCAP::CloudController
       get '/v2/users', '', headers_for(user)
 
       expect(logger).to have_received(:debug).at_least(:once)
-      expect(queries.flatten.map { |l| l.gsub(/\(.*s\) /, '') }).not_to include("SELECT * FROM \"users\"")
+      expect(queries.flatten.map { |l| l.gsub(/\(.*s\) /, '') }).not_to include('SELECT * FROM "users"')
     end
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:space_guid) }

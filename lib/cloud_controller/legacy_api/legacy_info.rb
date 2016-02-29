@@ -4,6 +4,7 @@ module VCAP::CloudController
 
     allow_unauthenticated_access
 
+    get '/info', :info
     def info
       info = {
         name: config[:info][:name],
@@ -52,12 +53,6 @@ module VCAP::CloudController
         services: default_space.service_instances.count
       }
     end
-
-    def self.setup_routes
-      get '/info', :info
-    end
-
-    setup_routes
 
     deprecated_endpoint('/info')
   end

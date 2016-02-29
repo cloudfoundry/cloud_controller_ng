@@ -1,17 +1,17 @@
 module VCAP::CloudController
   class PackageModel < Sequel::Model(:packages)
     PACKAGE_STATES = [
-      PENDING_STATE = 'PROCESSING_UPLOAD',
-      READY_STATE   = 'READY',
-      FAILED_STATE  = 'FAILED',
-      CREATED_STATE = 'AWAITING_UPLOAD',
-      COPYING_STATE = 'COPYING',
-      EXPIRED_STATE = 'EXPIRED'
+      PENDING_STATE = 'PROCESSING_UPLOAD'.freeze,
+      READY_STATE   = 'READY'.freeze,
+      FAILED_STATE  = 'FAILED'.freeze,
+      CREATED_STATE = 'AWAITING_UPLOAD'.freeze,
+      COPYING_STATE = 'COPYING'.freeze,
+      EXPIRED_STATE = 'EXPIRED'.freeze
     ].map(&:freeze).freeze
 
     PACKAGE_TYPES = [
-      BITS_TYPE   = 'bits',
-      DOCKER_TYPE = 'docker'
+      BITS_TYPE   = 'bits'.freeze,
+      DOCKER_TYPE = 'docker'.freeze
     ].map(&:freeze).freeze
 
     one_to_many :droplets, class: 'VCAP::CloudController::DropletModel', key: :package_guid, primary_key: :guid

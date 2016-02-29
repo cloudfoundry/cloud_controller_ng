@@ -2,7 +2,7 @@ require 'set'
 
 module VCAP::CloudController
   class Roles
-    CLOUD_CONTROLLER_ADMIN_SCOPE = 'cloud_controller.admin'
+    CLOUD_CONTROLLER_ADMIN_SCOPE = 'cloud_controller.admin'.freeze
 
     def initialize(token=nil)
       @scopes = Set.new(token && token['scope'])

@@ -110,8 +110,6 @@ module Sinatra
       end
     end
 
-    private
-
     def self.init_varz
       ::VCAP::Component.varz.synchronize do
         ::VCAP::Component.varz[:vcap_sinatra] ||= {}

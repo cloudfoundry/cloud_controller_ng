@@ -77,7 +77,6 @@ resource 'Apps', type: [:api, :legacy_api] do
         are also the default bits for a DEA backend. File mode bits are required to have at least the minimum permissions of 0600.
       eos
 
-      # rubocop:disable LineLength
       request_body_example = <<-eos.gsub(/^ */, '')
         --AaB03x
         Content-Disposition: form-data; name="async"
@@ -96,7 +95,6 @@ resource 'Apps', type: [:api, :legacy_api] do
         &lt;&lt;binary artifact bytes&gt;&gt;
         --AaB03x
       eos
-      # rubocop:enable LineLength
 
       client.put "/v2/apps/#{app_obj.guid}/bits", app_bits_put_params, headers
       example.metadata[:requests].each do |req|

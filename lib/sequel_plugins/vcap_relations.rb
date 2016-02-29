@@ -165,7 +165,7 @@ module Sequel::Plugins::VcapRelations
         ids.each { |i| send("add_#{singular_name}", i) }
       end
 
-      define_method("#{guids_attr}") do
+      define_method(guids_attr) do
         send(name).collect(&:guid)
       end
 
@@ -187,8 +187,8 @@ module Sequel::Plugins::VcapRelations
       define_method("remove_#{singular_name}") do |other|
         if other.is_a?(Integer)
           super(other) if send(ids_attr).include? other
-        else
-          super(other) if send(name).include? other
+        elsif send(name).include? other
+          super(other)
         end
       end
     end

@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class PackagesListMessage < BaseMessage
-    ALLOWED_KEYS = [:page, :per_page]
+    ALLOWED_KEYS = [:page, :per_page].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 

@@ -1,5 +1,5 @@
 class AppEnvironmentPolicy
-  RESERVED_ENV_VAR_ERROR_MSG = 'reserved_key:%s'
+  RESERVED_ENV_VAR_ERROR_MSG = 'reserved_key:%s'.freeze
 
   def initialize(app)
     @errors = app.errors

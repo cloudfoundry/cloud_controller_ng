@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class AppModel < Sequel::Model(:apps_v3)
     include Serializer
-    APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+    APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
 
     many_to_many :routes, join_table: :route_mappings, left_key: :app_guid, left_primary_key: :guid, right_primary_key: :guid, right_key: :route_guid
     one_to_many :service_bindings, class: 'VCAP::CloudController::ServiceBindingModel', key: :app_id
@@ -66,13 +66,10 @@ module VCAP::CloudController
 
       def space_guids_where_visible(user)
         Space.join(:spaces_developers, space_id: :id, user_id: user.id).select(:spaces__guid).
-        union(
-          Space.join(:spaces_managers, space_id: :id, user_id: user.id).select(:spaces__guid)
-        ).union(
-          Space.join(:spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__guid)
-        ).union(
-          Space.join(:organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid)
-        ).select(:space_guid)
+          union(Space.join(:spaces_managers, space_id: :id, user_id: user.id).select(:spaces__guid)).
+          union(Space.join(:spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__guid)).
+          union(Space.join(:organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid)).
+          select(:space_guid)
       end
     end
 

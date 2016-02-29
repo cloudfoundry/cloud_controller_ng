@@ -19,7 +19,7 @@ resource 'Routes', type: [:api, :legacy_api] do
   }
   before do
     allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
-                                                              and_return(routing_api_client)
+      and_return(routing_api_client)
     allow(routing_api_client).to receive(:router_group).and_return(router_group)
   end
 

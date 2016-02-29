@@ -29,7 +29,7 @@ module VCAP::CloudController
 
           def handle_failure(droplet, payload)
             begin
-              self.class.error_parser.validate(payload)
+              error_parser.validate(payload)
             rescue Membrane::SchemaValidationError => e
               logger.error(@logger_prefix + 'failure.invalid-message', staging_guid: droplet.guid, payload: payload, error: e.to_s)
 
