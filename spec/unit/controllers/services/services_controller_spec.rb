@@ -264,7 +264,7 @@ module VCAP::CloudController
           delete "/v2/services/#{service.guid}?purge=true", '{}', admin_headers_for(user, email: email)
           expect(last_response.status).to eq(204)
 
-          event = Event.all.last
+          event = Event.order(:id).last
           expect(event.type).to eq('audit.service.delete')
           expect(event.actor_type).to eq('user')
           expect(event.timestamp).to be
