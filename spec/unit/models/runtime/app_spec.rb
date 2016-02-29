@@ -2359,22 +2359,15 @@ module VCAP::CloudController
           expect(app.save.reload.ports).to be_nil
         end
 
-        context 'app with one or more routes and one port' do
-          before do
-            app.diego = false
-            app.save
-          end
-
-          it 'should set ports to nil' do
-            expect(route_mapping_1.reload.app_port).to be_nil
-            expect(route_mapping_2.reload.app_port).to be_nil
-          end
+        it 'should set route mappings app_port to nil' do
+          app.save
+          expect(route_mapping_1.reload.app_port).to be_nil
+          expect(route_mapping_2.reload.app_port).to be_nil
         end
 
         context 'app with one or more routes and multiple ports' do
           before do
             route_mapping_2.app_port = 2345
-            app.diego = false
           end
 
           it 'should add an error' do
@@ -2388,16 +2381,18 @@ module VCAP::CloudController
       context 'switching from dea to diego' do
         let(:app) { App.create_from_hash(name: 'test', space_guid: space.guid, diego: false) }
         let(:route) { Route.make(host: 'host', space: space) }
+        let!(:route_mapping) { RouteMapping.make(app: app, route: route) }
 
         context 'and no ports specified' do
           before do
-            RouteMapping.make(app: app, route: route)
             app.update_from_hash(diego: true)
           end
 
           it 'defaults to 8080' do
             expect(app.reload.ports).to eq [8080]
-            expect(app.route_mappings.first.app_port).to eq 8080
+            app.route_mappings.each do |rm|
+              expect(rm.saved_app_port).to eq 8080
+            end
           end
         end
 
@@ -2408,6 +2403,30 @@ module VCAP::CloudController
 
           it 'uses the ports provided' do
             expect(app.reload.ports).to eq [2345, 1298]
+            app.route_mappings.each do |rm|
+              expect(rm.saved_app_port).to eq 2345
+            end
+          end
+        end
+
+        context 'when using a docker app' do
+          before do
+            app.update_from_hash(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
+            app.add_droplet(Droplet.new(
+                              app: app,
+                              droplet_hash: 'the-droplet-hash',
+                              execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
+            ))
+            app.droplet_hash = 'the-droplet-hash'
+            app.save
+          end
+
+          it 'does not save the app port' do
+            expect(app.reload.ports).to eq [1024, 1025]
+            app.route_mappings.each do |rm|
+              expect(rm.saved_app_port).to be_nil
+              expect(rm.app_port).to eq 1024
+            end
           end
         end
       end

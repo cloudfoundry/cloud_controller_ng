@@ -14,10 +14,6 @@ module VCAP::CloudController
         RouteMapping.dataset.where('guid is null and id = ?', self.id).update(guid: SecureRandom.uuid)
         reload
       end
-      if self.saved_app_port.blank? && self.exists? && app.diego? && !app.docker_image.present?
-        RouteMapping.dataset.where('app_port is null and id = ?', self.id).update(app_port: app.ports.first)
-        reload
-      end
       super
     end
 

@@ -160,11 +160,6 @@ module VCAP::CloudController
       super
     end
 
-    def after_validation
-      super
-      update_route_mappings_ports if changed_from_diego_to_dea
-    end
-
     def before_save
       if needs_package_in_current_state? && !package_hash
         raise VCAP::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
@@ -176,6 +171,7 @@ module VCAP::CloudController
       self.enable_ssh = Config.config[:allow_app_ssh_access] && space.allow_ssh if enable_ssh.nil?
 
       update_ports(DEFAULT_PORTS) if diego && ports.blank?
+      update_route_mappings_ports
 
       if Config.config[:instance_file_descriptor_limit]
         self.file_descriptors ||= Config.config[:instance_file_descriptor_limit]
@@ -693,6 +689,10 @@ module VCAP::CloudController
       column_changed?(:diego) && initial_value(:diego).present? && !diego
     end
 
+    def changed_from_dea_to_diego
+      column_changed?(:diego) && (initial_value(:diego) == false) && diego
+    end
+
     # HACK: We manually call the Serializer here because the plugin uses the
     # _before_validation method to serialize ports. This is called before
     # validations and we want to set the default ports after validations.
@@ -723,7 +723,12 @@ module VCAP::CloudController
     end
 
     def update_route_mappings_ports
-      self.route_mappings_dataset.update(app_port: nil) unless self.route_mappings.nil?
+      if changed_from_diego_to_dea
+        self.route_mappings_dataset.update(app_port: nil) unless self.route_mappings.nil?
+      elsif changed_from_dea_to_diego && !self.docker_image.present?
+        port = self.ports.present? ? self.ports.first : DEFAULT_HTTP_PORT
+        self.route_mappings_dataset.update(app_port: port)
+      end
     end
 
     def mark_routes_changed
