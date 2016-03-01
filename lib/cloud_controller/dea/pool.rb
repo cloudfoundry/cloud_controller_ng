@@ -8,7 +8,7 @@ module VCAP::CloudController
         @advertise_timeout = config[:dea_advertisement_timeout_in_seconds]
         @message_bus = message_bus
         @percentage_of_top_stagers = (config[:placement_top_stager_percentage] || 0) / 100.0
-        @dea_advertisements = []
+        @dea_advertisements = {}
       end
 
       def register_subscriptions
@@ -26,7 +26,7 @@ module VCAP::CloudController
 
         mutex.synchronize do
           remove_advertisement_for_id(advertisement.dea_id)
-          @dea_advertisements << advertisement
+          @dea_advertisements[advertisement.dea_id] = advertisement
         end
       end
 
@@ -68,11 +68,11 @@ module VCAP::CloudController
         dea_id = opts[:dea_id]
         app_id = opts[:app_id]
 
-        @dea_advertisements.find { |ad| ad.dea_id == dea_id }.increment_instance_count(app_id)
+        @dea_advertisements[dea_id].increment_instance_count(app_id)
       end
 
       def reserve_app_memory(dea_id, app_memory)
-        @dea_advertisements.find { |ad| ad.dea_id == dea_id }.decrement_memory(app_memory)
+        @dea_advertisements[dea_id].decrement_memory(app_memory)
       end
 
       private
@@ -81,11 +81,11 @@ module VCAP::CloudController
 
       def prune_stale_deas
         now = Time.now.utc.to_i
-        @dea_advertisements.delete_if { |ad| ad.expired?(now) }
+        @dea_advertisements.delete_if { |_, ad| ad.expired?(now) }
       end
 
       def remove_advertisement_for_id(id)
-        @dea_advertisements.delete_if { |ad| ad.dea_id == id }
+        @dea_advertisements.delete(id)
       end
 
       def mutex
@@ -93,13 +93,13 @@ module VCAP::CloudController
       end
 
       def validate_stack_availability(stack)
-        unless @dea_advertisements.any? { |ad| ad.has_stack?(stack) }
+        unless @dea_advertisements.values.any? { |ad| ad.has_stack?(stack) }
           raise Errors::ApiError.new_from_details('StackNotFound', "The requested app stack #{stack} is not available on this system.")
         end
       end
 
       def top_n_stagers_for(memory, disk, stack)
-        @dea_advertisements.select do |advertisement|
+        @dea_advertisements.values.select do |advertisement|
           advertisement.meets_needs?(memory, stack) && advertisement.has_sufficient_disk?(disk)
         end.sort do |advertisement_a, advertisement_b|
           advertisement_a.available_memory <=> advertisement_b.available_memory
