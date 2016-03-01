@@ -60,6 +60,7 @@ describe 'Tasks' do
         'result'                => {
           'failure_reason' => nil
         },
+        'droplet_guid'          => droplet.guid,
         'created_at'            => iso8601,
         'updated_at'            => iso8601,
         'links'                 => {
@@ -105,6 +106,7 @@ describe 'Tasks' do
         'result'                => {
           'failure_reason' => nil
         },
+        'droplet_guid'          => task.droplet.guid,
         'created_at'            => iso8601,
         'updated_at'            => nil,
         'links'                 => {
@@ -151,6 +153,7 @@ describe 'Tasks' do
         'result'                => {
           'failure_reason' => nil
         },
+        'droplet_guid'          => task.droplet.guid,
         'created_at'            => iso8601,
         'updated_at'            => nil,
         'links'                 => {

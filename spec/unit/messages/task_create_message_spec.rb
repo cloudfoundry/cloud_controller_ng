@@ -45,7 +45,7 @@ module VCAP::CloudController
           end
 
           it 'must be a valid guid' do
-            body.merge! 'droplet_guid': 32913
+            body[:droplet_guid] = 32913
 
             message = TaskCreateMessage.create(body)
 
