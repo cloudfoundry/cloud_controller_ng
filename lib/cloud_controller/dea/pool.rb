@@ -25,7 +25,7 @@ module VCAP::CloudController
         advertisement = NatsMessages::DeaAdvertisement.new(message, Time.now.utc.to_i + @advertise_timeout)
 
         mutex.synchronize do
-          remove_advertisement_for_id(advertisement.dea_id)
+          @dea_advertisements.delete(advertisement.dea_id)
           @dea_advertisements[advertisement.dea_id] = advertisement
         end
       end
@@ -34,7 +34,7 @@ module VCAP::CloudController
         fake_advertisement = NatsMessages::DeaAdvertisement.new(message, Time.now.utc.to_i + @advertise_timeout)
 
         mutex.synchronize do
-          remove_advertisement_for_id(fake_advertisement.dea_id)
+          @dea_advertisements.delete(fake_advertisement.dea_id)
         end
       end
 
@@ -60,7 +60,7 @@ module VCAP::CloudController
 
           prune_stale_deas
           best_ad = top_n_stagers_for(memory, disk, stack).sample
-          best_ad && best_ad.dea_id
+          best_ad && best_ad[0]
         end
       end
 
@@ -84,26 +84,22 @@ module VCAP::CloudController
         @dea_advertisements.delete_if { |_, ad| ad.expired?(now) }
       end
 
-      def remove_advertisement_for_id(id)
-        @dea_advertisements.delete(id)
-      end
-
       def mutex
         @mutex ||= Mutex.new
       end
 
       def validate_stack_availability(stack)
-        unless @dea_advertisements.values.any? { |ad| ad.has_stack?(stack) }
+        unless @dea_advertisements.any? { |_, ad| ad.has_stack?(stack) }
           raise Errors::ApiError.new_from_details('StackNotFound', "The requested app stack #{stack} is not available on this system.")
         end
       end
 
       def top_n_stagers_for(memory, disk, stack)
-        @dea_advertisements.values.select do |advertisement|
-          advertisement.meets_needs?(memory, stack) && advertisement.has_sufficient_disk?(disk)
-        end.sort do |advertisement_a, advertisement_b|
-          advertisement_a.available_memory <=> advertisement_b.available_memory
-        end.last([5, @percentage_of_top_stagers * @dea_advertisements.size].max.to_i)
+        @dea_advertisements.dup.select { |id, ad|
+          ad.meets_needs?(memory, stack) && ad.has_sufficient_disk?(disk)
+        }.sort_by { |id, ad|
+          ad.available_memory
+        }.last([5, @percentage_of_top_stagers * @dea_advertisements.size].max.to_i)
       end
     end
   end
