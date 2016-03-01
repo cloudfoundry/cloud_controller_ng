@@ -728,6 +728,15 @@ module VCAP::CloudController
       let(:space) { Space.make(organization: organization) }
       let(:route) { Route.make(domain: domain, space: space) }
 
+      it 'should contain links to the route_mappings resource' do
+        route_guid = route.guid
+        get 'v2/routes', {}, admin_headers
+
+        expect(decoded_response['resources'].length).to eq(1)
+        expect(decoded_response['resources'][0]['entity']['route_mappings_url']).
+          to eq("/v2/routes/#{route_guid}/route_mappings")
+      end
+
       describe 'Filtering with Organization Guid' do
         context 'When Organization Guid Not Present' do
           it 'Return Resource length zero' do
@@ -815,6 +824,48 @@ module VCAP::CloudController
             expect(second_route_info.fetch('metadata').fetch('guid')).to eq(route1_guid)
             expect(third_route_info.fetch('metadata').fetch('guid')).to eq(route2_guid)
           end
+        end
+      end
+    end
+
+    describe 'GET /v2/routes/:guid/route_mappings' do
+      let(:organization) { Organization.make }
+      let(:domain) { PrivateDomain.make(owning_organization: organization) }
+      let(:space) { Space.make(organization: organization) }
+      let(:route) { Route.make(domain: domain, space: space) }
+      let(:app_obj) { AppFactory.make(space: route.space) }
+      let!(:app_route_mapping) { RouteMapping.make(route: route, app: app_obj) }
+
+      it 'lists the route mappings' do
+        get "v2/routes/#{route.guid}/route_mappings", {}, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(decoded_response['resources'].length).to eq(1)
+        expect(decoded_response['resources'][0]['metadata']['guid']).to eq app_route_mapping.guid
+      end
+
+      context 'when user has no access to the route' do
+        let(:user) { User.make }
+
+        it 'returns forbidden error' do
+          get "v2/routes/#{route.guid}/route_mappings", {}, headers_for(user)
+          expect(last_response).to have_status_code(403)
+        end
+      end
+
+      context 'when a route has no route_mappings' do
+        let(:route_2) { Route.make(domain: domain, space: space) }
+
+        it 'returns an empty collection' do
+          get "v2/routes/#{route_2.guid}/route_mappings", {}, admin_headers
+          expect(last_response).to have_status_code(200)
+          expect(decoded_response['resources'].length).to eq(0)
+        end
+      end
+
+      context 'when an non existing route is specified' do
+        it 'returns resource not found' do
+          get 'v2/routes/non-existing-route-guid/route_mappings', {}, admin_headers
+          expect(last_response).to have_status_code(404)
         end
       end
     end

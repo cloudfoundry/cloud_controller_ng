@@ -12,7 +12,11 @@ module VCAP::CloudController
     many_to_one :domain
     many_to_one :space, after_set: :validate_changed_space
 
+    # This is a v3 relationship
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', key: :route_guid, primary_key: :guid
+
+    # This is a v2 relationship for the /v2/route_mappings endpoints and associations
+    one_to_many :app_route_mappings, class: 'VCAP::CloudController::RouteMapping'
 
     many_to_many :apps,
                  distinct: true,

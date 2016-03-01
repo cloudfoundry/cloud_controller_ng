@@ -122,6 +122,13 @@ EOF
       nested_model_associate :app, :route
       nested_model_remove :app, :route
     end
+
+    describe 'Route Mappings' do
+      let(:app_obj) { VCAP::CloudController::AppFactory.make(space: space, diego: true) }
+      let!(:route_mapping) { VCAP::CloudController::RouteMapping.make(app: app_obj, route: route) }
+
+      standard_model_list :route_mapping, VCAP::CloudController::RouteMappingsController, outer_model: :route
+    end
   end
 
   describe 'Reserved Routes' do

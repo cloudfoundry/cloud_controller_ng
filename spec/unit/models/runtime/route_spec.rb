@@ -9,6 +9,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :space, associated_instance: ->(route) { Space.make(organization: route.domain.owning_organization) } }
       it { is_expected.to have_associated :apps, associated_instance: ->(route) { App.make(space: route.space) } }
       it { is_expected.to have_associated :route_mappings, associated_instance: ->(route) { RouteMappingModel.make(app: AppModel.make(space: route.space), route: route) } }
+      it { is_expected.to have_associated :app_route_mappings, associated_instance: ->(route) { RouteMapping.make(app: App.make(space: route.space), route: route) } }
 
       context 'when bound to a service instance' do
         let(:route) { Route.make }
