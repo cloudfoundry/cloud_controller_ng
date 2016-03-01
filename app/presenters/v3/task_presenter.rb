@@ -33,6 +33,7 @@ module VCAP::CloudController
         result: { failure_reason: task.failure_reason },
         created_at: task.created_at,
         updated_at: task.updated_at,
+        droplet_guid: task.droplet.guid,
         links: build_links(task)
       }
     end

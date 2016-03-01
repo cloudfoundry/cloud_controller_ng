@@ -29,6 +29,7 @@ describe TasksController, type: :controller do
         app_guid: app_model.guid,
         state: VCAP::CloudController::DropletModel::STAGED_STATE)
     end
+
     let(:req_body) do
       {
         "name": 'mytask',
@@ -202,7 +203,7 @@ describe TasksController, type: :controller do
           post :create, guid: app_model.guid, body: req_body
 
           expect(response.status).to eq(202)
-          expect(parsed_body['droplet']).to include(droplet.guid)
+          expect(parsed_body['droplet_guid']).to include(droplet.guid)
         end
 
         context 'and the app does not have an assigned droplet' do
@@ -219,9 +220,14 @@ describe TasksController, type: :controller do
       end
 
       context 'when a custom droplet guid is provided' do
-        let(:custom_droplet) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+        let(:custom_droplet) {
+          VCAP::CloudController::DropletModel.make(app_guid: app_model.guid,
+                                                   state: VCAP::CloudController::DropletModel::STAGED_STATE)
+        }
 
         it 'successfully creates a task on the specifed droplet' do
+          app_model.droplet = custom_droplet
+          app_model.save
           post :create, guid: app_model.guid, body: {
             "name": 'mytask',
             "command": 'rake db:migrate && true',
