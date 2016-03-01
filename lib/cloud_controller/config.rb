@@ -242,7 +242,9 @@ module VCAP::CloudController
           routing_client_secret: String,
         },
 
-        optional(:route_services_enabled) => bool
+        optional(:route_services_enabled) => bool,
+
+        optional(:reserved_private_domains) => String,
       }
     end
 
@@ -263,6 +265,8 @@ module VCAP::CloudController
 
         QuotaDefinition.configure(config)
         Stack.configure(config[:stacks_file])
+
+        PrivateDomain.configure(config[:reserved_private_domains])
 
         dependency_locator = CloudController::DependencyLocator.instance
         nsync_client = Diego::NsyncClient.new(@config)

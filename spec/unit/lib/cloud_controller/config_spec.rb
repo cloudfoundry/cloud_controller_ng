@@ -270,6 +270,8 @@ module VCAP::CloudController
               password: 'password',
             },
           },
+
+          reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat'),
         }
       end
 
@@ -417,6 +419,11 @@ module VCAP::CloudController
 
         Config.configure_components(@test_config)
         expect(dependency_locator.stager_client).to be_an_instance_of(VCAP::CloudController::Diego::StagerClient)
+      end
+
+      it 'sets up the reserved private domain' do
+        expect(PrivateDomain).to receive(:configure).with(@test_config[:reserved_private_domains])
+        Config.configure_components(@test_config)
       end
     end
   end
