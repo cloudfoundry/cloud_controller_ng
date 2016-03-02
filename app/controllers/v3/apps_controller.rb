@@ -27,7 +27,7 @@ class AppsV3Controller < ApplicationController
     paginated_result = if roles.admin?
                          AppListFetcher.new.fetch_all(pagination_options, message)
                        else
-                         VCAP::CloudController::AppListFetcher.new.fetch(pagination_options, message, allowed_space_guids)
+                         AppListFetcher.new.fetch(pagination_options, message, allowed_space_guids)
                        end
 
     render status: :ok, json: AppPresenter.new.present_json_list(paginated_result, message)
