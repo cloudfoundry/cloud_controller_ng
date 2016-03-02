@@ -1,5 +1,6 @@
 require 'queries/app_fetcher'
 require 'queries/task_list_fetcher'
+require 'queries/task_create_fetcher'
 require 'actions/task_create'
 require 'messages/task_create_message'
 require 'messages/tasks_list_message'
@@ -34,21 +35,15 @@ class TasksController < ApplicationController
 
   def create
     FeatureFlag.raise_unless_enabled!('task_creation') unless roles.admin?
-    message = TaskCreateMessage.new(params[:body])
+
+    message = TaskCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    app_guid = params[:guid]
-    app = AppModel.where(guid: app_guid).eager(:space, space: :organization).first
-    app_not_found! unless app
-    space = app.space
+    app, space, droplet = TaskCreateFetcher.new.fetch(app_guid: params[:app_guid], droplet_guid: message.droplet_guid)
 
-    app_not_found! unless can_read?(space.guid, space.organization.guid)
+    validate_parent_app_readable!(app: app)
     unauthorized! unless can_create?(space.guid)
-
-    if message.droplet_guid.present?
-      droplet = app.droplet_dataset.where(guid: message.droplet_guid).first
-      droplet_not_found! unless droplet
-    end
+    droplet_not_found! if message.requested?(:droplet_guid) && droplet.nil?
 
     task = TaskCreate.new(configuration).create(app, message, current_user.guid, current_user_email, droplet: droplet)
 

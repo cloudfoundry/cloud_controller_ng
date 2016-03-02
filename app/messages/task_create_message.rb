@@ -12,7 +12,7 @@ module VCAP::CloudController
     validates :memory_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
     validates :droplet_guid, guid: true, allow_nil: true
 
-    def self.create(body)
+    def self.create_from_http_request(body)
       TaskCreateMessage.new(body.symbolize_keys)
     end
 

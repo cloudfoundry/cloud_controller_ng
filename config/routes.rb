@@ -98,10 +98,10 @@ Rails.application.routes.draw do
   get '/tasks/:task_guid', to: 'tasks#show'
   put '/tasks/:task_guid/cancel', to: 'tasks#cancel'
 
-  post '/apps/:guid/tasks', to: 'tasks#create'
+  post '/apps/:app_guid/tasks', to: 'tasks#create'
   get '/apps/:app_guid/tasks', to: 'tasks#index'
   get '/apps/:app_guid/tasks/:task_guid', to: 'tasks#show'
-  put '/apps/:guid/tasks/:task_guid/cancel', to: 'tasks#cancel'
+  put '/apps/:app_guid/tasks/:task_guid/cancel', to: 'tasks#cancel'
 
   # service_bindings
   post '/service_bindings', to: 'service_bindings#create'

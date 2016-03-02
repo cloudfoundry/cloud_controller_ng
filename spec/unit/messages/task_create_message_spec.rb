@@ -3,7 +3,7 @@ require 'messages/task_create_message'
 
 module VCAP::CloudController
   describe TaskCreateMessage do
-    describe '.create' do
+    describe '.create_from_http_request' do
       let(:body) do
         {
           'name': 'mytask',
@@ -17,7 +17,7 @@ module VCAP::CloudController
       end
 
       it 'returns the correct TaskCreateMessage' do
-        message = TaskCreateMessage.create(body)
+        message = TaskCreateMessage.create_from_http_request(body)
 
         expect(message).to be_a(TaskCreateMessage)
         expect(message.name).to eq('mytask')
@@ -29,7 +29,7 @@ module VCAP::CloudController
       describe 'validations' do
         it 'validates that there are not excess fields' do
           body[:bogus] = 'field'
-          message = TaskCreateMessage.create(body)
+          message = TaskCreateMessage.create_from_http_request(body)
 
           expect(message).to_not be_valid
           expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
@@ -39,7 +39,7 @@ module VCAP::CloudController
           it 'can be nil' do
             body.delete 'droplet_guid'
 
-            message = TaskCreateMessage.create(body)
+            message = TaskCreateMessage.create_from_http_request(body)
 
             expect(message).to be_valid
           end
@@ -47,7 +47,7 @@ module VCAP::CloudController
           it 'must be a valid guid' do
             body[:droplet_guid] = 32913
 
-            message = TaskCreateMessage.create(body)
+            message = TaskCreateMessage.create_from_http_request(body)
 
             expect(message).to_not be_valid
           end
@@ -57,7 +57,7 @@ module VCAP::CloudController
           it 'can be nil' do
             body.delete 'memory_in_mb'
 
-            message = TaskCreateMessage.create(body)
+            message = TaskCreateMessage.create_from_http_request(body)
 
             expect(message).to be_valid
           end
@@ -65,7 +65,7 @@ module VCAP::CloudController
           it 'must be numerical' do
             body[:memory_in_mb] = 'trout'
 
-            message = TaskCreateMessage.create(body)
+            message = TaskCreateMessage.create_from_http_request(body)
 
             expect(message).to_not be_valid
             expect(message.errors.full_messages).to include('Memory in mb is not a number')
@@ -74,7 +74,7 @@ module VCAP::CloudController
           it 'may not have a floating point' do
             body[:memory_in_mb] = 4.5
 
-            message = TaskCreateMessage.create(body)
+            message = TaskCreateMessage.create_from_http_request(body)
 
             expect(message).to_not be_valid
             expect(message.errors.full_messages).to include('Memory in mb must be an integer')
@@ -83,7 +83,7 @@ module VCAP::CloudController
           it 'may not be negative' do
             body[:memory_in_mb] = -1
 
-            message = TaskCreateMessage.create(body)
+            message = TaskCreateMessage.create_from_http_request(body)
 
             expect(message).to_not be_valid
             expect(message.errors.full_messages).to include('Memory in mb must be greater than 0')
@@ -92,7 +92,7 @@ module VCAP::CloudController
           it 'may not be zero' do
             body[:memory_in_mb] = 0
 
-            message = TaskCreateMessage.create(body)
+            message = TaskCreateMessage.create_from_http_request(body)
 
             expect(message).to_not be_valid
             expect(message.errors.full_messages).to include('Memory in mb must be greater than 0')

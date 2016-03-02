@@ -52,7 +52,7 @@ describe TasksController, type: :controller do
     end
 
     it 'returns a 202 and the task' do
-      post :create, guid: app_model.guid, body: req_body
+      post :create, app_guid: app_model.guid, body: req_body
 
       expect(response.status).to eq 202
       expect(parsed_body['name']).to eq('mytask')
@@ -63,7 +63,7 @@ describe TasksController, type: :controller do
     it 'creates a task for the app' do
       expect(app_model.tasks.count).to eq(0)
 
-      post :create, guid: app_model.guid, body: req_body
+      post :create, app_guid: app_model.guid, body: req_body
 
       expect(app_model.reload.tasks.count).to eq(1)
       expect(app_model.tasks.first).to eq(VCAP::CloudController::TaskModel.last)
@@ -78,7 +78,7 @@ describe TasksController, type: :controller do
       allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(user_double)
       allow(VCAP::CloudController::SecurityContext).to receive(:current_user_email).and_return('user-email')
 
-      post :create, guid: app_model.guid, body: req_body
+      post :create, app_guid: app_model.guid, body: req_body
 
       expect(task_create).to have_received(:create).with(anything, anything, 'user-guid', 'user-email', droplet: nil)
     end
@@ -88,7 +88,7 @@ describe TasksController, type: :controller do
         let(:tasks_enabled) { false }
 
         it 'raises 403 for non-admins' do
-          post :create, guid: app_model.guid, body: req_body
+          post :create, app_guid: app_model.guid, body: req_body
 
           expect(response.status).to eq(403)
           expect(response.body).to include('FeatureDisabled')
@@ -97,7 +97,7 @@ describe TasksController, type: :controller do
 
         it 'succeeds for admins' do
           @request.env.merge!(admin_headers)
-          post :create, guid: app_model.guid, body: req_body
+          post :create, app_guid: app_model.guid, body: req_body
 
           expect(response.status).to eq(202)
         end
@@ -109,7 +109,7 @@ describe TasksController, type: :controller do
         end
 
         it 'raises 403' do
-          post :create, guid: app_model.guid, body: req_body
+          post :create, app_guid: app_model.guid, body: req_body
 
           expect(response.status).to eq(403)
           expect(response.body).to include 'NotAuthorized'
@@ -128,7 +128,7 @@ describe TasksController, type: :controller do
         end
 
         it 'returns a 403 unauthorized' do
-          post :create, guid: app_model.guid, body: req_body
+          post :create, app_guid: app_model.guid, body: req_body
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'
@@ -145,7 +145,7 @@ describe TasksController, type: :controller do
         end
 
         it 'returns a 404 ResourceNotFound' do
-          post :create, guid: app_model.guid, body: req_body
+          post :create, app_guid: app_model.guid, body: req_body
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -155,7 +155,7 @@ describe TasksController, type: :controller do
 
     context 'when the app does not exist' do
       it 'returns a 404 ResourceNotFound' do
-        post :create, guid: 'bogus', body: req_body
+        post :create, app_guid: 'bogus', body: req_body
 
         expect(response.status).to eq 404
         expect(response.body).to include 'ResourceNotFound'
@@ -167,7 +167,7 @@ describe TasksController, type: :controller do
       it 'returns a 400 and a helpful error' do
         req_body[:invalid] = 'field'
 
-        post :create, guid: app_model.guid, body: req_body
+        post :create, app_guid: app_model.guid, body: req_body
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -180,7 +180,7 @@ describe TasksController, type: :controller do
         stub_const('VCAP::CloudController::TaskModel::COMMAND_MAX_LENGTH', 6)
         req_body[:command] = 'a' * 7
 
-        post :create, guid: app_model.guid, body: req_body
+        post :create, app_guid: app_model.guid, body: req_body
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -190,7 +190,7 @@ describe TasksController, type: :controller do
 
     context 'invalid task' do
       it 'returns a useful error message' do
-        post :create, guid: app_model.guid, body: {}
+        post :create, app_guid: app_model.guid, body: {}
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -200,7 +200,7 @@ describe TasksController, type: :controller do
     describe 'droplets' do
       context 'when a droplet guid is not provided' do
         it "successfully creates the task on the app's droplet" do
-          post :create, guid: app_model.guid, body: req_body
+          post :create, app_guid: app_model.guid, body: req_body
 
           expect(response.status).to eq(202)
           expect(parsed_body['droplet_guid']).to include(droplet.guid)
@@ -210,7 +210,7 @@ describe TasksController, type: :controller do
           let(:droplet) { nil }
 
           it 'returns a 422 and a helpful error' do
-            post :create, guid: app_model.guid, body: req_body
+            post :create, app_guid: app_model.guid, body: req_body
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -226,9 +226,7 @@ describe TasksController, type: :controller do
         }
 
         it 'successfully creates a task on the specifed droplet' do
-          app_model.droplet = custom_droplet
-          app_model.save
-          post :create, guid: app_model.guid, body: {
+          post :create, app_guid: app_model.guid, body: {
             "name": 'mytask',
             "command": 'rake db:migrate && true',
             "droplet_guid": custom_droplet.guid
@@ -241,7 +239,7 @@ describe TasksController, type: :controller do
 
         context 'and the droplet is not found' do
           it 'returns a 404' do
-            post :create, guid: app_model.guid, body: {
+            post :create, app_guid: app_model.guid, body: {
               "name": 'mytask',
               "command": 'rake db:migrate && true',
               "droplet_guid": 'fake-droplet-guid'
@@ -257,7 +255,7 @@ describe TasksController, type: :controller do
           let(:custom_droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
 
           it 'returns a 404' do
-            post :create, guid: app_model.guid, body: {
+            post :create, app_guid: app_model.guid, body: {
               "name": 'mytask',
               "command": 'rake db:migrate && true',
               "droplet_guid": custom_droplet.guid
