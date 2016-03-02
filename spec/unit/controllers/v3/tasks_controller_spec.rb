@@ -350,9 +350,9 @@ describe TasksController, type: :controller do
     before do
       allow(membership).to receive(:space_guids_for_roles).with(
         [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-          VCAP::CloudController::Membership::SPACE_MANAGER,
-          VCAP::CloudController::Membership::SPACE_AUDITOR,
-          VCAP::CloudController::Membership::ORG_MANAGER
+         VCAP::CloudController::Membership::SPACE_MANAGER,
+         VCAP::CloudController::Membership::SPACE_AUDITOR,
+         VCAP::CloudController::Membership::ORG_MANAGER
         ]).and_return([space.guid])
 
       @request.env.merge!(headers_for(VCAP::CloudController::User.make))

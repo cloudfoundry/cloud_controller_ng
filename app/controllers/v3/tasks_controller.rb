@@ -28,11 +28,11 @@ class TasksController < ApplicationController
       base_url = "/v3/apps/#{app_guid}/tasks"
       paginated_result = fetcher.fetch_for_app(pagination_options: pagination_options, message: message, app_guid: app_guid)
     else
-      if roles.admin?
-        paginated_result = fetcher.fetch_all(pagination_options: pagination_options, message: message)
-      else
-        paginated_result = fetcher.fetch_for_spaces(pagination_options: pagination_options, message: message, space_guids: readable_space_guids)
-      end
+      paginated_result = if roles.admin?
+                           fetcher.fetch_all(pagination_options: pagination_options, message: message)
+                         else
+                           fetcher.fetch_for_spaces(pagination_options: pagination_options, message: message, space_guids: readable_space_guids)
+                         end
       base_url = '/v3/tasks'
     end
 
