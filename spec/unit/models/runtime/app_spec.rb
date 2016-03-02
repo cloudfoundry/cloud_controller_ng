@@ -2323,8 +2323,9 @@ module VCAP::CloudController
         end
         let(:app) { AppFactory.make(app_hash) }
         let(:route) { Route.make(host: 'host', space: app.space) }
+        let(:route2) { Route.make(host: 'host', space: app.space) }
         let!(:route_mapping_1) { RouteMapping.make(app: app, route: route) }
-        let!(:route_mapping_2) { RouteMapping.make(app: app, route: route) }
+        let!(:route_mapping_2) { RouteMapping.make(app: app, route: route2) }
 
         before do
           app.diego = false

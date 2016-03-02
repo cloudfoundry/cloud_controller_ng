@@ -22,11 +22,21 @@ module VCAP::CloudController
     end
 
     def validate
-      if self.app_port && !app.diego
+      validates_presence :app
+      validates_presence :route
+
+      if self.app_port && app && !app.diego
         errors.add(:app_port, :diego_only)
-      elsif app.diego && self.app_port && !app.ports.include?(self.app_port)
+      elsif app && app.diego && self.app_port && !app.ports.include?(self.app_port)
         errors.add(:app_port, :not_bound_to_app)
       end
+
+      if app && app.diego
+        validates_unique [:app_id, :route_id, :app_port]
+      else
+        validates_unique [:app_id, :route_id]
+      end
+
       super
     end
 

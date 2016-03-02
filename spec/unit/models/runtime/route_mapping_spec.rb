@@ -1,5 +1,4 @@
 require 'spec_helper'
-
 module VCAP::CloudController
   describe VCAP::CloudController::RouteMapping, type: :model do
     let(:mapping) { RouteMapping.new }
@@ -21,6 +20,42 @@ module VCAP::CloudController
 
       let(:space_b) { Space.make(organization: org) }
       let(:domain_b) { PrivateDomain.make(owning_organization: org) }
+
+      let(:route) { Route.make(space: space) }
+
+      it { is_expected.to validate_presence :app }
+      it { is_expected.to validate_presence :route }
+
+      context 'when the app is a diego app' do
+        let(:app) { AppFactory.make(diego: true, space: space, ports: [1111, 2222]) }
+
+        it 'validates uniqueness of route, app, and app_port' do
+          RouteMapping.make(app: app, route: route)
+
+          invalid_mapping = RouteMapping.new(app: app, route: route)
+          expect(invalid_mapping).not_to be_valid
+          expect(invalid_mapping.errors.on([:app_id, :route_id, :app_port])).to include :unique
+        end
+
+        it 'allows the same route and app but different app_ports' do
+          RouteMapping.make(app: app, route: route, app_port: 1111)
+
+          valid_mapping = RouteMapping.new(app: app, route: route, app_port: 2222)
+          expect(valid_mapping).to be_valid
+        end
+      end
+
+      context 'when the app is a DEA app' do
+        let(:app) { AppFactory.make(diego: false, space: space) }
+
+        it 'validates uniqueness of route and app' do
+          RouteMapping.make(app: app, route: route)
+
+          invalid_mapping = RouteMapping.new(app: app, route: route)
+          expect(invalid_mapping).not_to be_valid
+          expect(invalid_mapping.errors.on([:app_id, :route_id])).to include :unique
+        end
+      end
 
       it 'should not associate with apps and routes from a different space' do
         route = Route.make(space: space_b, domain: domain_a)
