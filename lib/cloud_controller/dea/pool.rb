@@ -25,7 +25,6 @@ module VCAP::CloudController
         advertisement = NatsMessages::DeaAdvertisement.new(message, Time.now.utc.to_i + @advertise_timeout)
 
         mutex.synchronize do
-          @dea_advertisements.delete(advertisement.dea_id)
           @dea_advertisements[advertisement.dea_id] = advertisement
         end
       end
@@ -95,7 +94,7 @@ module VCAP::CloudController
       end
 
       def top_n_stagers_for(memory, disk, stack)
-        @dea_advertisements.dup.select { |id, ad|
+        @dea_advertisements.select { |id, ad|
           ad.meets_needs?(memory, stack) && ad.has_sufficient_disk?(disk)
         }.sort_by { |id, ad|
           ad.available_memory
