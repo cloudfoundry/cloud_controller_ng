@@ -27,7 +27,7 @@ class TasksController < ApplicationController
       base_url = '/v3/tasks'
     end
 
-    paginated_result = TaskListFetcher.new.fetch(pagination_options, indexing_space_guids, app_guid)
+    paginated_result = TaskListFetcher.new.fetch(pagination_options, message, indexing_space_guids, app_guid)
 
     render :ok, json: TaskPresenter.new.present_json_list(paginated_result, base_url, message)
   end

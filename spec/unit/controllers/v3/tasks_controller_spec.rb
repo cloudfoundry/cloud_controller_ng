@@ -384,7 +384,7 @@ describe TasksController, type: :controller do
 
         get :index, app_guid: app_model.guid
 
-        expect(task_list_fetcher).to have_received(:fetch) do |_, _, app_guid|
+        expect(task_list_fetcher).to have_received(:fetch) do |_, _, _, app_guid|
           expect(app_guid).to eq(app_model.guid)
         end
         expect(response.status).to eq(200)
