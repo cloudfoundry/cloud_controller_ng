@@ -18,4 +18,8 @@ module AppSubresource
     roles.admin? ||
       membership.has_any_roles?(ROLES_FOR_READING, space_guid, org_guid)
   end
+
+  def readable_space_guids
+    membership.space_guids_for_roles(ROLES_FOR_READING)
+  end
 end

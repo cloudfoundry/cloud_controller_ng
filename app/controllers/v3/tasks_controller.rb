@@ -19,15 +19,22 @@ class TasksController < ApplicationController
     pagination_options = PaginationOptions.from_params(query_params)
     invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
+    paginated_result = nil
+    fetcher = TaskListFetcher.new
+
     if app_guid
       app, space, org = AppFetcher.new.fetch(app_guid)
       app_not_found! unless app && can_read?(space.guid, org.guid)
       base_url = "/v3/apps/#{app_guid}/tasks"
+      paginated_result = fetcher.fetch_for_app(pagination_options: pagination_options, message: message, app_guid: app_guid)
     else
+      if roles.admin?
+        paginated_result = fetcher.fetch_all(pagination_options: pagination_options, message: message)
+      else
+        paginated_result = fetcher.fetch_for_spaces(pagination_options: pagination_options, message: message, space_guids: readable_space_guids)
+      end
       base_url = '/v3/tasks'
     end
-
-    paginated_result = TaskListFetcher.new.fetch(pagination_options, message, indexing_space_guids, app_guid)
 
     render :ok, json: TaskPresenter.new.present_json_list(paginated_result, base_url, message)
   end

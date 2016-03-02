@@ -350,8 +350,10 @@ describe TasksController, type: :controller do
     before do
       allow(membership).to receive(:space_guids_for_roles).with(
         [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-         VCAP::CloudController::Membership::SPACE_MANAGER,
-         VCAP::CloudController::Membership::SPACE_AUDITOR]).and_return([space.guid])
+          VCAP::CloudController::Membership::SPACE_MANAGER,
+          VCAP::CloudController::Membership::SPACE_AUDITOR,
+          VCAP::CloudController::Membership::ORG_MANAGER
+        ]).and_return([space.guid])
 
       @request.env.merge!(headers_for(VCAP::CloudController::User.make))
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
@@ -378,16 +380,15 @@ describe TasksController, type: :controller do
 
     context 'when an app is specified' do
       it 'uses the app as a filter' do
-        task_list_fetcher = VCAP::CloudController::TaskListFetcher.new
-        allow(VCAP::CloudController::TaskListFetcher).to receive(:new).and_return(task_list_fetcher)
-        allow(task_list_fetcher).to receive(:fetch).and_call_original
+        task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
+        task_2 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
+        VCAP::CloudController::TaskModel.make
 
         get :index, app_guid: app_model.guid
 
-        expect(task_list_fetcher).to have_received(:fetch) do |_, _, _, app_guid|
-          expect(app_guid).to eq(app_model.guid)
-        end
         expect(response.status).to eq(200)
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response_guids).to match_array([task_1.guid, task_2.guid])
       end
 
       it 'provides the correct base url in the pagination links' do
@@ -428,7 +429,7 @@ describe TasksController, type: :controller do
         @request.env.merge!(admin_headers)
       end
 
-      it 'returns a 200 and all tasks belonging to the app' do
+      it 'returns a 200 and all tasks' do
         task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
         task_2 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
         task_3 = VCAP::CloudController::TaskModel.make

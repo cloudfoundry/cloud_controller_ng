@@ -27,43 +27,21 @@ module VCAP::CloudController
 
     results = nil
 
-    describe '#fetch' do
+    describe '#fetch_all' do
       it 'returns a PaginatedResult' do
-        results = fetcher.fetch(pagination_options, message, nil, nil)
+        results = fetcher.fetch_all(pagination_options: pagination_options, message: message)
         expect(results).to be_a(PaginatedResult)
       end
 
       it 'returns all of the tasks' do
-        results = fetcher.fetch(pagination_options, message, nil, nil).records
+        results = fetcher.fetch_all(pagination_options: pagination_options, message: message).records
 
         expect(results).to match_array([task_in_space1, task_for_app2, task2_in_space1, task_in_space2, failed_task_in_space2, task_in_org2])
       end
 
-      describe 'filtering by space' do
-        it 'only returns tasks in those spaces' do
-          results = fetcher.fetch(pagination_options, message, [space1.guid], nil).records
-
-          expect(results).to match_array([task_in_space1, task2_in_space1, task_for_app2])
-        end
-      end
-
-      describe 'filtering by app' do
-        it 'only returns tasks for that app' do
-          results = fetcher.fetch(pagination_options, message, nil, app_in_space1.guid).records
-
-          expect(results).to match_array([task_in_space1, task2_in_space1])
-        end
-      end
-
-      it 'can filter by spaces and app' do
-        results = fetcher.fetch(pagination_options, message, [space1.guid], app_in_space1.guid).records
-
-        expect(results).to match_array([task_in_space1, task2_in_space1])
-      end
-
       describe 'filtering on message' do
         before do
-          results = fetcher.fetch(pagination_options, message, nil, nil).records
+          results = fetcher.fetch_all(pagination_options: pagination_options, message: message).records
         end
 
         context 'when task names are provided' do
@@ -111,6 +89,145 @@ module VCAP::CloudController
 
           it 'returns the correct set of tasks' do
             expect(results).to match_array([task_in_org2])
+          end
+        end
+      end
+    end
+
+    describe '#fetch_for_spaces' do
+      it 'returns a PaginatedResult' do
+        results = fetcher.fetch_for_spaces(pagination_options: pagination_options, message: message, space_guids: [])
+        expect(results).to be_a(PaginatedResult)
+      end
+
+      it 'only returns tasks in those spaces' do
+        results = fetcher.fetch_for_spaces(pagination_options: pagination_options, message: message, space_guids: [space1.guid, space2.guid]).records
+
+        expect(results).to match_array([
+          task_in_space1,
+          task2_in_space1,
+          task_for_app2,
+          task_in_space2,
+          failed_task_in_space2
+        ])
+      end
+
+      describe 'filtering on message' do
+        before do
+          results = fetcher.fetch_for_spaces(pagination_options: pagination_options, message: message, space_guids: [space2.guid]).records
+        end
+
+        context 'when task names are provided' do
+          let(:filters) { { names: [task_in_space1.name, task_in_space2.name] } }
+
+          it 'returns the correct set of tasks' do
+            expect(results).to match_array([task_in_space2])
+          end
+        end
+
+        context 'when task states are provided' do
+          let(:filters) { { states: ['FAILED'] } }
+
+          it 'returns the correct set of tasks' do
+            expect(results).to match_array([failed_task_in_space2])
+          end
+        end
+
+        context 'when task guids are provided' do
+          let(:filters) { { guids: [task_in_space1.guid, task_in_space2.guid] } }
+
+          it 'returns the correct set of tasks' do
+            expect(results).to match_array([task_in_space2])
+          end
+        end
+
+        context 'when app guids are provided' do
+          let(:filters) { { app_guids: [app2_in_space1.guid, app_in_space2.guid] } }
+
+          it 'returns the correct set of tasks' do
+            expect(results).to match_array([failed_task_in_space2, task_in_space2])
+          end
+        end
+
+        context 'when space guids are provided' do
+          let(:filters) { { space_guids: [space2.guid] } }
+
+          it 'returns the correct set of tasks' do
+            expect(results).to match_array([failed_task_in_space2, task_in_space2])
+          end
+        end
+
+        context 'when org guids are provided' do
+          let(:filters) { { organization_guids: [org2.guid] } }
+
+          it 'returns the correct set of tasks' do
+            expect(results).to match_array([])
+          end
+        end
+      end
+    end
+
+    describe '#fetch_for_app' do
+      it 'returns a PaginatedResult' do
+        results = fetcher.fetch_for_app(pagination_options: pagination_options, message: message, app_guid: app_in_space1.guid)
+        expect(results).to be_a(PaginatedResult)
+      end
+
+      it 'only returns tasks for that app' do
+        results = fetcher.fetch_for_app(pagination_options: pagination_options, message: message, app_guid: app_in_space1.guid).records
+        expect(results).to match_array([task_in_space1, task2_in_space1])
+      end
+
+      describe 'filtering on message' do
+        before do
+          results = fetcher.fetch_for_app(pagination_options: pagination_options, message: message, app_guid: app_in_space1.guid).records
+        end
+
+        context 'when task names are provided' do
+          let(:filters) { { names: [task_in_space1.name, task_in_space2.name] } }
+
+          it 'returns the correct set of tasks' do
+            expect(results).to match_array([task_in_space1])
+          end
+        end
+
+        context 'when task states are provided' do
+          let(:filters) { { states: ['FAILED'] } }
+
+          it 'returns the correct set of tasks' do
+            expect(results).to match_array([])
+          end
+        end
+
+        context 'when task guids are provided' do
+          let(:filters) { { guids: [task_in_space1.guid, task_in_space2.guid] } }
+
+          it 'returns the correct set of tasks' do
+            expect(results).to match_array([task_in_space1])
+          end
+        end
+
+        context 'when app guids are provided' do
+          let(:filters) { { app_guids: [app2_in_space1.guid, app_in_space2.guid] } }
+
+          it 'returns the correct set of tasks' do
+            expect(results).to match_array([])
+          end
+        end
+
+        context 'when space guids are provided' do
+          let(:filters) { { space_guids: [space2.guid] } }
+
+          it 'returns the correct set of tasks' do
+            expect(results).to match_array([])
+          end
+        end
+
+        context 'when org guids are provided' do
+          let(:filters) { { organization_guids: [org2.guid] } }
+
+          it 'returns the correct set of tasks' do
+            expect(results).to match_array([])
           end
         end
       end
