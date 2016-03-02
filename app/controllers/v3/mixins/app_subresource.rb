@@ -35,16 +35,4 @@ module AppSubresource
   def app_nested?
     params[:app_guid].present?
   end
-
-  def validate_parent_app_readable!(app: nil)
-    if app
-      app   = app
-      space = app.space
-      org   = app.organization
-    else
-      app, space, org = VCAP::CloudController::AppFetcher.new.fetch(params[:app_guid])
-    end
-
-    app_not_found! unless app && can_read?(space.guid, org.guid)
-  end
 end

@@ -483,6 +483,42 @@ describe TasksController, type: :controller do
       expect(parsed_body['guid']).to eq(task.guid)
     end
 
+    context 'when accessed as an app subresource' do
+      it 'uses the app as a filter' do
+        put :cancel, task_guid: task.guid, app_guid: app_model.guid
+
+        expect(response.status).to eq 202
+        expect(parsed_body['name']).to eq('usher')
+        expect(parsed_body['guid']).to eq(task.guid)
+      end
+
+      context 'the app does not exist' do
+        it 'returns a 404 Resource Not Found' do
+          put :cancel, task_guid: task.guid, app_guid: 'not-real'
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+        end
+      end
+
+      context 'when the user does not have permissions to read the app' do
+        before do
+          allow(membership).to receive(:has_any_roles?).with(
+            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+             VCAP::CloudController::Membership::SPACE_MANAGER,
+             VCAP::CloudController::Membership::SPACE_AUDITOR,
+             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        end
+
+        it 'returns a 404 Resource Not Found error' do
+          put :cancel, task_guid: task.guid, app_guid: app_model.guid
+
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.status).to eq 404
+        end
+      end
+    end
+
     context 'when the task does not exist' do
       it 'returns a 404 ResourceNotFound' do
         put :cancel, task_guid: 'bogus-guid'

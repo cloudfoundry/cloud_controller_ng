@@ -1,6 +1,7 @@
 require 'queries/app_fetcher'
 require 'queries/task_list_fetcher'
 require 'queries/task_create_fetcher'
+require 'queries/task_cancel_fetcher'
 require 'actions/task_create'
 require 'messages/task_create_message'
 require 'messages/tasks_list_message'
@@ -20,7 +21,8 @@ class TasksController < ApplicationController
     invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
     if app_nested?
-      validate_parent_app_readable!
+      app, space, org = VCAP::CloudController::AppFetcher.new.fetch(params[:app_guid])
+      app_not_found! unless app && can_read?(space.guid, org.guid)
       paginated_result = list_fetcher.fetch_for_app(pagination_options: pagination_options, message: message, app_guid: params[:app_guid])
     else
       paginated_result = if roles.admin?
@@ -39,9 +41,9 @@ class TasksController < ApplicationController
     message = TaskCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    app, space, droplet = TaskCreateFetcher.new.fetch(app_guid: params[:app_guid], droplet_guid: message.droplet_guid)
+    app, space, org, droplet = TaskCreateFetcher.new.fetch(app_guid: params[:app_guid], droplet_guid: message.droplet_guid)
 
-    validate_parent_app_readable!(app: app)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_create?(space.guid)
     droplet_not_found! if message.requested?(:droplet_guid) && droplet.nil?
 
@@ -53,14 +55,16 @@ class TasksController < ApplicationController
   end
 
   def cancel
-    query_options = { guid: params[:task_guid] }
-    if params[:app_guid].present?
-      query_options[:app_id] = AppModel.select(:id).where(guid: params[:app_guid])
+    if app_nested?
+      task, app, space, org = TaskCancelFetcher.new.fetch_for_app(task_guid: params[:task_guid], app_guid: params[:app_guid])
+      app_not_found! unless app
+    else
+      task, space, org = TaskCancelFetcher.new.fetch(task_guid: params[:task_guid])
     end
-    task = TaskModel.where(query_options).eager(:space, space: :organization).first
 
-    task_not_found! unless task && can_read?(task.space.guid, task.space.organization.guid)
-    unauthorized! unless can_cancel?(task.space.guid)
+    task_not_found! unless task && can_read?(space.guid, org.guid)
+    unauthorized! unless can_cancel?(space.guid)
+
     if task.state == TaskModel::SUCCEEDED_STATE || task.state == TaskModel::FAILED_STATE
       invalid_task_request!("Task state is #{task.state} and therefore cannot be canceled")
     end
@@ -82,15 +86,6 @@ class TasksController < ApplicationController
   end
 
   private
-
-  def indexing_space_guids
-    unless roles.admin?
-      membership.space_guids_for_roles(
-        [Membership::SPACE_DEVELOPER,
-         Membership::SPACE_MANAGER,
-         Membership::SPACE_AUDITOR])
-    end
-  end
 
   def task_not_found!
     resource_not_found!(:task)
