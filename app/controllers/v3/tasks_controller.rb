@@ -12,31 +12,24 @@ class TasksController < ApplicationController
   include AppSubresource
 
   def index
-    app_guid = params[:app_guid]
     message = TasksListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     pagination_options = PaginationOptions.from_params(query_params)
     invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
-    paginated_result = nil
-    fetcher = TaskListFetcher.new
-
-    if app_guid
-      app, space, org = AppFetcher.new.fetch(app_guid)
-      app_not_found! unless app && can_read?(space.guid, org.guid)
-      base_url = "/v3/apps/#{app_guid}/tasks"
-      paginated_result = fetcher.fetch_for_app(pagination_options: pagination_options, message: message, app_guid: app_guid)
+    if app_nested?
+      validate_parent_app_readable!
+      paginated_result = list_fetcher.fetch_for_app(pagination_options: pagination_options, message: message, app_guid: params[:app_guid])
     else
       paginated_result = if roles.admin?
-                           fetcher.fetch_all(pagination_options: pagination_options, message: message)
+                           list_fetcher.fetch_all(pagination_options: pagination_options, message: message)
                          else
-                           fetcher.fetch_for_spaces(pagination_options: pagination_options, message: message, space_guids: readable_space_guids)
+                           list_fetcher.fetch_for_spaces(pagination_options: pagination_options, message: message, space_guids: readable_space_guids)
                          end
-      base_url = '/v3/tasks'
     end
 
-    render :ok, json: TaskPresenter.new.present_json_list(paginated_result, base_url, message)
+    render :ok, json: TaskPresenter.new.present_json_list(paginated_result, base_url(resource: 'tasks'), message)
   end
 
   def create
@@ -120,4 +113,8 @@ class TasksController < ApplicationController
     roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
   end
   alias_method :can_cancel?, :can_create?
+
+  def list_fetcher
+    @list_fetcher ||= TaskListFetcher.new
+  end
 end
