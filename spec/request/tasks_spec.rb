@@ -128,6 +128,86 @@ describe 'Tasks' do
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
+
+    describe 'filtering' do
+      it 'returns a paginated list of tasks' do
+        task1 = VCAP::CloudController::TaskModel.make(
+          name:                  'task one',
+          command:               'echo task',
+          app_guid:              app_model.guid,
+          droplet:               app_model.droplet,
+          environment_variables: { unicorn: 'magic' },
+          memory_in_mb:          5,
+          state:                 VCAP::CloudController::TaskModel::SUCCEEDED_STATE,
+        )
+        VCAP::CloudController::TaskModel.make(
+          name:         'task two',
+          command:      'echo task',
+          app_guid:     app_model.guid,
+          droplet:      app_model.droplet,
+          memory_in_mb: 100,
+        )
+        VCAP::CloudController::TaskModel.make(
+          app_guid: app_model.guid,
+          droplet:  app_model.droplet,
+        )
+
+        query = {
+          app_guids:          app_model.guid,
+          names:              'task one',
+          organization_guids: app_model.organization.guid,
+          space_guids:        app_model.space.guid,
+          states:             'SUCCEEDED'
+        }
+
+        get "/v3/tasks?#{query.to_query}", nil, developer_headers
+
+        expected_query    = "app_guids=#{app_model.guid}&names=task+one&organization_guids=#{app_model.organization.guid}" \
+                            "&page=1&per_page=50&space_guids=#{app_model.space.guid}&states=SUCCEEDED"
+        expected_response =
+          {
+            'pagination' => {
+              'total_results' => 1,
+              'first'         => { 'href' => "/v3/tasks?#{expected_query}" },
+              'last'          => { 'href' => "/v3/tasks?#{expected_query}" },
+              'next'          => nil,
+              'previous'      => nil,
+            },
+            'resources' => [
+              {
+                'guid'                  => task1.guid,
+                'name'                  => 'task one',
+                'command'               => 'echo task',
+                'state'                 => 'SUCCEEDED',
+                'memory_in_mb'          => 5,
+                'environment_variables' => { 'unicorn' => 'magic' },
+                'result'                => {
+                  'failure_reason' => nil
+                },
+                'droplet_guid'          => task1.droplet.guid,
+                'created_at'            => iso8601,
+                'updated_at'            => nil,
+                'links'                 => {
+                  'self' => {
+                    'href' => "/v3/tasks/#{task1.guid}"
+                  },
+                  'app' => {
+                    'href' => "/v3/apps/#{app_model.guid}"
+                  },
+                  'droplet' => {
+                    'href' => "/v3/droplets/#{app_model.droplet.guid}"
+                  }
+                }
+              }
+            ]
+          }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
+    end
   end
 
   describe 'GET /v3/tasks/:guid' do
@@ -288,6 +368,86 @@ describe 'Tasks' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    describe 'filtering' do
+      it 'returns a paginated list of tasks' do
+        task1 = VCAP::CloudController::TaskModel.make(
+          name:                  'task one',
+          command:               'echo task',
+          app_guid:              app_model.guid,
+          droplet:               app_model.droplet,
+          environment_variables: { unicorn: 'magic' },
+          memory_in_mb:          5,
+          state:                 VCAP::CloudController::TaskModel::SUCCEEDED_STATE,
+        )
+        VCAP::CloudController::TaskModel.make(
+          name:         'task two',
+          command:      'echo task',
+          app_guid:     app_model.guid,
+          droplet:      app_model.droplet,
+          memory_in_mb: 100,
+        )
+        VCAP::CloudController::TaskModel.make(
+          app_guid: app_model.guid,
+          droplet:  app_model.droplet,
+        )
+
+        query = {
+          app_guids:          app_model.guid,
+          names:              'task one',
+          organization_guids: app_model.organization.guid,
+          space_guids:        app_model.space.guid,
+          states:             'SUCCEEDED'
+        }
+
+        get "/v3/tasks?#{query.to_query}", nil, developer_headers
+
+        expected_query    = "app_guids=#{app_model.guid}&names=task+one&organization_guids=#{app_model.organization.guid}" \
+                            "&page=1&per_page=50&space_guids=#{app_model.space.guid}&states=SUCCEEDED"
+        expected_response =
+          {
+            'pagination' => {
+              'total_results' => 1,
+              'first'         => { 'href' => "/v3/tasks?#{expected_query}" },
+              'last'          => { 'href' => "/v3/tasks?#{expected_query}" },
+              'next'          => nil,
+              'previous'      => nil,
+            },
+            'resources' => [
+              {
+                'guid'                  => task1.guid,
+                'name'                  => 'task one',
+                'command'               => 'echo task',
+                'state'                 => 'SUCCEEDED',
+                'memory_in_mb'          => 5,
+                'environment_variables' => { 'unicorn' => 'magic' },
+                'result'                => {
+                  'failure_reason' => nil
+                },
+                'droplet_guid'          => task1.droplet.guid,
+                'created_at'            => iso8601,
+                'updated_at'            => nil,
+                'links'                 => {
+                  'self' => {
+                    'href' => "/v3/tasks/#{task1.guid}"
+                  },
+                  'app' => {
+                    'href' => "/v3/apps/#{app_model.guid}"
+                  },
+                  'droplet' => {
+                    'href' => "/v3/droplets/#{app_model.droplet.guid}"
+                  }
+                }
+              }
+            ]
+          }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
     end
   end
 
