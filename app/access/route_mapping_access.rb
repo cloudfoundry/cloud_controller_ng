@@ -6,6 +6,14 @@ module VCAP::CloudController
       route_mapping.route.space.has_developer?(context.user)
     end
 
+    def read_for_update?(route_mapping, params=nil)
+      create?(route_mapping)
+    end
+
+    def update?(route_mapping, params=nil)
+      read_for_update?(route_mapping, params)
+    end
+
     def delete?(route_mapping)
       create?(route_mapping)
     end

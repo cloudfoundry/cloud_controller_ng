@@ -365,6 +365,49 @@ module VCAP::CloudController
         end
       end
 
+      describe 'PUT /v2/route_mappings/:guid' do
+        let(:route) { Route.make }
+        let(:app_obj) { AppFactory.make(space: space, ports: [8080, 9090], diego: true) }
+        let(:space) { route.space }
+        let(:route_mapping) { RouteMapping.make(app_guid: app_obj.guid, route_guid: route.guid) }
+        let(:space_developer) { make_developer_for_space(space) }
+
+        context 'as SpaceDeveloper' do
+          it 'returns 201' do
+            put "/v2/route_mappings/#{route_mapping.guid}", '{ "app_port": 9090 }', headers_for(space_developer)
+            expect(last_response).to have_status_code(201)
+          end
+        end
+
+        context 'as SpaceDeveloper for another space' do
+          let(:space2) { Space.make }
+          let(:space_developer2) { make_developer_for_space(space2) }
+
+          it 'returns 403' do
+            put "/v2/route_mappings/#{route_mapping.guid}", '{ "app_port": 9090 }', headers_for(space_developer2)
+            expect(last_response).to have_status_code(403)
+          end
+        end
+
+        context 'when updating app_guid and route_guid' do
+          let(:body) do
+            {
+                app_port: 9090,
+                app_guid: '123',
+                route_guid: '456'
+            }.to_json
+          end
+
+          it 'does not update non-updatable fields' do
+            put "/v2/route_mappings/#{route_mapping.guid}", body, headers_for(space_developer)
+            expect(last_response).to have_status_code(201)
+            expect(decoded_response['entity']['app_port']).to eq 9090
+            expect(decoded_response['entity']['app_guid']).to eq app_obj.guid
+            expect(decoded_response['entity']['route_guid']).to eq route.guid
+          end
+        end
+      end
+
       describe 'DELETE /v2/route_mappings/:guid' do
         let(:route) { Route.make }
         let(:app_obj) { AppFactory.make(space: space) }
