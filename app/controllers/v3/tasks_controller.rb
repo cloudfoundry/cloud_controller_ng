@@ -3,12 +3,11 @@ require 'queries/task_list_fetcher'
 require 'queries/task_create_fetcher'
 require 'queries/task_cancel_fetcher'
 require 'actions/task_create'
+require 'actions/task_cancel'
 require 'messages/task_create_message'
 require 'messages/tasks_list_message'
 require 'presenters/v3/task_presenter'
 require 'controllers/v3/mixins/app_subresource'
-require 'cloud_controller/diego/nsync_client'
-require 'actions/task_cancel'
 
 class TasksController < ApplicationController
   include AppSubresource
@@ -65,13 +64,11 @@ class TasksController < ApplicationController
     task_not_found! unless task && can_read?(space.guid, org.guid)
     unauthorized! unless can_cancel?(space.guid)
 
-    if task.state == TaskModel::SUCCEEDED_STATE || task.state == TaskModel::FAILED_STATE
-      invalid_task_request!("Task state is #{task.state} and therefore cannot be canceled")
-    end
-
     TaskCancel.new.cancel(task: task, user: current_user, email: current_user_email)
 
     render status: :accepted, json: TaskPresenter.new.present_json(task.reload)
+  rescue TaskCancel::InvalidCancel => e
+    unprocessable!(e)
   end
 
   def show
@@ -93,10 +90,6 @@ class TasksController < ApplicationController
 
   def droplet_not_found!
     resource_not_found!(:droplet)
-  end
-
-  def invalid_task_request!(message)
-    raise VCAP::Errors::ApiError.new_from_details('InvalidTaskRequest', message)
   end
 
   def can_create?(space_guid)

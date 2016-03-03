@@ -1,5 +1,4 @@
 require 'rails_helper'
-require 'queries/task_list_fetcher'
 
 describe TasksController, type: :controller do
   let(:tasks_enabled) { true }
@@ -529,13 +528,16 @@ describe TasksController, type: :controller do
       end
     end
 
-    context 'when the task has already succeeded or failed' do
-      let(:task_to_cancel) { VCAP::CloudController::TaskModel.make(name: 'ursulina', app_guid: app_model.guid, state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE) }
-      it 'returns a 422 InvalidTaskRequest' do
-        put :cancel, task_guid: task_to_cancel.guid
+    context 'when InvalidCancel is raised' do
+      before do
+        allow_any_instance_of(VCAP::CloudController::TaskCancel).to receive(:cancel).and_raise(VCAP::CloudController::TaskCancel::InvalidCancel.new('sad trombone'))
+      end
+
+      it 'returns a 422 Unprocessable' do
+        put :cancel, task_guid: task.guid
 
         expect(response.status).to eq 422
-        expect(response.body).to include('InvalidTaskRequest')
+        expect(response.body).to include('sad trombone')
       end
     end
 

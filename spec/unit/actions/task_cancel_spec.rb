@@ -37,6 +37,26 @@ module VCAP::CloudController
         expect(event.metadata['task_guid']).to eq(task.guid)
         expect(event.actee).to eq(app.guid)
       end
+
+      context 'when the state is not cancelable' do
+        it 'raises InvalidCancel for FAILED' do
+          task.state = TaskModel::FAILED_STATE
+          task.save
+
+          expect {
+            task_cancel.cancel(task: task, user: user, email: user_email)
+          }.to raise_error(TaskCancel::InvalidCancel, "Task state is #{TaskModel::FAILED_STATE} and therefore cannot be canceled")
+        end
+
+        it 'raises InvalidCancel for SUCCEEDED' do
+          task.state = TaskModel::SUCCEEDED_STATE
+          task.save
+
+          expect {
+            task_cancel.cancel(task: task, user: user, email: user_email)
+          }.to raise_error(TaskCancel::InvalidCancel, "Task state is #{TaskModel::SUCCEEDED_STATE} and therefore cannot be canceled")
+        end
+      end
     end
   end
 end
