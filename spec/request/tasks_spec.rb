@@ -394,23 +394,19 @@ describe 'Tasks' do
         )
 
         query = {
-          app_guids:          app_model.guid,
           names:              'task one',
-          organization_guids: app_model.organization.guid,
-          space_guids:        app_model.space.guid,
           states:             'SUCCEEDED'
         }
 
-        get "/v3/tasks?#{query.to_query}", nil, developer_headers
+        get "/v3/apps/#{app_model.guid}/tasks?#{query.to_query}", nil, developer_headers
 
-        expected_query    = "app_guids=#{app_model.guid}&names=task+one&organization_guids=#{app_model.organization.guid}" \
-                            "&page=1&per_page=50&space_guids=#{app_model.space.guid}&states=SUCCEEDED"
+        expected_query    = 'names=task+one&page=1&per_page=50&states=SUCCEEDED'
         expected_response =
           {
             'pagination' => {
               'total_results' => 1,
-              'first'         => { 'href' => "/v3/tasks?#{expected_query}" },
-              'last'          => { 'href' => "/v3/tasks?#{expected_query}" },
+              'first'         => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+              'last'          => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
               'next'          => nil,
               'previous'      => nil,
             },

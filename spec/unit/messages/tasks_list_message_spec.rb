@@ -14,6 +14,7 @@ module VCAP::CloudController
           'space_guids'        => 'spaceguid',
           'page'               => 1,
           'per_page'           => 5,
+          'app_guid'           => 'blah-blah'
         }
       end
 
@@ -29,6 +30,7 @@ module VCAP::CloudController
         expect(message.space_guids).to eq(['spaceguid'])
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
+        expect(message.app_guid).to eq('blah-blah')
       end
 
       it 'converts requested keys to symbols' do
@@ -42,6 +44,7 @@ module VCAP::CloudController
         expect(message.requested?(:space_guids)).to be_truthy
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
+        expect(message.requested?(:app_guid)).to be_truthy
       end
     end
 
@@ -93,6 +96,59 @@ module VCAP::CloudController
       end
 
       describe 'validations' do
+        describe 'validating app nested query' do
+          context 'when the request contains app_guid but not app_guids, space_guids, and org_guids' do
+            it 'validates' do
+              message = TasksListMessage.new({ app_guid: 'blah' })
+              expect(message).to be_valid
+            end
+          end
+
+          context 'when the request does not contain app_guid but space_guids, org_guids, and app_guids' do
+            it 'validates' do
+              message = TasksListMessage.new({ app_guids: ['1'], space_guids: ['2'], organization_guids: ['5'] })
+              expect(message).to be_valid
+            end
+          end
+
+          context 'when the request contains both app_guid and app_guids' do
+            it 'does not validate' do
+              message = TasksListMessage.new({ app_guid: 'blah', app_guids: ['app1', 'app2'] })
+              expect(message).to_not be_valid
+              expect(message.errors[:base]).to include("Unknown query parameter(s): 'app_guids'")
+            end
+          end
+
+          context 'when the request contains both app_guid and space_guids' do
+            it 'does not validate' do
+              message = TasksListMessage.new({ app_guid: 'blah', space_guids: ['space1', 'space2'] })
+              expect(message).to_not be_valid
+              expect(message.errors[:base]).to include("Unknown query parameter(s): 'space_guids'")
+            end
+          end
+
+          context 'when the request contains both app_guid and org_guids' do
+            it 'does not validate' do
+              message = TasksListMessage.new({ app_guid: 'blah', organization_guids: ['org1', 'org2'] })
+              expect(message).to_not be_valid
+              expect(message.errors[:base]).to include("Unknown query parameter(s): 'organization_guids'")
+            end
+          end
+
+          context 'when the request contains both app_guid and app_guids, space_guids, and org_guids' do
+            it 'does not validate' do
+              message = TasksListMessage.new({
+                app_guid: 'blah',
+                app_guids: ['app1', 'app2'],
+                space_guids: ['space1', 'space2'],
+                organization_guids: ['org1', 'org2']
+              })
+              expect(message).to_not be_valid
+              expect(message.errors[:base]).to include("Unknown query parameter(s): 'space_guids', 'organization_guids', 'app_guids'")
+            end
+          end
+        end
+
         it 'validates names is an array' do
           message = TasksListMessage.new names: 'not array'
           expect(message).to be_invalid

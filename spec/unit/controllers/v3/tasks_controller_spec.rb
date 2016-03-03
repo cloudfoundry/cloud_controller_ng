@@ -419,6 +419,15 @@ describe TasksController, type: :controller do
           expect(response.status).to eq 404
         end
       end
+
+      context 'when space_guids, org_guids, or app_guids are present' do
+        it 'returns a 400 Bad Request' do
+          get :index, { app_guid: app_model.guid, 'space_guids' => [app_model.space.guid], 'organization_guids' => [app_model.organization.guid], 'app_guids' => [app_model.guid] }
+
+          expect(response.status).to eq 400
+          expect(response.body).to include "Unknown query parameter(s): 'space_guids', 'organization_guids', 'app_guids'"
+        end
+      end
     end
 
     context 'admin' do
