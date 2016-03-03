@@ -280,7 +280,7 @@ describe TasksController, type: :controller do
       expect(parsed_body['memory_in_mb']).to eq(2048)
     end
 
-    context 'when providing an app guid' do
+    context 'accessed as an app sub resource' do
       it 'returns a 200 and the task' do
         get :show, task_guid: task.guid, app_guid: app_model.guid
 
@@ -375,7 +375,7 @@ describe TasksController, type: :controller do
       expect(parsed_body['pagination']['first']['href']).to include('/v3/tasks')
     end
 
-    context 'when an app is specified' do
+    context 'when accessed as an app subresource' do
       it 'uses the app as a filter' do
         task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
         task_2 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)

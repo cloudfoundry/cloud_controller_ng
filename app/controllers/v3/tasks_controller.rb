@@ -1,7 +1,7 @@
 require 'queries/app_fetcher'
 require 'queries/task_list_fetcher'
 require 'queries/task_create_fetcher'
-require 'queries/task_cancel_fetcher'
+require 'queries/task_fetcher'
 require 'actions/task_create'
 require 'actions/task_cancel'
 require 'messages/task_create_message'
@@ -55,10 +55,10 @@ class TasksController < ApplicationController
 
   def cancel
     if app_nested?
-      task, app, space, org = TaskCancelFetcher.new.fetch_for_app(task_guid: params[:task_guid], app_guid: params[:app_guid])
+      task, app, space, org = TaskFetcher.new.fetch_for_app(task_guid: params[:task_guid], app_guid: params[:app_guid])
       app_not_found! unless app
     else
-      task, space, org = TaskCancelFetcher.new.fetch(task_guid: params[:task_guid])
+      task, space, org = TaskFetcher.new.fetch(task_guid: params[:task_guid])
     end
 
     task_not_found! unless task && can_read?(space.guid, org.guid)
@@ -72,13 +72,15 @@ class TasksController < ApplicationController
   end
 
   def show
-    query_options = { guid: params[:task_guid] }
-    if params[:app_guid].present?
-      query_options[:app_id] = AppModel.select(:id).where(guid: params[:app_guid])
+    if app_nested?
+      task, app, space, org = TaskFetcher.new.fetch_for_app(task_guid: params[:task_guid], app_guid: params[:app_guid])
+      app_not_found! unless app
+    else
+      task, space, org = TaskFetcher.new.fetch(task_guid: params[:task_guid])
     end
-    task = TaskModel.where(query_options).eager(:space, space: :organization).first
 
-    task_not_found! unless task && can_read?(task.space.guid, task.space.organization.guid)
+    task_not_found! unless task && can_read?(space.guid, org.guid)
+
     render status: :ok, json: TaskPresenter.new.present_json(task)
   end
 

@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class TaskCancelFetcher
+  class TaskFetcher
     def fetch_for_app(task_guid:, app_guid:)
       app = AppModel.where(guid: app_guid).eager(
         :space,
