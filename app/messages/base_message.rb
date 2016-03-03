@@ -32,7 +32,7 @@ module VCAP::CloudController
       params = {}
       (requested_keys - opts[:exclude]).each do |key|
         val = self.try(key)
-        params[key] = val.is_a?(Array) ? val.map { |v| CGI.escape(v) }.join(',') : val
+        params[key] = val.is_a?(Array) ? val.map { |v| v.gsub(',', CGI.escape(',')) }.join(',') : val
       end
       params
     end

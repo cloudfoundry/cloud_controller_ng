@@ -58,9 +58,9 @@ module VCAP::CloudController
         }
       end
 
-      it 'returns query param hash with escaped array members' do
+      it 'returns query param hash with escaped commas in array members' do
         expected_params = {
-          array_field:  'st+ate1,sta%2Cte2',
+          array_field:  'st ate1,sta%2Cte2',
           num_field:    1.2,
           string_field: 'stringval&',
           nil_field:    nil,
@@ -71,7 +71,7 @@ module VCAP::CloudController
       it 'does not return params that are not requested during initialization' do
         opts.delete(:nil_field)
         expected_params = {
-          array_field:  'st+ate1,sta%2Cte2',
+          array_field:  'st ate1,sta%2Cte2',
           num_field:    1.2,
           string_field: 'stringval&',
         }
@@ -80,7 +80,7 @@ module VCAP::CloudController
 
       it 'can exclude params' do
         expected_params = {
-          array_field:  'st+ate1,sta%2Cte2',
+          array_field:  'st ate1,sta%2Cte2',
           string_field: 'stringval&',
           nil_field:    nil,
         }
