@@ -1,5 +1,10 @@
 module VCAP::CloudController
   class TaskDelete
+    def initialize(user_guid, email)
+      @user_guid = user_guid
+      @email = email
+    end
+
     def delete(tasks)
       tasks.each do |task|
         task.destroy
@@ -11,6 +16,7 @@ module VCAP::CloudController
 
     def cancel_running_task(task)
       return unless task.state == TaskModel::RUNNING_STATE
+      Repositories::Runtime::TaskEventRepository.new.record_task_cancel(task, @user_guid, @email)
 
       begin
         nsync_client.cancel_task(task)
