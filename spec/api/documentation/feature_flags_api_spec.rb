@@ -11,7 +11,9 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
     parameter :name, 'The name of the feature flag',
       valid_values: ['user_org_creation', 'app_bits_upload', 'private_domain_creation', 'app_scaling',
                      'route_creation', 'service_instance_creation', 'diego_docker', 'set_roles_by_username',
-                     'unset_roles_by_username', 'task_creation (experimental), space_scoped_private_broker_creation (experimental)']
+                     'unset_roles_by_username', 'task_creation (experimental)',
+                     'space_scoped_private_broker_creation (experimental)',
+                     'space_developer_env_var_visibility (experimental)']
   end
 
   shared_context 'updatable_fields' do
@@ -26,7 +28,7 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
       client.get '/v2/config/feature_flags', {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(11)
+      expect(parsed_response.length).to eq(12)
       expect(parsed_response).to include(
         {
           'name'          => 'user_org_creation',
@@ -69,30 +71,48 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/service_instance_creation'
         })
-      expect(parsed_response).to include({
+      expect(parsed_response).to include(
+        {
             'name' => 'set_roles_by_username',
             'enabled' => true,
             'error_message' => nil,
             'url' => '/v2/config/feature_flags/set_roles_by_username'
-          })
-      expect(parsed_response).to include({
+        })
+      expect(parsed_response).to include(
+        {
             'name' => 'unset_roles_by_username',
             'enabled' => true,
             'error_message' => nil,
             'url' => '/v2/config/feature_flags/unset_roles_by_username'
-          })
-      expect(parsed_response).to include({
+        })
+      expect(parsed_response).to include(
+        {
             'name' => 'diego_docker',
             'enabled' => false,
             'error_message' => nil,
             'url' => '/v2/config/feature_flags/diego_docker'
-          })
-      expect(parsed_response).to include({
+        })
+      expect(parsed_response).to include(
+        {
             'name' => 'task_creation',
             'enabled' => false,
             'error_message' => nil,
             'url' => '/v2/config/feature_flags/task_creation'
-          })
+        })
+      expect(parsed_response).to include(
+        {
+            'name' => 'space_scoped_private_broker_creation',
+            'enabled' => true,
+            'error_message' => nil,
+            'url' => '/v2/config/feature_flags/space_scoped_private_broker_creation'
+        })
+      expect(parsed_response).to include(
+        {
+            'name' => 'space_developer_env_var_visibility',
+            'enabled' => true,
+            'error_message' => nil,
+            'url' => '/v2/config/feature_flags/space_developer_env_var_visibility'
+        })
     end
   end
 
@@ -283,6 +303,23 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
           'enabled'       => true,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/space_scoped_private_broker_creation'
+        })
+    end
+  end
+
+  get '/v2/config/feature_flags/space_developer_env_var_visibility' do
+    example 'Get the Space Developer Environment Variable Visibility feature flag (experimental)' do
+      explanation 'When enabled, space developers can do a get on the /v2/apps/:guid/env and /v3/apps/:guid/env end points.
+                   When disabled, space developers can no longer do a get against these end points.'
+      client.get '/v2/config/feature_flags/space_developer_env_var_visibility', {}, headers
+
+      expect(status).to eq(200)
+      expect(parsed_response).to eq(
+        {
+          'name'          => 'space_developer_env_var_visibility',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/space_developer_env_var_visibility'
         })
     end
   end
