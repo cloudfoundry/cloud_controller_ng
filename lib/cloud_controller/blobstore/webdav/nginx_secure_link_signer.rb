@@ -10,8 +10,6 @@ module CloudController
         @public_path_prefix   = public_path_prefix
 
         @client = HTTPClient.new
-        @client.ssl_config.set_default_paths
-        @client.ssl_config.verify_mode = skip_cert_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
 
         @headers = {}
         @headers['Authorization'] = 'Basic ' + Base64.strict_encode64("#{basic_auth_user}:#{basic_auth_password}").strip
@@ -22,7 +20,6 @@ module CloudController
         response_uri = make_request(uri: request_uri)
 
         signed_uri        = @internal_uri.clone
-        signed_uri.scheme = 'https'
         signed_uri.path   = response_uri.path
         signed_uri.query  = response_uri.query
         signed_uri.to_s
@@ -40,10 +37,6 @@ module CloudController
       end
 
       private
-
-      def skip_cert_verify
-        VCAP::CloudController::Config.config[:skip_cert_verify]
-      end
 
       def make_request(uri:)
         response = @client.get(uri, header: @headers)

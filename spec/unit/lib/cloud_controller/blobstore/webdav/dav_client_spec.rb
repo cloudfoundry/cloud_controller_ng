@@ -6,6 +6,7 @@ module CloudController
     describe DavClient do
       subject(:client) { DavClient.new(options, directory_key, root_dir) }
       let(:response) { instance_double(HTTP::Message) }
+      let(:httpclient) { instance_double(HTTPClient) }
       let(:options) do
         {
           private_endpoint: 'http://localhost',
@@ -14,9 +15,6 @@ module CloudController
       end
       let(:directory_key) { 'droplets' }
       let(:root_dir) { nil }
-
-      let(:ssl_config) { double(:ssl_config, :verify_mode= => nil, set_default_paths: nil) }
-      let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
 
       before do
         allow(HTTPClient).to receive_messages(new: httpclient)
@@ -33,32 +31,6 @@ module CloudController
         end
 
         it_behaves_like 'a blobstore client'
-      end
-
-      describe 'ssl cert verification' do
-        let(:skip_cert_verify) { true }
-        let(:config) { { skip_cert_verify: skip_cert_verify } }
-
-        before do
-          allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
-          allow(client).to receive(:new)
-        end
-
-        context 'when skip_cert_verify is true' do
-          it 'lackadaisically accepts the connection with the blobstore' do
-            expect(httpclient).to have_received(:ssl_config).exactly(4).times
-            expect(ssl_config).to have_received(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE).twice
-          end
-        end
-
-        context 'when skip_cert_verify is false' do
-          let(:skip_cert_verify) { false }
-
-          it 'accepts a connection with the blobstore by checking the cert' do
-            expect(httpclient).to have_received(:ssl_config).exactly(4).times
-            expect(ssl_config).to have_received(:verify_mode=).with(OpenSSL::SSL::VERIFY_PEER).twice
-          end
-        end
       end
 
       describe 'basic auth' do
