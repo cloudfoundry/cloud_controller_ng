@@ -61,7 +61,9 @@ resource 'User Provided Service Instances', type: [:api, :legacy_api] do
 
       field :guid, 'The guid of the Service Instance.', required: true
 
-      standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController, outer_model: :user_provided_service_instance, exclude_parameters: ['service_instance_guid']
+      standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController,
+        outer_model: :user_provided_service_instance,
+        exclude_parameters: ['service_instance_guid']
     end
 
     describe 'Routes' do
