@@ -143,9 +143,9 @@ module VCAP::CloudController
       end
     end
 
+    # If you change this function, also change _add_route in app.rb
     def _add_app(app, hash={})
-      app_port = app.ports.first if !app.ports.blank? && !app.docker_image.present?
-
+      app_port = app.user_provided_ports.first unless app.user_provided_ports.blank?
       model.db[:apps_routes].insert(hash.merge(app_id: app.id, app_port: app_port, route_id: id, guid: SecureRandom.uuid))
     end
 

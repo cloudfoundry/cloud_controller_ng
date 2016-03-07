@@ -809,19 +809,45 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the app is a docker app' do
-          let(:app) { App.make(diego: true, docker_image: 'some-docker-image', package_state: 'PENDING') }
+        context 'when the app has user provided ports' do
+          let(:app) { App.make(diego: true, ports: [8998]) }
+          let(:route) { Route.make(space: app.space) }
 
-          context 'when the app has a route' do
-            let(:route) { Route.make(space: app.space) }
-            before do
-              route.add_app(app)
-            end
+          before do
+            route.add_app(app)
+          end
 
-            it 'should not save app_port to the route mappings' do
-              route_mapping = RouteMapping.last
-              expect(route_mapping.saved_app_port).to be_nil
-            end
+          it 'should not save app_port to the route mappings' do
+            route_mapping = RouteMapping.last
+            expect(route_mapping.saved_app_port).to eq 8998
+          end
+        end
+
+        context 'when the app does not have user provided ports' do
+          let(:app) { App.make(diego: true) }
+          let(:route) { Route.make(space: app.space) }
+
+          before do
+            route.add_app(app)
+          end
+
+          it 'should not save app_port to the route mappings' do
+            route_mapping = RouteMapping.last
+            expect(route_mapping.saved_app_port).to be_nil
+          end
+        end
+
+        context 'when the app is a dea' do
+          let(:app) { App.make(diego: false) }
+          let(:route) { Route.make(space: app.space) }
+
+          before do
+            route.add_app(app)
+          end
+
+          it 'should not have an app_port' do
+            route_mapping = RouteMapping.last
+            expect(route_mapping.app_port).to be_nil
           end
         end
       end

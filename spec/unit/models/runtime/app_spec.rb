@@ -104,7 +104,7 @@ module VCAP::CloudController
       end
 
       context 'when associating a route with a diego app' do
-        let(:app) { AppFactory.make(space: space, diego: true, ports: [8080, 9090]) }
+        let(:app) { AppFactory.make(space: space, diego: true, ports: [9090, 7070]) }
         let(:route) { Route.make(host: 'host2', space: space, path: '/my%20path') }
 
         before do
@@ -112,7 +112,20 @@ module VCAP::CloudController
         end
 
         it 'maps the route to the first app port in the ports field of the app' do
-          expect(app.route_mappings.first.app_port).to eq(8080)
+          expect(app.route_mappings.first.app_port).to eq(9090)
+        end
+      end
+
+      context 'when an app has no user provided ports' do
+        let(:app) { AppFactory.make(space: space, diego: true) }
+        let(:route) { Route.make(host: 'host2', space: space, path: '/my%20path') }
+
+        before do
+          app.add_route(route)
+        end
+
+        it 'does not save an app_port for the route mapping' do
+          expect(app.route_mappings.first.saved_app_port).to be_nil
         end
       end
 
@@ -2858,11 +2871,29 @@ module VCAP::CloudController
           app = App.make(diego: true, ports: [1025, 1026, 1027, 1028])
           expect(app.ports).to eq([1025, 1026, 1027, 1028])
 
-          app = App.make
-          expect(app.ports).to eq(nil)
-
           app = App.make(diego: true, ports: [1024])
           expect(app.ports).to eq([1024])
+        end
+      end
+
+      context 'when user does not provide ports' do
+        let(:app) { App.make(diego: true) }
+
+        it 'returns the default port' do
+          expect(app.ports).to eq([8080])
+        end
+
+        it 'does not save the default ports to the DB' do
+          expect(app.user_provided_ports).to be_nil
+        end
+
+        context 'when the app is a DEA app' do
+          let(:app) { App.make }
+
+          it 'returns nil' do
+            app = App.make
+            expect(app.ports).to be_nil
+          end
         end
       end
 
@@ -2870,8 +2901,12 @@ module VCAP::CloudController
         context 'when app is not staged' do
           let(:app) { App.make(diego: true, docker_image: 'some-docker-image', package_state: 'PENDING') }
 
-          it 'returns the ports that were specified during creation' do
+          it 'returns the default ports' do
             expect(app.ports).to eq([8080])
+          end
+
+          it 'does not save the ports to the database' do
+            expect(app.user_provided_ports).to be_nil
           end
 
           context 'when the app has a route' do
@@ -2889,15 +2924,34 @@ module VCAP::CloudController
 
         context 'when app is staged' do
           context 'when some tcp ports are exposed' do
-            it 'returns the ports that were specified in the execution_metadata' do
+            let(:app) {
               app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
               app.add_droplet(Droplet.new(
                                 app: app,
                                 droplet_hash: 'the-droplet-hash',
                                 execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
-                               ))
+                              ))
               app.droplet_hash = 'the-droplet-hash'
+              app
+            }
+
+            it 'returns the ports that were specified in the execution_metadata' do
               expect(app.ports).to eq([1024, 1025])
+            end
+
+            it 'does not save ports to the database' do
+              expect(app.user_provided_ports).to be_nil
+            end
+
+            context 'when the user provided ports' do
+              before do
+                app.ports = [1111]
+                app.save
+              end
+
+              it 'returns the user provided ports' do
+                expect(app.ports).to eq([1111])
+              end
             end
           end
 

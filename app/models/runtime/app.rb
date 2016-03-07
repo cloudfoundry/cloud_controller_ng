@@ -175,7 +175,6 @@ module VCAP::CloudController
       self.disk_quota ||= Config.config[:default_app_disk_in_mb]
       self.enable_ssh = Config.config[:allow_app_ssh_access] && space.allow_ssh if enable_ssh.nil?
 
-      update_ports(DEFAULT_PORTS) if diego && ports.blank?
       update_route_mappings_ports
 
       if Config.config[:instance_file_descriptor_limit]
@@ -644,8 +643,9 @@ module VCAP::CloudController
       end
     end
 
+    # If you change this function, also change _add_app in route.rb
     def _add_route(route, hash={})
-      port = self.ports.first if !self.ports.blank? && !self.docker_image.present?
+      port = self.user_provided_ports.first unless self.user_provided_ports.blank?
       model.db[:apps_routes].insert(hash.merge(app_id: id, route_id: route.id, app_port: port, guid: SecureRandom.uuid))
     end
 
@@ -660,12 +660,17 @@ module VCAP::CloudController
       mark_routes_changed
     end
 
+    alias_method(:user_provided_ports, :ports)
     def ports
-      if self.docker_image.present? && diego?
-        ports = docker_ports
-        return ports unless ports.empty?
+      ports = super
+      return ports unless ports.nil?
+
+      if diego?
+        ports = docker_ports if self.docker_image.present?
+        ports = ports.blank? ? DEFAULT_PORTS : ports
       end
-      super
+
+      ports
     end
 
     def all_service_bindings

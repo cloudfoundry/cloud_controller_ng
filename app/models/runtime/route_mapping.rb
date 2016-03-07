@@ -41,8 +41,8 @@ module VCAP::CloudController
     end
 
     def before_save
-      if !self.saved_app_port && app.diego && !app.docker_image.present?
-        self.app_port = app.ports.first
+      if !self.saved_app_port && app.diego && app.user_provided_ports.present?
+        self.app_port = app.user_provided_ports.first
       end
       app.validate_route(route)
       super
@@ -61,10 +61,9 @@ module VCAP::CloudController
     alias_method :saved_app_port, :app_port
     def app_port
       saved_port = super
-      if !app.nil?
-        saved_port = app.ports.first if saved_port.nil? && !app.ports.blank?
-      end
-      saved_port
+
+      return saved_port unless saved_port.blank?
+      return app.ports.first if app && !app.ports.blank?
     end
   end
 end
