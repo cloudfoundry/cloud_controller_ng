@@ -31,5 +31,26 @@ module VCAP::CloudController
       let(:token) { { 'scope' => [] } }
       it_behaves_like :no_access
     end
+
+    context 'space developer' do
+      let(:space) { Space.make }
+
+      before do
+        space.organization.add_user user
+        space.add_developer user
+      end
+
+      it_behaves_like :read_only_access
+
+      context 'when the broker for the service is space scoped' do
+        before do
+          broker = object.service_broker
+          broker.space = space
+          broker.save
+        end
+
+        it { is_expected.to allow_op_on_object :delete, object }
+      end
+    end
   end
 end
