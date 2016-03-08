@@ -1310,6 +1310,27 @@ describe AppsV3Controller, type: :controller do
           expect(response.body).to include 'NotAuthorized'
         end
       end
+
+      context 'when the space_developer_env_var_visibility feature flag is disabled' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
+        end
+
+        it 'raises 403 for non-admins' do
+          get :show_environment, guid: app_model.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('FeatureDisabled')
+          expect(response.body).to include('space_developer_env_var_visibility')
+        end
+
+        it 'succeeds for admins' do
+          @request.env.merge!(admin_headers)
+          get :show_environment, guid: app_model.guid
+
+          expect(response.status).to eq(200)
+        end
+      end
     end
 
     context 'when the app does not exist' do
