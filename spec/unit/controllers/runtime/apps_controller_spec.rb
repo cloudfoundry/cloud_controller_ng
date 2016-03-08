@@ -911,6 +911,14 @@ module VCAP::CloudController
 
           expect(last_response.status).to eq(200)
         end
+
+        context 'when the user is not a space developer' do
+          it 'indicates they do not have permission rather than that the feature flag is disabled' do
+            get "/v2/apps/#{app_obj.guid}/env", '{}', json_headers(headers_for(auditor, { scopes: ['cloud_controller.read'] }))
+            expect(last_response.status).to eql(403)
+            expect(JSON.parse(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
+          end
+        end
       end
     end
 

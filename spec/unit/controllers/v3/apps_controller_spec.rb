@@ -1330,6 +1330,26 @@ describe AppsV3Controller, type: :controller do
 
           expect(response.status).to eq(200)
         end
+
+        context 'when the user can read but cannot write to the app' do
+          before do
+            allow(membership).to receive(:has_any_roles?).with(
+              [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+               VCAP::CloudController::Membership::SPACE_MANAGER,
+               VCAP::CloudController::Membership::SPACE_AUDITOR,
+               VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
+              and_return(true)
+            allow(membership).to receive(:has_any_roles?).
+              with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
+          end
+
+          it 'raises ApiError NotAuthorized as opposed to FeatureDisabled' do
+            get :show_environment, guid: app_model.guid
+
+            expect(response.status).to eq 403
+            expect(response.body).to include 'NotAuthorized'
+          end
+        end
       end
     end
 
