@@ -14,6 +14,8 @@ module CloudController
         @root_dir      = root_dir
 
         @client = HTTPClient.new
+        @client.ssl_config.set_default_paths
+        @client.ssl_config.verify_mode = skip_cert_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
 
         @endpoint = @options[:private_endpoint]
         @headers  = {}
@@ -145,6 +147,10 @@ module CloudController
       end
 
       private
+
+      def skip_cert_verify
+        VCAP::CloudController::Config.config[:skip_cert_verify]
+      end
 
       def url(key)
         [@endpoint, 'admin', @directory_key, partitioned_key(key)].compact.join('/')
