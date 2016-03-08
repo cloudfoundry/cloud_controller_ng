@@ -15,7 +15,7 @@ module VCAP::CloudController
 
       route_mapping = RouteMappingModel.create(app: app, route: route, process_type: desired_process_type)
 
-      if !process_model.nil?
+      unless process_model.nil?
         process_model.add_route(route)
         update_deas(process_model)
       end
