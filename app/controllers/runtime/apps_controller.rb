@@ -41,6 +41,7 @@ module VCAP::CloudController
     get '/v2/apps/:guid/env', :read_env
     def read_env(guid)
       app = find_guid_and_validate_access(:read_env, guid, App)
+      FeatureFlag.raise_unless_enabled!('space_developer_env_var_visibility') unless roles.admin?
       [
         HTTP::OK,
         {},

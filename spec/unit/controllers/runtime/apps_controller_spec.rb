@@ -890,6 +890,28 @@ module VCAP::CloudController
           expect(last_response.status).to eql 404
         end
       end
+
+      context 'when the space_developer_env_var_visibility feature flag is disabled' do
+        let(:app_obj) { AppFactory.make(detected_buildpack: 'buildpack-name', space: space) }
+
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
+        end
+
+        it 'raises 403 for non-admins' do
+          get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(headers_for(developer))
+
+          expect(last_response.status).to eq(403)
+          expect(last_response.body).to include('FeatureDisabled')
+          expect(last_response.body).to include('space_developer_env_var_visibility')
+        end
+
+        it 'succeeds for admins' do
+          get "/v2/apps/#{app_obj.guid}/env", {}, admin_headers
+
+          expect(last_response.status).to eq(200)
+        end
+      end
     end
 
     describe 'staging' do
