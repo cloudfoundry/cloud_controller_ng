@@ -70,7 +70,7 @@ module VCAP::CloudController
                   'lifecycle' => Lifecycles::BUILDPACK,
                   'command' => 'be rake my panda',
                   'completion_callback' => "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed",
-                  'log_source' => 'App/TASK/' + task.name
+                  'log_source' => 'APP/TASK/' + task.name
                 })
               end
             end
@@ -93,7 +93,7 @@ module VCAP::CloudController
                   'lifecycle' => Lifecycles::DOCKER,
                   'command' => 'be rake my panda',
                   'completion_callback' => "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed",
-                  'log_source' => 'App/TASK/' + task.name
+                  'log_source' => 'APP/TASK/' + task.name
                 })
               end
             end
