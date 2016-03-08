@@ -12,7 +12,7 @@ describe MinDiskQuotaPolicy do
 
   it 'when requested size is zero' do
     allow(app).to receive(:disk_quota).and_return(0)
-    expect(validator).to validate_without_error(app)
+    expect(validator).to validate_with_error(app, :disk_quota, MinDiskQuotaPolicy::ERROR_MSG)
   end
 
   it 'when requested size is positive' do
