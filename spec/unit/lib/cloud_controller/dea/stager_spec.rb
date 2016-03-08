@@ -15,10 +15,6 @@ module VCAP::CloudController
         instance_double(Dea::Pool)
       end
 
-      let(:stager_pool) do
-        instance_double(Dea::StagerPool)
-      end
-
       let(:runners) do
         instance_double(Runners)
       end
@@ -26,7 +22,7 @@ module VCAP::CloudController
       let(:runner) { double(:Runner) }
 
       subject(:stager) do
-        Stager.new(thing_to_stage, config, message_bus, dea_pool, stager_pool, runners)
+        Stager.new(thing_to_stage, config, message_bus, dea_pool, runners)
       end
 
       let(:stager_task) do
@@ -77,7 +73,6 @@ module VCAP::CloudController
                                                             message_bus,
                                                             thing_to_stage,
                                                             dea_pool,
-                                                            stager_pool,
                                                             an_instance_of(CloudController::Blobstore::UrlGenerator))
         end
 

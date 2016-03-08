@@ -3,8 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   describe Dea::AppStagerTask do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
-    let(:stager_pool) { double(:stager_pool, reserve_app_memory: nil) }
-    let(:dea_pool) { double(:stager_pool, reserve_app_memory: nil) }
+    let(:dea_pool) { double(:dea_pool, reserve_app_memory: nil) }
     let(:config_hash) { { staging: { timeout_in_seconds: 360 } } }
     let(:app) do
       AppFactory.make(
@@ -20,7 +19,7 @@ module VCAP::CloudController
     let(:blobstore_url_generator) { CloudController::DependencyLocator.instance.blobstore_url_generator }
 
     let(:options) { {} }
-    subject(:staging_task) { Dea::AppStagerTask.new(config_hash, message_bus, app, dea_pool, stager_pool, blobstore_url_generator) }
+    subject(:staging_task) { Dea::AppStagerTask.new(config_hash, message_bus, app, dea_pool, blobstore_url_generator) }
 
     let(:first_reply_json_error) { nil }
     let(:task_streaming_log_url) { 'task-streaming-log-url' }
@@ -62,7 +61,7 @@ module VCAP::CloudController
       expect(app.staged?).to be false
 
       allow(VCAP).to receive(:secure_uuid) { 'some_task_id' }
-      allow(stager_pool).to receive(:find_stager).with(app.stack.name, 1024, anything).and_return(stager_id)
+      allow(dea_pool).to receive(:find_stager).with(app.stack.name, 1024, anything).and_return(stager_id)
 
       allow(EM).to receive(:add_timer)
       allow(EM).to receive(:defer).and_yield
@@ -90,7 +89,7 @@ module VCAP::CloudController
       context 'when the app memory requirement exceeds the staging memory requirement (1024)' do
         it 'should request a stager with the app memory requirement' do
           app.memory = 1025
-          expect(stager_pool).to receive(:find_stager).with(app.stack.name, 1025, anything).and_return(stager_id)
+          expect(dea_pool).to receive(:find_stager).with(app.stack.name, 1025, anything).and_return(stager_id)
           staging_task.stage
         end
       end
@@ -98,7 +97,7 @@ module VCAP::CloudController
       context 'when the app memory requirement is less than the staging memory requirement' do
         it 'requests the staging memory requirement' do
           config_hash[:staging][:minimum_staging_memory_mb] = 2048
-          expect(stager_pool).to receive(:find_stager).with(app.stack.name, 2048, anything).and_return(stager_id)
+          expect(dea_pool).to receive(:find_stager).with(app.stack.name, 2048, anything).and_return(stager_id)
           staging_task.stage
         end
       end
@@ -109,7 +108,7 @@ module VCAP::CloudController
         it 'should request a stager with enough disk' do
           app.disk_quota                                  = 12
           config_hash[:staging][:minimum_staging_disk_mb] = 1025
-          expect(stager_pool).to receive(:find_stager).with(app.stack.name, anything, 1025).and_return(stager_id)
+          expect(dea_pool).to receive(:find_stager).with(app.stack.name, anything, 1025).and_return(stager_id)
           staging_task.stage
         end
       end
@@ -118,7 +117,7 @@ module VCAP::CloudController
         it 'should request a stager with enough disk' do
           app.disk_quota                                  = 123
           config_hash[:staging][:minimum_staging_disk_mb] = nil
-          expect(stager_pool).to receive(:find_stager).with(app.stack.name, anything, 4096).and_return(stager_id)
+          expect(dea_pool).to receive(:find_stager).with(app.stack.name, anything, 4096).and_return(stager_id)
           staging_task.stage
         end
       end
@@ -127,7 +126,7 @@ module VCAP::CloudController
         it 'should request a stager with enough disk' do
           app.disk_quota                                  = 123
           config_hash[:staging][:minimum_staging_disk_mb] = 122
-          expect(stager_pool).to receive(:find_stager).with(app.stack.name, anything, 123).and_return(stager_id)
+          expect(dea_pool).to receive(:find_stager).with(app.stack.name, anything, 123).and_return(stager_id)
           staging_task.stage
         end
       end
@@ -584,7 +583,7 @@ module VCAP::CloudController
 
       describe 'reserve app memory' do
         before do
-          allow(stager_pool).to receive(:find_stager).with(app.stack.name, 1025, 4096).and_return(stager_id)
+          allow(dea_pool).to receive(:find_stager).with(app.stack.name, 1025, 4096).and_return(stager_id)
         end
 
         context 'when app memory is less when configured minimum_staging_memory_mb' do
@@ -598,7 +597,7 @@ module VCAP::CloudController
           end
 
           it "decrement stager's available memory by minimum_staging_memory_mb" do
-            expect(stager_pool).to receive(:reserve_app_memory).with(stager_id, 1025)
+            expect(dea_pool).to receive(:reserve_app_memory).with(stager_id, 1025)
             staging_task.stage
           end
         end
@@ -610,7 +609,7 @@ module VCAP::CloudController
           end
 
           it "decrement stager's available memory by app memory" do
-            expect(stager_pool).to receive(:reserve_app_memory).with(stager_id, 1024)
+            expect(dea_pool).to receive(:reserve_app_memory).with(stager_id, 1024)
             staging_task.stage
           end
         end

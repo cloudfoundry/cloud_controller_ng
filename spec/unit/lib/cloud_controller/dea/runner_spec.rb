@@ -15,16 +15,12 @@ module VCAP::CloudController
         instance_double(Dea::Pool)
       end
 
-      let(:stager_pool) do
-        instance_double(Dea::StagerPool)
-      end
-
       let(:app) do
         instance_double(App, guid: 'fake-app-guid')
       end
 
       subject(:runner) do
-        Runner.new(app, config, message_bus, dea_pool, stager_pool)
+        Runner.new(app, config, message_bus, dea_pool)
       end
 
       describe '#scale' do
