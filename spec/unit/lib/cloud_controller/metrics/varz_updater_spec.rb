@@ -110,5 +110,9 @@ module VCAP::CloudController::Metrics
     describe '#update_log_counts' do
       # noop
     end
+
+    describe '#update_task_stats' do
+      # noop
+    end
   end
 end

@@ -172,5 +172,20 @@ module VCAP::CloudController::Metrics
         expect(batch).to have_received(:gauge).with('cc.log_count.all', 9)
       end
     end
+
+    describe '#update_task_stats' do
+      let(:batch) { instance_double(Statsd::Batch, gauge: nil) }
+
+      before do
+        allow(statsd_client).to receive(:batch).and_yield(batch)
+      end
+
+      it 'emits number of running tasks and task memory to statsd' do
+        updater.update_task_stats(5, 512)
+
+        expect(batch).to have_received(:gauge).with('cc.tasks_running.count', 5)
+        expect(batch).to have_received(:gauge).with('cc.tasks_running.memory_in_mb', 512)
+      end
+    end
   end
 end

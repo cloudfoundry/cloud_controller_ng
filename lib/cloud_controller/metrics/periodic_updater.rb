@@ -17,6 +17,7 @@ module VCAP::CloudController::Metrics
       EM.add_periodic_timer(30) { update_failed_job_count }
       EM.add_periodic_timer(30) { update_vitals }
       EM.add_periodic_timer(30) { update_log_counts }
+      EM.add_periodic_timer(30) { update_task_stats }
     end
 
     def update!
@@ -26,6 +27,14 @@ module VCAP::CloudController::Metrics
       update_failed_job_count
       update_vitals
       update_log_counts
+      update_task_stats
+    end
+
+    def update_task_stats
+      running_tasks = VCAP::CloudController::TaskModel.where(state: VCAP::CloudController::TaskModel::RUNNING_STATE)
+      running_task_count = running_tasks.count
+      running_task_memory = running_tasks.sum(:memory_in_mb)
+      @updaters.each { |u| u.update_task_stats(running_task_count, running_task_memory) }
     end
 
     def update_log_counts

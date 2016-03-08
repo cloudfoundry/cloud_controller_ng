@@ -26,6 +26,39 @@ module VCAP::CloudController::Metrics
       end
     end
 
+    describe 'task stats' do
+      before do
+        allow(updater1).to receive(:update_task_stats)
+        allow(updater2).to receive(:update_task_stats)
+      end
+
+      describe 'number of tasks' do
+        it 'should update the number of running tasks' do
+          VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::RUNNING_STATE)
+          VCAP::CloudController::TaskModel::TASK_STATES.each do |state|
+            VCAP::CloudController::TaskModel.make(state: state)
+          end
+
+          periodic_updater.update_task_stats
+
+          expect(updater1).to have_received(:update_task_stats).with(2, anything)
+          expect(updater2).to have_received(:update_task_stats).with(2, anything)
+        end
+      end
+
+      it 'should update the total memory allocated to tasks' do
+        VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::RUNNING_STATE, memory_in_mb: 512)
+        VCAP::CloudController::TaskModel::TASK_STATES.each do |state|
+          VCAP::CloudController::TaskModel.make(state: state, memory_in_mb: 1)
+        end
+
+        periodic_updater.update_task_stats
+
+        expect(updater1).to have_received(:update_task_stats).with(anything, 513)
+        expect(updater2).to have_received(:update_task_stats).with(anything, 513)
+      end
+    end
+
     describe '#setup_updates' do
       before do
         allow(updater1).to receive(:record_user_count)
@@ -34,6 +67,7 @@ module VCAP::CloudController::Metrics
         allow(updater1).to receive(:update_failed_job_count)
         allow(updater1).to receive(:update_vitals)
         allow(updater1).to receive(:update_log_counts)
+        allow(updater1).to receive(:update_task_stats)
 
         allow(updater2).to receive(:record_user_count)
         allow(updater2).to receive(:update_job_queue_length)
@@ -41,6 +75,7 @@ module VCAP::CloudController::Metrics
         allow(updater2).to receive(:update_failed_job_count)
         allow(updater2).to receive(:update_vitals)
         allow(updater2).to receive(:update_log_counts)
+        allow(updater2).to receive(:update_task_stats)
 
         allow(EventMachine).to receive(:add_periodic_timer)
       end
@@ -72,6 +107,11 @@ module VCAP::CloudController::Metrics
 
       it 'updates the log counts' do
         expect(periodic_updater).to receive(:update_log_counts).once
+        periodic_updater.setup_updates
+      end
+
+      it 'updates the task stats' do
+        expect(periodic_updater).to receive(:update_task_stats).once
         periodic_updater.setup_updates
       end
 
@@ -129,6 +169,13 @@ module VCAP::CloudController::Metrics
           expect(@periodic_timers[5][:interval]).to eq(30)
 
           @periodic_timers[5][:block].call
+        end
+
+        it 'updates the task stats' do
+          expect(periodic_updater).to receive(:update_task_stats).once
+          expect(@periodic_timers[6][:interval]).to eq(30)
+
+          @periodic_timers[6][:block].call
         end
       end
     end
@@ -382,6 +429,7 @@ module VCAP::CloudController::Metrics
         allow(updater1).to receive(:update_failed_job_count)
         allow(updater1).to receive(:update_vitals)
         allow(updater1).to receive(:update_log_counts)
+        allow(updater1).to receive(:update_task_stats)
 
         allow(updater2).to receive(:record_user_count)
         allow(updater2).to receive(:update_job_queue_length)
@@ -389,6 +437,7 @@ module VCAP::CloudController::Metrics
         allow(updater2).to receive(:update_failed_job_count)
         allow(updater2).to receive(:update_vitals)
         allow(updater2).to receive(:update_log_counts)
+        allow(updater2).to receive(:update_task_stats)
       end
 
       it 'calls all update methods' do
@@ -398,6 +447,7 @@ module VCAP::CloudController::Metrics
         expect(periodic_updater).to receive(:update_failed_job_count).once
         expect(periodic_updater).to receive(:update_vitals).once
         expect(periodic_updater).to receive(:update_log_counts).once
+        expect(periodic_updater).to receive(:update_task_stats).once
         periodic_updater.update!
       end
     end

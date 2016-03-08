@@ -27,5 +27,9 @@ module VCAP::CloudController::Metrics
     def update_log_counts(_)
       # noop
     end
+
+    def update_task_stats(_, _)
+      # noop
+    end
   end
 end
