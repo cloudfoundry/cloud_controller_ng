@@ -50,6 +50,30 @@ module VCAP::CloudController
         allow(VCAP::CloudController::Config.config).to receive(:[]).with(:default_app_memory).and_return(873565)
         expect(app.memory).to eq(873565)
       end
+      context 'has custom ports' do
+        let(:app) { App.make(ports: [8081, 8082]) }
+
+        context 'with default_to_diego_backend set to true' do
+          before { TestConfig.override(default_to_diego_backend: true) }
+
+          it 'return an app with custom port configuration' do
+            expect(app.ports).to eq([8081, 8082])
+          end
+        end
+
+        context 'with default_to_diego_backend set to false' do
+          before { TestConfig.override(default_to_diego_backend: false) }
+
+          it 'raises a validation error' do
+            expect {
+              app.save
+            }.to raise_error do |e|
+              expect(e.message).
+                to include('Custom app ports supported for Diego only. Enable Diego for the app or remove custom app ports')
+            end
+          end
+        end
+      end
     end
 
     describe 'Associations' do
