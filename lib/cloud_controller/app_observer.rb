@@ -38,10 +38,6 @@ module VCAP::CloudController
         @runners.runner_for_app(app).update_routes if app.started? && app.active?
       end
 
-      def react_to_ports_change(app)
-        @runners.runner_for_app(app).update_ports if app.started? && app.active?
-      end
-
       private
 
       def delete_buildpack_cache(app)
