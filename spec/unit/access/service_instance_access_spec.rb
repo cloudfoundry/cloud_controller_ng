@@ -111,6 +111,18 @@ module VCAP::CloudController
           expect(subject).to_not allow_op_on_object(:update, service_instance)
         end
       end
+
+      context 'when the service broker is space-scoped' do
+        before do
+          broker = service.service_broker
+          broker.space = space
+          broker.save
+        end
+
+        it 'returns true for purge' do
+          expect(subject).to allow_op_on_object(:purge, service_instance)
+        end
+      end
     end
 
     context 'space auditor' do
