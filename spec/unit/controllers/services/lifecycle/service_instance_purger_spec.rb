@@ -52,6 +52,21 @@ module VCAP::CloudController
         end
       end
 
+      context 'when there are route bindings' do
+        let(:route_1) { Route.make(space: service_instance.space) }
+        let(:route_2) { Route.make(space: service_instance.space) }
+        let!(:service_instance) { ManagedServiceInstance.make(:routing) }
+        let!(:route_binding_1) { RouteBinding.make(service_instance: service_instance, route: route_1) }
+        let!(:route_binding_2) { RouteBinding.make(service_instance: service_instance, route: route_2) }
+
+        it 'deletes the route bindings' do
+          purger.purge(service_instance)
+
+          expect(route_binding_1).not_to exist
+          expect(route_binding_2).not_to exist
+        end
+      end
+
       context 'when there are service keys' do
         let!(:service_key_1) { ServiceKey.make(service_instance: service_instance) }
         let!(:service_key_2) { ServiceKey.make(service_instance: service_instance) }
