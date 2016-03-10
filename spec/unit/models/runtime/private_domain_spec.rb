@@ -3,6 +3,11 @@ require 'spec_helper'
 module VCAP::CloudController
   describe PrivateDomain, type: :model do
     let(:private_domain) { described_class.make name: 'test.example.com' }
+    let(:reserved) { nil }
+
+    before(:each) do
+      TestConfig.override({ reserved_private_domains: reserved })
+    end
 
     it { is_expected.to have_timestamp_columns }
 
@@ -68,6 +73,33 @@ module VCAP::CloudController
         SharedDomain.make name: 'baz.bar.foo.com'
         SharedDomain.make name: 'foo.com'
         expect { PrivateDomain.make name: 'bar.foo.com' }.to raise_error(Sequel::ValidationFailed, /overlapping_domain/)
+      end
+
+      context 'with reserved private domains' do
+        let(:reserved) { File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat') }
+
+        it 'handles normal reserved domain names' do
+          expect { PrivateDomain.make name: 'com.ac' }.to raise_error(Sequel::ValidationFailed, /reserved/)
+          expect { PrivateDomain.make name: 'a.com.ac' }.to_not raise_error
+          expect { PrivateDomain.make name: 'scom.ac' }.to_not raise_error
+        end
+
+        it 'handles wildcard reserved domain names' do
+          expect { PrivateDomain.make name: 'b.wild.card' }.to raise_error(Sequel::ValidationFailed, /reserved/)
+          expect { PrivateDomain.make name: 'a.b.wild.card' }.to_not raise_error
+        end
+
+        it 'handles exception reserved domain names' do
+          expect { PrivateDomain.make name: 'a.wild.card' }.to_not raise_error
+        end
+
+        context 'with a missing file' do
+          let(:reserved) { nil }
+
+          it 'raises an error' do
+            expect { PrivateDomain.configure('bogus') }.to raise_error(Errno::ENOENT)
+          end
+        end
       end
 
       describe 'total allowed private domains' do

@@ -32,6 +32,7 @@ gem 'statsd-ruby'
 gem 'activemodel', '~> 4.2.5.2'
 gem 'actionpack', '~> 4.2.5.2'
 gem 'actionview', '~> 4.2.5.2'
+gem 'public_suffix'
 
 # We need to use https for git urls as the git protocol is blocked by various
 # firewalls
