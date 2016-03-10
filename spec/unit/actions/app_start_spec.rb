@@ -39,9 +39,6 @@ module VCAP::CloudController
           process1.reload
           expect(process1.docker_image).to eq(package.docker_data.image)
         end
-
-        context 'when the package does not have a docker image' do
-        end
       end
 
       context 'when the app has a buildpack lifecycle' do
