@@ -8,6 +8,12 @@ module VCAP::CloudController
     describe '#purge' do
       let(:service_instance) { ManagedServiceInstance.make }
 
+      it 'deletes the service instance' do
+        purger.purge(service_instance)
+
+        expect(service_instance).not_to exist
+      end
+
       it 'records a service instance delete event' do
         purger.purge(service_instance)
 
@@ -37,6 +43,13 @@ module VCAP::CloudController
           expect(events.length).to eq(2)
           expect(event_binding_guids).to match_array([service_binding_1.guid, service_binding_2.guid])
         end
+
+        it 'deletes the service bindings' do
+          purger.purge(service_instance)
+
+          expect(service_binding_1).not_to exist
+          expect(service_binding_2).not_to exist
+        end
       end
 
       context 'when there are service keys' do
@@ -51,6 +64,13 @@ module VCAP::CloudController
 
           expect(events.length).to eq(2)
           expect(event_key_guids).to match_array([service_key_1.guid, service_key_2.guid])
+        end
+
+        it 'deletes the service keys' do
+          purger.purge(service_instance)
+
+          expect(service_key_1).not_to exist
+          expect(service_key_2).not_to exist
         end
       end
     end
