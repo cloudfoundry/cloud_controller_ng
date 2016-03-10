@@ -3,9 +3,9 @@ require 'spec_helper'
 module VCAP::CloudController
   describe AppObserver do
     let(:stagers) { double(:stagers, stager_for_app: stager) }
-    let(:runners) { double(:runners, runner_for_app: runner) }
+    let(:runners) { instance_double(Runners, runner_for_app: runner) }
     let(:stager) { double(:stager) }
-    let(:runner) { double(:runner, stop: nil, start: nil) }
+    let(:runner) { instance_double(Diego::Runner, stop: nil, start: nil) }
     let(:app_active) { true }
     let(:diego) { false }
     let(:app) do
@@ -117,6 +117,15 @@ module VCAP::CloudController
             expect(runner).to_not receive(:start)
             subject
           end
+
+          context 'diego app' do
+            let(:diego) { true }
+
+            it 'does not care if diego is unavailable' do
+              allow(runner).to receive(:stop).and_raise(VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError)
+              expect { subject }.not_to raise_error
+            end
+          end
         end
 
         context 'if the desired app state is started' do
@@ -143,6 +152,15 @@ module VCAP::CloudController
             it 'starts the app' do
               expect(runner).to receive(:start)
               subject
+            end
+          end
+
+          context 'diego app' do
+            let(:diego) { true }
+
+            it 'does not care if diego is unavailable' do
+              allow(runner).to receive(:start).and_raise(VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError)
+              expect { subject }.not_to raise_error
             end
           end
         end
@@ -209,6 +227,15 @@ module VCAP::CloudController
             expect(runner).to_not receive(:start)
             subject
           end
+
+          context 'diego app' do
+            let(:diego) { true }
+
+            it 'does not care if diego is unavailable' do
+              allow(runner).to receive(:stop).and_raise(VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError)
+              expect { subject }.not_to raise_error
+            end
+          end
         end
 
         context 'if the desired state of the app is started' do
@@ -235,6 +262,15 @@ module VCAP::CloudController
             it 'starts the app' do
               expect(runner).to receive(:start)
               subject
+            end
+
+            context 'diego app' do
+              let(:diego) { true }
+
+              it 'does not care if diego is unavailable' do
+                allow(runner).to receive(:start).and_raise(VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError)
+                expect { subject }.not_to raise_error
+              end
             end
           end
         end
@@ -295,6 +331,15 @@ module VCAP::CloudController
               subject
             end
           end
+
+          context 'diego app' do
+            let(:diego) { true }
+
+            it 'does not care if diego is unavailable' do
+              allow(runner).to receive(:scale).and_raise(VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError)
+              expect { subject }.not_to raise_error
+            end
+          end
         end
       end
     end
@@ -352,6 +397,15 @@ module VCAP::CloudController
           it 'updates routes' do
             expect(runner).to receive(:update_routes)
             subject
+          end
+        end
+
+        context 'diego app' do
+          let(:diego) { true }
+
+          it 'does not care if diego is unavailable' do
+            allow(runner).to receive(:update_routes).and_raise(VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError)
+            expect { subject }.not_to raise_error
           end
         end
       end
