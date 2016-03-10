@@ -1,0 +1,121 @@
+/*
+Copyright 2008-2013 Concur Technologies, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may
+not use this file except in compliance with the License. You may obtain
+a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License.
+*/
+
+
+////////////////////////////////////////////////////////////////////////////////
+// CUSTOMIZE SLATE
+////////////////////////////////////////////////////////////////////////////////
+// Use these settings to help adjust the appearance of Slate
+
+// CLOUDFOUNDRY STYLE GUIDE
+@import "partials/_vars.scss";
+
+// CODE TAB LANGUAGES
+////////////////////
+$lexed-languages: ("json", "http", "shell", "ruby", "golang");   // used to style code blocks written in a language differently from plaintext code blocks
+                                                                  // drawn from the Rouge lexer: http://rouge.jayferd.us/demo
+                                                                  // only languages used in our docs are listed thus far
+
+
+// BACKGROUND COLORS
+////////////////////
+$nav-bg: $gray5;
+$code-annotation-bg: #1c1c1c;
+$nav-subitem-bg: $gray5;
+$nav-active-bg: $gray5;
+$lang-select-border: #000;
+$lang-select-bg: $lang-selector-background-color;
+$lang-select-active-bg: $code-background-color; // feel free to change this to blue or something
+$lang-select-pressed-bg: #111; // color of language tab bg when mouse is pressed
+$main-bg: #fff;
+$aside-notice-bg: #8fbcd4;
+$aside-warning-bg: #c97a7e;
+$aside-success-bg: #6ac174;
+$search-notice-bg: #c97a7e;
+
+
+// TEXT COLORS
+////////////////////
+$main-text: #333; // main content text color
+$nav-text: $blue1;
+$nav-active-text: $blue1;
+$lang-select-text: #fff; // color of unselected language tab text
+$lang-select-active-text: #fff; // color of selected language tab text
+$lang-select-pressed-text: #fff; // color of language tab text when mouse is pressed
+
+
+// SIZES
+////////////////////
+$nav-width: 230px; // width of the navbar
+$examples-width: 50%; // portion of the screen taken up by code examples
+$logo-margin: 20px; // margin between nav items and logo, ignored if search is active
+$main-padding: 28px; // padding to left and right of content & examples
+$nav-padding: 15px; // padding to left and right of navbar
+$nav-v-padding: 10px; // padding used vertically around search boxes and results
+$nav-indent: 10px; // extra padding for ToC subitems
+$code-annotation-padding: 13px; // padding inside code annotations
+$h1-margin-top: 0px; // margin above the largest header tags - added to allow lining up code blocks
+$h1-margin-bottom: 0px; // margin under the largest header tags - cleared to allow lining up code blocks
+$section-divide-margin: 0px; // margin at bottom of a section (p + div + h2) - added to allow lining up code blocks
+$section-divide-padding: 1.7em; // add the removed margin at section borders as padding - added to allow lining up of code blocks
+$tablet-width: 930px; // min width before reverting to tablet size
+$phone-width: $tablet-width - $nav-width; // min width before reverting to mobile size
+
+
+// FONTS
+////////////////////
+%default-font {
+  font-family: $font-primary, "Helvetica Neue", Helvetica, Arial, "Microsoft Yahei","微软雅黑", STXihei, "华文细黑", sans-serif;
+  font-size: $font-size-s;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+%header-font {
+  @extend %default-font;
+  font-weight: bold;
+}
+
+%code-font {
+  font-family: Consolas, Menlo, Monaco, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Courier New", monospace, serif;
+  font-size: $font-size-xls;
+  line-height: 1.5;
+}
+
+
+// OTHER
+////////////////////
+$nav-active-shadow: transparent;
+$nav-footer-border-color: #666;
+$nav-embossed-border-top: #000;
+$nav-embossed-border-bottom: #939393;
+$main-embossed-text-shadow: 0px 1px 0px #fff;
+$search-box-border-color: transparent;
+
+
+////////////////////////////////////////////////////////////////////////////////
+// INTERNAL
+////////////////////////////////////////////////////////////////////////////////
+// These settings are probably best left alone.
+
+%break-words {
+     word-break: break-all;
+
+     /* Non standard for webkit */
+     word-break: break-word;
+
+        hyphens: auto;
+}

@@ -1,0 +1,61 @@
+## Create a route mapping
+
+```
+Definition
+```
+
+```http
+POST /v3/apps/:guid/route_mappings HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/apps/[guid]/route_mappings" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -d '{
+    "relationships": {
+      "route": {
+        "guid": "9612ecbd-36f1-4ada-927a-efae9310b3a1"
+      },
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+
+<%= yield_content :single_route_mapping %>
+```
+
+This endpoint creates a new route mapping.
+
+### Body Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      relationships['route']['guid']
+
+      <span class="method-list-item-type method-list-item-type-required">required</span>
+    </h4>
+
+    <p class="method-list-item-description">Guid of the route to which you would like to map the app.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      relationships['process']['type']
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Type of the process on the app to which you would like to map the route. Defaults to 'web'</p>
+  </li>
+</ul>

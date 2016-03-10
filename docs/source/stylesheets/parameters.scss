@@ -1,0 +1,51 @@
+@import "partials/_vars.scss";
+
+.method-list-item {
+  padding: 17px 0;
+  border-bottom: 1px solid #f0f4f7;
+  line-height: 24px;
+  list-style-type: none;
+  overflow: hidden;
+}
+
+.method-list-item-label {
+  width: 180px;
+  float: left;
+  text-align: right;
+  position: relative;
+  z-index: 5;
+  font-size: $font-size-xls;
+  margin-top: 0;
+  line-height: 1.6;
+
+  .method-list-item-type {
+    display: block;
+    color: $color-text-dim;
+
+    &.method-list-item-type-required {
+      text-transform: uppercase;
+      color: $color-required-parameter;
+    }
+  }
+}
+
+.method-list-item-description {
+  position: relative;
+  z-index: 10;
+  background: #fff;
+  margin: 0 0 0 200px;
+}
+
+.no-body-parameters-required {
+  display: inline-block;
+  width: 100%;
+  padding: 20px 0;
+
+  text-align: center;
+  font-weight: $weight-no-body-parameters;
+  color: $color-no-body-parameters;
+
+  border-width: 1px 0;
+  border-style: solid;
+  border-color: $color-no-body-parameters-border;
+}

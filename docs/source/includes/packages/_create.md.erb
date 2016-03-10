@@ -1,0 +1,69 @@
+## Create a package
+
+```
+Definition
+```
+
+```http
+POST /v3/apps/:guid/packages HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/apps/[guid]/packages" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -d '{
+    "type": "docker",
+    "data": {
+      "image": "registry/image:latest"
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+
+<%= yield_content :single_docker_package %>
+```
+
+This endpoint creates a new package.
+
+### Body Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      type
+
+      <span class="method-list-item-type method-list-item-type-required">required</span>
+    </h4>
+
+    <p class="method-list-item-description">Package type. Possible values are "bits", "docker".</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      data
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Data for docker packages. Can be empty for bits packages.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      data['image']
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Location of docker image. Required for docker packages.</p>
+  </li>
+</ul>

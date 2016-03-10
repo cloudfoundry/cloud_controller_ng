@@ -1,0 +1,75 @@
+/*
+ * FILE: _vars.scss
+======================================================================== */
+
+// ~BEGIN BASE VALUES
+// ===================================================
+$font-primary: 'Source Sans Pro', sans-serif;
+$font-size-xxl: 2.441em;
+$font-size-xl: 1.953em;
+$font-size-l: 1.563em;
+$font-size-m: 1.25em;
+$font-size-s: 1em;
+$font-size-xls: 0.9em;
+$font-size-xs: 0.8em;
+
+$font-weight-light: 300;
+
+$navy: #243640;
+$gray1: #424242;
+$gray2: #686868;
+$gray3: #b5b5b5;
+$gray4: #eceae9;
+$gray5: #f8f8f8;
+$gray6: #fdfdfd;
+$blue1: #2185c5;
+$blue2: #a7cae1;
+$bluegray1: #4b6475;
+$teal1: #03786D;
+$teal2: #00a79d;
+$froly-red: #F08080;
+
+// ~COLORS
+// ===================================================
+
+$color-accent: $teal1;
+$color-accent-bright: $teal2;
+
+// text colors
+$color-header: $gray2;
+$color-text: $gray1;
+$color-text-dim: $gray3;
+
+// link colors
+$color-link: $blue1;
+$color-link-border: $blue2;
+
+// border colors
+$color-border-row: $gray5;
+$color-border: $gray4;
+$color-border-light: $gray4;
+$color-border-superlight: $gray4;
+$color-border-dark: $gray3;
+
+// background-colors
+$color-bg: $gray5;
+$color-bg-light: $gray6;
+$color-bg-panel: $gray5;
+$color-bg-header: $navy;
+$color-bg-dark: $bluegray1;
+
+$color-required-parameter: $froly-red;
+$color-no-body-parameters: $gray3;
+$color-no-body-parameters-border: $gray4;
+
+$weight-no-body-parameters: $font-weight-light;
+
+// ~COMPASS DEFAULTS
+// ===================================================
+$contrasted-dark-default: $color-text;
+$contrasted-light-default: #fff;
+$contrasted-lightness-threshold: 90%;
+
+$code-snippet-background-color: $navy;
+$code-background-color: darken($code-snippet-background-color, 7%);
+$lang-selector-background-color: desaturate($code-snippet-background-color, 10%);

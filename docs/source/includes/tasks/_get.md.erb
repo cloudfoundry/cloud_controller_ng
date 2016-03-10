@@ -1,0 +1,39 @@
+## Get a task
+
+```
+Definition
+```
+
+```http
+GET /v3/tasks/:guid HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/tasks/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :single_task %>
+```
+
+This endpoint retrieves a specific task.
+
+### Body Parameters
+
+<p class='no-body-parameters-outer'>
+  <span class='no-body-parameters-required'>
+    No arguments
+  </span>
+</p>

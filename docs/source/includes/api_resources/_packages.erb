@@ -1,0 +1,140 @@
+<% content_for :single_docker_package do %>
+{
+  "guid": "4cb65058-f04f-458f-aca1-5f4e43de6407",
+  "type": "docker",
+  "data": {
+    "hash": {
+      "type": "sha1",
+      "value": null
+    },
+    "error": null,
+    "image": "registry/image:latest"
+  },
+  "state": "READY",
+  "created_at": "2015-11-03T00:53:54Z",
+  "updated_at": null,
+  "links":
+  {
+    "self": {
+      "href": "/v3/packages/4cb65058-f04f-458f-aca1-5f4e43de6407"
+    },
+    "app": {
+      "href": "/v3/apps/d8b8148d-5798-44de-821a-64b85b15e968"
+    }
+  }
+}
+<% end %>
+
+<% content_for :single_bits_package do %>
+{
+  "guid": "44f7c078-0934-470f-9883-4fcddc5b8f13",
+  "type": "bits",
+  "data": {
+    "hash": {
+      "type": "sha1",
+      "value": null
+    },
+    "error": null
+  },
+  "state": "PROCESSING_UPLOAD",
+  "created_at": "2015-11-13T17:02:56Z",
+  "updated_at": null,
+  "links": {
+    "self": {
+      "href": "/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13"
+    },
+    "upload": {
+      "href": "/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/upload",
+      "method": "POST"
+    },
+    "download": {
+      "href": "/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/download",
+      "method": "GET"
+    },
+    "stage": {
+      "href": "/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/droplets",
+      "method": "POST"
+    },
+    "app": {
+      "href": "/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a"
+    }
+  }
+}
+<% end %>
+
+<% content_for :paginated_list_of_packages do |base_url| %>
+{
+  "pagination": {
+    "total_results": 3,
+    "first": {
+      "href": "<%= base_url %>?page=1&per_page=2"
+    },
+    "last": {
+      "href": "<%= base_url %>?page=2&per_page=2"
+    },
+    "next": {
+      "href": "<%= base_url %>?page=2&per_page=2"
+    },
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "a57fd932-85db-483a-a27e-b00efbb3b0a4",
+      "type": "bits",
+      "data": {
+        "hash": {
+          "type": "sha1",
+          "value": null
+        },
+        "error": null
+      },
+      "state": "AWAITING_UPLOAD",
+      "created_at": "2015-11-03T00:53:54Z",
+      "updated_at": null,
+      "links": {
+        "self": {
+          "href": "/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4"
+        },
+        "upload": {
+          "href": "/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4/upload",
+          "method": "POST"
+        },
+        "download": {
+          "href": "/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4/download",
+          "method": "GET"
+        },
+        "stage": {
+          "href": "/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4/droplets",
+          "method": "POST"
+        },
+        "app": {
+          "href": "/v3/apps/fa3558ce-1c4d-46fc-9776-54b9c8021745"
+        }
+      }
+    },
+    {
+      "guid": "8f1f294d-cef8-4c11-9f0b-3bcdc0bd2691",
+      "type": "docker",
+      "data": {
+        "hash": {
+          "type": "sha1",
+          "value": null
+        },
+        "error": null,
+        "image": "http://location-of-image.com"
+      },
+      "state": "READY",
+      "created_at": "2015-11-03T00:53:54Z",
+      "updated_at": null,
+      "links": {
+        "self": {
+          "href": "/v3/packages/8f1f294d-cef8-4c11-9f0b-3bcdc0bd2691"
+        },
+        "app": {
+          "href": "/v3/apps/fa3558ce-1c4d-46fc-9776-54b9c8021745"
+        }
+      }
+    }
+  ]
+}
+<% end %>

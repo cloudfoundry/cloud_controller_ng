@@ -1,0 +1,80 @@
+## Create a task
+
+```
+Definition
+```
+
+```http
+POST /v3/apps/:guid/tasks HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/apps/[guid]/tasks" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -d '{
+    "name": "migrate",
+    "command": "rake db:migrate",
+    "memory_in_mb": 512,
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 202 Accepted
+
+<%= yield_content :single_task %>
+```
+
+This endpoint creates a new task.
+
+Environment variables specified in the request body will overwrite and be appended to the environment variables set on the app associated with your task.
+These overwrite and are appended to the app's running environment variable group.
+
+
+### Body Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      name
+
+      <span class="method-list-item-type method-list-item-type-required">required</span>
+    </h4>
+
+    <p class="method-list-item-description">User-facing name of the task</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      command
+
+      <span class="method-list-item-type method-list-item-type-required">required</span>
+    </h4>
+
+    <p class="method-list-item-description">Command that will be executed</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+     environment_variables
+     <span class="method-list-item-type">optional</span>
+    </h4>
+    <p class="method-list-item-description">Environment variables passed to the
+    container running your task.</p>
+
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      memory_in_mb
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Maximum memory for the task in MB. Will default to operater-configurable 'default_app_memory' if not set.</p>
+  </li>
+</ul>
