@@ -8,4 +8,3 @@ gem 'rouge'
 gem 'rake'
 gem 'redcarpet'
 gem 'therubyracer'
-
