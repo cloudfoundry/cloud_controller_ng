@@ -39,7 +39,8 @@ resource 'Apps (Experimental)', type: :api do
         package_guid:                     package.guid,
         buildpack_receipt_buildpack:      buildpack.name,
         buildpack_receipt_buildpack_guid: buildpack.guid,
-        environment_variables:            { 'yuu' => 'huuu' }
+        environment_variables:            { 'yuu' => 'huuu' },
+        memory_limit:                     123,
       )
     end
     let!(:droplet2) do
@@ -51,7 +52,8 @@ resource 'Apps (Experimental)', type: :api do
         droplet_hash:                'my-hash',
         buildpack_receipt_buildpack: 'https://github.com/cloudfoundry/my-buildpack.git',
         process_types:               { web: 'started' }.to_json,
-        state:                       VCAP::CloudController::DropletModel::STAGED_STATE
+        state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
+        memory_limit:                123,
       )
     end
     let!(:droplet3) { VCAP::CloudController::DropletModel.make(:buildpack, package_guid: VCAP::CloudController::PackageModel.make.guid) }
@@ -90,7 +92,7 @@ resource 'Apps (Experimental)', type: :api do
                   'stack' => droplet2.lifecycle_data.stack,
                 }
               },
-              'memory_limit' => nil,
+              'memory_limit' => 123,
               'disk_limit' => nil,
               'environment_variables' => {},
               'result'                   => {
@@ -123,7 +125,7 @@ resource 'Apps (Experimental)', type: :api do
                   'stack' => droplet1.lifecycle_data.stack,
                 }
               },
-              'memory_limit' => nil,
+              'memory_limit' => 123,
               'disk_limit' => nil,
               'environment_variables' => droplet1.environment_variables,
               'result' => nil,

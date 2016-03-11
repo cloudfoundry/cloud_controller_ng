@@ -152,5 +152,168 @@ module VCAP::CloudController
         expect(droplet_model.lifecycle_data).to be_a(DockerLifecycleDataModel)
       end
     end
+
+    describe 'usage events' do
+      it 'ensures we have coverage for all states' do
+        expect(DropletModel::DROPLET_STATES.count).to eq(5), 'After adding a new state, tests for app usage event coverage should be added.'
+      end
+
+      context 'when creating a droplet' do
+        it 'creates a STAGING_STARTED app usage event' do
+          expect {
+            DropletModel.make
+          }.to change { AppUsageEvent.count }.by(1)
+
+          expect(AppUsageEvent.last.state).to eq('STAGING_STARTED')
+        end
+      end
+
+      context 'when updating a droplet' do
+        let!(:droplet) { DropletModel.make(state: initial_state) }
+
+        context 'when state is PENDING' do
+          let(:initial_state) { DropletModel::STAGING_STATE }
+
+          it 'records no usage event' do
+            expect {
+              droplet.state = DropletModel::PENDING_STATE
+              droplet.save
+            }.not_to change { AppUsageEvent.count }
+          end
+        end
+
+        context 'when state is STAGING' do
+          let(:initial_state) { DropletModel::PENDING_STATE }
+
+          it 'records no usage event' do
+            expect {
+              droplet.state = DropletModel::STAGING_STATE
+              droplet.save
+            }.not_to change { AppUsageEvent.count }
+          end
+        end
+
+        context 'when state is FAILED' do
+          context 'changing from a different state' do
+            let(:initial_state) { DropletModel::PENDING_STATE }
+
+            it 'records a STAGING_STOPPED event ' do
+              expect {
+                droplet.state = DropletModel::FAILED_STATE
+                droplet.save
+              }.to change { AppUsageEvent.count }.by(1)
+
+              expect(AppUsageEvent.last.state).to eq('STAGING_STOPPED')
+            end
+          end
+
+          context 'not changing state' do
+            let(:initial_state) { DropletModel::FAILED_STATE }
+
+            it 'records no usage event' do
+              expect {
+                droplet.memory_limit = 555
+                droplet.save
+              }.not_to change { AppUsageEvent.count }
+            end
+          end
+        end
+
+        context 'when state is STAGED' do
+          context 'changing from a different state' do
+            let(:initial_state) { DropletModel::PENDING_STATE }
+
+            it 'records a STAGING_STOPPED event ' do
+              expect {
+                droplet.state = DropletModel::STAGED_STATE
+                droplet.save
+              }.to change { AppUsageEvent.count }.by(1)
+
+              expect(AppUsageEvent.last.state).to eq('STAGING_STOPPED')
+            end
+          end
+
+          context 'not changing state' do
+            let(:initial_state) { DropletModel::STAGED_STATE }
+
+            it 'records no usage event' do
+              expect {
+                droplet.memory_limit = 555
+                droplet.save
+              }.not_to change { AppUsageEvent.count }
+            end
+          end
+        end
+
+        context 'when state is EXPIRED' do
+          let(:initial_state) { DropletModel::STAGED_STATE }
+
+          it 'records no usage event' do
+            expect {
+              droplet.state = DropletModel::EXPIRED_STATE
+              droplet.save
+            }.not_to change { AppUsageEvent.count }
+          end
+        end
+      end
+
+      context 'when deleting a droplet' do
+        let!(:droplet) { DropletModel.make(state: state) }
+
+        context 'when state is PENDING' do
+          let(:state) { DropletModel::PENDING_STATE }
+
+          it 'records a STAGING_STOPPED event ' do
+            expect {
+              droplet.destroy
+            }.to change { AppUsageEvent.count }.by(1)
+
+            expect(AppUsageEvent.last.state).to eq('STAGING_STOPPED')
+          end
+        end
+
+        context 'when state is STAGING' do
+          let(:state) { DropletModel::STAGING_STATE }
+
+          it 'records a STAGING_STOPPED event ' do
+            expect {
+              droplet.destroy
+            }.to change { AppUsageEvent.count }.by(1)
+
+            expect(AppUsageEvent.last.state).to eq('STAGING_STOPPED')
+          end
+        end
+
+        context 'when state is FAILED' do
+          let(:state) { DropletModel::FAILED_STATE }
+
+          it 'records no usage event' do
+            expect {
+              droplet.destroy
+            }.not_to change { AppUsageEvent.count }
+          end
+        end
+
+        context 'when state is STAGED' do
+          let(:state) { DropletModel::STAGED_STATE }
+
+          it 'records no usage event' do
+            expect {
+              droplet.destroy
+            }.not_to change { AppUsageEvent.count }
+          end
+        end
+
+        context 'when state is EXPIRED' do
+          let(:state) { DropletModel::EXPIRED_STATE }
+
+          it 'records no usage event' do
+            expect {
+              droplet.destroy
+            }.not_to change { AppUsageEvent.count }
+          end
+        end
+      end
+    end
   end
 end

@@ -154,7 +154,7 @@ module VCAP::CloudController
       end
 
       describe '#create_from_task' do
-        let(:task) { TaskModel.make(memory_in_mb: 222) }
+        let!(:task) { TaskModel.make(memory_in_mb: 222) }
         let(:state) { 'TEST_STATE' }
 
         it 'creates an AppUsageEvent' do
@@ -192,6 +192,47 @@ module VCAP::CloudController
             expect(event.process_type).to be_nil
             expect(event.task_guid).to eq(task.guid)
             expect(event.task_name).to eq(task.name)
+          end
+        end
+      end
+
+      describe '#create_from_droplet' do
+        let(:package) { PackageModel.make }
+        let!(:droplet) { DropletModel.make(memory_limit: 222, package_guid: package.guid) }
+        let(:state) { 'TEST_STATE' }
+
+        it 'creates an AppUsageEvent' do
+          expect {
+            repository.create_from_droplet(droplet, state)
+          }.to change { AppUsageEvent.count }.by(1)
+        end
+
+        describe 'the created event' do
+          it 'sets the state to what is passed in' do
+            event = repository.create_from_droplet(droplet, state)
+            expect(event.state).to eq('TEST_STATE')
+          end
+
+          it 'sets the attributes based on the task' do
+            event = repository.create_from_droplet(droplet, state)
+
+            expect(event.state).to eq('TEST_STATE')
+            expect(event.instance_count).to eq(1)
+            expect(event.memory_in_mb_per_instance).to eq(222)
+            expect(event.org_guid).to eq(droplet.space.organization.guid)
+            expect(event.space_guid).to eq(droplet.space.guid)
+            expect(event.space_name).to eq(droplet.space.name)
+            expect(event.parent_app_guid).to eq(droplet.app.guid)
+            expect(event.parent_app_name).to eq(droplet.app.name)
+            expect(event.package_guid).to eq(droplet.package.guid)
+            expect(event.app_guid).to eq('')
+            expect(event.app_name).to eq('')
+            expect(event.process_type).to be_nil
+            expect(event.buildpack_guid).to be_nil
+            expect(event.buildpack_name).to be_nil
+            expect(event.package_state).to be_nil
+            expect(event.task_guid).to be_nil
+            expect(event.task_name).to be_nil
           end
         end
       end

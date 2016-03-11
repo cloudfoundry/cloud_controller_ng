@@ -61,6 +61,10 @@ module VCAP::CloudController
       app_model.droplets_dataset.
         select(:"#{DropletModel.table_name}__guid",
         :"#{DropletModel.table_name}__id",
+        :"#{DropletModel.table_name}__state",
+        :"#{DropletModel.table_name}__memory_limit",
+        :"#{DropletModel.table_name}__app_guid",
+        :"#{DropletModel.table_name}__package_guid",
         :"#{DropletModel.table_name}__droplet_hash").all
     end
 

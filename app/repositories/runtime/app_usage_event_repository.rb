@@ -7,20 +7,21 @@ module VCAP::CloudController
         end
 
         def create_from_app(app, state_name=nil)
-          AppUsageEvent.create(state:  state_name || app.state,
-                               package_state:             app.package_state,
-                               instance_count:            app.instances,
-                               memory_in_mb_per_instance: app.memory,
-                               app_guid:                  app.guid,
-                               app_name:                  app.name,
-                               org_guid:                  app.space.organization_guid,
-                               space_guid:                app.space_guid,
-                               space_name:                app.space.name,
-                               buildpack_guid:            app.detected_buildpack_guid,
-                               buildpack_name:            app.custom_buildpack_url || app.detected_buildpack_name,
-                               parent_app_guid:           app.app ? app.app.guid : nil,
-                               parent_app_name:           app.app ? app.app.name : nil,
-                               process_type:              app.type
+          AppUsageEvent.create(
+            state:                     state_name || app.state,
+            package_state:             app.package_state,
+            instance_count:            app.instances,
+            memory_in_mb_per_instance: app.memory,
+            app_guid:                  app.guid,
+            app_name:                  app.name,
+            org_guid:                  app.space.organization_guid,
+            space_guid:                app.space_guid,
+            space_name:                app.space.name,
+            buildpack_guid:            app.detected_buildpack_guid,
+            buildpack_name:            app.custom_buildpack_url || app.detected_buildpack_name,
+            parent_app_guid:           app.app ? app.app.guid : nil,
+            parent_app_name:           app.app ? app.app.name : nil,
+            process_type:              app.type
           )
         end
 
@@ -43,6 +44,22 @@ module VCAP::CloudController
             task_guid:                 task.guid,
             task_name:                 task.name,
           )
+        end
+
+        def create_from_droplet(droplet, state)
+          AppUsageEvent.create({
+            state:                     state,
+            instance_count:            1,
+            memory_in_mb_per_instance: droplet.memory_limit,
+            org_guid:                  droplet.space.organization.guid,
+            space_guid:                droplet.space.guid,
+            space_name:                droplet.space.name,
+            parent_app_guid:           droplet.app.guid,
+            parent_app_name:           droplet.app.name,
+            package_guid:              droplet.package_guid,
+            app_guid:                  '',
+            app_name:                  '',
+          })
         end
 
         def purge_and_reseed_started_apps!

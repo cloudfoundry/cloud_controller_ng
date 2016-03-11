@@ -76,14 +76,8 @@ module VCAP::CloudController
       end
 
       context 'creating a stage request' do
-        let(:droplet) { Droplet.make }
-
-        before do
-          allow(DropletModel).to receive(:new).and_return(droplet)
-        end
-
         it 'initiates a staging request' do
-          action.stage(package, lifecycle, stagers)
+          droplet = action.stage(package, lifecycle, stagers)
           expect(stager).to have_received(:stage) do |staging_details|
             expect(staging_details.droplet).to eq(droplet)
             expect(staging_details.memory_limit).to eq(calculated_mem_limit)
