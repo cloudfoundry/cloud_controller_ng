@@ -34,6 +34,7 @@ module VCAP::CloudController::Metrics
       running_tasks = VCAP::CloudController::TaskModel.where(state: VCAP::CloudController::TaskModel::RUNNING_STATE)
       running_task_count = running_tasks.count
       running_task_memory = running_tasks.sum(:memory_in_mb)
+      running_task_memory = 0 if running_task_memory.nil?
       @updaters.each { |u| u.update_task_stats(running_task_count, running_task_memory) }
     end
 

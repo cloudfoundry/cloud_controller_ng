@@ -57,6 +57,14 @@ module VCAP::CloudController::Metrics
         expect(updater1).to have_received(:update_task_stats).with(anything, 513)
         expect(updater2).to have_received(:update_task_stats).with(anything, 513)
       end
+
+      context 'when there are no running tasks' do
+        it 'properly reports 0' do
+          periodic_updater.update_task_stats
+          expect(updater1).to have_received(:update_task_stats).with(0, 0)
+          expect(updater2).to have_received(:update_task_stats).with(0, 0)
+        end
+      end
     end
 
     describe '#setup_updates' do
