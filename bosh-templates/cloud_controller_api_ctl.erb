@@ -40,7 +40,7 @@ export NEWRELIC_ENABLE=<%= !!properties.cc.newrelic.license_key || p("cc.develop
 export NRCONFIG=$CONFIG_DIR/newrelic.yml
 export NEW_RELIC_ENV=<%= p("cc.newrelic.environment_name") %>
 
-source /var/vcap/packages/common/utils.sh
+source /var/vcap/packages/capi_utils/utils.sh
 source $CC_JOB_DIR/bin/blobstore_waiter.sh
 
 case $1 in
