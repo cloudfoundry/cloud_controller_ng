@@ -1,8 +1,8 @@
 AllCops:
   TargetRubyVersion: 2.2
   Include:
-    - Gemfile
-    - Rakefile
+    - '**/Gemfile'
+    - '**/Rakefile'
   Exclude:
     - vendor/**/*
     - db/migrations/**/*
