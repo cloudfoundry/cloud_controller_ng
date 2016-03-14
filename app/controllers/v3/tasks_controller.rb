@@ -20,9 +20,8 @@ class TasksController < ApplicationController
     invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
     if app_nested?
-      app, space, org = VCAP::CloudController::AppFetcher.new.fetch(params[:app_guid])
-      app_not_found! unless app && can_read?(space.guid, org.guid)
-      paginated_result = list_fetcher.fetch_for_app(pagination_options: pagination_options, message: message, app_guid: params[:app_guid])
+      app, paginated_result = list_fetcher.fetch_for_app(pagination_options: pagination_options, message: message, app_guid: params[:app_guid])
+      app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
       paginated_result = if roles.admin?
                            list_fetcher.fetch_all(pagination_options: pagination_options, message: message)
