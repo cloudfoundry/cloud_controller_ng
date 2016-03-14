@@ -23,6 +23,174 @@ resource 'Packages (Experimental)', type: :api do
     end
   end
 
+  post '/v3/apps/:guid/packages' do
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:space_guid) { space.guid }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space_guid) }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+    end
+
+    describe 'creating a package' do
+      let(:guid) { app_model.guid }
+      let(:type) { 'docker' }
+      let(:data) do # 'docker://cloudfoundry/runtime-ci'
+        {
+          image: 'registry/image:latest'
+        }
+      end
+
+      let(:raw_post) { body_parameters }
+
+      body_parameter :type, 'Package type', required: true, valid_values: ['bits', 'docker'], parameter_type: 'String'
+      body_parameter :data, 'Data for docker packages.  Can be empty for bits packages.', required: false
+      body_parameter :'data["image"]', 'Location of docker image.  Required for docker packages.', example_values: ['registry/image:latest'], parameter_type: 'String'
+
+      header 'Content-Type', 'application/json'
+
+      example 'Create a Package' do
+        expect {
+          do_request
+        }.to change { VCAP::CloudController::PackageModel.count }.by(1)
+
+        package = VCAP::CloudController::PackageModel.last
+
+        expected_response = {
+          'guid'       => package.guid,
+          'type'       => type,
+          'data'       => {
+            'image'    => 'registry/image:latest',
+          },
+          'state'      => 'READY',
+          'created_at' => iso8601,
+          'updated_at' => nil,
+          'links' => {
+            'self' => { 'href' => "/v3/packages/#{package.guid}" },
+            'app'  => { 'href' => "/v3/apps/#{guid}" },
+            'stage' => { 'href' => "/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
+          }
+        }
+
+        parsed_response = MultiJson.load(response_body)
+        expect(response_status).to eq(201)
+        expect(parsed_response).to be_a_response_like(expected_response)
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+          type:              'audit.app.add_package',
+          actee:             parsed_response['guid'],
+          actee_type:        'package',
+          actee_name:        '',
+          actor:             user.guid,
+          actor_type:        'user',
+          space_guid:        space.guid,
+          organization_guid: space.organization.guid
+        })
+        expect(event.metadata['request']['app_guid']).to eq(app_model.guid)
+      end
+    end
+
+    describe 'copying a package' do
+      let(:target_app_model) { VCAP::CloudController::AppModel.make(space_guid: space_guid) }
+      let!(:original_package) { VCAP::CloudController::PackageModel.make(type: 'docker', app_guid: app_model.guid) }
+
+      parameter :source_package_guid, 'The package to copy from', required: true
+
+      let(:guid) { target_app_model.guid }
+      let(:source_package_guid) { original_package.guid }
+
+      before do
+        VCAP::CloudController::PackageDockerDataModel.create(package: original_package, image: 'http://awesome-sauce.com')
+      end
+
+      example 'Copy a Package' do
+        # Using client directly instead of calling do_request to ensure parameter is displayed correctly in docs
+        expect {
+          client.post "/v3/apps/#{guid}/packages?source_package_guid=#{source_package_guid}", {}, headers
+        }.to change { VCAP::CloudController::PackageModel.count }.by(1)
+
+        package = VCAP::CloudController::PackageModel.last
+
+        expected_response = {
+          'guid'       => package.guid,
+          'type'       => 'docker',
+          'data'       => {
+            'image'    => 'http://awesome-sauce.com'
+          },
+          'state'      => 'READY',
+          'created_at' => iso8601,
+          'updated_at' => nil,
+          'links' => {
+            'self' => { 'href' => "/v3/packages/#{package.guid}" },
+            'app'  => { 'href' => "/v3/apps/#{guid}" },
+            'stage' => { 'href' => "/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
+          }
+        }
+
+        expect(status).to eq(201)
+        parsed_response = MultiJson.load(response_body)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
+    end
+  end
+
+  get '/v3/apps/:guid/packages' do
+    parameter :page, 'Page to display', valid_values: '>= 1'
+    parameter :per_page, 'Number of results per page', valid_values: '1-5000'
+
+    let(:space) { VCAP::CloudController::Space.make }
+    let!(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+    let(:guid) { app_model.guid }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+    end
+
+    example 'List associated packages' do
+      expected_response = {
+        'pagination' => {
+          'total_results' => 1,
+          'first'         => { 'href' => "/v3/apps/#{guid}/packages?page=1&per_page=50" },
+          'last'          => { 'href' => "/v3/apps/#{guid}/packages?page=1&per_page=50" },
+          'next'          => nil,
+          'previous'      => nil,
+        },
+        'resources' => [
+          {
+            'guid'       => package.guid,
+            'type'       => 'bits',
+            'data'       => {
+              'hash'       => { 'type' => 'sha1', 'value' => nil },
+              'error'      => nil
+            },
+            'url'        => nil,
+            'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
+            'created_at' => iso8601,
+            'updated_at' => nil,
+            'links' => {
+              'self'   => { 'href' => "/v3/packages/#{package.guid}" },
+              'upload' => { 'href' => "/v3/packages/#{package.guid}/upload", 'method' => 'POST' },
+              'download' => { 'href' => "/v3/packages/#{package.guid}/download", 'method' => 'GET' },
+              'stage' => { 'href' => "/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
+              'app' => { 'href' => "/v3/apps/#{guid}" },
+            }
+          }
+        ]
+      }
+
+      do_request_with_error_handling
+
+      parsed_response = MultiJson.load(response_body)
+
+      expect(response_status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
+
   get '/v3/packages' do
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1-5000'
@@ -148,118 +316,6 @@ resource 'Packages (Experimental)', type: :api do
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
-    end
-  end
-
-  post '/v3/apps/:guid/packages' do
-    let(:space) { VCAP::CloudController::Space.make }
-    let(:space_guid) { space.guid }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space_guid) }
-
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
-    end
-
-    describe 'creating a package' do
-      let(:guid) { app_model.guid }
-      let(:type) { 'docker' }
-      let(:data) do # 'docker://cloudfoundry/runtime-ci'
-        {
-          image: 'registry/image:latest'
-        }
-      end
-
-      let(:raw_post) { body_parameters }
-
-      body_parameter :type, 'Package type', required: true, valid_values: ['bits', 'docker'], parameter_type: 'String'
-      body_parameter :data, 'Data for docker packages.  Can be empty for bits packages.', required: false
-      body_parameter :'data["image"]', 'Location of docker image.  Required for docker packages.', example_values: ['registry/image:latest'], parameter_type: 'String'
-
-      header 'Content-Type', 'application/json'
-
-      example 'Create a Package' do
-        expect {
-          do_request
-        }.to change { VCAP::CloudController::PackageModel.count }.by(1)
-
-        package = VCAP::CloudController::PackageModel.last
-
-        expected_response = {
-          'guid'       => package.guid,
-          'type'       => type,
-          'data'       => {
-            'image'    => 'registry/image:latest',
-          },
-          'state'      => 'READY',
-          'created_at' => iso8601,
-          'updated_at' => nil,
-          'links' => {
-            'self' => { 'href' => "/v3/packages/#{package.guid}" },
-            'app'  => { 'href' => "/v3/apps/#{guid}" },
-            'stage' => { 'href' => "/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
-          }
-        }
-
-        parsed_response = MultiJson.load(response_body)
-        expect(response_status).to eq(201)
-        expect(parsed_response).to be_a_response_like(expected_response)
-        event = VCAP::CloudController::Event.last
-        expect(event.values).to include({
-              type:              'audit.app.add_package',
-              actee:             parsed_response['guid'],
-              actee_type:        'package',
-              actee_name:        '',
-              actor:             user.guid,
-              actor_type:        'user',
-              space_guid:        space.guid,
-              organization_guid: space.organization.guid
-            })
-        expect(event.metadata['request']['app_guid']).to eq(app_model.guid)
-      end
-    end
-
-    describe 'copying a package' do
-      let(:target_app_model) { VCAP::CloudController::AppModel.make(space_guid: space_guid) }
-      let!(:original_package) { VCAP::CloudController::PackageModel.make(type: 'docker', app_guid: app_model.guid) }
-
-      parameter :source_package_guid, 'The package to copy from', required: true
-
-      let(:guid) { target_app_model.guid }
-      let(:source_package_guid) { original_package.guid }
-
-      before do
-        VCAP::CloudController::PackageDockerDataModel.create(package: original_package, image: 'http://awesome-sauce.com')
-      end
-
-      example 'Copy a Package' do
-        # Using client directly instead of calling do_request to ensure parameter is displayed correctly in docs
-        expect {
-          client.post "/v3/apps/#{guid}/packages?source_package_guid=#{source_package_guid}", {}, headers
-        }.to change { VCAP::CloudController::PackageModel.count }.by(1)
-
-        package = VCAP::CloudController::PackageModel.last
-
-        expected_response = {
-          'guid'       => package.guid,
-          'type'       => 'docker',
-          'data'       => {
-            'image'    => 'http://awesome-sauce.com'
-          },
-          'state'      => 'READY',
-          'created_at' => iso8601,
-          'updated_at' => nil,
-          'links' => {
-            'self' => { 'href' => "/v3/packages/#{package.guid}" },
-            'app'  => { 'href' => "/v3/apps/#{guid}" },
-            'stage' => { 'href' => "/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
-          }
-        }
-
-        expect(status).to eq(201)
-        parsed_response = MultiJson.load(response_body)
-        expect(parsed_response).to be_a_response_like(expected_response)
-      end
     end
   end
 

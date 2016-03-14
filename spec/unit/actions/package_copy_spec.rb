@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe '#copy' do
       let(:target_app) { AppModel.make }
-      let(:source_package) { PackageModel.make(type: type) }
+      let!(:source_package) { PackageModel.make(type: type) }
       let(:type) { 'docker' }
       let(:app_guid) { target_app.guid }
 
@@ -67,15 +67,25 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the package is invalid' do
+      context 'when model validation fails' do
         before do
-          allow_any_instance_of(Steno::Logger).to receive(:info).and_raise(Sequel::ValidationFailed.new('the message'))
+          allow_any_instance_of(PackageModel).to receive(:save).and_raise(Sequel::ValidationFailed.new('the message'))
         end
 
         it 'raises an InvalidPackage error' do
           expect {
             package_copy.copy(app_guid, source_package)
           }.to raise_error(PackageCopy::InvalidPackage, 'the message')
+        end
+      end
+
+      context 'when the source and destination apps are the same' do
+        let!(:source_package) { PackageModel.make(type: type, app_guid: target_app.guid) }
+
+        it 'raises an InvalidPackage error' do
+          expect {
+            package_copy.copy(app_guid, source_package)
+          }.to raise_error(PackageCopy::InvalidPackage, 'Source and destination app cannot be the same')
         end
       end
     end

@@ -46,6 +46,8 @@ Rails.application.routes.draw do
   get '/v3/packages/:guid/download', to: 'packages#download'
   delete '/v3/packages/:guid', to: 'packages#destroy'
   post '/v3/packages/:guid/droplets', to: 'packages#stage'
+  get '/v3/apps/:app_guid/packages', to: 'packages#index'
+  post '/v3/apps/:app_guid/packages', to: 'packages#create'
 
   get '/packages', to: 'packages#index'
   get '/packages/:guid', to: 'packages#show'
@@ -53,6 +55,8 @@ Rails.application.routes.draw do
   get '/packages/:guid/download', to: 'packages#download'
   delete '/packages/:guid', to: 'packages#destroy'
   post '/packages/:guid/droplets', to: 'packages#stage'
+  get '/apps/:app_guid/packages', to: 'packages#index'
+  post '/apps/:app_guid/packages', to: 'packages#create'
 
   # droplets
   get '/v3/droplets', to: 'droplets#index'
@@ -83,13 +87,6 @@ Rails.application.routes.draw do
   put '/apps/:guid/processes/:type/scale', to: 'apps_processes#scale'
   delete '/apps/:guid/processes/:type/instances/:index', to: 'apps_processes#terminate'
   get '/apps/:guid/processes/:type/stats', to: 'apps_processes#stats'
-
-  # apps_packages
-  get '/v3/apps/:guid/packages', to: 'apps_packages#index'
-  post '/v3/apps/:guid/packages', to: 'apps_packages#create'
-
-  get '/apps/:guid/packages', to: 'apps_packages#index'
-  post '/apps/:guid/packages', to: 'apps_packages#create'
 
   # tasks
   get '/tasks', to: 'tasks#index'
