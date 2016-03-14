@@ -15,11 +15,31 @@ module VCAP::CloudController
           @message_bus = message_bus
           @dea_pool = dea_pool
           @blobstore_url_generator = blobstore_url_generator
+          @http_client = nil
+
+          if config[:dea_client]
+            client = HTTPClient.new
+            client.connect_timeout = 5
+            client.receive_timeout = 5
+            client.send_timeout = 5
+            client.keep_alive_timeout = 5
+
+            ssl = client.ssl_config
+            ssl.verify_mode = OpenSSL::SSL::VERIFY_PEER
+
+            dea_config = config[:dea_client]
+            ssl.set_client_cert_file(dea_config[:cert_file], dea_config[:key_file])
+
+            ssl.clear_cert_store
+            ssl.add_trust_ca(dea_config[:ca_file])
+
+            @http_client = client
+          end
         end
 
         def start(app, options={})
           instances_to_start = options[:instances_to_start] || app.instances
-          start_instances_in_range(app, ((app.instances - instances_to_start)...app.instances))
+          start_instances(app, ((app.instances - instances_to_start)...app.instances))
           app.routes_changed = false
         end
 
@@ -100,7 +120,7 @@ module VCAP::CloudController
         def change_running_instances(app, delta)
           if delta > 0
             range = (app.instances - delta...app.instances)
-            start_instances_in_range(app, range)
+            start_instances(app, range)
           elsif delta < 0
             range = (app.instances...app.instances - delta)
             stop_indices(app, range.to_a)
@@ -133,11 +153,11 @@ module VCAP::CloudController
             raise Errors::ApiError.new_from_details('AppPackageNotFound', app.guid)
           end
 
-          dea_id = dea_pool.find_dea(mem: app.memory, disk: app.disk_quota, stack: app.stack.name, app_id: app.guid)
-          if dea_id
-            dea_publish_start(dea_id, start_message)
-            dea_pool.mark_app_started(dea_id: dea_id, app_id: app.guid)
-            dea_pool.reserve_app_memory(dea_id, app.memory)
+          dea = dea_pool.find_dea(mem: app.memory, disk: app.disk_quota, stack: app.stack.name, app_id: app.guid)
+          if dea
+            dea_send_start(dea, start_message)
+            dea_pool.mark_app_started(dea_id: dea.dea_id, app_id: app.guid)
+            dea_pool.reserve_app_memory(dea.dea_id, app.memory)
           else
             logger.error 'dea-client.no-resources-available', message: scrub_sensitive_fields(start_message)
             raise Errors::ApiError.new_from_details('InsufficientRunningResourcesAvailable')
@@ -246,11 +266,6 @@ module VCAP::CloudController
           CloudController::DependencyLocator.instance.health_manager_client
         end
 
-        # @param [Enumerable, #each] indices the range / sequence of instances to start
-        def start_instances_in_range(app, indices)
-          start_instances(app, indices)
-        end
-
         # @return [FileUriResult]
         def get_file_uri(app, path, options)
           if app.stopped?
@@ -294,9 +309,20 @@ module VCAP::CloudController
           message_bus.publish('dea.update', args)
         end
 
-        def dea_publish_start(dea_id, args)
-          logger.debug "sending 'dea.start' for dea_id: #{dea_id} with '#{args}'"
-          message_bus.publish("dea.#{dea_id}.start", args)
+        def dea_send_start(dea, args)
+          dea_id = dea.dea_id
+          url = dea.url
+          logger.debug "sending 'dea.start' for dea_id: #{dea_id} to #{url} with '#{args}'"
+
+          if dea.url && @http_client
+            begin
+              @http_client.post("#{url}/v1/apps", header: { 'Content-Type' => 'application/json' }, body: MultiJson.dump(args))
+            rescue => e
+              logger.warn 'start failed', dea_id: dea_id, url: url, error: e.to_s
+            end
+          else
+            message_bus.publish("dea.#{dea_id}.start", args)
+          end
         end
 
         def dea_request_find_droplet(args, opts={})

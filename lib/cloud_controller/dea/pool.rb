@@ -49,7 +49,7 @@ module VCAP::CloudController
                         upper_half_by_memory.
                         sample
 
-          best_dea_ad && best_dea_ad.dea_id
+          best_dea_ad
         end
       end
 
