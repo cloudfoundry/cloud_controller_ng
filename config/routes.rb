@@ -58,10 +58,12 @@ Rails.application.routes.draw do
   get '/v3/droplets', to: 'droplets#index'
   get '/v3/droplets/:guid', to: 'droplets#show'
   delete '/v3/droplets/:guid', to: 'droplets#destroy'
+  get '/v3/apps/:app_guid/droplets', to: 'droplets#index'
 
   get '/droplets', to: 'droplets#index'
   get '/droplets/:guid', to: 'droplets#show'
   delete '/droplets/:guid', to: 'droplets#destroy'
+  get '/apps/:app_guid/droplets', to: 'droplets#index'
 
   # route_mappings
   post '/apps/:app_guid/route_mappings', to: 'route_mappings#create'
@@ -88,10 +90,6 @@ Rails.application.routes.draw do
 
   get '/apps/:guid/packages', to: 'apps_packages#index'
   post '/apps/:guid/packages', to: 'apps_packages#create'
-
-  # apps_droplets
-  get '/v3/apps/:guid/droplets', to: 'apps_droplets#index'
-  get '/apps/:guid/droplets', to: 'apps_droplets#index'
 
   # tasks
   get '/tasks', to: 'tasks#index'

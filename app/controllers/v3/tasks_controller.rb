@@ -13,7 +13,7 @@ class TasksController < ApplicationController
   include AppSubresource
 
   def index
-    message = TasksListMessage.from_params(message_query_params)
+    message = TasksListMessage.from_params(app_subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     pagination_options = PaginationOptions.from_params(query_params)
@@ -101,13 +101,5 @@ class TasksController < ApplicationController
 
   def list_fetcher
     @list_fetcher ||= TaskListFetcher.new
-  end
-
-  def message_query_params
-    if params[:app_guid].present?
-      query_params.merge(app_guid: params[:app_guid])
-    else
-      query_params
-    end
   end
 end

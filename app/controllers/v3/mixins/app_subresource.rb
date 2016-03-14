@@ -35,4 +35,12 @@ module AppSubresource
   def app_nested?
     params[:app_guid].present?
   end
+
+  def app_subresource_query_params
+    if app_nested?
+      query_params.merge(app_guid: params[:app_guid])
+    else
+      query_params
+    end
+  end
 end

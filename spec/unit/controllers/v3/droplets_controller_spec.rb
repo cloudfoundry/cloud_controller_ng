@@ -210,6 +210,49 @@ describe DropletsController, type: :controller do
       expect(parsed_body['pagination']['first']['href']).to start_with('/v3/droplets')
     end
 
+    context 'accessed as an app subresource' do
+      it 'returns droplets for the app' do
+        app       = VCAP::CloudController::AppModel.make(space: space)
+        droplet_1 = VCAP::CloudController::DropletModel.make(app_guid: app.guid)
+        droplet_2 = VCAP::CloudController::DropletModel.make(app_guid: app.guid)
+        VCAP::CloudController::DropletModel.make
+
+        get :index, app_guid: app.guid
+
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response.status).to eq(200)
+        expect(response_guids).to match_array([droplet_1, droplet_2].map(&:guid))
+      end
+
+      it 'provides the correct base url in the pagination links' do
+        get :index, app_guid: app.guid
+
+        expect(parsed_body['pagination']['first']['href']).to include("/v3/apps/#{app.guid}/droplets")
+      end
+
+      context 'when the user cannot read the app' do
+        before do
+          space.remove_developer(user)
+        end
+
+        it 'returns a 404 Resource Not Found error' do
+          get :index, app_guid: app.guid
+
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.status).to eq 404
+        end
+      end
+
+      context 'when the app does not exist' do
+        it 'returns a 404 Resource Not Found error' do
+          get :index, app_guid: 'made-up'
+
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.status).to eq 404
+        end
+      end
+    end
+
     context 'when the user is an admin' do
       before do
         @request.env.merge!(admin_headers)

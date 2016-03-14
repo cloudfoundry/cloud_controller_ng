@@ -44,10 +44,11 @@ module VCAP::CloudController
           page:      1,
           per_page:  5,
           order_by:  'created_at',
+          app_guid: '24234',
         }
       end
 
-      it 'excludes the pagination keys' do
+      it 'excludes the pagination keys and app_guid' do
         expected_params = [:states, :app_guids]
         expect(DropletsListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
       end
@@ -78,6 +79,16 @@ module VCAP::CloudController
       end
 
       describe 'validations' do
+        describe 'validating app nested query' do
+          context 'when the request contains both app_guid and app_guids' do
+            it 'does not validate' do
+              message = DropletsListMessage.new({ app_guid: 'blah', app_guids: ['app1', 'app2'] })
+              expect(message).to_not be_valid
+              expect(message.errors[:base]).to include("Unknown query parameter(s): 'app_guids'")
+            end
+          end
+        end
+
         it 'validates app_guids is an array' do
           message = DropletsListMessage.new app_guids: 'tricked you, not an array'
           expect(message).to be_invalid

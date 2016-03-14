@@ -10,20 +10,24 @@ class DropletsController < ApplicationController
   include AppSubresource
 
   def index
-    message = DropletsListMessage.from_params(query_params)
+    message = DropletsListMessage.from_params(app_subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     pagination_options = PaginationOptions.from_params(query_params)
     invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
-    if roles.admin?
-      paginated_result = DropletListFetcher.new.fetch_all(pagination_options, message)
+    if app_nested?
+      app, paginated_result = list_fetcher.fetch_for_app(app_guid: params[:app_guid], pagination_options: pagination_options, message: message)
+      app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
-      space_guids = membership.space_guids_for_roles(ROLES_FOR_READING)
-      paginated_result = DropletListFetcher.new.fetch(pagination_options, space_guids, message)
+      paginated_result = if roles.admin?
+                           list_fetcher.fetch_all(pagination_options: pagination_options, message: message)
+                         else
+                           list_fetcher.fetch_for_spaces(space_guids: readable_space_guids, pagination_options: pagination_options, message: message)
+                         end
     end
 
-    render status: :ok, json: droplet_presenter.present_json_list(paginated_result, '/v3/droplets', message)
+    render status: :ok, json: droplet_presenter.present_json_list(paginated_result, base_url(resource: 'droplets'), message)
   end
 
   def show
@@ -55,5 +59,9 @@ class DropletsController < ApplicationController
 
   def droplet_presenter
     @droplet_presenter ||= DropletPresenter.new
+  end
+
+  def list_fetcher
+    DropletListFetcher.new
   end
 end
