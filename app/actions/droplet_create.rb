@@ -5,7 +5,7 @@ require 'cloud_controller/diego/v3/staging_details'
 require 'cloud_controller/diego/lifecycles/lifecycle_provider'
 
 module VCAP::CloudController
-  class PackageStageAction
+  class DropletCreate
     class InvalidPackage < StandardError; end
     class SpaceQuotaExceeded < StandardError; end
     class OrgQuotaExceeded < StandardError; end
@@ -20,7 +20,7 @@ module VCAP::CloudController
       @environment_builder     = environment_presenter
     end
 
-    def stage(package, lifecycle, stagers)
+    def create_and_stage(package, lifecycle, stagers)
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
 
       staging_details = get_staging_details(package, lifecycle)
@@ -77,15 +77,15 @@ module VCAP::CloudController
     def get_disk_limit(requested_limit)
       @disk_limit_calculator.get_limit(requested_limit)
     rescue StagingDiskCalculator::LimitExceeded
-      raise PackageStageAction::DiskLimitExceeded
+      raise DiskLimitExceeded
     end
 
     def get_memory_limit(requested_limit, space, org)
       @memory_limit_calculator.get_limit(requested_limit, space, org)
     rescue StagingMemoryCalculator::SpaceQuotaExceeded
-      raise PackageStageAction::SpaceQuotaExceeded
+      raise SpaceQuotaExceeded
     rescue StagingMemoryCalculator::OrgQuotaExceeded
-      raise PackageStageAction::OrgQuotaExceeded
+      raise OrgQuotaExceeded
     end
 
     def logger

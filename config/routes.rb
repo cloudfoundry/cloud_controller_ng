@@ -45,7 +45,6 @@ Rails.application.routes.draw do
   post '/v3/packages/:guid/upload', to: 'packages#upload'
   get '/v3/packages/:guid/download', to: 'packages#download'
   delete '/v3/packages/:guid', to: 'packages#destroy'
-  post '/v3/packages/:guid/droplets', to: 'packages#stage'
   get '/v3/apps/:app_guid/packages', to: 'packages#index'
   post '/v3/apps/:app_guid/packages', to: 'packages#create'
 
@@ -54,16 +53,17 @@ Rails.application.routes.draw do
   post '/packages/:guid/upload', to: 'packages#upload'
   get '/packages/:guid/download', to: 'packages#download'
   delete '/packages/:guid', to: 'packages#destroy'
-  post '/packages/:guid/droplets', to: 'packages#stage'
   get '/apps/:app_guid/packages', to: 'packages#index'
   post '/apps/:app_guid/packages', to: 'packages#create'
 
   # droplets
+  post '/v3/packages/:package_guid/droplets', to: 'droplets#create'
   get '/v3/droplets', to: 'droplets#index'
   get '/v3/droplets/:guid', to: 'droplets#show'
   delete '/v3/droplets/:guid', to: 'droplets#destroy'
   get '/v3/apps/:app_guid/droplets', to: 'droplets#index'
 
+  post '/packages/:package_guid/droplets', to: 'droplets#create'
   get '/droplets', to: 'droplets#index'
   get '/droplets/:guid', to: 'droplets#show'
   delete '/droplets/:guid', to: 'droplets#destroy'

@@ -16,6 +16,136 @@ resource 'Droplets (Experimental)', type: :api do
     end
   end
 
+  post '/v3/packages/:guid/droplets' do
+    header 'Content-Type', 'application/json'
+
+    body_parameter :environment_variables, 'Environment variables to use during staging.
+    Environment variable names may not start with "VCAP_" or "CF_". "PORT" is not a valid environment variable.',
+      example_values: ['{"FEATURE_ENABLED": "true"}'],
+      required: false, valid_values: 'object'
+    body_parameter :memory_limit, 'Memory limit used to stage package', valid_values: 'integer', required: false
+    body_parameter :disk_limit, 'Disk limit used to stage package', valid_values: 'integer', required: false
+    body_parameter :lifecycle, 'Lifecycle information for a droplet.  If not provided, it will default to what is specified on the app.
+    If the app does not have lifecycle information, it will default to a buildpack',
+      valid_values: 'object', required: false,
+      example_values: [
+        MultiJson.dump(
+          {
+            type: 'buildpack',
+            data: {
+              buildpack: 'http://github.com/myorg/awesome-buildpack',
+              stack:     'cflinuxfs2'
+            }
+          }, pretty: true),
+        MultiJson.dump({ type: 'docker' }, pretty: true)
+      ]
+
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:space_guid) { space.guid }
+    let(:buildpack) { 'http://github.com/myorg/awesome-buildpack' }
+    let(:custom_env_var_val) { 'hello' }
+    let(:environment_variables) { { 'CUSTOM_ENV_VAR' => custom_env_var_val } }
+
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+    let(:app_guid) { app_model.guid }
+    let!(:package_model) do
+      VCAP::CloudController::PackageModel.make(
+        app_guid: app_guid,
+        state:    VCAP::CloudController::PackageModel::READY_STATE,
+        type:     VCAP::CloudController::PackageModel::BITS_TYPE
+      )
+    end
+
+    let(:guid) { package_model.guid }
+    let(:stack) { 'cflinuxfs2' }
+    let(:diego_staging_response) do
+      {
+        execution_metadata:     'String',
+        detected_start_command: {},
+        lifecycle_data:         {
+          buildpack_key:      'String',
+          detected_buildpack: 'String',
+        }
+      }
+    end
+
+    let(:lifecycle) do
+      {
+        type: 'buildpack',
+        data: {
+          buildpack: buildpack,
+          stack: stack
+        }
+      }
+    end
+
+    let(:raw_post) { body_parameters }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+      allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:v3_app_buildpack_cache_download_url).and_return('some-string')
+      allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:v3_app_buildpack_cache_upload_url).and_return('some-string')
+      allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_download_url).and_return('some-string')
+      allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_droplet_upload_url).and_return('some-string')
+      stub_request(:put, "#{TestConfig.config[:diego_stager_url]}/v1/staging/whatuuid").
+        to_return(status: 202, body: diego_staging_response.to_json)
+    end
+
+    example 'Stage a package' do
+      stub_const('SecureRandom', double(:sr, uuid: 'whatuuid', hex: '8-octetx'))
+
+      expect {
+        do_request_with_error_handling
+      }.to change { VCAP::CloudController::DropletModel.count }.by(1)
+
+      droplet           = VCAP::CloudController::DropletModel.last
+      expected_response = {
+        'guid'                  => droplet.guid,
+        'state'                 => 'PENDING',
+        'error'                 => nil,
+        'lifecycle'             => { 'type' => 'buildpack', 'data' => { 'stack' => 'cflinuxfs2', 'buildpack' => 'http://github.com/myorg/awesome-buildpack' } },
+        'environment_variables' => {
+          'CF_STACK'         => stack,
+          'CUSTOM_ENV_VAR'   => custom_env_var_val,
+          'MEMORY_LIMIT'     => 1024,
+          'VCAP_SERVICES'    => {},
+          'VCAP_APPLICATION' => {
+            'limits'              => { 'mem' => 1024, 'disk' => 4096, 'fds' => 16384 },
+            'application_id'      => app_guid,
+            'application_version' => 'whatuuid',
+            'application_name'    => app_model.name, 'application_uris' => [],
+            'version'             => 'whatuuid',
+            'name'                => app_model.name,
+            'space_name'          => space.name,
+            'space_id'            => space.guid,
+            'uris'                => [],
+            'users'               => nil
+          }
+        },
+        'memory_limit'          => 1024,
+        'disk_limit'            => 4096,
+        'result'                => nil,
+        'created_at'            => iso8601,
+        'updated_at'            => nil,
+        'links'                 => {
+          'self'                   => { 'href' => "/v3/droplets/#{droplet.guid}" },
+          'package'                => { 'href' => "/v3/packages/#{guid}" },
+          'app'                    => { 'href' => "/v3/apps/#{app_guid}" },
+          'assign_current_droplet' => {
+            'href'   => "/v3/apps/#{app_guid}/current_droplet",
+            'method' => 'PUT'
+          }
+        }
+      }
+
+      expect(response_status).to eq(201)
+
+      parsed_response = MultiJson.load(response_body)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
+
   get '/v3/droplets/:guid' do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
