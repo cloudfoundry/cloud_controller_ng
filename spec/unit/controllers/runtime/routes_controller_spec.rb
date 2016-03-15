@@ -157,6 +157,7 @@ module VCAP::CloudController
         RoutingApi::RouterGroup.new({
                                         'guid' => 'tcp-guid',
                                         'type' => 'tcp',
+                                        'reservable_ports' => '1024-65535'
                                     })
       }
       let(:user) { User.make }

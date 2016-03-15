@@ -75,9 +75,7 @@ module VCAP::CloudController
     end
 
     def validate_port_number
-      if port < 1024 || port > 65535
-        raise RouteInvalid.new('Port must within the range 1024-65535.')
-      end
+      raise RouteInvalid.new('Port must be one of the reservable ports.') unless router_group.reservable_ports.include? port
     end
 
     def validate_port_not_taken

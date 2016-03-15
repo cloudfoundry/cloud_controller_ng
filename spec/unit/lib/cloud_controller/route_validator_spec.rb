@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe RouteValidator do
     let(:validator) { RouteValidator.new(routing_api_client, domain_guid, route_attrs) }
     let(:routing_api_client) { double('routing_api', router_group: router_group) }
-    let(:router_group) { double(:router_group, types: router_group_types, guid: router_group_guid) }
+    let(:router_group) { double(:router_group, types: router_group_types, guid: router_group_guid, reservable_ports: [3,4,5,8080]) }
     let(:router_group_types) { ['tcp'] }
     let(:router_group_guid) { 'router-group-guid' }
     let(:domain_guid) { domain.guid }
@@ -56,7 +56,7 @@ module VCAP::CloudController
 
           it 'raises a RouteInvalid error' do
             expect { validator.validate }.
-              to raise_error(RouteValidator::RouteInvalid, 'Port must within the range 1024-65535.')
+              to raise_error(RouteValidator::RouteInvalid, 'Port must be one of the reservable ports.')
           end
         end
 

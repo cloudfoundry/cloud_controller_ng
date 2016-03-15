@@ -15,6 +15,7 @@ resource 'Routes', type: [:api, :legacy_api] do
     VCAP::CloudController::RoutingApi::RouterGroup.new({
                                                            'guid' => 'tcp-guid',
                                                            'type' => 'tcp',
+                                                           'reservable_ports' => '1024-65535'
                                                        })
   }
   before do
