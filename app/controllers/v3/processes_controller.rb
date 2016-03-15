@@ -1,8 +1,8 @@
 require 'presenters/v3/process_presenter'
 require 'cloud_controller/paging/pagination_options'
 require 'actions/process_delete'
-require 'queries/process_scale_fetcher'
 require 'queries/process_list_fetcher'
+require 'queries/process_fetcher'
 require 'messages/process_scale_message'
 require 'actions/process_scale'
 require 'actions/process_update'
@@ -20,25 +20,35 @@ class ProcessesController < ApplicationController
     pagination_options = PaginationOptions.from_params(query_params)
     invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
-    if roles.admin?
-      paginated_result = ProcessListFetcher.new.fetch_all(pagination_options)
+    if app_nested?
+      app, paginated_result = list_fetcher.fetch_for_app(app_guid: params[:app_guid], pagination_options: pagination_options)
+      app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
-      space_guids = membership.space_guids_for_roles([Membership::SPACE_DEVELOPER, Membership::SPACE_MANAGER, Membership::SPACE_AUDITOR, Membership::ORG_MANAGER])
-      paginated_result = ProcessListFetcher.new.fetch(pagination_options, space_guids)
+      paginated_result = if roles.admin?
+                           list_fetcher.fetch_all(pagination_options: pagination_options)
+                         else
+                           list_fetcher.fetch_for_spaces(pagination_options: pagination_options, space_guids: readable_space_guids)
+                         end
     end
 
-    render status: :ok, json: process_presenter.present_json_list(paginated_result, '/v3/processes')
+    render status: :ok, json: process_presenter.present_json_list(paginated_result, base_url(resource: 'processes'))
   end
 
   def show
-    guid = params[:guid]
-    process = ProcessModel.where(guid: guid).eager(:space, :organization).all.first
-    process_not_found! unless process && can_read?(process.space.guid, process.organization.guid)
+    if app_nested?
+      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(app_guid: params[:app_guid], process_type: params[:type])
+      app_not_found! unless app && can_read?(space.guid, org.guid)
+      process_not_found! unless process
+    else
+      process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
+      process_not_found! unless process && can_read?(space.guid, org.guid)
+    end
+
     render status: :ok, json: process_presenter.present_json(process)
   end
 
   def update
-    guid = params[:guid]
+    guid    = params[:process_guid]
     message = ProcessUpdateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
@@ -54,10 +64,16 @@ class ProcessesController < ApplicationController
   end
 
   def terminate
-    process_guid = params[:guid]
-    process = ProcessModel.where(guid: process_guid).eager(:space, :organization).all.first
-    process_not_found! unless process && can_read?(process.space.guid, process.organization.guid)
-    unauthorized! unless can_terminate?(process.space.guid)
+    if app_nested?
+      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
+      app_not_found! unless app && can_read?(space.guid, org.guid)
+      process_not_found! unless process
+    else
+      process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
+      process_not_found! unless process && can_read?(space.guid, org.guid)
+    end
+
+    unauthorized! unless can_terminate?(space.guid)
 
     index = params[:index].to_i
     instance_not_found! unless index < process.instances && index >= 0
@@ -73,8 +89,15 @@ class ProcessesController < ApplicationController
     message = ProcessScaleMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) if message.invalid?
 
-    process, space, org = ProcessScaleFetcher.new.fetch(params[:guid])
-    process_not_found! unless process && can_read?(space.guid, org.guid)
+    if app_nested?
+      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
+      app_not_found! unless app && can_read?(space.guid, org.guid)
+      process_not_found! unless process
+    else
+      process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
+      process_not_found! unless process && can_read?(space.guid, org.guid)
+    end
+
     unauthorized! unless can_scale?(space.guid)
 
     ProcessScale.new(current_user, current_user_email).scale(process, message)
@@ -85,13 +108,20 @@ class ProcessesController < ApplicationController
   end
 
   def stats
-    guid = params[:guid]
-    process = ProcessModel.where(guid: guid).eager(:space).all.first
+    if app_nested?
+      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
+      app_not_found! unless app && can_read?(space.guid, org.guid)
+      process_not_found! unless process
+      base_url = "/v3/apps/#{app.guid}/processes/#{process.type}/stats"
+    else
+      process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
+      process_not_found! unless process && can_read?(space.guid, org.guid)
+      base_url = "/v3/processes/#{process.guid}/stats"
+    end
+
     process_stats = instances_reporters.stats_for_app(process)
 
-    process_not_found! unless process && can_stats?(process.space.guid)
-
-    render status: :ok, json: process_presenter.present_json_stats(process, process_stats, "/v3/processes/#{guid}/stats")
+    render status: :ok, json: process_presenter.present_json_stats(process, process_stats, base_url)
   end
 
   private
@@ -109,7 +139,6 @@ class ProcessesController < ApplicationController
   end
   alias_method :can_terminate?, :can_update?
   alias_method :can_scale?, :can_update?
-  alias_method :can_stats?, :can_update?
 
   def instance_not_found!
     resource_not_found!(:instance)
@@ -121,5 +150,9 @@ class ProcessesController < ApplicationController
 
   def instances_reporters
     CloudController::DependencyLocator.instance.instances_reporters
+  end
+
+  def list_fetcher
+    ProcessListFetcher.new
   end
 end
