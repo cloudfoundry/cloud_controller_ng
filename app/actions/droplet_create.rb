@@ -39,6 +39,9 @@ module VCAP::CloudController
         staging_details.droplet = droplet
         lifecycle.create_lifecycle_data_model(droplet)
       end
+
+      load_association(droplet)
+
       logger.info("droplet created: #{droplet.guid}")
 
       logger.info("staging package: #{package.inspect} for droplet #{droplet.guid}")
@@ -49,6 +52,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def load_association(droplet)
+      droplet.reload
+    end
 
     def get_staging_details(package, lifecycle)
       staging_message = lifecycle.staging_message
