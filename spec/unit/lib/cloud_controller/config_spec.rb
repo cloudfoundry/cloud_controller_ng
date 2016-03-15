@@ -206,6 +206,28 @@ module VCAP::CloudController
           end
         end
 
+        context 'and the password contains double quotes' do
+          let(:tmpdir) { Dir.mktmpdir }
+          let(:config_from_file) { Config.from_file(File.join(tmpdir, 'incorrect_overridden_config.yml')) }
+
+          before do
+            config_hash = YAML.load_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml'))
+            config_hash['staging']['auth']['password'] = 'pass"wor"d'
+
+            File.open(File.join(tmpdir, 'incorrect_overridden_config.yml'), 'w') do |f|
+              YAML.dump(config_hash, f)
+            end
+          end
+
+          after do
+            FileUtils.rm_r(tmpdir)
+          end
+
+          it 'URL-encodes staging password as neccesary' do
+            expect(config_from_file[:staging][:auth][:password]).to eq('pass%22wor%22d')
+          end
+        end
+
         context 'and the values are invalid' do
           let(:tmpdir) { Dir.mktmpdir }
           let(:config_from_file) { Config.from_file(File.join(tmpdir, 'incorrect_overridden_config.yml')) }

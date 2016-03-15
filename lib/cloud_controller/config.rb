@@ -387,7 +387,11 @@ module VCAP::CloudController
       def sanitize_staging_auth(config)
         auth = config[:staging][:auth]
         auth[:user] = escape_userinfo(auth[:user]) unless valid_in_userinfo?(auth[:user])
-        auth[:password] = escape_userinfo(auth[:password]) unless valid_in_userinfo?(auth[:password])
+        auth[:password] = escape_password(auth[:password]) unless valid_in_userinfo?(auth[:password])
+      end
+
+      def escape_password(value)
+        escape_userinfo(value).gsub(/\"/, '%22')
       end
 
       def escape_userinfo(value)
