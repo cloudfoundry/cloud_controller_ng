@@ -55,12 +55,13 @@ class TasksController < ApplicationController
   def cancel
     if app_nested?
       task, app, space, org = TaskFetcher.new.fetch_for_app(task_guid: params[:task_guid], app_guid: params[:app_guid])
-      app_not_found! unless app
+      app_not_found! unless app && can_read?(space.guid, org.guid)
+      task_not_found! unless task
     else
       task, space, org = TaskFetcher.new.fetch(task_guid: params[:task_guid])
+      task_not_found! unless task && can_read?(space.guid, org.guid)
     end
 
-    task_not_found! unless task && can_read?(space.guid, org.guid)
     unauthorized! unless can_cancel?(space.guid)
 
     TaskCancel.new.cancel(task: task, user: current_user, email: current_user_email)
@@ -73,12 +74,12 @@ class TasksController < ApplicationController
   def show
     if app_nested?
       task, app, space, org = TaskFetcher.new.fetch_for_app(task_guid: params[:task_guid], app_guid: params[:app_guid])
-      app_not_found! unless app
+      app_not_found! unless app && can_read?(space.guid, org.guid)
+      task_not_found! unless task
     else
       task, space, org = TaskFetcher.new.fetch(task_guid: params[:task_guid])
+      task_not_found! unless task && can_read?(space.guid, org.guid)
     end
-
-    task_not_found! unless task && can_read?(space.guid, org.guid)
 
     render status: :ok, json: TaskPresenter.new.present_json(task)
   end

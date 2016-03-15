@@ -299,6 +299,34 @@ describe TasksController, type: :controller do
           expect(response.body).to include 'Task not found'
         end
       end
+
+      context 'when the app does not exist' do
+        it 'returns a 404' do
+          get :show, task_guid: task.guid, app_guid: 'foobar'
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'App not found'
+        end
+      end
+
+      context 'when the user cannot read the app' do
+        before do
+          allow(membership).to receive(:has_any_roles?).with(
+            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+              VCAP::CloudController::Membership::SPACE_MANAGER,
+              VCAP::CloudController::Membership::SPACE_AUDITOR,
+              VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        end
+
+        it 'returns a 404' do
+          get :show, task_guid: task.guid, app_guid: app_model.guid
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'App not found'
+        end
+      end
     end
 
     describe 'access permissions' do
@@ -518,10 +546,21 @@ describe TasksController, type: :controller do
              VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
         end
 
-        it 'returns a 404 Resource Not Found error' do
+        it 'returns a 404 App Not Found error' do
           put :cancel, task_guid: task.guid, app_guid: app_model.guid
 
           expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'App'
+          expect(response.status).to eq 404
+        end
+      end
+
+      context 'when the task does not exist' do
+        it 'returns a 404 Task Not Found error' do
+          put :cancel, task_guid: 'not-found', app_guid: app_model.guid
+
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'Task'
           expect(response.status).to eq 404
         end
       end
