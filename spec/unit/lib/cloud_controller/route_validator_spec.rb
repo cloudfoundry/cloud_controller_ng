@@ -51,7 +51,7 @@ module VCAP::CloudController
           expect { validator.validate }.not_to raise_error
         end
 
-        context 'with an invalid port' do
+        context 'with port that is not part of the reservable port range' do
           let(:port) { 1023 }
 
           it 'raises a RouteInvalid error' do
