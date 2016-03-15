@@ -223,7 +223,7 @@ resource 'Processes (Experimental)', type: :api do
       }
 
       parsed_response = JSON.parse(response_body)
-      expect(response_status).to eq(200)
+      expect(response_status).to eq(202)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
   end

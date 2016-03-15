@@ -245,7 +245,7 @@ describe AppsProcessesController, type: :controller do
       expect(app_process.memory).to eq(100)
       expect(app_process.disk_quota).to eq(200)
 
-      expect(response.status).to eq(200)
+      expect(response.status).to eq(202)
       expect(parsed_body['guid']).to eq(app_process.guid)
     end
 
@@ -267,7 +267,7 @@ describe AppsProcessesController, type: :controller do
         expect(app_process.memory).to eq(100)
         expect(app_process.disk_quota).to eq(200)
 
-        expect(response.status).to eq(200)
+        expect(response.status).to eq(202)
         expect(parsed_body['guid']).to eq(app_process.guid)
       end
     end
@@ -317,7 +317,7 @@ describe AppsProcessesController, type: :controller do
           expect(app_process.memory).to eq(100)
           expect(app_process.disk_quota).to eq(200)
 
-          expect(response.status).to eq(200)
+          expect(response.status).to eq(202)
           expect(parsed_body['guid']).to eq(app_process.guid)
         end
       end

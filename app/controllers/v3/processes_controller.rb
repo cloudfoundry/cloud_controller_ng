@@ -79,7 +79,7 @@ class ProcessesController < ApplicationController
 
     ProcessScale.new(current_user, current_user_email).scale(process, message)
 
-    render status: :ok, json: process_presenter.present_json(process)
+    render status: :accepted, json: process_presenter.present_json(process)
   rescue ProcessScale::InvalidProcess => e
     unprocessable!(e.message)
   end

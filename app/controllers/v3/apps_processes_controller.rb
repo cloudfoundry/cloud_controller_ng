@@ -47,7 +47,7 @@ class AppsProcessesController < ApplicationController
       unprocessable!(e.message)
     end
 
-    render :ok, json: process_presenter.present_json(process)
+    render :accepted, json: process_presenter.present_json(process)
   end
 
   def stats

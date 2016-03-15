@@ -414,7 +414,7 @@ describe ProcessesController, type: :controller do
       expect(process_type.instances).to eq(2)
       expect(process_type.memory).to eq(100)
       expect(process_type.disk_quota).to eq(200)
-      expect(response.status).to eq(200)
+      expect(response.status).to eq(202)
       expect(response.body).to eq(expected_response)
     end
 
@@ -435,7 +435,7 @@ describe ProcessesController, type: :controller do
         expect(process_type.instances).to eq(2)
         expect(process_type.memory).to eq(100)
         expect(process_type.disk_quota).to eq(200)
-        expect(response.status).to eq(200)
+        expect(response.status).to eq(202)
         expect(response.body).to eq(expected_response)
       end
     end
@@ -481,7 +481,7 @@ describe ProcessesController, type: :controller do
           expect(process_type.instances).to eq(2)
           expect(process_type.memory).to eq(100)
           expect(process_type.disk_quota).to eq(200)
-          expect(response.status).to eq(200)
+          expect(response.status).to eq(202)
           expect(response.body).to eq(expected_response)
         end
       end
