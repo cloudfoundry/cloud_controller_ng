@@ -59,6 +59,9 @@ module VCAP::CloudController
             package_guid:              droplet.package_guid,
             app_guid:                  '',
             app_name:                  '',
+            buildpack_guid:            droplet.try(:buildpack_lifecycle_data).try(:guid),
+            buildpack_name:            droplet.try(:buildpack_lifecycle_data).try(:buildpack),
+            package_state:             droplet.try(:package).try(:state)
           })
         end
 

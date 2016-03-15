@@ -198,7 +198,7 @@ module VCAP::CloudController
 
       describe '#create_from_droplet' do
         let(:package) { PackageModel.make }
-        let!(:droplet) { DropletModel.make(memory_limit: 222, package_guid: package.guid) }
+        let!(:droplet) { DropletModel.make(:buildpack, memory_limit: 222, package_guid: package.guid) }
         let(:state) { 'TEST_STATE' }
 
         it 'creates an AppUsageEvent' do
@@ -228,9 +228,9 @@ module VCAP::CloudController
             expect(event.app_guid).to eq('')
             expect(event.app_name).to eq('')
             expect(event.process_type).to be_nil
-            expect(event.buildpack_guid).to be_nil
-            expect(event.buildpack_name).to be_nil
-            expect(event.package_state).to be_nil
+            expect(event.buildpack_guid).to eq droplet.buildpack_lifecycle_data.guid
+            expect(event.buildpack_name).to eq droplet.buildpack_lifecycle_data.buildpack
+            expect(event.package_state).to eq droplet.package.state
             expect(event.task_guid).to be_nil
             expect(event.task_name).to be_nil
           end
