@@ -129,10 +129,13 @@ module VCAP::CloudController
 
         # @param [Enumerable, #each] indices an Enumerable of indices / indexes
         def start_instances(app, indices)
+          indices = Array(indices)
           insufficient_resources_error = false
+          callbacks = []
           indices.each do |idx|
             begin
-              start_instance_at_index(app, idx)
+              callback = start_instance_at_index(app, idx)
+              callbacks << callback if callback
             rescue Errors::ApiError => e
               if e.name == 'InsufficientRunningResourcesAvailable'
                 insufficient_resources_error = true
@@ -143,25 +146,8 @@ module VCAP::CloudController
           end
 
           raise Errors::ApiError.new_from_details('InsufficientRunningResourcesAvailable') if insufficient_resources_error
-        end
-
-        def start_instance_at_index(app, index)
-          start_message = Dea::StartAppMessage.new(app, index, config, @blobstore_url_generator)
-
-          unless start_message.has_app_package?
-            logger.error 'dea-client.no-package-found', guid: app.guid
-            raise Errors::ApiError.new_from_details('AppPackageNotFound', app.guid)
-          end
-
-          dea = dea_pool.find_dea(mem: app.memory, disk: app.disk_quota, stack: app.stack.name, app_id: app.guid)
-          if dea
-            dea_send_start(dea, start_message)
-            dea_pool.mark_app_started(dea_id: dea.dea_id, app_id: app.guid)
-            dea_pool.reserve_app_memory(dea.dea_id, app.memory)
-          else
-            logger.error 'dea-client.no-resources-available', message: scrub_sensitive_fields(start_message)
-            raise Errors::ApiError.new_from_details('InsufficientRunningResourcesAvailable')
-          end
+        ensure
+          callbacks.each(&:call)
         end
 
         # @param [Array] indices an Enumerable of integer indices
@@ -262,6 +248,26 @@ module VCAP::CloudController
 
         private
 
+        def start_instance_at_index(app, index)
+          start_message = Dea::StartAppMessage.new(app, index, config, @blobstore_url_generator)
+
+          unless start_message.has_app_package?
+            logger.error 'dea-client.no-package-found', guid: app.guid
+            raise Errors::ApiError.new_from_details('AppPackageNotFound', app.guid)
+          end
+
+          dea = dea_pool.find_dea(mem: app.memory, disk: app.disk_quota, stack: app.stack.name, app_id: app.guid)
+          if dea.nil?
+            logger.error 'dea-client.no-resources-available', message: scrub_sensitive_fields(start_message)
+            raise Errors::ApiError.new_from_details('InsufficientRunningResourcesAvailable')
+          end
+
+          callback = dea_send_start(dea, start_message)
+          dea_pool.mark_app_started(dea_id: dea.dea_id, app_id: app.guid)
+          dea_pool.reserve_app_memory(dea.dea_id, app.memory)
+          callback
+        end
+
         def health_manager_client
           CloudController::DependencyLocator.instance.health_manager_client
         end
@@ -315,14 +321,19 @@ module VCAP::CloudController
           logger.debug "sending 'dea.start' for dea_id: #{dea_id} to #{url} with '#{args}'"
 
           if dea.url && @http_client
-            begin
-              @http_client.post("#{url}/v1/apps", header: { 'Content-Type' => 'application/json' }, body: MultiJson.dump(args))
-            rescue => e
-              logger.warn 'start failed', dea_id: dea_id, url: url, error: e.to_s
+            connection = @http_client.post_async("#{url}/v1/apps", header: { 'Content-Type' => 'application/json' }, body: MultiJson.dump(args))
+            return lambda do
+              begin
+                connection.pop
+              rescue => e
+                logger.warn 'start failed', dea_id: dea_id, url: url, error: e.to_s
+              end
             end
-          else
-            message_bus.publish("dea.#{dea_id}.start", args)
           end
+
+          message_bus.publish("dea.#{dea_id}.start", args)
+
+          nil
         end
 
         def dea_request_find_droplet(args, opts={})

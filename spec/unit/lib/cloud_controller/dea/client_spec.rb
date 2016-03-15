@@ -70,7 +70,7 @@ module VCAP::CloudController
     end
 
     describe 'start_instances' do
-      it 'should send a start messages to deas with message override' do
+      it 'should send start messages' do
         app.instances = 3
 
         expect(dea_pool).to receive(:find_dea).twice.and_return(dea_ad)
@@ -112,10 +112,8 @@ module VCAP::CloudController
           }.to raise_error Errors::ApiError, 'One or more instances could not be started because of insufficient running resources.'
         end
       end
-    end
 
-    describe 'start_instance_at_index' do
-      it 'should send a start messages to deas with message override' do
+      it 'should send a start message' do
         app.instances = 2
 
         expect(dea_pool).to receive(:find_dea).once.and_return(dea_ad)
@@ -128,7 +126,7 @@ module VCAP::CloudController
           )
         )
 
-        Dea::Client.start_instance_at_index(app, 1)
+        Dea::Client.start_instances(app, 1)
       end
 
       context 'when droplet is missing' do
@@ -138,7 +136,7 @@ module VCAP::CloudController
 
         it 'should raise an error if the droplet is missing' do
           expect {
-            Dea::Client.start_instance_at_index(app, 1)
+            Dea::Client.start_instances(app, 1)
           }.to raise_error Errors::ApiError, "The app package could not be found: #{app.guid}"
         end
       end
@@ -154,8 +152,43 @@ module VCAP::CloudController
           }.once
 
           expect {
-            Dea::Client.start_instance_at_index(app, 1)
+            Dea::Client.start_instances(app, 1)
           }.to raise_error Errors::ApiError, 'One or more instances could not be started because of insufficient running resources.'
+        end
+      end
+
+      context 'callbacks' do
+        it 'skips nil callbacks' do
+          app.instances = 1
+
+          expect(Dea::Client).to receive(:start_instance_at_index).with(app, 1).and_return(nil)
+
+          expect { Dea::Client.start_instances(app, 1) }.to_not raise_error
+        end
+
+        it 'calls the callback' do
+          app.instances = 2
+
+          count = 0
+          cb = lambda { count += 1 }
+          expect(Dea::Client).to receive(:start_instance_at_index).and_return(cb).twice
+
+          expect { Dea::Client.start_instances(app, [1, 2]) }.to_not raise_error
+          expect(count).to eq(2)
+        end
+
+        context 'when an error is raised' do
+          it 'calls all callbacks' do
+            app.instances = 2
+
+            count = 0
+            cb = lambda { count += 1 }
+            expect(Dea::Client).to receive(:start_instance_at_index).and_return(cb)
+            expect(Dea::Client).to receive(:start_instance_at_index).and_raise('bogus')
+
+            expect { Dea::Client.start_instances(app, [1, 2]) }.to raise_error 'bogus'
+            expect(count).to eq(1)
+          end
         end
       end
     end
@@ -245,6 +278,10 @@ module VCAP::CloudController
 
         context 'when an error occurs over http' do
           it 'is ignored' do
+            logger = double(Steno::Logger, debug: nil)
+            allow(Dea::Client).to receive(:logger).and_return(logger)
+            expect(logger).to receive(:warn).with('start failed', include(:dea_id, :url, :error))
+
             app.instances = 1
             expect(dea_pool).to receive(:find_dea).and_return(def_ad)
             expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'def', app_id: app.guid)
