@@ -13,18 +13,18 @@ module VCAP::CloudController
 
     describe 'generate_port' do
       it 'generates a port' do
-        port = generator1.generate_port
+        port = generator1.generate_port(Array(1024..65535))
 
         expect((1024..65535).cover?(port)).to eq(true)
       end
 
       it 'runs out of ports' do
         3.times do
-          port = generator1.generate_port(1024, 1026)
+          port = generator1.generate_port(Array(1024..1026))
           Route.make(domain: domain1, port: port)
         end
 
-        port = generator1.generate_port(1024, 1026)
+        port = generator1.generate_port(Array(1024..1026))
         expect(port).to eq(-1)
       end
 
@@ -39,8 +39,8 @@ module VCAP::CloudController
           Route.make(domain: domain1, port: 60001)
           Route.make(domain: domain2, port: 60001)
 
-          port1 = generator1.generate_port(60001, 60002)
-          port2 = generator2.generate_port(60001, 60002)
+          port1 = generator1.generate_port(Array(60001..60002))
+          port2 = generator2.generate_port(Array(60001..60002))
 
           expect(port1).to eq(port2)
         end

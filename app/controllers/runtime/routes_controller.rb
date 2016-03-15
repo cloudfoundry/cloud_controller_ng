@@ -236,8 +236,11 @@ module VCAP::CloudController
         add_warning('Specified port ignored. Random port generated.')
       end
 
+      domain = Domain[guid: request_attrs['domain_guid']]
+      reservable_ports = @routing_api_client.router_group(domain.router_group_guid).reservable_ports
+
       @request_attrs = @request_attrs.deep_dup
-      @request_attrs['port'] = PortGenerator.new(@request_attrs).generate_port
+      @request_attrs['port'] = PortGenerator.new(@request_attrs).generate_port(reservable_ports)
       @request_attrs.freeze
     end
 

@@ -4,9 +4,7 @@ module VCAP::CloudController
       @domain_guid = request_attrs.fetch('domain_guid')
     end
 
-    def generate_port(lower=1024, upper=65535)
-      possible_ports = Array(lower..upper)
-
+    def generate_port(possible_ports)
       router_group_guid = get_router_group_guid(@domain_guid)
 
       unavailable_ports = Route.join(:domains, id: :domain_id).

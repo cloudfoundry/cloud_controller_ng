@@ -11,8 +11,8 @@ module VCAP::CloudController
 
     let(:router_groups) do
       [
-        RoutingApi::RouterGroup.new({ 'guid' => tcp_group_1, 'type' => 'tcp' }),
-        RoutingApi::RouterGroup.new({ 'guid' => tcp_group_2, 'type' => 'tcp' }),
+        RoutingApi::RouterGroup.new({ 'guid' => tcp_group_1, 'type' => 'tcp', 'reservable_ports' => '1024-65535' }),
+        RoutingApi::RouterGroup.new({ 'guid' => tcp_group_2, 'type' => 'tcp', 'reservable_ports' => '1024-65535' }),
         RoutingApi::RouterGroup.new({ 'guid' => http_group, 'type' => 'http' }),
       ]
     end
@@ -519,6 +519,8 @@ module VCAP::CloudController
 
               context 'generate_port is "true"' do
                 let(:generated_port) { 10005 }
+                let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
+                let(:domain_guid) { domain.guid }
                 let(:route_attrs) { { 'port' => generated_port, 'host' => host, 'path' => '' } }
 
                 before do
@@ -553,6 +555,8 @@ module VCAP::CloudController
             context 'body provides a port' do
               context 'generate_port is "true"' do
                 let(:generated_port) { 14098 }
+                let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
+                let(:domain_guid) { domain.guid }
                 let(:route_attrs) { { 'port' => generated_port, 'host' => host, 'path' => '' } }
 
                 before do
