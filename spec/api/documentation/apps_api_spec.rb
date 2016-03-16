@@ -59,8 +59,8 @@ resource 'Apps', type: [:api, :legacy_api] do
     field :console, 'Open the console port for the app (at $CONSOLE_PORT).', deprecated: true, default: false, valid_values: [true, false]
     field :debug, 'Open the debug port for the app (at $DEBUG_PORT).', deprecated: true, default: false, valid_values: [true, false]
 
-    field :staging_failed_reason, 'Reason for application staging failures', default: nil
-    field :staging_failed_description, 'Detailed description for the staging_failed_reason', default: nil
+    field :staging_failed_reason, 'Reason for application staging failures', default: nil, example_values: ['StagingError', 'StagingTimeExpired']
+    field :staging_failed_description, 'Detailed description for the staging_failed_reason', default: nil, example_values: ['An app was not successfully detected by any available buildpack']
 
     field :ports, 'Ports on which application may listen. Overwrites previously configured ports. Ports must be in range 1024-65535. Supported for Diego only.',
       experimental:   true,
