@@ -8,12 +8,10 @@ if [ $# == 0 ]; then
     exit 1
 fi
 
-CF_RELEASE_DIR=${CF_RELEASE_DIR:-~/workspace/cf-release}
-CAPI_RELEASE_DIR="${CF_RELEASE_DIR}/src/capi-release"
-CC_DIR="$(cd "$(dirname "$0")" && pwd)"
-SEARCH_SHA=$1
-
-declare -a branches=("origin/master" "origin/release-candidate" "origin/acceptance-deployed" "origin/runtime-passed" "origin/runtime-deployed" "origin/develop")
+readonly CF_RELEASE_DIR=${CF_RELEASE_DIR:-~/workspace/cf-release}
+readonly CAPI_RELEASE_DIR="${CF_RELEASE_DIR}/src/capi-release"
+readonly CC_DIR="${CAPI_RELEASE_DIR}/src/cloud_controller_ng"
+readonly SEARCH_SHA=$1
 
 function update_repos {
   pushd ${CF_RELEASE_DIR} > /dev/null
@@ -29,30 +27,63 @@ function update_repos {
   popd > /dev/null
 }
 
-function main {
-  update_repos
+function exists_on_ref {
+  declare branch=$1 search_sha=$2
 
   local capi_release_sha
   local cc_sha
-  local exists
-  local result
 
-  for branch in "${branches[@]}"
-  do
-    pushd ${CF_RELEASE_DIR} > /dev/null
-      capi_release_sha=$(git ls-tree ${branch} src/capi-release | grep -E -o --color=never "[0-9a-f]{40}")
-    popd > /dev/null
+  pushd ${CF_RELEASE_DIR} > /dev/null
+    set +e
+    capi_release_sha=$(git ls-tree ${branch} src/capi-release | grep -E -o --color=never "[0-9a-f]{40}")
+    set -e
+  popd > /dev/null
 
+  if [[ -n "${capi_release_sha}" ]]; then
     pushd ${CAPI_RELEASE_DIR} > /dev/null
       cc_sha=$(git ls-tree ${capi_release_sha} src/cloud_controller_ng | grep -E -o --color=never "[0-9a-f]{40}")
     popd > /dev/null
-
-    pushd ${CC_DIR} > /dev/null
-      set +e
-      git merge-base --is-ancestor ${SEARCH_SHA} ${cc_sha}
-      exists=$?
-      set -e
+  else
+    pushd ${CF_RELEASE_DIR} > /dev/null
+      cc_sha=$(git ls-tree ${branch} src/cloud_controller_ng | grep -E -o --color=never "[0-9a-f]{40}")
     popd > /dev/null
+  fi
+
+  pushd ${CC_DIR} > /dev/null
+    set +e
+    git merge-base --is-ancestor ${search_sha} ${cc_sha}
+    exists=$?
+    set -e
+  popd > /dev/null
+}
+
+function first_release_with_sha {
+  declare sha=$1
+
+  local tag
+  release=""
+
+  pushd ~/workspace/cf-release > /dev/null
+    for tag in $(git tag | grep -E v[0-9]{3}$ | sort -n -t v -k 2); do
+      exists_on_ref ${tag} ${sha}
+
+      if [[ ${exists} -eq 0 ]]; then
+        release=$tag
+        return
+      fi
+    done
+  popd > /dev/null
+}
+
+function display_pre_release_branches_with_sha {
+  declare search_sha=$1
+
+  declare -a branches=("origin/master" "origin/release-candidate" "origin/acceptance-deployed" "origin/runtime-passed" "origin/runtime-deployed" "origin/develop")
+  local branch
+  local result
+
+  for branch in "${branches[@]}"; do
+    exists_on_ref ${branch} ${search_sha}
 
     if [[ ${exists} -eq 0 ]]; then
       result="$(tput setaf 2)$(tput bold)found$(tput sgr0)"
@@ -64,6 +95,16 @@ function main {
   done
 }
 
-main
+function main {
+  first_release_with_sha ${SEARCH_SHA}
 
-exit 0
+  if [[ -n "${release}" ]]; then
+    local result="$(tput setaf 2)$(tput bold)$release$(tput sgr0)"
+    echo "$(tput setaf 1)First CF release:$(tput sgr0)" "${result}"
+  else
+    echo "$(tput setaf 1)Has not been released$(tput sgr0)"
+    display_pre_release_branches_with_sha ${SEARCH_SHA}
+  fi
+}
+
+main
