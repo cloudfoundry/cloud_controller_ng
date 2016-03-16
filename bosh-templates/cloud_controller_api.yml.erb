@@ -197,10 +197,12 @@ uaa:
 hm9000:
   url: <%= p("hm9000.url", "https://hm9000.#{domain}") %>
 
+<% if p("routing_api.enabled") %>
 routing_api:
   url: <%= "https://api.#{domain}/routing" %>
   routing_client_name: "cc_routing"
   routing_client_secret: <%= p("uaa.clients.cc_routing.secret") %>
+<% end %>
 
 # App staging parameters
 staging:
