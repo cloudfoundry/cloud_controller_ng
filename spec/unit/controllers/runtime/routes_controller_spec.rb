@@ -5,14 +5,16 @@ module VCAP::CloudController
     let(:routing_api_client) { double('routing_api_client') }
     let(:tcp_group_1) { 'tcp-group-1' }
     let(:tcp_group_2) { 'tcp-group-2' }
+    let(:tcp_group_3) { 'tcp-group-3' }
     let(:http_group) { 'http-group' }
 
     let(:user) { User.make }
 
     let(:router_groups) do
       [
-        RoutingApi::RouterGroup.new({ 'guid' => tcp_group_1, 'type' => 'tcp', 'reservable_ports' => '1024-65535' }),
-        RoutingApi::RouterGroup.new({ 'guid' => tcp_group_2, 'type' => 'tcp', 'reservable_ports' => '1024-65535' }),
+        RoutingApi::RouterGroup.new({ 'guid' => tcp_group_1, 'name' => 'TCP1', 'type' => 'tcp', 'reservable_ports' => '1024-65535' }),
+        RoutingApi::RouterGroup.new({ 'guid' => tcp_group_2, 'name' => 'TCP2', 'type' => 'tcp', 'reservable_ports' => '1024-65535' }),
+        RoutingApi::RouterGroup.new({ 'guid' => tcp_group_3, 'name' => 'TCP3', 'type' => 'tcp', 'reservable_ports' => '50000-50001' }),
         RoutingApi::RouterGroup.new({ 'guid' => http_group, 'type' => 'http' }),
       ]
     end
@@ -25,7 +27,8 @@ module VCAP::CloudController
       allow(CloudController::DependencyLocator.instance).to receive(:route_event_repository).and_return(route_event_repository)
       allow(routing_api_client).to receive(:router_group).with(tcp_group_1).and_return(router_groups[0])
       allow(routing_api_client).to receive(:router_group).with(tcp_group_2).and_return(router_groups[1])
-      allow(routing_api_client).to receive(:router_group).with(http_group).and_return(router_groups[2])
+      allow(routing_api_client).to receive(:router_group).with(tcp_group_3).and_return(router_groups[2])
+      allow(routing_api_client).to receive(:router_group).with(http_group).and_return(router_groups[3])
     end
 
     describe 'Query Parameters' do
@@ -511,6 +514,24 @@ module VCAP::CloudController
               post '/v2/routes?generate_port=lol', MultiJson.dump(req), headers_for(user)
 
               expect(last_response.status).to eq(400)
+            end
+
+            context 'when the router group runs out of ports' do
+              let(:generated_port) { -1 }
+              let(:domain) { SharedDomain.make(router_group_guid: tcp_group_3) }
+              let(:domain_guid) { domain.guid }
+              let(:route_attrs) { { 'port' => generated_port, 'host' => host, 'path' => '' } }
+
+              before do
+                allow_any_instance_of(PortGenerator).to receive(:generate_port).and_return(generated_port)
+              end
+
+              it 'generates a port without warning' do
+                post '/v2/routes?generate_port=true', MultiJson.dump(req), headers_for(user)
+
+                expect(last_response.status).to eq(503)
+                expect(last_response.body).to include('There are no more available ports in router group: TCP3')
+              end
             end
 
             context 'the body does not provide a port' do

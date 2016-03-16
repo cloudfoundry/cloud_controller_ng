@@ -1,8 +1,9 @@
 module VCAP::CloudController::RoutingApi
   class RouterGroup
-    attr_reader :guid, :types, :reservable_ports
+    attr_reader :guid, :types, :reservable_ports, :name
     def initialize(hash)
       @guid = hash['guid']
+      @name = hash['name']
       @types = []
       @types.push(hash['type'])
       @reservable_ports = hash['reservable_ports']
@@ -14,20 +15,20 @@ module VCAP::CloudController::RoutingApi
 
     def reservable_ports
       ports = []
-      portRanges = @reservable_ports.split(",")
+      port_ranges = @reservable_ports.split(',')
 
-      portRanges.each do |portRange|
-        portBounds = portRange.split("-")
+      port_ranges.each do |port_range|
+        port_bounds = port_range.split('-')
 
-        min = portBounds[0].to_i
-        max = portBounds.length > 1 ? portBounds[1].to_i : min
-        for i in  min .. max
-          ports.push(i)
+        min = port_bounds[0].to_i
+        max = port_bounds.length > 1 ? port_bounds[1].to_i : min
+
+        (min..max).each do |port|
+          ports.push(port)
         end
-
       end
 
-      ports.sort().uniq()
+      ports.sort.uniq
     end
   end
 end

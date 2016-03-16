@@ -668,6 +668,11 @@
   http_code: 404
   message: "The route mapping could not be found: %s"
 
+21008:
+  name: OutOfRouterGroupPorts
+  http_code: 503
+  message: "There are no more available ports in router group: %s"
+
 220001:
   name: InstancesError
   http_code: 400
