@@ -526,11 +526,11 @@ module VCAP::CloudController
                 allow_any_instance_of(PortGenerator).to receive(:generate_port).and_return(generated_port)
               end
 
-              it 'generates a port without warning' do
+              it 'returns 403' do
                 post '/v2/routes?generate_port=true', MultiJson.dump(req), headers_for(user)
 
-                expect(last_response.status).to eq(503)
-                expect(last_response.body).to include('There are no more available ports in router group: TCP3')
+                expect(last_response.status).to eq(403)
+                expect(last_response.body).to include('There are no more ports available for router group: TCP3. Please contact your administrator for more information.')
               end
             end
 

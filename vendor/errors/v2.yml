@@ -670,8 +670,8 @@
 
 21008:
   name: OutOfRouterGroupPorts
-  http_code: 503
-  message: "There are no more available ports in router group: %s"
+  http_code: 403
+  message: "There are no more ports available for router group: %s. Please contact your administrator for more information."
 
 220001:
   name: InstancesError
