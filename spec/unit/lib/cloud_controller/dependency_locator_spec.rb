@@ -277,6 +277,16 @@ describe CloudController::DependencyLocator do
       TestConfig.config
     end
 
+    context 'when routing api in not enabled' do
+      before do
+        config[:routing_api] = nil
+      end
+
+      it 'returns nil' do
+        expect(locator.routing_api_client).to be_nil
+      end
+    end
+
     it 'returns a routing_api_client' do
       name = config[:routing_api][:routing_client_name]
       secret = config[:routing_api][:routing_client_secret]

@@ -214,6 +214,7 @@ module CloudController
     end
 
     def routing_api_client
+      return nil if @config[:routing_api].nil?
       skip_cert_verify = @config[:skip_cert_verify]
 
       client_id = @config[:routing_api] && @config[:routing_api][:routing_client_name]

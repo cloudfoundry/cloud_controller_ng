@@ -16,15 +16,15 @@ module VCAP::CloudController
     end
 
     describe 'transform' do
-      context 'when the Routing API is unavailable' do
-        before do
-          allow(routing_api_client).to receive(:router_groups).and_raise(RoutingApi::Client::RoutingApiUnavailable)
-        end
+      context 'when the Routing API is not configured' do
+        let(:router_group_type_populator) { RouterGroupTypePopulator.new(nil) }
 
-        it 'rescues RoutingApiUnavailable' do
-          expect {
-            router_group_type_populator.transform(domains)
-          }.not_to raise_error
+        it 'returns domains without router group type' do
+          router_group_type_populator.transform(domains)
+          expect(domain1.router_group_types).to be_nil
+          expect(domain2.router_group_types).to be_nil
+          expect(domain3.router_group_types).to be_nil
+          expect(domain4.router_group_types).to be_nil
         end
       end
 
