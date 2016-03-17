@@ -82,17 +82,26 @@ function display_pre_release_branches_with_sha {
   local branch
   local result
 
+  declare found_one=1
   for branch in "${branches[@]}"; do
     exists_on_ref ${branch} ${search_sha}
 
     if [[ ${exists} -eq 0 ]]; then
       result="$(tput setaf 2)$(tput bold)found$(tput sgr0)"
+      found_one=0
     else
       result="$(tput setaf 3)$(tput bold)not found$(tput sgr0)"
     fi
 
     printf "%-40s %s\n" "$(tput setaf 1)${branch}:$(tput sgr0)" "${result}"
   done
+
+  if [[ ${found_one} -eq 1 ]]; then
+    if which dishy > /dev/null; then
+      echo ""
+      echo $(dishy fail)
+    fi
+  fi
 }
 
 function main {
