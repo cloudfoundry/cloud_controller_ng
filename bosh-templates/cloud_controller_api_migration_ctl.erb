@@ -18,7 +18,8 @@ export C_INCLUDE_PATH=/var/vcap/packages/libpq/include:$C_INCLUDE_PATH
 export LIBRARY_PATH=/var/vcap/packages/libpq/lib:$LIBRARY_PATH
 export LANG=en_US.UTF-8
 
-source /var/vcap/packages/capi_utils/utils.sh
+source /var/vcap/packages/capi_utils/syslog_utils.sh
+source /var/vcap/packages/capi_utils/pid_utils.sh
 
 case $1 in
 
