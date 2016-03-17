@@ -5,15 +5,17 @@ set -e -x
 
 # Write the versionfile in source
 
-DOCS_DIR=docs
+ROOT_DIR=$(dirname $0)/..
 VERSION=$1
+
+pushd $ROOT_DIR
 
 if [[ $# -eq 0 ]]; then
   echo "You need to provide the version number as the first argument"
   exit 0
 fi
 
-cd $DOCS_DIR
+cd $ROOT_DIR/docs
 
 touch source/versionfile
 echo $VERSION > source/versionfile
@@ -26,9 +28,12 @@ bundle exec middleman build
 
 rm -f source/versionfile
 
+popd
 # Check out the gh-pages branch
 
 git checkout gh-pages
+
+mv docs/build build
 
 # Copy the build directory into versions/$VERSION/..
 
@@ -38,11 +43,12 @@ if [[ $VERSION != 'release-candidate' && -d version/$VERSION ]]; then
 fi
 
 if [[ $VERSION == 'release-candidate' ]]; then
-  rm -rf version/$VERSION
+  rm -rf version/release-candidate
 fi
 
 mkdir -p version/$VERSION
 mv build/* version/$VERSION
+rm -rf build
 
 # Rewrite the index.html
 if [[ $VERSION != 'release-candidate' ]]; then
@@ -79,12 +85,11 @@ echo -e '\t]
 }' >> versions.json
 
 # Commit the changes and push to origin/gh-pages
-git add -A
+git add index.html --ignore-errors
 git add versions.json
 git add version/$VERSION
 git commit -m "Bump v3 API docs version $VERSION"
-git push origin gh-pages
+# git push origin gh-pages
 
 # Check master back out
 git checkout master
-
