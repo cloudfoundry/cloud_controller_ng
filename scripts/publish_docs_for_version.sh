@@ -89,7 +89,7 @@ git add index.html --ignore-errors
 git add versions.json
 git add version/$VERSION
 git commit -m "Bump v3 API docs version $VERSION"
-# git push origin gh-pages
+git push origin gh-pages
 
 # Check master back out
 git checkout master
