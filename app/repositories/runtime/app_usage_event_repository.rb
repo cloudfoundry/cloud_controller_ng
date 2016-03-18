@@ -47,7 +47,7 @@ module VCAP::CloudController
         end
 
         def create_from_droplet(droplet, state)
-          AppUsageEvent.create({
+          opts = {
             state:                     state,
             instance_count:            1,
             memory_in_mb_per_instance: droplet.memory_limit,
@@ -59,10 +59,15 @@ module VCAP::CloudController
             package_guid:              droplet.package_guid,
             app_guid:                  '',
             app_name:                  '',
-            buildpack_guid:            droplet.try(:buildpack_lifecycle_data).try(:guid),
-            buildpack_name:            droplet.try(:buildpack_lifecycle_data).try(:buildpack),
             package_state:             droplet.try(:package).try(:state)
-          })
+          }
+
+          if droplet.lifecycle_type == Lifecycles::BUILDPACK
+            opts[:buildpack_guid] = droplet.buildpack_receipt_buildpack_guid
+            opts[:buildpack_name] = droplet.buildpack_receipt_buildpack || droplet.lifecycle_data.buildpack
+          end
+
+          AppUsageEvent.create(opts)
         end
 
         def purge_and_reseed_started_apps!

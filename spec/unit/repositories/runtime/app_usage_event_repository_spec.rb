@@ -197,8 +197,12 @@ module VCAP::CloudController
       end
 
       describe '#create_from_droplet' do
-        let(:package) { PackageModel.make }
-        let!(:droplet) { DropletModel.make(:buildpack, memory_limit: 222, package_guid: package.guid) }
+        let(:org) { Organization.make(guid: 'org-1') }
+        let(:space) { Space.make(guid: 'space-1', name: 'space-name', organization: org) }
+        let(:app_model) { AppModel.make(guid: 'app-1', name: 'frank-app', space: space) }
+        let(:package) { PackageModel.make(guid: 'package-1', app_guid: app_model.guid, state: PackageModel::READY_STATE) }
+        let!(:droplet) { DropletModel.make(guid: 'droplet-1', memory_limit: 222, package: package, app_guid: app_model.guid) }
+
         let(:state) { 'TEST_STATE' }
 
         it 'creates an AppUsageEvent' do
@@ -219,20 +223,91 @@ module VCAP::CloudController
             expect(event.state).to eq('TEST_STATE')
             expect(event.instance_count).to eq(1)
             expect(event.memory_in_mb_per_instance).to eq(222)
-            expect(event.org_guid).to eq(droplet.space.organization.guid)
-            expect(event.space_guid).to eq(droplet.space.guid)
-            expect(event.space_name).to eq(droplet.space.name)
-            expect(event.parent_app_guid).to eq(droplet.app.guid)
-            expect(event.parent_app_name).to eq(droplet.app.name)
-            expect(event.package_guid).to eq(droplet.package.guid)
+            expect(event.org_guid).to eq('org-1')
+            expect(event.space_guid).to eq('space-1')
+            expect(event.space_name).to eq('space-name')
+            expect(event.parent_app_guid).to eq('app-1')
+            expect(event.parent_app_name).to eq('frank-app')
+            expect(event.package_guid).to eq('package-1')
             expect(event.app_guid).to eq('')
             expect(event.app_name).to eq('')
             expect(event.process_type).to be_nil
-            expect(event.buildpack_guid).to eq droplet.buildpack_lifecycle_data.guid
-            expect(event.buildpack_name).to eq droplet.buildpack_lifecycle_data.buildpack
-            expect(event.package_state).to eq droplet.package.state
+            expect(event.buildpack_name).to be_nil
+            expect(event.buildpack_guid).to be_nil
+            expect(event.package_state).to eq(PackageModel::READY_STATE)
             expect(event.task_guid).to be_nil
             expect(event.task_name).to be_nil
+          end
+        end
+
+        context 'when the droplet has buildpack receipt information' do
+          let!(:droplet) do
+            DropletModel.make(
+              :buildpack,
+              guid:                             'droplet-1',
+              memory_limit:                     222,
+              package_guid:                     package.guid,
+              app_guid:                         app_model.guid,
+              buildpack_receipt_buildpack:      'a-buildpack',
+              buildpack_receipt_buildpack_guid: 'a-buildpack-guid'
+            )
+          end
+
+          it 'sets the event info to the buildpack receipt info' do
+            event = repository.create_from_droplet(droplet, state)
+
+            expect(event.buildpack_name).to eq('a-buildpack')
+            expect(event.buildpack_guid).to eq('a-buildpack-guid')
+          end
+        end
+
+        context 'when the droplet has buildpack lifecycle information' do
+          let!(:droplet) do
+            DropletModel.make(
+              :buildpack,
+              guid:         'droplet-1',
+              memory_limit: 222,
+              package_guid: package.guid,
+              app_guid:     app_model.guid,
+            )
+          end
+
+          before do
+            lifecycle_data           = droplet.lifecycle_data
+            lifecycle_data.buildpack = 'http://git.url.example.com'
+          end
+
+          it 'sets the event info to the buildpack lifecycle info' do
+            event = repository.create_from_droplet(droplet, state)
+
+            expect(event.buildpack_name).to eq('http://git.url.example.com')
+            expect(event.buildpack_guid).to be_nil
+          end
+        end
+
+        context 'when the droplet has both buildpack receipt and lifecycle information' do
+          let!(:droplet) do
+            DropletModel.make(
+              :buildpack,
+              guid:                             'droplet-1',
+              memory_limit:                     222,
+              package_guid:                     package.guid,
+              app_guid:                         app_model.guid,
+              buildpack_receipt_buildpack:      'a-buildpack',
+              buildpack_receipt_buildpack_guid: 'a-buildpack-guid'
+            )
+          end
+
+          before do
+            lifecycle_data           = droplet.lifecycle_data
+            lifecycle_data.buildpack = 'ruby_buildpack'
+          end
+
+          it 'prefers the buildpack receipt info' do
+            event = repository.create_from_droplet(droplet, state)
+
+            expect(event.buildpack_name).to eq('a-buildpack')
+            expect(event.buildpack_guid).to eq('a-buildpack-guid')
           end
         end
       end
