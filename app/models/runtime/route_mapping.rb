@@ -41,7 +41,7 @@ module VCAP::CloudController
     end
 
     def before_save
-      if !self.saved_app_port && app.diego && app.user_provided_ports.present?
+      if !self.user_provided_app_port && app.diego && app.user_provided_ports.present?
         self.app_port = app.user_provided_ports.first
       end
       app.validate_route(route)
@@ -58,7 +58,7 @@ module VCAP::CloudController
       super
     end
 
-    alias_method :saved_app_port, :app_port
+    alias_method :user_provided_app_port, :app_port
     def app_port
       saved_port = super
 

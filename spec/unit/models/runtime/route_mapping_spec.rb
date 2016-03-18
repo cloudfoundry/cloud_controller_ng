@@ -104,7 +104,7 @@ module VCAP::CloudController
           it 'saves the app port to the database' do
             mapping = RouteMapping.new(app: app_obj, route: route)
             mapping.save
-            expect(mapping.saved_app_port).to eq(8080)
+            expect(mapping.user_provided_app_port).to eq(8080)
           end
         end
 
@@ -174,7 +174,7 @@ module VCAP::CloudController
         it 'does not save the app port' do
           mapping = RouteMapping.new(app: app_obj, route: route)
           mapping.save
-          expect(mapping.saved_app_port).to be_nil
+          expect(mapping.user_provided_app_port).to be_nil
         end
       end
 
@@ -199,7 +199,7 @@ module VCAP::CloudController
 
         it 'does not save app_port' do
           mapping.save
-          expect(mapping.saved_app_port).to be_nil
+          expect(mapping.user_provided_app_port).to be_nil
         end
 
         context 'and the app does have user provided ports' do
@@ -215,7 +215,7 @@ module VCAP::CloudController
 
           it 'does save the app_port' do
             mapping.save
-            expect(mapping.saved_app_port).to eq 7777
+            expect(mapping.user_provided_app_port).to eq 7777
           end
         end
       end
@@ -259,7 +259,7 @@ module VCAP::CloudController
 
         it 'sets the app_port to the first port of the app' do
           route_mapping = RouteMapping.last
-          expect(route_mapping.saved_app_port).to eq 8080
+          expect(route_mapping.user_provided_app_port).to eq 8080
         end
       end
 

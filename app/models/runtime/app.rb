@@ -667,7 +667,7 @@ module VCAP::CloudController
 
       if diego?
         ports = docker_ports if self.docker_image.present?
-        ports = ports.blank? ? DEFAULT_PORTS : ports
+        ports = DEFAULT_PORTS if ports.blank?
       end
 
       ports

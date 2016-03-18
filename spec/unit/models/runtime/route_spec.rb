@@ -819,7 +819,7 @@ module VCAP::CloudController
 
           it 'should not save app_port to the route mappings' do
             route_mapping = RouteMapping.last
-            expect(route_mapping.saved_app_port).to eq 8998
+            expect(route_mapping.user_provided_app_port).to eq 8998
           end
         end
 
@@ -833,7 +833,7 @@ module VCAP::CloudController
 
           it 'should not save app_port to the route mappings' do
             route_mapping = RouteMapping.last
-            expect(route_mapping.saved_app_port).to be_nil
+            expect(route_mapping.user_provided_app_port).to be_nil
           end
         end
 
