@@ -113,22 +113,6 @@ module VCAP::CloudController
         end
       end
 
-      it 'should send a start message' do
-        app.instances = 2
-
-        expect(dea_pool).to receive(:find_dea).once.and_return(dea_ad)
-        expect(dea_pool).to receive(:mark_app_started).once.with(dea_id: dea_id, app_id: app.guid)
-        expect(dea_pool).to receive(:reserve_app_memory).once.with(dea_id, app.memory)
-        expect(message_bus).to receive(:publish).with(
-          'dea.dea_123.start',
-          hash_including(
-            index: 1,
-          )
-        )
-
-        Dea::Client.start_instances(app, 1)
-      end
-
       context 'when droplet is missing' do
         let(:blobstore_url_generator) do
           double('blobstore_url_generator', droplet_download_url: nil)
@@ -188,6 +172,22 @@ module VCAP::CloudController
 
             expect { Dea::Client.start_instances(app, [1, 2]) }.to raise_error 'bogus'
             expect(count).to eq(1)
+          end
+        end
+
+        context 'when starting more than 5 instances' do
+          it 'should start 5 at a time' do
+            app.instances = 9
+
+            count = 0
+            cb5 = lambda { expect(count).to eq 5 }
+            cb9 = lambda { expect(count).to eq 9 }
+            allow(Dea::Client).to receive(:start_instance_at_index) do
+              count += 1
+              count <= 5 ? cb5 : cb9
+            end
+
+            Dea::Client.start_instances(app, 1..9)
           end
         end
       end
