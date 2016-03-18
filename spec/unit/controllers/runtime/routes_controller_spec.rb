@@ -480,6 +480,19 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the routing api is disabled' do
+          before do
+            allow(tcp_route_validator).to receive(:validate).
+              and_raise(RoutingApi::Client::RoutingApiDisabled)
+          end
+          it 'returns a 403' do
+            post '/v2/routes', MultiJson.dump(req), headers_for(user)
+
+            expect(last_response).to have_status_code(403)
+            expect(last_response.body).to include 'Support for TCP routing is disabled'
+          end
+        end
+
         context 'when the routing api client raises a RoutingApiUnavailable error' do
           before do
             allow(tcp_route_validator).to receive(:validate).
@@ -514,6 +527,18 @@ module VCAP::CloudController
               post '/v2/routes?generate_port=lol', MultiJson.dump(req), headers_for(user)
 
               expect(last_response.status).to eq(400)
+            end
+
+            context 'when the routing api is disabled' do
+              before do
+                allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).and_return(nil)
+              end
+              it 'returns a 403' do
+                post '/v2/routes?generate_port=true', MultiJson.dump(req), headers_for(user)
+
+                expect(last_response).to have_status_code(403)
+                expect(last_response.body).to include 'Support for TCP routing is disabled'
+              end
             end
 
             context 'when the router group runs out of ports' do

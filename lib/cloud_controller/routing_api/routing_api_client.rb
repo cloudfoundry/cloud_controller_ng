@@ -1,6 +1,7 @@
 module VCAP::CloudController::RoutingApi
   class Client
     attr_reader :skip_cert_verify, :routing_api_uri, :token_issuer
+    class RoutingApiDisabled < StandardError; end
     class RoutingApiUnavailable < StandardError; end
     class UaaUnavailable < StandardError; end
 

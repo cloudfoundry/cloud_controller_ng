@@ -17,12 +17,19 @@ module VCAP::CloudController
       @router_group_type_populating_collection_renderer = dependencies.fetch(:router_group_type_populating_collection_renderer)
     end
 
+    def routing_api_client
+      raise RoutingApi::Client::RoutingApiDisabled if @routing_api_client.nil?
+      @routing_api_client
+    end
+
     def before_create
       router_group_guid = request_attrs['router_group_guid']
       return if router_group_guid.nil?
 
       begin
-        router_groups = @routing_api_client.router_groups || []
+        router_groups = routing_api_client.router_groups || []
+      rescue RoutingApi::Client::RoutingApiDisabled
+        raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
       rescue RoutingApi::Client::RoutingApiUnavailable
         raise Errors::ApiError.new_from_details('RoutingApiUnavailable')
       rescue RoutingApi::Client::UaaUnavailable
@@ -65,7 +72,11 @@ module VCAP::CloudController
       domain = SharedDomain.find(guid: guid)
       validate_access(:read, domain)
       unless domain.router_group_guid.nil?
-        rtr_grp = @routing_api_client.router_group(domain.router_group_guid)
+        begin
+          rtr_grp = routing_api_client.router_group(domain.router_group_guid)
+          rescue RoutingApi::Client::RoutingApiDisabled
+            raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
+        end
         domain.router_group_types = rtr_grp.types unless rtr_grp.nil?
       end
       object_renderer.render_json(self.class, domain, @opts)

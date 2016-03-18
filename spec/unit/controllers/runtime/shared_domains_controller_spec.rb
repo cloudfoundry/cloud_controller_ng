@@ -57,6 +57,31 @@ module VCAP::CloudController
           ]
         end
 
+        context 'when the routing api is not enabled' do
+          before do
+            allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
+              and_return(nil)
+          end
+
+          it 'raises a 403 - tcp routing disabled error' do
+            post '/v2/shared_domains', body, json_headers(admin_headers)
+
+            expect(last_response).to have_status_code(403)
+            expect(last_response.body).to include 'Support for TCP routing is disabled'
+          end
+
+          context 'when getting a particular shared domain' do
+            let!(:shared_domain) { SharedDomain.make(name: 'shareddomain.com', router_group_guid: 'router-group-guid1') }
+
+            it 'raises a 403 - tcp routing disabled error' do
+              get "/v2/shared_domains/#{shared_domain.guid}", nil, json_headers(admin_headers)
+
+              expect(last_response).to have_status_code(403)
+              expect(last_response.body).to include 'Support for TCP routing is disabled'
+            end
+          end
+        end
+
         before do
           allow(routing_api_client).to receive(:router_groups).and_return(router_groups)
           allow(routing_api_client).to receive(:router_group).with('router-group-guid1').

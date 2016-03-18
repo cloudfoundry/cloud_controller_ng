@@ -9,7 +9,7 @@ module VCAP::CloudController
     class RoutePortTaken < ValidationError
     end
 
-    attr_reader :domain_guid, :port, :routing_api_client, :host, :path, :domain
+    attr_reader :domain_guid, :port, :host, :path, :domain
 
     def initialize(routing_api_client, domain_guid, route_attrs)
       @routing_api_client = routing_api_client
@@ -35,6 +35,11 @@ module VCAP::CloudController
     end
 
     private
+
+    def routing_api_client
+      raise RoutingApi::Client::RoutingApiDisabled if @routing_api_client.nil?
+      @routing_api_client
+    end
 
     def is_tcp_router_group?
       domain.router_group_guid && !router_group.nil? && (router_group.types.include? 'tcp')

@@ -19,7 +19,7 @@ module VCAP::CloudController
       context 'when the Routing API is not configured' do
         let(:router_group_type_populator) { RouterGroupTypePopulator.new(nil) }
 
-        it 'returns domains without router group type' do
+        it 'returns domains with empty router group type' do
           router_group_type_populator.transform(domains)
           expect(domain1.router_group_types).to be_nil
           expect(domain2.router_group_types).to be_nil
