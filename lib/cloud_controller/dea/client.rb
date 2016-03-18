@@ -22,7 +22,7 @@ module VCAP::CloudController
             client.connect_timeout = 5
             client.receive_timeout = 5
             client.send_timeout = 5
-            client.keep_alive_timeout = 5
+            client.keep_alive_timeout = 1
 
             ssl = client.ssl_config
             ssl.verify_mode = OpenSSL::SSL::VERIFY_PEER
@@ -131,23 +131,27 @@ module VCAP::CloudController
         def start_instances(app, indices)
           indices = Array(indices)
           insufficient_resources_error = false
-          callbacks = []
-          indices.each do |idx|
+          indices.each_slice(5) do |slice|
             begin
-              callback = start_instance_at_index(app, idx)
-              callbacks << callback if callback
-            rescue Errors::ApiError => e
-              if e.name == 'InsufficientRunningResourcesAvailable'
-                insufficient_resources_error = true
-              else
-                raise e
+              callbacks = []
+              slice.each do |idx|
+                begin
+                  callback = start_instance_at_index(app, idx)
+                  callbacks << callback if callback
+                rescue Errors::ApiError => e
+                  if e.name == 'InsufficientRunningResourcesAvailable'
+                    insufficient_resources_error = true
+                  else
+                    raise e
+                  end
+                end
               end
+            ensure
+              callbacks.each(&:call)
             end
           end
 
           raise Errors::ApiError.new_from_details('InsufficientRunningResourcesAvailable') if insufficient_resources_error
-        ensure
-          callbacks.each(&:call)
         end
 
         # @param [Array] indices an Enumerable of integer indices
