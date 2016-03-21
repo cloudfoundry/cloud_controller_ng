@@ -465,6 +465,7 @@ module VCAP::CloudController
 
       context 'when the domain is a TCP Domain' do
         let(:domain) { SharedDomain.make(router_group_guid: 'router-group') }
+        let(:domain_guid) {domain.guid}
 
         context 'when the routing api client raises a UaaUnavailable error' do
           before do

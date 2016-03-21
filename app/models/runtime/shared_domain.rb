@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     add_association_dependencies routes: :destroy
 
-    export_attributes :name, :router_group_guid
+    export_attributes :name, :router_group_guid, :router_group_types
     import_attributes :name, :router_group_guid
     strip_attributes :name
     attr_accessor :router_group_types
