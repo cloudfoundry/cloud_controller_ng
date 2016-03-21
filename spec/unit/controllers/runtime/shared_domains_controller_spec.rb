@@ -57,47 +57,6 @@ module VCAP::CloudController
           ]
         end
 
-        context 'when the routing api is not enabled' do
-          before do
-            allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
-              and_return(nil)
-          end
-
-          it 'raises a 403 - tcp routing disabled error' do
-            post '/v2/shared_domains', body, json_headers(admin_headers)
-
-            expect(last_response).to have_status_code(403)
-            expect(last_response.body).to include 'Support for TCP routing is disabled'
-          end
-
-          context 'when getting a particular shared domain' do
-            let!(:shared_domain) { SharedDomain.make(name: 'shareddomain.com', router_group_guid: 'router-group-guid1') }
-
-            it 'raises a 403 - tcp routing disabled error' do
-              get "/v2/shared_domains/#{shared_domain.guid}", nil, json_headers(admin_headers)
-
-              expect(last_response).to have_status_code(403)
-              expect(last_response.body).to include 'Support for TCP routing is disabled'
-            end
-          end
-
-          it 'includes router_group_types in the response' do
-            SharedDomain.make(name: 'shareddomain2.com', router_group_guid: 'router-group-guid1')
-
-            get '/v2/shared_domains', nil, json_headers(admin_headers)
-
-            expect(last_response).to have_status_code(200)
-
-            domain_hash = JSON.parse(last_response.body)['resources'].last['entity']
-
-            expect(domain_hash['name']).to eq('shareddomain2.com')
-            expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
-            expect(domain_hash.has_key?('router_group_types')).to be true
-            expect(domain_hash['router_group_types']).to be_nil
-
-          end
-        end
-
         before do
           allow(routing_api_client).to receive(:router_groups).and_return(router_groups)
           allow(routing_api_client).to receive(:router_group).with('router-group-guid1').
@@ -141,8 +100,7 @@ module VCAP::CloudController
 
           expect(domain_hash['name']).to eq('shareddomain2.com')
           expect(domain_hash['router_group_types']).to be_nil
-          expect(domain_hash.has_key?('router_group_types')).to be true
-
+          expect(domain_hash.key?('router_group_types')).to be true
         end
 
         it 'includes router_group_types in the response for a particular domain' do
@@ -179,6 +137,20 @@ module VCAP::CloudController
           end
 
           it 'returns a 503 Service Unavailable' do
+            get '/v2/shared_domains', nil, json_headers(admin_headers)
+
+            expect(last_response).to have_status_code(503)
+            expect(last_response.body).to include 'The Routing API is currently unavailable'
+          end
+        end
+
+        context 'when the routing api client raises a RoutingApiUnavailable error' do
+          before do
+            allow(routing_api_client).to receive(:router_groups).
+              and_raise(RoutingApi::Client::RoutingApiUnavailable)
+          end
+
+          it 'returns a 503 Service Unavailable' do
             post '/v2/shared_domains', body, json_headers(admin_headers)
 
             expect(last_response).to have_status_code(503)
@@ -204,6 +176,46 @@ module VCAP::CloudController
 
             expect(last_response).to have_status_code(400)
             expect(last_response.body).to include "router group guid 'router-group-guid1' not found"
+          end
+        end
+
+        context 'when the routing api is not enabled' do
+          before do
+            allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
+              and_return(nil)
+          end
+
+          it 'raises a 403 - tcp routing disabled error' do
+            post '/v2/shared_domains', body, json_headers(admin_headers)
+
+            expect(last_response).to have_status_code(403)
+            expect(last_response.body).to include 'Support for TCP routing is disabled'
+          end
+
+          context 'when getting a particular shared domain' do
+            let!(:shared_domain) { SharedDomain.make(name: 'shareddomain.com', router_group_guid: 'router-group-guid1') }
+
+            it 'raises a 403 - tcp routing disabled error' do
+              get "/v2/shared_domains/#{shared_domain.guid}", nil, json_headers(admin_headers)
+
+              expect(last_response).to have_status_code(403)
+              expect(last_response.body).to include 'Support for TCP routing is disabled'
+            end
+          end
+
+          it 'includes router_group_types in the response' do
+            SharedDomain.make(name: 'shareddomain2.com', router_group_guid: 'router-group-guid1')
+
+            get '/v2/shared_domains', nil, json_headers(admin_headers)
+
+            expect(last_response).to have_status_code(200)
+
+            domain_hash = JSON.parse(last_response.body)['resources'].last['entity']
+
+            expect(domain_hash['name']).to eq('shareddomain2.com')
+            expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
+            expect(domain_hash.key?('router_group_types')).to be true
+            expect(domain_hash['router_group_types']).to be_nil
           end
         end
       end

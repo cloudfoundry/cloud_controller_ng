@@ -58,13 +58,17 @@ module VCAP::CloudController
     get '/v2/shared_domains', :enumerate_shared_domains
     def enumerate_shared_domains
       validate_access(:index, model)
-      @router_group_type_populating_collection_renderer.render_json(
-        self.class,
-          get_filtered_dataset_for_enumeration(model, SharedDomain.dataset, self.class.query_parameters, @opts),
-          self.class.path,
-          @opts,
-          {},
-      )
+      begin
+        @router_group_type_populating_collection_renderer.render_json(
+          self.class,
+            get_filtered_dataset_for_enumeration(model, SharedDomain.dataset, self.class.query_parameters, @opts),
+            self.class.path,
+            @opts,
+            {},
+        )
+      rescue RoutingApi::Client::RoutingApiUnavailable
+        raise Errors::ApiError.new_from_details('RoutingApiUnavailable')
+      end
     end
 
     get '/v2/shared_domains/:guid', :get_shared_domain
@@ -74,8 +78,8 @@ module VCAP::CloudController
       unless domain.router_group_guid.nil?
         begin
           rtr_grp = routing_api_client.router_group(domain.router_group_guid)
-          rescue RoutingApi::Client::RoutingApiDisabled
-            raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
+        rescue RoutingApi::Client::RoutingApiDisabled
+          raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
         end
         domain.router_group_types = rtr_grp.types unless rtr_grp.nil?
       end

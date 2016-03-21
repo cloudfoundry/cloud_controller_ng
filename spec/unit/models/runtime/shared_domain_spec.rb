@@ -7,7 +7,7 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :router_group_guid }
+      it { is_expected.to export_attributes :name, :router_group_guid, :router_group_types }
       it { is_expected.to import_attributes :name, :router_group_guid }
     end
 
@@ -79,19 +79,6 @@ module VCAP::CloudController
     describe 'addable_to_organization!' do
       it 'does not raise error' do
         expect { subject.addable_to_organization!(Organization.new) }.to_not raise_error
-      end
-    end
-
-    describe '#export_attrs' do
-      let(:shared_domain) { SharedDomain.make }
-
-      it 'does not include router_group_types when router_group_types has not been set' do
-        expect(shared_domain.export_attrs).to_not include(:router_group_types)
-      end
-
-      it 'includes router_group_types when router_group_types has been set' do
-        shared_domain.router_group_types = ['tcp']
-        expect(shared_domain.transient_attrs).to include(:router_group_types)
       end
     end
   end
