@@ -1,6 +1,7 @@
 require 'fileutils'
 require 'find'
 require 'fog'
+require 'mime-types'
 require 'cloud_controller/blobstore/base_client'
 require 'cloud_controller/blobstore/fog/directory'
 require 'cloud_controller/blobstore/fog/fog_blob'
