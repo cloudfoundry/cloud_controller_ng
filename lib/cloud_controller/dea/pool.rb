@@ -59,7 +59,7 @@ module VCAP::CloudController
 
           prune_stale_deas
           best_ad = top_n_stagers_for(memory, disk, stack).sample
-          best_ad && best_ad[0]
+          best_ad && best_ad[1]
         end
       end
 

@@ -26,7 +26,7 @@ module VCAP::CloudController
         end
       end
 
-      it 'includes app guid, task id, download/upload uris and stack name' do
+      it 'includes app guid, task id, download/upload uris, stack name, and accepts_http flag' do
         allow(blobstore_url_generator).to receive(:app_package_download_url).with(app).and_return('http://www.app.uri')
         allow(blobstore_url_generator).to receive(:droplet_upload_url).with(app).and_return('http://www.droplet.upload.uri')
         allow(blobstore_url_generator).to receive(:buildpack_cache_download_url).with(app).and_return('http://www.buildpack.cache.download.uri')
@@ -40,6 +40,7 @@ module VCAP::CloudController
         expect(request[:buildpack_cache_upload_uri]).to eq('http://www.buildpack.cache.upload.uri')
         expect(request[:buildpack_cache_download_uri]).to eq('http://www.buildpack.cache.download.uri')
         expect(request[:stack]).to eq(app.stack.name)
+        expect(request[:accepts_http]).to be false
       end
 
       it 'includes misc app properties' do
@@ -239,6 +240,15 @@ module VCAP::CloudController
 
           request = staging_message.staging_request(app, task_id)
           expect(request[:properties][:environment]).to include('KEY=value')
+        end
+      end
+
+      context 'when http is enabled for DEAs' do
+        let(:config_hash) { { dea_client: { cert_file: 'some/file', key_file: 'another/file' } } }
+
+        it 'sets the staging request accepts https to true' do
+          request = staging_message.staging_request(app, task_id)
+          expect(request[:accepts_http]).to equal(true)
         end
       end
     end

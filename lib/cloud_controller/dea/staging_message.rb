@@ -20,6 +20,7 @@ module VCAP::CloudController
           start_message:                start_app_message(app),
           admin_buildpacks:             admin_buildpacks,
           egress_network_rules:         staging_egress_rules,
+          accepts_http:                 @config[:dea_client] ? true : false
         }
       end
 

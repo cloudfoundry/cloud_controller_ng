@@ -409,7 +409,7 @@ module VCAP::CloudController
         it 'only finds registered stagers' do
           expect { subject.find_stager('stack', 0, 0) }.to raise_error(CloudController::Errors::ApiError, /The stack could not be found/)
           subject.process_advertise_message(dea_advertise_msg)
-          expect(subject.find_stager('stack', 0, 0)).to eq('dea-id')
+          expect(subject.find_stager('stack', 0, 0).dea_id).to eq('dea-id')
         end
       end
 
@@ -440,7 +440,7 @@ module VCAP::CloudController
             subject.process_advertise_message(dea_advertise_msg)
 
             Timecop.travel(9)
-            expect(subject.find_stager('stack', 1024, 0)).to eq('dea-id')
+            expect(subject.find_stager('stack', 1024, 0).dea_id).to eq('dea-id')
 
             Timecop.travel(1)
             expect(subject.find_stager('stack', 1024, 0)).to be_nil
@@ -455,7 +455,7 @@ module VCAP::CloudController
               subject.process_advertise_message(dea_advertise_msg)
 
               Timecop.travel(11)
-              expect(subject.find_stager('stack', 1024, 0)).to eq('dea-id')
+              expect(subject.find_stager('stack', 1024, 0).dea_id).to eq('dea-id')
 
               Timecop.travel(5)
               expect(subject.find_stager('stack', 1024, 0)).to be_nil
@@ -468,7 +468,7 @@ module VCAP::CloudController
         it 'only finds stagers that can satisfy memory request' do
           subject.process_advertise_message(dea_advertise_msg)
           expect(subject.find_stager('stack', 1025, 0)).to be_nil
-          expect(subject.find_stager('stack', 1024, 0)).to eq('dea-id')
+          expect(subject.find_stager('stack', 1024, 0).dea_id).to eq('dea-id')
         end
 
         it 'samples out of the top 5 stagers with enough memory' do
@@ -483,7 +483,7 @@ module VCAP::CloudController
           correct_stagers = (5..9).map { |i| "staging-id-#{i}" }
 
           10.times do
-            expect(correct_stagers).to include(subject.find_stager('stack-name', 1024, 0))
+            expect(correct_stagers).to include(subject.find_stager('stack-name', 1024, 0).dea_id)
           end
         end
       end
@@ -492,7 +492,7 @@ module VCAP::CloudController
         it 'only finds deas that can satisfy stack request' do
           subject.process_advertise_message(dea_advertise_msg)
           expect { subject.find_stager('unknown-stack-name', 0, 0) }.to raise_error(CloudController::Errors::ApiError, /The stack could not be found/)
-          expect(subject.find_stager('stack', 0, 0)).to eq('dea-id')
+          expect(subject.find_stager('stack', 0, 0).dea_id).to eq('dea-id')
         end
       end
 
