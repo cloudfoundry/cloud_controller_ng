@@ -120,6 +120,8 @@ module LegacyApiDsl
       end
 
       get root(path) do
+        include_context 'response_fields' if options[:response_fields]
+
         standard_list_parameters controller, outer_model: outer_model, exclude_parameters: options.fetch(:exclude_parameters, [])
         example_request "List all #{title}#{outer_model_description}" do
           expect(status).to eq 200
@@ -160,6 +162,8 @@ module LegacyApiDsl
       path = options[:path] || model
       title = options[:title] || path.to_s.singularize.titleize
       get "#{root(path)}/:guid" do
+        include_context 'response_fields' if options[:response_fields]
+
         example_request "Retrieve a Particular #{title}" do
           standard_entity_response parsed_response, model
           if options[:nested_associations]
