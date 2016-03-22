@@ -135,12 +135,12 @@ module VCAP::CloudController
       droplet = DropletModel.find(guid: guid)
 
       raise ApiError.new_from_details('NotFound', guid) if droplet.nil?
-      raise ApiError.new_from_details('StagingError', "malformed droplet upload request for #{guid}") unless upload_path
+      raise ApiError.new_from_details('StagingError', "malformed droplet upload request for #{guid}") unless v3_upload_path
       check_file_md5
 
       logger.info 'v3-droplet.begin-upload', droplet_guid: guid
 
-      droplet_upload_job = Jobs::V3::DropletUpload.new(upload_path, guid)
+      droplet_upload_job = Jobs::V3::DropletUpload.new(v3_upload_path, guid)
 
       job = Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::LocalQueue.new(config)).enqueue
       [HTTP::OK, StagingJobPresenter.new(job).to_json]
@@ -151,12 +151,12 @@ module VCAP::CloudController
       app_model = AppModel.find(guid: guid)
 
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found') if app_model.nil?
-      raise ApiError.new_from_details('StagingError', "malformed buildpack cache upload request for #{guid}") unless upload_path
+      raise ApiError.new_from_details('StagingError', "malformed buildpack cache upload request for #{guid}") unless v3_upload_path
       check_file_md5
 
       cache_key = CacheKeyPresenter.cache_key(guid: guid, stack_name: stack_name)
 
-      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, cache_key, :buildpack_cache_blobstore)
+      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(v3_upload_path, cache_key, :buildpack_cache_blobstore)
       Jobs::Enqueuer.new(blobstore_upload, queue: Jobs::LocalQueue.new(config)).enqueue
       HTTP::OK
     end
@@ -207,6 +207,15 @@ module VCAP::CloudController
         if HashUtils.dig(config, :nginx, :use_nginx)
           params['droplet_path']
         elsif (tempfile = HashUtils.dig(params, 'upload', 'droplet', :tempfile))
+          tempfile.path
+        end
+    end
+
+    def v3_upload_path
+      @upload_path ||=
+        if HashUtils.dig(config, :nginx, :use_nginx)
+          params['droplet_path']
+        elsif (tempfile = HashUtils.dig(params, 'file', :tempfile))
           tempfile.path
         end
     end

@@ -47,6 +47,18 @@ module VCAP::CloudController
 
         expect(message.requested?(:bits_path)).to be_truthy
       end
+
+      context 'when rack is handling the file upload' do
+        let(:file) { instance_double(ActionDispatch::Http::UploadedFile, tempfile: instance_double(Tempfile, path: 'foobar')) }
+        let(:params) { { 'bits' => file } }
+
+        it 'returns the correct PackageUploadMessage' do
+          message = PackageUploadMessage.create_from_params(params)
+
+          expect(message).to be_a(PackageUploadMessage)
+          expect(message.bits_path).to eq('foobar')
+        end
+      end
     end
   end
 end
