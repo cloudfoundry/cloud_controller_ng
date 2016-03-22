@@ -21,11 +21,9 @@ module VCAP::CloudController
       end
 
       def stage(&completion_callback)
-        @stager_id = @dea_pool.find_stager(@app.stack.name, staging_task_memory_mb, staging_task_disk_mb)
-        raise CloudController::Errors::ApiError.new_from_details('StagingError', 'no available stagers') unless @stager_id
-
-        subject = "staging.#{@stager_id}.start"
-        @multi_message_bus_request = MultiResponseMessageBusRequest.new(@message_bus, subject)
+        stager = @dea_pool.find_stager(@app.stack.name, staging_task_memory_mb, staging_task_disk_mb)
+        raise CloudController::Errors::ApiError.new_from_details('StagingError', 'no available stagers') unless stager
+        @stager_id = stager.dea_id
 
         # Save the current staging task
         @app.update(package_state: 'PENDING', staging_task_id: task_id)
@@ -39,6 +37,13 @@ module VCAP::CloudController
 
         logger.info('staging.begin', app_guid: @app.guid)
         staging_msg = staging_request
+
+        if stager.url && Client.enabled?
+          return stage_with_http(stager.url, staging_msg)
+        end
+
+        subject = "staging.#{@stager_id}.start"
+        @multi_message_bus_request = MultiResponseMessageBusRequest.new(@message_bus, subject)
 
         staging_result = EM.schedule_sync do |promise|
           # First response is blocking stage_app.
@@ -66,11 +71,29 @@ module VCAP::CloudController
         StagingMessage.new(@config, @blobstore_url_generator).staging_request(@app, task_id)
       end
 
+      def handle_http_response(response)
+        ensure_staging_is_current!
+        check_staging_error!(response)
+        process_response(response)
+      rescue => e
+        Loggregator.emit_error(@app.guid, "Encountered error: #{e.message}")
+        logger.error "Encountered error on stager with id #{@stager_id}: #{e}\n#{e.backtrace.join("\n")}"
+        raise e
+      end
+
       private
 
+      def stage_with_http(url, msg)
+        Dea::Client.stage(url, msg)
+      rescue => e
+        @app.mark_as_failed_to_stage('StagingError')
+        logger.error e.message
+        raise e
+      end
+
       def handle_first_response(response, error, promise)
-        ensure_staging_is_current!
-        check_staging_error!(response, error)
+        ensure_staging_is_current!(false)
+        check_staging_error!(response)
         promise.deliver(StagingResponse.new(response))
       rescue => e
         Loggregator.emit_error(@app.guid, "exception handling first response #{e.message}")
@@ -80,8 +103,8 @@ module VCAP::CloudController
 
       def handle_second_response(response, error)
         @multi_message_bus_request.ignore_subsequent_responses
-        ensure_staging_is_current!
-        check_staging_error!(response, error)
+        ensure_staging_is_current!(false)
+        check_staging_error!(response)
         process_response(response)
       rescue => e
         Loggregator.emit_error(@app.guid, "encountered error: #{e.message}")
@@ -101,7 +124,7 @@ module VCAP::CloudController
         end
       end
 
-      def check_staging_error!(response, error)
+      def check_staging_error!(response)
         type = error_type(response)
         message = error_message(response)
 
@@ -131,7 +154,7 @@ module VCAP::CloudController
         end
       end
 
-      def ensure_staging_is_current!
+      def ensure_staging_is_current!(use_http=true)
         begin
           # Reload to find other updates of staging task id
           # which means that there was a new staging process initiated
@@ -142,12 +165,16 @@ module VCAP::CloudController
           raise CloudController::Errors::ApiError.new_from_details('StagingError', "failed to stage application: can't retrieve staging status")
         end
 
-        if @app.staging_task_id != task_id
-          raise CloudController::Errors::ApiError.new_from_details('StagingError', 'failed to stage application: another staging request was initiated')
-        end
+        check_task_id unless use_http
 
         if @app.staging_failed?
           raise CloudController::Errors::ApiError.new_from_details('StagingError', STAGING_ALREADY_FAILURE_MSG)
+        end
+      end
+
+      def check_task_id
+        if @app.staging_task_id != task_id
+          raise CloudController::Errors::ApiError.new_from_details('StagingError', 'failed to stage application: another staging request was initiated')
         end
       end
 
