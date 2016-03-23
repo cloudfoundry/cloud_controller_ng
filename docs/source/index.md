@@ -23,6 +23,7 @@ includes:
   - packages/upload_bits
   - packages/delete
   - packages/list
+  - packages/list_all
   - processes/header
   - processes/object
   - processes/stats_object
