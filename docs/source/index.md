@@ -30,6 +30,7 @@ includes:
   - processes/scale
   - processes/terminate_instance
   - processes/list
+  - processes/app/list
   - route_mappings/header
   - route_mappings/object
   - route_mappings/create
