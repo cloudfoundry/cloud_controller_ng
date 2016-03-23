@@ -122,6 +122,63 @@ describe 'Processes' do
     end
   end
 
+  describe 'GET /v3/processes/:guid/stats' do
+    it 'retrieves the stats for a process' do
+      process = VCAP::CloudController::ProcessModel.make(type: 'worker', space: space, diego: true)
+
+      usage_time = Time.now.utc.to_s
+      tps_response = [{
+        process_guid:  process.guid,
+        instance_guid: 'instance-A',
+        index:         0,
+        state:         'RUNNING',
+        details:       'some-details',
+        uptime:        1,
+        since:         101,
+        host:          'toast',
+        port:          8080,
+        stats:         { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
+      }].to_json
+
+      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(process)
+      stub_request(:get, "http://tps.service.cf.internal:1518/v1/actual_lrps/#{process_guid}/stats").to_return(status: 200, body: tps_response)
+
+      get "/v3/processes/#{process.guid}/stats", nil, developer_headers
+
+      expected_response = {
+        'pagination' => {
+          'total_results' => 1,
+          'first'         => { 'href' => "/v3/processes/#{process.guid}/stats" },
+          'last'          => { 'href' => "/v3/processes/#{process.guid}/stats" },
+          'next'          => nil,
+          'previous'      => nil,
+        },
+        'resources'  => [{
+          'type'       => 'worker',
+          'index'      => 0,
+          'state'      => 'RUNNING',
+          'usage'      => {
+            'time' => usage_time,
+            'cpu'  => 80,
+            'mem'  => 128,
+            'disk' => 1024,
+          },
+          'host'       => 'toast',
+          'port'       => 8080,
+          'uptime'     => 1,
+          'mem_quota'  => 1073741824,
+          'disk_quota' => 1073741824,
+          'fds_quota'  => 16384
+        }]
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
+
   describe 'PATCH /v3/processes/:guid' do
     it 'updates the process' do
       process = VCAP::CloudController::ProcessModel.make(
