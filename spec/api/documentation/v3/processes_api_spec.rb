@@ -16,46 +16,6 @@ resource 'Processes (Experimental)', type: :api do
     end
   end
 
-  get '/v3/processes/:guid' do
-    let(:space) { VCAP::CloudController::Space.make }
-    let(:app_model) { VCAP::CloudController::AppModel.make space: space }
-    let(:process) { VCAP::CloudController::AppFactory.make app_guid: app_model.guid, space: space }
-    let(:guid) { process.guid }
-    let(:type) { process.type }
-
-    before do
-      process.space.organization.add_user user
-      process.space.add_developer user
-    end
-
-    example 'Get a Process' do
-      expect(process.app_guid).to be_present
-
-      expected_response = {
-        'guid'         => guid,
-        'type'         => type,
-        'command'      => nil,
-        'instances'    => 1,
-        'memory_in_mb' => 1024,
-        'disk_in_mb' => 1024,
-        'created_at'   => iso8601,
-        'updated_at'   => iso8601,
-        'links' => {
-          'self'  => { 'href' => "/v3/processes/#{process.guid}" },
-          'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
-          'app'   => { 'href' => "/v3/apps/#{process.app_guid}" },
-          'space' => { 'href' => "/v2/spaces/#{process.space_guid}" },
-        },
-      }
-
-      do_request_with_error_handling
-      parsed_response = MultiJson.load(response_body)
-
-      expect(response_status).to eq(200)
-      expect(parsed_response).to be_a_response_like(expected_response)
-    end
-  end
-
   put '/v3/processes/:guid/scale' do
     body_parameter :instances, 'Number of instances'
     body_parameter :memory_in_mb, 'The memory in mb allocated per instance'
