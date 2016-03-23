@@ -19,13 +19,15 @@ module VCAP::CloudController
         active?: app_active,
         buildpack_cache_key: key,
         diego: diego,
-        is_v3?: false
+        is_v3?: false,
+        pending?: pending?
       )
     end
     let(:app_started) { false }
     let(:app_needs_staging) { false }
     let(:previous_changes) { nil }
     let(:package_hash) { nil }
+    let(:pending?) { false }
     let(:key) { nil }
 
     before do
@@ -47,6 +49,14 @@ module VCAP::CloudController
         it 'does not care if diego is unavailable' do
           allow(runner).to receive(:stop).and_raise(VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError)
           expect { subject }.not_to raise_error
+        end
+
+        context 'when the app is staging' do
+          let(:pending?) { true }
+          it 'stops staging before stopping the application' do
+            expect(stager).to receive(:stop_stage)
+            subject
+          end
         end
       end
 

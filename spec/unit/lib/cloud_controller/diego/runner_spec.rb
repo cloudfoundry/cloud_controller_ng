@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     describe Runner do
       let(:messenger) { instance_double(Messenger) }
-      let(:app) { AppFactory.make(state: 'STARTED') }
+      let(:app) { AppFactory.make(state: 'STARTED', package_state: 'STAGED') }
       let(:protocol) { instance_double(Diego::Protocol, desire_app_message: {}) }
       let(:default_health_check_timeout) { 9999 }
 
@@ -71,6 +71,18 @@ module VCAP::CloudController
           it 'desires an app, relying on its state to convey the change' do
             expect(messenger).to receive(:send_desire_request).with(app, default_health_check_timeout)
             runner.update_routes
+          end
+
+          context 'but it has never had a successful stage (e.g. the first stage is in progress)' do
+            let(:app) { AppFactory.make(state: 'STARTED', package_state: 'PENDING') }
+
+            it 'should not update routes' do
+              allow(messenger).to receive(:send_desire_request)
+
+              runner.update_routes
+
+              expect(messenger).to_not have_received(:send_desire_request)
+            end
           end
         end
 
