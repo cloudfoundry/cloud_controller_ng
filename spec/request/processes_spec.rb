@@ -83,7 +83,7 @@ describe 'Processes' do
     end
   end
 
-  describe 'GET /v3/processes:guid' do
+  describe 'GET /v3/processes/:guid' do
     it 'retrieves the process' do
       process = VCAP::CloudController::ProcessModel.make(
         app:        app_model,
@@ -361,6 +361,45 @@ describe 'Processes' do
             },
           }
         ]
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
+
+  describe 'GET /v3/apps/:guid/processes/:type' do
+    it 'retrieves the process for an app with the requested type' do
+      process = VCAP::CloudController::ProcessModel.make(
+        app:        app_model,
+        space:      space,
+        type:       'web',
+        instances:  2,
+        memory:     1024,
+        disk_quota: 1024,
+        command:    'rackup',
+        metadata:   {}
+      )
+
+      get "/v3/apps/#{app_model.guid}/processes/web", nil, developer_headers
+
+      expected_response = {
+        'guid'         => process.guid,
+        'type'         => 'web',
+        'command'      => 'rackup',
+        'instances'    => 2,
+        'memory_in_mb' => 1024,
+        'disk_in_mb'   => 1024,
+        'created_at'   => iso8601,
+        'updated_at'   => nil,
+        'links'        => {
+          'self'  => { 'href' => "/v3/processes/#{process.guid}" },
+          'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+        },
       }
 
       parsed_response = MultiJson.load(last_response.body)
