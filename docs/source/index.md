@@ -26,6 +26,7 @@ includes:
   - processes/header
   - processes/get
   - processes/update
+  - processes/scale
   - processes/list
   - route_mappings/header
   - route_mappings/object

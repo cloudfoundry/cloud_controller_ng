@@ -16,57 +16,6 @@ resource 'Processes (Experimental)', type: :api do
     end
   end
 
-  put '/v3/processes/:guid/scale' do
-    body_parameter :instances, 'Number of instances'
-    body_parameter :memory_in_mb, 'The memory in mb allocated per instance'
-    body_parameter :disk_in_mb, 'The disk in mb allocated per instance'
-    header 'Content-Type', 'application/json'
-
-    let(:instances) { 3 }
-    let(:memory_in_mb) { 100 }
-    let(:disk_in_mb) { 100 }
-    let(:guid) { process.guid }
-    let(:raw_post) { body_parameters }
-
-    let(:process) { VCAP::CloudController::AppFactory.make }
-
-    before do
-      app = VCAP::CloudController::AppModel.make
-      process.app_guid = app.guid
-      process.save
-      process.space.organization.add_user user
-      process.space.add_developer user
-    end
-
-    example 'Scaling a Process' do
-      expect {
-        do_request_with_error_handling
-      }.to change { VCAP::CloudController::Event.count }.by(1)
-      process.reload
-
-      expected_response = {
-        'guid'         => process.guid,
-        'type'         => process.type,
-        'command'      => process.command,
-        'instances'    => instances,
-        'memory_in_mb' => memory_in_mb,
-        'disk_in_mb' => disk_in_mb,
-        'created_at'   => iso8601,
-        'updated_at'   => iso8601,
-        'links' => {
-          'self'  => { 'href' => "/v3/processes/#{process.guid}" },
-          'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
-          'app'   => { 'href' => "/v3/apps/#{process.app_guid}" },
-          'space' => { 'href' => "/v2/spaces/#{process.space_guid}" },
-        },
-      }
-
-      parsed_response = JSON.parse(response_body)
-      expect(response_status).to eq(202)
-      expect(parsed_response).to be_a_response_like(expected_response)
-    end
-  end
-
   get '/v3/processes/:guid/stats' do
     header 'Content-Type', 'application/json'
 

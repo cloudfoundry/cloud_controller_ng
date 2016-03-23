@@ -171,4 +171,58 @@ describe 'Processes' do
       expect(event.actee).to eq(process.guid)
     end
   end
+
+  describe 'PUT /v3/processes/:guid/scale' do
+    it 'scales the process' do
+      process = VCAP::CloudController::ProcessModel.make(
+        app:        app_model,
+        space:      space,
+        type:       'web',
+        instances:  2,
+        memory:     1024,
+        disk_quota: 1024,
+        command:    'rackup',
+        metadata:   {}
+      )
+
+      scale_request = {
+        instances:    5,
+        memory_in_mb: 10,
+        disk_in_mb:   20,
+      }
+
+      put "/v3/processes/#{process.guid}/scale", scale_request, developer_headers
+
+      expected_response = {
+        'guid'         => process.guid,
+        'type'         => 'web',
+        'command'      => 'rackup',
+        'instances'    => 5,
+        'memory_in_mb' => 10,
+        'disk_in_mb'   => 20,
+        'created_at'   => iso8601,
+        'updated_at'   => iso8601,
+        'links'        => {
+          'self'  => { 'href' => "/v3/processes/#{process.guid}" },
+          'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+        },
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(202)
+      expect(parsed_response).to be_a_response_like(expected_response)
+
+      process.reload
+      expect(process.instances).to eq(5)
+      expect(process.memory).to eq(10)
+      expect(process.disk_quota).to eq(20)
+
+      event = VCAP::CloudController::Event.last
+      expect(event.type).to eq('audit.app.update')
+      expect(event.actee).to eq(process.guid)
+    end
+  end
 end
