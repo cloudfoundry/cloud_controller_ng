@@ -1,0 +1,39 @@
+## Get stats for a process for an app
+
+```
+Definition
+```
+
+```http
+GET /v3/apps/:guid/processes/:type/stats HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/apps/[guid]/processes/[type]/stats" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :paginated_list_of_process_stats, '/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web' %>
+```
+
+This endpoint retrieves the stats for a specific process belonging to an app.
+
+### Body Parameters
+
+<p class='no-body-parameters-outer'>
+  <span class='no-body-parameters-required'>
+    No arguments
+  </span>
+</p>

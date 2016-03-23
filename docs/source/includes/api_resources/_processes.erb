@@ -95,3 +95,38 @@
   ]
 }
 <% end %>
+
+<% content_for :paginated_list_of_process_stats do |base_url| %>
+{
+  "resources": [
+    {
+      "type": "web",
+      "index": 0,
+      "state": "RUNNING",
+      "usage": {
+        "time": "2016-03-23T23:17:30.476314154Z",
+        "cpu": 0.00038711029163348665,
+        "mem": 19177472,
+        disk": 69705728
+      },
+      "host": "10.244.16.10",
+      "port": 60040,
+      "uptime": 9042,
+      "mem_quota": 268435456,
+      "disk_quota": 1073741824,
+      "fds_quota": 16384
+    }
+  ],
+  "pagination": {
+    "total_results": 1,
+    "first": {
+      "href": "<%= base_url %>/stats"
+    },
+    "last": {
+      "href": "<%= base_url %>/stats"
+    },
+    "next": null,
+    "previous": null
+  }
+}
+<% end %>
