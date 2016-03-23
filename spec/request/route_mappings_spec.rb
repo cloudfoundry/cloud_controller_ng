@@ -1,17 +1,6 @@
-ENV['RACK_ENV'] = 'test'
-require 'rack/test'
 require 'spec_helper'
 
 describe 'Route Mappings' do
-  include Rack::Test::Methods
-  include ControllerHelpers
-
-  def app
-    test_config     = TestConfig.config
-    request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new
-    VCAP::CloudController::RackAppBuilder.new.build test_config, request_metrics
-  end
-
   let(:space) { VCAP::CloudController::Space.make }
   let(:org) { space.organization }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }

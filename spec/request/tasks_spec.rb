@@ -1,17 +1,6 @@
-ENV['RACK_ENV'] = 'test'
-require 'rack/test'
 require 'spec_helper'
 
 describe 'Tasks' do
-  include Rack::Test::Methods
-  include ControllerHelpers
-
-  def app
-    test_config     = TestConfig.config
-    request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new
-    VCAP::CloudController::RackAppBuilder.new.build test_config, request_metrics
-  end
-
   let(:space) { VCAP::CloudController::Space.make }
   let(:user) { VCAP::CloudController::User.make }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }

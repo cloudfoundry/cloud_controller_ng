@@ -1,16 +1,6 @@
-require 'rack/test'
 require 'spec_helper'
 
 describe 'v3 service bindings' do
-  include Rack::Test::Methods
-  include ControllerHelpers
-
-  def app
-    test_config     = TestConfig.config
-    request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new
-    VCAP::CloudController::RackAppBuilder.new.build test_config, request_metrics
-  end
-
   let(:user) { VCAP::CloudController::User.make }
 
   let(:user_headers) do
