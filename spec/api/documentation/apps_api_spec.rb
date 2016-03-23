@@ -85,7 +85,7 @@ resource 'Apps', type: [:api, :legacy_api] do
 
       {
         name: :staging_failed_description,
-        description: 'Detailed description for the staging_failed_reaso',
+        description: 'Detailed description for the staging_failed_reason',
         custom_params: { default: nil, example_values: ['An app was not successfully detected by any available buildpack'] }
       },
 
