@@ -56,53 +56,6 @@ resource 'Processes (Experimental)', type: :api do
     end
   end
 
-  patch '/v3/processes/:guid' do
-    let(:process) { VCAP::CloudController::AppFactory.make }
-
-    before do
-      process.space.organization.add_user user
-      process.space.add_developer user
-    end
-
-    header 'Content-Type', 'application/json'
-
-    body_parameter :command, 'Start command for process'
-
-    let(:command) { 'X' }
-
-    let(:guid) { process.guid }
-
-    let(:raw_post) { body_parameters }
-
-    example 'Updating a Process' do
-      expect {
-        do_request_with_error_handling
-      }.to change { VCAP::CloudController::Event.count }.by(1)
-      process.reload
-
-      expected_response = {
-        'guid'         => guid,
-        'type'         => process.type,
-        'command'      => 'X',
-        'instances'    => process.instances,
-        'memory_in_mb' => 1024,
-        'disk_in_mb' => 1024,
-        'created_at'   => iso8601,
-        'updated_at'   => iso8601,
-        'links' => {
-          'self'  => { 'href' => "/v3/processes/#{process.guid}" },
-          'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
-          'app'   => { 'href' => "/v3/apps/#{process.app_guid}" },
-          'space' => { 'href' => "/v2/spaces/#{process.space_guid}" },
-        },
-      }
-
-      parsed_response = JSON.parse(response_body)
-      expect(response_status).to eq(200)
-      expect(parsed_response).to be_a_response_like(expected_response)
-    end
-  end
-
   put '/v3/processes/:guid/scale' do
     body_parameter :instances, 'Number of instances'
     body_parameter :memory_in_mb, 'The memory in mb allocated per instance'

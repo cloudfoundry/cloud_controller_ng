@@ -82,4 +82,54 @@ describe 'Processes' do
       expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
+
+  describe 'PATCH /v3/processes/:guid' do
+    it 'updates the process' do
+      process = VCAP::CloudController::ProcessModel.make(
+        app:        app_model,
+        space:      space,
+        type:       'web',
+        instances:  2,
+        memory:     1024,
+        disk_quota: 1024,
+        command:    'rackup',
+        metadata:   {}
+      )
+
+      update_request = {
+        command: 'new command'
+      }
+
+      patch "/v3/processes/#{process.guid}", update_request, developer_headers
+
+      expected_response = {
+        'guid'         => process.guid,
+        'type'         => 'web',
+        'command'      => 'new command',
+        'instances'    => 2,
+        'memory_in_mb' => 1024,
+        'disk_in_mb'   => 1024,
+        'created_at'   => iso8601,
+        'updated_at'   => iso8601,
+        'links'        => {
+          'self'  => { 'href' => "/v3/processes/#{process.guid}" },
+          'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+        },
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+
+      process.reload
+      expect(process.command).to eq('new command')
+
+      event = VCAP::CloudController::Event.last
+      expect(event.type).to eq('audit.app.update')
+      expect(event.actee).to eq(process.guid)
+    end
+  end
 end

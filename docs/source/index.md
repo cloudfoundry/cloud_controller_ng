@@ -24,6 +24,7 @@ includes:
   - packages/delete
   - packages/list
   - processes/header
+  - processes/update
   - processes/list
   - route_mappings/header
   - route_mappings/object

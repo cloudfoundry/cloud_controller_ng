@@ -1,0 +1,46 @@
+## Update a process
+
+```
+Definition
+```
+
+```http
+PATCH /v3/processes/:guid HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/processes/[guid]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -d '{ "command": "rackup" }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :single_process %>
+```
+
+This endpoint updates an existing process.
+
+### Body Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      command
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">The command that will be used to start the process.</p>
+  </li>
+</ul>
