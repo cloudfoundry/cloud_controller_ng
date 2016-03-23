@@ -138,3 +138,55 @@
   ]
 }
 <% end %>
+
+<% content_for :paginated_list_of_associated_packages do |base_url| %>
+{
+  "pagination": {
+    "total_results": 1,
+    "first": {
+      "href": "/v3/apps/guid-f2efe391-2b5b-4836-8518-ad93fa9ebf69/packages?page=1&per_page=50"
+    },
+    "last": {
+      "href": "/v3/apps/guid-f2efe391-2b5b-4836-8518-ad93fa9ebf69/packages?page=1&per_page=50"
+    },
+    "next": null,
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "guid-752edab0-2147-4f58-9c25-cd72ad8c3561",
+      "type": "bits",
+      "data": {
+        "error": null,
+        "hash": {
+          "type": "sha1",
+          "value": null
+        }
+      },
+      "state": "AWAITING_UPLOAD",
+      "created_at": "2016-03-17T21:41:09Z",
+      "updated_at": null,
+      "links": {
+        "self": {
+          "href": "/v3/packages/guid-752edab0-2147-4f58-9c25-cd72ad8c3561"
+        },
+        "upload": {
+          "href": "/v3/packages/guid-752edab0-2147-4f58-9c25-cd72ad8c3561/upload",
+          "method": "POST"
+        },
+        "download": {
+          "href": "/v3/packages/guid-752edab0-2147-4f58-9c25-cd72ad8c3561/download",
+          "method": "GET"
+        },
+        "stage": {
+          "href": "/v3/packages/guid-752edab0-2147-4f58-9c25-cd72ad8c3561/droplets",
+          "method": "POST"
+        },
+        "app": {
+          "href": "/v3/apps/guid-f2efe391-2b5b-4836-8518-ad93fa9ebf69"
+        }
+      }
+    }
+  ]
+}
+<% end %>

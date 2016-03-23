@@ -1,0 +1,54 @@
+## List associated packages
+
+```
+Definition
+```
+
+```http
+GET /v3/apps/:guid/packages HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/apps/guid-f2efe391-2b5b-4836-8518-ad93fa9ebf69/packages" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :paginated_list_of_associated_packages %>
+```
+
+This endpoint retrieves the packages that associates with the given app guid.
+
+### Query Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      page
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Page to display. Possible values are all integers >= 1.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      per_page
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+  </li>
+</ul>

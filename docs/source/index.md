@@ -24,6 +24,7 @@ includes:
   - packages/delete
   - packages/list
   - packages/list_all
+  - packages/list_associated
   - processes/header
   - processes/object
   - processes/stats_object
