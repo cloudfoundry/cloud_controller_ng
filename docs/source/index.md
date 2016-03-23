@@ -28,6 +28,7 @@ includes:
   - processes/stats
   - processes/update
   - processes/scale
+  - processes/terminate_instance
   - processes/list
   - route_mappings/header
   - route_mappings/object

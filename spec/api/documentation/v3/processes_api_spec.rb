@@ -16,28 +16,6 @@ resource 'Processes (Experimental)', type: :api do
     end
   end
 
-  delete '/v3/processes/:guid/instances/:index' do
-    body_parameter :guid, 'Process guid'
-    body_parameter :index, 'The index of the instance to terminate'
-
-    let(:guid) { process.guid }
-    let(:index) { 0 }
-
-    let(:app_model) { VCAP::CloudController::AppModel.make }
-    let(:process) { VCAP::CloudController::AppFactory.make(app_guid: app_model.guid, space: app_model.space) }
-
-    before do
-      process.space.organization.add_user user
-      process.space.add_developer user
-    end
-
-    example 'Terminating a Process instance' do
-      do_request_with_error_handling
-
-      expect(response_status).to eq(204)
-    end
-  end
-
   get '/v3/apps/:guid/processes' do
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1-5000'
