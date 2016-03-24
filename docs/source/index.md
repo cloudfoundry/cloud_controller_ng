@@ -25,6 +25,7 @@ includes:
   - packages/list
   - processes/header
   - processes/object
+  - processes/stats_object
   - processes/get
   - processes/stats
   - processes/update
