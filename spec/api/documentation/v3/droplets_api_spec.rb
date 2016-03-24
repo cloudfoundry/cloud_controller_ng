@@ -108,7 +108,7 @@ resource 'Droplets (Experimental)', type: :api do
         'environment_variables' => {
           'CF_STACK'         => stack,
           'CUSTOM_ENV_VAR'   => custom_env_var_val,
-          'MEMORY_LIMIT'     => 1024,
+          'MEMORY_LIMIT'     => "1024m",
           'VCAP_SERVICES'    => {},
           'VCAP_APPLICATION' => {
             'limits'              => { 'mem' => 1024, 'disk' => 4096, 'fds' => 16384 },
