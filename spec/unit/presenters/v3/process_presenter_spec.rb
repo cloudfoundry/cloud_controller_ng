@@ -5,8 +5,19 @@ module VCAP::CloudController
   describe ProcessPresenter do
     describe '#present_json' do
       it 'presents the process as json' do
-        app_model          = AppModel.make
-        process            = AppFactory.make(created_at: Time.at(1), app_guid: app_model.guid)
+        app_model = AppModel.make
+
+        process = App.make(
+          app_guid:             app_model.guid,
+          instances:            3,
+          memory:               42,
+          disk_quota:           37,
+          command:              'rackup',
+          metadata:             {},
+          health_check_type:    'process',
+          health_check_timeout: 51,
+          created_at:           Time.at(1)
+        )
         process.updated_at = Time.at(2)
 
         json_result = ProcessPresenter.new.present_json(process)
@@ -20,9 +31,12 @@ module VCAP::CloudController
         }
 
         expect(result['guid']).to eq(process.guid)
-        expect(result['instances']).to eq(process.instances)
-        expect(result['memory_in_mb']).to eq(process.memory)
-        expect(result['disk_in_mb']).to eq(process.disk_quota)
+        expect(result['instances']).to eq(3)
+        expect(result['memory_in_mb']).to eq(42)
+        expect(result['disk_in_mb']).to eq(37)
+        expect(result['command']).to eq('rackup')
+        expect(result['health_check']['type']).to eq('process')
+        expect(result['health_check']['data']['timeout']).to eq(51)
         expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
         expect(result['updated_at']).to eq('1970-01-01T00:00:02Z')
         expect(result['links']).to eq(links)
@@ -37,18 +51,18 @@ module VCAP::CloudController
       let(:stats_for_app) do
         {
           0 => {
-            'state' => 'RUNNING',
+            'state'   => 'RUNNING',
             'details' => 'some-details',
-            'stats' => {
-              'name' => process.name,
-              'uris' => process.uris,
-              'host' => 'myhost',
-              'port' => 8080,
-              'uptime' => 12345,
+            'stats'   => {
+              'name'       => process.name,
+              'uris'       => process.uris,
+              'host'       => 'myhost',
+              'port'       => 8080,
+              'uptime'     => 12345,
               'mem_quota'  => process[:memory] * 1024 * 1024,
               'disk_quota' => process[:disk_quota] * 1024 * 1024,
-              'fds_quota' => process.file_descriptors,
-              'usage' => {
+              'fds_quota'  => process.file_descriptors,
+              'usage'      => {
                 'time' => '2015-12-08 16:54:48 -0800',
                 'cpu'  => 80,
                 'mem'  => 128,
@@ -59,15 +73,15 @@ module VCAP::CloudController
           1 => {
             'state' => 'CRASHED',
             'stats' => {
-              'name' => process.name,
-              'uris' => process.uris,
-              'host' => 'toast',
-              'port' => 8081,
-              'uptime' => 42,
+              'name'       => process.name,
+              'uris'       => process.uris,
+              'host'       => 'toast',
+              'port'       => 8081,
+              'uptime'     => 42,
               'mem_quota'  => process[:memory] * 1024 * 1024,
               'disk_quota' => process[:disk_quota] * 1024 * 1024,
-              'fds_quota' => process.file_descriptors,
-              'usage' => {
+              'fds_quota'  => process.file_descriptors,
+              'usage'      => {
                 'time' => '2015-03-13 16:54:48 -0800',
                 'cpu'  => 70,
                 'mem'  => 128,
@@ -93,9 +107,9 @@ module VCAP::CloudController
         expect(stats[0]['disk_quota']).to eq(process[:disk_quota] * 1024 * 1024)
         expect(stats[0]['fds_quota']).to eq(process.file_descriptors)
         expect(stats[0]['usage']).to eq({ 'time' => '2015-12-08 16:54:48 -0800',
-                                          'cpu' => 80,
-                                          'mem' => 128,
-                                          'disk' => 1024 })
+                                          'cpu'                                  => 80,
+                                          'mem'                                  => 128,
+                                          'disk'                                 => 1024 })
         expect(stats[1]['type']).to eq(process.type)
         expect(stats[1]['index']).to eq(1)
         expect(stats[1]['state']).to eq('CRASHED')
@@ -103,9 +117,9 @@ module VCAP::CloudController
         expect(stats[1]['port']).to eq(8081)
         expect(stats[1]['uptime']).to eq(42)
         expect(stats[1]['usage']).to eq({ 'time' => '2015-03-13 16:54:48 -0800',
-                                          'cpu' => 70,
-                                          'mem' => 128,
-                                          'disk' => 1024 })
+                                          'cpu'                                  => 70,
+                                          'mem'                                  => 128,
+                                          'disk'                                 => 1024 })
       end
 
       it 'includes a pagination section' do

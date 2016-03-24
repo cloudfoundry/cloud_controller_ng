@@ -48,6 +48,12 @@ describe 'Processes' do
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
+            'health_check' => {
+              'type' => 'port',
+              'data' => {
+                'timeout' => nil
+              }
+            },
             'created_at'   => iso8601,
             'updated_at'   => nil,
             'links'        => {
@@ -64,6 +70,12 @@ describe 'Processes' do
             'instances'    => 1,
             'memory_in_mb' => 100,
             'disk_in_mb'   => 200,
+            'health_check' => {
+              'type' => 'port',
+              'data' => {
+                'timeout' => nil
+              }
+            },
             'created_at'   => iso8601,
             'updated_at'   => nil,
             'links'        => {
@@ -105,6 +117,12 @@ describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
+        'health_check' => {
+          'type' => 'port',
+          'data' => {
+            'timeout' => nil
+          }
+        },
         'created_at'   => iso8601,
         'updated_at'   => nil,
         'links'        => {
@@ -189,11 +207,19 @@ describe 'Processes' do
         memory:     1024,
         disk_quota: 1024,
         command:    'rackup',
-        metadata:   {}
+        metadata:   {},
+        health_check_type: 'port',
+        health_check_timeout: 10
       )
 
       update_request = {
-        command: 'new command'
+        command: 'new command',
+        health_check: {
+          type: 'process',
+          data: {
+            timeout: 20
+          }
+        }
       }
 
       patch "/v3/processes/#{process.guid}", update_request, developer_headers
@@ -205,6 +231,12 @@ describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
+        'health_check' => {
+          'type' => 'process',
+          'data' => {
+            'timeout' => 20
+          }
+        },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
         'links'        => {
@@ -222,6 +254,8 @@ describe 'Processes' do
 
       process.reload
       expect(process.command).to eq('new command')
+      expect(process.health_check_type).to eq('process')
+      expect(process.health_check_timeout).to eq(20)
 
       event = VCAP::CloudController::Event.last
       expect(event.type).to eq('audit.app.update')
@@ -257,6 +291,12 @@ describe 'Processes' do
         'instances'    => 5,
         'memory_in_mb' => 10,
         'disk_in_mb'   => 20,
+        'health_check' => {
+          'type' => 'port',
+          'data' => {
+            'timeout' => nil
+          }
+        },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
         'links'        => {
@@ -335,6 +375,12 @@ describe 'Processes' do
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
+            'health_check' => {
+              'type' => 'port',
+              'data' => {
+                'timeout' => nil
+              }
+            },
             'created_at'   => iso8601,
             'updated_at'   => nil,
             'links'        => {
@@ -351,6 +397,12 @@ describe 'Processes' do
             'instances'    => 1,
             'memory_in_mb' => 100,
             'disk_in_mb'   => 200,
+            'health_check' => {
+              'type' => 'port',
+              'data' => {
+                'timeout' => nil
+              }
+            },
             'created_at'   => iso8601,
             'updated_at'   => nil,
             'links'        => {
@@ -392,6 +444,12 @@ describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
+        'health_check' => {
+          'type' => 'port',
+          'data' => {
+            'timeout' => nil
+          }
+        },
         'created_at'   => iso8601,
         'updated_at'   => nil,
         'links'        => {
@@ -494,6 +552,12 @@ describe 'Processes' do
         'instances'    => 5,
         'memory_in_mb' => 10,
         'disk_in_mb'   => 20,
+        'health_check' => {
+          'type' => 'port',
+          'data' => {
+            'timeout' => nil
+          }
+        },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
         'links'        => {

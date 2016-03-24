@@ -84,6 +84,72 @@ module VCAP::CloudController
           expect(message.errors[:command]).to include('must be between 1 and 4096 characters')
         end
       end
+
+      context 'when health_check type is invalid' do
+        let(:params) { { health_check: { type: 'invalid' } } }
+
+        it 'is not valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:health_check_type]).to include('must be "port" or "process"')
+        end
+      end
+
+      context 'when health_check timeout is not an integer' do
+        let(:params) do
+          {
+            health_check: {
+              type: 'port',
+              data: {
+                timeout: 0.2
+              }
+            }
+          }
+        end
+
+        it 'is not valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:health_check_timeout]).to include('must be an integer')
+        end
+      end
+
+      context 'when health_check timeout is less than zero' do
+        let(:params) do
+          {
+            health_check: {
+              type: 'port',
+              data: {
+                timeout: -7
+              }
+            }
+          }
+        end
+
+        it 'is not valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:health_check_timeout]).to include('must be greater than or equal to 0')
+        end
+      end
+
+      context 'when health_check timeout not requested' do
+        let(:params) do
+          {
+            health_check: {
+              type: 'port'
+            }
+          }
+        end
+
+        it 'is valid' do
+          message = ProcessUpdateMessage.new(params)
+          expect(message).to be_valid
+        end
+      end
     end
   end
 end

@@ -12,6 +12,10 @@ module VCAP::CloudController
         process.lock!
 
         process.command = message.command if message.requested?(:command)
+        if message.requested?(:health_check)
+          process.health_check_type    = message.health_check_type
+          process.health_check_timeout = message.health_check_timeout if message.health_check_timeout
+        end
 
         process.save
 
