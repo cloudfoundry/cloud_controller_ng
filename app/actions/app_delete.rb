@@ -8,6 +8,8 @@ require 'actions/route_mapping_delete'
 
 module VCAP::CloudController
   class AppDelete
+    class InvalidDelete < StandardError; end
+
     attr_reader :user_guid, :user_email
 
     def initialize(user_guid, user_email)
@@ -20,6 +22,8 @@ module VCAP::CloudController
       apps = Array(apps)
 
       apps.each do |app|
+        raise_if_service_bindings_exist!(app)
+
         delete_subresources(app)
 
         Repositories::Runtime::AppEventRepository.new.record_app_delete_request(
@@ -78,6 +82,12 @@ module VCAP::CloudController
 
     def tasks_to_delete(app_model)
       app_model.tasks_dataset
+    end
+
+    def raise_if_service_bindings_exist!(app)
+      unless app.service_bindings_dataset.empty?
+        raise InvalidDelete.new('Please delete the service_bindings associations for your apps.')
+      end
     end
   end
 end

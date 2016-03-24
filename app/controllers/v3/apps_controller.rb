@@ -1,20 +1,20 @@
-require 'presenters/v3/app_presenter'
-require 'presenters/v3/app_stats_presenter'
-require 'queries/app_list_fetcher'
-require 'messages/apps_list_message'
-require 'queries/app_fetcher'
-require 'messages/app_create_message'
-require 'actions/app_create'
+require 'cloud_controller/diego/lifecycles/app_lifecycle_provider'
 require 'cloud_controller/paging/pagination_options'
-require 'messages/app_update_message'
+require 'actions/app_create'
 require 'actions/app_update'
-require 'queries/app_delete_fetcher'
 require 'actions/app_delete'
 require 'actions/app_start'
 require 'actions/app_stop'
-require 'queries/assign_current_droplet_fetcher'
 require 'actions/set_current_droplet'
-require 'cloud_controller/diego/lifecycles/app_lifecycle_provider'
+require 'messages/apps_list_message'
+require 'messages/app_update_message'
+require 'messages/app_create_message'
+require 'presenters/v3/app_presenter'
+require 'presenters/v3/app_stats_presenter'
+require 'queries/app_list_fetcher'
+require 'queries/app_fetcher'
+require 'queries/app_delete_fetcher'
+require 'queries/assign_current_droplet_fetcher'
 
 class AppsV3Controller < ApplicationController
   def index
@@ -94,6 +94,8 @@ class AppsV3Controller < ApplicationController
     AppDelete.new(current_user.guid, current_user_email).delete(app)
 
     head :no_content
+  rescue AppDelete::InvalidDelete => e
+    unprocessable!(e.message)
   end
 
   def start

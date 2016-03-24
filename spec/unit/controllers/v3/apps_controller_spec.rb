@@ -938,6 +938,20 @@ describe AppsV3Controller, type: :controller do
         expect(response.body).to include 'ResourceNotFound'
       end
     end
+
+    context 'when AppDelete::InvalidDelete is raised' do
+      before do
+        allow_any_instance_of(VCAP::CloudController::AppDelete).to receive(:delete).
+          and_raise(VCAP::CloudController::AppDelete::InvalidDelete.new('it is broke'))
+      end
+
+      it 'returns a 400' do
+        delete :destroy, guid: app_model.guid
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'it is broke'
+      end
+    end
   end
 
   describe '#start' do

@@ -11,24 +11,22 @@ module VCAP::CloudController
       let(:user) { User.make }
       let(:user_email) { 'user@example.com' }
 
-      context 'when the app exists' do
-        it 'deletes the app record' do
-          expect {
-            app_delete.delete(app_dataset)
-          }.to change { AppModel.count }.by(-1)
-          expect(app.exists?).to be_falsey
-        end
-
-        it 'creates an audit event' do
-          expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_delete_request).with(
-            app,
-            app.space,
-            user.guid,
-            user_email
-          )
-
+      it 'deletes the app record' do
+        expect {
           app_delete.delete(app_dataset)
-        end
+        }.to change { AppModel.count }.by(-1)
+        expect(app.exists?).to be_falsey
+      end
+
+      it 'creates an audit event' do
+        expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_delete_request).with(
+          app,
+          app.space,
+          user.guid,
+          user_email
+        )
+
+        app_delete.delete(app_dataset)
       end
 
       describe 'recursive deletion' do
@@ -90,6 +88,19 @@ module VCAP::CloudController
           expect(job.handler).to include(app.guid)
           expect(job.queue).to eq('cc-generic')
           expect(app.exists?).to be_falsey
+        end
+      end
+
+      context 'when the app has associated service bindings' do
+        let(:binding) { ServiceBindingModel.make }
+        let(:app) { binding.app }
+
+        it 'raises a meaningful error and does not delete the app' do
+          expect {
+            app_delete.delete(app)
+          }.to raise_error(AppDelete::InvalidDelete, 'Please delete the service_bindings associations for your apps.')
+
+          expect(app.exists?).to be_truthy
         end
       end
     end
