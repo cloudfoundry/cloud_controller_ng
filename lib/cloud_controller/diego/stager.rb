@@ -28,10 +28,6 @@ module VCAP::CloudController
         @completion_handler.staging_complete(staging_guid, staging_response)
       end
 
-      def stop_stage
-        @messenger.send_stop_staging_request(@app)
-      end
-
       private
 
       def logger

@@ -14,9 +14,6 @@ module VCAP::CloudController
 
       def deleted(app)
         with_diego_communication_handling do
-          if app.pending?
-            @stagers.stager_for_app(app).stop_stage
-          end
           @runners.runner_for_app(app).stop
         end
 
