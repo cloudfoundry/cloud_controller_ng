@@ -237,6 +237,49 @@ describe 'Packages' do
       end
     end
 
+    describe 'GET /v3/packages/:guid' do
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+      let(:package_model) do
+        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+      end
+
+      let(:guid) { package_model.guid }
+      let(:space_guid) { space.guid }
+
+      before do
+        space.organization.add_user user
+        space.add_developer user
+      end
+
+      it 'gets a package' do
+        expected_response = {
+          'type'       => package_model.type,
+          'guid'       => guid,
+          'data'       => {
+            'hash'       => { 'type' => 'sha1', 'value' => nil },
+            'error'      => nil
+          },
+          'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
+          'created_at' => iso8601,
+          'updated_at' => nil,
+          'links' => {
+            'self'   => { 'href' => "/v3/packages/#{guid}" },
+            'upload' => { 'href' => "/v3/packages/#{guid}/upload", 'method' => 'POST' },
+            'download' => { 'href' => "/v3/packages/#{guid}/download", 'method' => 'GET' },
+            'stage' => { 'href' => "/v3/packages/#{guid}/droplets", 'method' => 'POST' },
+            'app' => { 'href' => "/v3/apps/#{app_model.guid}" },
+          }
+        }
+
+        get "v3/packages/#{guid}", {}, headers_for(user)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
+    end
+
     describe 'POST /v3/packages/:guid/upload' do
       let(:type) { 'bits' }
       let!(:package_model) do
