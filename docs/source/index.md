@@ -26,6 +26,7 @@ includes:
   - packages/list
   - packages/list_all
   - packages/list_associated
+  - packages/copy_bits
   - processes/header
   - processes/object
   - processes/stats_object

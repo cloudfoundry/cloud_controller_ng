@@ -194,3 +194,28 @@
 <% content_for :download_bits_package do |base_url| %>
 You are being redirected.
 <% end %>
+
+<% content_for :copy_of_packages do |base_url| %>
+  {
+  "guid": "fec72fc1-e453-4463-a86d-5df426f337a3",
+  "type": "docker",
+  "data": {
+    "image": "http://awesome-sauce.com"
+  },
+  "state": "READY",
+  "created_at": "2016-03-17T21:41:09Z",
+  "updated_at": null,
+  "links": {
+    "self": {
+      "href": "/v3/packages/fec72fc1-e453-4463-a86d-5df426f337a3"
+    },
+    "stage": {
+      "href": "/v3/packages/fec72fc1-e453-4463-a86d-5df426f337a3/droplets",
+      "method": "POST"
+    },
+    "app": {
+      "href": "/v3/apps/guid-36208a68-562d-4f51-94ea-28bd8553a271"
+    }
+  }
+}
+<% end %>
