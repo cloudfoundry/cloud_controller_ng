@@ -1,0 +1,103 @@
+## List all applications
+
+```
+Definition
+```
+
+```http
+GET /v3/apps HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/apps" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :paginated_list_of_apps, '/v3/apps' %>
+```
+
+This endpoint retrieves all the packages the user has access to.
+
+### Query Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      names
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+<p class="method-list-item-description">Array of app names to filter by. <br>Example: <code>names=name1,name2</code></p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      space_guids
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Array of space names to filter by. <br>Example: <code>space_guids=space_guid1,space_guid2</code></p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      organization_guids
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Array of organization names to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code></p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guids
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Array of app guids to filter by. <br>Example: <code>guids=guid1,guid2</code></p>
+Value to sort by. Prepend with "+" or "-" to change sort direction to ascending or descending, respectively.	
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      page
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Page to display. <br>Possible values are all integers >= 1.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      per_page
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Number of results per page. <br>Possible values are 1 through 5000.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+    Value to sort by. Prepend with "+" or "-" to change sort direction to ascending or descending, respectively.
+    <br>Possible values are <code>created_at</code>, <code>updated_at</code>
+    </p>
+  </li>
+</ul>

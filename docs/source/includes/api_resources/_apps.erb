@@ -1,0 +1,126 @@
+<% content_for :paginated_list_of_apps do |base_url| %>
+{
+  "pagination": {
+    "total_results": 3,
+    "first": {
+      "href": "<%= base_url %>?order_by=-created_at&page=1&per_page=2"
+    },
+    "last": {
+      "href": "<%= base_url %>?order_by=-created_at&page=2&per_page=2"
+    },
+    "next": {
+      "href": "<%= base_url %>?order_by=-created_at&page=2&per_page=2"
+    },
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66",
+      "name": "my_app3",
+      "desired_state": "STOPPED",
+      "total_desired_instances": 0,
+      "created_at": "1970-01-01T00:00:03Z",
+      "updated_at": null,
+      "lifecycle": {
+        "type": "buildpack",
+        "data": {
+          "buildpack": "name-2396",
+          "stack": "name-2397"
+        }
+      },
+      "environment_variables": {
+        "magic": "beautiful"
+      },
+      "links": {
+        "self": {
+          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66"
+        },
+        "space": {
+          "href": "/v2/spaces/1e9ab435-c477-41dd-bc5d-6d825f790c70"
+        },
+        "processes": {
+          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/processes"
+        },
+        "route_mappings": {
+          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/route_mappings"
+        },
+        "packages": {
+          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/packages"
+        },
+        "droplets": {
+          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/droplets"
+        },
+        "tasks": {
+          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/tasks"
+        },
+        "start": {
+          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/start",
+          "method": "PUT"
+        },
+        "stop": {
+          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/stop",
+          "method": "PUT"
+        },
+        "assign_current_droplet": {
+          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/current_droplet",
+          "method": "PUT"
+        }
+      }
+    },
+    {
+      "guid": "guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8",
+      "name": "my_app2",
+      "desired_state": "STOPPED",
+      "total_desired_instances": 0,
+      "created_at": "1970-01-01T00:00:02Z",
+      "updated_at": null,
+      "lifecycle": {
+        "type": "buildpack",
+        "data": {
+          "buildpack": "name-2394",
+          "stack": "name-2395"
+        }
+      },
+      "environment_variables": {
+
+      },
+      "links": {
+        "self": {
+          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8"
+        },
+        "space": {
+          "href": "/v2/spaces/1e9ab435-c477-41dd-bc5d-6d825f790c70"
+        },
+        "processes": {
+          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/processes"
+        },
+        "route_mappings": {
+          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/route_mappings"
+        },
+        "packages": {
+          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/packages"
+        },
+        "droplets": {
+          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets"
+        },
+        "tasks": {
+          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/tasks"
+        },
+        "start": {
+          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/start",
+          "method": "PUT"
+        },
+        "stop": {
+          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/stop",
+          "method": "PUT"
+        },
+        "assign_current_droplet": {
+          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/current_droplet",
+          "method": "PUT"
+        }
+      }
+    }
+  ]
+}
+<% end %>
+

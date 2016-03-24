@@ -6,12 +6,14 @@ language_tabs:
 
 includes:
   - api_resources/tasks
+  - api_resources/apps
   - api_resources/packages
   - api_resources/processes
   - api_resources/route_mappings
   - api_resources/service_bindings
   - general/header
   - apps/header
+  - apps/list_all
   - apps/tasks/get
   - apps/tasks/list
   - apps/tasks/cancel
