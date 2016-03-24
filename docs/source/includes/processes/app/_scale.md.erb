@@ -1,11 +1,11 @@
-## Scale a process
+## Scale a process for an app
 
 ```
 Definition
 ```
 
 ```http
-PUT /v3/processes/:guid/scale HTTP/1.1
+PUT /v3/apps/:guid/processes/:type/scale HTTP/1.1
 ```
 
 ```
@@ -13,7 +13,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.[your-domain.com]/v3/processes/[guid]/scale" \
+curl "https://api.[your-domain.com]/v3/apps/[guid]/processes/[type]/scale" \
   -X PUT \
   -H "Authorization: bearer [token]" \
   -d '{
@@ -33,7 +33,7 @@ HTTP/1.1 202 OK
 <%= yield_content :single_process %>
 ```
 
-This endpoint scales an existing process.
+This endpoint scales an existing process belonging to an app.
 
 ### Body Parameters
 

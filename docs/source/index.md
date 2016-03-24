@@ -32,6 +32,7 @@ includes:
   - processes/list
   - processes/app/get
   - processes/app/stats
+  - processes/app/scale
   - processes/app/list
   - route_mappings/header
   - route_mappings/object
