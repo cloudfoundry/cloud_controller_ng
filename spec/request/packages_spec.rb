@@ -2,7 +2,6 @@ ENV['RACK_ENV'] = 'test'
 require 'rack/test'
 require 'spec_helper'
 
-
 # require 'rails_helper'
 
 describe 'Packages' do
@@ -37,7 +36,7 @@ describe 'Packages' do
     end
 
     describe 'creation' do
-      it "creates a package" do
+      it 'creates a package' do
         expect {
           post "/v3/apps/#{guid}/packages", { type: type, data: data }, headers_for(user)
         }.to change { VCAP::CloudController::PackageModel.count }.by(1)
@@ -76,7 +75,7 @@ describe 'Packages' do
         VCAP::CloudController::PackageDockerDataModel.create(package: original_package, image: 'http://awesome-sauce.com')
       end
 
-      it "copies a package" do
+      it 'copies a package' do
         expect {
           post "/v3/apps/#{guid}/packages?source_package_guid=#{source_package_guid}", {}, headers_for(user)
         }.to change { VCAP::CloudController::PackageModel.count }.by(1)
@@ -228,11 +227,11 @@ describe 'Packages' do
             ]
         }
 
-          get '/v3/packages', { per_page: per_page }, headers_for(user)
+        get '/v3/packages', { per_page: per_page }, headers_for(user)
 
-          parsed_response = MultiJson.load(last_response.body)
-          expect(last_response.status).to eq(200)
-          expect(parsed_response).to be_a_response_like(expected_response)
+        parsed_response = MultiJson.load(last_response.body)
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
       end
     end
 
@@ -306,7 +305,6 @@ describe 'Packages' do
           post "/v3/packages/#{guid}/upload", packages_params, headers_for(user)
         }.to change { Delayed::Job.count }.by(1)
       end
-
     end
 
     describe 'GET /v3/packages/:guid/download' do
@@ -339,8 +337,6 @@ describe 'Packages' do
       it 'downloads the bit for a package' do
         Timecop.freeze do
           get "/v3/packages/#{guid}/download", {}, headers_for(user)
-
-          # do_request_with_error_handling
 
           expect(last_response.status).to eq(302)
           expect(last_response.headers['Location']).to eq(bits_download_url)
