@@ -103,7 +103,6 @@ describe 'Packages' do
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(expected_response)
       end
-
     end
 
     describe 'GET /v3/apps/:guid/packages' do
@@ -349,5 +348,26 @@ describe 'Packages' do
       end
     end
 
+    describe 'DELETE /v3/packages/:guid' do
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+      let!(:package_model) do
+        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+      end
+
+      let(:guid) { package_model.guid }
+
+      before do
+        space.organization.add_user user
+        space.add_developer user
+      end
+
+      it 'deletes a package' do
+        expect {
+          delete "/v3/packages/#{guid}", {}, headers_for(user)
+        }.to change { VCAP::CloudController::PackageModel.count }.by(-1)
+        expect(last_response.status).to eq(204)
+      end
+    end
   end
 end
