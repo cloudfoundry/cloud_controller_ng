@@ -21,6 +21,7 @@ includes:
   - packages/get
   - packages/stage
   - packages/upload_bits
+  - packages/download_bits
   - packages/delete
   - packages/list
   - packages/list_all
