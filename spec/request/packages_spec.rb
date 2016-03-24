@@ -310,5 +310,44 @@ describe 'Packages' do
 
     end
 
+    describe 'GET /v3/packages/:guid/download' do
+      let!(:package_model) do
+        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: 'bits')
+      end
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:bits_download_url) { CloudController::DependencyLocator.instance.blobstore_url_generator.package_download_url(package_model) }
+      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+      let(:guid) { package_model.guid }
+      let(:temp_file) do
+        file = File.join(Dir.mktmpdir, 'application.zip')
+        TestZip.create(file, 1, 1024)
+        file
+      end
+      let(:upload_body) do
+        {
+          bits_name: 'application.zip',
+          bits_path: temp_file,
+        }
+      end
+
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+        post "/v3/packages/#{guid}/upload", upload_body, headers_for(user)
+        Delayed::Worker.new.work_off
+      end
+
+      it 'downloads the bit for a package' do
+        Timecop.freeze do
+          get "/v3/packages/#{guid}/download", {}, headers_for(user)
+
+          # do_request_with_error_handling
+
+          expect(last_response.status).to eq(302)
+          expect(last_response.headers['Location']).to eq(bits_download_url)
+        end
+      end
+    end
+
   end
 end
