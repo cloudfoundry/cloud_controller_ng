@@ -237,5 +237,35 @@ describe 'Packages' do
       end
     end
 
+    describe 'POST /v3/packages/:guid/upload' do
+      let(:type) { 'bits' }
+      let!(:package_model) do
+        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: type)
+      end
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+      let(:guid) { package_model.guid }
+      let(:tmpdir) { Dir.mktmpdir }
+
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
+
+      let(:packages_params) do
+        {
+          bits_name: 'application.zip',
+          bits_path: "#{tmpdir}/application.zip",
+        }
+      end
+
+      it 'uploads the bits for the package' do
+        expect {
+          post "/v3/packages/#{guid}/upload", packages_params, headers_for(user)
+        }.to change { Delayed::Job.count }.by(1)
+      end
+
+    end
+
   end
 end
