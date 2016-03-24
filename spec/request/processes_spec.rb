@@ -40,7 +40,7 @@ describe 'Processes' do
           'next'          => { 'href' => '/v3/processes?page=2&per_page=2' },
           'previous'      => nil,
         },
-        'resources'  => [
+        'resources' => [
           {
             'guid'         => process1.guid,
             'type'         => 'web',
@@ -153,7 +153,7 @@ describe 'Processes' do
           'next'          => nil,
           'previous'      => nil,
         },
-        'resources'  => [{
+        'resources' => [{
           'type'       => 'worker',
           'index'      => 0,
           'state'      => 'RUNNING',
@@ -327,7 +327,7 @@ describe 'Processes' do
           'next'          => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=2&per_page=2" },
           'previous'      => nil,
         },
-        'resources'  => [
+        'resources' => [
           {
             'guid'         => process1.guid,
             'type'         => 'web',
@@ -440,7 +440,7 @@ describe 'Processes' do
           'next'          => nil,
           'previous'      => nil,
         },
-        'resources'  => [{
+        'resources' => [{
           'type'       => 'worker',
           'index'      => 0,
           'state'      => 'RUNNING',
@@ -522,7 +522,7 @@ describe 'Processes' do
 
   describe 'DELETE /v3/apps/:guid/processes/:type/instances/:index' do
     it 'terminates a single instance of a process belonging to an app' do
-      process = VCAP::CloudController::ProcessModel.make(type: 'web', app: app_model, space: space)
+      VCAP::CloudController::ProcessModel.make(type: 'web', app: app_model, space: space)
 
       delete "/v3/apps/#{app_model.guid}/processes/web/instances/0", nil, developer_headers
 
