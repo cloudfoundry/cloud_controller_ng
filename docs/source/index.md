@@ -24,6 +24,7 @@ includes:
   - packages/delete
   - packages/list
   - processes/header
+  - processes/object
   - processes/get
   - processes/stats
   - processes/update
