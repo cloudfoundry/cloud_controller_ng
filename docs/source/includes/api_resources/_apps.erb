@@ -124,3 +124,61 @@
 }
 <% end %>
 
+<% content_for :list_app do |base_url| %>
+{
+  "guid": "guid-e9627412-85ef-459d-bb28-809a1386b04c",
+  "name": "my_app",
+  "desired_state": "STOPPED",
+  "total_desired_instances": 3,
+  "created_at": "2016-03-17T21:41:30Z",
+  "updated_at": null,
+  "lifecycle": {
+    "type": "buildpack",
+    "data": {
+      "buildpack": "name-2441",
+      "stack": "name-2442"
+    }
+  },
+  "environment_variables": {
+    "unicorn": "horn"
+  },
+  "links": {
+    "self": {
+      "href": "/v3/apps/guid-e9627412-85ef-459d-bb28-809a1386b04c"
+    },
+    "space": {
+      "href": "/v2/spaces/3c9df48a-06d5-4d00-9c2e-067cded7ed38"
+    },
+    "processes": {
+      "href": "/v3/apps/guid-e9627412-85ef-459d-bb28-809a1386b04c/processes"
+    },
+    "route_mappings": {
+      "href": "/v3/apps/guid-e9627412-85ef-459d-bb28-809a1386b04c/route_mappings"
+    },
+    "packages": {
+      "href": "/v3/apps/guid-e9627412-85ef-459d-bb28-809a1386b04c/packages"
+    },
+    "droplet": {
+      "href": "/v3/droplets/a-droplet-guid"
+    },
+    "droplets": {
+      "href": "/v3/apps/guid-e9627412-85ef-459d-bb28-809a1386b04c/droplets"
+    },
+    "tasks": {
+      "href": "/v3/apps/guid-e9627412-85ef-459d-bb28-809a1386b04c/tasks"
+    },
+    "start": {
+      "href": "/v3/apps/guid-e9627412-85ef-459d-bb28-809a1386b04c/start",
+      "method": "PUT"
+    },
+    "stop": {
+      "href": "/v3/apps/guid-e9627412-85ef-459d-bb28-809a1386b04c/stop",
+      "method": "PUT"
+    },
+    "assign_current_droplet": {
+      "href": "/v3/apps/guid-e9627412-85ef-459d-bb28-809a1386b04c/current_droplet",
+      "method": "PUT"
+    }
+  }
+}
+<% end %>

@@ -157,4 +157,72 @@ describe 'Apps' do
       end
     end
   end
+
+  describe 'GET /v3/apps/:guid' do
+    let(:droplet_guid) { 'a-droplet-guid' }
+    let(:environment_variables) { { 'unicorn' => 'horn' } }
+    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:app_model) { VCAP::CloudController::AppModel.make(
+      name:                  name,
+      droplet_guid:          droplet_guid,
+      environment_variables: environment_variables
+    )
+    }
+    let(:process1) { VCAP::CloudController::App.make(space: space, instances: 1) }
+    let(:process2) { VCAP::CloudController::App.make(space: space, instances: 2) }
+    let(:guid) { app_model.guid }
+    let(:space_guid) { app_model.space_guid }
+    let(:space) { VCAP::CloudController::Space.find(guid: space_guid) }
+    let(:name) { 'my_app' }
+
+    before do
+      space.organization.add_user user
+      space.add_developer user
+
+      app_model.add_process(process1)
+      app_model.add_process(process2)
+
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model)
+    end
+
+    it 'get a specific app' do
+      # do_request_with_error_handling
+      get "/v3/apps/#{guid}", {}, user_header
+
+      expected_response = {
+        'name'                    => name,
+        'guid'                    => guid,
+        'desired_state'           => app_model.desired_state,
+        'total_desired_instances' => 3,
+        'created_at'              => iso8601,
+        'updated_at'              => nil,
+        'environment_variables'   => environment_variables,
+        'lifecycle'               => {
+          'type' => 'buildpack',
+          'data' => {
+            'buildpack' => app_model.lifecycle_data.buildpack,
+            'stack'     => app_model.lifecycle_data.stack,
+          }
+        },
+        'links' => {
+          'self'                   => { 'href' => "/v3/apps/#{guid}" },
+          'processes'              => { 'href' => "/v3/apps/#{guid}/processes" },
+          'packages'               => { 'href' => "/v3/apps/#{guid}/packages" },
+          'space'                  => { 'href' => "/v2/spaces/#{space_guid}" },
+          'droplet'                => { 'href' => "/v3/droplets/#{droplet_guid}" },
+          'droplets'               => { 'href' => "/v3/apps/#{guid}/droplets" },
+          'tasks'                  => { 'href' => "/v3/apps/#{guid}/tasks" },
+          'route_mappings'         => { 'href' => "/v3/apps/#{guid}/route_mappings" },
+          'start'                  => { 'href' => "/v3/apps/#{guid}/start", 'method' => 'PUT' },
+          'stop'                   => { 'href' => "/v3/apps/#{guid}/stop", 'method' => 'PUT' },
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
+        }
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+
+    end
+  end
 end
