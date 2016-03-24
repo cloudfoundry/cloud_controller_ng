@@ -92,19 +92,19 @@ module VCAP::CloudController
     describe 'creating' do
       let(:route) { Route.make(space: space) }
       context 'when the app is a diego app' do
-        let(:app_obj) { AppFactory.make(space: space, diego: true, ports: [8080]) }
+        let(:app_obj) { AppFactory.make(space: space, diego: true, ports: [9090]) }
 
         context 'and no app port is specified' do
           it 'uses the first port in the list of app ports' do
             mapping = RouteMapping.new(app: app_obj, route: route)
             mapping.save
-            expect(mapping.app_port).to eq(8080)
+            expect(mapping.app_port).to eq(9090)
           end
 
           it 'saves the app port to the database' do
             mapping = RouteMapping.new(app: app_obj, route: route)
             mapping.save
-            expect(mapping.user_provided_app_port).to eq(8080)
+            expect(mapping.user_provided_app_port).to eq(9090)
           end
         end
 
@@ -123,6 +123,7 @@ module VCAP::CloudController
             mapping = RouteMapping.new(app: app_obj, route: route, app_port: 1111)
             mapping.save
             expect(mapping.app_port).to eq(1111)
+            expect(mapping.user_provided_app_port).to eq(1111)
           end
         end
       end
@@ -131,10 +132,11 @@ module VCAP::CloudController
         let(:app_obj) { AppFactory.make(space: space, diego: false) }
 
         context 'and app port is not specified' do
-          it 'returns a 201' do
+          it 'sets app port to nil' do
             mapping = RouteMapping.new(app: app_obj, route: route)
             mapping.save
             expect(mapping.app_port).to be_nil
+            expect(mapping.user_provided_app_port).to be_nil
           end
         end
 
@@ -208,7 +210,7 @@ module VCAP::CloudController
             app_obj.save
           end
 
-          it 'returns a the first user provided port' do
+          it 'returns the first user provided port' do
             mapping.save
             expect(mapping.app_port).to eq 7777
           end
@@ -257,9 +259,14 @@ module VCAP::CloudController
           app.save
         end
 
-        it 'sets the app_port to the first port of the app' do
+        it 'sets the app_port to the default port' do
           route_mapping = RouteMapping.last
-          expect(route_mapping.user_provided_app_port).to eq 8080
+          expect(route_mapping.app_port).to eq(8080)
+        end
+
+        it 'does not save the app_port' do
+          route_mapping = RouteMapping.last
+          expect(route_mapping.user_provided_app_port).to be_nil
         end
       end
 
@@ -321,12 +328,13 @@ module VCAP::CloudController
           let(:route) { Route.make('myhost', space: app.space, path: '/my%20path') }
           let(:route_mapping) { RouteMapping.make(app: app, route: route) }
 
-          it 'returns the first app port' do
+          it 'saves app_port and returns the first app port' do
+            expect(route_mapping.user_provided_app_port).to equal 1111
             expect(route_mapping.app_port).to equal 1111
           end
         end
 
-        context 'when the associated app has null ports' do
+        context 'when the associated app has no ports' do
           context 'when the app is a diego app' do
             let(:app) { AppFactory.make(space: space, diego: true) }
             let(:route) { Route.make('myhost', space: app.space, path: '/my%20path') }
@@ -334,6 +342,10 @@ module VCAP::CloudController
 
             it 'returns the default port' do
               expect(route_mapping.app_port).to equal 8080
+            end
+
+            it 'does not save the default port' do
+              expect(route_mapping.user_provided_app_port).to be_nil
             end
           end
 
@@ -344,28 +356,7 @@ module VCAP::CloudController
 
             it 'returns nil' do
               expect(route_mapping.app_port).to be nil
-            end
-          end
-        end
-
-        context 'when the associated app has no ports' do
-          context 'when the app is a diego app' do
-            let(:app) { AppFactory.make(space: space, diego: true, ports: []) }
-            let(:route) { Route.make('myhost', space: app.space, path: '/my%20path') }
-            let(:route_mapping) { RouteMapping.make(app: app, route: route) }
-
-            it 'returns the default port' do
-              expect(route_mapping.app_port).to equal 8080
-            end
-          end
-
-          context 'when the app is not a diego app' do
-            let(:app) { AppFactory.make(space: space, diego: false, ports: []) }
-            let(:route) { Route.make('myhost', space: app.space, path: '/my%20path') }
-            let(:route_mapping) { RouteMapping.make(app: app, route: route) }
-
-            it 'returns nil' do
-              expect(route_mapping.app_port).to be nil
+              expect(route_mapping.user_provided_app_port).to be nil
             end
           end
         end

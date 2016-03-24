@@ -128,6 +128,11 @@ module VCAP::CloudController
             route_mapping = RouteMapping.find(app: app, route: route)
             expect(route_mapping.app_port).to eq(8080)
           end
+
+          it "doesn't save the default port to the route mapping" do
+            route_mapping = RouteMapping.find(app: app, route: route)
+            expect(route_mapping.user_provided_app_port).to be_nil
+          end
         end
 
         context 'when it is dea app' do
@@ -136,6 +141,7 @@ module VCAP::CloudController
           it 'sets the app_port as nil' do
             route_mapping = RouteMapping.find(app: app, route: route)
             expect(route_mapping.app_port).to be_nil
+            expect(route_mapping.user_provided_app_port).to be_nil
           end
         end
       end
@@ -817,7 +823,7 @@ module VCAP::CloudController
             route.add_app(app)
           end
 
-          it 'should not save app_port to the route mappings' do
+          it 'should save app_port to the route mappings' do
             route_mapping = RouteMapping.last
             expect(route_mapping.user_provided_app_port).to eq 8998
           end

@@ -112,6 +112,7 @@ module VCAP::CloudController
         end
 
         it 'maps the route to the first app port in the ports field of the app' do
+          expect(app.route_mappings.first.user_provided_app_port).to eq(9090)
           expect(app.route_mappings.first.app_port).to eq(9090)
         end
       end
@@ -126,6 +127,7 @@ module VCAP::CloudController
 
         it 'does not save an app_port for the route mapping' do
           expect(app.route_mappings.first.user_provided_app_port).to be_nil
+          expect(app.route_mappings.first.app_port).to eq(8080)
         end
       end
 
@@ -2399,7 +2401,9 @@ module VCAP::CloudController
 
         it 'should set route mappings app_port to nil' do
           app.save
+          expect(route_mapping_1.reload.user_provided_app_port).to be_nil
           expect(route_mapping_1.reload.app_port).to be_nil
+          expect(route_mapping_1.reload.user_provided_app_port).to be_nil
           expect(route_mapping_2.reload.app_port).to be_nil
         end
 
@@ -2429,7 +2433,8 @@ module VCAP::CloudController
           it 'defaults to 8080' do
             expect(app.reload.ports).to eq [8080]
             app.route_mappings.each do |rm|
-              expect(rm.user_provided_app_port).to eq 8080
+              expect(rm.user_provided_app_port).to be_nil
+              expect(rm.app_port).to eq 8080
             end
           end
         end
@@ -2443,6 +2448,7 @@ module VCAP::CloudController
             expect(app.reload.ports).to eq [2345, 1298]
             app.route_mappings.each do |rm|
               expect(rm.user_provided_app_port).to eq 2345
+              expect(rm.app_port).to eq 2345
             end
           end
         end
@@ -2919,6 +2925,11 @@ module VCAP::CloudController
               route_mapping = RouteMapping.last
               expect(route_mapping.user_provided_app_port).to be_nil
             end
+
+            it 'returns the default app_port for the route mapping' do
+              route_mapping = RouteMapping.last
+              expect(route_mapping.app_port).to eq(8080)
+            end
           end
         end
 
@@ -2949,7 +2960,8 @@ module VCAP::CloudController
                 app.save
               end
 
-              it 'returns the user provided ports' do
+              it 'saves to db and returns the user provided ports' do
+                expect(app.user_provided_ports).to eq([1111])
                 expect(app.ports).to eq([1111])
               end
             end
@@ -2965,6 +2977,7 @@ module VCAP::CloudController
                               ))
               app.droplet_hash = 'the-droplet-hash'
               expect(app.ports).to eq([8080])
+              expect(app.user_provided_ports).to be_nil
             end
           end
 
@@ -2977,12 +2990,13 @@ module VCAP::CloudController
                                 execution_metadata: 'some-invalid-json',
                               ))
               app.droplet_hash = 'the-droplet-hash'
+              expect(app.user_provided_ports).to eq([1111])
               expect(app.ports).to eq([1111])
             end
           end
 
           context 'when no ports are specified in the execution metadata' do
-            it 'returns the ports that were specified during creation' do
+            it 'returns the default port' do
               app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
               app.add_droplet(Droplet.new(
                                 app: app,
@@ -2991,6 +3005,7 @@ module VCAP::CloudController
                               ))
               app.droplet_hash = 'the-droplet-hash'
               expect(app.ports).to eq([8080])
+              expect(app.user_provided_ports).to be_nil
             end
           end
         end
@@ -3001,6 +3016,7 @@ module VCAP::CloudController
           it 'returns the ports that were specified during creation' do
             app = App.make(diego: true, ports: [1025, 1026, 1027, 1028], package_state: 'PENDING')
             expect(app.ports).to eq([1025, 1026, 1027, 1028])
+            expect(app.user_provided_ports).to eq([1025, 1026, 1027, 1028])
           end
         end
 
@@ -3009,6 +3025,7 @@ module VCAP::CloudController
             it 'returns the ports that were specified during creation' do
               app = App.make(diego: true, ports: [1025, 1026, 1027, 1028], package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
               expect(app.ports).to eq([1025, 1026, 1027, 1028])
+              expect(app.user_provided_ports).to eq([1025, 1026, 1027, 1028])
             end
           end
 
@@ -3022,6 +3039,7 @@ module VCAP::CloudController
                               ))
               app.droplet_hash = 'the-droplet-hash'
               expect(app.ports).to eq([1025, 1026, 1027, 1028])
+              expect(app.user_provided_ports).to eq([1025, 1026, 1027, 1028])
             end
           end
         end

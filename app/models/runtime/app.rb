@@ -660,6 +660,8 @@ module VCAP::CloudController
       mark_routes_changed
     end
 
+    # user_provided_ports method should be called to
+    # get the value of ports stored in the database
     alias_method(:user_provided_ports, :ports)
     def ports
       ports = super
@@ -731,9 +733,9 @@ module VCAP::CloudController
     def update_route_mappings_ports
       if changed_from_diego_to_dea
         self.route_mappings_dataset.update(app_port: nil) unless self.route_mappings.nil?
-      elsif changed_from_dea_to_diego && !self.docker_image.present?
-        port = self.ports.present? ? self.ports.first : DEFAULT_HTTP_PORT
-        self.route_mappings_dataset.update(app_port: port)
+      elsif changed_from_dea_to_diego
+        port = self.user_provided_ports.first if self.user_provided_ports.present?
+        self.route_mappings_dataset.update(app_port: port) if port.present?
       end
     end
 

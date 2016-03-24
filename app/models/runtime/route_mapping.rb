@@ -58,6 +58,8 @@ module VCAP::CloudController
       super
     end
 
+    # user_provided_app_port method should be called to
+    # get the value of app_port stored in the database
     alias_method :user_provided_app_port, :app_port
     def app_port
       saved_port = super
