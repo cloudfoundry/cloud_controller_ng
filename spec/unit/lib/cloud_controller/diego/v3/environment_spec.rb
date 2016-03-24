@@ -51,7 +51,7 @@ module VCAP::CloudController::Diego
 
           expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
           expect(constructed_envs).to include({ 'VCAP_SERVICES' => be_an_instance_of(Hash) })
-          expect(constructed_envs).to include({ 'MEMORY_LIMIT' => task.memory_in_mb })
+          expect(constructed_envs).to include({ 'MEMORY_LIMIT' => "#{task.memory_in_mb}m" })
           expect(constructed_envs).to include({ 'ENV_VAR_2' => 'jeff' })
         end
 
@@ -63,7 +63,7 @@ module VCAP::CloudController::Diego
 
             expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
             expect(constructed_envs).to include({ 'VCAP_SERVICES' => be_an_instance_of(Hash) })
-            expect(constructed_envs).to include({ 'MEMORY_LIMIT' => task.memory_in_mb })
+            expect(constructed_envs).to include({ 'MEMORY_LIMIT' => "#{task.memory_in_mb}m" })
             expect(constructed_envs).to include({ 'ENV_VAR_2' => 'jeff' })
             expect(constructed_envs).to include({ 'PUPPIES' => 'frolicking' })
           end
@@ -78,7 +78,7 @@ module VCAP::CloudController::Diego
             expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
             expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
             expect(constructed_envs).to include({ 'VCAP_SERVICES' => be_an_instance_of(Hash) })
-            expect(constructed_envs).to include({ 'MEMORY_LIMIT' => task.memory_in_mb })
+            expect(constructed_envs).to include({ 'MEMORY_LIMIT' => "#{task.memory_in_mb}m" })
             expect(constructed_envs).to include({ 'ENV_VAR_2' => 'not jeff' })
             expect(constructed_envs).to include({ 'SILLY' => 'lily' })
             expect(constructed_envs).to include({ 'PUPPIES' => 'frolicking' })
@@ -94,7 +94,7 @@ module VCAP::CloudController::Diego
             expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
             expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
             expect(constructed_envs).to include({ 'VCAP_SERVICES' => be_an_instance_of(Hash) })
-            expect(constructed_envs).to include({ 'MEMORY_LIMIT' => task.memory_in_mb })
+            expect(constructed_envs).to include({ 'MEMORY_LIMIT' => "#{task.memory_in_mb}m" })
             expect(constructed_envs).to include({ 'ENV_VAR_2' => 'jeff' })
             expect(constructed_envs).to include({ 'SILLY' => 'lily' })
             expect(constructed_envs).to include({ 'PUPPIES' => 'frolicking' })

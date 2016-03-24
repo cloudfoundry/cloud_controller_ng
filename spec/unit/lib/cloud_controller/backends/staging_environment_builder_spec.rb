@@ -35,7 +35,7 @@ module VCAP::CloudController
               'APP_VAR'          => 'is here',
               'STAGING_ENV'      => 'staging_value',
               'CF_STACK'         => stack,
-              'MEMORY_LIMIT'     => memory_limit,
+              'MEMORY_LIMIT'     => "#{memory_limit}m",
               'VCAP_SERVICES'    => be_an_instance_of(Hash),
               'VCAP_APPLICATION' => {
                 'limits' => {
