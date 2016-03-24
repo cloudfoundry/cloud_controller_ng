@@ -519,4 +519,14 @@ describe 'Processes' do
       expect(event.actee).to eq(process.guid)
     end
   end
+
+  describe 'DELETE /v3/apps/:guid/processes/:type/instances/:index' do
+    it 'terminates a single instance of a process belonging to an app' do
+      process = VCAP::CloudController::ProcessModel.make(type: 'web', app: app_model, space: space)
+
+      delete "/v3/apps/#{app_model.guid}/processes/web/instances/0", nil, developer_headers
+
+      expect(last_response.status).to eq(204)
+    end
+  end
 end

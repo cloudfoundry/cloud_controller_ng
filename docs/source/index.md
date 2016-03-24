@@ -33,6 +33,7 @@ includes:
   - processes/app/get
   - processes/app/stats
   - processes/app/scale
+  - processes/app/terminate_instance
   - processes/app/list
   - route_mappings/header
   - route_mappings/object
