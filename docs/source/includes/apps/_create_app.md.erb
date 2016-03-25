@@ -1,0 +1,90 @@
+## Create an application
+
+```
+Definition
+```
+
+```http
+POST /v3/apps HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/apps" \
+  -X POST \
+  -H "Authorization: bearer [token]"
+  -d '{
+        "name": "my_app",
+        "environment_variables": {
+          "open":"source"
+        },
+        "lifecycle": {
+          "type": "buildpack",
+          "data": {
+            "stack": null,
+            "buildpack": "name-2446"
+          }
+        },
+        "relationships": {
+          "space": {
+            "guid":"7d3c05f1-aa8d-44cd-af6f-06e2ab1fccc1"
+          }
+        }
+      }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+
+<%= yield_content :create_app, '/v3/apps' %>
+```
+Creates an app in v3 of the Cloud Controller API. Apps must have a valid space guid for creation, which is namespaced under {"relationships": {"space": "your-space-guid"} }. See the example for more information.
+
+### Query Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      names
+
+      <span class="method-list-item-type method-list-item-type-required">required</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Name of the App</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      relationships[space][guid]
+
+      <span class="method-list-item-type method-list-item-type-required">required</span>
+    </h4>
+
+    <p class="method-list-item-description">Guid for a particular space</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      environment_variables
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Environment variables to be used for the App when running</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      lifecycle
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Lifecycle to be used when creating the app. Note: If no lifecycle is provided, lifecycle type defaults to buildpack. Data is a required field in lifecycle</p>
+  </li>
+</ul>

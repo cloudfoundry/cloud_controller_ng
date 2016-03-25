@@ -48,8 +48,8 @@ describe 'Apps' do
         VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model4)
       end
 
-      it "lists all apps" do
-        get "/v3/apps", {per_page: per_page, order_by: order_by}, user_header
+      it 'lists all apps' do
+        get '/v3/apps', { per_page: per_page, order_by: order_by }, user_header
 
         expected_response = {
           'pagination' => {
@@ -147,7 +147,7 @@ describe 'Apps' do
             'previous'      => nil
           }
 
-          get "/v3/apps", {per_page: per_page, space_guids: space_guids, names: names, order_by: order_by},  admin_header
+          get '/v3/apps', { per_page: per_page, space_guids: space_guids, names: names, order_by: order_by }, admin_header
 
           parsed_response = MultiJson.load(last_response.body)
           expect(last_response.status).to eq(200)
@@ -222,7 +222,135 @@ describe 'Apps' do
       parsed_response = MultiJson.load(last_response.body)
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
 
+  describe 'POST /v3/apps' do
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:space_guid) { space.guid }
+    let(:name) { 'my_app' }
+    let(:buildpack) { VCAP::CloudController::Buildpack.make.name }
+    let(:environment_variables) { { 'open' => 'source' } }
+    let(:lifecycle) { { 'type' => 'buildpack', 'data' => { 'stack' => nil, 'buildpack' => buildpack } } }
+    let(:relationships) { { 'space' => { 'guid' => space_guid } } }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+    end
+
+    it 'creates an app' do
+      expect {
+        post '/v3/apps', { name: name, environment_variables: environment_variables, lifecycle: lifecycle, relationships: relationships }, user_header
+      }.to change { VCAP::CloudController::AppModel.count }.by(1)
+
+      created_app       = VCAP::CloudController::AppModel.last
+      expected_guid     = created_app.guid
+      expected_response = {
+        'name'                    => name,
+        'guid'                    => expected_guid,
+        'desired_state'           => 'STOPPED',
+        'total_desired_instances' => 0,
+        'lifecycle'               => {
+          'type' => 'buildpack',
+          'data' => {
+            'buildpack' => created_app.lifecycle_data.buildpack,
+            'stack'     => created_app.lifecycle_data.stack,
+          }
+        },
+        'created_at'              => iso8601,
+        'updated_at'              => nil,
+        'environment_variables'   => environment_variables,
+        'links'                   => {
+          'self'                   => { 'href' => "/v3/apps/#{expected_guid}" },
+          'processes'              => { 'href' => "/v3/apps/#{expected_guid}/processes" },
+          'packages'               => { 'href' => "/v3/apps/#{expected_guid}/packages" },
+          'space'                  => { 'href' => "/v2/spaces/#{space_guid}" },
+          'droplets'               => { 'href' => "/v3/apps/#{expected_guid}/droplets" },
+          'tasks'                  => { 'href' => "/v3/apps/#{expected_guid}/tasks" },
+          'route_mappings'         => { 'href' => "/v3/apps/#{expected_guid}/route_mappings" },
+          'start'                  => { 'href' => "/v3/apps/#{expected_guid}/start", 'method' => 'PUT' },
+          'stop'                   => { 'href' => "/v3/apps/#{expected_guid}/stop", 'method' => 'PUT' },
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{expected_guid}/current_droplet", 'method' => 'PUT' }
+        }
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(last_response.status).to eq(201)
+      expect(parsed_response).to be_a_response_like(expected_response)
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+            type:              'audit.app.create',
+            actee:             expected_guid,
+            actee_type:        'v3-app',
+            actee_name:        name,
+            actor:             user.guid,
+            actor_type:        'user',
+            space_guid:        space_guid,
+            organization_guid: space.organization.guid,
+          })
+    end
+
+    describe 'Docker app' do
+      let(:lifecycle) { { 'type' => 'docker', 'data' => {} } }
+
+      before do
+        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+      end
+
+      it 'create a docker app' do
+        expect {
+          post '/v3/apps',
+            { name: name,
+              environment_variables: environment_variables,
+              lifecycle: lifecycle,
+              relationships: relationships }.to_json,
+            headers_for(user).merge({ 'CONTENT_TYPE' => 'application/json' })
+        }.to change { VCAP::CloudController::AppModel.count }.by(1)
+
+        created_app       = VCAP::CloudController::AppModel.last
+        expected_guid     = created_app.guid
+        expected_response = {
+          'name'                    => name,
+          'guid'                    => expected_guid,
+          'desired_state'           => 'STOPPED',
+          'total_desired_instances' => 0,
+          'lifecycle'               => {
+            'type' => 'docker',
+            'data' => {}
+          },
+          'created_at'              => iso8601,
+          'updated_at'              => nil,
+          'environment_variables'   => environment_variables,
+          'links'                   => {
+            'self'                   => { 'href' => "/v3/apps/#{expected_guid}" },
+            'processes'              => { 'href' => "/v3/apps/#{expected_guid}/processes" },
+            'packages'               => { 'href' => "/v3/apps/#{expected_guid}/packages" },
+            'space'                  => { 'href' => "/v2/spaces/#{space_guid}" },
+            'droplets'               => { 'href' => "/v3/apps/#{expected_guid}/droplets" },
+            'tasks'                  => { 'href' => "/v3/apps/#{expected_guid}/tasks" },
+            'route_mappings'         => { 'href' => "/v3/apps/#{expected_guid}/route_mappings" },
+            'start'                  => { 'href' => "/v3/apps/#{expected_guid}/start", 'method' => 'PUT' },
+            'stop'                   => { 'href' => "/v3/apps/#{expected_guid}/stop", 'method' => 'PUT' },
+            'assign_current_droplet' => { 'href' => "/v3/apps/#{expected_guid}/current_droplet", 'method' => 'PUT' }
+          }
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(last_response.status).to eq(201)
+        expect(parsed_response).to be_a_response_like(expected_response)
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+              type:              'audit.app.create',
+              actee:             expected_guid,
+              actee_type:        'v3-app',
+              actee_name:        name,
+              actor:             user.guid,
+              actor_type:        'user',
+              space_guid:        space_guid,
+              organization_guid: space.organization.guid,
+            })
+      end
     end
   end
 end
