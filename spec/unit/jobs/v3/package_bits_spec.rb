@@ -23,16 +23,9 @@ module VCAP::CloudController
           allow(AppBitsPackage).to receive(:new) { double(:packer, create_package_in_blobstore: 'done') }
         end
 
-        it 'creates blob stores' do
-          expect(CloudController::DependencyLocator.instance).to receive(:package_blobstore)
-          job.perform
-        end
-
         it 'creates an AppBitsPackage and performs' do
-          expect(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
-
-          packer = double
-          expect(AppBitsPackage).to receive(:new).with(package_blobstore, nil, max_package_size, tmpdir).and_return(packer)
+          packer = double(:packer)
+          expect(AppBitsPackage).to receive(:new).and_return(packer)
           expect(packer).to receive(:create_package_in_blobstore).with(package_guid, uploaded_path)
           job.perform
         end

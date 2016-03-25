@@ -27,18 +27,9 @@ module VCAP::CloudController
           allow(AppBitsPackage).to receive(:new) { double(:packer, create: 'done') }
         end
 
-        it 'creates blob stores' do
-          expect(CloudController::DependencyLocator.instance).to receive(:package_blobstore)
-          expect(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache)
-          job.perform
-        end
-
         it 'creates an app bit packer and performs' do
-          expect(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
-          expect(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache).and_return(global_app_bits_cache)
-
-          packer = double
-          expect(AppBitsPackage).to receive(:new).with(package_blobstore, global_app_bits_cache, max_package_size, tmpdir).and_return(packer)
+          packer = double(:packer)
+          expect(AppBitsPackage).to receive(:new).and_return(packer)
           expect(packer).to receive(:create).with(app, uploaded_path, fingerprints)
           job.perform
         end

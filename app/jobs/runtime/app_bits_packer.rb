@@ -23,15 +23,7 @@ module VCAP::CloudController
             return
           end
 
-          package_blobstore     = CloudController::DependencyLocator.instance.package_blobstore
-          global_app_bits_cache = CloudController::DependencyLocator.instance.global_app_bits_cache
-          max_package_size      = VCAP::CloudController::Config.config[:packages][:max_package_size] || 512 * 1024 * 1024
-
-          app_bits_packer = AppBitsPackage.new(
-            package_blobstore,
-            global_app_bits_cache,
-            max_package_size,
-            VCAP::CloudController::Config.config[:directories][:tmpdir])
+          app_bits_packer = AppBitsPackage.new
 
           app_bits_packer.create(
             app,

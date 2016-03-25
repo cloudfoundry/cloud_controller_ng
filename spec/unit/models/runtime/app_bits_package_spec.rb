@@ -1,15 +1,6 @@
 require 'spec_helper'
 
 describe AppBitsPackage do
-  let(:fingerprints_in_app_cache) do
-    path = File.join(local_tmp_dir, 'content')
-    sha = 'some_fake_sha'
-    File.open(path, 'w') { |f| f.write 'content' }
-    global_app_bits_cache.cp_to_blobstore(path, sha)
-
-    CloudController::Blobstore::FingerprintsCollection.new([{ 'fn' => 'path/to/content.txt', 'size' => 123, 'sha1' => sha }])
-  end
-
   let(:compressed_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }
   let(:app) { VCAP::CloudController::AppFactory.make }
   let(:package) { VCAP::CloudController::PackageModel.make }
@@ -24,10 +15,15 @@ describe AppBitsPackage do
     CloudController::Blobstore::FogClient.new({ provider: 'Local', local_root: blobstore_dir }, 'package')
   end
 
-  let(:packer) { AppBitsPackage.new(package_blobstore, global_app_bits_cache, max_package_size, local_tmp_dir) }
+  let(:packer) { AppBitsPackage.new }
   let(:max_package_size) { 1_073_741_824 }
 
   before do
+    allow(packer).to receive(:tmp_dir).and_return(local_tmp_dir)
+    allow(packer).to receive(:package_blobstore).and_return(package_blobstore)
+    allow(packer).to receive(:global_app_bits_cache).and_return(global_app_bits_cache)
+    allow(packer).to receive(:max_package_size).and_return(max_package_size)
+
     Fog.unmock!
     allow(FileUtils).to receive(:rm_f).with(compressed_path)
   end
@@ -121,6 +117,15 @@ describe AppBitsPackage do
 
   describe '#create' do
     subject(:create) { packer.create(app, compressed_path, fingerprints_in_app_cache) }
+
+    let(:fingerprints_in_app_cache) do
+      path = File.join(local_tmp_dir, 'content')
+      sha = 'some_fake_sha'
+      File.open(path, 'w') { |f| f.write 'content' }
+      global_app_bits_cache.cp_to_blobstore(path, sha)
+
+      CloudController::Blobstore::FingerprintsCollection.new([{ 'fn' => 'path/to/content.txt', 'size' => 123, 'sha1' => sha }])
+    end
 
     it 'uploads the new app bits to the app bit cache' do
       create
