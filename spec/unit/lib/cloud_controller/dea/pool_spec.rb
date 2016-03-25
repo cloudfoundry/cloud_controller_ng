@@ -17,6 +17,12 @@ module VCAP::CloudController
       }
     end
 
+    def find_dea_id(criteria)
+      dea = subject.find_dea(criteria)
+      return dea.dea_id if dea
+      nil
+    end
+
     describe '#register_subscriptions' do
       let(:dea_advertise_msg) do
         {
@@ -39,7 +45,7 @@ module VCAP::CloudController
       it 'finds advertised dea' do
         subject.register_subscriptions
         message_bus.publish('dea.advertise', dea_advertise_msg)
-        expect(subject.find_dea(mem: 1, stack: 'stack', app_id: 'app-id')).to eq('dea-id')
+        expect(find_dea_id(mem: 1, stack: 'stack', app_id: 'app-id')).to eq('dea-id')
       end
 
       it 'clears advertisements of DEAs being shut down' do
@@ -101,11 +107,16 @@ module VCAP::CloudController
         dea_advertisement dea: 'dea-id8', memory: 256, instance_count: 1, zone: 'zone1'
       end
 
+      it 'returns a dea advertisement' do
+        dea = subject.process_advertise_message(dea_advertise_msg)
+        expect(dea).to be_a(Dea::NatsMessages::DeaAdvertisement)
+      end
+
       describe 'dea availability' do
         it 'only finds registered deas' do
           expect {
             subject.process_advertise_message(dea_advertise_msg)
-          }.to change { subject.find_dea(mem: 1, stack: 'stack', app_id: 'app-id') }.from(nil).to('dea-id')
+          }.to change { find_dea_id(mem: 1, stack: 'stack', app_id: 'app-id') }.from(nil).to('dea-id')
         end
       end
 
@@ -114,19 +125,19 @@ module VCAP::CloudController
           it 'finds the DEA within the default zone' do
             subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
             subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
-            expect(subject.find_dea(mem: 1, stack: 'stack', app_id: 'app-id')).to eq('dea-id1')
+            expect(find_dea_id(mem: 1, stack: 'stack', app_id: 'app-id')).to eq('dea-id1')
           end
 
           it 'finds the DEA with enough memory within the default zone' do
             subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
             subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
-            expect(subject.find_dea(mem: 256, stack: 'stack', app_id: 'app-id')).to eq('dea-id4')
+            expect(find_dea_id(mem: 256, stack: 'stack', app_id: 'app-id')).to eq('dea-id4')
           end
 
           it 'finds the DEA in user defined zones' do
             subject.process_advertise_message(dea_in_user_defined_zone_with_3_instances_and_1024m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_2_instances_and_1024m_memory)
-            expect(subject.find_dea(mem: 1, stack: 'stack', app_id: 'app-id')).to eq('dea-id6')
+            expect(find_dea_id(mem: 1, stack: 'stack', app_id: 'app-id')).to eq('dea-id6')
           end
         end
 
@@ -135,14 +146,14 @@ module VCAP::CloudController
             subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
             subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_3_instances_and_1024m_memory)
-            expect(subject.find_dea(mem: 1, stack: 'stack', app_id: 'app-id')).to eq('dea-id1')
+            expect(find_dea_id(mem: 1, stack: 'stack', app_id: 'app-id')).to eq('dea-id1')
           end
 
           it 'finds the only one DEA with enough memory' do
             subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
             subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_3_instances_and_1024m_memory)
-            expect(subject.find_dea(mem: 256, stack: 'stack', app_id: 'app-id')).to eq('dea-id4')
+            expect(find_dea_id(mem: 256, stack: 'stack', app_id: 'app-id')).to eq('dea-id4')
           end
 
           it 'finds one of the DEAs with the smallest instance number' do
@@ -150,7 +161,7 @@ module VCAP::CloudController
             subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_2_instances_and_1024m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_1_instance_and_512m_memory)
-            expect(['dea-id1', 'dea-id7']).to include(subject.find_dea(mem: 1, stack: 'stack', app_id: 'app-id'))
+            expect(['dea-id1', 'dea-id7']).to include(find_dea_id(mem: 1, stack: 'stack', app_id: 'app-id'))
           end
         end
 
@@ -160,7 +171,7 @@ module VCAP::CloudController
             subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_3_instances_and_1024m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_2_instances_and_1024m_memory)
-            expect(subject.find_dea(mem: 1, stack: 'stack', app_id: 'app-id')).to eq('dea-id1')
+            expect(find_dea_id(mem: 1, stack: 'stack', app_id: 'app-id')).to eq('dea-id1')
           end
 
           it 'picks one of the DEAs in the zone with fewest instances' do
@@ -169,21 +180,21 @@ module VCAP::CloudController
             subject.process_advertise_message(dea_in_user_defined_zone_with_1_instance_and_512m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_1_instance_and_256m_memory)
 
-            expect(['dea-id7', 'dea-id8']).to include(subject.find_dea(mem: 1, stack: 'stack', app_id: 'app-id'))
+            expect(['dea-id7', 'dea-id8']).to include(find_dea_id(mem: 1, stack: 'stack', app_id: 'app-id'))
           end
 
           it 'picks the only DEA with enough resource even it has more instances' do
             subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_128m_memory)
             subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_512m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_3_instances_and_1024m_memory)
-            expect(subject.find_dea(mem: 768, stack: 'stack', app_id: 'app-id')).to eq('dea-id5')
+            expect(find_dea_id(mem: 768, stack: 'stack', app_id: 'app-id')).to eq('dea-id5')
           end
 
           it 'picks DEA in zone with fewest instances even if other zones have more filtered DEAs' do
             subject.process_advertise_message(dea_in_default_zone_with_2_instances_and_128m_memory)
             subject.process_advertise_message(dea_in_default_zone_with_1_instance_and_512m_memory)
             subject.process_advertise_message(dea_in_user_defined_zone_with_2_instances_and_1024m_memory)
-            expect(subject.find_dea(mem: 256, stack: 'stack', app_id: 'app-id')).to eq('dea-id6')
+            expect(find_dea_id(mem: 256, stack: 'stack', app_id: 'app-id')).to eq('dea-id6')
           end
         end
       end
@@ -194,10 +205,10 @@ module VCAP::CloudController
             subject.process_advertise_message(dea_advertise_msg)
 
             Timecop.travel(9)
-            expect(subject.find_dea(mem: 1024, stack: 'stack', app_id: 'app-id')).to eq('dea-id')
+            expect(find_dea_id(mem: 1024, stack: 'stack', app_id: 'app-id')).to eq('dea-id')
 
             Timecop.travel(2)
-            expect(subject.find_dea(mem: 1024, stack: 'stack', app_id: 'app-id')).to be_nil
+            expect(find_dea_id(mem: 1024, stack: 'stack', app_id: 'app-id')).to be_nil
           end
         end
 
@@ -208,10 +219,10 @@ module VCAP::CloudController
               subject.process_advertise_message(dea_advertise_msg)
 
               Timecop.travel(13)
-              expect(subject.find_dea(mem: 1024, stack: 'stack', app_id: 'app-id')).to eq('dea-id')
+              expect(find_dea_id(mem: 1024, stack: 'stack', app_id: 'app-id')).to eq('dea-id')
 
               Timecop.travel(2)
-              expect(subject.find_dea(mem: 1024, stack: 'stack', app_id: 'app-id')).to be_nil
+              expect(find_dea_id(mem: 1024, stack: 'stack', app_id: 'app-id')).to be_nil
             end
           end
         end
@@ -220,8 +231,8 @@ module VCAP::CloudController
       describe 'memory capacity' do
         it 'only finds deas that can satisfy memory request' do
           subject.process_advertise_message(dea_advertise_msg)
-          expect(subject.find_dea(mem: 1025, stack: 'stack', app_id: 'app-id')).to be_nil
-          expect(subject.find_dea(mem: 1024, stack: 'stack', app_id: 'app-id')).to eq('dea-id')
+          expect(find_dea_id(mem: 1025, stack: 'stack', app_id: 'app-id')).to be_nil
+          expect(find_dea_id(mem: 1024, stack: 'stack', app_id: 'app-id')).to eq('dea-id')
         end
       end
 
@@ -230,7 +241,7 @@ module VCAP::CloudController
           let(:available_disk) { 0 }
           it "it doesn't find any deas" do
             subject.process_advertise_message(dea_advertise_msg)
-            expect(subject.find_dea(mem: 1024, disk: 10, stack: 'stack', app_id: 'app-id')).to be_nil
+            expect(find_dea_id(mem: 1024, disk: 10, stack: 'stack', app_id: 'app-id')).to be_nil
           end
         end
 
@@ -238,7 +249,7 @@ module VCAP::CloudController
           let(:available_disk) { 50 }
           it 'finds the DEA' do
             subject.process_advertise_message(dea_advertise_msg)
-            expect(subject.find_dea(mem: 1024, disk: 10, stack: 'stack', app_id: 'app-id')).to eq('dea-id')
+            expect(find_dea_id(mem: 1024, disk: 10, stack: 'stack', app_id: 'app-id')).to eq('dea-id')
           end
         end
       end
@@ -246,8 +257,8 @@ module VCAP::CloudController
       describe 'stacks availability' do
         it 'only finds deas that can satisfy stack request' do
           subject.process_advertise_message(dea_advertise_msg)
-          expect(subject.find_dea(mem: 0, stack: 'unknown-stack', app_id: 'app-id')).to be_nil
-          expect(subject.find_dea(mem: 0, stack: 'stack', app_id: 'app-id')).to eq('dea-id')
+          expect(find_dea_id(mem: 0, stack: 'unknown-stack', app_id: 'app-id')).to be_nil
+          expect(find_dea_id(mem: 0, stack: 'stack', app_id: 'app-id')).to eq('dea-id')
         end
       end
 
@@ -264,8 +275,8 @@ module VCAP::CloudController
         end
 
         it 'picks DEAs that have no existing instances of the app' do
-          expect(subject.find_dea(mem: 1, stack: 'stack', app_id: 'app-id')).to eq('dea-id')
-          expect(subject.find_dea(mem: 1, stack: 'stack', app_id: 'other-app-id')).to eq('other-dea-id')
+          expect(find_dea_id(mem: 1, stack: 'stack', app_id: 'app-id')).to eq('dea-id')
+          expect(find_dea_id(mem: 1, stack: 'stack', app_id: 'other-app-id')).to eq('other-dea-id')
         end
       end
 
@@ -288,7 +299,7 @@ module VCAP::CloudController
           it 'randomly picks one of the eligible DEAs' do
             found_dea_ids = []
             20.times do
-              found_dea_ids << subject.find_dea(mem: 1, stack: 'stack', app_id: 'app-id')
+              found_dea_ids << find_dea_id(mem: 1, stack: 'stack', app_id: 'app-id')
             end
 
             expect(found_dea_ids.uniq).to match_array(%w(dea-id1 dea-id2))
@@ -309,7 +320,7 @@ module VCAP::CloudController
             it 'always picks the one with the greater memory' do
               found_dea_ids = []
               20.times do
-                found_dea_ids << subject.find_dea(mem: 1, stack: 'stack', app_id: 'app-id')
+                found_dea_ids << find_dea_id(mem: 1, stack: 'stack', app_id: 'app-id')
               end
 
               expect(found_dea_ids.uniq).to match_array(%w(dea-id1))
@@ -332,7 +343,7 @@ module VCAP::CloudController
             it 'always picks from the half of the list (rounding up) with greater memory' do
               found_dea_ids = []
               40.times do
-                found_dea_ids << subject.find_dea(mem: 1, stack: 'stack', app_id: 'app-id')
+                found_dea_ids << find_dea_id(mem: 1, stack: 'stack', app_id: 'app-id')
               end
 
               expect(found_dea_ids.uniq).to match_array(%w(dea-id1 dea-id2 dea-id3))
@@ -361,7 +372,7 @@ module VCAP::CloudController
         it 'will use different DEAs when starting an app with multiple instances' do
           dea_ids = []
           10.times do
-            dea_id = subject.find_dea(mem: 0, stack: 'stack', app_id: 'app-id')
+            dea_id = find_dea_id(mem: 0, stack: 'stack', app_id: 'app-id')
             dea_ids << dea_id
             subject.mark_app_started(dea_id: dea_id, app_id: 'app-id')
           end
@@ -382,7 +393,7 @@ module VCAP::CloudController
             next_advertisement['available_memory'] = 0
             subject.process_advertise_message(next_advertisement)
 
-            expect(subject.find_dea(mem: 64, stack: 'stack', app_id: 'foo')).to be_nil
+            expect(find_dea_id(mem: 64, stack: 'stack', app_id: 'foo')).to be_nil
           end
         end
       end
@@ -520,7 +531,7 @@ module VCAP::CloudController
         expect {
           subject.reserve_app_memory('dea-id', 1)
         }.to change {
-          subject.find_dea(mem: 1024, stack: 'stack', app_id: 'foo')
+          find_dea_id(mem: 1024, stack: 'stack', app_id: 'foo')
         }.from('dea-id').to(nil)
       end
 
@@ -530,7 +541,7 @@ module VCAP::CloudController
         expect {
           subject.process_advertise_message(new_dea_advertise_msg)
         }.to change {
-          subject.find_dea(mem: 1024, stack: 'stack', app_id: 'foo')
+          find_dea_id(mem: 1024, stack: 'stack', app_id: 'foo')
         }.from(nil).to('dea-id')
       end
     end

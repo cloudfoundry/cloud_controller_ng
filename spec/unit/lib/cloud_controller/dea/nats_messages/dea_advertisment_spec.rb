@@ -7,6 +7,7 @@ module VCAP::CloudController
       let(:message) do
         {
             'id' => 'staging-id',
+            'url' => 'host:port',
             'stacks' => ['stack-name'],
             'available_memory' => 1024,
             'available_disk' => 756,
@@ -22,6 +23,10 @@ module VCAP::CloudController
 
       describe '#dea_id' do
         its(:dea_id) { should eq 'staging-id' }
+      end
+
+      describe '#url' do
+        its(:url) { should eq 'host:port' }
       end
 
       describe '#stats' do

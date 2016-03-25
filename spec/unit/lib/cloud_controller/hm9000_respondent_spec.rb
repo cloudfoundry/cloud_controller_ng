@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     before do
       allow(dea_client).to receive(:stop_instances)
-      allow(dea_client).to receive(:start_instance_at_index)
+      allow(dea_client).to receive(:start_instances)
     end
 
     describe '#handle_requests' do
@@ -65,7 +65,7 @@ module VCAP::CloudController
 
       context 'when the message is missing fields' do
         it 'should not do anything' do
-          expect(dea_client).not_to receive(:start_instance_at_index)
+          expect(dea_client).not_to receive(:start_instances)
           subject.process_hm9000_stop({ 'droplet' => app.guid, 'instance_index' => 2 })
         end
       end
@@ -76,7 +76,7 @@ module VCAP::CloudController
         let(:start_instance_index) { 1 }
 
         it 'should not do anything' do
-          expect(dea_client).not_to receive(:start_instance_at_index)
+          expect(dea_client).not_to receive(:start_instances)
           subject.process_hm9000_start(hm9000_start_message)
         end
       end
@@ -93,14 +93,14 @@ module VCAP::CloudController
                 let(:diego) { true }
 
                 it 'should not send the start message' do
-                  expect(dea_client).not_to receive(:start_instance_at_index)
+                  expect(dea_client).not_to receive(:start_instances)
                   subject.process_hm9000_start(hm9000_start_message)
                 end
               end
 
               context 'and the diego flag is not set' do
                 it 'should send the start message' do
-                  expect(dea_client).to receive(:start_instance_at_index) do |app_to_start, index_to_start|
+                  expect(dea_client).to receive(:start_instances) do |app_to_start, index_to_start|
                     expect(app_to_start).to eq(app)
                     expect(index_to_start).to eq(1)
                   end
@@ -114,7 +114,7 @@ module VCAP::CloudController
               let(:droplet_hash) { nil }
 
               it 'should not do anything' do
-                expect(dea_client).not_to receive(:start_instance_at_index)
+                expect(dea_client).not_to receive(:start_instances)
                 subject.process_hm9000_start(hm9000_start_message)
               end
             end
@@ -126,7 +126,7 @@ module VCAP::CloudController
               end
 
               it 'should not do anything' do
-                expect(dea_client).not_to receive(:start_instance_at_index)
+                expect(dea_client).not_to receive(:start_instances)
                 subject.process_hm9000_start(hm9000_start_message)
               end
             end
@@ -135,7 +135,7 @@ module VCAP::CloudController
               let(:app_state) { 'STOPPED' }
 
               it 'should not do anything' do
-                expect(dea_client).not_to receive(:start_instance_at_index)
+                expect(dea_client).not_to receive(:start_instances)
                 subject.process_hm9000_start(hm9000_start_message)
               end
             end
@@ -145,7 +145,7 @@ module VCAP::CloudController
             let(:start_instance_index) { 2 }
 
             it 'should not do anything' do
-              expect(dea_client).not_to receive(:start_instance_at_index)
+              expect(dea_client).not_to receive(:start_instances)
               subject.process_hm9000_start(hm9000_start_message)
             end
           end
@@ -156,7 +156,7 @@ module VCAP::CloudController
           let(:start_instance_index) { 1 }
 
           it 'should not do anything' do
-            expect(dea_client).not_to receive(:start_instance_at_index)
+            expect(dea_client).not_to receive(:start_instances)
             subject.process_hm9000_start(hm9000_start_message)
           end
         end
