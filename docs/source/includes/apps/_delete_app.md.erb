@@ -1,0 +1,30 @@
+## Delete an application
+
+```
+Definition
+```
+
+```http
+POST /v3/apps HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/apps/guid-880840bb-b9f0-4c40-9492-5083e61a9014" -d '' -X DELETE \
+	-H "Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQyNCIsImVtYWlsIjoiZW1haWwtMjkzQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5yZWFkIiwiY2xvdWRfY29udHJvbGxlci53cml0ZSJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NTg4NTU2ODl9.2haDoetR6BKwZrcj8Lu-taMF2Lvxors6DlsxX7bwKt0" \
+	-H "Host: example.org" \
+	-H "Content-Type: application/x-www-form-urlencoded" \
+	-H "Cookie: "
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 204 No Content
+```
+Deletes an app in v3 of the Cloud Controller API. See the example for more information.

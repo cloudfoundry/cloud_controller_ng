@@ -225,6 +225,41 @@ describe 'Apps' do
     end
   end
 
+  describe 'DELETE /v3/apps/guid' do
+    let!(:app_model) { VCAP::CloudController::AppModel.make }
+    let!(:package) { VCAP::CloudController::PackageModel.make(app_guid: guid) }
+    let!(:droplet) { VCAP::CloudController::DropletModel.make(package_guid: package.guid, app_guid: guid) }
+    let!(:process) { VCAP::CloudController::AppFactory.make(app_guid: guid, space_guid: space_guid) }
+    let(:guid) { app_model.guid }
+    let(:space_guid) { app_model.space_guid }
+    let(:space) { VCAP::CloudController::Space.find(guid: space_guid) }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+    end
+
+    it 'Delete an App' do
+      delete "/v3/apps/#{guid}", {}, headers_for(user)
+      expect(last_response.status).to eq(204)
+      expect { app_model.refresh }.to raise_error Sequel::Error, 'Record not found'
+      expect { package.refresh }.to raise_error Sequel::Error, 'Record not found'
+      expect { droplet.refresh }.to raise_error Sequel::Error, 'Record not found'
+      expect { process.refresh }.to raise_error Sequel::Error, 'Record not found'
+      event = VCAP::CloudController::Event.last(2).first
+      expect(event.values).to include({
+            type:              'audit.app.delete-request',
+            actee:             app_model.guid,
+            actee_type:        'v3-app',
+            actee_name:        app_model.name,
+            actor:             user.guid,
+            actor_type:        'user',
+            space_guid:        space_guid,
+            organization_guid: space.organization.guid
+          })
+    end
+  end
+
   describe 'POST /v3/apps' do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }

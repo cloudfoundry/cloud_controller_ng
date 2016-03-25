@@ -14,6 +14,7 @@ includes:
   - general/header
   - apps/header
   - apps/create_app
+  - apps/delete_app
   - apps/list_all
   - apps/get_app
   - apps/tasks/get
