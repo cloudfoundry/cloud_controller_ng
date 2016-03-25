@@ -53,57 +53,8 @@ module VCAP::CloudController
       end
 
       describe 'validations' do
-        describe 'page' do
-          it 'validates it is a number' do
-            message = ServiceBindingsListMessage.new page: 'not number'
-            expect(message).to be_invalid
-            expect(message.errors[:page].length).to eq 1
-          end
-
-          it 'is invalid if page is 0' do
-            message = ServiceBindingsListMessage.new page: 0
-            expect(message).to be_invalid
-            expect(message.errors[:page].length).to eq 1
-          end
-
-          it 'is invalid if page is negative' do
-            message = ServiceBindingsListMessage.new page: -1
-            expect(message).to be_invalid
-            expect(message.errors[:page].length).to eq 1
-          end
-
-          it 'is invalid if page is not an integer' do
-            message = ServiceBindingsListMessage.new page: 1.1
-            expect(message).to be_invalid
-            expect(message.errors[:page].length).to eq 1
-          end
-        end
-
-        describe 'per_page' do
-          it 'validates it is a number' do
-            message = ServiceBindingsListMessage.new per_page: 'not number'
-            expect(message).to be_invalid
-            expect(message.errors[:per_page].length).to eq 1
-          end
-
-          it 'is invalid if per_page is 0' do
-            message = ServiceBindingsListMessage.new per_page: 0
-            expect(message).to be_invalid
-            expect(message.errors[:per_page].length).to eq 1
-          end
-
-          it 'is invalid if per_page is negative' do
-            message = ServiceBindingsListMessage.new per_page: -1
-            expect(message).to be_invalid
-            expect(message.errors[:per_page].length).to eq 1
-          end
-
-          it 'is invalid if per_page is not an integer' do
-            message = ServiceBindingsListMessage.new per_page: 1.1
-            expect(message).to be_invalid
-            expect(message.errors[:per_page].length).to eq 1
-          end
-        end
+        it_behaves_like 'a page validator'
+        it_behaves_like 'a per_page validator'
 
         describe 'order_by' do
           describe 'valid values' do

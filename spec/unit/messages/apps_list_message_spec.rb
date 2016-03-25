@@ -89,6 +89,9 @@ module VCAP::CloudController
       end
 
       describe 'validations' do
+        it_behaves_like 'a page validator'
+        it_behaves_like 'a per_page validator'
+
         it 'validates names is an array' do
           message = AppsListMessage.new names: 'not array'
           expect(message).to be_invalid
@@ -111,58 +114,6 @@ module VCAP::CloudController
           message = AppsListMessage.new space_guids: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:space_guids].length).to eq 1
-        end
-
-        describe 'page' do
-          it 'validates it is a number' do
-            message = AppsListMessage.new page: 'not number'
-            expect(message).to be_invalid
-            expect(message.errors[:page].length).to eq 1
-          end
-
-          it 'is invalid if page is 0' do
-            message = AppsListMessage.new page: 0
-            expect(message).to be_invalid
-            expect(message.errors[:page].length).to eq 1
-          end
-
-          it 'is invalid if page is negative' do
-            message = AppsListMessage.new page: -1
-            expect(message).to be_invalid
-            expect(message.errors[:page].length).to eq 1
-          end
-
-          it 'is invalid if page is not an integer' do
-            message = AppsListMessage.new page: 1.1
-            expect(message).to be_invalid
-            expect(message.errors[:page].length).to eq 1
-          end
-        end
-
-        describe 'per_page' do
-          it 'validates it is a number' do
-            message = AppsListMessage.new per_page: 'not number'
-            expect(message).to be_invalid
-            expect(message.errors[:per_page].length).to eq 1
-          end
-
-          it 'is invalid if per_page is 0' do
-            message = AppsListMessage.new per_page: 0
-            expect(message).to be_invalid
-            expect(message.errors[:per_page].length).to eq 1
-          end
-
-          it 'is invalid if per_page is negative' do
-            message = AppsListMessage.new per_page: -1
-            expect(message).to be_invalid
-            expect(message.errors[:per_page].length).to eq 1
-          end
-
-          it 'is invalid if per_page is not an integer' do
-            message = AppsListMessage.new per_page: 1.1
-            expect(message).to be_invalid
-            expect(message.errors[:per_page].length).to eq 1
-          end
         end
 
         describe 'order_by' do
