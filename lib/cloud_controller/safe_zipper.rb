@@ -43,7 +43,7 @@ class SafeZipper
   def zip
     @zip ||= begin
       output, error, status = Open3.capture3(
-        %(zip -q -r --symlinks #{Shellwords.escape(@zip_destination)} .),
+        %(zip -q -r -D --symlinks #{Shellwords.escape(@zip_destination)} .),
         chdir: @zip_path
       )
 
