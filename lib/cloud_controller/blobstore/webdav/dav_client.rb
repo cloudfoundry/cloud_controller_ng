@@ -14,8 +14,7 @@ module CloudController
         @root_dir      = root_dir
 
         @client = HTTPClient.new
-        @client.ssl_config.set_default_paths
-        @client.ssl_config.verify_mode = skip_cert_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
+        configure_ssl(@client)
 
         @endpoint = @options[:private_endpoint]
         @headers  = {}
@@ -144,6 +143,11 @@ module CloudController
 
         raise FileNotFound.new("Could not find object '#{URI(url).path}', #{response.status}/#{response.content}") if response.status == 404
         raise BlobstoreError.new("Could not delete all in path, #{response.status}/#{response.content}")
+      end
+
+      def configure_ssl(httpclient)
+        httpclient.ssl_config.verify_mode = skip_cert_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
+        httpclient.ssl_config.set_default_paths
       end
 
       private
