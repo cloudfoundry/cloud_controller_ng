@@ -34,7 +34,7 @@ class AppBitsPackage
 
     begin
       raise InvalidZip.new('The zip provided was not valid') unless valid_zip?(package_path)
-      raise ZipSizeExceeded if @max_package_size && package_size(package_path) > @max_package_size
+      raise ZipSizeExceeded if max_package_size && package_size(package_path) > max_package_size
 
       package_blobstore.cp_to_blobstore(package_path, package_guid)
 
