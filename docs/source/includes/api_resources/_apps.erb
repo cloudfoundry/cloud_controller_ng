@@ -238,3 +238,59 @@
   }
 }
 <% end %>
+
+<% content_for :update_app do |base_url| %>
+{
+  "guid": "guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0",
+  "name": "new_name",
+  "desired_state": "STOPPED",
+  "total_desired_instances": 0,
+  "created_at": "2016-03-17T21:41:30Z",
+  "updated_at": "2016-03-17T21:41:30Z",
+  "lifecycle": {
+    "type": "buildpack",
+    "data": {
+      "buildpack": "http://gitwheel.org/my-app",
+      "stack": "redhat"
+    }
+  },
+  "environment_variables": {
+    "MY_ENV_VAR": "foobar",
+    "FOOBAR": "MY_ENV_VAR"
+  },
+  "links": {
+    "self": {
+      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0"
+    },
+    "space": {
+      "href": "/v2/spaces/80a9166a-4aec-4a83-b743-145b4fcd33cc"
+    },
+    "processes": {
+      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/processes"
+    },
+    "route_mappings": {
+      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/route_mappings"
+    },
+    "packages": {
+      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/packages"
+    },
+    "droplets": {
+      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/droplets"
+    },
+    "tasks": {
+      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/tasks"
+    },
+    "start": {
+      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/start",
+      "method": "PUT"
+    },
+    "stop": {
+      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/stop",
+      "method": "PUT"
+    },
+    "assign_current_droplet": {
+      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/current_droplet",
+      "method": "PUT"
+    }
+  }
+}<% end %>

@@ -388,4 +388,84 @@ describe 'Apps' do
       end
     end
   end
+
+  describe 'PATCH /v3/apps/:guid' do
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:space_guid) { space.guid }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid) }
+    let(:buildpack) { 'http://gitwheel.org/my-app' }
+    let(:app_model) { VCAP::CloudController::AppModel.make(name: 'original_name', space_guid: space_guid) }
+
+    let(:stack) { VCAP::CloudController::Stack.make(name: 'redhat') }
+    let(:lifecycle) { { 'type' => 'buildpack', 'data' => { 'buildpack' => buildpack, 'stack' => stack.name } } }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, stack: VCAP::CloudController::Stack.default.name, buildpack: 'og-buildpack')
+    end
+
+
+    let(:name) { 'new_name' }
+    let(:environment_variables) do
+      {
+        'MY_ENV_VAR' => 'foobar',
+        'FOOBAR'     => 'MY_ENV_VAR'
+      }
+    end
+    let(:guid) { app_model.guid }
+
+    it 'updates an app' do
+      patch "/v3/apps/#{guid}", { name: name, environment_variables: environment_variables, lifecycle: lifecycle }, headers_for(user)
+      app_model.reload
+      expected_response = {
+        'name'                    => name,
+        'guid'                    => app_model.guid,
+        'desired_state'           => app_model.desired_state,
+        'total_desired_instances' => 0,
+        'lifecycle'               => {
+          'type' => 'buildpack',
+          'data' => {
+            'buildpack' => buildpack,
+            'stack'     => stack.name,
+          }
+        },
+        'created_at'              => iso8601,
+        'updated_at'              => iso8601,
+        'environment_variables'   => environment_variables,
+        'links'                   => {
+          'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
+          'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
+          'space'                  => { 'href' => "/v2/spaces/#{space_guid}" },
+          'droplets'               => { 'href' => "/v3/apps/#{app_model.guid}/droplets" },
+          'tasks'                  => { 'href' => "/v3/apps/#{app_model.guid}/tasks" },
+          'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
+          'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
+          'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
+        }
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type:              'audit.app.update',
+        actee:             app_model.guid,
+        actee_type:        'v3-app',
+        actee_name:        name,
+        actor:             user.guid,
+        actor_type:        'user',
+        space_guid:        space_guid,
+        organization_guid: space.organization.guid
+        })
+
+      metadata_request = { 'name' => 'new_name', 'environment_variables' => 'PRIVATE DATA HIDDEN',
+          'lifecycle' => { 'type' => 'buildpack', 'data' => { 'buildpack' => buildpack, 'stack' => stack.name } } }
+      expect(event.metadata['request']).to eq(metadata_request)
+    end
+  end
 end
