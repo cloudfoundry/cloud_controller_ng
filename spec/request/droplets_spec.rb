@@ -107,16 +107,4 @@ describe 'Droplets' do
       expect(parsed_response['environment_variables']).to be_a_response_like(expected_response['environment_variables'])
     end
   end
-
-  describe 'GET /v3/droplets/:guid' do
-  end
-
-  describe 'GET /v3/droplets' do
-  end
-
-  describe 'GET /v3/apps/:guid/droplets' do
-  end
-
-  describe 'DELETE /v3/droplets/:guid' do
-  end
 end

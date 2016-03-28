@@ -24,6 +24,9 @@ includes:
   - apps/tasks/get
   - apps/tasks/list
   - apps/tasks/cancel
+  - droplets/header
+  - droplets/create
+  - droplets/lifecycle_object
   - packages/header
   - packages/object
   - packages/create
