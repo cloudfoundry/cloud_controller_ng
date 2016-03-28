@@ -5,12 +5,13 @@ language_tabs:
   - shell: curl
 
 includes:
-  - api_resources/tasks
   - api_resources/apps
+  - api_resources/droplets
   - api_resources/packages
   - api_resources/processes
   - api_resources/route_mappings
   - api_resources/service_bindings
+  - api_resources/tasks
   - general/header
   - apps/header
   - apps/create
@@ -27,6 +28,7 @@ includes:
   - droplets/header
   - droplets/create
   - droplets/lifecycle_object
+  - droplets/get
   - packages/header
   - packages/object
   - packages/create

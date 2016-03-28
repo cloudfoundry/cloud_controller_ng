@@ -37,67 +37,7 @@ Example Response
 ```http
 HTTP/1.1 201 Created
 
-{
-  "guid": "whatuuid",
-  "state": "PENDING",
-  "error": null,
-  "lifecycle": {
-    "type": "buildpack",
-    "data": {
-      "buildpack": "http://github.com/myorg/awesome-buildpack",
-      "stack": "cflinuxfs2"
-    }
-  },
-  "memory_limit": 1024,
-  "disk_limit": 4096,
-  "result": null,
-  "environment_variables": {
-    "CUSTOM_ENV_VAR": "hello",
-    "CF_STACK": "cflinuxfs2",
-    "VCAP_APPLICATION": {
-      "limits": {
-        "mem": 1024,
-        "disk": 4096,
-        "fds": 16384
-      },
-      "application_id": "guid-35a397f0-b347-4575-8e33-b056cdee9628",
-      "application_version": "whatuuid",
-      "application_name": "name-2535",
-      "application_uris": [
-
-      ],
-      "version": "whatuuid",
-      "name": "name-2535",
-      "space_name": "name-2532",
-      "space_id": "1ec84aed-5852-4b44-9ae5-7a1045cc65b8",
-      "uris": [
-
-      ],
-      "users": null
-    },
-    "MEMORY_LIMIT": 1024,
-    "VCAP_SERVICES": {
-
-    }
-  },
-  "created_at": "2016-03-17T21:41:32Z",
-  "updated_at": null,
-  "links": {
-    "self": {
-      "href": "/v3/droplets/whatuuid"
-    },
-    "package": {
-      "href": "/v3/packages/guid-bdb9450a-25c2-4e1e-ab2b-58552be010f6"
-    },
-    "app": {
-      "href": "/v3/apps/guid-35a397f0-b347-4575-8e33-b056cdee9628"
-    },
-    "assign_current_droplet": {
-      "href": "/v3/apps/guid-35a397f0-b347-4575-8e33-b056cdee9628/current_droplet",
-      "method": "PUT"
-    }
-  }
-}
+<%= yield_content :single_pending_buildpack_droplet %>
 ```
 
 This endpoint creates a new droplet.

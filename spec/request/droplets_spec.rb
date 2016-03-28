@@ -107,4 +107,66 @@ describe 'Droplets' do
       expect(parsed_response['environment_variables']).to be_a_response_like(expected_response['environment_variables'])
     end
   end
+
+  describe 'GET /v3/droplets/:guid' do
+    let(:guid) { droplet_model.guid }
+    let(:buildpack_git_url) { 'http://buildpack.git.url.com' }
+    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let!(:droplet_model) do
+      VCAP::CloudController::DropletModel.make(
+        :buildpack,
+        state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
+        app_guid:                    app_model.guid,
+        package_guid:                package_model.guid,
+        buildpack_receipt_buildpack: buildpack_git_url,
+        error:                       'example error',
+        environment_variables:       { 'cloud' => 'foundry' },
+      )
+    end
+
+    let(:app_guid) { droplet_model.app_guid }
+
+    it 'gets a droplet' do
+      expected_response = {
+        'guid'                   => droplet_model.guid,
+        'state'                  => droplet_model.state,
+        'error'                  => droplet_model.error,
+        'lifecycle'              => {
+          'type' => 'buildpack',
+          'data' => {
+            'buildpack' => droplet_model.lifecycle_data.buildpack,
+            'stack' => droplet_model.lifecycle_data.stack,
+          }
+        },
+        'result' => {
+          'hash'                 => { 'type' => 'sha1', 'value' => droplet_model.droplet_hash },
+          'stack'                => droplet_model.buildpack_receipt_stack_name,
+          'process_types'        => droplet_model.process_types,
+          'execution_metadata'   => droplet_model.execution_metadata,
+          'buildpack'            => droplet_model.buildpack_receipt_buildpack
+        },
+        'memory_limit'           => droplet_model.memory_limit,
+        'disk_limit'             => droplet_model.disk_limit,
+        'detected_start_command' => droplet_model.detected_start_command,
+        'environment_variables'  => droplet_model.environment_variables,
+        'created_at'             => iso8601,
+        'updated_at'             => iso8601,
+        'links'                 => {
+          'self'    => { 'href' => "/v3/droplets/#{guid}" },
+          'package' => { 'href' => "/v3/packages/#{package_model.guid}" },
+          'app'     => { 'href' => "/v3/apps/#{app_guid}" },
+          'assign_current_droplet' => {
+            'href' => "/v3/apps/#{app_guid}/current_droplet",
+            'method' => 'PUT'
+          }
+        }
+      }
+
+      get "/v3/droplets/#{droplet_model.guid}", nil, developer_headers
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
 end

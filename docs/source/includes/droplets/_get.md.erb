@@ -1,0 +1,39 @@
+## Get a droplet
+
+```
+Definition
+```
+
+```http
+GET /v3/droplets/:guid HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/droplets/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :single_staged_buildpack_droplet %>
+```
+
+This endpoint retrieves a specific droplet.
+
+### Body Parameters
+
+<p class='no-body-parameters-outer'>
+  <span class='no-body-parameters-required'>
+    No arguments
+  </span>
+</p>
