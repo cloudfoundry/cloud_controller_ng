@@ -120,7 +120,6 @@ describe 'Packages' do
                 'hash'       => { 'type' => 'sha1', 'value' => nil },
                 'error'      => nil
               },
-              'url'        => nil,
               'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
               'created_at' => iso8601,
               'updated_at' => nil,
