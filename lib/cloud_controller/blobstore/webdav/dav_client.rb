@@ -14,7 +14,7 @@ module CloudController
         @root_dir      = root_dir
 
         @client = HTTPClient.new
-        configure_ssl(@client)
+        configure_ssl(@client, @options[:ca_cert_path])
 
         @endpoint = @options[:private_endpoint]
         @headers  = {}
@@ -145,9 +145,13 @@ module CloudController
         raise BlobstoreError.new("Could not delete all in path, #{response.status}/#{response.content}")
       end
 
-      def configure_ssl(httpclient)
+      def configure_ssl(httpclient, ca_cert_path)
         httpclient.ssl_config.verify_mode = skip_cert_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
         httpclient.ssl_config.set_default_paths
+
+        if ca_cert_path && File.exist?(ca_cert_path)
+          httpclient.ssl_config.add_trust_ca(ca_cert_path)
+        end
       end
 
       private
