@@ -280,22 +280,24 @@ module VCAP::CloudController
       let(:package) { PackageModel.make }
       before { authorize(staging_user, staging_password) }
 
-      def upload_package
+      def create_test_blob
         tmpdir = Dir.mktmpdir
-        zipname = File.join(tmpdir, 'test.zip')
-        TestZip.create(zipname, 10, 1024)
-        file_contents = File.read(zipname)
-        Jobs::V3::PackageBits.new(package.guid, zipname).perform
-        FileUtils.rm_rf(tmpdir)
-        file_contents
+        file = File.new(File.join(tmpdir, 'afile.txt'), 'w')
+        file.print('test blob contents')
+        file.close
+        CloudController::Blobstore::FogBlob.new(file, nil)
       end
 
       context 'when using with nginx' do
-        before { TestConfig.override(staging_config) }
+        before do
+          TestConfig.override(staging_config)
+          blob = create_test_blob
+          allow(blob).to receive(:internal_download_url).and_return("/cc-packages/gu/id/#{package.guid}")
+          package_blobstore = instance_double(CloudController::Blobstore::Client, blob: blob, local?: true)
+          allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
+        end
 
         it 'succeeds for valid packages' do
-          upload_package
-
           get "/staging/packages/#{package.guid}"
           expect(last_response.status).to eq(200)
 
@@ -304,16 +306,17 @@ module VCAP::CloudController
       end
 
       context 'when not using with nginx' do
-        before { TestConfig.override(staging_config.merge(nginx: { use_nginx: false })) }
+        before do
+          TestConfig.override(staging_config.merge(nginx: { use_nginx: false }))
+          package_blobstore = instance_double(CloudController::Blobstore::Client, blob: create_test_blob, local?: true)
+          allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
+        end
 
         it 'succeeds for valid packages' do
-          encoded_expected_body = Base64.encode64(upload_package)
-
           get "/staging/packages/#{package.guid}"
           expect(last_response.status).to eq(200)
 
-          encoded_actual_body = Base64.encode64(last_response.body)
-          expect(encoded_actual_body).to eq(encoded_expected_body)
+          expect(last_response.body).to eq('test blob contents')
         end
       end
 
