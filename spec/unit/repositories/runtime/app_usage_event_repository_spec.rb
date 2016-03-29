@@ -32,6 +32,18 @@ module VCAP::CloudController
           expect(event).to match_app(app)
         end
 
+        it 'will create an event with default previous attributes' do
+          event = repository.create_from_app(app)
+
+          default_instances = App.db_schema[:instances][:default].to_i
+          default_memory = VCAP::CloudController::Config.config[:default_app_memory]
+
+          expect(event.previous_state).to eq('STOPPED')
+          expect(event.previous_package_state).to eq('PENDING')
+          expect(event.previous_instance_count).to eq(default_instances)
+          expect(event.previous_memory_in_mb_per_instance).to eq(default_memory)
+        end
+
         context 'when a custom state is provided' do
           let(:custom_state) { 'CUSTOM' }
 
@@ -151,6 +163,64 @@ module VCAP::CloudController
             expect(event.process_type).to eq(app.type)
           end
         end
+
+        context 'when the app already existed' do
+          let(:old_state) { 'STARTED' }
+          let(:old_package_state) { 'STAGED' }
+          let(:old_instances) { 4 }
+          let(:old_memory) { 256 }
+          let(:app) { AppFactory.make(state: old_state, package_state: old_package_state, instances: old_instances, memory: old_memory) }
+
+          context 'when the same attribute values are set' do
+            before do
+              app.state = old_state
+              app.package_state = old_package_state
+              app.instances = old_instances
+              app.memory =  old_memory
+            end
+
+            it 'creates event with previous attributes' do
+              event = repository.create_from_app(app)
+
+              expect(event.previous_state).to eq(old_state)
+              expect(event.previous_package_state).to eq(old_package_state)
+              expect(event.previous_instance_count).to eq(old_instances)
+              expect(event.previous_memory_in_mb_per_instance).to eq(old_memory)
+            end
+          end
+
+          context 'when app attributes change' do
+            let(:new_state) { 'STOPPED' }
+            let(:new_package_state) { 'FAILED' }
+            let(:new_instances) { 2 }
+            let(:new_memory) { 1024 }
+
+            before do
+              app.state = new_state
+              app.package_state = new_package_state
+              app.instances = new_instances
+              app.memory =  new_memory
+            end
+
+            it 'stores new values' do
+              event = repository.create_from_app(app)
+
+              expect(event.state).to eq(new_state)
+              expect(event.package_state).to eq(new_package_state)
+              expect(event.instance_count).to eq(new_instances)
+              expect(event.memory_in_mb_per_instance).to eq(new_memory)
+            end
+
+            it 'stores previous values' do
+              event = repository.create_from_app(app)
+
+              expect(event.previous_state).to eq(old_state)
+              expect(event.previous_package_state).to eq(old_package_state)
+              expect(event.previous_instance_count).to eq(old_instances)
+              expect(event.previous_memory_in_mb_per_instance).to eq(old_memory)
+            end
+          end
+        end
       end
 
       describe '#create_from_task' do
@@ -173,7 +243,9 @@ module VCAP::CloudController
             event = repository.create_from_task(task, state)
 
             expect(event.memory_in_mb_per_instance).to eq(222)
+            expect(event.previous_memory_in_mb_per_instance).to eq(222)
             expect(event.instance_count).to eq(1)
+            expect(event.previous_instance_count).to eq(1)
             expect(event.app_guid).to eq('')
             expect(event.app_name).to eq('')
             expect(event.space_guid).to eq(task.space.guid)
@@ -184,7 +256,9 @@ module VCAP::CloudController
             expect(event.org_guid).to be_present
             expect(event.buildpack_guid).to be_nil
             expect(event.buildpack_name).to be_nil
+            expect(event.previous_state).to eq('RUNNING')
             expect(event.package_state).to eq('STAGED')
+            expect(event.previous_package_state).to eq('STAGED')
             expect(event.parent_app_guid).to eq(task.app.guid)
             expect(event.parent_app_guid).to be_present
             expect(event.parent_app_name).to eq(task.app.name)
@@ -194,13 +268,60 @@ module VCAP::CloudController
             expect(event.task_name).to eq(task.name)
           end
         end
+
+        context 'when the task exists' do
+          let(:old_state) { TaskModel::RUNNING_STATE }
+          let(:old_memory) { 256 }
+          let(:existing_task) { TaskModel.make(state: old_state, memory_in_mb: old_memory) }
+
+          context 'when the same attribute values are set' do
+            before do
+              existing_task.memory_in_mb = old_memory
+            end
+
+            it 'creates event with previous attributes' do
+              event = repository.create_from_task(existing_task, state)
+
+              expect(event.previous_state).to eq(old_state)
+              expect(event.previous_package_state).to eq('STAGED')
+              expect(event.previous_instance_count).to eq(1)
+              expect(event.previous_memory_in_mb_per_instance).to eq(old_memory)
+            end
+          end
+
+          context 'when task attributes change' do
+            let(:new_state) { TaskModel::FAILED_STATE }
+            let(:new_memory) { 1024 }
+
+            before do
+              existing_task.memory_in_mb = new_memory
+            end
+
+            it 'stores new values' do
+              event = repository.create_from_task(existing_task, new_state)
+
+              expect(event.state).to eq(new_state)
+              expect(event.memory_in_mb_per_instance).to eq(new_memory)
+            end
+
+            it 'stores previous values' do
+              event = repository.create_from_task(existing_task, state)
+
+              expect(event.previous_state).to eq(old_state)
+              expect(event.previous_package_state).to eq('STAGED')
+              expect(event.previous_instance_count).to eq(1)
+              expect(event.previous_memory_in_mb_per_instance).to eq(old_memory)
+            end
+          end
+        end
       end
 
       describe '#create_from_droplet' do
         let(:org) { Organization.make(guid: 'org-1') }
         let(:space) { Space.make(guid: 'space-1', name: 'space-name', organization: org) }
         let(:app_model) { AppModel.make(guid: 'app-1', name: 'frank-app', space: space) }
-        let(:package) { PackageModel.make(guid: 'package-1', app_guid: app_model.guid, state: PackageModel::READY_STATE) }
+        let(:package_state) { PackageModel::READY_STATE }
+        let(:package) { PackageModel.make(guid: 'package-1', app_guid: app_model.guid, state: package_state) }
         let!(:droplet) { DropletModel.make(guid: 'droplet-1', memory_limit: 222, package: package, app_guid: app_model.guid) }
 
         let(:state) { 'TEST_STATE' }
@@ -217,12 +338,15 @@ module VCAP::CloudController
             expect(event.state).to eq('TEST_STATE')
           end
 
-          it 'sets the attributes based on the task' do
+          it 'sets the attributes based on the droplet' do
             event = repository.create_from_droplet(droplet, state)
 
             expect(event.state).to eq('TEST_STATE')
+            expect(event.previous_state).to eq('STAGING')
             expect(event.instance_count).to eq(1)
+            expect(event.previous_instance_count).to eq(1)
             expect(event.memory_in_mb_per_instance).to eq(222)
+            expect(event.previous_memory_in_mb_per_instance).to eq(222)
             expect(event.org_guid).to eq('org-1')
             expect(event.space_guid).to eq('space-1')
             expect(event.space_name).to eq('space-name')
@@ -234,7 +358,8 @@ module VCAP::CloudController
             expect(event.process_type).to be_nil
             expect(event.buildpack_name).to be_nil
             expect(event.buildpack_guid).to be_nil
-            expect(event.package_state).to eq(PackageModel::READY_STATE)
+            expect(event.package_state).to eq(package_state)
+            expect(event.previous_package_state).to eq(package_state)
             expect(event.task_guid).to be_nil
             expect(event.task_name).to be_nil
           end
@@ -308,6 +433,71 @@ module VCAP::CloudController
 
             expect(event.buildpack_name).to eq('a-buildpack')
             expect(event.buildpack_guid).to eq('a-buildpack-guid')
+          end
+        end
+
+        context 'when the droplet exists' do
+          let(:old_memory) { 265 }
+          let(:old_droplet_state) { DropletModel::STAGED_STATE }
+          let(:existing_droplet) { DropletModel.make(guid: 'existing-droplet', state: old_droplet_state, memory_limit: old_memory, package: package, app_guid: app_model.guid) }
+
+          context 'when the same attribute values are set' do
+            before do
+              existing_droplet.memory_limit = old_memory
+            end
+
+            it 'creates event with previous attributes' do
+              event = repository.create_from_droplet(existing_droplet, state)
+
+              expect(event.previous_state).to eq(old_droplet_state)
+              expect(event.previous_package_state).to eq(package_state)
+              expect(event.previous_instance_count).to eq(1)
+              expect(event.previous_memory_in_mb_per_instance).to eq(old_memory)
+            end
+          end
+
+          context 'when app attributes change' do
+            let(:new_state) { DropletModel::STAGED_STATE }
+            let(:new_package_state) { PackageModel::FAILED_STATE }
+            let(:new_memory) { 1024 }
+
+            before do
+              existing_droplet.package.state = new_package_state
+              existing_droplet.memory_limit = new_memory
+            end
+
+            it 'stores new values' do
+              event = repository.create_from_droplet(existing_droplet, new_state)
+
+              expect(event.state).to eq(new_state)
+              expect(event.package_state).to eq(new_package_state)
+              expect(event.instance_count).to eq(1)
+              expect(event.memory_in_mb_per_instance).to eq(new_memory)
+            end
+
+            it 'stores previous values' do
+              event = repository.create_from_droplet(existing_droplet, new_state)
+
+              expect(event.previous_state).to eq(old_droplet_state)
+              expect(event.previous_package_state).to eq(package_state)
+              expect(event.previous_instance_count).to eq(1)
+              expect(event.previous_memory_in_mb_per_instance).to eq(old_memory)
+            end
+          end
+
+          context 'when the droplet has no package' do
+            let(:existing_droplet) { DropletModel.make(guid: 'existing-droplet', state: old_droplet_state, memory_limit: old_memory, app_guid: app_model.guid) }
+
+            context 'when app attributes change' do
+              before do
+                existing_droplet.memory_limit = 1024
+              end
+
+              it 'returns no previous package state' do
+                event = repository.create_from_droplet(existing_droplet, state)
+                expect(event.previous_package_state).to be_nil
+              end
+            end
           end
         end
       end
