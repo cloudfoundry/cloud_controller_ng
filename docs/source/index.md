@@ -28,10 +28,10 @@ includes:
   - packages/stage
   - packages/upload_bits
   - packages/download_bits
-  - packages/delete
-  - packages/list_all
-  - packages/list_associated
   - packages/copy_bits
+  - packages/delete
+  - packages/list
+  - packages/app/list
   - processes/header
   - processes/object
   - processes/stats_object

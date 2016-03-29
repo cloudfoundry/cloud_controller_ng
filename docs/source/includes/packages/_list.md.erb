@@ -1,11 +1,11 @@
-## List associated packages
+## List packages
 
 ```
 Definition
 ```
 
 ```http
-GET /v3/apps/:guid/packages HTTP/1.1
+GET /v3/packages HTTP/1.1
 ```
 
 ```
@@ -13,7 +13,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.[your-domain.com]/v3/apps/guid-f2efe391-2b5b-4836-8518-ad93fa9ebf69/packages" \
+curl "https://api.[your-domain.com]/v3/packages" \
   -X GET \
   -H "Authorization: bearer [token]"
 ```
@@ -25,10 +25,10 @@ Example Response
 ```http
 HTTP/1.1 200 OK
 
-<%= yield_content :paginated_list_of_associated_packages %>
+<%= yield_content :paginated_list_of_packages, '/v3/packages' %>
 ```
 
-This endpoint retrieves the packages that associates with the given app guid.
+This endpoint retrieves all the packages the user has access to.
 
 ### Query Parameters
 
