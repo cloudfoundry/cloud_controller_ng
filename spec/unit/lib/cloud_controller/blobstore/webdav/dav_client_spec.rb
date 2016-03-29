@@ -146,6 +146,13 @@ module CloudController
           expect { client.exists?('foobar') }.to raise_error BlobstoreError, /Could not get object existence/
           expect(httpclient).to have_received(:head).with('http://localhost/admin/droplets/fo/ob/foobar', header: {})
         end
+
+        context 'when an OpenSSL::SSL::SSLError is raised' do
+          it 'reraises a BlobstoreError' do
+            allow(httpclient).to receive(:head).and_raise(OpenSSL::SSL::SSLError.new)
+            expect { client.exists?('foobar') }.to raise_error BlobstoreError, /SSL verification failed/
+          end
+        end
       end
 
       describe '#download_from_blobstore' do
@@ -208,6 +215,13 @@ module CloudController
 
               expect(sprintf('%o', File.stat(destination_path).mode)).to eq('100753')
             end
+          end
+        end
+
+        context 'when an OpenSSL::SSL::SSLError is raised' do
+          it 'reraises a BlobstoreError' do
+            allow(httpclient).to receive(:get).and_raise(OpenSSL::SSL::SSLError.new)
+            expect { client.download_from_blobstore('foobar', destination_path) }.to raise_error BlobstoreError, /SSL verification failed/
           end
         end
       end
@@ -334,6 +348,13 @@ module CloudController
             end
           end
         end
+
+        context 'when an OpenSSL::SSL::SSLError is raised' do
+          it 'reraises a BlobstoreError' do
+            allow(httpclient).to receive(:put).and_raise(OpenSSL::SSL::SSLError.new)
+            expect { client.cp_to_blobstore(tmpfile.path, 'foobar') }.to raise_error BlobstoreError, /SSL verification failed/
+          end
+        end
       end
 
       describe '#cp_r_to_blobstore' do
@@ -449,6 +470,13 @@ module CloudController
             end
           end
         end
+
+        context 'when an OpenSSL::SSL::SSLError is raised' do
+          it 'reraises a BlobstoreError' do
+            allow(httpclient).to receive(:put).and_raise(OpenSSL::SSL::SSLError.new)
+            expect { client.cp_r_to_blobstore(source_dir) }.to raise_error BlobstoreError, /SSL verification failed/
+          end
+        end
       end
 
       describe '#cp_file_between_keys' do
@@ -510,6 +538,24 @@ module CloudController
             }.to raise_error(CloudController::Blobstore::FileNotFound, /Could not find object 'foobar'/)
           end
         end
+
+        context 'when an OpenSSL::SSL::SSLError is raised' do
+          context 'when creating a destination' do
+            it 'reraises a BlobstoreError' do
+              allow(httpclient).to receive(:put).and_raise(OpenSSL::SSL::SSLError.new)
+              expect { client.cp_file_between_keys('foobar', 'bazbar') }.to raise_error BlobstoreError, /SSL verification failed/
+            end
+          end
+
+          context 'when copying files' do
+            it 'reraises a BlobstoreError' do
+              allow(response).to receive_messages(status: 204, content: '')
+              allow(httpclient).to receive(:put).and_return(response)
+              allow(httpclient).to receive(:request).and_raise(OpenSSL::SSL::SSLError.new)
+              expect { client.cp_file_between_keys('foobar', 'bazbar') }.to raise_error BlobstoreError, /SSL verification failed/
+            end
+          end
+        end
       end
 
       describe '#delete' do
@@ -551,6 +597,13 @@ module CloudController
 
           expect { client.delete('foobar') }.to raise_error ConflictError, /Conflict deleting object/
         end
+
+        context 'when an OpenSSL::SSL::SSLError is raised' do
+          it 'reraises a BlobstoreError' do
+            allow(httpclient).to receive(:delete).and_raise(OpenSSL::SSL::SSLError.new)
+            expect { client.delete('foobar') }.to raise_error BlobstoreError, /SSL verification failed/
+          end
+        end
       end
 
       describe '#delete_all' do
@@ -583,6 +636,13 @@ module CloudController
           }.to raise_error(BlobstoreError, /Could not delete all/)
           expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/buildpack_cache/', header: {})
         end
+
+        context 'when an OpenSSL::SSL::SSLError is raised' do
+          it 'reraises a BlobstoreError' do
+            allow(httpclient).to receive(:delete).and_raise(OpenSSL::SSL::SSLError.new)
+            expect { client.delete_all }.to raise_error BlobstoreError, /SSL verification failed/
+          end
+        end
       end
 
       describe '#delete_all_in_path' do
@@ -614,6 +674,13 @@ module CloudController
             client.delete_all_in_path('foobar')
           }.to raise_error(BlobstoreError, /Could not delete all in path/)
           expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/buildpack_cache/fo/ob/foobar/', header: {})
+        end
+
+        context 'when an OpenSSL::SSL::SSLError is raised' do
+          it 'reraises a BlobstoreError' do
+            allow(httpclient).to receive(:delete).and_raise(OpenSSL::SSL::SSLError.new)
+            expect { client.delete_all_in_path('foobar') }.to raise_error BlobstoreError, /SSL verification failed/
+          end
         end
       end
 
@@ -649,6 +716,13 @@ module CloudController
 
           expect { client.exists?('foobar') }.to raise_error BlobstoreError, /Could not get object/
         end
+
+        context 'when an OpenSSL::SSL::SSLError is raised' do
+          it 'reraises a BlobstoreError' do
+            allow(httpclient).to receive(:head).and_raise(OpenSSL::SSL::SSLError.new)
+            expect { client.blob('foobar') }.to raise_error BlobstoreError, /SSL verification failed/
+          end
+        end
       end
 
       describe '#delete_blob' do
@@ -676,6 +750,15 @@ module CloudController
 
           expect { client.delete_blob(blob) }.not_to raise_error
           expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/fo/ob/foobar', header: {})
+        end
+
+        context 'when an OpenSSL::SSL::SSLError is raised' do
+          it 'reraises a BlobstoreError' do
+            blob = DavBlob.new(httpmessage: instance_double(HTTPClient), key: 'fo/ob/foobar', signer: nil)
+            allow(httpclient).to receive(:delete).and_raise(OpenSSL::SSL::SSLError.new)
+
+            expect { client.delete_blob(blob) }.to raise_error BlobstoreError, /SSL verification failed/
+          end
         end
       end
 
