@@ -246,3 +246,105 @@
   ]
 }
 <% end %>
+
+<% content_for :paginated_list_of_droplets do |base_url| %>
+{
+  "pagination": {
+    "total_results": 2,
+    "first": {
+      "href": "/v3/droplets?order_by=-created_at&page=1&per_page=2"
+    },
+    "last": {
+      "href": "/v3/droplets?order_by=-created_at&page=1&per_page=2"
+    },
+    "next": null,
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "guid-01ebbd56-e163-4c2d-8dbf-d20dea5be413",
+      "state": "STAGED",
+      "error": null,
+      "lifecycle": {
+        "type": "buildpack",
+        "data": {
+          "buildpack": "name-2556",
+          "stack": "name-2557"
+        }
+      },
+      "memory_limit": 123,
+      "disk_limit": 456,
+      "result": {
+        "execution_metadata": "black-box-secrets",
+        "process_types": {
+          "web": "started"
+        },
+        "hash": {
+          "type": "sha1",
+          "value": "my-hash"
+        },
+        "buildpack": "https://github.com/cloudfoundry/detected-buildpack.git",
+        "stack": null
+      },
+      "environment_variables": {
+
+      },
+      "created_at": "1970-01-01T00:00:02Z",
+      "updated_at": "2016-03-17T21:41:32Z",
+      "links": {
+        "self": {
+          "href": "/v3/droplets/guid-01ebbd56-e163-4c2d-8dbf-d20dea5be413"
+        },
+        "package": {
+          "href": "/v3/packages/guid-c5725684-a02f-4e59-bc67-8f36ae944688"
+        },
+        "app": {
+          "href": "/v3/apps/guid-92bbcaf6-7629-4960-b77a-f207de04053e"
+        },
+        "assign_current_droplet": {
+          "href": "/v3/apps/guid-92bbcaf6-7629-4960-b77a-f207de04053e/current_droplet",
+          "method": "PUT"
+        }
+      }
+    },
+    {
+      "guid": "guid-fdf3851c-def8-4de1-87f1-6d4543189e22",
+      "state": "STAGING",
+      "error": null,
+      "lifecycle": {
+        "type": "buildpack",
+        "data": {
+          "buildpack": "name-2558",
+          "stack": "name-2559"
+        }
+      },
+      "memory_limit": 123,
+      "disk_limit": null,
+      "result": null,
+      "environment_variables": {
+        "yuu": "huuu"
+      },
+      "created_at": "1970-01-01T00:00:01Z",
+      "updated_at": "2016-03-17T21:41:32Z",
+      "links": {
+        "self": {
+          "href": "/v3/droplets/guid-fdf3851c-def8-4de1-87f1-6d4543189e22"
+        },
+        "package": {
+          "href": "/v3/packages/guid-c5725684-a02f-4e59-bc67-8f36ae944688"
+        },
+        "app": {
+          "href": "/v3/apps/guid-92bbcaf6-7629-4960-b77a-f207de04053e"
+        },
+        "assign_current_droplet": {
+          "href": "/v3/apps/guid-92bbcaf6-7629-4960-b77a-f207de04053e/current_droplet",
+          "method": "PUT"
+        },
+        "buildpack": {
+          "href": "/v2/buildpacks/f5ae9667-0550-4c71-af5a-b7636a49dab1"
+        }
+      }
+    }
+  ]
+}
+<% end %>

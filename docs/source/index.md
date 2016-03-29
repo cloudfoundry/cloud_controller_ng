@@ -29,6 +29,7 @@ includes:
   - droplets/create
   - droplets/lifecycle_object
   - droplets/get
+  - droplets/list
   - packages/header
   - packages/object
   - packages/create
