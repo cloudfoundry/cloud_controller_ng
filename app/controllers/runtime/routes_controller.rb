@@ -237,12 +237,7 @@ module VCAP::CloudController
 
     private
 
-    attr_reader :app_event_repository, :route_event_repository
-
-    def routing_api_client
-      raise RoutingApi::Client::RoutingApiDisabled if @routing_api_client.nil?
-      @routing_api_client
-    end
+    attr_reader :app_event_repository, :route_event_repository, :routing_api_client
 
     def overwrite_port!
       if @request_attrs['port']
@@ -254,7 +249,7 @@ module VCAP::CloudController
 
       begin
         router_group = routing_api_client.router_group(domain.router_group_guid)
-      rescue RoutingApi::Client::RoutingApiDisabled
+      rescue RoutingApi::RoutingApiDisabled
         raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
       end
 
@@ -278,11 +273,11 @@ module VCAP::CloudController
       RouteValidator.new(@routing_api_client, domain_guid, assemble_route_attrs).validate
     rescue RouteValidator::ValidationError => e
       raise Errors::ApiError.new_from_details(e.class.name.demodulize, e.message)
-    rescue RoutingApi::Client::RoutingApiDisabled
+    rescue RoutingApi::RoutingApiDisabled
       raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
-    rescue RoutingApi::Client::RoutingApiUnavailable
+    rescue RoutingApi::RoutingApiUnavailable
       raise Errors::ApiError.new_from_details('RoutingApiUnavailable')
-    rescue RoutingApi::Client::UaaUnavailable
+    rescue RoutingApi::UaaUnavailable
       raise Errors::ApiError.new_from_details('UaaUnavailable')
     end
 

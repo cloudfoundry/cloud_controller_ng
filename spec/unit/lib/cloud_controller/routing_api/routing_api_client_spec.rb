@@ -23,6 +23,12 @@ module VCAP::CloudController::RoutingApi
       end
     end
 
+    describe '.enabled?' do
+      it 'returns true' do
+        expect(routing_api.enabled?).to be_truthy
+      end
+    end
+
     describe '.router_groups' do
       let(:status) { 200 }
       let(:body) do
@@ -37,7 +43,7 @@ module VCAP::CloudController::RoutingApi
         it 'raises a RoutingApiUnavailable error' do
           expect {
             routing_api.router_groups
-          }.to raise_error Client::RoutingApiUnavailable
+          }.to raise_error RoutingApiUnavailable
         end
       end
 
@@ -77,7 +83,7 @@ module VCAP::CloudController::RoutingApi
             it 'raises a UaaUnavailable' do
               expect {
                 routing_api.router_groups
-              }.to raise_error Client::UaaUnavailable
+              }.to raise_error UaaUnavailable
 
               expect(a_request(:get, routing_api_url + path)).
                 to have_been_made.times(0)
@@ -92,7 +98,7 @@ module VCAP::CloudController::RoutingApi
             it 'raises a UaaUnavailable' do
               expect {
                 routing_api.router_groups
-              }.to raise_error Client::UaaUnavailable
+              }.to raise_error UaaUnavailable
 
               expect(a_request(:get, routing_api_url + path)).
                 to have_been_made.times(0)
@@ -112,7 +118,7 @@ module VCAP::CloudController::RoutingApi
           it 'raises a error' do
             expect {
               routing_api.router_groups
-            }.to raise_error Client::RoutingApiUnavailable
+            }.to raise_error RoutingApiUnavailable
 
             expect(a_request(:get, routing_api_url + path)).
               to have_been_made.times(1)
@@ -153,7 +159,7 @@ module VCAP::CloudController::RoutingApi
           it 'returns a RoutingApiUnavailable error' do
             expect {
               routing_api.router_groups
-            }.to raise_error Client::RoutingApiUnavailable
+            }.to raise_error RoutingApiUnavailable
 
             expect(a_request(:get, routing_api_url + path)).
               to have_been_made.times(1)

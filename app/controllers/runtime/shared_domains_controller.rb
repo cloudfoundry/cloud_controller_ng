@@ -1,5 +1,7 @@
 module VCAP::CloudController
   class SharedDomainsController < RestController::ModelController
+    attr_reader :routing_api_client
+
     def self.dependencies
       [:routing_api_client, :router_group_type_populating_collection_renderer]
     end
@@ -17,22 +19,17 @@ module VCAP::CloudController
       @router_group_type_populating_collection_renderer = dependencies.fetch(:router_group_type_populating_collection_renderer)
     end
 
-    def routing_api_client
-      raise RoutingApi::Client::RoutingApiDisabled if @routing_api_client.nil?
-      @routing_api_client
-    end
-
     def before_create
       router_group_guid = request_attrs['router_group_guid']
       return if router_group_guid.nil?
 
       begin
         router_groups = routing_api_client.router_groups || []
-      rescue RoutingApi::Client::RoutingApiDisabled
+      rescue RoutingApi::RoutingApiDisabled
         raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
-      rescue RoutingApi::Client::RoutingApiUnavailable
+      rescue RoutingApi::RoutingApiUnavailable
         raise Errors::ApiError.new_from_details('RoutingApiUnavailable')
-      rescue RoutingApi::Client::UaaUnavailable
+      rescue RoutingApi::UaaUnavailable
         raise Errors::ApiError.new_from_details('UaaUnavailable')
       end
 
@@ -66,9 +63,9 @@ module VCAP::CloudController
             @opts,
             {},
         )
-      rescue RoutingApi::Client::RoutingApiUnavailable
+      rescue RoutingApi::RoutingApiUnavailable
         raise Errors::ApiError.new_from_details('RoutingApiUnavailable')
-      rescue RoutingApi::Client::UaaUnavailable
+      rescue RoutingApi::UaaUnavailable
         raise Errors::ApiError.new_from_details('UaaUnavailable')
       end
     end
@@ -79,11 +76,11 @@ module VCAP::CloudController
       unless domain.router_group_guid.nil?
         begin
           rtr_grp = routing_api_client.router_group(domain.router_group_guid)
-        rescue RoutingApi::Client::RoutingApiDisabled
+        rescue RoutingApi::RoutingApiDisabled
           raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
-        rescue RoutingApi::Client::RoutingApiUnavailable
+        rescue RoutingApi::RoutingApiUnavailable
           raise Errors::ApiError.new_from_details('RoutingApiUnavailable')
-        rescue RoutingApi::Client::UaaUnavailable
+        rescue RoutingApi::UaaUnavailable
           raise Errors::ApiError.new_from_details('UaaUnavailable')
         end
         domain.router_group_types = rtr_grp.types unless rtr_grp.nil?

@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   describe RouterGroupTypePopulator do
     describe 'transform' do
-      let(:router_group_type_populator) { RouterGroupTypePopulator.new(nil) }
+      let(:router_group_type_populator) { RouterGroupTypePopulator.new(RoutingApi::DisabledClient.new) }
       let(:domain1) { SharedDomain.new(name: '1', router_group_guid: 'guid1') }
       let(:domain2) { SharedDomain.new(name: '2', router_group_guid: 'guid2') }
       let(:domain3) { SharedDomain.new(name: '3', router_group_guid: nil) }
@@ -20,7 +20,7 @@ module VCAP::CloudController
       end
 
       context 'when routing API is configured' do
-        let(:routing_api_client) { double(RoutingApi::Client) }
+        let(:routing_api_client) { double(RoutingApi::Client, enabled?: true) }
         let(:router_group_type_populator) { RouterGroupTypePopulator.new(routing_api_client) }
 
         before do

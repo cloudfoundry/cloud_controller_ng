@@ -138,35 +138,35 @@ module VCAP::CloudController
     end
 
     context 'when the routing api is disabled' do
-      let(:validator) { RouteValidator.new(nil, domain_guid, route_attrs) }
+      let(:validator) { RouteValidator.new(RoutingApi::DisabledClient.new, domain_guid, route_attrs) }
 
       it 'raises a routing api disabled error' do
         expect { validator.validate }.
-          to raise_error(RoutingApi::Client::RoutingApiDisabled)
+          to raise_error(RoutingApi::RoutingApiDisabled)
       end
     end
 
     context 'when the routing api client raises a UaaUnavailable error' do
       before do
         allow(routing_api_client).to receive(:router_group).
-          and_raise(RoutingApi::Client::UaaUnavailable)
+          and_raise(RoutingApi::UaaUnavailable)
       end
 
       it 'does not rescue the exception' do
         expect { validator.validate }.
-          to raise_error(RoutingApi::Client::UaaUnavailable)
+          to raise_error(RoutingApi::UaaUnavailable)
       end
     end
 
     context 'when the routing api client raises a RoutingApiUnavailable error' do
       before do
         allow(routing_api_client).to receive(:router_group).
-          and_raise(RoutingApi::Client::RoutingApiUnavailable)
+          and_raise(RoutingApi::RoutingApiUnavailable)
       end
 
       it 'does not rescue the exception' do
         expect { validator.validate }.
-          to raise_error(RoutingApi::Client::RoutingApiUnavailable)
+          to raise_error(RoutingApi::RoutingApiUnavailable)
       end
     end
   end

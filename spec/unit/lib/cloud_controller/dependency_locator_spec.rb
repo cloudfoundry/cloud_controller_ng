@@ -282,8 +282,9 @@ describe CloudController::DependencyLocator do
         config[:routing_api] = nil
       end
 
-      it 'returns nil' do
-        expect(locator.routing_api_client).to be_nil
+      it 'returns a disabled client' do
+        expect(locator.routing_api_client).
+          to be_an_instance_of(VCAP::CloudController::RoutingApi::DisabledClient)
       end
     end
 
