@@ -169,4 +169,133 @@ describe 'Droplets' do
       expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
+
+  describe 'GET /v3/droplets' do
+    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:package) do
+      VCAP::CloudController::PackageModel.make(
+        app_guid: app_model.guid,
+        type: VCAP::CloudController::PackageModel::BITS_TYPE
+      )
+    end
+
+    let!(:droplet1) do
+      VCAP::CloudController::DropletModel.make(
+        :buildpack,
+        app_guid:                         app_model.guid,
+        created_at:                       Time.at(1),
+        package_guid:                     package.guid,
+        buildpack_receipt_buildpack:      buildpack.name,
+        buildpack_receipt_buildpack_guid: buildpack.guid,
+        environment_variables:            { 'yuu' => 'huuu' }
+      )
+    end
+    let!(:droplet2) do
+      VCAP::CloudController::DropletModel.make(
+        :buildpack,
+        app_guid:                    app_model.guid,
+        created_at:                  Time.at(2),
+        package_guid:                package.guid,
+        droplet_hash:                'my-hash',
+        buildpack_receipt_buildpack: 'https://github.com/cloudfoundry/detected-buildpack.git',
+        state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
+        process_types:               { 'web' => 'started' },
+        memory_limit:                123,
+        disk_limit:                  456,
+        execution_metadata:          'black-box-secrets'
+      )
+    end
+    let!(:droplet3) { VCAP::CloudController::DropletModel.make(:buildpack, package_guid: VCAP::CloudController::PackageModel.make.guid) }
+
+    let(:page) { 1 }
+    let(:per_page) { 2 }
+    let(:order_by) { '-created_at' }
+
+    before do
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet2)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet1)
+    end
+
+    it 'list all droplets' do
+      expected_response =
+        {
+          'pagination' => {
+            'total_results' => 2,
+            'first'         => { 'href' => "/v3/droplets?order_by=#{order_by}&page=1&per_page=50" },
+            'last'          => { 'href' => "/v3/droplets?order_by=#{order_by}&page=1&per_page=50" },
+            'next'          => nil,
+            'previous'      => nil,
+          },
+          'resources' => [
+            {
+              'guid'                   => droplet2.guid,
+              'state'                  => VCAP::CloudController::DropletModel::STAGED_STATE,
+              'lifecycle'              => {
+                'type' => 'buildpack',
+                'data' => {
+                  'buildpack' => droplet2.lifecycle_data.buildpack,
+                  'stack' => droplet2.lifecycle_data.stack,
+                }
+              },
+              'error'                  => droplet2.error,
+              'memory_limit'           => droplet2.memory_limit,
+              'disk_limit'             => droplet2.disk_limit,
+              'result'                 => {
+                'hash'                 => { 'type' => 'sha1', 'value' => 'my-hash' },
+                'buildpack'            => 'https://github.com/cloudfoundry/detected-buildpack.git',
+                'stack'                => nil,
+                'process_types'        => { 'web' => 'started' },
+                'execution_metadata'   => 'black-box-secrets'
+              },
+              'environment_variables'  => {},
+              'created_at'             => iso8601,
+              'updated_at'             => iso8601,
+              'links'                 => {
+                'self'    => { 'href' => "/v3/droplets/#{droplet2.guid}" },
+                'package' => { 'href' => "/v3/packages/#{package.guid}" },
+                'app'     => { 'href' => "/v3/apps/#{droplet2.app_guid}" },
+                'assign_current_droplet' => {
+                  'href' => "/v3/apps/#{droplet2.app_guid}/current_droplet",
+                  'method' => 'PUT'
+                }
+              }
+            },
+            {
+              'guid'                   => droplet1.guid,
+              'state'                  => VCAP::CloudController::DropletModel::STAGING_STATE,
+              'lifecycle'              => {
+                'type' => 'buildpack',
+                'data' => {
+                  'buildpack' => droplet1.lifecycle_data.buildpack,
+                  'stack' => droplet1.lifecycle_data.stack,
+                }
+              },
+              'error'                  => droplet1.error,
+              'memory_limit'           => droplet1.memory_limit,
+              'disk_limit'             => droplet1.disk_limit,
+              'result'                 => nil,
+              'environment_variables'  => droplet1.environment_variables,
+              'created_at'             => iso8601,
+              'updated_at'             => iso8601,
+              'links' => {
+                'self'      => { 'href' => "/v3/droplets/#{droplet1.guid}" },
+                'package'   => { 'href' => "/v3/packages/#{package.guid}" },
+                'buildpack' => { 'href' => "/v2/buildpacks/#{buildpack.guid}" },
+                'app'       => { 'href' => "/v3/apps/#{droplet1.app_guid}" },
+                'assign_current_droplet' => {
+                  'href' => "/v3/apps/#{droplet1.app_guid}/current_droplet",
+                  'method' => 'PUT'
+                }
+              }
+            },
+          ]
+        }
+
+      get "/v3/droplets?order_by=#{order_by}", nil, developer_headers
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
 end
