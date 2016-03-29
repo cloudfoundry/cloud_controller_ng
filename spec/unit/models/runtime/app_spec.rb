@@ -2474,6 +2474,60 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when changing ports from the default port' do
+        let(:app) { AppFactory.make(diego: true) }
+        let(:route) { Route.make(space: app.space) }
+
+        before do
+          RouteMapping.make(app: app, route: route)
+        end
+
+        it 'updates all route mappings associated with the app to the default port' do
+          app.ports = [7777, 8080]
+
+          expect {
+            app.save
+            app.reload
+          }.to change { app.route_mappings.map(&:user_provided_app_port) }.from([nil]).to([8080])
+        end
+      end
+
+      context 'when changing ports on a docker app' do
+        let(:app) { App.make(diego: true, docker_image: 'some-docker-image', package_state: 'PENDING') }
+        let(:route) { Route.make(space: app.space) }
+
+        before do
+          RouteMapping.make(app: app, route: route)
+        end
+
+        it 'does not change route mappings associated with the app' do
+          app.ports = [7777, 8080]
+
+          expect {
+            app.save
+            app.reload
+          }.to_not change { app.route_mappings.map(&:user_provided_app_port) }
+        end
+      end
+
+      context 'when updating user provided ports' do
+        let(:app) { AppFactory.make(diego: true, ports: [7777, 8080]) }
+        let(:route) { Route.make(space: app.space) }
+
+        before do
+          RouteMapping.make(app: app, route: route, app_port: 7777)
+        end
+
+        it 'does not update route mappings' do
+          app.ports = [8888, 7777, 8080]
+
+          expect {
+            app.save
+            app.reload
+          }.to_not change { app.route_mappings.map(&:user_provided_app_port) }
+        end
+      end
     end
 
     describe 'saving' do

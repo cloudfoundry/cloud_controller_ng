@@ -701,6 +701,10 @@ module VCAP::CloudController
       column_changed?(:diego) && (initial_value(:diego) == false) && diego
     end
 
+    def changed_from_default_ports
+      @ports_changed_by_user && initial_value(:ports) == [DEFAULT_HTTP_PORT]
+    end
+
     # HACK: We manually call the Serializer here because the plugin uses the
     # _before_validation method to serialize ports. This is called before
     # validations and we want to set the default ports after validations.
@@ -736,6 +740,8 @@ module VCAP::CloudController
       elsif changed_from_dea_to_diego
         port = self.user_provided_ports.first if self.user_provided_ports.present?
         self.route_mappings_dataset.update(app_port: port) if port.present?
+      elsif changed_from_default_ports && self.route_mappings.present? && self.docker_image.blank?
+        self.route_mappings_dataset.update(app_port: DEFAULT_HTTP_PORT)
       end
     end
 
