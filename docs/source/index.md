@@ -15,6 +15,7 @@ includes:
   - apps/header
   - apps/create
   - apps/get
+  - apps/env
   - apps/update
   - apps/start
   - apps/stop

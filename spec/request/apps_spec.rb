@@ -387,6 +387,84 @@ describe 'Apps' do
     end
   end
 
+  describe 'GET /v3/apps/:guid/env' do
+    it 'returns the environment of the app, including environment variables provided by the system' do
+      app_model = VCAP::CloudController::AppModel.make(
+        name:                  'my_app',
+        space:                 space,
+        environment_variables: { 'unicorn' => 'horn' },
+      )
+
+      group = VCAP::CloudController::EnvironmentVariableGroup.staging
+      group.environment_json = { STAGING_ENV: 'staging_value' }
+      group.save
+
+      group = VCAP::CloudController::EnvironmentVariableGroup.running
+      group.environment_json = { RUNNING_ENV: 'running_value' }
+      group.save
+
+      service_instance = VCAP::CloudController::ManagedServiceInstance.make(
+        space: space,
+        name:  'si-name',
+        tags:  ['50% off']
+      )
+      VCAP::CloudController::ServiceBindingModel.make(
+        service_instance: service_instance,
+        app:              app_model,
+        syslog_drain_url: 'https://syslog.example.com/drain',
+        credentials:      { password: 'top-secret' }
+      )
+
+      get "/v3/apps/#{app_model.guid}/env", nil, user_header
+
+      expected_response = {
+        'staging_env_json' => {
+          'STAGING_ENV' => 'staging_value'
+        },
+        'running_env_json' => {
+          'RUNNING_ENV' => 'running_value'
+        },
+        'environment_variables' => {
+          'unicorn' => 'horn'
+        },
+        'system_env_json' => {
+          'VCAP_SERVICES' => {
+            service_instance.service.label => [
+              {
+                'name'             => 'si-name',
+                'label'            => service_instance.service.label,
+                'tags'             => ['50% off'],
+                'plan'             => service_instance.service_plan.name,
+                'credentials'      => { 'password' => 'top-secret' },
+                'syslog_drain_url' => 'https://syslog.example.com/drain',
+                'provider'         => nil
+              }
+            ]
+          }
+        },
+        'application_env_json' => {
+          'VCAP_APPLICATION' => {
+            'limits' => {
+              'fds' => 16384
+            },
+            'application_name' => 'my_app',
+            'application_uris' => [],
+            'name'             => 'my_app',
+            'space_name'       => space.name,
+            'space_id'         => space.guid,
+            'uris'             => [],
+            'users'            => nil
+          }
+        }
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
+
   describe 'DELETE /v3/apps/guid' do
     let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'app_name', space: space) }
     let!(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }

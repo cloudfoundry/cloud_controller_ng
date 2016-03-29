@@ -1,0 +1,75 @@
+## Get environment for an app
+
+```
+Definition
+```
+
+```http
+GET /v3/apps/:guid/env HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/apps/[guid]/env" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+{
+  "staging_env_json": {
+    "GEM_CACHE": "http://gem-cache.example.com"
+  },
+  "running_env_json": {
+    "HTTP_PROXY": "http://proxy.example.com"
+  },
+  "environment_variables": {
+    "RAILS_ENV": "production"
+  },
+  "system_env_json": {
+    "VCAP_SERVICES": {
+      "mysql": [
+        {
+          "name": "db-for-my-app",
+          "label": "mysql",
+          "tags": ["relational", "sql"],
+          "plan": "xlarge",
+          "credentials": { 
+            "username": "user",
+            "password": "top-secret" 
+           },
+          "syslog_drain_url": "https://syslog.example.com/drain",
+          "provider": null
+        }
+      ]
+    }
+  },
+  "application_env_json": {
+    "VCAP_APPLICATION": {
+      "limits": {
+        "fds": 16384
+      },
+      "application_name": "my_app",
+      "application_uris": [ "my_app.example.com" ],
+      "name": "my_app",
+      "space_name": "my_space",
+      "space_id": "2f35885d-0c9d-4423-83ad-fd05066f8576",
+      "uris": [ "my_app.example.com" ],
+      "users": null
+    }
+  }
+}
+```
+
+This endpoint retrieves the environment variables that will be provided to an app at runtime.
+It will include environment variables for Environment Variable Groups and Service Bindings.
+
