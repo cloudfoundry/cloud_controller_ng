@@ -38,7 +38,7 @@ module VCAP::CloudController
   AppModel.blueprint(:buildpack) do
     guid       { Sham.guid }
     name       { Sham.name }
-    space_guid { Space.make.guid }
+    space { Space.make }
     buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(app: object.save) }
   end
 
@@ -49,35 +49,35 @@ module VCAP::CloudController
     guid     { Sham.guid }
     state    { VCAP::CloudController::PackageModel::CREATED_STATE }
     type     { 'bits' }
-    app_guid { AppModel.make.guid }
+    app { AppModel.make }
   end
 
   PackageModel.blueprint(:docker) do
     guid     { Sham.guid }
     state    { VCAP::CloudController::PackageModel::CREATED_STATE }
     type     { 'docker' }
-    app_guid { AppModel.make.guid }
+    app { AppModel.make }
     docker_data { PackageDockerDataModel.create(package: object.save, image: "org/image-#{Sham.guid}:latest") }
   end
 
   DropletModel.blueprint do
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
-    app_guid { AppModel.make.guid }
+    app { AppModel.make }
     memory_limit { 123 }
   end
 
   DropletModel.blueprint(:docker) do
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
-    app_guid { AppModel.make.guid }
+    app { AppModel.make }
     memory_limit { 123 }
   end
 
   DropletModel.blueprint(:buildpack) do
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
-    app_guid { AppModel.make.guid }
+    app { AppModel.make }
     memory_limit { 123 }
     buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(droplet: object.save) }
   end
