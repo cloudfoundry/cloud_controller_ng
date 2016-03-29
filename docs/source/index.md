@@ -31,6 +31,7 @@ includes:
   - droplets/get
   - droplets/delete
   - droplets/list
+  - droplets/app/list
   - packages/header
   - packages/object
   - packages/create

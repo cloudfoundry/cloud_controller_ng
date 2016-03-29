@@ -1,11 +1,11 @@
-## List droplets
+## Get a droplets for an app
 
 ```
 Definition
 ```
 
 ```http
-GET /v3/droplets HTTP/1.1
+GET /v3/apps/:guid/droplets HTTP/1.1
 ```
 
 ```
@@ -13,7 +13,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.[your-domain.com]/v3/droplets" \
+curl "https://api.[your-domain.com]/v3/apps/[guid]/droplets" \
   -X GET \
   -H "Authorization: bearer [token]"
 ```
@@ -25,12 +25,12 @@ Example Response
 ```http
 HTTP/1.1 200 OK
 
-<%= yield_content :paginated_list_of_droplets, '/v3/droplets' %>
+<%= yield_content :paginated_list_of_droplets, '/v3/app/:guid/droplets' %>
 ```
 
-This endpoint retrieves the droplets the user has access to.
+This endpoint retrieves a list of droplets belonging to an app.
 
-### Query Parameters
+### Body Parameters
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -62,5 +62,16 @@ This endpoint retrieves the droplets the user has access to.
     </h4>
 
     <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      states
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      Filter droplets by state. Valid values are "PENDING", "STAGING", "STAGED", "FAILED", or "EXPIRED".
+    </p>
   </li>
 </ul>
