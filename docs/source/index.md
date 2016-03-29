@@ -24,9 +24,6 @@ includes:
   - apps/stop
   - apps/delete
   - apps/list
-  - apps/tasks/get
-  - apps/tasks/list
-  - apps/tasks/cancel
   - droplets/header
   - droplets/create
   - droplets/lifecycle_object
@@ -75,8 +72,11 @@ includes:
   - tasks/object
   - tasks/create
   - tasks/get
-  - tasks/list
   - tasks/cancel
+  - tasks/list
+  - tasks/app/get
+  - tasks/app/cancel
+  - tasks/app/list
 
 search: true
 ---
