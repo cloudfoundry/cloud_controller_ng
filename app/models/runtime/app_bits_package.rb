@@ -36,13 +36,18 @@ class AppBitsPackage
       raise InvalidZip.new('The zip provided was not valid') unless valid_zip?(package_path)
       raise ZipSizeExceeded if max_package_size && package_size(package_path) > max_package_size
 
-      package_blobstore.cp_to_blobstore(package_path, package_guid)
+      # by unpacking and repacking, we remove unneeded directory listings, which
+      # may contain directory permissions that cause problems during staging
+      CloudController::Blobstore::LocalAppBits.from_compressed_bits(package_path, tmp_dir) do |local_app_bits|
+        rezipped_package = local_app_bits.create_package
+        package_blobstore.cp_to_blobstore(rezipped_package.path, package_guid)
 
-      package.db.transaction do
-        package.lock!
-        package.package_hash = Digester.new.digest_path(package_path)
-        package.state = VCAP::CloudController::PackageModel::READY_STATE
-        package.save
+        package.db.transaction do
+          package.lock!
+          package.package_hash = Digester.new.digest_path(rezipped_package)
+          package.state = VCAP::CloudController::PackageModel::READY_STATE
+          package.save
+        end
       end
 
       VCAP::CloudController::BitsExpiration.new.expire_packages!(package.app)
