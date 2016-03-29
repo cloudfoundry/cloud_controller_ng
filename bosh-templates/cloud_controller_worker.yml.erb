@@ -197,7 +197,14 @@ default_quota_definition: <%= p("cc.default_quota_definition") %>
 
 resource_pool:
   blobstore_type: <%= p("cc.resource_pool.blobstore_type") %>
-  webdav_config: <%= p("cc.resource_pool.webdav_config").to_json %>
+  webdav_config:
+    public_endpoint: <%= p("cc.resource_pool.webdav_config.public_endpoint") %>
+    private_endpoint: <%= p("cc.resource_pool.webdav_config.private_endpoint") %>
+    username: <%= p("cc.resource_pool.webdav_config.username") %>
+    password: <%= p("cc.resource_pool.webdav_config.password") %>
+    <% if p("cc.resource_pool.webdav_config.ca_cert") != "" && p("cc.resource_pool.webdav_config.ca_cert") != nil %>
+    ca_cert_path: "/var/vcap/jobs/cloud_controller_ng/config/certs/resource_pool_ca_cert.pem"
+    <% end %>
   minimum_size: <%= p("cc.resource_pool.minimum_size") %>
   maximum_size: <%= p("cc.resource_pool.maximum_size") %>
   resource_directory_key: <%= p("cc.resource_pool.resource_directory_key") %>
@@ -211,7 +218,14 @@ resource_pool:
 
 packages:
   blobstore_type: <%= p("cc.packages.blobstore_type") %>
-  webdav_config: <%= p("cc.packages.webdav_config").to_json %>
+  webdav_config:
+    public_endpoint: <%= p("cc.packages.webdav_config.public_endpoint") %>
+    private_endpoint: <%= p("cc.packages.webdav_config.private_endpoint") %>
+    username: <%= p("cc.packages.webdav_config.username") %>
+    password: <%= p("cc.packages.webdav_config.password") %>
+    <% if p("cc.packages.webdav_config.ca_cert") != "" && p("cc.packages.webdav_config.ca_cert") != nil %>
+    ca_cert_path: "/var/vcap/jobs/cloud_controller_ng/config/certs/packages_ca_cert.pem"
+    <% end %>
   app_package_directory_key: <%= p("cc.packages.app_package_directory_key") %>
   max_package_size: <%= p("cc.packages.max_package_size") %>
   <% if_p("cc.packages.cdn") do %>
@@ -224,7 +238,14 @@ packages:
 
 droplets:
   blobstore_type: <%= p("cc.droplets.blobstore_type") %>
-  webdav_config: <%= p("cc.droplets.webdav_config").to_json %>
+  webdav_config:
+    public_endpoint: <%= p("cc.droplets.webdav_config.public_endpoint") %>
+    private_endpoint: <%= p("cc.droplets.webdav_config.private_endpoint") %>
+    username: <%= p("cc.droplets.webdav_config.username") %>
+    password: <%= p("cc.droplets.webdav_config.password") %>
+    <% if p("cc.droplets.webdav_config.ca_cert") != "" && p("cc.droplets.webdav_config.ca_cert") != nil %>
+    ca_cert_path: "/var/vcap/jobs/cloud_controller_ng/config/certs/droplets_ca_cert.pem"
+    <% end %>
   droplet_directory_key: <%= p("cc.droplets.droplet_directory_key") %>
   <% if_p("cc.droplets.cdn") do %>
   cdn:
@@ -236,7 +257,14 @@ droplets:
 
 buildpacks:
   blobstore_type: <%= p("cc.buildpacks.blobstore_type") %>
-  webdav_config: <%= p("cc.buildpacks.webdav_config").to_json %>
+  webdav_config:
+    public_endpoint: <%= p("cc.buildpacks.webdav_config.public_endpoint") %>
+    private_endpoint: <%= p("cc.buildpacks.webdav_config.private_endpoint") %>
+    username: <%= p("cc.buildpacks.webdav_config.username") %>
+    password: <%= p("cc.buildpacks.webdav_config.password") %>
+    <% if p("cc.buildpacks.webdav_config.ca_cert") != "" && p("cc.buildpacks.webdav_config.ca_cert") != nil %>
+    ca_cert_path: "/var/vcap/jobs/cloud_controller_ng/config/certs/buildpacks_ca_cert.pem"
+    <% end %>
   buildpack_directory_key: <%= p("cc.buildpacks.buildpack_directory_key") %>
   <% if_p("cc.buildpacks.cdn") do %>
   cdn:
