@@ -1,4 +1,4 @@
-## Get a droplets for an app
+## List droplets for an app
 
 ```
 Definition
@@ -25,7 +25,7 @@ Example Response
 ```http
 HTTP/1.1 200 OK
 
-<%= yield_content :paginated_list_of_droplets, '/v3/app/:guid/droplets' %>
+<%= yield_content :paginated_list_of_droplets, '/v3/app/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets' %>
 ```
 
 This endpoint retrieves a list of droplets belonging to an app.
