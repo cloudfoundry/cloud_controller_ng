@@ -17,6 +17,7 @@ includes:
   - apps/create
   - apps/get
   - apps/env
+  - apps/stats
   - apps/update
   - apps/start
   - apps/stop

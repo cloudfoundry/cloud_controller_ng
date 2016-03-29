@@ -465,6 +465,95 @@ describe 'Apps' do
     end
   end
 
+  describe 'GET /v3/apps/:guid/stats' do
+    it 'displays stats for the processes of an app' do
+      app_model = VCAP::CloudController::AppModel.make(space: space)
+      process = VCAP::CloudController::AppFactory.make(
+        state: 'STARTED',
+        diego: true,
+        type: 'web',
+        instances: 2,
+        app: app_model
+      )
+
+      usage_time = Time.now.utc.to_s
+      tps_response = [
+        {
+          process_guid:  process.guid,
+          instance_guid: 'instance-1-A',
+          index:         0,
+          state:         'RUNNING',
+          details:       'some-details',
+          uptime:        1,
+          since:         101,
+          host:          'toast',
+          port:          8080,
+          stats:         { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
+        },
+        {
+          process_guid:  process.guid,
+          instance_guid: 'instance-1-B',
+          index:         1,
+          state:         'RUNNING',
+          details:       'some-details',
+          uptime:        1,
+          since:         101,
+          host:          'toast',
+          port:          8080,
+          stats:         { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
+        }
+      ].to_json
+
+      diego_process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(process)
+      stub_request(:get, "http://tps.service.cf.internal:1518/v1/actual_lrps/#{diego_process_guid}/stats").to_return(status: 200, body: tps_response)
+
+      get "/v3/apps/#{app_model.guid}/stats", nil, user_header
+
+      expected_response = {
+        'processes' => [
+          {
+            'type'       => 'web',
+            'index'      => 0,
+            'state'      => 'RUNNING',
+            'usage'      => {
+              'time' => usage_time,
+              'cpu'  => 80,
+              'mem'  => 128,
+              'disk' => 1024,
+            },
+            'host'       => 'toast',
+            'port'       => 8080,
+            'uptime'     => 1,
+            'mem_quota'  => 1073741824,
+            'disk_quota' => 1073741824,
+            'fds_quota'  => 16384
+          },
+          {
+            'type'       => 'web',
+            'index'      => 1,
+            'state'      => 'RUNNING',
+            'usage'      => {
+              'time' => usage_time,
+              'cpu'  => 80,
+              'mem'  => 128,
+              'disk' => 1024,
+            },
+            'host'       => 'toast',
+            'port'       => 8080,
+            'uptime'     => 1,
+            'mem_quota'  => 1073741824,
+            'disk_quota' => 1073741824,
+            'fds_quota'  => 16384
+          }
+        ]
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
+
   describe 'DELETE /v3/apps/guid' do
     let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'app_name', space: space) }
     let!(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
