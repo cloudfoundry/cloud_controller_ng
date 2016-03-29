@@ -68,18 +68,23 @@ module VCAP::CloudController
         )
       rescue RoutingApi::Client::RoutingApiUnavailable
         raise Errors::ApiError.new_from_details('RoutingApiUnavailable')
+      rescue RoutingApi::Client::UaaUnavailable
+        raise Errors::ApiError.new_from_details('UaaUnavailable')
       end
     end
 
     get '/v2/shared_domains/:guid', :get_shared_domain
     def get_shared_domain(guid)
-      domain = SharedDomain.find(guid: guid)
-      validate_access(:read, domain)
+      domain = find_guid_and_validate_access(:read, guid)
       unless domain.router_group_guid.nil?
         begin
           rtr_grp = routing_api_client.router_group(domain.router_group_guid)
         rescue RoutingApi::Client::RoutingApiDisabled
           raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
+        rescue RoutingApi::Client::RoutingApiUnavailable
+          raise Errors::ApiError.new_from_details('RoutingApiUnavailable')
+        rescue RoutingApi::Client::UaaUnavailable
+          raise Errors::ApiError.new_from_details('UaaUnavailable')
         end
         domain.router_group_types = rtr_grp.types unless rtr_grp.nil?
       end
