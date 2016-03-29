@@ -798,4 +798,81 @@ describe 'Apps' do
       })
     end
   end
+
+  describe 'PUT /v3/apps/:guid/current_droplet' do
+    it 'assigns the current droplet of the app' do
+      stack = VCAP::CloudController::Stack.make(name: 'stack-name')
+      app_model = VCAP::CloudController::AppModel.make(
+        :buildpack,
+        name:                  'my_app',
+        space:                 space,
+        desired_state:         'STOPPED',
+      )
+      app_model.lifecycle_data.buildpack = 'http://example.com/git'
+      app_model.lifecycle_data.stack     = stack.name
+      app_model.lifecycle_data.save
+
+      droplet = VCAP::CloudController::DropletModel.make(
+        app: app_model,
+        process_types: { web: 'rackup' },
+        state: VCAP::CloudController::DropletModel::STAGED_STATE
+      )
+
+      droplet_request = {
+        droplet_guid: droplet.guid
+      }
+
+      put "/v3/apps/#{app_model.guid}/current_droplet", droplet_request, user_header
+
+      expected_response = {
+        'name'                    => 'my_app',
+        'guid'                    => app_model.guid,
+        'desired_state'           => 'STOPPED',
+        'total_desired_instances' => 1,
+        'environment_variables'   => {},
+        'created_at'              => iso8601,
+        'updated_at'              => iso8601,
+        'lifecycle'               => {
+          'type' => 'buildpack',
+          'data' => {
+            'buildpack' => 'http://example.com/git',
+            'stack'     => 'stack-name',
+          }
+        },
+        'links' => {
+          'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
+          'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
+          'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
+          'droplet'                => { 'href' => "/v3/droplets/#{droplet.guid}" },
+          'droplets'               => { 'href' => "/v3/apps/#{app_model.guid}/droplets" },
+          'tasks'                  => { 'href' => "/v3/apps/#{app_model.guid}/tasks" },
+          'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
+          'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
+          'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
+        }
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+
+      event = VCAP::CloudController::Event.where(actor: user.guid).first
+      expect(event.values).to include({
+        type:              'audit.app.droplet_mapped',
+        actee:             app_model.guid,
+        actee_type:        'v3-app',
+        actee_name:        'my_app',
+        actor:             user.guid,
+        actor_type:        'user',
+        space_guid:        space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(event.metadata).to eq({ 'request' => { 'droplet_guid' => droplet.guid } })
+
+      expect(app_model.reload.processes).not_to be_empty
+    end
+  end
 end
