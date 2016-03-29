@@ -17,6 +17,7 @@ includes:
   - apps/get
   - apps/update
   - apps/start
+  - apps/stop
   - apps/delete
   - apps/list
   - apps/tasks/get

@@ -25,7 +25,7 @@ Example Response
 ```http
 HTTP/1.1 200 OK
 
-<%= yield_content :started_app %>
+<%= yield_content :app_with_state, 'STARTED' %>
 ```
 
 This endpoint starts running the app.

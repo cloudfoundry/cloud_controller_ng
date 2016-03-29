@@ -501,7 +501,7 @@ describe 'Apps' do
         :buildpack,
         name:                  'app-name',
         space:                 space,
-        desired_state:         'STARTED',
+        desired_state:         'STOPPED',
       )
 
       app_model.lifecycle_data.buildpack = 'http://example.com/git'
@@ -553,6 +553,75 @@ describe 'Apps' do
       expect(event.values).to include({
         type:              'audit.app.start',
         actee:             app_model.guid,
+        actee_type:        'v3-app',
+        actee_name:        'app-name',
+        actor:             user.guid,
+        actor_type:        'user',
+        space_guid:        space.guid,
+        organization_guid: space.organization.guid,
+      })
+    end
+  end
+
+  describe 'PUT /v3/apps/:guid/stop' do
+    it 'stops the app' do
+      stack     = VCAP::CloudController::Stack.make(name: 'stack-name')
+      app_model = VCAP::CloudController::AppModel.make(
+        :buildpack,
+        name:                  'app-name',
+        space:                 space,
+        desired_state:         'STARTED',
+      )
+
+      app_model.lifecycle_data.buildpack = 'http://example.com/git'
+      app_model.lifecycle_data.stack     = stack.name
+      app_model.lifecycle_data.save
+
+      droplet = VCAP::CloudController::DropletModel.make(:buildpack, app: app_model, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+      app_model.droplet = droplet
+      app_model.save
+
+      put "/v3/apps/#{app_model.guid}/stop", nil, user_header
+
+      expected_response = {
+        'name'                    => 'app-name',
+        'guid'                    => app_model.guid,
+        'desired_state'           => 'STOPPED',
+        'total_desired_instances' => 0,
+        'created_at'              => iso8601,
+        'updated_at'              => iso8601,
+        'environment_variables'   => {},
+        'lifecycle'               => {
+          'type' => 'buildpack',
+          'data' => {
+            'buildpack' => 'http://example.com/git',
+            'stack'     => 'stack-name',
+          }
+        },
+        'links' => {
+          'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
+          'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
+          'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
+          'droplet'                => { 'href' => "/v3/droplets/#{droplet.guid}" },
+          'droplets'               => { 'href' => "/v3/apps/#{app_model.guid}/droplets" },
+          'tasks'                  => { 'href' => "/v3/apps/#{app_model.guid}/tasks" },
+          'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
+          'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
+          'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
+        }
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type:              'audit.app.stop',
+        actee:              app_model.guid,
         actee_type:        'v3-app',
         actee_name:        'app-name',
         actor:             user.guid,

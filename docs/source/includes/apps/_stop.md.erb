@@ -1,0 +1,33 @@
+## Stop an app
+
+```
+Definition
+```
+
+```http
+PUT /v3/apps/:guid/stop HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/apps/[guid]/stop" \
+  -X PUT \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :app_with_state, 'STOPPED' %>
+```
+
+This endpoint stops a running app.
+
+
