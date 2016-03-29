@@ -33,7 +33,7 @@ Lifecycle objects describe buildpacks or docker images.
     </h4>
 
     <p class="method-list-item-description">
-      The root filesystem to use with the buildpack, for example `cflinuxfs2`
+      The root filesystem to use with the buildpack, for example "cflinuxfs2"
     </p>
   </li>
 </ul>
