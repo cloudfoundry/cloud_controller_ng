@@ -298,4 +298,18 @@ describe 'Droplets' do
       expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
+
+  describe 'DELETE /v3/droplets/:guid' do
+    let!(:droplet) do
+      VCAP::CloudController::DropletModel.make(:buildpack, app_guid: app_model.guid)
+    end
+
+    example 'Delete a Droplet' do
+      expect {
+        delete "/v3/droplets/#{droplet.guid}", nil, developer_headers
+      }.to change { VCAP::CloudController::DropletModel.count }.by(-1)
+      expect(last_response.status).to eq(204)
+      expect(VCAP::CloudController::DropletModel.find(guid: droplet.guid)).to be_nil
+    end
+  end
 end
