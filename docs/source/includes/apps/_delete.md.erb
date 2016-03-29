@@ -1,11 +1,11 @@
-## Get an App
+## Delete an app
 
 ```
 Definition
 ```
 
 ```http
-GET /v3/apps/:guid HTTP/1.1
+DELETE /v3/apps/:guid HTTP/1.1
 ```
 
 ```
@@ -14,7 +14,7 @@ Example Request
 
 ```shell
 curl "https://api.[your-domain.com]/v3/apps/[guid]" \
-  -X GET \
+  -X DELETE \
   -H "Authorization: bearer [token]"
 ```
 
@@ -23,10 +23,7 @@ Example Response
 ```
 
 ```http
-HTTP/1.1 200 OK
-
-<%= yield_content :list_app, '/v3/apps' %>
+HTTP/1.1 204 No Content
 ```
 
-This endpoint retrieves a specific app.
-
+This endpoint deletes an app.

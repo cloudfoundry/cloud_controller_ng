@@ -3,72 +3,75 @@
   "pagination": {
     "total_results": 3,
     "first": {
-      "href": "<%= base_url %>?order_by=-created_at&page=1&per_page=2"
+      "href": "<%= base_url %>?page=1&per_page=2"
     },
     "last": {
-      "href": "<%= base_url %>?order_by=-created_at&page=2&per_page=2"
+      "href": "<%= base_url %>?page=2&per_page=2"
     },
     "next": {
-      "href": "<%= base_url %>?order_by=-created_at&page=2&per_page=2"
+      "href": "<%= base_url %>?page=2&per_page=2"
     },
     "previous": null
   },
   "resources": [
     {
-      "guid": "guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66",
-      "name": "my_app3",
-      "desired_state": "STOPPED",
-      "total_desired_instances": 0,
-      "created_at": "1970-01-01T00:00:03Z",
-      "updated_at": null,
+      "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446",
+      "name": "my_app",
+      "desired_state": "STARTED",
+      "total_desired_instances": 3,
+      "created_at": "2016-03-17T21:41:30Z",
+      "updated_at": "2016-03-18T11:32:30Z",
       "lifecycle": {
         "type": "buildpack",
         "data": {
-          "buildpack": "name-2396",
-          "stack": "name-2397"
+          "buildpack": "java_buildpack",
+          "stack": "cflinuxfs2"
         }
       },
       "environment_variables": {
-        "magic": "beautiful"
+        "HTTP_PROXY": "http://proxy.example.com"
       },
       "links": {
         "self": {
-          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66"
+          "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
         },
         "space": {
-          "href": "/v2/spaces/1e9ab435-c477-41dd-bc5d-6d825f790c70"
+          "href": "/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
         },
         "processes": {
-          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/processes"
+          "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
         },
         "route_mappings": {
-          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/route_mappings"
+          "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
         },
         "packages": {
-          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/packages"
+          "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
+        },
+        "droplet": {
+          "href": "/v3/droplets/98fa704c-6703-418d-9fec-0dbfffa2186e"
         },
         "droplets": {
-          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/droplets"
+          "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
         },
         "tasks": {
-          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/tasks"
+          "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
         },
         "start": {
-          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/start",
+          "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
           "method": "PUT"
         },
         "stop": {
-          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/stop",
+          "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
           "method": "PUT"
         },
         "assign_current_droplet": {
-          "href": "<%= base_url %>/guid-07c8a7aa-beb2-4940-9afe-0be42c2a6d66/current_droplet",
+          "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/current_droplet",
           "method": "PUT"
         }
       }
     },
     {
-      "guid": "guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8",
+      "guid": "02b4ec9b-94c7-4468-9c23-4e906191a0f8",
       "name": "my_app2",
       "desired_state": "STOPPED",
       "total_desired_instances": 0,
@@ -77,45 +80,43 @@
       "lifecycle": {
         "type": "buildpack",
         "data": {
-          "buildpack": "name-2394",
-          "stack": "name-2395"
+          "buildpack": "ruby_buildpack",
+          "stack": "cflinuxfs2"
         }
       },
-      "environment_variables": {
-
-      },
+      "environment_variables": {},
       "links": {
         "self": {
-          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8"
+          "href": "<%= base_url %>/02b4ec9b-94c7-4468-9c23-4e906191a0f8"
         },
         "space": {
-          "href": "/v2/spaces/1e9ab435-c477-41dd-bc5d-6d825f790c70"
+          "href": "/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
         },
         "processes": {
-          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/processes"
+          "href": "<%= base_url %>/02b4ec9b-94c7-4468-9c23-4e906191a0f8/processes"
         },
         "route_mappings": {
-          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/route_mappings"
+          "href": "<%= base_url %>/02b4ec9b-94c7-4468-9c23-4e906191a0f8/route_mappings"
         },
         "packages": {
-          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/packages"
+          "href": "<%= base_url %>/02b4ec9b-94c7-4468-9c23-4e906191a0f8/packages"
         },
         "droplets": {
-          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets"
+          "href": "<%= base_url %>/02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets"
         },
         "tasks": {
-          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/tasks"
+          "href": "<%= base_url %>/02b4ec9b-94c7-4468-9c23-4e906191a0f8/tasks"
         },
         "start": {
-          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/start",
+          "href": "<%= base_url %>/02b4ec9b-94c7-4468-9c23-4e906191a0f8/start",
           "method": "PUT"
         },
         "stop": {
-          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/stop",
+          "href": "<%= base_url %>/02b4ec9b-94c7-4468-9c23-4e906191a0f8/stop",
           "method": "PUT"
         },
         "assign_current_droplet": {
-          "href": "<%= base_url %>/guid-02b4ec9b-94c7-4468-9c23-4e906191a0f8/current_droplet",
+          "href": "<%= base_url %>/02b4ec9b-94c7-4468-9c23-4e906191a0f8/current_droplet",
           "method": "PUT"
         }
       }
@@ -124,66 +125,7 @@
 }
 <% end %>
 
-<% content_for :list_app do |base_url| %>
-{
-  "guid": "guid-e9627412-85ef-459d-bb28-809a1386b04c",
-  "name": "my_app",
-  "desired_state": "STOPPED",
-  "total_desired_instances": 3,
-  "created_at": "2016-03-17T21:41:30Z",
-  "updated_at": null,
-  "lifecycle": {
-    "type": "buildpack",
-    "data": {
-      "buildpack": "name-2441",
-      "stack": "name-2442"
-    }
-  },
-  "environment_variables": {
-    "unicorn": "horn"
-  },
-  "links": {
-    "self": {
-      "href": "<%= base_url %>/guid-e9627412-85ef-459d-bb28-809a1386b04c"
-    },
-    "space": {
-      "href": "/v2/spaces/3c9df48a-06d5-4d00-9c2e-067cded7ed38"
-    },
-    "processes": {
-      "href": "<%= base_url %>/guid-e9627412-85ef-459d-bb28-809a1386b04c/processes"
-    },
-    "route_mappings": {
-      "href": "<%= base_url %>/guid-e9627412-85ef-459d-bb28-809a1386b04c/route_mappings"
-    },
-    "packages": {
-      "href": "<%= base_url %>/guid-e9627412-85ef-459d-bb28-809a1386b04c/packages"
-    },
-    "droplet": {
-      "href": "/v3/droplets/a-droplet-guid"
-    },
-    "droplets": {
-      "href": "<%= base_url %>/guid-e9627412-85ef-459d-bb28-809a1386b04c/droplets"
-    },
-    "tasks": {
-      "href": "<%= base_url %>/guid-e9627412-85ef-459d-bb28-809a1386b04c/tasks"
-    },
-    "start": {
-      "href": "<%= base_url %>/guid-e9627412-85ef-459d-bb28-809a1386b04c/start",
-      "method": "PUT"
-    },
-    "stop": {
-      "href": "<%= base_url %>/guid-e9627412-85ef-459d-bb28-809a1386b04c/stop",
-      "method": "PUT"
-    },
-    "assign_current_droplet": {
-      "href": "<%= base_url %>/guid-e9627412-85ef-459d-bb28-809a1386b04c/current_droplet",
-      "method": "PUT"
-    }
-  }
-}
-<% end %>
-
-<% content_for :create_app do |base_url| %>
+<% content_for :single_app do %>
 {
   "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446",
   "name": "my_app",
@@ -194,103 +136,106 @@
   "lifecycle": {
     "type": "buildpack",
     "data": {
-      "buildpack": "name-2446",
-      "stack": "default-stack-name"
+      "buildpack": "java_buildpack",
+      "stack": "cflinuxfs2"
     }
   },
   "environment_variables": {
-    "open": "source"
+    "HTTP_PROXY": "http://proxy.example.com"
   },
   "links": {
     "self": {
-      "href": "<%= base_url %>/1cb006ee-fb05-47e1-b541-c34179ddc446"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
     },
     "space": {
-      "href": "/v2/spaces/7d3c05f1-aa8d-44cd-af6f-06e2ab1fccc1"
+      "href": "/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
     },
     "processes": {
-      "href": "<%= base_url %>/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
     },
     "route_mappings": {
-      "href": "<%= base_url %>/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
     },
     "packages": {
-      "href": "<%= base_url %>/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
     },
     "droplets": {
-      "href": "<%= base_url %>/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
     },
     "tasks": {
-      "href": "<%= base_url %>/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
     },
     "start": {
-      "href": "<%= base_url %>/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
       "method": "PUT"
     },
     "stop": {
-      "href": "<%= base_url %>/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
       "method": "PUT"
     },
     "assign_current_droplet": {
-      "href": "<%= base_url %>/1cb006ee-fb05-47e1-b541-c34179ddc446/current_droplet",
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/current_droplet",
       "method": "PUT"
     }
   }
 }
 <% end %>
 
-<% content_for :update_app do |base_url| %>
+<% content_for :started_app do %>
 {
-  "guid": "guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0",
-  "name": "new_name",
-  "desired_state": "STOPPED",
-  "total_desired_instances": 0,
+  "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446",
+  "name": "my_app",
+  "desired_state": "STARTED",
+  "total_desired_instances": 3,
   "created_at": "2016-03-17T21:41:30Z",
-  "updated_at": "2016-03-17T21:41:30Z",
+  "updated_at": "2016-03-18T11:32:30Z",
   "lifecycle": {
     "type": "buildpack",
     "data": {
-      "buildpack": "http://gitwheel.org/my-app",
-      "stack": "redhat"
+      "buildpack": "java_buildpack",
+      "stack": "cflinuxfs2"
     }
   },
   "environment_variables": {
-    "MY_ENV_VAR": "foobar",
-    "FOOBAR": "MY_ENV_VAR"
+    "HTTP_PROXY": "http://proxy.example.com"
   },
   "links": {
     "self": {
-      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
     },
     "space": {
-      "href": "/v2/spaces/80a9166a-4aec-4a83-b743-145b4fcd33cc"
+      "href": "/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
     },
     "processes": {
-      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/processes"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
     },
     "route_mappings": {
-      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/route_mappings"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
     },
     "packages": {
-      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/packages"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
+    },
+    "droplet": {
+      "href": "/v3/droplets/98fa704c-6703-418d-9fec-0dbfffa2186e"
     },
     "droplets": {
-      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/droplets"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
     },
     "tasks": {
-      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/tasks"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
     },
     "start": {
-      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/start",
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
       "method": "PUT"
     },
     "stop": {
-      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/stop",
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
       "method": "PUT"
     },
     "assign_current_droplet": {
-      "href": "<%= base_url %>/guid-deb01706-9aeb-4fc2-a553-bbf77cdd8ee0/current_droplet",
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/current_droplet",
       "method": "PUT"
     }
   }
-}<% end %>
+}
+<% end %>

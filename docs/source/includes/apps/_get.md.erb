@@ -1,0 +1,32 @@
+## Get an app
+
+```
+Definition
+```
+
+```http
+GET /v3/apps/:guid HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/apps/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :single_app %>
+```
+
+This endpoint retrieves an app.
+

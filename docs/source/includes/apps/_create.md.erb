@@ -1,4 +1,4 @@
-## Create an application
+## Create an app
 
 ```
 Definition
@@ -15,25 +15,24 @@ Example Request
 ```shell
 curl "https://api.[your-domain.com]/v3/apps" \
   -X POST \
-  -H "Authorization: bearer [token]"
+  -H "Authorization: bearer [token]" \
   -d '{
-        "name": "my_app",
-        "environment_variables": {
-          "open":"source"
-        },
-        "lifecycle": {
-          "type": "buildpack",
-          "data": {
-            "stack": null,
-            "buildpack": "name-2446"
-          }
-        },
-        "relationships": {
-          "space": {
-            "guid":"7d3c05f1-aa8d-44cd-af6f-06e2ab1fccc1"
-          }
-        }
-      }'
+    "name": "my_app",
+    "environment_variables": {
+      "HTTP_PROXY": "http://proxy.example.com"
+    },
+    "lifecycle": {
+      "type": "buildpack",
+      "data": {
+        "buildpack": "java_buildpack"
+      }
+    },
+    "relationships": {
+      "space": {
+        "guid": "2f35885d-0c9d-4423-83ad-fd05066f8576"
+      }
+    }
+  }'
 ```
 
 ```
@@ -43,11 +42,11 @@ Example Response
 ```http
 HTTP/1.1 201 Created
 
-<%= yield_content :create_app, '/v3/apps' %>
+<%= yield_content :single_app %>
 ```
-Creates an app in v3 of the Cloud Controller API. Apps must have a valid space guid for creation, which is namespaced under {"relationships": {"space": "your-space-guid"} }. See the example for more information.
+This endpoint creates a new app.
 
-### Query Parameters
+### Body Parameters
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -55,7 +54,6 @@ Creates an app in v3 of the Cloud Controller API. Apps must have a valid space g
       name
 
       <span class="method-list-item-type method-list-item-type-required">required</span>
-      <span class="method-list-item-type">string</span>
     </h4>
 
     <p class="method-list-item-description">Name of the App</p>

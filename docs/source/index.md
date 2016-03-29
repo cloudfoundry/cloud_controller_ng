@@ -13,11 +13,11 @@ includes:
   - api_resources/service_bindings
   - general/header
   - apps/header
-  - apps/create_app
-  - apps/delete_app
-  - apps/update_app
-  - apps/list_all
-  - apps/get_app
+  - apps/create
+  - apps/get
+  - apps/update
+  - apps/delete
+  - apps/list
   - apps/tasks/get
   - apps/tasks/list
   - apps/tasks/cancel
