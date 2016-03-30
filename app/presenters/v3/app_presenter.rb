@@ -46,19 +46,13 @@ module VCAP::CloudController
     end
 
     def env_hash(app)
+      vars_builder = VCAP::VarsBuilder.new(
+        app,
+        file_descriptors: Config.config[:instance_file_descriptor_limit] || 16384
+      )
+
       vcap_application = {
-        'VCAP_APPLICATION' => {
-          limits: {
-            fds: Config.config[:instance_file_descriptor_limit] || 16384,
-          },
-          application_name: app.name,
-          application_uris: app.routes.map(&:fqdn),
-          name: app.name,
-          space_name: app.space.name,
-          space_id: app.space.guid,
-          uris: app.routes.map(&:fqdn),
-          users: nil
-        }
+        'VCAP_APPLICATION' => vars_builder.vcap_application
       }
 
       {

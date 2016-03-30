@@ -137,6 +137,7 @@ module VCAP::CloudController
 
         expect(result['environment_variables']).to eq(app_model.environment_variables)
         expect(result['application_env_json']['VCAP_APPLICATION']['name']).to eq(app_model.name)
+        expect(result['application_env_json']['VCAP_APPLICATION']['limits']['fds']).to eq(16384)
         expect(result['system_env_json']['VCAP_SERVICES']['rabbit'][0]['name']).to eq('rabbit-instance')
         expect(result['staging_env_json']).to eq({})
         expect(result['running_env_json']).to eq({})
