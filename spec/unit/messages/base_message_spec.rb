@@ -38,6 +38,12 @@ module VCAP::CloudController
         response = message.audit_hash
         expect(response).to eq({ 'field1' => 'value1', 'field2' => { 'subfield' => 'subfield' } })
       end
+
+      it 'excludes keys' do
+        message  = AuditMessage.new({ field1: 'value1', field2: { 'subfield' => 'subfield' } })
+        response = message.audit_hash(exclude: [:field2])
+        expect(response).to eq({ 'field1' => 'value1' })
+      end
     end
 
     describe '#to_param_hash' do

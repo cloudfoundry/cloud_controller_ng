@@ -20,9 +20,10 @@ module VCAP::CloudController
       requested_keys.include?(key)
     end
 
-    def audit_hash
+    def audit_hash(exclude: [])
       request = {}
       requested_keys.each do |key|
+        next if exclude.include?(key)
         request[key.to_s] = self.try(key)
       end
       request
