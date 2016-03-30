@@ -352,27 +352,6 @@ module VCAP::CloudController
     end
     alias_method_chain :docker_credentials_json, 'serialization'
 
-    def vcap_application
-      app_name = app.nil? ? name : app.name
-      {
-        limits: {
-          mem: memory,
-          disk: disk_quota,
-          fds: file_descriptors
-        },
-        application_id: guid,
-        application_version: version,
-        application_name: app_name,
-        application_uris: uris,
-        version: version,
-        name: name,
-        space_name: space.name,
-        space_id: space_guid,
-        uris: uris,
-        users: nil
-      }
-    end
-
     def database_uri
       service_uris = service_bindings.map { |binding| binding.credentials['uri'] }.compact
       DatabaseUriGenerator.new(service_uris).database_uri
