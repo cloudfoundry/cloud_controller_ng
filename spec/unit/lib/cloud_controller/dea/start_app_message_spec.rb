@@ -1,4 +1,5 @@
 require 'spec_helper'
+require_relative '../../../../../lib/vcap/vars_builder'
 
 module VCAP::CloudController
   describe Dea::StartAppMessage do
@@ -41,8 +42,9 @@ module VCAP::CloudController
         expect(res[:egress_network_rules]).to eq([])
         expect(res[:stack]).to eq(app.stack.name)
 
-        expect(app.vcap_application).to be
-        expect(res[:vcap_application]).to eql(app.vcap_application)
+        vars_builder = VCAP::VarsBuilder.new(app)
+        vcap_application = vars_builder.vcap_application
+        expect(res[:vcap_application]).to eql(vcap_application)
 
         expect(res[:index]).to eq(1)
       end

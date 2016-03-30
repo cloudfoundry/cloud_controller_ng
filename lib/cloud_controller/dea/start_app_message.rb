@@ -46,7 +46,11 @@ module VCAP::CloudController
         self[:debug]                = app.debug
         self[:start_command]        = app.command
         self[:health_check_timeout] = app.health_check_timeout
-        self[:vcap_application]     = app.vcap_application
+
+        vars_builder = VCAP::VarsBuilder.new(app)
+        vcap_application = vars_builder.vcap_application
+        self[:vcap_application]     = vcap_application
+
         self[:index]                = index
         self[:egress_network_rules] = EgressNetworkRulesPresenter.new(app.space.security_groups).to_array
       end
