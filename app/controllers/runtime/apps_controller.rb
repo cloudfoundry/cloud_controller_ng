@@ -160,6 +160,15 @@ module VCAP::CloudController
       if should_warn_about_changed_ports?(app.diego, updated_diego_flag, ports)
         add_warning('App ports have changed but are unknown. The app should now listen on the port specified by environment variable PORT.')
       end
+      return if request_attrs['route'].blank?
+      route = Route.find(guid: request_attrs['route'])
+      begin
+        RouteMappingValidator.new(route, app).validate
+      rescue RouteMappingValidator::RouteInvalidError
+        raise Errors::ApiError.new_from_details('RouteNotFound', request_attrs['route_guid'])
+      rescue RouteMappingValidator::TcpRoutingDisabledError
+        raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
+      end
     end
 
     def ignore_empty_ports!

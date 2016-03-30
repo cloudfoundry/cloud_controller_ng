@@ -112,8 +112,8 @@ module VCAP::CloudController
           it 'returns with a NotFound error' do
             post '/v2/route_mappings', body, headers_for(developer)
 
-            expect(last_response).to have_status_code(400)
-            expect(decoded_response['description']).to include('Could not find VCAP::CloudController::App')
+            expect(last_response).to have_status_code(404)
+            expect(decoded_response['description']).to include('The app could not be found')
           end
         end
 
@@ -128,8 +128,8 @@ module VCAP::CloudController
           it 'returns with a NotFound error' do
             post '/v2/route_mappings', body, headers_for(developer)
 
-            expect(last_response).to have_status_code(400)
-            expect(decoded_response['description']).to include('Could not find VCAP::CloudController::Route')
+            expect(last_response).to have_status_code(404)
+            expect(decoded_response['description']).to include('The route could not be found')
           end
         end
 
@@ -361,6 +361,29 @@ module VCAP::CloudController
               expect(decoded_response['code']).to eq(210006)
               expect(decoded_response['description']).to_not include('port')
             end
+          end
+        end
+
+        context 'when the Routing API is not enabled' do
+          let(:tcp_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: 'guid_1') }
+          let(:tcp_route) { Route.make(port: 9090, host: '', space: space, domain: tcp_domain) }
+          let(:app_obj) { AppFactory.make(space: space, ports: [9090], diego: true) }
+          let(:space_developer) { make_developer_for_space(space) }
+          let(:body) do
+            {
+                app_guid: app_obj.guid,
+                route_guid: tcp_route.guid
+            }.to_json
+          end
+
+          before do
+            TestConfig.override(routing_api: nil)
+          end
+
+          it 'returns 403' do
+            post '/v2/route_mappings', body, headers_for(space_developer)
+            expect(last_response).to have_status_code(403)
+            expect(decoded_response['description']).to include('Support for TCP routing is disabled')
           end
         end
       end

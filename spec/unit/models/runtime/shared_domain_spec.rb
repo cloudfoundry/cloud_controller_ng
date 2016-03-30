@@ -76,6 +76,24 @@ module VCAP::CloudController
       end
     end
 
+    describe '#tcp?' do
+      context 'when shared domain is a tcp domain' do
+        let(:shared_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: '123') }
+
+        it 'returns true' do
+          expect(shared_domain.tcp?).to be_truthy
+        end
+      end
+
+      context 'when shared domain is not a tcp domain' do
+        let(:shared_domain) { SharedDomain.make(name: 'tcp.com') }
+
+        it 'returns false' do
+          expect(shared_domain.tcp?).to eq(false)
+        end
+      end
+    end
+
     describe 'addable_to_organization!' do
       it 'does not raise error' do
         expect { subject.addable_to_organization!(Organization.new) }.to_not raise_error

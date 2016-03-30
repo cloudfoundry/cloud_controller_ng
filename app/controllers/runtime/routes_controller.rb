@@ -214,10 +214,18 @@ module VCAP::CloudController
 
     def before_update(route)
       super
-
-      return if request_attrs['app']
-
-      validate_route(route.domain.guid) if request_attrs['port'] != route.port
+      if request_attrs['app'].nil?
+        validate_route(route.domain.guid) if request_attrs['port'] != route.port
+      else
+        app = App.find(guid: request_attrs['app'])
+        begin
+          RouteMappingValidator.new(route, app).validate
+        rescue RouteMappingValidator::AppInvalidError
+          raise Errors::ApiError.new_from_details('AppNotFound', request_attrs['app'])
+        rescue RouteMappingValidator::TcpRoutingDisabledError
+          raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
+        end
+      end
     end
 
     def after_update(route)

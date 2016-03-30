@@ -621,6 +621,30 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when associating with route' do
+        let(:domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: 'guid_1') }
+        let(:route) { Route.make(space: app_obj.space, domain: domain, port: 9090, host: '') }
+
+        it 'allows updating app' do
+          put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil, json_headers(admin_headers)
+
+          expect(last_response).to have_status_code(201)
+          expect(app_obj.reload.routes.first).to eq(route)
+        end
+
+        context 'when routing api is not enabled' do
+          before do
+            TestConfig.override(routing_api: nil)
+          end
+
+          it 'returns 403' do
+            put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil, json_headers(admin_headers)
+            expect(last_response).to have_status_code(403)
+            expect(decoded_response['description']).to include('Support for TCP routing is disabled')
+          end
+        end
+      end
     end
 
     describe 'delete an app' do

@@ -24,6 +24,22 @@ module VCAP::CloudController
       end
     end
 
+    def before_create
+      super
+
+      route = Route.find(guid: request_attrs['route_guid'])
+      app = App.find(guid: request_attrs['app_guid'])
+      begin
+        RouteMappingValidator.new(route, app).validate
+      rescue RouteMappingValidator::AppInvalidError
+        raise Errors::ApiError.new_from_details('AppNotFound', request_attrs['app_guid'])
+      rescue RouteMappingValidator::RouteInvalidError
+        raise Errors::ApiError.new_from_details('RouteNotFound', request_attrs['route_guid'])
+      rescue RouteMappingValidator::TcpRoutingDisabledError
+        raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
+      end
+    end
+
     def after_create(route_mapping)
       super
       app_guid = request_attrs['app_guid']

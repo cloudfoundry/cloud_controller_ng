@@ -43,6 +43,10 @@ module VCAP::CloudController
       true
     end
 
+    def tcp?
+      self.router_group_guid.present?
+    end
+
     def addable_to_organization!(organization)
     end
 

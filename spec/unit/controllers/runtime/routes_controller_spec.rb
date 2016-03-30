@@ -651,7 +651,7 @@ module VCAP::CloudController
       describe 'tcp routes' do
         let(:port) { 18000 }
         let(:new_port) { 18001 }
-        let(:route) { Route.make(space: space, domain: domain, port: port) }
+        let(:route) { Route.make(space: space, domain: domain, port: port, host: '') }
         let(:req) { {
           port: new_port,
         } }
@@ -677,11 +677,23 @@ module VCAP::CloudController
           let(:req) { '' }
           let(:app_obj) { AppFactory.make(space: route.space) }
 
-          it 'allows updating route' do
+          it 'creates a route mapping' do
             put "/v2/routes/#{route.guid}/apps/#{app_obj.guid}", MultiJson.dump(req), headers_for(user)
 
             expect(last_response).to have_status_code(201)
             expect(app_obj.reload.routes.first).to eq(route)
+          end
+
+          context 'when routing api is not enabled' do
+            before do
+              TestConfig.override(routing_api: nil)
+            end
+
+            it 'returns 403' do
+              put "/v2/routes/#{route.guid}/apps/#{app_obj.guid}", MultiJson.dump(req), headers_for(user)
+              expect(last_response).to have_status_code(403)
+              expect(decoded_response['description']).to include('Support for TCP routing is disabled')
+            end
           end
         end
 
