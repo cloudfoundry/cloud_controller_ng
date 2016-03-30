@@ -150,11 +150,11 @@ describe 'Route Mappings' do
     end
   end
 
-  describe 'DELETE /v3/apps/:app_guid/route_mappings/:route_mapping_guid' do
+  describe 'DELETE /v3/route_mappings/:route_mapping_guid' do
     let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'buckeyes') }
 
     it 'deletes the specified route mapping' do
-      delete "/v3/apps/#{app_model.guid}/route_mappings/#{route_mapping.guid}", {}, developer_headers
+      delete "/v3/route_mappings/#{route_mapping.guid}", nil, developer_headers
 
       # verify response
       expect(last_response.status).to eq(204)

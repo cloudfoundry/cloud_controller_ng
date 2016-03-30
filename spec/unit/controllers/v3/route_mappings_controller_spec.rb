@@ -381,16 +381,6 @@ describe RouteMappingsController, type: :controller do
       end
     end
 
-    context 'when the app does not exist' do
-      it 'raises an API 404 error' do
-        delete :destroy, app_guid: 'not-exist', route_mapping_guid: route_mapping.guid
-
-        expect(response.body).to include 'ResourceNotFound'
-        expect(response.body).to include 'App not found'
-        expect(response.status).to eq 404
-      end
-    end
-
     context 'when the route mapping does not exist' do
       it 'raises an API 404 error' do
         delete :destroy, app_guid: app.guid, route_mapping_guid: 'not-real'
