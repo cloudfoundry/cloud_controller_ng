@@ -43,6 +43,7 @@ Rails.application.routes.draw do
 
   # route_mappings
   post '/route_mappings', to: 'route_mappings#create'
+  get '/route_mappings', to: 'route_mappings#index'
   get '/route_mappings/:route_mapping_guid', to: 'route_mappings#show'
   delete '/route_mappings/:route_mapping_guid', to: 'route_mappings#destroy'
   get '/apps/:app_guid/route_mappings', to: 'route_mappings#index'

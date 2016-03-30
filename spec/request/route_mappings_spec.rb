@@ -71,6 +71,59 @@ describe 'Route Mappings' do
     end
   end
 
+  describe 'GET /v3/route_mappings' do
+    let!(:route_mapping1) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route) }
+    let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'worker') }
+    let!(:route_mapping3) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'other') }
+    let!(:route_mapping4) { VCAP::CloudController::RouteMappingModel.make }
+
+    it 'retrieves all the route mappings the user has access to' do
+      get '/v3/route_mappings?per_page=2', {}, developer_headers
+
+      expected_response = {
+        'pagination' => {
+          'total_results' => 3,
+          'first'         => { 'href' => '/v3/route_mappings?page=1&per_page=2' },
+          'last'          => { 'href' => '/v3/route_mappings?page=2&per_page=2' },
+          'next'          => { 'href' => '/v3/route_mappings?page=2&per_page=2' },
+          'previous'      => nil
+        },
+        'resources' => [
+          {
+            'guid'       => route_mapping1.guid,
+            'created_at' => iso8601,
+            'updated_at' => nil,
+
+            'links'      => {
+              'self'    => { 'href' => "/v3/route_mappings/#{route_mapping1.guid}" },
+              'app'     => { 'href' => "/v3/apps/#{app_model.guid}" },
+              'route'   => { 'href' => "/v2/routes/#{route.guid}" },
+              'process' => { 'href' => "/v3/apps/#{app_model.guid}/processes/web" }
+            }
+          },
+          {
+            'guid'       => route_mapping2.guid,
+            'created_at' => iso8601,
+            'updated_at' => nil,
+
+            'links'      => {
+              'self'    => { 'href' => "/v3/route_mappings/#{route_mapping2.guid}" },
+              'app'     => { 'href' => "/v3/apps/#{app_model.guid}" },
+              'route'   => { 'href' => "/v2/routes/#{route.guid}" },
+              'process' => { 'href' => "/v3/apps/#{app_model.guid}/processes/worker" }
+            }
+          }
+        ]
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      # verify response
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
+
   describe 'GET /v3/route_mappings/:route_mapping_guid' do
     let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'worker') }
 

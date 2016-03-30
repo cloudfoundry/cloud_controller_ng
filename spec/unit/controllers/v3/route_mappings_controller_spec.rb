@@ -282,59 +282,76 @@ describe RouteMappingsController, type: :controller do
       @request.env.merge!(headers_for(VCAP::CloudController::User.make))
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
+
+      allow(membership).to receive(:space_guids_for_roles).with(
+        [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+         VCAP::CloudController::Membership::SPACE_MANAGER,
+         VCAP::CloudController::Membership::SPACE_AUDITOR,
+         VCAP::CloudController::Membership::ORG_MANAGER]
+      ).and_return([space.guid])
     end
 
     it 'returns route mappings the user has roles to see' do
-      route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app_guid: app.guid)
-      route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app_guid: app.guid)
+      route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app: VCAP::CloudController::AppModel.make(space: space))
+      route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app: VCAP::CloudController::AppModel.make(space: space))
       VCAP::CloudController::RouteMappingModel.make
 
-      get :index, app_guid: app.guid
+      get :index
 
       response_guids = parsed_body['resources'].map { |r| r['guid'] }
       expect(response.status).to eq(200)
       expect(response_guids).to match_array([route_mapping_1.guid, route_mapping_2.guid])
     end
 
-    context 'when the app does not exist' do
-      it 'raises an API 404 error' do
-        get :index, app_guid: 'bogus-guid'
-
-        expect(response.body).to include 'ResourceNotFound'
-        expect(response.body).to include 'App not found'
-        expect(response.status).to eq 404
-      end
+    it 'provides the correct base url in the pagination links' do
+      get :index
+      expect(parsed_body['pagination']['first']['href']).to include('/v3/route_mappings')
     end
 
-    context 'when the user is not one of the required roles' do
+    context 'when accessed as an app subresource' do
       before do
         allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-          and_return(false)
+          AppSubresource::ROLES_FOR_READING, app.space.guid, app.organization.guid).and_return(true)
       end
 
-      it 'raises an API 404 error' do
+      it 'uses the app as a filter' do
+        route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app: app)
+        route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app: app)
+        VCAP::CloudController::RouteMappingModel.make(app: VCAP::CloudController::AppModel.make(space: space))
+
         get :index, app_guid: app.guid
 
-        expect(response.status).to eq 404
-        expect(response.body).to include 'ResourceNotFound'
-        expect(response.body).to include 'App not found'
-      end
-    end
-
-    context 'when the user does not have read scope' do
-      before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response.status).to eq(200)
+        expect(response_guids).to match_array([route_mapping_1.guid, route_mapping_2.guid])
       end
 
-      it 'raises an ApiError with a 403 code' do
+      it 'provides the correct base url in the pagination links' do
         get :index, app_guid: app.guid
+        expect(parsed_body['pagination']['first']['href']).to include("/v3/apps/#{app.guid}/route_mappings")
+      end
 
-        expect(response.status).to eq 403
-        expect(response.body).to include 'NotAuthorized'
+      context 'the app does not exist' do
+        it 'returns a 404 Resource Not Found' do
+          get :index, app_guid: 'hello-i-do-not-exist'
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'App'
+        end
+      end
+
+      context 'when the user does not have permissions to read the app' do
+        before do
+          allow(membership).to receive(:has_any_roles?).with(
+            AppSubresource::ROLES_FOR_READING, app.space.guid, app.organization.guid).and_return(false)
+        end
+
+        it 'returns a 404 Resource Not Found error' do
+          get :index, app_guid: app.guid
+
+          expect(response.body).to include 'App'
+          expect(response.status).to eq 404
+        end
       end
     end
 
@@ -344,10 +361,29 @@ describe RouteMappingsController, type: :controller do
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
-      it 'succeeds' do
-        get :index, app_guid: app.guid
+      it 'lists all route_mappings' do
+        route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app_guid: app.guid)
+        route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app_guid: app.guid)
+        route_mapping_3 = VCAP::CloudController::RouteMappingModel.make
 
-        expect(response.status).to eq 200
+        get :index
+
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response.status).to eq(200)
+        expect(response_guids).to match_array([route_mapping_1.guid, route_mapping_2.guid, route_mapping_3.guid])
+      end
+    end
+
+    context 'when the user does not have read scope' do
+      before do
+        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))
+      end
+
+      it 'raises an ApiError with a 403 code' do
+        get :index
+
+        expect(response.status).to eq 403
+        expect(response.body).to include 'NotAuthorized'
       end
     end
   end
