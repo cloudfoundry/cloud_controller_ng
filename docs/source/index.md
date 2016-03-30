@@ -25,6 +25,7 @@ includes:
   - apps/delete
   - apps/list
   - droplets/header
+  - droplets/object
   - droplets/lifecycle_object
   - droplets/create
   - droplets/get
