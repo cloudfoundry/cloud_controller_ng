@@ -71,11 +71,11 @@ describe 'Route Mappings' do
     end
   end
 
-  describe 'GET /v3/apps/:app_guid/route_mappings/:route_mapping_guid' do
+  describe 'GET /v3/route_mappings/:route_mapping_guid' do
     let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'worker') }
 
     it 'retrieves the requests route mapping' do
-      get "/v3/apps/#{app_model.guid}/route_mappings/#{route_mapping.guid}", {}, developer_headers
+      get "/v3/route_mappings/#{route_mapping.guid}", nil, developer_headers
 
       expected_response = {
         'guid'       => route_mapping.guid,

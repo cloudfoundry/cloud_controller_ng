@@ -52,7 +52,7 @@ class RouteMappingsController < ApplicationController
   end
 
   def show
-    route_mapping = RouteMappingModel.where(guid: params[:route_mapping_guid]).first
+    route_mapping = RouteMappingModel.where(guid: params[:route_mapping_guid]).eager(:space, space: :organization).first
     route_mapping_not_found! unless route_mapping && can_read?(route_mapping.space.guid, route_mapping.space.organization.guid)
     render status: :ok, json: RouteMappingPresenter.new.present_json(route_mapping)
   end
