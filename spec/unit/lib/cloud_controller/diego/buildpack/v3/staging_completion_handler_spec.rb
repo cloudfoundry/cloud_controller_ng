@@ -7,7 +7,7 @@ module VCAP::CloudController
       module V3
         describe StagingCompletionHandler do
           let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
-          let(:buildpack) { VCAP::CloudController::Buildpack.make }
+          let(:buildpack) { VCAP::CloudController::Buildpack.make(name: 'INTERCAL') }
           let(:success_response) do
             {
               result: {
@@ -83,6 +83,7 @@ module VCAP::CloudController
                   expect(droplet.execution_metadata).to eq('black-box-string')
                   expect(droplet.process_types).to eq(data)
                   expect(droplet.buildpack_receipt_buildpack).to eq('INTERCAL')
+                  expect(droplet.buildpack_receipt_buildpack_guid).to eq(buildpack.guid)
                 end
 
                 context 'when process_types is empty' do
@@ -103,6 +104,7 @@ module VCAP::CloudController
                     staged_droplet.save
 
                     success_response[:result][:lifecycle_metadata][:detected_buildpack] = ''
+                    success_response[:result][:lifecycle_metadata][:buildpack_key] = ''
                   end
 
                   it 'uses the lifecycle data buildpack' do

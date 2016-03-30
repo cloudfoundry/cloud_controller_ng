@@ -153,6 +153,37 @@ module VCAP::CloudController
       end
     end
 
+    describe '#update_buildpack_receipt' do
+      let!(:droplet_model) { DropletModel.make(state: 'STAGED') }
+      let(:buildpack) { Buildpack.make }
+      let(:buildpack_key) { buildpack.key }
+
+      it 'updates the buildpack receipt with the new buildpack and buildpack guid' do
+        droplet_model.update_buildpack_receipt(buildpack_key)
+        droplet_model.reload
+
+        expect(droplet_model.buildpack_receipt_buildpack_guid).to eq(buildpack.guid)
+        expect(droplet_model.buildpack_receipt_buildpack).to eq(buildpack.name)
+      end
+
+      context 'when there is no detected buildpack' do
+        let(:old_buildpack) { Buildpack.make }
+        before do
+          droplet_model.update(
+            buildpack_receipt_buildpack_guid: old_buildpack.guid,
+            buildpack_receipt_buildpack: old_buildpack.name
+          )
+        end
+
+        it 'does not update the buildpack receipt' do
+          droplet_model.update_buildpack_receipt(nil)
+
+          expect(droplet_model.buildpack_receipt_buildpack_guid).to eq(old_buildpack.guid)
+          expect(droplet_model.buildpack_receipt_buildpack).to eq(old_buildpack.name)
+        end
+      end
+    end
+
     describe 'usage events' do
       it 'ensures we have coverage for all states' do
         expect(DropletModel::DROPLET_STATES.count).to eq(5), 'After adding a new state, tests for app usage event coverage should be added.'

@@ -53,6 +53,16 @@ module VCAP::CloudController
       end
     end
 
+    def update_buildpack_receipt(detected_buildpack_key)
+      detected_admin_buildpack = Buildpack.find(key: detected_buildpack_key)
+      if detected_admin_buildpack
+        update(
+          buildpack_receipt_buildpack_guid: detected_admin_buildpack.guid,
+          buildpack_receipt_buildpack: detected_admin_buildpack.name
+        )
+      end
+    end
+
     def self.user_visible(user)
       dataset.
         join(AppModel.table_name, :"#{AppModel.table_name}__guid" => :"#{DropletModel.table_name}__app_guid").

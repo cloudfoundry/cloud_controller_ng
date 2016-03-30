@@ -84,14 +84,15 @@ module VCAP::CloudController
 
           def save_staging_result(droplet, payload)
             lifecycle_data = payload[:result][:lifecycle_metadata]
-            buildpack      = lifecycle_data[:detected_buildpack]
-            buildpack      = droplet.buildpack_lifecycle_data.buildpack if buildpack.blank?
+            buildpack_key = lifecycle_data[:buildpack_key]
+            buildpack = droplet.buildpack_lifecycle_data.buildpack if buildpack_key.blank?
 
             droplet.class.db.transaction do
               droplet.lock!
               droplet.process_types               = payload[:result][:process_types]
               droplet.execution_metadata          = payload[:result][:execution_metadata]
-              droplet.buildpack_receipt_buildpack = buildpack
+              droplet.buildpack_receipt_buildpack = buildpack if buildpack
+              droplet.update_buildpack_receipt(buildpack_key) if buildpack_key
               droplet.mark_as_staged
               droplet.save_changes(raise_on_save_failure: true)
             end
