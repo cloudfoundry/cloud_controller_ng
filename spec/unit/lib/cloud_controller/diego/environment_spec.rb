@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'presenters/system_env_presenter'
+require_relative '../../../../../lib/vcap/vars_builder'
 
 module VCAP::CloudController::Diego
   describe Environment do
@@ -17,7 +18,9 @@ module VCAP::CloudController::Diego
     end
 
     it 'returns the correct environment hash for an application' do
-      vcap_app = app.vcap_application
+      vars_builder = VCAP::VarsBuilder.new(app)
+      vcap_app = vars_builder.vcap_application
+
       Environment::EXCLUDE.each { |k| vcap_app.delete(k) }
       encoded_vcap_application_json = vcap_app.to_json
 

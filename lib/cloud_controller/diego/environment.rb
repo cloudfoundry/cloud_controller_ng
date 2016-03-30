@@ -1,4 +1,5 @@
 require 'presenters/system_env_presenter'
+require_relative '../../vcap/vars_builder'
 
 module VCAP::CloudController
   module Diego
@@ -27,7 +28,9 @@ module VCAP::CloudController
       attr_reader :app
 
       def vcap_application
-        env = app.vcap_application
+        vars_builder = VCAP::VarsBuilder.new(app)
+        env = vars_builder.vcap_application
+
         EXCLUDE.each { |k| env.delete(k) }
         env
       end
