@@ -766,14 +766,67 @@ module VCAP::CloudController
           end
         end
 
-        it 'returns application environment with VCAP_APPLICATION' do
-          expected_vcap_application = MultiJson.load(MultiJson.dump(app_obj.vcap_application))
+        context 'environment variable' do
+          context 'when there is no v3 app associated' do
+            it 'returns v2 application environment with VCAP_APPLICATION' do
+              get "/v2/apps/#{app_obj.guid}/env", '{}', json_headers(headers_for(developer, { scopes: ['cloud_controller.read'] }))
+              expect(last_response.status).to eql(200)
 
-          get "/v2/apps/#{app_obj.guid}/env", '{}', json_headers(headers_for(developer, { scopes: ['cloud_controller.read'] }))
-          expect(last_response.status).to eql(200)
+              expect(decoded_response['application_env_json']).to have_key('VCAP_APPLICATION')
+              expect(decoded_response['application_env_json']).to match({
+                  'VCAP_APPLICATION' => {
+                    'limits' => {
+                      'mem'  => app_obj.memory,
+                      'disk' => app_obj.disk_quota,
+                      'fds'  => 16384
+                    },
+                    'application_id'      => app_obj.guid,
+                    'application_name'    => app_obj.name,
+                    'name'                => app_obj.name,
+                    'application_uris'    => [],
+                    'uris'                => [],
+                    'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+                    'version'             => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+                    'space_name'          => app_obj.space.name,
+                    'space_id'            => app_obj.space.guid,
+                    'users'               => nil
+                  }
+              })
+            end
+          end
 
-          expect(decoded_response['application_env_json']).to have_key('VCAP_APPLICATION')
-          expect(decoded_response['application_env_json']['VCAP_APPLICATION']).to eql(expected_vcap_application)
+          context 'when a v3 app is associated' do
+            let!(:app_model) { AppModel.make(name: 'v3-parent-app') }
+            let!(:process) { AppFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'process-name') }
+
+            it 'returns appenvironment with VCAP_APPLICATION with v3 app name' do
+              app_model.add_process(process)
+
+              get "/v2/apps/#{process.guid}/env", '{}', admin_headers
+              expect(last_response.status).to eql(200)
+
+              expect(decoded_response['application_env_json']).to have_key('VCAP_APPLICATION')
+              expect(decoded_response['application_env_json']).to match({
+                  'VCAP_APPLICATION' => {
+                  'limits' => {
+                    'mem' => 259,
+                    'disk' => 799,
+                    'fds' => 1234,
+                  },
+                  'application_id' => process.guid,
+                  'application_version' => process.version,
+                  'application_name' => app_model.name,
+                  'application_uris' => process.uris,
+                  'version' => process.version,
+                  'name' => process.name,
+                  'space_name' => process.space.name,
+                  'space_id' => process.space.guid,
+                  'uris' => process.uris,
+                  'users' => nil
+                }
+              })
+            end
+          end
         end
 
         context 'when the user is space dev and has service instance bound to application' do
