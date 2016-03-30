@@ -64,6 +64,7 @@ includes:
   - route_mappings/get
   - route_mappings/delete
   - route_mappings/list
+  - route_mappings/app/list
   - service_bindings/header
   - service_bindings/object
   - service_bindings/create

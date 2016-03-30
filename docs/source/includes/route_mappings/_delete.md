@@ -5,7 +5,7 @@ Definition
 ```
 
 ```http
-DELETE /v3/apps/:guid/route_mappings/:guid HTTP/1.1
+DELETE /v3/route_mappings/:guid HTTP/1.1
 ```
 
 ```
@@ -13,7 +13,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.[your-domain.com]/v3/apps/[guid]/route_mappings/[guid]" \
+curl "https://api.[your-domain.com]/v3/route_mappings/[guid]" \
   -X DELETE \
   -H "Authorization: bearer [token]"
 ```

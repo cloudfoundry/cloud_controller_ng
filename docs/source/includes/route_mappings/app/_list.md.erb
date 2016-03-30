@@ -1,11 +1,11 @@
-## List route mappings
+## List route mappings for an app
 
 ```
 Definition
 ```
 
 ```http
-GET /v3/route_mappings HTTP/1.1
+GET /v3/apps/:guid/route_mappings HTTP/1.1
 ```
 
 ```
@@ -13,7 +13,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.[your-domain.com]/v3/route_mappings" \
+curl "https://api.[your-domain.com]/v3/apps/[guid]/route_mappings" \
   -X GET \
   -H "Authorization: bearer [token]"
 ```
@@ -25,7 +25,7 @@ Example Response
 ```http
 HTTP/1.1 200 OK
 
-<%= yield_content :paginated_list_of_route_mappings, '/v3/route_mappings' %>
+<%= yield_content :paginated_list_of_route_mappings, '/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/route_mappings' %>
 ```
 
 This endpoint retrieves the route mappings the user has access to.

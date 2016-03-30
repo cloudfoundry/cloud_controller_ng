@@ -5,7 +5,7 @@ Definition
 ```
 
 ```http
-POST /v3/apps/:guid/route_mappings HTTP/1.1
+POST /v3/route_mappings HTTP/1.1
 ```
 
 ```
@@ -13,14 +13,17 @@ Example Request
 ```
 
 ```shell
-curl "https://api.[your-domain.com]/v3/apps/[guid]/route_mappings" \
+curl "https://api.[your-domain.com]/v3/route_mappings" \
   -X POST \
   -H "Authorization: bearer [token]" \
   -d '{
     "relationships": {
-      "route": {
-        "guid": "9612ecbd-36f1-4ada-927a-efae9310b3a1"
+      "app": {
+        "guid": "[app-guid]"
       },
+      "route": {
+        "guid": "[route_guid]"
+      }
     }
   }'
 ```
@@ -40,6 +43,15 @@ This endpoint creates a new route mapping.
 ### Body Parameters
 
 <ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      relationships['app']['guid']
+
+      <span class="method-list-item-type method-list-item-type-required">required</span>
+    </h4>
+
+    <p class="method-list-item-description">Guid of the app to which you would like to map the route.</p>
+  </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       relationships['route']['guid']
