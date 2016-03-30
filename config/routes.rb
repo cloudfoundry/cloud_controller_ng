@@ -1,17 +1,5 @@
 Rails.application.routes.draw do
   # apps
-  get '/v3/apps', to: 'apps_v3#index'
-  post '/v3/apps', to: 'apps_v3#create'
-  get '/v3/apps/:guid', to: 'apps_v3#show'
-  put '/v3/apps/:guid', to: 'apps_v3#update'
-  patch '/v3/apps/:guid', to: 'apps_v3#update'
-  delete '/v3/apps/:guid', to: 'apps_v3#destroy'
-  put '/v3/apps/:guid/start', to: 'apps_v3#start'
-  put '/v3/apps/:guid/stop', to: 'apps_v3#stop'
-  get '/v3/apps/:guid/env', to: 'apps_v3#show_environment'
-  put '/v3/apps/:guid/current_droplet', to: 'apps_v3#assign_current_droplet'
-  get '/v3/apps/:guid/stats', to: 'apps_v3#stats'
-
   get '/apps', to: 'apps_v3#index'
   post '/apps', to: 'apps_v3#create'
   get '/apps/:guid', to: 'apps_v3#show'
@@ -37,27 +25,7 @@ Rails.application.routes.draw do
   delete '/apps/:app_guid/processes/:type/instances/:index', to: 'processes#terminate'
   get '/apps/:app_guid/processes/:type/stats', to: 'processes#stats'
 
-  get '/v3/processes', to: 'processes#index'
-  get '/v3/processes/:process_guid', to: 'processes#show'
-  patch '/v3/processes/:process_guid', to: 'processes#update'
-  delete '/v3/processes/:process_guid/instances/:index', to: 'processes#terminate'
-  put '/v3/processes/:process_guid/scale', to: 'processes#scale'
-  get '/v3/processes/:process_guid/stats', to: 'processes#stats'
-  get '/v3/apps/:app_guid/processes', to: 'processes#index'
-  get '/v3/apps/:app_guid/processes/:type', to: 'processes#show'
-  put '/v3/apps/:app_guid/processes/:type/scale', to: 'processes#scale'
-  delete '/v3/apps/:app_guid/processes/:type/instances/:index', to: 'processes#terminate'
-  get '/v3/apps/:app_guid/processes/:type/stats', to: 'processes#stats'
-
   # packages
-  get '/v3/packages', to: 'packages#index'
-  get '/v3/packages/:guid', to: 'packages#show'
-  post '/v3/packages/:guid/upload', to: 'packages#upload'
-  get '/v3/packages/:guid/download', to: 'packages#download'
-  delete '/v3/packages/:guid', to: 'packages#destroy'
-  get '/v3/apps/:app_guid/packages', to: 'packages#index'
-  post '/v3/apps/:app_guid/packages', to: 'packages#create'
-
   get '/packages', to: 'packages#index'
   get '/packages/:guid', to: 'packages#show'
   post '/packages/:guid/upload', to: 'packages#upload'
@@ -67,12 +35,6 @@ Rails.application.routes.draw do
   post '/apps/:app_guid/packages', to: 'packages#create'
 
   # droplets
-  post '/v3/packages/:package_guid/droplets', to: 'droplets#create'
-  get '/v3/droplets', to: 'droplets#index'
-  get '/v3/droplets/:guid', to: 'droplets#show'
-  delete '/v3/droplets/:guid', to: 'droplets#destroy'
-  get '/v3/apps/:app_guid/droplets', to: 'droplets#index'
-
   post '/packages/:package_guid/droplets', to: 'droplets#create'
   get '/droplets', to: 'droplets#index'
   get '/droplets/:guid', to: 'droplets#show'
