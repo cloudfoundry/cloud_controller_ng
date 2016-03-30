@@ -78,7 +78,7 @@ describe 'Route Mappings' do
     let!(:route_mapping4) { VCAP::CloudController::RouteMappingModel.make }
 
     it 'retrieves all the route mappings the user has access to' do
-      get '/v3/route_mappings?per_page=2', {}, developer_headers
+      get '/v3/route_mappings?per_page=2', nil, developer_headers
 
       expected_response = {
         'pagination' => {
@@ -151,13 +151,43 @@ describe 'Route Mappings' do
     end
   end
 
+  describe 'DELETE /v3/route_mappings/:route_mapping_guid' do
+    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'buckeyes') }
+
+    it 'deletes the specified route mapping' do
+      delete "/v3/route_mappings/#{route_mapping.guid}", nil, developer_headers
+
+      # verify response
+      expect(last_response.status).to eq(204)
+      expect(route_mapping.exists?).to be_falsey
+
+      # verify audit event
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type:       'audit.app.unmap-route',
+        actee:      app_model.guid,
+        actee_type: 'v3-app',
+        actee_name: app_model.name,
+        actor:      developer.guid,
+        actor_type: 'user',
+        space_guid: space.guid,
+        metadata:   {
+                      route_guid:         route.guid,
+                      route_mapping_guid: route_mapping.guid,
+                      process_type:       'buckeyes'
+                    }.to_json,
+        organization_guid: space.organization.guid,
+      })
+    end
+  end
+
   describe 'GET /v3/apps/:guid/route_mappings' do
     let!(:route_mapping1) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route) }
     let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'worker') }
     let!(:route_mapping3) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'other') }
 
     it 'retrieves all the route mappings associated with the given app' do
-      get "/v3/apps/#{app_model.guid}/route_mappings?per_page=2", {}, developer_headers
+      get "/v3/apps/#{app_model.guid}/route_mappings?per_page=2", nil, developer_headers
 
       expected_response = {
         'pagination' => {
@@ -200,36 +230,6 @@ describe 'Route Mappings' do
       # verify response
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
-    end
-  end
-
-  describe 'DELETE /v3/route_mappings/:route_mapping_guid' do
-    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'buckeyes') }
-
-    it 'deletes the specified route mapping' do
-      delete "/v3/route_mappings/#{route_mapping.guid}", nil, developer_headers
-
-      # verify response
-      expect(last_response.status).to eq(204)
-      expect(route_mapping.exists?).to be_falsey
-
-      # verify audit event
-      event = VCAP::CloudController::Event.last
-      expect(event.values).to include({
-        type:       'audit.app.unmap-route',
-        actee:      app_model.guid,
-        actee_type: 'v3-app',
-        actee_name: app_model.name,
-        actor:      developer.guid,
-        actor_type: 'user',
-        space_guid: space.guid,
-        metadata:   {
-                      route_guid:         route.guid,
-                      route_mapping_guid: route_mapping.guid,
-                      process_type:       'buckeyes'
-                    }.to_json,
-        organization_guid: space.organization.guid,
-      })
     end
   end
 end
