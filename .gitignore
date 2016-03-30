@@ -30,6 +30,7 @@ docs/.config
 docs/coverage
 docs/InstalledFiles
 docs/lib/bundler/man
+docs/npm-debug.log
 docs/pkg
 docs/rdoc
 docs/spec/reports
