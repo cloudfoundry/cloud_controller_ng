@@ -6,6 +6,8 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_KEYS)
     validates_with NoAdditionalKeysValidator
+    validates :app, hash: true
+    validates :app_guid, guid: true
     validates :route, hash: true
     validates :route_guid, guid: true
     validates :process, hash: true, allow_nil: true
@@ -15,24 +17,28 @@ module VCAP::CloudController
       RouteMappingsCreateMessage.new(body.symbolize_keys)
     end
 
+    def app
+      HashUtils.dig(relationships, :app) || HashUtils.dig(relationships, 'app')
+    end
+
+    def app_guid
+      HashUtils.dig(app, :guid) || HashUtils.dig(app, 'guid')
+    end
+
     def process
-      relationships.try(:[], 'process') || relationships.try(:[], :process)
+      HashUtils.dig(relationships, :process) || HashUtils.dig(relationships, 'process')
     end
 
     def process_type
-      if process.is_a?(Hash)
-        process.try(:[], 'type') || process.try(:[], :type)
-      end
+      HashUtils.dig(process, :type) || HashUtils.dig(process, 'type')
     end
 
     def route
-      relationships.try(:[], 'route') || relationships.try(:[], :route)
+      HashUtils.dig(relationships, :route) || HashUtils.dig(relationships, 'route')
     end
 
     def route_guid
-      if route.is_a?(Hash)
-        route.try(:[], 'guid') || route.try(:[], :guid)
-      end
+      HashUtils.dig(route, :guid) || HashUtils.dig(route, 'guid')
     end
 
     private

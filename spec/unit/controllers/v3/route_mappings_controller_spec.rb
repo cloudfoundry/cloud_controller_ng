@@ -13,6 +13,7 @@ describe RouteMappingsController, type: :controller do
     let(:req_body) do
       {
         relationships: {
+          app:     { guid: app.guid },
           route:   { guid: route.guid },
           process: { type: process_type }
         }
@@ -26,7 +27,7 @@ describe RouteMappingsController, type: :controller do
     end
 
     it 'successfully creates a route mapping' do
-      post :create, app_guid: app.guid, body: req_body
+      post :create, body: req_body
 
       expect(response.status).to eq(201)
       expect(parsed_body['guid']).to eq(VCAP::CloudController::RouteMappingModel.last.guid)
@@ -36,7 +37,7 @@ describe RouteMappingsController, type: :controller do
       let(:process_type) { true }
 
       it 'raises an unprocessable error' do
-        post :create, app_guid: app.guid, body: req_body
+        post :create, body: req_body
 
         expect(response.body).to include 'UnprocessableEntity'
       end
@@ -51,7 +52,7 @@ describe RouteMappingsController, type: :controller do
       end
 
       it 'defaults to "web"' do
-        post :create, app_guid: app.guid, body: req_body
+        post :create, body: req_body
 
         expect(route_fetcher).to have_received(:fetch).with(app.guid, route.guid, 'web')
       end
@@ -67,14 +68,14 @@ describe RouteMappingsController, type: :controller do
       end
 
       it 'fetches the requested process type' do
-        post :create, app_guid: app.guid, body: req_body
+        post :create, body: req_body
 
         expect(route_fetcher).to have_received(:fetch).with(app.guid, route.guid, 'worker')
       end
 
       it 'creates the specified process type' do
         expect_any_instance_of(VCAP::CloudController::RouteMappingCreate).to receive(:add).with(app, route, app_process, 'worker').and_call_original
-        post :create, app_guid: app.guid, body: req_body
+        post :create, body: req_body
 
         expect(VCAP::CloudController::RouteMappingModel.first.process_type).to eq 'worker'
       end
@@ -84,13 +85,14 @@ describe RouteMappingsController, type: :controller do
       let(:req_body) do
         {
           relationships: {
-            route: { guid: 'bad-route-guid' }
+            route: { guid: 'bad-route-guid' },
+            app:   { guid: app.guid }
           }
         }
       end
 
       it 'raises an API 404 error' do
-        post :create, app_guid: app.guid, body: req_body
+        post :create, body: req_body
 
         expect(response.status).to eq 404
         expect(response.body).to include('ResourceNotFound')
@@ -99,8 +101,17 @@ describe RouteMappingsController, type: :controller do
     end
 
     context 'when the requested app does not exist' do
+      let(:req_body) do
+        {
+          relationships: {
+            route: { guid: route.guid },
+            app:   { guid: 'bad-guid' }
+          }
+        }
+      end
+
       it 'raises an API 404 error' do
-        post :create, app_guid: 'bogus-app-guid', body: req_body
+        post :create, body: req_body
 
         expect(response.status).to eq 404
         expect(response.body).to include 'ResourceNotFound'
@@ -114,7 +125,7 @@ describe RouteMappingsController, type: :controller do
       end
 
       it 'raises an ApiError with a 403 code' do
-        post :create, app_guid: app.guid, body: req_body
+        post :create, body: req_body
 
         expect(response.status).to eq(403)
         expect(response.body).to include('NotAuthorized')
@@ -131,7 +142,7 @@ describe RouteMappingsController, type: :controller do
       end
 
       it 'returns a 404 ResourceNotFound error' do
-        post :create, app_guid: app.guid, body: req_body
+        post :create, body: req_body
 
         expect(response.status).to eq 404
         expect(response.body).to include 'ResourceNotFound'
@@ -152,7 +163,7 @@ describe RouteMappingsController, type: :controller do
       end
 
       it 'raises ApiError NotAuthorized' do
-        post :create, app_guid: app.guid, body: req_body
+        post :create, body: req_body
 
         expect(response.status).to eq 403
         expect(response.body).to include 'NotAuthorized'
@@ -167,7 +178,7 @@ describe RouteMappingsController, type: :controller do
       end
 
       it 'returns an UnprocessableEntity error' do
-        post :create, app_guid: app.guid, body: req_body
+        post :create, body: req_body
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -181,7 +192,7 @@ describe RouteMappingsController, type: :controller do
       end
 
       it 'returns 201' do
-        post :create, app_guid: app.guid, body: req_body
+        post :create, body: req_body
 
         expect(response.status).to eq(201)
       end
@@ -192,6 +203,7 @@ describe RouteMappingsController, type: :controller do
       let(:req_body) do
         {
           relationships: {
+            app:     { guid: app.guid },
             route:   { guid: route_in_other_space.guid },
             process: { type: 'web' }
           }
@@ -199,7 +211,7 @@ describe RouteMappingsController, type: :controller do
       end
 
       it 'raises UnprocessableRequest' do
-        post :create, app_guid: app.guid, body: req_body
+        post :create, body: req_body
 
         expect(response.status).to eq 422
         expect(response.body).to include 'belong to the same space'

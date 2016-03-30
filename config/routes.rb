@@ -42,7 +42,7 @@ Rails.application.routes.draw do
   get '/apps/:app_guid/droplets', to: 'droplets#index'
 
   # route_mappings
-  post '/apps/:app_guid/route_mappings', to: 'route_mappings#create'
+  post '/route_mappings', to: 'route_mappings#create'
   get '/apps/:app_guid/route_mappings/:route_mapping_guid', to: 'route_mappings#show'
   get '/apps/:app_guid/route_mappings', to: 'route_mappings#index'
   delete 'apps/:app_guid/route_mappings/:route_mapping_guid', to: 'route_mappings#destroy'

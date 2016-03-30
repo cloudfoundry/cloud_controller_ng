@@ -38,7 +38,7 @@ module VCAP::CloudController
           json_result = presenter.present_json(route_mapping)
           result      = MultiJson.load(json_result)
 
-          expect(result['links']['self']['href']).to eq("/v3/apps/#{app.guid}/route_mappings/#{route_mapping.guid}")
+          expect(result['links']['self']['href']).to eq("/v3/route_mappings/#{route_mapping.guid}")
           expect(result['links']['app']['href']).to eq("/v3/apps/#{app.guid}")
           expect(result['links']['route']['href']).to eq("/v2/routes/#{route_mapping.route.guid}")
           expect(result['links']['process']['href']).to eq("/v3/apps/#{app.guid}/processes/some-type")

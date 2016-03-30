@@ -40,7 +40,7 @@ module VCAP::CloudController
       end
 
       {
-        self:    { href: "/v3/apps/#{route_mapping.app.guid}/route_mappings/#{route_mapping.guid}" },
+        self:    { href: "/v3/route_mappings/#{route_mapping.guid}" },
         app:     { href: "/v3/apps/#{route_mapping.app.guid}" },
         route:   { href: "/v2/routes/#{route_mapping.route.guid}" },
         process: process_link

@@ -45,99 +45,67 @@ module VCAP::CloudController
         end
       end
 
-      describe 'route' do
-        context 'when route is not a hash' do
-          let(:body) do
-            {
-              relationships: {
-                route: 'sdf',
-                process: { type: 'web' }
-              }
-            }
-          end
-          it 'is not valid' do
-            message = RouteMappingsCreateMessage.new(body)
-            expect(message).not_to be_valid
-          end
+      describe 'app' do
+        it 'is not valid when app is missing' do
+          message = RouteMappingsCreateMessage.new({ relationships: {} })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:app)).to include('must be a hash')
         end
 
-        context 'when route_guid has an invalid guid' do
-          let(:body) do
-            {
-              relationships: {
-                route: { guid: 123 },
-                process: { type: 'web' }
-              }
-            }
-          end
-          it 'is not valid' do
-            message = RouteMappingsCreateMessage.new(body)
-            expect(message).not_to be_valid
-          end
+        it 'is not valid when app is not a hash' do
+          message = RouteMappingsCreateMessage.new({ relationships: { app: 'hello' } })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:app)).to include('must be a hash')
+        end
+
+        it 'is not valid when app_guid has an invalid guid' do
+          message = RouteMappingsCreateMessage.new({ relationships: { app: { guid: 876 } } })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:app_guid)).to_not be_empty
+        end
+      end
+
+      describe 'route' do
+        it 'is not valid when route is missing' do
+          message = RouteMappingsCreateMessage.new({})
+          expect(message).not_to be_valid
+          expect(message.errors_on(:route)).to include('must be a hash')
+        end
+
+        it 'is not valid when route is not a hash' do
+          message = RouteMappingsCreateMessage.new({ relationships: { route: 'potato' } })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:route)).to include('must be a hash')
+        end
+
+        it 'is not valid when route_guid has an invalid guid' do
+          message = RouteMappingsCreateMessage.new(relationships: { route: { guid: 123 }, })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:route_guid)).not_to be_empty
         end
       end
 
       describe 'process' do
-        context 'when process is not hash' do
-          let(:body) do
-            {
-              relationships: {
-                route: { guid: 'some-guid' },
-                process: 'not-a-hash'
-              }
-            }
-          end
-
-          it 'is not valid' do
-            message = RouteMappingsCreateMessage.new(body)
-            expect(message).not_to be_valid
-          end
+        it 'is not valid when process is not a hash' do
+          message = RouteMappingsCreateMessage.new({ relationships: { process: 'not-a-hash' } })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:process)).to include('must be a hash')
         end
 
-        context 'when process is missing' do
-          let(:body) do
-            {
-              relationships: {
-                route: { guid: 'some-guid' }
-              }
-            }
-          end
-          it 'is valid' do
-            message = RouteMappingsCreateMessage.new(body)
-            expect(message).to be_valid
-          end
+        it 'is valid when process is missing' do
+          message = RouteMappingsCreateMessage.new({})
+          expect(message.errors_on(:process)).to be_empty
         end
 
-        context 'when process type is not a string' do
-          let(:body) do
-            {
-              relationships: {
-                route: { guid: 'some-guid' },
-                process: { type: 123 }
-              }
-            }
-          end
-
-          it 'is not valid' do
-            message = RouteMappingsCreateMessage.new(body)
-            expect(message).not_to be_valid
-          end
+        it 'is not valid when process type is not a string' do
+          message = RouteMappingsCreateMessage.new({ relationships: { process: { type: 123 } } })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:process_type)).to include('must be a string')
         end
 
-        context 'when process type is nil' do
-          let(:body) do
-            {
-              relationships: {
-                route: { guid: 'some-guid' },
-                process: nil
-              }
-            }
-          end
-
-          it 'is valid' do
-            message = RouteMappingsCreateMessage.new(body)
-            expect(message).to be_valid
-          end
+        it 'is valid when process type is nil' do
+          message = RouteMappingsCreateMessage.new({ relationships: { process: { type: nil } } })
+          expect(message.errors_on(:process_type)).to be_empty
         end
       end
     end

@@ -33,7 +33,7 @@ class RouteMappingsController < ApplicationController
     process_type = message.process_type || 'web'
 
     app, route, process, space, org = AddRouteFetcher.new.fetch(
-      params['app_guid'],
+      message.app_guid,
       message.route_guid,
       process_type
     )

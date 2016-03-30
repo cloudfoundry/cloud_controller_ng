@@ -2,9 +2,8 @@ require 'spec_helper'
 
 describe 'Route Mappings' do
   let(:space) { VCAP::CloudController::Space.make }
-  let(:org) { space.organization }
-  let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-  let(:process) { VCAP::CloudController::App.make(space: space, app_guid: app_model.guid, type: 'worker') }
+  let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+  let(:process) { VCAP::CloudController::App.make(space: space, app: app_model, type: 'worker') }
   let(:route) { VCAP::CloudController::Route.make(space: space) }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) do
@@ -15,16 +14,17 @@ describe 'Route Mappings' do
     allow(ApplicationController).to receive(:configuration).and_return(TestConfig.config)
   end
 
-  describe 'POST /v3/apps/:guid/route_mappings' do
+  describe 'POST /v3/route_mappings' do
     it 'creates a route mapping for a specific process on an app' do
       body = {
         relationships: {
+          app:     { guid: app_model.guid },
           route:   { guid: route.guid },
           process: { type: process.type }
         }
       }
 
-      post "/v3/apps/#{app_model.guid}/route_mappings", body, developer_headers
+      post '/v3/route_mappings', body, developer_headers
 
       guid = VCAP::CloudController::RouteMappingModel.last.guid
 
@@ -34,7 +34,7 @@ describe 'Route Mappings' do
         'updated_at' => nil,
 
         'links'      => {
-          'self'    => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings/#{guid}" },
+          'self'    => { 'href' => "/v3/route_mappings/#{guid}" },
           'app'     => { 'href' => "/v3/apps/#{app_model.guid}" },
           'route'   => { 'href' => "/v2/routes/#{route.guid}" },
           'process' => { 'href' => "/v3/apps/#{app_model.guid}/processes/#{process.type}" }
@@ -83,7 +83,7 @@ describe 'Route Mappings' do
         'updated_at' => nil,
 
         'links'      => {
-          'self'    => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings/#{route_mapping.guid}" },
+          'self'    => { 'href' => "/v3/route_mappings/#{route_mapping.guid}" },
           'app'     => { 'href' => "/v3/apps/#{app_model.guid}" },
           'route'   => { 'href' => "/v2/routes/#{route.guid}" },
           'process' => { 'href' => "/v3/apps/#{app_model.guid}/processes/#{process.type}" }
@@ -121,7 +121,7 @@ describe 'Route Mappings' do
             'updated_at' => nil,
 
             'links'      => {
-              'self'    => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings/#{route_mapping1.guid}" },
+              'self'    => { 'href' => "/v3/route_mappings/#{route_mapping1.guid}" },
               'app'     => { 'href' => "/v3/apps/#{app_model.guid}" },
               'route'   => { 'href' => "/v2/routes/#{route.guid}" },
               'process' => { 'href' => "/v3/apps/#{app_model.guid}/processes/web" }
@@ -133,7 +133,7 @@ describe 'Route Mappings' do
             'updated_at' => nil,
 
             'links'      => {
-              'self'    => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings/#{route_mapping2.guid}" },
+              'self'    => { 'href' => "/v3/route_mappings/#{route_mapping2.guid}" },
               'app'     => { 'href' => "/v3/apps/#{app_model.guid}" },
               'route'   => { 'href' => "/v2/routes/#{route.guid}" },
               'process' => { 'href' => "/v3/apps/#{app_model.guid}/processes/worker" }
