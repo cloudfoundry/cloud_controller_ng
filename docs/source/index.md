@@ -44,6 +44,7 @@ includes:
   - packages/app/list
   - processes/header
   - processes/object
+  - processes/health_check_object
   - processes/stats_object
   - processes/get
   - processes/stats
