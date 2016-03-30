@@ -10,12 +10,12 @@ module VCAP::CloudController
       MultiJson.dump(route_mapping_hash(route_mapping), pretty: true)
     end
 
-    def present_json_list(paginated_result, base_url, params)
+    def present_json_list(paginated_result, base_url)
       route_mappings       = paginated_result.records
       route_mapping_hashes = route_mappings.map { |route_mapping| route_mapping_hash(route_mapping) }
 
       paginated_response = {
-        pagination: @pagination_presenter.present_pagination_hash(paginated_result, base_url, params),
+        pagination: @pagination_presenter.present_pagination_hash(paginated_result, base_url),
         resources:  route_mapping_hashes
       }
 

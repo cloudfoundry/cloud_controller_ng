@@ -28,7 +28,7 @@ class RouteMappingsController < ApplicationController
                          end
     end
 
-    render :ok, json: RouteMappingPresenter.new.present_json_list(paginated_result, base_url(resource: 'route_mappings'), message)
+    render :ok, json: RouteMappingPresenter.new.present_json_list(paginated_result, base_url(resource: 'route_mappings'))
   end
 
   def create

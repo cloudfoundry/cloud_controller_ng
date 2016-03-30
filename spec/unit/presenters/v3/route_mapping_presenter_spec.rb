@@ -69,10 +69,9 @@ module VCAP::CloudController
       let(:route_mappings) { [route_mapping_1, route_mapping_2] }
       let(:total_results) { 2 }
       let(:paginated_result) { PaginatedResult.new(route_mappings, total_results, PaginationOptions.new(options)) }
-      let(:message) { instance_double(RouteMappingsListMessage, to_param_hash: {}) }
 
       it 'presents the route mappings as a json array under resources' do
-        json_result = presenter.present_json_list(paginated_result, "/v3/apps/#{app.guid}/route_mappings", message)
+        json_result = presenter.present_json_list(paginated_result, "/v3/apps/#{app.guid}/route_mappings")
         result = MultiJson.load(json_result)
         guids = result['resources'].collect { |route_mapping_json| route_mapping_json['guid'] }
 
