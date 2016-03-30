@@ -448,6 +448,7 @@ describe 'Apps' do
               'fds' => 16384
             },
             'application_name' => 'my_app',
+            'application_id' => app_model.guid,
             'application_uris' => [],
             'name'             => 'my_app',
             'space_name'       => space.name,
