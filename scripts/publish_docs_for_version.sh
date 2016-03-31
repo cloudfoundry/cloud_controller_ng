@@ -19,12 +19,6 @@ fi
 
 cd $ROOT_DIR/docs
 
-if [[ $(which apt-get) ]]; then
-  apt-get install npm --assume-yes
-fi
-bundle install
-npm install
-
 touch source/versionfile
 echo $VERSION > source/versionfile
 
