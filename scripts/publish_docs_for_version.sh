@@ -7,6 +7,8 @@ set -e -x
 
 ROOT_DIR=$(dirname $0)/..
 VERSION=$1
+GIT_USER=$2
+GIT_EMAIL=$3
 
 pushd $ROOT_DIR
 
@@ -91,6 +93,11 @@ echo -e '\t]
 }' >> versions.json
 
 # Commit the changes and push to origin/gh-pages
+if [[ $GIT_USER != "" && $GIT_EMAIL != "" ]]; then
+  git config user.name $GIT_USER
+  git config user.email $GIT_EMAIL
+fi
+
 git add index.html --ignore-errors
 git add versions.json
 git add version/$VERSION
