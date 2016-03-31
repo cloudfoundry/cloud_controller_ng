@@ -48,6 +48,7 @@ describe 'Processes' do
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
+            'ports'        => nil,
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -70,6 +71,7 @@ describe 'Processes' do
             'instances'    => 1,
             'memory_in_mb' => 100,
             'disk_in_mb'   => 200,
+            'ports'        => nil,
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -117,6 +119,7 @@ describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
+        'ports'        => nil,
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -200,6 +203,7 @@ describe 'Processes' do
   describe 'PATCH /v3/processes/:guid' do
     it 'updates the process' do
       process = VCAP::CloudController::ProcessModel.make(
+        diego:      true,
         app:        app_model,
         space:      space,
         type:       'web',
@@ -208,21 +212,23 @@ describe 'Processes' do
         disk_quota: 1024,
         command:    'rackup',
         metadata:   {},
+        ports:      [4444, 5555],
         health_check_type: 'port',
         health_check_timeout: 10
       )
 
       update_request = {
         command: 'new command',
+        ports: [1234, 5678],
         health_check: {
           type: 'process',
           data: {
             timeout: 20
           }
         }
-      }
+      }.to_json
 
-      patch "/v3/processes/#{process.guid}", update_request, developer_headers
+      patch "/v3/processes/#{process.guid}", update_request, developer_headers.merge('CONTENT_TYPE' => 'application/json')
 
       expected_response = {
         'guid'         => process.guid,
@@ -231,6 +237,7 @@ describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
+        'ports'        => [1234, 5678],
         'health_check' => {
           'type' => 'process',
           'data' => {
@@ -256,6 +263,7 @@ describe 'Processes' do
       expect(process.command).to eq('new command')
       expect(process.health_check_type).to eq('process')
       expect(process.health_check_timeout).to eq(20)
+      expect(process.ports).to match_array([1234, 5678])
 
       event = VCAP::CloudController::Event.last
       expect(event.type).to eq('audit.app.update')
@@ -291,6 +299,7 @@ describe 'Processes' do
         'instances'    => 5,
         'memory_in_mb' => 10,
         'disk_in_mb'   => 20,
+        'ports'        => nil,
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -375,6 +384,7 @@ describe 'Processes' do
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
+            'ports'        => nil,
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -397,6 +407,7 @@ describe 'Processes' do
             'instances'    => 1,
             'memory_in_mb' => 100,
             'disk_in_mb'   => 200,
+            'ports'        => nil,
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -444,6 +455,7 @@ describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
+        'ports'        => nil,
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -552,6 +564,7 @@ describe 'Processes' do
         'instances'    => 5,
         'memory_in_mb' => 10,
         'disk_in_mb'   => 20,
+        'ports'        => nil,
         'health_check' => {
           'type' => 'port',
           'data' => {

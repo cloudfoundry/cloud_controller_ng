@@ -5,6 +5,10 @@ RSpec.describe 'be_a_response_like matcher' do
     expect({ 'a' => 1 }).to be_a_response_like({ 'a' => 1 })
   end
 
+  it 'passes with array values' do
+    expect({ 'a' => [1, 2] }).to be_a_response_like({ 'a' => [1, 2] })
+  end
+
   context 'with regular expression matching' do
     it 'passes when comparing a string' do
       expect({ 'a' => '1' }).to be_a_response_like({ 'a' => /\d+/ })
@@ -39,6 +43,12 @@ RSpec.describe 'be_a_response_like matcher' do
     expect {
       expect({ 'a' => 1 }).to be_a_response_like({})
     }.to raise_expectation_not_met_error(expected: '{}', actual: '{"a"=>1}')
+  end
+
+  it 'fails when array values do not match' do
+    expect {
+      expect({ 'a' => [1, 2] }).to be_a_response_like({ 'a' => [1] })
+    }.to raise_expectation_not_met_error(expected: '{"a"=>[1]}', actual: '{"a"=>[1, 2]}')
   end
 
   it 'fails when hash values within arrays do not match' do

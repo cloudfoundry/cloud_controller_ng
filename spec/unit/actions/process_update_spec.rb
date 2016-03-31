@@ -13,8 +13,16 @@ module VCAP::CloudController
         }
       }
     end
-    let(:message) { ProcessUpdateMessage.new({ command: 'new', health_check: health_check }) }
-    let!(:process) { App.make(command: 'initial command', health_check_type: 'port', health_check_timeout: 10, metadata: {}) }
+    let(:message) { ProcessUpdateMessage.new({ command: 'new', health_check: health_check, ports: [1234, 5678] }) }
+    let!(:process) do
+      App.make(
+        diego:                true,
+        command:              'initial command',
+        health_check_type:    'port',
+        health_check_timeout: 10,
+        ports:                [1574, 3389],
+        metadata:             {})
+    end
     let(:user) { User.make }
     let(:user_email) { 'user@example.com' }
 
@@ -22,9 +30,11 @@ module VCAP::CloudController
       it 'updates the requested changes on the process' do
         process_update.update(process, message)
 
-        expect(process.reload.command).to eq('new')
-        expect(process.reload.health_check_type).to eq('process')
-        expect(process.reload.health_check_timeout).to eq(20)
+        process.reload
+        expect(process.command).to eq('new')
+        expect(process.health_check_type).to eq('process')
+        expect(process.health_check_timeout).to eq(20)
+        expect(process.ports).to match_array([1234, 5678])
       end
 
       context 'when no changes are requested' do
@@ -33,9 +43,10 @@ module VCAP::CloudController
         it 'does not update the process' do
           process_update.update(process, message)
 
-          expect(process.reload.command).to eq('initial command')
-          expect(process.reload.health_check_type).to eq('port')
-          expect(process.reload.health_check_timeout).to eq(10)
+          process.reload
+          expect(process.command).to eq('initial command')
+          expect(process.health_check_type).to eq('port')
+          expect(process.health_check_timeout).to eq(10)
         end
       end
 
@@ -50,8 +61,9 @@ module VCAP::CloudController
         it 'updates just the requested information' do
           process_update.update(process, message)
 
-          expect(process.reload.health_check_type).to eq('process')
-          expect(process.reload.health_check_timeout).to eq(10)
+          process.reload
+          expect(process.health_check_type).to eq('process')
+          expect(process.health_check_timeout).to eq(10)
         end
       end
 
@@ -62,7 +74,8 @@ module VCAP::CloudController
           user.guid,
           user_email,
           {
-            'command' => 'new',
+            'command'      => 'new',
+            'ports'        => [1234, 5678],
             'health_check' => {
               'type' => 'process',
               'data' => {

@@ -50,6 +50,7 @@ module VCAP::CloudController
         instances:    process.instances,
         memory_in_mb: process.memory,
         disk_in_mb:   process.disk_quota,
+        ports:        process.ports,
         health_check: {
           type: process.health_check_type,
           data: {

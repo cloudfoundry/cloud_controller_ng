@@ -8,6 +8,7 @@ module VCAP::CloudController
         app_model = AppModel.make
 
         process = App.make(
+          diego:                true,
           app_guid:             app_model.guid,
           instances:            3,
           memory:               42,
@@ -16,6 +17,7 @@ module VCAP::CloudController
           metadata:             {},
           health_check_type:    'process',
           health_check_timeout: 51,
+          ports:                [1234, 7896],
           created_at:           Time.at(1)
         )
         process.updated_at = Time.at(2)
@@ -37,6 +39,7 @@ module VCAP::CloudController
         expect(result['command']).to eq('rackup')
         expect(result['health_check']['type']).to eq('process')
         expect(result['health_check']['data']['timeout']).to eq(51)
+        expect(result['ports']).to match_array([1234, 7896])
         expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
         expect(result['updated_at']).to eq('1970-01-01T00:00:02Z')
         expect(result['links']).to eq(links)
