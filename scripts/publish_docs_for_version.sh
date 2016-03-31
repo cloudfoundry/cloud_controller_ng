@@ -1,102 +1,113 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e -x
 
 # This script must be run with an argument: either a final release number or 'release-candidate'
-
-# Write the versionfile in source
-
-ROOT_DIR=$(dirname $0)/..
-VERSION=$1
-GIT_USER=$2
-GIT_EMAIL=$3
-
-pushd $ROOT_DIR
-
 if [[ $# -eq 0 ]]; then
   echo "You need to provide the version number as the first argument"
   exit 0
 fi
 
-cd $ROOT_DIR/docs
+readonly ROOT_DIR="$(dirname "$0")/.."
+readonly VERSION=$1
 
-touch source/versionfile
-echo $VERSION > source/versionfile
+function build_docs() {
+  pushd "${ROOT_DIR}/docs" > /dev/null
+    bundle
 
-# Build the source directory
+    touch source/versionfile
+    echo "${VERSION}" > source/versionfile
 
-bundle exec middleman build
+    bundle exec middleman build
 
-# Delete the versionfile
+    rm -f source/versionfile
+  popd > /dev/null
+}
 
-rm -f source/versionfile
+function abort_on_existing_version() {
+  if [[ ${VERSION} != 'release-candidate' && -d "version/${VERSION}" ]]; then
+    echo "That version already exists."
+    exit 1
+  fi
+}
 
-popd
-# Check out the gh-pages branch
+function write_versions_json() {
+  # Update the versions.json
+    # - Grabs all the folder names
+    # - Rewrites the versions.json
+  declare version_list=''
+  local dirs
+  local dir
+  dirs=$(ls -l version | egrep '^d' | awk '{print $9}' | sort -n -r)
 
-git checkout gh-pages
+  rm -f versions.json
 
-mv docs/build build
+  echo -e '{
+  \t"versions": [' > versions.json
 
-# Copy the build directory into versions/$VERSION/..
+  for dir in ${dirs}
+  do
+    version_list="${version_list}\t\t\"${dir}\",\n"
+  done
 
-if [[ $VERSION != 'release-candidate' && -d version/$VERSION ]]; then
-  echo "That version already exists."
-  exit 1
-fi
+  # this crazy bash removes the trailing newline and , so that our array is valid json, there's probably a better way
+  echo -e "${version_list%???}" >> versions.json
 
-if [[ $VERSION == 'release-candidate' ]]; then
-  rm -rf version/release-candidate
-fi
+  echo -e '\t]
+  }' >> versions.json
+}
 
-mkdir -p version/$VERSION
-mv build/* version/$VERSION
-rm -rf build
-
-# Rewrite the index.html
-if [[ $VERSION != 'release-candidate' ]]; then
-  rm -f index.html
-  touch index.html
-  cat <<INDEX > index.html
+function update_index_html() {
+  if [[ ${VERSION} != 'release-candidate' ]]; then
+    cat <<INDEX > index.html
 ---
-redirect_to: version/$VERSION/index.html
+redirect_to: version/${VERSION}/index.html
 ---
 INDEX
-fi
+  fi
+}
 
-# Update the versions.json
-  # - Grabs all the folder names
-  # - Rewrites the versions.json
+function remove_old_release_candidate() {
+  if [[ ${VERSION} == 'release-candidate' ]]; then
+    rm -rf version/release-candidate
+  fi
+}
 
-DIRS=`ls -l version | egrep '^d' | awk '{print $9}' | sort -n -r`
+function push_docs() {
+  git add index.html --ignore-errors
+  git add versions.json
+  git add "version/${VERSION}"
 
-rm -f versions.json
-touch versions.json
+  if [[ "$(git diff --name-only --staged)" == '' ]]; then
+    echo "No changes to the docs. Nothing to publish"
+    return
+  fi
 
-echo -e '{
-\t"versions": [' > versions.json
+  git commit -m "Bump v3 API docs version ${VERSION}"
+  git push origin gh-pages
+}
 
-version_list=''
-for DIR in $DIRS
-do
-  version_list="$version_list\t\t\"$DIR\",\n"
-done
-# this crazy bash removes the trailing newline and , so that our array is valid json, there's probably a better way
-echo -e "${version_list%???}" >> versions.json
+function add_new_docs() {
+  mkdir -p "version/${VERSION}"
+  mv docs/build/* "version/${VERSION}"
+  rm -rf docs/build
+}
 
-echo -e '\t]
-}' >> versions.json
+function main() {
+  build_docs
 
-# Commit the changes and push to origin/gh-pages
-if [[ $GIT_USER != "" && $GIT_EMAIL != "" ]]; then
-  git config user.name $GIT_USER
-  git config user.email $GIT_EMAIL
-fi
+  pushd "${ROOT_DIR}" > /dev/null
+    git checkout gh-pages
+    git pull --ff-only
 
-git add index.html --ignore-errors
-git add versions.json
-git add version/$VERSION
-git commit -m "Bump v3 API docs version $VERSION"
-git push origin gh-pages
+    abort_on_existing_version
+    remove_old_release_candidate
+    add_new_docs
+    update_index_html
+    write_versions_json
+    push_docs
 
-# Check master back out
-git checkout master
+    git checkout master
+  popd > /dev/null
+}
+
+main
