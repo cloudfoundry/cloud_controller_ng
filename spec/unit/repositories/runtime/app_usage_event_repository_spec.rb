@@ -134,9 +134,7 @@ module VCAP::CloudController
         end
 
         context 'when the app is a v3 process' do
-          let(:app_name) { 'v3_app_name' }
           let(:v3_app) { AppModel.make(name: 'v3_app_name') }
-          let(:app_guid) { v3_app.guid }
 
           before do
             v3_app.add_process_by_guid(app.guid)
@@ -146,9 +144,34 @@ module VCAP::CloudController
           it 'records information about the parent app' do
             event = repository.create_from_app(app)
 
-            expect(event.parent_app_name).to eq(app_name)
-            expect(event.parent_app_guid).to eq(app_guid)
+            expect(event.parent_app_name).to eq('v3_app_name')
+            expect(event.parent_app_guid).to eq(v3_app.guid)
             expect(event.process_type).to eq(app.type)
+          end
+
+          context 'when the app has a droplet' do
+            let(:droplet) do
+              DropletModel.make(
+                state: DropletModel::STAGED_STATE,
+                buildpack_receipt_buildpack_guid: 'buildpack-guid',
+                buildpack_receipt_buildpack:      'buildpack-name'
+              )
+            end
+
+            before do
+              v3_app.droplet = droplet
+              v3_app.save
+            end
+
+            it 'records buildpack information' do
+              event = repository.create_from_app(app)
+
+              expect(event.parent_app_name).to eq('v3_app_name')
+              expect(event.parent_app_guid).to eq(v3_app.guid)
+              expect(event.process_type).to eq(app.type)
+              expect(event.buildpack_guid).to eq('buildpack-guid')
+              expect(event.buildpack_name).to eq('buildpack-name')
+            end
           end
         end
       end

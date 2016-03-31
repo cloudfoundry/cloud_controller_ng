@@ -17,12 +17,22 @@ module VCAP::CloudController
             org_guid:                  app.space.organization_guid,
             space_guid:                app.space_guid,
             space_name:                app.space.name,
-            buildpack_guid:            app.detected_buildpack_guid,
-            buildpack_name:            app.custom_buildpack_url || app.detected_buildpack_name,
-            parent_app_guid:           app.app ? app.app.guid : nil,
-            parent_app_name:           app.app ? app.app.name : nil,
+            buildpack_guid:            buildpack_guid_for_app(app),
+            buildpack_name:            buildpack_name_for_app(app),
+            parent_app_guid:           app.is_v3? ? app.app.guid : nil,
+            parent_app_name:           app.is_v3? ? app.app.name : nil,
             process_type:              app.type
           )
+        end
+
+        def buildpack_name_for_app(app)
+          return (app.custom_buildpack_url || app.detected_buildpack_name) if app.is_v2?
+          app.app.droplet.buildpack_receipt_buildpack if app.app.droplet
+        end
+
+        def buildpack_guid_for_app(app)
+          return app.detected_buildpack_guid if app.is_v2?
+          app.app.droplet.buildpack_receipt_buildpack_guid if app.app.droplet
         end
 
         def create_from_task(task, state)
