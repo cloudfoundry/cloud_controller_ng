@@ -61,17 +61,13 @@ module VCAP::CloudController
             }.to_json
           end
 
-          let(:router_groups) do
-            [
-              RoutingApi::RouterGroup.new({ 'guid' => 'router-group-guid1', 'type' => 'tcp' }),
-              RoutingApi::RouterGroup.new({ 'guid' => 'random-guid-2', 'type' => 'tcp' }),
-            ]
+          let(:router_group) do
+            RoutingApi::RouterGroup.new({ 'guid' => 'router-group-guid1', 'type' => 'tcp' })
           end
 
           before do
-            allow(routing_api_client).to receive(:router_groups).and_return(router_groups)
             allow(routing_api_client).to receive(:router_group).with('router-group-guid1').
-              and_return(RoutingApi::RouterGroup.new({ 'guid' => 'router-group-guid1', 'type' => 'tcp' }))
+              and_return(router_group)
           end
 
           it 'validates that the router_group_guid is a valid guid for a Router Group' do
@@ -79,7 +75,7 @@ module VCAP::CloudController
 
             expect(last_response).to have_status_code(201)
 
-            expect(routing_api_client).to have_received(:router_groups).exactly(1).times
+            expect(routing_api_client).to have_received(:router_group).exactly(1).times
 
             domain_hash = JSON.parse(last_response.body)['entity']
             expect(domain_hash['name']).to eq('shareddomain.com')
@@ -89,7 +85,7 @@ module VCAP::CloudController
 
           context 'when the UAA is unavailable' do
             before do
-              allow(routing_api_client).to receive(:router_groups).
+              allow(routing_api_client).to receive(:router_group).
                 and_raise(RoutingApi::UaaUnavailable)
             end
 
@@ -103,7 +99,7 @@ module VCAP::CloudController
 
           context 'when the routing API is unavailable' do
             before do
-              allow(routing_api_client).to receive(:router_groups).
+              allow(routing_api_client).to receive(:router_group).
                 and_raise(RoutingApi::RoutingApiUnavailable)
             end
 
@@ -116,18 +112,7 @@ module VCAP::CloudController
           end
 
           context 'when the router_group_guid does not exist in the Routing API' do
-            let(:router_groups) { [] }
-            it 'returns a 400 error' do
-              post '/v2/shared_domains', body, json_headers(admin_headers)
-
-              expect(last_response).to have_status_code(400)
-              expect(last_response.body).to include "router group guid 'router-group-guid1' not found"
-            end
-          end
-
-          # Should not happen, but just in case
-          context 'when the router_groups is nil' do
-            let(:router_groups) { nil }
+            let(:router_group) { nil }
             it 'returns a 400 error' do
               post '/v2/shared_domains', body, json_headers(admin_headers)
 

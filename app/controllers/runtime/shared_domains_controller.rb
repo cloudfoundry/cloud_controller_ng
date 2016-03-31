@@ -24,7 +24,7 @@ module VCAP::CloudController
       return if router_group_guid.nil?
 
       begin
-        router_groups = routing_api_client.router_groups || []
+        @router_group = routing_api_client.router_group(router_group_guid)
       rescue RoutingApi::RoutingApiDisabled
         raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
       rescue RoutingApi::RoutingApiUnavailable
@@ -33,7 +33,7 @@ module VCAP::CloudController
         raise Errors::ApiError.new_from_details('UaaUnavailable')
       end
 
-      unless router_groups.map(&:guid).include? router_group_guid
+      unless @router_group
         raise Errors::ApiError.new_from_details('DomainInvalid', "router group guid '#{router_group_guid}' not found")
       end
     end
@@ -42,8 +42,7 @@ module VCAP::CloudController
       super(domain)
       unless domain.nil?
         unless domain.router_group_guid.nil?
-          rtr_grp = @routing_api_client.router_group(domain.router_group_guid)
-          domain.router_group_type = rtr_grp.type unless rtr_grp.nil?
+          domain.router_group_type = @router_group.type unless @router_group.nil?
         end
       end
     end
