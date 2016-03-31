@@ -5,7 +5,7 @@ module VCAP::CloudController::IntegerArraySerializer
 
   def self.serializer
     lambda do |array|
-      return nil if array.nil? || array.empty?
+      return nil if array.nil?
       raise ArgumentError.new('Integer array columns must be passed an array') unless array.is_a?(Array)
       raise ArgumentError.new('All members of the array must be integers') unless array.all? { |v| v.is_a? Integer }
 

@@ -9,6 +9,7 @@ describe 'Processes' do
   describe 'GET /v3/processes' do
     it 'returns a paginated list of processes' do
       process1 = VCAP::CloudController::ProcessModel.make(
+        :process,
         app:        app_model,
         space:      space,
         type:       'web',
@@ -16,9 +17,9 @@ describe 'Processes' do
         memory:     1024,
         disk_quota: 1024,
         command:    'rackup',
-        metadata:   {}
       )
       process2 = VCAP::CloudController::ProcessModel.make(
+        :process,
         app:        app_model,
         space:      space,
         type:       'worker',
@@ -26,9 +27,8 @@ describe 'Processes' do
         memory:     100,
         disk_quota: 200,
         command:    'start worker',
-        metadata:   {}
       )
-      VCAP::CloudController::ProcessModel.make(app: app_model, space: space)
+      VCAP::CloudController::ProcessModel.make(:process, app: app_model, space: space)
 
       get '/v3/processes?per_page=2', nil, developer_headers
 
@@ -48,7 +48,7 @@ describe 'Processes' do
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
-            'ports'        => nil,
+            'ports'        => [],
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -71,7 +71,7 @@ describe 'Processes' do
             'instances'    => 1,
             'memory_in_mb' => 100,
             'disk_in_mb'   => 200,
-            'ports'        => nil,
+            'ports'        => [],
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -100,6 +100,7 @@ describe 'Processes' do
   describe 'GET /v3/processes/:guid' do
     it 'retrieves the process' do
       process = VCAP::CloudController::ProcessModel.make(
+        :process,
         app:        app_model,
         space:      space,
         type:       'web',
@@ -107,7 +108,6 @@ describe 'Processes' do
         memory:     1024,
         disk_quota: 1024,
         command:    'rackup',
-        metadata:   {}
       )
 
       get "/v3/processes/#{process.guid}", nil, developer_headers
@@ -119,7 +119,7 @@ describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
-        'ports'        => nil,
+        'ports'        => [],
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -145,7 +145,7 @@ describe 'Processes' do
 
   describe 'GET /v3/processes/:guid/stats' do
     it 'retrieves the stats for a process' do
-      process = VCAP::CloudController::ProcessModel.make(type: 'worker', space: space, diego: true)
+      process = VCAP::CloudController::ProcessModel.make(:process, type: 'worker', space: space, diego: true)
 
       usage_time = Time.now.utc.to_s
       tps_response = [{
@@ -203,6 +203,7 @@ describe 'Processes' do
   describe 'PATCH /v3/processes/:guid' do
     it 'updates the process' do
       process = VCAP::CloudController::ProcessModel.make(
+        :process,
         diego:      true,
         app:        app_model,
         space:      space,
@@ -211,7 +212,6 @@ describe 'Processes' do
         memory:     1024,
         disk_quota: 1024,
         command:    'rackup',
-        metadata:   {},
         ports:      [4444, 5555],
         health_check_type: 'port',
         health_check_timeout: 10
@@ -274,6 +274,7 @@ describe 'Processes' do
   describe 'PUT /v3/processes/:guid/scale' do
     it 'scales the process' do
       process = VCAP::CloudController::ProcessModel.make(
+        :process,
         app:        app_model,
         space:      space,
         type:       'web',
@@ -281,7 +282,6 @@ describe 'Processes' do
         memory:     1024,
         disk_quota: 1024,
         command:    'rackup',
-        metadata:   {}
       )
 
       scale_request = {
@@ -299,7 +299,7 @@ describe 'Processes' do
         'instances'    => 5,
         'memory_in_mb' => 10,
         'disk_in_mb'   => 20,
-        'ports'        => nil,
+        'ports'        => [],
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -334,7 +334,10 @@ describe 'Processes' do
 
   describe 'DELETE /v3/processes/:guid/instances/:index' do
     it 'terminates a single instance of a process' do
-      process = VCAP::CloudController::ProcessModel.make(space: space)
+      process = VCAP::CloudController::ProcessModel.make(:process, space: space)
+
+      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(process)
+      stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/apps/#{process_guid}/index/0").to_return(status: 202, body: '')
 
       delete "/v3/processes/#{process.guid}/instances/0", nil, developer_headers
 
@@ -345,6 +348,7 @@ describe 'Processes' do
   describe 'GET /v3/apps/:guid/processes' do
     it 'returns a paginated list of processes for an app' do
       process1 = VCAP::CloudController::ProcessModel.make(
+        :process,
         app:        app_model,
         space:      space,
         type:       'web',
@@ -352,9 +356,9 @@ describe 'Processes' do
         memory:     1024,
         disk_quota: 1024,
         command:    'rackup',
-        metadata:   {}
       )
       process2 = VCAP::CloudController::ProcessModel.make(
+        :process,
         app:        app_model,
         space:      space,
         type:       'worker',
@@ -362,9 +366,8 @@ describe 'Processes' do
         memory:     100,
         disk_quota: 200,
         command:    'start worker',
-        metadata:   {}
       )
-      VCAP::CloudController::ProcessModel.make(app: app_model, space: space)
+      VCAP::CloudController::ProcessModel.make(:process, app: app_model, space: space)
 
       get "/v3/apps/#{app_model.guid}/processes?per_page=2", nil, developer_headers
 
@@ -384,7 +387,7 @@ describe 'Processes' do
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
-            'ports'        => nil,
+            'ports'        => [],
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -407,7 +410,7 @@ describe 'Processes' do
             'instances'    => 1,
             'memory_in_mb' => 100,
             'disk_in_mb'   => 200,
-            'ports'        => nil,
+            'ports'        => [],
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -436,6 +439,7 @@ describe 'Processes' do
   describe 'GET /v3/apps/:guid/processes/:type' do
     it 'retrieves the process for an app with the requested type' do
       process = VCAP::CloudController::ProcessModel.make(
+        :process,
         app:        app_model,
         space:      space,
         type:       'web',
@@ -443,7 +447,6 @@ describe 'Processes' do
         memory:     1024,
         disk_quota: 1024,
         command:    'rackup',
-        metadata:   {}
       )
 
       get "/v3/apps/#{app_model.guid}/processes/web", nil, developer_headers
@@ -455,7 +458,7 @@ describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
-        'ports'        => nil,
+        'ports'        => [],
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -481,7 +484,7 @@ describe 'Processes' do
 
   describe 'GET /v3/apps/:guid/processes/:type/stats' do
     it 'retrieves the stats for a process belonging to an app' do
-      process = VCAP::CloudController::ProcessModel.make(type: 'worker', app: app_model, space: space, diego: true)
+      process = VCAP::CloudController::ProcessModel.make(:process, type: 'worker', app: app_model, space: space, diego: true)
 
       usage_time = Time.now.utc.to_s
       tps_response = [{
@@ -539,6 +542,7 @@ describe 'Processes' do
   describe 'PUT /v3/apps/:guid//processes/:type/scale' do
     it 'scales the process belonging to an app' do
       process = VCAP::CloudController::ProcessModel.make(
+        :process,
         app:        app_model,
         space:      space,
         type:       'web',
@@ -546,7 +550,6 @@ describe 'Processes' do
         memory:     1024,
         disk_quota: 1024,
         command:    'rackup',
-        metadata:   {}
       )
 
       scale_request = {
@@ -564,7 +567,7 @@ describe 'Processes' do
         'instances'    => 5,
         'memory_in_mb' => 10,
         'disk_in_mb'   => 20,
-        'ports'        => nil,
+        'ports'        => [],
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -599,7 +602,10 @@ describe 'Processes' do
 
   describe 'DELETE /v3/apps/:guid/processes/:type/instances/:index' do
     it 'terminates a single instance of a process belonging to an app' do
-      VCAP::CloudController::ProcessModel.make(type: 'web', app: app_model, space: space)
+      process = VCAP::CloudController::ProcessModel.make(:process, type: 'web', app: app_model, space: space)
+
+      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(process)
+      stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/apps/#{process_guid}/index/0").to_return(status: 202, body: '')
 
       delete "/v3/apps/#{app_model.guid}/processes/web/instances/0", nil, developer_headers
 

@@ -46,13 +46,15 @@ module VCAP::CloudController
         process_event_repository.record_app_update(existing_process, app.space, user_guid, user_email, message)
       else
         message = {
+          diego: true,
           command: command,
           type: type,
           space: app.space,
           name: "v3-#{app.name}-#{type}",
           metadata: {},
           instances: type == 'web' ? 1 : 0,
-          health_check_type: type == 'web' ? 'port' : 'process'
+          health_check_type: type == 'web' ? 'port' : 'process',
+          ports: type == 'web' ? [8080] : []
         }
 
         app.class.db.transaction do

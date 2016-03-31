@@ -208,6 +208,17 @@ module VCAP::CloudController
     type              { 'web' }
   end
 
+  App.blueprint(:process) do
+    diego { true }
+    ports { [] }
+    name { Sham.name }
+    space { Space.make }
+    stack { Stack.make }
+    instances { 1 }
+    type { 'web' }
+    metadata { {} }
+  end
+
   RouteBinding.blueprint do
     service_instance { ManagedServiceInstance.make(:routing) }
     route { Route.make space: service_instance.space }
