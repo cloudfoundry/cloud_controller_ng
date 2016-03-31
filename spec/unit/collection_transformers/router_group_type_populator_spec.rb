@@ -12,11 +12,11 @@ module VCAP::CloudController
 
       it 'returns domains with empty router group type' do
         router_group_type_populator.transform([domain1, domain2, domain3, domain4, domain5])
-        expect(domain1.router_group_types).to be_nil
-        expect(domain2.router_group_types).to be_nil
-        expect(domain3.router_group_types).to be_nil
-        expect(domain4.router_group_types).to be_nil
-        expect(domain5.router_group_types).to be_nil
+        expect(domain1.router_group_type).to be_nil
+        expect(domain2.router_group_type).to be_nil
+        expect(domain3.router_group_type).to be_nil
+        expect(domain4.router_group_type).to be_nil
+        expect(domain5.router_group_type).to be_nil
       end
 
       context 'when routing API is configured' do
@@ -28,13 +28,13 @@ module VCAP::CloudController
                                                                            RoutingApi::RouterGroup.new({ 'guid' => 'guid2', 'type' => 'http' })])
         end
 
-        it 'populates domains with router group types from Routing API' do
+        it 'populates domains with router group type from Routing API' do
           router_group_type_populator.transform([domain1, domain2, domain3, domain4, domain5])
-          expect(domain1.router_group_types).to eq(['tcp'])
-          expect(domain2.router_group_types).to eq(['http'])
-          expect(domain3.router_group_types).to be_nil
-          expect(domain4.router_group_types).to be_nil
-          expect(domain5.router_group_types).to be_nil
+          expect(domain1.router_group_type).to eq('tcp')
+          expect(domain2.router_group_type).to eq('http')
+          expect(domain3.router_group_type).to be_nil
+          expect(domain4.router_group_type).to be_nil
+          expect(domain5.router_group_type).to be_nil
         end
 
         context 'when there are no domains associated with router groups' do

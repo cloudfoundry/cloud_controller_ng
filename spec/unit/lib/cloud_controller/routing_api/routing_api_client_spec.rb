@@ -179,12 +179,12 @@ module VCAP::CloudController::RoutingApi
 
       context 'when the guid exists' do
         let(:guid) { 'router-group-guid' }
-        let(:types) { ['my-type'] }
+        let(:type) { 'my-type' }
 
         it 'returns the router group object' do
           group = routing_api.router_group(guid)
           expect(group.guid).to eq(guid)
-          expect(group.types).to eq(types)
+          expect(group.type).to eq(type)
         end
       end
 

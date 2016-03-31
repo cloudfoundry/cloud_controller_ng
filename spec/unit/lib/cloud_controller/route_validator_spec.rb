@@ -4,8 +4,8 @@ module VCAP::CloudController
   describe RouteValidator do
     let(:validator) { RouteValidator.new(routing_api_client, domain_guid, route_attrs) }
     let(:routing_api_client) { double('routing_api', router_group: router_group) }
-    let(:router_group) { double(:router_group, types: router_group_types, guid: router_group_guid, reservable_ports: [3, 4, 5, 8080]) }
-    let(:router_group_types) { ['tcp'] }
+    let(:router_group) { double(:router_group, type: router_group_type, guid: router_group_guid, reservable_ports: [3, 4, 5, 8080]) }
+    let(:router_group_type) { 'tcp' }
     let(:router_group_guid) { 'router-group-guid' }
     let(:domain_guid) { domain.guid }
     let(:domain) { SharedDomain.make(router_group_guid: router_group_guid) }
@@ -128,7 +128,7 @@ module VCAP::CloudController
       end
 
       context 'with a domain with a router_group_guid of type other than tcp' do
-        let(:router_group_types) { ['http'] }
+        let(:router_group_type) { 'http' }
 
         it 'rejects the request with a RouteInvalid error' do
           expect { validator.validate }.

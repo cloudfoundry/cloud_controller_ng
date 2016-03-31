@@ -1,11 +1,10 @@
 module VCAP::CloudController::RoutingApi
   class RouterGroup
-    attr_reader :guid, :types, :reservable_ports, :name
+    attr_reader :guid, :type, :reservable_ports, :name
     def initialize(hash)
       @guid = hash['guid']
       @name = hash['name']
-      @types = []
-      @types.push(hash['type'])
+      @type = hash['type']
       @reservable_ports = hash['reservable_ports']
     end
 

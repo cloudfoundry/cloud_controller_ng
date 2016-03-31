@@ -2,12 +2,12 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe SharedDomain, type: :model do
-    subject { described_class.make name: 'test.example.com', router_group_guid: 'my-router-group-guid', router_group_types: ['tcp'] }
+    subject { described_class.make name: 'test.example.com', router_group_guid: 'my-router-group-guid', router_group_type: 'tcp' }
 
     it { is_expected.to have_timestamp_columns }
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :router_group_guid, :router_group_types }
+      it { is_expected.to export_attributes :name, :router_group_guid, :router_group_type }
       it { is_expected.to import_attributes :name, :router_group_guid }
     end
 
@@ -17,7 +17,7 @@ module VCAP::CloudController
           guid: subject.guid,
           name: 'test.example.com',
           router_group_guid: 'my-router-group-guid',
-          router_group_types: ['tcp'])
+          router_group_type: 'tcp')
       end
     end
 

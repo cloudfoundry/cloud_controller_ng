@@ -84,7 +84,7 @@ module VCAP::CloudController
             domain_hash = JSON.parse(last_response.body)['entity']
             expect(domain_hash['name']).to eq('shareddomain.com')
             expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
-            expect(domain_hash['router_group_types']).to eq(['tcp'])
+            expect(domain_hash['router_group_type']).to eq('tcp')
           end
 
           context 'when the UAA is unavailable' do
@@ -168,7 +168,7 @@ module VCAP::CloudController
             and_return(RoutingApi::RouterGroup.new({ 'guid' => 'router-group-guid1', 'type' => 'tcp' }))
         end
 
-        it 'includes router_group_types in the response' do
+        it 'includes router_group_type in the response' do
           get '/v2/shared_domains', nil, json_headers(admin_headers)
 
           expect(last_response).to have_status_code(200)
@@ -176,10 +176,10 @@ module VCAP::CloudController
           domain_hash = JSON.parse(last_response.body)['resources'].last['entity']
           expect(domain_hash['name']).to eq('shareddomain.com')
           expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
-          expect(domain_hash['router_group_types']).to eq(['tcp'])
+          expect(domain_hash['router_group_type']).to eq('tcp')
         end
 
-        it 'includes router_group_types in the response' do
+        it 'includes router_group_type in the response' do
           SharedDomain.make(name: 'shareddomain2.com')
 
           get '/v2/shared_domains', nil, json_headers(admin_headers)
@@ -189,11 +189,11 @@ module VCAP::CloudController
           domain_hash = JSON.parse(last_response.body)['resources'].last['entity']
 
           expect(domain_hash['name']).to eq('shareddomain2.com')
-          expect(domain_hash['router_group_types']).to be_nil
-          expect(domain_hash.key?('router_group_types')).to be true
+          expect(domain_hash['router_group_type']).to be_nil
+          expect(domain_hash.key?('router_group_type')).to be true
         end
 
-        it 'includes router_group_types in the response for a particular domain' do
+        it 'includes router_group_type in the response for a particular domain' do
           get "/v2/shared_domains/#{domain.guid}", nil, json_headers(admin_headers)
 
           expect(last_response).to have_status_code(200)
@@ -201,7 +201,7 @@ module VCAP::CloudController
           domain_hash = JSON.parse(last_response.body)['entity']
           expect(domain_hash['name']).to eq('shareddomain.com')
           expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
-          expect(domain_hash['router_group_types']).to eq(['tcp'])
+          expect(domain_hash['router_group_type']).to eq('tcp')
         end
 
         context 'when the routing api client raises a UaaUnavailable error' do
@@ -266,7 +266,7 @@ module VCAP::CloudController
             end
           end
 
-          it 'includes router_group_types in the response' do
+          it 'includes router_group_type in the response' do
             get '/v2/shared_domains', nil, json_headers(admin_headers)
 
             expect(last_response).to have_status_code(200)
@@ -275,8 +275,8 @@ module VCAP::CloudController
 
             expect(domain_hash['name']).to eq('shareddomain.com')
             expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
-            expect(domain_hash.key?('router_group_types')).to be true
-            expect(domain_hash['router_group_types']).to be_nil
+            expect(domain_hash.key?('router_group_type')).to be true
+            expect(domain_hash['router_group_type']).to be_nil
           end
         end
       end

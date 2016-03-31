@@ -42,7 +42,7 @@ module VCAP::CloudController
     end
 
     def is_tcp_router_group?
-      domain.router_group_guid && !router_group.nil? && (router_group.types.include? 'tcp')
+      domain.router_group_guid && !router_group.nil? && router_group.type == 'tcp'
     end
 
     def router_group
