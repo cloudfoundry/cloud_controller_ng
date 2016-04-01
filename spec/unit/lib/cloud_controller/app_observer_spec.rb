@@ -19,7 +19,8 @@ module VCAP::CloudController
         active?: app_active,
         buildpack_cache_key: key,
         diego: diego,
-        is_v3?: false
+        is_v3?: false,
+        staging?: staging?
       )
     end
     let(:app_started) { false }
@@ -27,6 +28,7 @@ module VCAP::CloudController
     let(:previous_changes) { nil }
     let(:package_hash) { nil }
     let(:key) { nil }
+    let(:staging?) { false }
 
     before do
       AppObserver.configure(stagers, runners)
@@ -47,6 +49,15 @@ module VCAP::CloudController
         it 'does not care if diego is unavailable' do
           allow(runner).to receive(:stop).and_raise(VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError)
           expect { subject }.not_to raise_error
+        end
+
+        context 'when the app is staging' do
+          let(:staging?) { true }
+
+          it 'stops staging before stopping the application' do
+            expect(stager).to receive(:stop_stage)
+            subject
+          end
         end
       end
 

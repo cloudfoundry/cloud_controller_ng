@@ -85,6 +85,15 @@ module VCAP::CloudController
           expect(completion_handler).to have_received(:staging_complete).with(staging_guid, staging_response)
         end
       end
+
+      describe '#stop_stage' do
+        let(:app) { AppFactory.make(package_state: 'PENDING') }
+
+        it 'tells diego to stop staging the application' do
+          expect(messenger).to receive(:send_stop_staging_request)
+          stager.stop_stage
+        end
+      end
     end
   end
 end

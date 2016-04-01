@@ -21,7 +21,7 @@ module VCAP::CloudController
 
       def update_routes
         raise VCAP::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @app.started?
-        with_logging('update_route') { @messenger.send_desire_request(@app, @default_health_check_timeout) }
+        with_logging('update_route') { @messenger.send_desire_request(@app, @default_health_check_timeout) unless @app.staging? }
       end
 
       def desire_app_message

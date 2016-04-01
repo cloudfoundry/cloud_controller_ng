@@ -74,6 +74,18 @@ module VCAP::CloudController
           end
         end
 
+        context 'when an app is in staging status' do
+          let(:app) { AppFactory.make(state: 'STARTED', package_state: 'PENDING', staging_task_id: 'some-id') }
+
+          it 'should not update routes' do
+            allow(messenger).to receive(:send_desire_request)
+
+            runner.update_routes
+
+            expect(messenger).to_not have_received(:send_desire_request)
+          end
+        end
+
         context 'when the app has not been started' do
           let(:app) { AppFactory.make(state: 'STOPPED') }
 
