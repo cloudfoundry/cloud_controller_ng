@@ -1471,7 +1471,7 @@ module VCAP::CloudController
     end
 
     describe 'staging?' do
-        let(:app) { AppFactory.make }
+      let(:app) { AppFactory.make }
 
       it 'should return true if package_state is PENDING and staging_task_id is not null' do
         app.package_state = 'PENDING'
