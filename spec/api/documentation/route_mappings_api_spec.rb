@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 resource 'Routes Mapping', type: [:api, :legacy_api] do
-  let!(:app_obj) { VCAP::CloudController::AppFactory.make(diego: true, ports: [8888]) }
+  let!(:app_obj) { VCAP::CloudController::AppFactory.make(diego: true, ports: [8888, 8889]) }
   let!(:route) { VCAP::CloudController::Route.make(space: app_obj.space) }
 
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
@@ -10,9 +10,12 @@ resource 'Routes Mapping', type: [:api, :legacy_api] do
   authenticated_request
 
   describe 'Standard endpoints' do
-    shared_context 'fields' do |opts|
+    shared_context 'guid_fields' do |opts|
       field :app_guid, 'The guid of the bound application.', required: true, example_values: [Sham.guid]
       field :route_guid, 'The guid of the bound route.', required: true, example_values: [Sham.guid]
+    end
+
+    shared_context 'updatable_fields' do |opts|
       field :app_port, 'Port on which the application should
                       listen, and to which requests for the
                       mapped route will be routed. Must be
@@ -32,7 +35,8 @@ resource 'Routes Mapping', type: [:api, :legacy_api] do
     end
 
     post '/v2/route_mappings' do
-      include_context 'fields'
+      include_context 'guid_fields'
+      include_context 'updatable_fields'
 
       example 'Mapping an App and a Route' do
         body = MultiJson.dump(
@@ -46,6 +50,29 @@ resource 'Routes Mapping', type: [:api, :legacy_api] do
         expect(parsed_response['entity']['app_guid']).to eq(app_obj.guid)
         expect(parsed_response['entity']['route_guid']).to eq(route.guid)
         expect(parsed_response['entity']['app_port']).to eq(8888)
+      end
+    end
+
+    context 'when updating a route mapping' do
+      let!(:route_mapping) { VCAP::CloudController::RouteMapping.make(route: route, app: app_obj) }
+      let!(:guid) { route_mapping.guid }
+
+      put '/v2/route_mappings/:guid' do
+        include_context 'updatable_fields'
+
+        example 'Updating a Route Mapping' do
+          body = MultiJson.dump(
+            { app_port: 8889 }, pretty: true
+          )
+
+          client.put "/v2/route_mappings/#{guid}", body, headers
+          expect(status).to eq(201)
+
+          standard_entity_response parsed_response, :route_mapping
+          expect(parsed_response['entity']['app_guid']).to eq(app_obj.guid)
+          expect(parsed_response['entity']['route_guid']).to eq(route.guid)
+          expect(parsed_response['entity']['app_port']).to eq(8889)
+        end
       end
     end
   end
