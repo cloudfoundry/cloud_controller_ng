@@ -1470,6 +1470,27 @@ module VCAP::CloudController
       end
     end
 
+    describe 'staging?' do
+        let(:app) { AppFactory.make }
+
+      it 'should return true if package_state is PENDING and staging_task_id is not null' do
+        app.package_state = 'PENDING'
+        app.staging_task_id = 'some-non-null-value'
+        expect(app.staging?).to be true
+      end
+
+      it 'should return false if package_state is not PENDING' do
+        app.package_state = 'STARTED'
+        app.staging_task_id = 'some-non-null-value'
+        expect(app.staging?).to be false
+      end
+
+      it 'should return false if staging_task_id is empty' do
+        app.package_state = 'PENDING'
+        expect(app.staging?).to be false
+      end
+    end
+
     describe 'failed?' do
       let(:app) { AppFactory.make }
 

@@ -427,6 +427,10 @@ module VCAP::CloudController
       package_state == 'PENDING'
     end
 
+    def staging?
+      pending? && staging_task_id.present?
+    end
+
     def started?
       state == 'STARTED'
     end
