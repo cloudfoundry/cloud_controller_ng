@@ -238,6 +238,24 @@ module VCAP::CloudController
         expect(last_response.body).to include('Port is supported for domains of TCP router groups only.')
       end
 
+      context 'when the domain is private' do
+        let(:private_domain) { PrivateDomain.make }
+
+        it 'returns RouteInvalid' do
+          post '/v2/routes?generate_port=true', MultiJson.dump(domain_guid: private_domain.guid, space_guid: space.guid), headers_for(user)
+
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to include('Port is supported for domains of TCP router groups only.')
+        end
+
+        it 'returns RouteInvalid when port is provided' do
+          post '/v2/routes', MultiJson.dump(port: 8080, domain_guid: private_domain.guid, space_guid: space.guid), headers_for(user)
+
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to include('Port is supported for domains of TCP router groups only.')
+        end
+      end
+
       it 'returns RouteInvalid when generate_port is queried with an http domain' do
         post '/v2/routes?generate_port=true', MultiJson.dump(domain_guid: http_domain.guid, space_guid: space.guid), headers_for(user)
 

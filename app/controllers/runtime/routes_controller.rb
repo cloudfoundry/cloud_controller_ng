@@ -245,7 +245,7 @@ module VCAP::CloudController
       end
 
       domain = Domain[guid: request_attrs['domain_guid']]
-      raise Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.') if domain.router_group_guid.nil?
+      raise Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.') unless domain.shared? && domain.tcp?
 
       begin
         router_group = routing_api_client.router_group(domain.router_group_guid)
