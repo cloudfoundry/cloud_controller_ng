@@ -63,7 +63,7 @@ class DropletsController < ApplicationController
     lifecycle = LifecycleProvider.provide(package, staging_message)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
-    droplet = DropletCreate.new.create_and_stage(package, lifecycle, stagers)
+    droplet = DropletCreate.new.create_and_stage(package, lifecycle)
 
     render status: :created, json: droplet_presenter.present_json(droplet)
   rescue DropletCreate::InvalidPackage => e
@@ -105,9 +105,5 @@ class DropletsController < ApplicationController
 
   def list_fetcher
     DropletListFetcher.new
-  end
-
-  def stagers
-    CloudController::DependencyLocator.instance.stagers
   end
 end

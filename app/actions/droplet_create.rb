@@ -20,7 +20,7 @@ module VCAP::CloudController
       @environment_builder     = environment_presenter
     end
 
-    def create_and_stage(package, lifecycle, stagers)
+    def create_and_stage(package, lifecycle)
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
 
       staging_details = get_staging_details(package, lifecycle)
@@ -97,6 +97,10 @@ module VCAP::CloudController
 
     def logger
       @logger ||= Steno.logger('cc.package_stage_action')
+    end
+
+    def stagers
+      CloudController::DependencyLocator.instance.stagers
     end
   end
 end

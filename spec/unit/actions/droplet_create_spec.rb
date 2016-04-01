@@ -52,6 +52,7 @@ module VCAP::CloudController
       end
 
       before do
+        allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
         allow(stagers).to receive(:stager_for_package).and_return(stager)
         allow(stager).to receive(:stage)
         allow(memory_limit_calculator).to receive(:get_limit).with(memory_limit, space, org).and_return(calculated_mem_limit)
@@ -62,7 +63,7 @@ module VCAP::CloudController
       context 'creating a droplet' do
         it 'creates a droplet' do
           expect {
-            droplet = action.create_and_stage(package, lifecycle, stagers)
+            droplet = action.create_and_stage(package, lifecycle)
             expect(droplet.state).to eq(DropletModel::PENDING_STATE)
             expect(droplet.lifecycle_data.to_hash).to eq(lifecycle_data)
             expect(droplet.package_guid).to eq(package.guid)
@@ -77,7 +78,7 @@ module VCAP::CloudController
 
       context 'creating a stage request' do
         it 'initiates a staging request' do
-          droplet = action.create_and_stage(package, lifecycle, stagers)
+          droplet = action.create_and_stage(package, lifecycle)
           expect(stager).to have_received(:stage) do |staging_details|
             expect(staging_details.droplet).to eq(droplet)
             expect(staging_details.memory_limit).to eq(calculated_mem_limit)
@@ -93,7 +94,7 @@ module VCAP::CloudController
           let(:package) { PackageModel.make(app: app, state: PackageModel::PENDING_STATE) }
           it 'raises an InvalidPackage exception' do
             expect {
-              action.create_and_stage(package, lifecycle, stagers)
+              action.create_and_stage(package, lifecycle)
             }.to raise_error(DropletCreate::InvalidPackage, /not ready/)
           end
         end
@@ -106,7 +107,7 @@ module VCAP::CloudController
 
             it 'raises DropletCreate::DiskLimitExceeded' do
               expect {
-                action.create_and_stage(package, lifecycle, stagers)
+                action.create_and_stage(package, lifecycle)
               }.to raise_error(DropletCreate::DiskLimitExceeded)
             end
           end
@@ -120,7 +121,7 @@ module VCAP::CloudController
 
             it 'raises DropletCreate::SpaceQuotaExceeded' do
               expect {
-                action.create_and_stage(package, lifecycle, stagers)
+                action.create_and_stage(package, lifecycle)
               }.to raise_error(DropletCreate::SpaceQuotaExceeded)
             end
           end
@@ -132,7 +133,7 @@ module VCAP::CloudController
 
             it 'raises DropletCreate::OrgQuotaExceeded' do
               expect {
-                action.create_and_stage(package, lifecycle, stagers)
+                action.create_and_stage(package, lifecycle)
               }.to raise_error(DropletCreate::OrgQuotaExceeded)
             end
           end
