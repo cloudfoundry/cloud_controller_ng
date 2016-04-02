@@ -12,7 +12,11 @@ resource 'Files', type: [:api, :legacy_api] do
 
   get '/v2/apps/:app_guid/instances/:instance_index/files/:file_path' do
     example 'Retrieve File' do
-      explanation 'This endpoint does not work for Diego apps.'
+      explanation <<-EOD
+        The endpoint does not function with Deigo apps.
+        Please use <a href="http://docs.cloudfoundry.org/devguide/deploy-apps/ssh-apps.html#ssh-command">`cf ssh`</a>
+        for Diego apps.
+      EOD
 
       deal_file_result = VCAP::CloudController::Dea::FileUriResult.new(
         credentials: [],
