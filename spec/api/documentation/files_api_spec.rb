@@ -14,8 +14,7 @@ resource 'Files', type: [:api, :legacy_api] do
     example 'Retrieve File' do
       explanation <<-EOD
         The endpoint does not function with Deigo apps.
-        Please use <a href="http://docs.cloudfoundry.org/devguide/deploy-apps/ssh-apps.html#ssh-command">`cf ssh`</a>
-        for Diego apps.
+        Please use CF CLI command `cf ssh` for Diego apps.
       EOD
 
       deal_file_result = VCAP::CloudController::Dea::FileUriResult.new(
