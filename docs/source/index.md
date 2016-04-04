@@ -14,6 +14,7 @@ includes:
   - api_resources/tasks
   - general/header
   - apps/header
+  - apps/object
   - apps/create
   - apps/get
   - apps/env
