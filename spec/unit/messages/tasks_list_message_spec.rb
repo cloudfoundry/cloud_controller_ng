@@ -96,9 +96,6 @@ module VCAP::CloudController
       end
 
       describe 'validations' do
-        it_behaves_like 'a page validator'
-        it_behaves_like 'a per_page validator'
-
         describe 'validating app nested query' do
           context 'when the request contains app_guid but not app_guids, space_guids, and org_guids' do
             it 'validates' do

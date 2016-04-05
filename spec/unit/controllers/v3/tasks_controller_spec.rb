@@ -403,6 +403,24 @@ describe TasksController, type: :controller do
       expect(parsed_body['pagination']['first']['href']).to include('/v3/tasks')
     end
 
+    context 'when pagination options are specified' do
+      let(:page) { 1 }
+      let(:per_page) { 1 }
+      let(:params) { { 'page' => page, 'per_page' => per_page } }
+
+      it 'paginates the response' do
+        VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
+        VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
+
+        get :index, params
+
+        parsed_response = parsed_body
+        response_guids = parsed_response['resources'].map { |r| r['guid'] }
+        expect(parsed_response['pagination']['total_results']).to eq(2)
+        expect(response_guids.length).to eq(per_page)
+      end
+    end
+
     context 'when accessed as an app subresource' do
       it 'uses the app as a filter' do
         task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
@@ -482,7 +500,7 @@ describe TasksController, type: :controller do
           get :index, per_page: 'meow'
 
           expect(response.status).to eq 400
-          expect(response.body).to include('Per page is not a number')
+          expect(response.body).to include('Per page must be a positive integer')
           expect(response.body).to include('BadQueryParameter')
         end
       end

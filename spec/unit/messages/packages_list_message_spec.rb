@@ -48,11 +48,6 @@ module VCAP::CloudController
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
       end
-
-      describe 'validations' do
-        it_behaves_like 'a page validator'
-        it_behaves_like 'a per_page validator'
-      end
     end
   end
 end

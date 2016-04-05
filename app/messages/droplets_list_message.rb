@@ -1,20 +1,14 @@
-require 'messages/base_message'
+require 'messages/list_message'
 
 module VCAP::CloudController
-  class DropletsListMessage < BaseMessage
+  class DropletsListMessage < ListMessage
     ALLOWED_KEYS = [:app_guids, :states, :page, :per_page, :order_by, :app_guid].freeze
-    VALID_ORDER_BY_KEYS = /created_at|updated_at/
 
     attr_accessor(*ALLOWED_KEYS)
-
-    validates_with NoAdditionalParamsValidator
+    validates_with NoAdditionalParamsValidator # from BaseMessage
 
     validates :app_guids, array: true, allow_nil: true
     validates :states, array: true, allow_nil: true
-    validates_numericality_of :page, greater_than: 0, allow_nil: true, only_integer: true
-    validates_numericality_of :per_page, greater_than: 0, allow_nil: true, only_integer: true
-    validates_format_of :order_by, with: /[+-]?(#{VALID_ORDER_BY_KEYS})/, allow_nil: true
-
     validate :app_nested_request, if: -> { app_guid.present? }
 
     def initialize(params={})

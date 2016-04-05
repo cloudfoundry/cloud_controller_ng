@@ -1,12 +1,12 @@
 require 'messages/base_message'
 
 module VCAP::CloudController
-  class TasksListMessage < BaseMessage
-    ALLOWED_KEYS = [:names, :states, :guids, :app_guids, :organization_guids, :space_guids, :page, :per_page, :app_guid].freeze
+  class TasksListMessage < ListMessage
+    ALLOWED_KEYS = [:names, :states, :guids, :app_guids, :organization_guids, :space_guids, :page, :per_page, :order_by, :app_guid].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 
-    validates_with NoAdditionalParamsValidator
+    validates_with NoAdditionalParamsValidator # from BaseMessage
 
     validates :names, array: true, allow_nil: true
     validates :states, array: true, allow_nil: true
@@ -14,9 +14,6 @@ module VCAP::CloudController
     validates :app_guids, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
-    validates_numericality_of :page, greater_than: 0, allow_nil: true, only_integer: true
-    validates_numericality_of :per_page, greater_than: 0, allow_nil: true, only_integer: true
-
     validate :app_nested_request, if: -> { app_guid.present? }
 
     def initialize(params={})

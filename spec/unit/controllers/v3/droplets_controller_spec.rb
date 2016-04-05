@@ -635,6 +635,21 @@ describe DropletsController, type: :controller do
       expect(parsed_body['pagination']['first']['href']).to start_with('/v3/droplets')
     end
 
+    context 'when pagination options are specified' do
+      let(:page) { 1 }
+      let(:per_page) { 1 }
+      let(:params) { { 'page' => page, 'per_page' => per_page } }
+
+      it 'paginates the response' do
+        get :index, params
+
+        parsed_response = parsed_body
+        response_guids = parsed_response['resources'].map { |r| r['guid'] }
+        expect(parsed_response['pagination']['total_results']).to eq(2)
+        expect(response_guids.length).to eq(per_page)
+      end
+    end
+
     context 'accessed as an app subresource' do
       it 'returns droplets for the app' do
         app       = VCAP::CloudController::AppModel.make(space: space)
@@ -713,7 +728,7 @@ describe DropletsController, type: :controller do
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
-          expect(response.body).to include('Order by is invalid')
+          expect(response.body).to include("Order by can only be 'created_at' or 'updated_at'")
         end
       end
 

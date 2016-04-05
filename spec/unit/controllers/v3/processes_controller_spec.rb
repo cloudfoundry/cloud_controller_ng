@@ -73,6 +73,24 @@ describe ProcessesController, type: :controller do
         expect(parsed_body['pagination']['first']['href']).to include("/v3/apps/#{app.guid}/processes")
       end
 
+      context 'when pagination options are specified' do
+        let(:page) { 1 }
+        let(:per_page) { 1 }
+        let(:params) { { 'page' => page, 'per_page' => per_page, app_guid: app.guid } }
+
+        it 'paginates the response' do
+          VCAP::CloudController::ProcessModel.make(app_guid: app.guid)
+          VCAP::CloudController::ProcessModel.make(app_guid: app.guid)
+
+          get :index, params
+
+          parsed_response = parsed_body
+          response_guids = parsed_response['resources'].map { |r| r['guid'] }
+          expect(parsed_response['pagination']['total_results']).to eq(2)
+          expect(response_guids.length).to eq(per_page)
+        end
+      end
+
       context 'the app does not exist' do
         it 'returns a 404 Resource Not Found' do
           get :index, app_guid: 'hello-i-do-not-exist'

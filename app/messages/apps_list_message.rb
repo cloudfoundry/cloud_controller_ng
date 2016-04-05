@@ -1,8 +1,8 @@
-require 'messages/base_message'
+require 'messages/list_message'
 
 module VCAP::CloudController
-  class AppsListMessage < BaseMessage
-    ALLOWED_KEYS = [:names, :guids, :organization_guids, :space_guids, :page, :per_page, :order_by].freeze
+  class AppsListMessage < ListMessage
+    ALLOWED_KEYS = [:names, :guids, :organization_guids, :space_guids, :page, :per_page, :order_by, :order_direction].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 
@@ -12,9 +12,6 @@ module VCAP::CloudController
     validates :guids, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
-    validates_numericality_of :page, greater_than: 0, allow_nil: true, only_integer: true
-    validates_numericality_of :per_page, greater_than: 0, allow_nil: true, only_integer: true
-    validates :order_by, string: true, allow_nil: true
 
     def initialize(params={})
       super(params.symbolize_keys)

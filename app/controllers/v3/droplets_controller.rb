@@ -15,17 +15,14 @@ class DropletsController < ApplicationController
     message = DropletsListMessage.from_params(app_subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    pagination_options = PaginationOptions.from_params(query_params)
-    invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
-
     if app_nested?
-      app, paginated_result = list_fetcher.fetch_for_app(app_guid: params[:app_guid], pagination_options: pagination_options, message: message)
+      app, paginated_result = list_fetcher.fetch_for_app(app_guid: params[:app_guid], pagination_options: message.pagination_options, message: message)
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
       paginated_result = if roles.admin?
-                           list_fetcher.fetch_all(pagination_options: pagination_options, message: message)
+                           list_fetcher.fetch_all(pagination_options: message.pagination_options, message: message)
                          else
-                           list_fetcher.fetch_for_spaces(space_guids: readable_space_guids, pagination_options: pagination_options, message: message)
+                           list_fetcher.fetch_for_spaces(space_guids: readable_space_guids, pagination_options: message.pagination_options, message: message)
                          end
     end
 

@@ -43,7 +43,7 @@ module VCAP::CloudController
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        message = TasksListMessage.new({
+        message = RouteMappingsListMessage.new({
           page: 1,
           per_page: 5,
         })
@@ -51,20 +51,15 @@ module VCAP::CloudController
       end
 
       it 'accepts an empty set' do
-        message = TasksListMessage.new
+        message = RouteMappingsListMessage.new
         expect(message).to be_valid
       end
 
       it 'does not accept a field not in this set' do
-        message = TasksListMessage.new({ foobar: 'pants' })
+        message = RouteMappingsListMessage.new({ foobar: 'pants' })
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
-      end
-
-      describe 'validations' do
-        it_behaves_like 'a page validator'
-        it_behaves_like 'a per_page validator'
       end
     end
   end

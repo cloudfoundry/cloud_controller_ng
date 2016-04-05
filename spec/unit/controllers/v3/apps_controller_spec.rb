@@ -75,16 +75,6 @@ describe AppsV3Controller, type: :controller do
         end
       end
 
-      context 'when the page is not an integer' do
-        it 'returns 400' do
-          get :index, page: 1.1
-
-          expect(response.status).to eq 400
-          expect(response.body).to include 'BadQueryParameter'
-          expect(response.body).to include 'Page must be an integer'
-        end
-      end
-
       context 'unknown query param' do
         it 'returns 400' do
           get :index, meow: 'woof', kaplow: 'zoom'

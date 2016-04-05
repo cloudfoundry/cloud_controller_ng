@@ -156,10 +156,10 @@ describe RouteMappingsController, type: :controller do
            VCAP::CloudController::Membership::SPACE_MANAGER,
            VCAP::CloudController::Membership::SPACE_AUDITOR,
            VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-          and_return(true)
+           and_return(true)
 
-        allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-          and_return(false)
+           allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
+             and_return(false)
       end
 
       it 'raises ApiError NotAuthorized' do
@@ -329,6 +329,24 @@ describe RouteMappingsController, type: :controller do
       it 'provides the correct base url in the pagination links' do
         get :index, app_guid: app.guid
         expect(parsed_body['pagination']['first']['href']).to include("/v3/apps/#{app.guid}/route_mappings")
+      end
+
+      context 'when pagination options are specified' do
+        let(:page) { 1 }
+        let(:per_page) { 1 }
+        let(:params) { { 'page' => page, 'per_page' => per_page } }
+
+        it 'paginates the response' do
+          VCAP::CloudController::RouteMappingModel.make(app: app)
+          VCAP::CloudController::RouteMappingModel.make(app: app)
+
+          get :index, params
+
+          parsed_response = parsed_body
+          response_guids = parsed_response['resources'].map { |r| r['guid'] }
+          expect(parsed_response['pagination']['total_results']).to eq(2)
+          expect(response_guids.length).to eq(per_page)
+        end
       end
 
       context 'the app does not exist' do

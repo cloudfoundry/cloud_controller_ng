@@ -79,9 +79,6 @@ module VCAP::CloudController
       end
 
       describe 'validations' do
-        it_behaves_like 'a page validator'
-        it_behaves_like 'a per_page validator'
-
         describe 'validating app nested query' do
           context 'when the request contains both app_guid and app_guids' do
             it 'does not validate' do
@@ -102,38 +99,6 @@ module VCAP::CloudController
           message = DropletsListMessage.new states: 'not array at all'
           expect(message).to be_invalid
           expect(message.errors[:states].length).to eq 1
-        end
-
-        describe 'order_by' do
-          describe 'valid values' do
-            it 'created_at' do
-              message = DropletsListMessage.new order_by: 'created_at'
-              expect(message).to be_valid
-            end
-
-            it 'updated_at' do
-              message = DropletsListMessage.new order_by: 'updated_at'
-              expect(message).to be_valid
-            end
-
-            describe 'order direction' do
-              it 'accepts valid values prefixed with "-"' do
-                message = DropletsListMessage.new order_by: '-updated_at'
-                expect(message).to be_valid
-              end
-
-              it 'accepts valid values prefixed with "+"' do
-                message = DropletsListMessage.new order_by: '+updated_at'
-                expect(message).to be_valid
-              end
-            end
-          end
-
-          it 'is invalid otherwise' do
-            message = DropletsListMessage.new order_by: '+foobar'
-            expect(message).to be_invalid
-            expect(message.errors[:order_by].length).to eq 1
-          end
         end
       end
     end
