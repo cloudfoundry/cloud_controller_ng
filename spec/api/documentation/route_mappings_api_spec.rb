@@ -15,16 +15,6 @@ resource 'Routes Mapping', type: [:api, :legacy_api] do
       field :route_guid, 'The guid of the bound route.', required: true, example_values: [Sham.guid]
     end
 
-    shared_context 'updatable_fields' do |opts|
-      field :app_port, 'Port on which the application should
-                      listen, and to which requests for the
-                      mapped route will be routed. Must be
-                      among those already configured for the app.
-                      If a port is not specified when mapping the
-                      route, the first one in the list of those
-                      configured for the app will be chosen.', required: false
-    end
-
     context 'when a route mapping exists' do
       let!(:route_mapping) { VCAP::CloudController::RouteMapping.make(route: route, app: app_obj) }
       let(:guid) { route_mapping.guid }
@@ -36,7 +26,13 @@ resource 'Routes Mapping', type: [:api, :legacy_api] do
 
     post '/v2/route_mappings' do
       include_context 'guid_fields'
-      include_context 'updatable_fields'
+      field :app_port, 'Port on which the application should
+                      listen, and to which requests for the
+                      mapped route will be routed. Must be
+                      among those already configured for the app.
+                      If a port is not specified when mapping the
+                      route, the first one in the list of those
+                      configured for the app will be chosen.', required: false
 
       example 'Mapping an App and a Route' do
         body = MultiJson.dump(
@@ -58,7 +54,9 @@ resource 'Routes Mapping', type: [:api, :legacy_api] do
       let!(:guid) { route_mapping.guid }
 
       put '/v2/route_mappings/:guid' do
-        include_context 'updatable_fields'
+        field :app_port, 'Port on which the application should listen,
+                          and to which requests for the mapped route will be routed.
+                          Must be among those already configured for the app.', required: true
 
         example 'Updating a Route Mapping' do
           body = MultiJson.dump(
