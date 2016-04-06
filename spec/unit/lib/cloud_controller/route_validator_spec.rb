@@ -55,8 +55,9 @@ module VCAP::CloudController
           let(:port) { 1023 }
 
           it 'raises a RouteInvalid error' do
+            err_msg = 'The requested port is not available for reservation. Try a different port or request a random one be generated for you.'
             expect { validator.validate }.
-              to raise_error(RouteValidator::RouteInvalid, 'Port must be one of the reservable ports.')
+              to raise_error(RouteValidator::RouteInvalid, err_msg)
           end
         end
 

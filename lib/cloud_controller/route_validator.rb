@@ -80,7 +80,8 @@ module VCAP::CloudController
     end
 
     def validate_port_number
-      raise RouteInvalid.new('Port must be one of the reservable ports.') unless router_group.reservable_ports.include? port
+      err_msg = 'The requested port is not available for reservation. Try a different port or request a random one be generated for you.'
+      raise RouteInvalid.new(err_msg) unless router_group.reservable_ports.include? port
     end
 
     def validate_port_not_taken
