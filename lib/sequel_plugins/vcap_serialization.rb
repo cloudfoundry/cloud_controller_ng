@@ -39,6 +39,10 @@ module Sequel::Plugins::VcapSerialization
       self.class.export_attrs || []
     end
 
+    def export_attrs_from_methods
+      self.class.export_attrs_from_methods
+    end
+
     # Update the model instance from the supplied json string.  Only update
     # attributes specified by import_attributes.
     #
@@ -106,6 +110,12 @@ module Sequel::Plugins::VcapSerialization
       self.export_attrs = attributes.freeze
     end
 
+    # after serializing an object to a hash based on export_attributes and
+    # transient_attributes, swap in different values from methods on the object
+    def export_attributes_from_methods(hash)
+      self.export_attrs_from_methods = hash.freeze
+    end
+
     # @param [Array<Symbol>] List of attributes to include when importing
     # from json or a hash.
     def import_attributes(*attributes)
@@ -130,6 +140,6 @@ module Sequel::Plugins::VcapSerialization
       results
     end
 
-    attr_accessor :export_attrs, :import_attrs
+    attr_accessor :export_attrs, :import_attrs, :export_attrs_from_methods
   end
 end

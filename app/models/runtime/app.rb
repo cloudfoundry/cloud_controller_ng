@@ -68,6 +68,8 @@ module VCAP::CloudController
                       :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh,
                       :docker_credentials_json, :ports
 
+    export_attributes_from_methods ports: :ports_with_defaults
+
     strip_attributes :name
 
     serialize_attributes :json, :metadata
@@ -90,6 +92,10 @@ module VCAP::CloudController
     attr_accessor :last_stager_response
 
     alias_method :diego?, :diego
+
+    # user_provided_ports method should be called to
+    # get the value of ports stored in the database
+    alias_method(:user_provided_ports, :ports)
 
     def copy_buildpack_errors
       bp = buildpack
@@ -117,8 +123,8 @@ module VCAP::CloudController
         HealthCheckPolicy.new(self, health_check_timeout),
         CustomBuildpackPolicy.new(self, custom_buildpacks_enabled?),
         DockerPolicy.new(self),
-        PortsPolicy.new(self),
-        DiegoToDeaPolicy.new(self, changed_from_diego_to_dea)
+        PortsPolicy.new(self, changed_from_dea_to_diego?),
+        DiegoToDeaPolicy.new(self, changed_from_diego_to_dea?)
       ]
     end
 
@@ -161,7 +167,7 @@ module VCAP::CloudController
 
       # column_changed?(:ports) reports false here for reasons unknown
       @ports_changed_by_user = changed_columns.include?(:ports)
-      update_ports(nil) if changed_from_diego_to_dea && !changed_columns.include?(:ports)
+      update_ports(nil) if changed_from_diego_to_dea? && !changed_columns.include?(:ports)
       super
     end
 
@@ -340,6 +346,10 @@ module VCAP::CloudController
     end
     alias_method_chain :environment_json, 'serialization'
 
+    def docker?
+      docker_image.present?
+    end
+
     def docker_credentials_json_with_serialization=(env)
       self.docker_credentials_json_without_serialization = MultiJson.dump(env)
     end
@@ -450,32 +460,6 @@ module VCAP::CloudController
       routes.map(&:uri)
     end
 
-    def routing_info
-      route_app_port_map = route_id_app_ports_map
-
-      http_info = []
-      tcp_info = []
-      routes.each do |r|
-        route_app_port_map[r.id].each do |app_port|
-          if r.domain.router_group_guid.nil?
-            info = { 'hostname' => r.uri }
-            info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
-            info['port'] = app_port
-            http_info.push(info)
-          elsif !route_app_port_map[r.id].blank?
-            info = { 'router_group_guid' => r.domain.router_group_guid }
-            info['external_port'] = r.port
-            info['container_port'] = app_port
-            tcp_info.push(info)
-          end
-        end
-      end
-      route_info = {}
-      route_info['http_routes'] = http_info unless http_info.blank?
-      route_info['tcp_routes'] = tcp_info unless tcp_info.blank?
-      route_info
-    end
-
     def mark_as_staged
       self.package_state = 'STAGED'
       self.package_pending_since = nil
@@ -537,7 +521,7 @@ module VCAP::CloudController
     end
 
     def docker_image=(value)
-      value = fill_docker_string(value)
+      value = docker_image_with_tag_name(value)
       super
       self.package_hash = value
     end
@@ -643,60 +627,8 @@ module VCAP::CloudController
       mark_routes_changed
     end
 
-    # user_provided_ports method should be called to
-    # get the value of ports stored in the database
-    alias_method(:user_provided_ports, :ports)
-    def ports
-      ports = super
-      return ports unless ports.nil?
-
-      if diego?
-        ports = docker_ports if self.docker_image.present?
-        ports = DEFAULT_PORTS if ports.blank?
-      end
-
-      ports
-    end
-
     def all_service_bindings
       service_bindings + (app ? app.service_bindings : [])
-    end
-
-    private
-
-    def route_id_app_ports_map
-      route_app_port_map = {}
-      self.route_mappings(true).each do |route_map|
-        route_app_port_map[route_map.route_id] = [] if route_app_port_map[route_map.route_id].nil?
-        unless route_map.app_port.nil?
-          route_app_port_map[route_map.route_id].push(route_map.app_port)
-        end
-      end
-
-      route_app_port_map
-    end
-
-    def changed_from_diego_to_dea
-      column_changed?(:diego) && initial_value(:diego).present? && !diego
-    end
-
-    def changed_from_dea_to_diego
-      column_changed?(:diego) && (initial_value(:diego) == false) && diego
-    end
-
-    def changed_from_default_ports
-      @ports_changed_by_user && initial_value(:ports) == [DEFAULT_HTTP_PORT]
-    end
-
-    # HACK: We manually call the Serializer here because the plugin uses the
-    # _before_validation method to serialize ports. This is called before
-    # validations and we want to set the default ports after validations.
-    #
-    # See:
-    # https://github.com/jeremyevans/sequel/blob/7d6753da53196884e218a59a7dcd9a7803881b68/lib/sequel/model/base.rb#L1772-L1779
-    def update_ports(new_ports)
-      self.ports = new_ports
-      self[:ports] = IntegerArraySerializer.serializer.call(self.ports)
     end
 
     def docker_ports
@@ -717,13 +649,42 @@ module VCAP::CloudController
       exposed_ports
     end
 
+    def ports_with_defaults
+      VCAP::CloudController::Diego::Protocol::OpenProcessPorts.new(self).to_a
+    end
+
+    private
+
+    def changed_from_diego_to_dea?
+      column_changed?(:diego) && initial_value(:diego).present? && !diego
+    end
+
+    def changed_from_dea_to_diego?
+      column_changed?(:diego) && (initial_value(:diego) == false) && diego
+    end
+
+    def changed_from_default_ports?
+      @ports_changed_by_user && (initial_value(:ports).nil? || initial_value(:ports) == [DEFAULT_HTTP_PORT])
+    end
+
+    # HACK: We manually call the Serializer here because the plugin uses the
+    # _before_validation method to serialize ports. This is called before
+    # validations and we want to set the default ports after validations.
+    #
+    # See:
+    # https://github.com/jeremyevans/sequel/blob/7d6753da53196884e218a59a7dcd9a7803881b68/lib/sequel/model/base.rb#L1772-L1779
+    def update_ports(new_ports)
+      self.ports = new_ports
+      self[:ports] = IntegerArraySerializer.serializer.call(self.ports)
+    end
+
     def update_route_mappings_ports
-      if changed_from_diego_to_dea
+      if changed_from_diego_to_dea?
         self.route_mappings_dataset.update(app_port: nil) unless self.route_mappings.nil?
-      elsif changed_from_dea_to_diego
+      elsif changed_from_dea_to_diego?
         port = self.user_provided_ports.first if self.user_provided_ports.present?
         self.route_mappings_dataset.update(app_port: port) if port.present?
-      elsif changed_from_default_ports && self.route_mappings.present? && self.docker_image.blank?
+      elsif changed_from_default_ports? && self.route_mappings.present? && self.docker_image.blank?
         self.route_mappings_dataset.update(app_port: DEFAULT_HTTP_PORT)
       end
     end
@@ -751,8 +712,9 @@ module VCAP::CloudController
     # repo/image reference online at the moment, so make a best effort to turn
     # the passed value into a complete, plausible docker image reference:
     # registry-name:registry-port/[scope-name/]repo-name:tag-name
-    def fill_docker_string(value)
-      segs = value.split('/')
+    def docker_image_with_tag_name(docker_image_name)
+      return unless docker_image_name
+      segs = docker_image_name.split('/')
       segs[-1] = segs.last + ':latest' unless segs.last.include?(':')
       segs.join('/')
     end

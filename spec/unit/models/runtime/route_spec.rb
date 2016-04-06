@@ -114,37 +114,6 @@ module VCAP::CloudController
           expect(mapping2.exists?).to be_falsey
         end
       end
-      context 'when mapping app to route' do
-        let(:route) { Route.make }
-
-        before do
-          route.add_app(app)
-        end
-
-        context 'when it is a diego app' do
-          let(:app) { AppFactory.make(space: route.space, diego: true) }
-
-          it 'uses the first port of the app as the app_port' do
-            route_mapping = RouteMapping.find(app: app, route: route)
-            expect(route_mapping.app_port).to eq(8080)
-          end
-
-          it "doesn't save the default port to the route mapping" do
-            route_mapping = RouteMapping.find(app: app, route: route)
-            expect(route_mapping.user_provided_app_port).to be_nil
-          end
-        end
-
-        context 'when it is dea app' do
-          let(:app) { AppFactory.make(space: route.space, diego: false) }
-
-          it 'sets the app_port as nil' do
-            route_mapping = RouteMapping.find(app: app, route: route)
-            expect(route_mapping.app_port).to be_nil
-            expect(route_mapping.user_provided_app_port).to be_nil
-          end
-        end
-      end
     end
 
     describe 'Validations' do

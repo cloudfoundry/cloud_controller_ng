@@ -4,10 +4,9 @@ require 'presenters/v3/process_presenter'
 module VCAP::CloudController
   describe ProcessPresenter do
     describe '#present_json' do
-      it 'presents the process as json' do
-        app_model = AppModel.make
-
-        process = App.make(
+      let(:app_model) { AppModel.make }
+      let(:process) {
+        App.make(
           diego:                true,
           app_guid:             app_model.guid,
           instances:            3,
@@ -20,11 +19,15 @@ module VCAP::CloudController
           ports:                [1234, 7896],
           created_at:           Time.at(1)
         )
+      }
+      let(:json_result) { ProcessPresenter.new.present_json(process) }
+      subject(:result) { MultiJson.load(json_result) }
+
+      before do
         process.updated_at = Time.at(2)
+      end
 
-        json_result = ProcessPresenter.new.present_json(process)
-        result      = MultiJson.load(json_result)
-
+      it 'presents the process as json' do
         links = {
           'self'  => { 'href' => "/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
@@ -43,6 +46,18 @@ module VCAP::CloudController
         expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
         expect(result['updated_at']).to eq('1970-01-01T00:00:02Z')
         expect(result['links']).to eq(links)
+      end
+
+      context 'when diego thinks that a different port should be used' do
+        let(:open_process_ports) { double(:app_ports, to_a: [5678]) }
+
+        before do
+          allow(VCAP::CloudController::Diego::Protocol::OpenProcessPorts).to receive(:new).with(process).and_return(open_process_ports)
+        end
+
+        it 'uses those ports' do
+          expect(result['ports']).to match_array([5678])
+        end
       end
     end
 

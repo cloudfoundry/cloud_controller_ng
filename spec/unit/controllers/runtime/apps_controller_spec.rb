@@ -466,7 +466,6 @@ module VCAP::CloudController
             expect(last_response.status).to eq(201)
             expect(decoded_response['entity']['ports']).to match([8080])
             expect(decoded_response['entity']['diego']).to be true
-            expect(route_mapping.reload.app_port).to eq(8080)
           end
         end
 

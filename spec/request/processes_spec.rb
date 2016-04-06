@@ -48,7 +48,7 @@ describe 'Processes' do
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
-            'ports'        => [],
+            'ports'        => [8080],
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -119,7 +119,7 @@ describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
-        'ports'        => [],
+        'ports'        => [8080],
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -299,7 +299,7 @@ describe 'Processes' do
         'instances'    => 5,
         'memory_in_mb' => 10,
         'disk_in_mb'   => 20,
-        'ports'        => [],
+        'ports'        => [8080],
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -387,7 +387,7 @@ describe 'Processes' do
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
-            'ports'        => [],
+            'ports'        => [8080],
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -458,7 +458,7 @@ describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
-        'ports'        => [],
+        'ports'        => [8080],
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -567,7 +567,7 @@ describe 'Processes' do
         'instances'    => 5,
         'memory_in_mb' => 10,
         'disk_in_mb'   => 20,
-        'ports'        => [],
+        'ports'        => [8080],
         'health_check' => {
           'type' => 'port',
           'data' => {

@@ -41,26 +41,26 @@ module VCAP::CloudController
           context 'web processes' do
             let(:process_types) { { web: 'thing' } }
 
-            it '1 instance, port health_check_type, [8080] ports' do
+            it '1 instance, port health_check_type, nil ports' do
               current_process_types.process_current_droplet(app)
               app.reload
 
               expect(app.processes[0].instances).to eq(1)
               expect(app.processes[0].health_check_type).to eq('port')
-              expect(app.processes[0].ports).to eq([8080])
+              expect(app.processes[0].ports).to eq(nil)
             end
           end
 
           context 'non-web processes' do
             let(:process_types) { { other: 'stuff' } }
 
-            it '0 instances, process health_check_type, [] ports' do
+            it '0 instances, process health_check_type, nil ports' do
               current_process_types.process_current_droplet(app)
               app.reload
 
               expect(app.processes[0].instances).to eq(0)
               expect(app.processes[0].health_check_type).to eq('process')
-              expect(app.processes[0].ports).to eq([])
+              expect(app.processes[0].ports).to eq(nil)
             end
           end
         end

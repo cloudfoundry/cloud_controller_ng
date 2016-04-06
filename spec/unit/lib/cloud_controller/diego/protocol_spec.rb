@@ -33,12 +33,15 @@ module VCAP::CloudController
       let(:default_health_check_timeout) { 99 }
       let(:config) { TestConfig.config }
       let(:egress_rules) { double(:egress_rules) }
+      let(:ports) { [2222, 3333] }
+      let(:type) { 'web' }
       let(:app) do
         AppFactory.make(
           health_check_timeout: default_health_check_timeout,
           command: 'start_me',
           diego: true,
-          ports: [2222, 3333]
+          type: type,
+          ports: ports
         )
       end
 
@@ -192,11 +195,11 @@ module VCAP::CloudController
             'routing_info' => {
               'http_routes' => [
                 { 'hostname' => route_without_service.uri,
-                  'port' => app.ports[0],
+                  'port' => 2222,
                 },
                 { 'hostname' => route_with_service.uri,
                   'route_service_url' => route_with_service.route_binding.route_service_url,
-                  'port' => app.ports[0],
+                  'port' => 2222,
                 }
               ]
             },
@@ -205,6 +208,39 @@ module VCAP::CloudController
             'allow_ssh' => true,
             'ports' => [2222, 3333]
           }.merge(lifecycle_protocol.desired_app_message(double(:app))))
+        end
+
+        context 'when app does not have ports defined' do
+          let(:ports) { nil }
+
+          context 'when this is a docker app' do
+            before do
+              allow(app).to receive(:docker_image).and_return('docker/image')
+              allow(app).to receive(:docker_ports).and_return([123, 456])
+            end
+
+            it 'uses the saved docker ports' do
+              expect(message['ports']).to eq([123, 456])
+            end
+          end
+
+          context 'when this is a buildpack app' do
+            context 'when the type is web' do
+              let(:type) { 'web' }
+
+              it 'defaults to [8080]' do
+                expect(message['ports']).to eq([8080])
+              end
+            end
+
+            context 'when the type is not web' do
+              let(:type) { 'other' }
+
+              it 'default to []' do
+                expect(message['ports']).to eq([])
+              end
+            end
+          end
         end
 
         context 'when the app health check timeout is not set' do

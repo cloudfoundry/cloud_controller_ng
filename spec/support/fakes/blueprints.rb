@@ -70,7 +70,7 @@ module VCAP::CloudController
   DropletModel.blueprint(:docker) do
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
-    app { AppModel.make }
+    app { AppModel.make(droplet_guid: guid) }
     memory_limit { 123 }
   end
 

@@ -1,6 +1,8 @@
 require 'cloud_controller/diego/environment'
 require 'cloud_controller/diego/process_guid'
 require 'cloud_controller/diego/staging_request'
+require 'cloud_controller/diego/protocol/open_process_ports'
+require 'cloud_controller/diego/protocol/routing_info'
 
 module VCAP::CloudController
   module Diego
@@ -51,14 +53,14 @@ module VCAP::CloudController
           'environment'                     => env,
           'num_instances'                   => app.desired_instances,
           'routes'                          => app.uris,
-          'routing_info'                    => app.routing_info,
+          'routing_info'                    => RoutingInfo.new(app).routing_info,
           'log_guid'                        => log_guid,
           'health_check_type'               => app.health_check_type,
           'health_check_timeout_in_seconds' => app.health_check_timeout || default_health_check_timeout,
           'egress_rules'                    => @egress_rules.running(app),
           'etag'                            => app.updated_at.to_f.to_s,
           'allow_ssh'                       => app.enable_ssh,
-          'ports'                           => app.ports
+          'ports'                           => OpenProcessPorts.new(app).to_a
         }.merge(@lifecycle_protocol.desired_app_message(app))
       end
 

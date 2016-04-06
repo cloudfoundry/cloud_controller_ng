@@ -167,10 +167,10 @@ module VCAP::CloudController
       let(:route) { Route.make(space: app_obj.space) }
 
       context 'when the app has no docker ports' do
-        it 'returns the default app_port' do
+        it 'is nil' do
           mapping = RouteMapping.new(app: app_obj, route: route)
           mapping.save
-          expect(mapping.app_port).to eq 8080
+          expect(mapping.app_port).to be nil
         end
 
         it 'does not save the app port' do
@@ -194,9 +194,9 @@ module VCAP::CloudController
 
         let(:mapping) { RouteMapping.new(app: app_obj, route: route) }
 
-        it 'returns a the first docker port' do
+        it 'returns nil app_port' do
           mapping.save
-          expect(mapping.app_port).to eq 1024
+          expect(mapping.app_port).to be nil
         end
 
         it 'does not save app_port' do
@@ -259,14 +259,14 @@ module VCAP::CloudController
           app.save
         end
 
-        it 'sets the app_port to the default port' do
+        it 'returns a nil app_port' do
           route_mapping = RouteMapping.last
-          expect(route_mapping.app_port).to eq(8080)
+          expect(route_mapping.app_port).to be nil
         end
 
-        it 'does not save the app_port' do
+        it 'does not save the user_provided_app_port' do
           route_mapping = RouteMapping.last
-          expect(route_mapping.user_provided_app_port).to be_nil
+          expect(route_mapping.user_provided_app_port).to be nil
         end
       end
 
@@ -340,8 +340,8 @@ module VCAP::CloudController
             let(:route) { Route.make('myhost', space: app.space, path: '/my%20path') }
             let(:route_mapping) { RouteMapping.make(app: app, route: route) }
 
-            it 'returns the default port' do
-              expect(route_mapping.app_port).to equal 8080
+            it 'is nil' do
+              expect(route_mapping.app_port).to be nil
             end
 
             it 'does not save the default port' do

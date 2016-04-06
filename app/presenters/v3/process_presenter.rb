@@ -1,5 +1,6 @@
 require 'presenters/v3/pagination_presenter'
 require 'presenters/v3/process_stats_presenter'
+require 'cloud_controller/diego/protocol/open_process_ports'
 
 module VCAP::CloudController
   class ProcessPresenter
@@ -50,7 +51,7 @@ module VCAP::CloudController
         instances:    process.instances,
         memory_in_mb: process.memory,
         disk_in_mb:   process.disk_quota,
-        ports:        process.ports,
+        ports:        VCAP::CloudController::Diego::Protocol::OpenProcessPorts.new(process).to_a,
         health_check: {
           type: process.health_check_type,
           data: {

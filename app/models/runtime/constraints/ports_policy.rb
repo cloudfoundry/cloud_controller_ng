@@ -1,6 +1,7 @@
 class PortsPolicy
-  def initialize(app)
+  def initialize(app, changed_to_diego)
     @app = app
+    @changed_to_diego = changed_to_diego
     @errors = app.errors
   end
 
@@ -18,7 +19,14 @@ class PortsPolicy
   private
 
   def verify_ports
-    @app.route_mappings.each { |m| return false if !m.app_port.nil? && !@app.ports.include?(m.app_port) }
+    return true if @changed_to_diego
+    @app.route_mappings.each do |m|
+      if m.user_provided_app_port.blank?
+        return false unless @app.ports.include?(VCAP::CloudController::App::DEFAULT_HTTP_PORT)
+      elsif !@app.ports.include?(m.app_port)
+        return false
+      end
+    end
   end
 
   def all_ports_are_integers?

@@ -2,7 +2,8 @@ require 'spec_helper'
 
 describe PortsPolicy do
   let!(:app) { VCAP::CloudController::AppFactory.make }
-  let(:validator) { PortsPolicy.new(app) }
+  let(:validator) { PortsPolicy.new(app, changed_to_diego) }
+  let(:changed_to_diego) { false }
 
   context 'invalid apps request' do
     it 'registers error a provided port is not an integer' do

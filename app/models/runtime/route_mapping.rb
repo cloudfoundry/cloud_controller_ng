@@ -27,7 +27,7 @@ module VCAP::CloudController
 
       if self.app_port && app && !app.diego
         errors.add(:app_port, :diego_only)
-      elsif app && app.diego && self.app_port && !app.ports.include?(self.app_port)
+      elsif app && app.diego && self.app_port && app.ports.present? && !app.ports.include?(self.app_port)
         errors.add(:app_port, :not_bound_to_app)
       end
 
@@ -65,7 +65,7 @@ module VCAP::CloudController
       saved_port = super
 
       return saved_port unless saved_port.blank?
-      return app.ports.first if app && !app.ports.blank?
+      return app.ports.first if app && app.ports.present?
     end
   end
 end

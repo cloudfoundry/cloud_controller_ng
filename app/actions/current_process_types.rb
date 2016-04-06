@@ -53,8 +53,7 @@ module VCAP::CloudController
           name: "v3-#{app.name}-#{type}",
           metadata: {},
           instances: type == 'web' ? 1 : 0,
-          health_check_type: type == 'web' ? 'port' : 'process',
-          ports: type == 'web' ? [8080] : []
+          health_check_type: type == 'web' ? 'port' : 'process'
         }
 
         app.class.db.transaction do
