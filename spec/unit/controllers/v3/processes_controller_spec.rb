@@ -6,7 +6,7 @@ describe ProcessesController, type: :controller do
 
   describe '#index' do
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
 
       allow(membership).to receive(:space_guids_for_roles).with(
@@ -31,7 +31,7 @@ describe ProcessesController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(json_headers(admin_headers))
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -116,7 +116,7 @@ describe ProcessesController, type: :controller do
     end
 
     it 'fails without read permissions scope on the auth token' do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))
+      set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
       get :index
 
       expect(response.status).to eq(403)
@@ -154,7 +154,7 @@ describe ProcessesController, type: :controller do
     let(:process_type) { VCAP::CloudController::App.make }
 
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
     end
@@ -168,7 +168,7 @@ describe ProcessesController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(json_headers(admin_headers))
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -231,7 +231,7 @@ describe ProcessesController, type: :controller do
     end
 
     context 'when the user does not have read permissions' do
-      before { @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])) }
+      before { set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']) }
 
       it 'raises an ApiError with a 403 code' do
         get :show, { process_guid: process_type.guid }
@@ -281,7 +281,7 @@ describe ProcessesController, type: :controller do
     end
 
     before do
-      @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make)))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
     end
@@ -298,7 +298,7 @@ describe ProcessesController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(json_headers(admin_headers))
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -323,7 +323,7 @@ describe ProcessesController, type: :controller do
     end
 
     context 'when the user does not have write permissions' do
-      before { @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))) }
+      before { set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']) }
 
       it 'raises an ApiError with a 403 code' do
         patch :update, { process_guid: process_type.guid, body: req_body }
@@ -400,7 +400,7 @@ describe ProcessesController, type: :controller do
     let(:index_stopper) { instance_double(VCAP::CloudController::IndexStopper) }
 
     before do
-      @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make)))
+      set_current_user(VCAP::CloudController::User.make)
       allow(index_stopper).to receive(:stop_index)
       allow_any_instance_of(ProcessesController).to receive(:index_stopper).and_return(index_stopper)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
@@ -419,7 +419,7 @@ describe ProcessesController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(json_headers(admin_headers))
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -499,7 +499,7 @@ describe ProcessesController, type: :controller do
     end
 
     context 'when the user does not have write permissions' do
-      before { @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))) }
+      before { set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']) }
 
       it 'raises an ApiError with a 403 code' do
         delete :terminate, { process_guid: process_type.guid, index: 0 }
@@ -551,7 +551,7 @@ describe ProcessesController, type: :controller do
 
     before do
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make)))
+      set_current_user(VCAP::CloudController::User.make)
       allow(membership).to receive(:has_any_roles?).and_return(true)
     end
 
@@ -572,7 +572,7 @@ describe ProcessesController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(json_headers(admin_headers))
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -698,7 +698,7 @@ describe ProcessesController, type: :controller do
       end
 
       context 'admin user' do
-        before { @request.env.merge!(json_headers(admin_headers)) }
+        before { set_current_user_as_admin }
 
         it 'scales the process and returns the correct things' do
           expect(process_type.instances).not_to eq(2)
@@ -718,7 +718,7 @@ describe ProcessesController, type: :controller do
     end
 
     context 'when the user does not have write permissions' do
-      before { @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))) }
+      before { set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']) }
 
       it 'raises an ApiError with a 403 code' do
         put :scale, { process_guid: process_type.guid, body: req_body }
@@ -796,7 +796,7 @@ describe ProcessesController, type: :controller do
       allow(membership).to receive(:has_any_roles?).and_return(true)
       CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
       allow(instances_reporters).to receive(:stats_for_app).and_return(stats)
-      @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make)))
+      set_current_user(VCAP::CloudController::User.make)
     end
 
     it 'returns the stats for all instances for the process' do
@@ -808,7 +808,7 @@ describe ProcessesController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(json_headers(admin_headers))
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -838,7 +838,7 @@ describe ProcessesController, type: :controller do
 
       context 'admin' do
         before do
-          @request.env.merge!(json_headers(admin_headers))
+          set_current_user_as_admin
           allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
@@ -893,7 +893,7 @@ describe ProcessesController, type: :controller do
     end
 
     context 'when the user does not have read scope' do
-      before { @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))) }
+      before { set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']) }
 
       it 'raises an ApiError with a 403 code' do
         put :stats, { process_guid: process_type.guid }

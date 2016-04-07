@@ -13,7 +13,7 @@ describe DropletsController, type: :controller do
     end
 
     before do
-      @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make)))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
       allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
@@ -52,7 +52,7 @@ describe DropletsController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(json_headers(admin_headers))
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -75,7 +75,7 @@ describe DropletsController, type: :controller do
 
     context 'when the user does not have the write scope' do
       before do
-        @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
       end
 
       it 'raises an ApiError with a 403 code' do
@@ -270,7 +270,7 @@ describe DropletsController, type: :controller do
 
         context 'admin user' do
           before do
-            @request.env.merge!(json_headers(admin_headers))
+            set_current_user_as_admin
             allow(membership).to receive(:has_any_roles?).and_return(false)
           end
 
@@ -432,7 +432,7 @@ describe DropletsController, type: :controller do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
 
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
     end
@@ -446,7 +446,7 @@ describe DropletsController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -469,7 +469,7 @@ describe DropletsController, type: :controller do
 
     context 'when the user does not have the read scope' do
       before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
       end
 
       it 'returns a 403 NotAuthorized error' do
@@ -506,7 +506,7 @@ describe DropletsController, type: :controller do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
 
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
     end
@@ -521,7 +521,7 @@ describe DropletsController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -545,7 +545,7 @@ describe DropletsController, type: :controller do
 
     context 'when the user does not have write scope' do
       before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
       end
 
       it 'returns 403' do
@@ -611,7 +611,7 @@ describe DropletsController, type: :controller do
     let!(:admin_droplet) { VCAP::CloudController::DropletModel.make }
 
     before do
-      @request.env.merge!(headers_for(user))
+      set_current_user(user)
       space.organization.add_user(user)
       space.organization.save
       space.add_developer(user)
@@ -695,7 +695,7 @@ describe DropletsController, type: :controller do
 
     context 'when the user is an admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
       end
 
       it 'returns all droplets' do
@@ -708,7 +708,7 @@ describe DropletsController, type: :controller do
 
     context 'when the user does not have read scope' do
       before do
-        @request.env.merge!(headers_for(user, scopes: ['cloud_controller.write']))
+        set_current_user(user, scopes: ['cloud_controller.write'])
       end
 
       it 'returns a 403 Not Authorized error' do

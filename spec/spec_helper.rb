@@ -22,7 +22,6 @@ require 'posix/spawn'
 
 require 'rspec_api_documentation'
 require 'services'
-require 'documentation_helper'
 
 require 'support/bootstrap/spec_bootstrap'
 require 'rspec/collection_matchers'
@@ -43,6 +42,7 @@ RSpec.configure do |rspec_config|
   rspec_config.include ControllerHelpers, type: :v2_controller, file_path: EscapedPath.join(%w(spec unit controllers))
   rspec_config.include ControllerHelpers, type: :api
   rspec_config.include ControllerHelpers, file_path: EscapedPath.join(%w(spec acceptance))
+  rspec_config.include RequestSpecHelper, file_path: EscapedPath.join(%w(spec acceptance))
   rspec_config.include ControllerHelpers, file_path: EscapedPath.join(%w(spec request))
   rspec_config.include RequestSpecHelper, file_path: EscapedPath.join(%w(spec request))
   rspec_config.include ApiDsl, type: :api
@@ -52,10 +52,6 @@ RSpec.configure do |rspec_config|
   rspec_config.include IntegrationHttp, type: :integration
   rspec_config.include IntegrationSetupHelpers, type: :integration
   rspec_config.include IntegrationSetup, type: :integration
-
-  rspec_config.before(:each, type: :api) do
-    VCAP::CloudController::DocumentationConfigure.configure!(self)
-  end
 
   rspec_config.before(:all) { WebMock.disable_net_connect!(allow: 'codeclimate.com') }
   rspec_config.before(:all, type: :integration) { WebMock.allow_net_connect! }
@@ -100,6 +96,7 @@ RSpec.configure do |rspec_config|
   rspec_config.after(:each, type: :legacy_api) { add_deprecation_warning }
 
   RspecApiDocumentation.configure do |c|
+    c.app = VCAP::CloudController::RackAppBuilder.new.build(TestConfig.config, VCAP::CloudController::Metrics::RequestMetrics.new)
     c.format = [:html, :json]
     c.api_name = 'Cloud Foundry API'
     c.template_path = 'spec/api/documentation/templates'

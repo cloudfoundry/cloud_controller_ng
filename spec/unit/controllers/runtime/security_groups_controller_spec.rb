@@ -35,8 +35,10 @@ module VCAP::CloudController
     end
 
     describe 'errors' do
+      before { set_current_user_as_admin }
+
       it 'returns SecurityGroupInvalid' do
-        post '/v2/security_groups', '{"name":"one\ntwo"}', json_headers(admin_headers)
+        post '/v2/security_groups', '{"name":"one\ntwo"}'
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['description']).to match(/security group is invalid/)
@@ -45,7 +47,7 @@ module VCAP::CloudController
 
       it 'returns SecurityGroupNameTaken errors on unique name errors' do
         SecurityGroup.make(name: 'foo')
-        post '/v2/security_groups', '{"name":"foo"}', json_headers(admin_headers)
+        post '/v2/security_groups', '{"name":"foo"}'
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['description']).to match(/name is taken/)
@@ -71,7 +73,7 @@ module VCAP::CloudController
         end
 
         it 'returns SecurityGroupInvalid' do
-          post '/v2/security_groups', MultiJson.dump(security_group), json_headers(admin_headers)
+          post '/v2/security_groups', MultiJson.dump(security_group)
 
           expect(last_response.status).to eq(400)
           expect(decoded_response['description']).to match(/must not exceed #{SecurityGroup::MAX_RULES_CHAR_LENGTH} characters/)

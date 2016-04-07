@@ -50,7 +50,8 @@ module VCAP::CloudController
     describe 'GET /v2/organizations/:id/summary' do
       context 'admin users' do
         before do
-          get "/v2/organizations/#{org.guid}/summary", {}, admin_headers
+          set_current_user_as_admin
+          get "/v2/organizations/#{org.guid}/summary"
         end
 
         it 'return organization data' do
@@ -96,14 +97,16 @@ module VCAP::CloudController
 
         context 'when the user is a member of the space' do
           it 'should only return spaces a user has access to' do
-            get "/v2/organizations/#{org.guid}/summary", {}, json_headers(headers_for(member))
+            set_current_user(member)
+            get "/v2/organizations/#{org.guid}/summary"
             expect(decoded_response['spaces'].size).to eq(num_visible_spaces)
           end
         end
 
         context 'when the user is not a member of the space (but is a member of the org)' do
           it 'should only return spaces a user has access to' do
-            get "/v2/organizations/#{org.guid}/summary", {}, json_headers(headers_for(non_member))
+            set_current_user(non_member)
+            get "/v2/organizations/#{org.guid}/summary"
             expect(decoded_response['spaces'].size).to eq(0)
           end
         end

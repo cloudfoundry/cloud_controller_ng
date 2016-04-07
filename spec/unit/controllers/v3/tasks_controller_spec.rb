@@ -8,11 +8,9 @@ describe TasksController, type: :controller do
   let(:org) { space.organization }
 
   before do
-    VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: tasks_enabled, error_message: nil)
+    set_current_user(VCAP::CloudController::User.make)
 
-    @request.env.merge!(headers_for(VCAP::CloudController::User.make))
-
-    allow_any_instance_of(TasksController).to receive(:membership).and_return(membership)
+    allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
     allow(membership).to receive(:has_any_roles?).with(
       [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(true)
     allow(membership).to receive(:has_any_roles?).with(
@@ -42,6 +40,8 @@ describe TasksController, type: :controller do
     let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
 
     before do
+      VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: tasks_enabled, error_message: nil)
+
       app_model.droplet = droplet
       app_model.save
 
@@ -95,7 +95,7 @@ describe TasksController, type: :controller do
         end
 
         it 'succeeds for admins' do
-          @request.env.merge!(admin_headers)
+          set_current_user_as_admin
           post :create, app_guid: app_model.guid, body: req_body
 
           expect(response.status).to eq(202)
@@ -104,7 +104,7 @@ describe TasksController, type: :controller do
 
       context 'when the user does not have write scope' do
         before do
-          @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])))
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
         end
 
         it 'raises 403' do
@@ -332,7 +332,7 @@ describe TasksController, type: :controller do
     describe 'access permissions' do
       context 'when the user does not have read scope' do
         before do
-          @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: [])))
+          set_current_user(VCAP::CloudController::User.make, scopes: [])
         end
 
         it 'raises 403' do
@@ -379,10 +379,6 @@ describe TasksController, type: :controller do
          VCAP::CloudController::Membership::SPACE_AUDITOR,
          VCAP::CloudController::Membership::ORG_MANAGER
         ]).and_return([space.guid])
-
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
     end
 
     it 'returns tasks the user has roles to see' do
@@ -478,7 +474,7 @@ describe TasksController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
       end
 
       it 'returns a 200 and all tasks' do

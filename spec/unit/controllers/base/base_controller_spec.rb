@@ -81,46 +81,46 @@ module VCAP::CloudController
 
     describe '#dispatch' do
       context 'when the dispatch is successful' do
-        let(:token_decoder) { double(:decoder) }
-        let(:header_token) { 'some token' }
-        let(:token_info) { { 'user_id' => 'some user' } }
+        before { set_current_user(user) }
 
         it 'should dispatch the request' do
-          get '/test_endpoint', '', headers_for(user)
+          get '/test_endpoint'
           expect(last_response.body).to eq 'test_response'
         end
 
         it 'should log a debug message' do
           expect(logger).to receive(:debug).with('cc.dispatch', endpoint: :test_endpoint, args: [])
-          get '/test_endpoint', '', headers_for(user)
+          get '/test_endpoint'
         end
       end
 
       context 'when the dispatch raises an error' do
+        before { set_current_user(user) }
+
         it 'processes Sequel Validation errors using translate_validation_exception' do
-          get '/test_validation_error', '', headers_for(user)
+          get '/test_validation_error'
           expect(decoded_response['description']).to eq 'validation failed'
         end
 
         it 'returns InvalidRequest when Sequel HookFailed error occurs' do
-          get '/test_sql_hook_failed', '', headers_for(user)
+          get '/test_sql_hook_failed'
           expect(decoded_response['code']).to eq 10004
         end
 
         it 'logs the error when a Sequel Database Error occurs' do
           expect(logger).to receive(:warn).with(/exception not translated/)
-          get '/test_database_error', '', headers_for(user)
+          get '/test_database_error'
           expect(decoded_response['code']).to eq 10011
         end
 
         it 'logs an error when a JSON error occurs' do
           expect(logger).to receive(:debug).with(/Rescued JsonMessage::Error/)
-          get '/test_json_error', '', headers_for(user)
+          get '/test_json_error'
           expect(decoded_response['code']).to eq 1001
         end
 
         it 'returns InvalidRelation when an Invalid Relation error occurs' do
-          get '/test_invalid_relation_error', '', headers_for(user)
+          get '/test_invalid_relation_error'
           expect(decoded_response['code']).to eq 1002
         end
       end
@@ -150,47 +150,21 @@ module VCAP::CloudController
 
       describe 'internationalization' do
         it 'should record the locale during dispatching the request' do
-          get '/test_i18n', '', headers_for(user).merge({ 'HTTP_ACCEPT_LANGUAGE' => 'never_Neverland' })
+          set_current_user(user)
+          get '/test_i18n', nil, { 'HTTP_ACCEPT_LANGUAGE' => 'never_Neverland' }
           expect(last_response.body).to eq('never_Neverland')
         end
       end
 
       describe 'authentication' do
-        context 'when the token contains a valid user' do
-          let(:headers) { headers_for(user) }
-          it 'allows the operation' do
-            get '/test_endpoint', '', headers
-            expect(last_response.body).to eq 'test_response'
-          end
-
-          context 'and the endpoint allows authenticated access' do
-            it 'allows the operation' do
-              get '/test_unauthenticated', '', headers
-              expect(last_response.body).to eq 'unauthenticated_response'
-            end
-          end
-        end
-
-        context 'when there is no token' do
-          it 'returns NotAuthenticated' do
-            get '/test_endpoint'
-            expect(last_response.status).to eq 401
-            expect(decoded_response['code']).to eq 10002
-          end
+        context 'when there is no current user' do
+          before { set_current_user(nil) }
 
           context 'when a particular operation is allowed to skip authentication' do
             it 'does not raise error' do
               get '/test_unauthenticated'
               expect(last_response.body).to eq 'unauthenticated_response'
             end
-          end
-        end
-
-        context 'when the token cannot be parsed' do
-          it 'returns InvalidAuthToken' do
-            get '/test_endpoint', '', 'HTTP_AUTHORIZATION' => 'BEARER fake_token'
-            expect(decoded_response['code']).to eq 1000
-            expect(last_response.status).to eq 401
           end
         end
 
@@ -324,7 +298,8 @@ module VCAP::CloudController
 
     describe '#add_warning' do
       it 'sets warnings in the X-Cf-Warnings header' do
-        get '/test_warnings', '', headers_for(user)
+        set_current_user(user)
+        get '/test_warnings'
 
         warnings_header = last_response.headers['X-Cf-Warnings']
         warnings = warnings_header.split(',')

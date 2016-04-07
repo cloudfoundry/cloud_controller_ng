@@ -13,21 +13,13 @@ module VCAP::CloudController
 
     vcap_configure(logger_name: 'cc.api', reload_path: File.dirname(__FILE__))
 
-    def initialize(config, token_decoder)
+    def initialize(config)
       @config = config
-      @token_decoder = token_decoder
       super()
     end
 
     before do
       I18n.locale = env['HTTP_ACCEPT_LANGUAGE']
-
-      auth_token = env['HTTP_AUTHORIZATION']
-      VCAP::CloudController::Security::SecurityContextConfigurer.new(@token_decoder).configure(auth_token)
-
-      user_guid = VCAP::CloudController::SecurityContext.current_user.nil? ? nil : VCAP::CloudController::SecurityContext.current_user.guid
-      logger.info("User for request: #{user_guid}")
-
       validate_scheme!
     end
 

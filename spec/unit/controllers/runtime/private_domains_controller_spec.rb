@@ -34,6 +34,7 @@ module VCAP::CloudController
         before do
           organization.add_user(user)
           organization.add_manager(user)
+          set_current_user(user)
         end
 
         context 'when domain_creation feature_flag is disabled' do
@@ -42,7 +43,7 @@ module VCAP::CloudController
           end
 
           it 'returns FeatureDisabled' do
-            post '/v2/private_domains', request_body, headers_for(user)
+            post '/v2/private_domains', request_body
 
             expect(last_response.status).to eq(403)
             expect(decoded_response['error_code']).to match(/FeatureDisabled/)
@@ -68,7 +69,8 @@ module VCAP::CloudController
         end
 
         it 'returns links for shared organizations' do
-          get "/v2/private_domains/#{private_domain.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
+          set_current_user_as_admin
+          get "/v2/private_domains/#{private_domain.guid}?inline-relations-depth=1"
 
           expect(entity).to have_key('shared_organizations_url')
           expect(entity).to_not have_key('shared_organizations')
@@ -84,7 +86,8 @@ module VCAP::CloudController
         quota_definition.total_private_domains = 0
         quota_definition.save
 
-        post '/v2/private_domains', MultiJson.dump(name: 'foo.com', owning_organization_guid: organization.guid), json_headers(admin_headers)
+        set_current_user_as_admin
+        post '/v2/private_domains', MultiJson.dump(name: 'foo.com', owning_organization_guid: organization.guid)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(130005)

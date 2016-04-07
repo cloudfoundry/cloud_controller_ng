@@ -101,6 +101,10 @@ module VCAP::CloudController
         let(:space) { route.space }
         let(:developer) { make_developer_for_space(space) }
 
+        before do
+          set_current_user(developer)
+        end
+
         context 'when the app does not exist' do
           let(:body) do
             {
@@ -110,7 +114,7 @@ module VCAP::CloudController
           end
 
           it 'returns with a NotFound error' do
-            post '/v2/route_mappings', body, headers_for(developer)
+            post '/v2/route_mappings', body
 
             expect(last_response).to have_status_code(404)
             expect(decoded_response['description']).to include('The app could not be found')
@@ -126,7 +130,7 @@ module VCAP::CloudController
           end
 
           it 'returns with a NotFound error' do
-            post '/v2/route_mappings', body, headers_for(developer)
+            post '/v2/route_mappings', body
 
             expect(last_response).to have_status_code(404)
             expect(decoded_response['description']).to include('The route could not be found')
@@ -144,7 +148,7 @@ module VCAP::CloudController
 
           context 'and no app port is specified' do
             it 'uses the first port in the list of app ports' do
-              post '/v2/route_mappings', body, headers_for(developer)
+              post '/v2/route_mappings', body
 
               expect(last_response).to have_status_code(201)
               expect(decoded_response['entity']['app_port']).to eq(8080)
@@ -155,11 +159,11 @@ module VCAP::CloudController
 
             context 'when another mapping with the same port already exists' do
               it 'does not create another route mapping' do
-                post '/v2/route_mappings', body, headers_for(developer)
+                post '/v2/route_mappings', body
                 expect(last_response).to have_status_code(201)
                 expect(decoded_response['entity']['app_port']).to eq(8080)
 
-                post '/v2/route_mappings', body, headers_for(developer)
+                post '/v2/route_mappings', body
                 expect(last_response).to have_status_code(400)
                 expect(decoded_response['code']).to eq(210006)
               end
@@ -176,13 +180,13 @@ module VCAP::CloudController
             end
 
             before do
-              post '/v2/route_mappings', body_2, headers_for(developer)
+              post '/v2/route_mappings', body_2
               expect(last_response).to have_status_code(201)
               expect(decoded_response['entity']['app_port']).to eq(8080)
             end
 
             it 'still makes a route mapping from the app to the route' do
-              post '/v2/route_mappings', body, headers_for(developer)
+              post '/v2/route_mappings', body
               expect(last_response).to have_status_code(201)
               expect(decoded_response['entity']['app_port']).to eq(8080)
             end
@@ -206,18 +210,18 @@ module VCAP::CloudController
             end
 
             before do
-              post '/v2/route_mappings', body_2, headers_for(developer)
+              post '/v2/route_mappings', body_2
               expect(last_response).to have_status_code(201)
               expect(decoded_response['entity']['app_port']).to eq(9090)
             end
 
             it 'still makes a route mapping from the app to the route' do
-              post '/v2/route_mappings', body, headers_for(developer)
+              post '/v2/route_mappings', body
               expect(last_response).to have_status_code(201)
             end
 
             it 'makes the route mapping even if the port number is the same' do
-              post '/v2/route_mappings', body, headers_for(developer)
+              post '/v2/route_mappings', body
               expect(last_response).to have_status_code(201)
               expect(decoded_response['entity']['app_port']).to eq(9090)
             end
@@ -233,7 +237,7 @@ module VCAP::CloudController
             end
 
             it 'returns a 400' do
-              post '/v2/route_mappings', body, headers_for(developer)
+              post '/v2/route_mappings', body
 
               expect(last_response).to have_status_code(400)
               expect(decoded_response['description']).to include('Routes can only be mapped to ports already enabled for the application')
@@ -250,7 +254,7 @@ module VCAP::CloudController
             end
 
             it 'uses the app port specified' do
-              post '/v2/route_mappings', body, headers_for(developer)
+              post '/v2/route_mappings', body
 
               expect(last_response).to have_status_code(201)
               expect(decoded_response['entity']['app_port']).to eq(9090)
@@ -260,11 +264,11 @@ module VCAP::CloudController
 
             context 'when the same route mapping with the same port is specified' do
               it 'does not create another route mapping' do
-                post '/v2/route_mappings', body, headers_for(developer)
+                post '/v2/route_mappings', body
                 expect(last_response).to have_status_code(201)
                 expect(decoded_response['entity']['app_port']).to eq(9090)
 
-                post '/v2/route_mappings', body, headers_for(developer)
+                post '/v2/route_mappings', body
                 expect(last_response).to have_status_code(400)
                 expect(decoded_response['code']).to eq(210006)
                 expect(decoded_response['description']).to include('port 9090')
@@ -273,7 +277,7 @@ module VCAP::CloudController
 
             context 'when the same route mapping with the different port is specified' do
               it 'creates another route mapping' do
-                post '/v2/route_mappings', body, headers_for(developer)
+                post '/v2/route_mappings', body
                 expect(last_response).to have_status_code(201)
                 expect(decoded_response['entity']['app_port']).to eq(9090)
 
@@ -282,7 +286,7 @@ module VCAP::CloudController
                     route_guid: route.guid,
                     app_port: 8080
                   }.to_json
-                post '/v2/route_mappings', body, headers_for(developer)
+                post '/v2/route_mappings', body
                 expect(last_response).to have_status_code(201)
                 expect(decoded_response['entity']['app_port']).to eq(8080)
               end
@@ -301,7 +305,7 @@ module VCAP::CloudController
             end
 
             it 'gets unauhtorized error' do
-              post '/v2/route_mappings', body, headers_for(developer)
+              post '/v2/route_mappings', body
 
               expect(last_response).to have_status_code(403)
             end
@@ -320,7 +324,7 @@ module VCAP::CloudController
             end
 
             it 'returns a 201' do
-              post '/v2/route_mappings', body, headers_for(developer)
+              post '/v2/route_mappings', body
 
               expect(last_response).to have_status_code(201)
               expect(decoded_response['entity']['app_port']).to be_nil
@@ -337,7 +341,7 @@ module VCAP::CloudController
             end
 
             it 'returns a 400' do
-              post '/v2/route_mappings', body, headers_for(developer)
+              post '/v2/route_mappings', body
 
               expect(last_response).to have_status_code(400)
               expect(decoded_response['description']).to include('App ports are supported for Diego apps only')
@@ -353,10 +357,10 @@ module VCAP::CloudController
             end
 
             it 'does not create another route mapping' do
-              post '/v2/route_mappings', body, headers_for(developer)
+              post '/v2/route_mappings', body
               expect(last_response).to have_status_code(201)
 
-              post '/v2/route_mappings', body, headers_for(developer)
+              post '/v2/route_mappings', body
               expect(last_response).to have_status_code(400)
               expect(decoded_response['code']).to eq(210006)
               expect(decoded_response['description']).to_not include('port')
@@ -381,7 +385,7 @@ module VCAP::CloudController
           end
 
           it 'returns 403' do
-            post '/v2/route_mappings', body, headers_for(space_developer)
+            post '/v2/route_mappings', body
             expect(last_response).to have_status_code(403)
             expect(decoded_response['description']).to include('Support for TCP routing is disabled')
           end
@@ -395,19 +399,21 @@ module VCAP::CloudController
         let(:route_mapping) { RouteMapping.make(app_guid: app_obj.guid, route_guid: route.guid) }
         let(:space_developer) { make_developer_for_space(space) }
 
+        before do
+          set_current_user(space_developer)
+        end
+
         context 'as SpaceDeveloper' do
           it 'returns 201' do
-            put "/v2/route_mappings/#{route_mapping.guid}", '{ "app_port": 9090 }', headers_for(space_developer)
+            put "/v2/route_mappings/#{route_mapping.guid}", '{ "app_port": 9090 }'
             expect(last_response).to have_status_code(201)
           end
         end
 
         context 'as SpaceDeveloper for another space' do
-          let(:space2) { Space.make }
-          let(:space_developer2) { make_developer_for_space(space2) }
-
           it 'returns 403' do
-            put "/v2/route_mappings/#{route_mapping.guid}", '{ "app_port": 9090 }', headers_for(space_developer2)
+            set_current_user(User.make)
+            put "/v2/route_mappings/#{route_mapping.guid}", '{ "app_port": 9090 }'
             expect(last_response).to have_status_code(403)
           end
         end
@@ -422,7 +428,7 @@ module VCAP::CloudController
           end
 
           it 'does not update non-updatable fields' do
-            put "/v2/route_mappings/#{route_mapping.guid}", body, headers_for(space_developer)
+            put "/v2/route_mappings/#{route_mapping.guid}", body
             expect(last_response).to have_status_code(201)
             expect(decoded_response['entity']['app_port']).to eq 9090
             expect(decoded_response['entity']['app_guid']).to eq app_obj.guid
@@ -438,14 +444,18 @@ module VCAP::CloudController
         let(:developer) { make_developer_for_space(space) }
         let(:route_mapping) { RouteMapping.make(app_guid: app_obj.guid, route_guid: route.guid) }
 
+        before do
+          set_current_user(developer)
+        end
+
         it 'deletes the route mapping' do
-          delete "/v2/route_mappings/#{route_mapping.guid}", {}, headers_for(developer)
+          delete "/v2/route_mappings/#{route_mapping.guid}"
 
           expect(last_response).to have_status_code(204)
         end
 
         it 'does not delete the associated app and route' do
-          delete "/v2/route_mappings/#{route_mapping.guid}", {}, headers_for(developer)
+          delete "/v2/route_mappings/#{route_mapping.guid}"
 
           expect(last_response).to have_status_code(204)
           expect(route).to exist
@@ -454,7 +464,7 @@ module VCAP::CloudController
 
         context 'when the route mapping does not exist' do
           it 'raises an informative error' do
-            delete '/v2/route_mappings/nonexistent-guid', {}, headers_for(developer)
+            delete '/v2/route_mappings/nonexistent-guid'
 
             expect(last_response).to have_status_code(404)
             expect(last_response.body).to include 'RouteMappingNotFound'

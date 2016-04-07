@@ -5,7 +5,7 @@ describe ServiceBindingsController, type: :controller do
   let(:membership) { instance_double(VCAP::CloudController::Membership) }
 
   before do
-    @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+    set_current_user(VCAP::CloudController::User.make)
     allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
     allow(membership).to receive(:has_any_roles?).and_return(true)
   end
@@ -94,7 +94,7 @@ describe ServiceBindingsController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -127,7 +127,7 @@ describe ServiceBindingsController, type: :controller do
 
       context 'when the user does not have write scope' do
         before do
-          @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])))
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
         end
 
         it 'returns a 403 NotAuthorized error' do
@@ -362,7 +362,7 @@ describe ServiceBindingsController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -394,7 +394,7 @@ describe ServiceBindingsController, type: :controller do
 
       context 'when the user does not have read scope' do
         before do
-          @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])))
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
         end
 
         it 'returns a 403 NotAuthorized error' do
@@ -464,7 +464,7 @@ describe ServiceBindingsController, type: :controller do
         [allowed_binding_1, allowed_binding_2, allowed_binding_3, binding_in_unauthorized_space].map(&:guid)
       end
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
       end
 
       it 'returns all service bindings' do
@@ -493,7 +493,7 @@ describe ServiceBindingsController, type: :controller do
 
     context 'when the user does not have the read scope' do
       before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
       end
 
       it 'returns a 403 NotAuthorized error' do
@@ -548,7 +548,7 @@ describe ServiceBindingsController, type: :controller do
     context 'permissions' do
       context 'admin with no other roles' do
         before do
-          @request.env.merge!(admin_headers)
+          set_current_user_as_admin
           allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
@@ -585,7 +585,7 @@ describe ServiceBindingsController, type: :controller do
 
       context 'when the user does not have the write scope' do
         before do
-          @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
         end
 
         it 'returns a 403 NotAuthorized error and does NOT delete the binding' do

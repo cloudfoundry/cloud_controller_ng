@@ -37,6 +37,8 @@ module VCAP::CloudController
 
       @app.add_route(@route1)
       @app.add_route(@route2)
+
+      set_current_user_as_admin
     end
 
     describe 'GET /v2/apps/:id/summary' do
@@ -50,7 +52,7 @@ module VCAP::CloudController
         before do
           allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_app).and_return(@app.instances)
 
-          get "/v2/apps/#{@app.guid}/summary", {}, admin_headers
+          get "/v2/apps/#{@app.guid}/summary"
         end
 
         it 'should contain the basic app attributes' do
@@ -150,7 +152,7 @@ module VCAP::CloudController
           allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_app).and_raise(
             Errors::InstancesUnavailable.new(SomeInstancesException.new))
 
-          get "/v2/apps/#{@app.guid}/summary", {}, admin_headers
+          get "/v2/apps/#{@app.guid}/summary"
         end
 
         it "returns '220001 InstancesError'" do

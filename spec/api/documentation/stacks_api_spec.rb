@@ -5,6 +5,10 @@ resource 'Stacks', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   authenticated_request
 
+  before do
+    set_current_user_as_admin
+  end
+
   let(:guid) { VCAP::CloudController::Stack.first.guid }
 
   context do

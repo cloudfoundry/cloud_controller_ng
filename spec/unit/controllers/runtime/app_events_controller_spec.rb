@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       it 'is deprecated' do
-        get '/v2/app_events', {}, admin_headers
+        get '/v2/app_events'
         expect(last_response).to be_a_deprecated_response
       end
     end

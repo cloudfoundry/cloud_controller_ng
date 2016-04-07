@@ -21,7 +21,7 @@ describe RouteMappingsController, type: :controller do
     end
 
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
     end
@@ -121,7 +121,7 @@ describe RouteMappingsController, type: :controller do
 
     context 'when the user does not have write scope' do
       before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
       end
 
       it 'raises an ApiError with a 403 code' do
@@ -187,7 +187,7 @@ describe RouteMappingsController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -223,7 +223,7 @@ describe RouteMappingsController, type: :controller do
     let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route) }
 
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
     end
@@ -246,7 +246,7 @@ describe RouteMappingsController, type: :controller do
     describe 'access permissions' do
       context 'when the user does not have read scope' do
         before do
-          @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: [])))
+          set_current_user(VCAP::CloudController::User.make, scopes: [])
         end
 
         it 'raises 403' do
@@ -279,7 +279,7 @@ describe RouteMappingsController, type: :controller do
 
   describe '#index' do
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
 
@@ -375,7 +375,7 @@ describe RouteMappingsController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -394,7 +394,7 @@ describe RouteMappingsController, type: :controller do
 
     context 'when the user does not have read scope' do
       before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
       end
 
       it 'raises an ApiError with a 403 code' do
@@ -408,7 +408,7 @@ describe RouteMappingsController, type: :controller do
 
   describe '#destroy' do
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
     end
@@ -424,7 +424,7 @@ describe RouteMappingsController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -462,7 +462,7 @@ describe RouteMappingsController, type: :controller do
 
     context 'when the user does not have write scope' do
       before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
       end
 
       it 'raises an ApiError with a 403 code' do

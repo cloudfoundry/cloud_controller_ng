@@ -9,7 +9,8 @@ describe AppsV3Controller, type: :controller do
     let!(:space_1) { app_model_1.space }
 
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
+
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
       allow(membership).to receive(:space_guids_for_roles).with(
@@ -35,7 +36,7 @@ describe AppsV3Controller, type: :controller do
       let!(:app_model_3) { VCAP::CloudController::AppModel.make }
 
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
         VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
         VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
@@ -53,7 +54,7 @@ describe AppsV3Controller, type: :controller do
 
     context 'when the user does not have read scope' do
       before do
-        @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
       end
 
       it 'raises an ApiError with a 403 code' do
@@ -101,7 +102,7 @@ describe AppsV3Controller, type: :controller do
     let(:app_model) { VCAP::CloudController::AppModel.make }
 
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
@@ -116,7 +117,7 @@ describe AppsV3Controller, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -139,7 +140,7 @@ describe AppsV3Controller, type: :controller do
 
     context 'when the user does not have cc read scope' do
       before do
-        @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
       end
 
       it 'raises an ApiError with a 403 code' do
@@ -182,7 +183,8 @@ describe AppsV3Controller, type: :controller do
     end
 
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
+
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
     end
@@ -198,7 +200,7 @@ describe AppsV3Controller, type: :controller do
 
     context 'when the user does not have write scope' do
       before do
-        @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
       end
 
       it 'raises an ApiError with a 403 code' do
@@ -211,7 +213,7 @@ describe AppsV3Controller, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -443,7 +445,7 @@ describe AppsV3Controller, type: :controller do
 
       context 'admin' do
         before do
-          @request.env.merge!(json_headers(admin_headers))
+          set_current_user_as_admin
           allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
@@ -477,7 +479,8 @@ describe AppsV3Controller, type: :controller do
     let(:req_body) { { name: 'new-name' } }
 
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
+
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
     end
@@ -492,7 +495,7 @@ describe AppsV3Controller, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
       end
 
       it 'returns a 200 OK and the app' do
@@ -842,7 +845,8 @@ describe AppsV3Controller, type: :controller do
     let(:org) { space.organization }
 
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
+
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
@@ -857,7 +861,7 @@ describe AppsV3Controller, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -871,7 +875,7 @@ describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'because they do not have the write scope' do
         before do
-          @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])))
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -951,7 +955,8 @@ describe AppsV3Controller, type: :controller do
     let(:org) { space.organization }
 
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
+
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
@@ -970,7 +975,7 @@ describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'admin' do
         before do
-          @request.env.merge!(admin_headers)
+          set_current_user_as_admin
           allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
@@ -987,7 +992,7 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user does not have write permissions' do
         before do
-          @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])))
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -1087,7 +1092,8 @@ describe AppsV3Controller, type: :controller do
 
       context 'admin' do
         before do
-          @request.env.merge!(json_headers(admin_headers))
+          set_current_user_as_admin
+
           allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
@@ -1121,7 +1127,7 @@ describe AppsV3Controller, type: :controller do
     let(:org) { space.organization }
 
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
@@ -1139,7 +1145,7 @@ describe AppsV3Controller, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -1157,7 +1163,7 @@ describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have the write scope' do
         before do
-          @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])))
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -1237,7 +1243,7 @@ describe AppsV3Controller, type: :controller do
     let(:org) { space.organization }
 
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
@@ -1252,7 +1258,7 @@ describe AppsV3Controller, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -1267,7 +1273,7 @@ describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have read permissions' do
         before do
-          @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])))
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
         end
 
         it 'returns a 403' do
@@ -1329,7 +1335,7 @@ describe AppsV3Controller, type: :controller do
         end
 
         it 'succeeds for admins' do
-          @request.env.merge!(admin_headers)
+          set_current_user_as_admin
           get :show_environment, guid: app_model.guid
 
           expect(response.status).to eq(200)
@@ -1377,7 +1383,7 @@ describe AppsV3Controller, type: :controller do
 
     before do
       app_model.add_droplet(droplet)
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
@@ -1395,7 +1401,8 @@ describe AppsV3Controller, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
+
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -1474,7 +1481,7 @@ describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have write permissions' do
         before do
-          @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])))
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -1538,7 +1545,7 @@ describe AppsV3Controller, type: :controller do
       allow(VCAP::CloudController::AppStatsPresenter).to receive(:new).and_return(presenter)
       allow(presenter).to receive(:present_json).and_return('controller response')
 
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
     end
@@ -1552,7 +1559,7 @@ describe AppsV3Controller, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -1599,7 +1606,7 @@ describe AppsV3Controller, type: :controller do
 
     context 'when the requestor does not have the cloud_controller.read scope' do
       before do
-        @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
       end
 
       it 'raises an ApiError with a 403 code' do

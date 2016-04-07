@@ -2,21 +2,6 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe VCAP::CloudController::UsersController do
-    it "doesn't query all users when unauthorized" do
-      user = User.make(active: true)
-      logger = Steno.logger('cc.db')
-      queries = []
-
-      old_debug = logger.method(:debug)
-      allow(logger).to receive(:debug) do |*args|
-        queries << args
-        old_debug.call(*args)
-      end
-      get '/v2/users', '', headers_for(user)
-
-      expect(logger).to have_received(:debug).at_least(:once)
-      expect(queries.flatten.map { |l| l.gsub(/\(.*s\) /, '') }).not_to include('SELECT * FROM "users"')
-    end
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:space_guid) }
       it { expect(described_class).to be_queryable_by(:organization_guid) }
@@ -92,15 +77,15 @@ module VCAP::CloudController
       end
 
       context 'admin user' do
-        let(:headers_a) { admin_headers_for(member_a) }
-        let(:member_a) { @cf_admin }
+        let(:member_a) { User.make }
         let(:enumeration_expectation_a) { User.order(:id).limit(50) }
 
         include_examples 'permission enumeration', 'Admin',
                          name: 'user',
                          path: '/v2/users',
                          enumerate: proc { User.count },
-                         permissions_overlap: true
+                         permissions_overlap: true,
+                         user_opts: { admin: true }
       end
     end
 
@@ -109,13 +94,15 @@ module VCAP::CloudController
       let(:user) { User.make }
       let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [user.guid]) }
 
+      before { set_current_user(user) }
+
       it 'allows the user' do
-        get "/v2/users/#{user.guid}/organizations", '', headers_for(user)
+        get "/v2/users/#{user.guid}/organizations"
         expect(last_response.status).to eq(200)
       end
 
       it 'disallows a different user' do
-        get "/v2/users/#{mgr.guid}/organizations", '', headers_for(user)
+        get "/v2/users/#{mgr.guid}/organizations"
         expect(last_response.status).to eq(403)
       end
     end

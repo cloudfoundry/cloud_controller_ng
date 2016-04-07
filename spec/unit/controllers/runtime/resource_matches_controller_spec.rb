@@ -11,8 +11,11 @@ module VCAP::CloudController
     def resource_match_request(verb, path, matches, non_matches)
       user = User.make(admin: false, active: true)
       req = MultiJson.dump(matches + non_matches)
+
+      set_current_user(user)
       send(verb, path, req, json_headers(headers_for(user)))
       expect(last_response.status).to eq(200)
+
       resp = MultiJson.load(last_response.body)
       expect(resp).to eq(matches)
     end
@@ -37,7 +40,9 @@ module VCAP::CloudController
 
         context 'invalid json' do
           it 'returns an error' do
-            put '/v2/resource_match', 'invalid json', json_headers(headers_for(User.make))
+            set_current_user_as_admin
+
+            put '/v2/resource_match', 'invalid json'
 
             expect(last_response.status).to eq(400)
             expect(last_response.body).to match(/MessageParseError/)
@@ -46,7 +51,9 @@ module VCAP::CloudController
 
         context 'non-array json' do
           it 'returns an error' do
-            put '/v2/resource_match', 'null', json_headers(headers_for(User.make))
+            set_current_user_as_admin
+
+            put '/v2/resource_match', 'null'
 
             expect(last_response.status).to eq(422)
             expect(last_response.body).to match(/UnprocessableEntity/)
@@ -62,13 +69,17 @@ module VCAP::CloudController
       end
 
       it 'allows the upload if the user is an admin' do
-        send(:put, '/v2/resource_match', '[]', admin_headers)
+        set_current_user_as_admin
+
+        put '/v2/resource_match', '[]'
         expect(last_response.status).to eq(200)
       end
 
       it 'returns FeatureDisabled unless the user is an admin' do
-        user = User.make(admin: false, active: true)
-        send(:put, '/v2/resource_match', '[]', json_headers(headers_for(user)))
+        set_current_user(User.make)
+
+        put '/v2/resource_match', '[]'
+
         expect(last_response.status).to eq(403)
         expect(decoded_response['error_code']).to match(/FeatureDisabled/)
         expect(decoded_response['description']).to match(/Feature Disabled/)

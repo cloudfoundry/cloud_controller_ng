@@ -33,6 +33,8 @@ module VCAP::CloudController
 
         context 'because they are a developer' do
           it 'should return the stats' do
+            set_current_user(@developer)
+
             @app.state = 'STARTED'
             @app.instances = 1
             @app.save
@@ -51,9 +53,7 @@ module VCAP::CloudController
               }
             }
 
-            get("/v2/apps/#{@app.guid}/stats",
-                {},
-                headers_for(@developer))
+            get "/v2/apps/#{@app.guid}/stats"
 
             expect(last_response.status).to eq(200)
             expect(MultiJson.load(last_response.body)).to eq(expected)
@@ -64,6 +64,8 @@ module VCAP::CloudController
 
         context 'because they are an auditor' do
           it 'should return the stats' do
+            set_current_user(@auditor)
+
             @app.state = 'STARTED'
             @app.instances = 1
             @app.save
@@ -82,9 +84,7 @@ module VCAP::CloudController
               }
             }
 
-            get("/v2/apps/#{@app.guid}/stats",
-                {},
-                headers_for(@auditor))
+            get "/v2/apps/#{@app.guid}/stats"
 
             expect(last_response.status).to eq(200)
             expect(MultiJson.load(last_response.body)).to eq(expected)
@@ -96,14 +96,13 @@ module VCAP::CloudController
         context 'when instance reporter is unavailable' do
           before do
             allow(instances_reporters).to receive(:stats_for_app).and_raise(VCAP::Errors::InstancesUnavailable.new(StandardError.new))
+            set_current_user(@developer)
           end
 
           it 'returns 503' do
             @app.update(state: 'STARTED')
 
-            get("/v2/apps/#{@app.guid}/stats",
-                {},
-                headers_for(@developer))
+            get "/v2/apps/#{@app.guid}/stats"
 
             expect(last_response.status).to eq(503)
             expect(last_response.body).to match('Stats unavailable: Stats server temporarily unavailable.')
@@ -113,14 +112,13 @@ module VCAP::CloudController
         context 'when there is an error finding instances' do
           before do
             allow(instances_reporters).to receive(:stats_for_app).and_raise(VCAP::Errors::ApiError.new_from_details('StatsError', 'msg'))
+            set_current_user(@developer)
           end
 
           it 'raises an error' do
             @app.update(state: 'STARTED')
 
-            get("/v2/apps/#{@app.guid}/stats",
-                {},
-                headers_for(@developer))
+            get "/v2/apps/#{@app.guid}/stats"
 
             expect(last_response.status).to eq(400)
             expect(MultiJson.load(last_response.body)['code']).to eq(200001)
@@ -129,11 +127,12 @@ module VCAP::CloudController
 
         context 'when the app is stopped' do
           before do
+            set_current_user(@developer)
             @app.stop!
           end
 
           it 'raises an error' do
-            get("/v2/apps/#{@app.guid}/stats", {}, headers_for(@developer))
+            get "/v2/apps/#{@app.guid}/stats"
 
             expect(last_response.status).to eq(400)
             expect(last_response.body).to match("Could not fetch stats for stopped app: #{@app.name}")
@@ -144,9 +143,9 @@ module VCAP::CloudController
       context 'when the client cannot see stats' do
         context 'because they are a user' do
           it 'should return 403' do
-            get("/v2/apps/#{@app.guid}/stats",
-                {},
-                headers_for(@user))
+            set_current_user(@user)
+
+            get "/v2/apps/#{@app.guid}/stats"
 
             expect(last_response.status).to eq(403)
           end

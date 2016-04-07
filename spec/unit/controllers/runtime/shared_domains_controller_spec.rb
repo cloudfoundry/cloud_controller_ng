@@ -6,6 +6,8 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:name) }
     end
 
+    before { set_current_user_as_admin }
+
     describe 'Attributes' do
       it do
         expect(described_class).to have_creatable_attributes({
@@ -25,7 +27,7 @@ module VCAP::CloudController
     context 'GET /v2/shared_domains/:guid' do
       context 'when the guid does not exist' do
         it 'returns a 404 not found' do
-          get '/v2/shared_domains/doesnotexist', nil, json_headers(admin_headers)
+          get '/v2/shared_domains/doesnotexist'
 
           expect(last_response).to have_status_code(404)
         end
@@ -48,7 +50,7 @@ module VCAP::CloudController
           end
 
           it 'does not call the Routing API and UAA' do
-            post '/v2/shared_domains', body, json_headers(admin_headers)
+            post '/v2/shared_domains', body
             expect(last_response).to have_status_code(201)
           end
         end
@@ -71,7 +73,7 @@ module VCAP::CloudController
           end
 
           it 'validates that the router_group_guid is a valid guid for a Router Group' do
-            post '/v2/shared_domains', body, json_headers(admin_headers)
+            post '/v2/shared_domains', body
 
             expect(last_response).to have_status_code(201)
 
@@ -90,7 +92,7 @@ module VCAP::CloudController
             end
 
             it 'returns a 503 Service Unavailable' do
-              post '/v2/shared_domains', body, json_headers(admin_headers)
+              post '/v2/shared_domains', body
 
               expect(last_response).to have_status_code(503)
               expect(last_response.body).to include 'The UAA service is currently unavailable'
@@ -104,7 +106,7 @@ module VCAP::CloudController
             end
 
             it 'returns a 503 Service Unavailable' do
-              post '/v2/shared_domains', body, json_headers(admin_headers)
+              post '/v2/shared_domains', body
 
               expect(last_response).to have_status_code(503)
               expect(last_response.body).to include 'The Routing API is currently unavailable'
@@ -114,7 +116,7 @@ module VCAP::CloudController
           context 'when the router_group_guid does not exist in the Routing API' do
             let(:router_group) { nil }
             it 'returns a 400 error' do
-              post '/v2/shared_domains', body, json_headers(admin_headers)
+              post '/v2/shared_domains', body
 
               expect(last_response).to have_status_code(400)
               expect(last_response.body).to include "router group guid 'router-group-guid1' not found"
@@ -128,7 +130,7 @@ module VCAP::CloudController
             end
 
             it 'raises a 403 - tcp routing disabled error' do
-              post '/v2/shared_domains', body, json_headers(admin_headers)
+              post '/v2/shared_domains', body
 
               expect(last_response).to have_status_code(403)
               expect(last_response.body).to include 'Support for TCP routing is disabled'
@@ -154,7 +156,7 @@ module VCAP::CloudController
         end
 
         it 'includes router_group_type in the response' do
-          get '/v2/shared_domains', nil, json_headers(admin_headers)
+          get '/v2/shared_domains'
 
           expect(last_response).to have_status_code(200)
 
@@ -167,7 +169,7 @@ module VCAP::CloudController
         it 'includes router_group_type in the response' do
           SharedDomain.make(name: 'shareddomain2.com')
 
-          get '/v2/shared_domains', nil, json_headers(admin_headers)
+          get '/v2/shared_domains'
 
           expect(last_response).to have_status_code(200)
 
@@ -179,7 +181,7 @@ module VCAP::CloudController
         end
 
         it 'includes router_group_type in the response for a particular domain' do
-          get "/v2/shared_domains/#{domain.guid}", nil, json_headers(admin_headers)
+          get "/v2/shared_domains/#{domain.guid}"
 
           expect(last_response).to have_status_code(200)
 
@@ -199,14 +201,14 @@ module VCAP::CloudController
           end
 
           it 'returns a 503 Service Unavailable' do
-            get '/v2/shared_domains', nil, json_headers(admin_headers)
+            get '/v2/shared_domains'
 
             expect(last_response).to have_status_code(503)
             expect(last_response.body).to include 'The UAA service is currently unavailable'
           end
 
           it 'returns a 503 Service Unavailable' do
-            get "/v2/shared_domains/#{domain.guid}", nil, json_headers(admin_headers)
+            get "/v2/shared_domains/#{domain.guid}"
 
             expect(last_response).to have_status_code(503)
             expect(last_response.body).to include 'The UAA service is currently unavailable'
@@ -222,14 +224,14 @@ module VCAP::CloudController
               and_raise(RoutingApi::RoutingApiUnavailable)
           end
           it 'returns a 503 Service Unavailable' do
-            get '/v2/shared_domains', nil, json_headers(admin_headers)
+            get '/v2/shared_domains'
 
             expect(last_response).to have_status_code(503)
             expect(last_response.body).to include 'The Routing API is currently unavailable'
           end
 
           it 'returns a 503 Service Unavailable' do
-            get "/v2/shared_domains/#{domain.guid}", nil, json_headers(admin_headers)
+            get "/v2/shared_domains/#{domain.guid}"
 
             expect(last_response).to have_status_code(503)
             expect(last_response.body).to include 'The Routing API is currently unavailable'
@@ -244,7 +246,7 @@ module VCAP::CloudController
 
           context 'when getting a particular shared domain' do
             it 'raises a 403 - tcp routing disabled error' do
-              get "/v2/shared_domains/#{domain.guid}", nil, json_headers(admin_headers)
+              get "/v2/shared_domains/#{domain.guid}"
 
               expect(last_response).to have_status_code(403)
               expect(last_response.body).to include 'Support for TCP routing is disabled'
@@ -252,7 +254,7 @@ module VCAP::CloudController
           end
 
           it 'includes router_group_type in the response' do
-            get '/v2/shared_domains', nil, json_headers(admin_headers)
+            get '/v2/shared_domains'
 
             expect(last_response).to have_status_code(200)
 

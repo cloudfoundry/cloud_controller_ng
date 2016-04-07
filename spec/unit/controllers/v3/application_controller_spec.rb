@@ -17,47 +17,9 @@ describe ApplicationController, type: :controller do
     end
   end
 
-  describe 'setting the current user' do
-    context 'when a valid auth is provided' do
-      let(:headers) { headers_for(VCAP::CloudController::User.new(guid: expected_user_id)) }
-      let(:expected_user_id) { 'user-id' }
-
-      before do
-        @request.env.merge!(headers)
-      end
-
-      it 'sets security context to the user' do
-        get :index
-
-        expect(VCAP::CloudController::SecurityContext.current_user).to eq VCAP::CloudController::User.last
-        expect(VCAP::CloudController::SecurityContext.token['user_id']).to eq expected_user_id
-      end
-    end
-
-    context 'when an invalid auth token is provided' do
-      before do
-        @request.env.merge!('HTTP_AUTHORIZATION' => 'bearer potato')
-      end
-
-      it 'sets the token to invalid' do
-        expect { get :index }.to not_change { VCAP::CloudController::SecurityContext.current_user }.from(nil).
-          and change { VCAP::CloudController::SecurityContext.token }.to(:invalid_token)
-      end
-    end
-
-    context 'when there is no auth token provided' do
-      it 'sets security context to be empty' do
-        expect { get :index }.to not_change { VCAP::CloudController::SecurityContext.current_user }.from(nil).
-          and not_change { VCAP::CloudController::SecurityContext.token }.from(nil)
-      end
-    end
-  end
-
   describe 'read permission scope validation' do
-    let(:headers) { headers_for(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.write']) }
-
     before do
-      @request.env.merge!(headers)
+      set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.write'])
     end
 
     it 'is required on index' do
@@ -75,14 +37,13 @@ describe ApplicationController, type: :controller do
     end
 
     it 'is not required on other actions' do
-      @request.env.merge!(json_headers({}))
-
       post :create
+
       expect(response.status).to eq(201)
     end
 
     it 'is not required for admin' do
-      @request.env.merge!(json_headers(admin_headers))
+      set_current_user_as_admin
 
       post :create
       expect(response.status).to eq(201)
@@ -90,10 +51,8 @@ describe ApplicationController, type: :controller do
   end
 
   describe 'write permission scope validation' do
-    let(:headers) { headers_for(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.read']) }
-
     before do
-      @request.env.merge!(headers)
+      set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.read'])
     end
 
     it 'is not required on index' do
@@ -113,7 +72,7 @@ describe ApplicationController, type: :controller do
     end
 
     it 'is not required for admin' do
-      @request.env.merge!(json_headers(admin_headers))
+      set_current_user_as_admin
 
       post :create
       expect(response.status).to eq(201)
@@ -122,7 +81,8 @@ describe ApplicationController, type: :controller do
 
   describe 'request id' do
     before do
-      @request.env.merge!(admin_headers).merge!('cf.request_id' => 'expected-request-id')
+      set_current_user_as_admin
+      @request.env.merge!('cf.request_id' => 'expected-request-id')
     end
 
     it 'sets the vcap request current_id from the passed in rack request during request handling' do
@@ -140,7 +100,7 @@ describe ApplicationController, type: :controller do
 
   describe 'https schema validation' do
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       VCAP::CloudController::Config.config[:https_required] = true
     end
 
@@ -169,12 +129,10 @@ describe ApplicationController, type: :controller do
   end
 
   describe 'auth token validation' do
-    before do
-      @request.env.merge!(headers)
-    end
-
     context 'when the token contains a valid user' do
-      let(:headers) { admin_headers }
+      before do
+        set_current_user_as_admin
+      end
 
       it 'allows the operation' do
         get :index
@@ -183,8 +141,6 @@ describe ApplicationController, type: :controller do
     end
 
     context 'when there is no token' do
-      let(:headers) { {} }
-
       it 'raises NotAuthenticated' do
         get :index
         expect(response.status).to eq(401)
@@ -192,8 +148,10 @@ describe ApplicationController, type: :controller do
       end
     end
 
-    context 'when the token cannot be parsed' do
-      let(:headers) { { 'HTTP_AUTHORIZATION' => 'bearer potato' } }
+    context 'when the token is invalid' do
+      before do
+        VCAP::CloudController::SecurityContext.set(nil, :invalid_token, nil)
+      end
 
       it 'raises InvalidAuthToken' do
         get :index
@@ -202,16 +160,10 @@ describe ApplicationController, type: :controller do
       end
     end
 
-    context 'when the token is valid but does not contain user or client id' do
-      let(:headers) do
-        coder = CF::UAA::TokenCoder.new(
-          audience_ids: TestConfig.config[:uaa][:resource_id],
-          skey:         TestConfig.config[:uaa][:symmetric_secret],
-          pkey:         nil)
-
-        token = coder.encode(scope: ['some-scope'])
-
-        { 'HTTP_AUTHORIZATION' => "bearer #{token}" }
+    context 'when there is a token but no matching user' do
+      before do
+        user = nil
+        VCAP::CloudController::SecurityContext.set(user, 'valid_token', nil)
       end
 
       it 'raises InvalidAuthToken' do

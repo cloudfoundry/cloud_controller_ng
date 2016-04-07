@@ -127,6 +127,8 @@ module VCAP::CloudController
     end
 
     describe 'Associations' do
+      before { set_current_user_as_admin }
+
       it do
         expect(described_class).to have_nested_routes(
           {
@@ -146,14 +148,14 @@ module VCAP::CloudController
       describe 'app_events associations' do
         it 'does not return app_events with inline-relations-depth=0' do
           space = Space.make
-          get "/v2/spaces/#{space.guid}?inline-relations-depth=0", {}, json_headers(admin_headers)
+          get "/v2/spaces/#{space.guid}?inline-relations-depth=0"
           expect(entity).to have_key('app_events_url')
           expect(entity).to_not have_key('app_events')
         end
 
         it 'does not return app_events with inline-relations-depth=1 since app_events dataset is relatively expensive to query' do
           space = Space.make
-          get "/v2/spaces/#{space.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
+          get "/v2/spaces/#{space.guid}?inline-relations-depth=1"
           expect(entity).to have_key('app_events_url')
           expect(entity).to_not have_key('app_events')
         end
@@ -162,14 +164,14 @@ module VCAP::CloudController
       describe 'events associations' do
         it 'does not return events with inline-relations-depth=0' do
           space = Space.make
-          get "/v2/spaces/#{space.guid}?inline-relations-depth=0", {}, json_headers(admin_headers)
+          get "/v2/spaces/#{space.guid}?inline-relations-depth=0"
           expect(entity).to have_key('events_url')
           expect(entity).to_not have_key('events')
         end
 
         it 'does not return events with inline-relations-depth=1 since events dataset is relatively expensive to query' do
           space = Space.make
-          get "/v2/spaces/#{space.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
+          get "/v2/spaces/#{space.guid}?inline-relations-depth=1"
           expect(entity).to have_key('events_url')
           expect(entity).to_not have_key('events')
         end
@@ -179,16 +181,16 @@ module VCAP::CloudController
     describe 'GET /v2/spaces/:guid/user_roles' do
       context 'for an space that does not exist' do
         it 'returns a 404' do
-          get '/v2/spaces/foobar/user_roles', {}, admin_headers
+          set_current_user_as_admin
+          get '/v2/spaces/foobar/user_roles'
           expect(last_response.status).to eq(404)
         end
       end
 
       context 'when the user does not have permissions to read' do
-        let(:user) { User.make }
-
         it 'returns a 403' do
-          get "/v2/spaces/#{space_one.guid}/user_roles", {}, headers_for(user)
+          set_current_user(User.make)
+          get "/v2/spaces/#{space_one.guid}/user_roles"
           expect(last_response.status).to eq(403)
         end
       end
@@ -198,6 +200,8 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
 
+      before { set_current_user(developer) }
+
       context 'when filtering results' do
         it 'returns only matching results' do
           user_provided_service_instance_1 = UserProvidedServiceInstance.make(space: space, name: 'provided service 1')
@@ -205,11 +209,11 @@ module VCAP::CloudController
           managed_service_instance_1 = ManagedServiceInstance.make(space: space, name: 'managed service 1')
           ManagedServiceInstance.make(space: space, name: 'managed service 2')
 
-          get "v2/spaces/#{space.guid}/service_instances", { 'q' => 'name:provided service 1;', 'return_user_provided_service_instances' => true }, headers_for(developer)
+          get "v2/spaces/#{space.guid}/service_instances", { 'q' => 'name:provided service 1;', 'return_user_provided_service_instances' => true }
           guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
           expect(guids).to eq([user_provided_service_instance_1.guid])
 
-          get "v2/spaces/#{space.guid}/service_instances", { 'q' => 'name:managed service 1;', 'return_user_provided_service_instances' => true }, headers_for(developer)
+          get "v2/spaces/#{space.guid}/service_instances", { 'q' => 'name:managed service 1;', 'return_user_provided_service_instances' => true }
           guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
           expect(guids).to eq([managed_service_instance_1.guid])
         end
@@ -221,14 +225,14 @@ module VCAP::CloudController
 
         describe 'when return_user_provided_service_instances is true' do
           it 'returns ManagedServiceInstances and UserProvidedServiceInstances' do
-            get "v2/spaces/#{space.guid}/service_instances", { return_user_provided_service_instances: true }, headers_for(developer)
+            get "v2/spaces/#{space.guid}/service_instances", { return_user_provided_service_instances: true }
 
             guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
             expect(guids).to include(user_provided_service_instance.guid, managed_service_instance.guid)
           end
 
           it 'includes service_plan_url for managed service instances' do
-            get "/v2/spaces/#{space.guid}/service_instances", { return_user_provided_service_instances: true }, headers_for(developer)
+            get "/v2/spaces/#{space.guid}/service_instances", { return_user_provided_service_instances: true }
             service_instances_response = decoded_response.fetch('resources')
             managed_service_instance_response = service_instances_response.detect {|si|
               si.fetch('metadata').fetch('guid') == managed_service_instance.guid
@@ -239,7 +243,7 @@ module VCAP::CloudController
           end
 
           it 'includes the correct service binding url' do
-            get "/v2/spaces/#{space.guid}/service_instances", { return_user_provided_service_instances: true }, headers_for(developer)
+            get "/v2/spaces/#{space.guid}/service_instances", { return_user_provided_service_instances: true }
             service_instances_response = decoded_response.fetch('resources')
             user_provided_service_instance_response = service_instances_response.detect {|si|
               si.fetch('metadata').fetch('guid') == user_provided_service_instance.guid
@@ -248,7 +252,7 @@ module VCAP::CloudController
           end
 
           it 'presents pagination link urls with the return_user_provided_service_instances param' do
-            get "v2/spaces/#{space.guid}/service_instances", { return_user_provided_service_instances: true, 'results-per-page': 1 }, headers_for(developer)
+            get "v2/spaces/#{space.guid}/service_instances", { return_user_provided_service_instances: true, 'results-per-page': 1 }
 
             next_url = decoded_response.fetch('next_url')
             expect(next_url).to include('return_user_provided_service_instances=true')
@@ -257,13 +261,13 @@ module VCAP::CloudController
 
         describe 'when return_user_provided_service_instances flag is not present' do
           it 'returns only the managed service instances' do
-            get "/v2/spaces/#{space.guid}/service_instances", '', headers_for(developer)
+            get "/v2/spaces/#{space.guid}/service_instances"
             guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
             expect(guids).to match_array([managed_service_instance.guid])
           end
 
           it 'includes service_plan_url for managed service instances' do
-            get "/v2/spaces/#{space.guid}/service_instances", '', headers_for(developer)
+            get "/v2/spaces/#{space.guid}/service_instances"
             service_instances_response = decoded_response.fetch('resources')
             managed_service_instance_response = service_instances_response.detect {|si|
               si.fetch('metadata').fetch('guid') == managed_service_instance.guid
@@ -280,7 +284,9 @@ module VCAP::CloudController
         shared_examples 'disallow enumerating service instances' do |perm_name|
           describe 'disallowing enumerating service instances' do
             it "disallows a user that only has #{perm_name} permission on the space" do
-              get "/v2/spaces/#{@space_a.guid}/service_instances", {}, headers_for(member_a)
+              set_current_user(member_a)
+
+              get "/v2/spaces/#{@space_a.guid}/service_instances"
 
               expect(last_response).to have_status_code(403)
             end
@@ -297,7 +303,9 @@ module VCAP::CloudController
           end
 
           it "should return service instances to a user that has #{perm_name} permissions" do
-            get path, {}, headers_for(member_a)
+            set_current_user(member_a)
+
+            get path
 
             expect(last_response).to be_ok
             expect(decoded_response['total_results']).to eq(expected)
@@ -306,7 +314,8 @@ module VCAP::CloudController
           end
 
           it "should not return a service instance to a user with the #{perm_name} permission on a different space" do
-            get path, {}, headers_for(member_b)
+            set_current_user(member_b)
+            get path
             expect(last_response).to have_status_code(403)
           end
         end
@@ -314,8 +323,8 @@ module VCAP::CloudController
         shared_examples 'disallow enumerating services' do |perm_name|
           describe 'disallowing enumerating services' do
             it "disallows a user that only has #{perm_name} permission on the space" do
-              get "/v2/spaces/#{@space_a.guid}/services", {}, headers_for(member_a)
-
+              set_current_user(member_a)
+              get "/v2/spaces/#{@space_a.guid}/services"
               expect(last_response).to be_forbidden
             end
           end
@@ -325,13 +334,14 @@ module VCAP::CloudController
           let(:path) { "/v2/spaces/#{@space_a.guid}/services" }
 
           it "should return services to a user that has #{perm_name} permissions" do
-            get path, {}, headers_for(member_a)
-
+            set_current_user(member_a)
+            get path
             expect(last_response).to be_ok
           end
 
           it "should not return services to a user with the #{perm_name} permission on a different space" do
-            get path, {}, headers_for(member_b)
+            set_current_user(member_b)
+            get path
             expect(last_response).to be_forbidden
           end
         end
@@ -457,11 +467,11 @@ module VCAP::CloudController
       let(:space_one) { Space.make(organization: organization_one) }
       let(:space_two) { Space.make(organization: organization_two) }
       let(:user) { make_developer_for_space(space_one) }
-      let(:headers) { headers_for(user) }
 
       before do
         user.add_organization(organization_two)
         space_two.add_developer(user)
+        set_current_user(user)
       end
 
       def decoded_guids
@@ -485,38 +495,38 @@ module VCAP::CloudController
         let(:outside_manager) { make_manager_for_space(space_two) }
 
         it 'should be visible to SpaceDevelopers' do
-          developer_headers = headers_for(developer)
-          get "v2/spaces/#{space_one.guid}/services", {}, developer_headers
+          set_current_user(developer)
+          get "v2/spaces/#{space_one.guid}/services"
           expect(decoded_guids).to include(@service.guid)
         end
 
         it 'should not be visible to outside SpaceDevelopers, even in their own space' do
-          developer_headers = headers_for(outside_developer)
-          get "v2/spaces/#{space_two.guid}/services", {}, developer_headers
+          set_current_user(outside_developer)
+          get "v2/spaces/#{space_two.guid}/services"
           expect(decoded_guids).not_to include(@service.guid)
         end
 
         it 'should be visible to SpaceManagers ' do
-          manager_headers = headers_for(manager)
-          get "v2/spaces/#{space_one.guid}/services", {}, manager_headers
+          set_current_user(manager)
+          get "v2/spaces/#{space_one.guid}/services"
           expect(decoded_guids).to include(@service.guid)
         end
 
         it 'should be visible to SpaceManagers' do
-          manager_headers = headers_for(outside_manager)
-          get "v2/spaces/#{space_one.guid}/services", {}, manager_headers
+          set_current_user(outside_manager)
+          get "v2/spaces/#{space_one.guid}/services"
           expect(last_response).not_to be_ok
         end
 
         it 'should be visible to SpaceAuditor' do
-          auditor_headers = headers_for(auditor)
-          get "v2/spaces/#{space_one.guid}/services", {}, auditor_headers
+          set_current_user(auditor)
+          get "v2/spaces/#{space_one.guid}/services"
           expect(decoded_guids).to include(@service.guid)
         end
 
         it 'should be visible to SpaceManagers' do
-          auditor_headers = headers_for(outside_auditor)
-          get "v2/spaces/#{space_one.guid}/services", {}, auditor_headers
+          set_current_user(outside_auditor)
+          get "v2/spaces/#{space_one.guid}/services"
           expect(last_response).not_to be_ok
         end
       end
@@ -529,19 +539,19 @@ module VCAP::CloudController
         end
 
         it "should remove the offering when the org does not have access to any of the service's plans" do
-          get "/v2/spaces/#{space_two.guid}/services", {}, headers
+          get "/v2/spaces/#{space_two.guid}/services"
           expect(last_response).to be_ok
           expect(decoded_guids).not_to include(@service.guid)
         end
 
         it "should return the offering when the org has access to one of the service's plans" do
-          get "/v2/spaces/#{space_one.guid}/services", {}, headers
+          get "/v2/spaces/#{space_one.guid}/services"
           expect(last_response).to be_ok
           expect(decoded_guids).to include(@service.guid)
         end
 
         it 'should include plans that are visible to the org' do
-          get "/v2/spaces/#{space_one.guid}/services?inline-relations-depth=1", {}, headers
+          get "/v2/spaces/#{space_one.guid}/services?inline-relations-depth=1"
 
           expect(last_response).to be_ok
           service = decoded_response.fetch('resources').fetch(0)
@@ -554,7 +564,7 @@ module VCAP::CloudController
         it 'should exclude plans that are not visible to the org' do
           public_service_plan = ServicePlan.make(service: @service, public: true)
 
-          get "/v2/spaces/#{space_two.guid}/services?inline-relations-depth=1", {}, headers
+          get "/v2/spaces/#{space_two.guid}/services?inline-relations-depth=1"
 
           expect(last_response).to be_ok
           service = decoded_response.fetch('resources').fetch(0)
@@ -571,13 +581,13 @@ module VCAP::CloudController
         end
 
         it 'can remove inactive services' do
-          get "/v2/spaces/#{space_one.guid}/services?q=active:t", {}, headers
+          get "/v2/spaces/#{space_one.guid}/services?q=active:t"
           expect(last_response).to be_ok
           expect(decoded_guids).to match_array(@active.map(&:guid))
         end
 
         it 'can only get inactive services' do
-          get "/v2/spaces/#{space_one.guid}/services?q=active:f", {}, headers
+          get "/v2/spaces/#{space_one.guid}/services?q=active:f"
           expect(last_response).to be_ok
           expect(decoded_guids).to match_array(@inactive.map(&:guid))
         end
@@ -587,9 +597,11 @@ module VCAP::CloudController
     describe 'audit events' do
       let(:organization) { Organization.make }
 
+      before { set_current_user_as_admin }
+
       it 'logs audit.space.create when creating a space' do
         request_body = { organization_guid: organization.guid, name: 'space_name' }.to_json
-        post '/v2/spaces', request_body, json_headers(admin_headers)
+        post '/v2/spaces', request_body
 
         expect(last_response).to have_status_code(201)
 
@@ -603,7 +615,7 @@ module VCAP::CloudController
       it 'logs audit.space.update when updating a space' do
         space = Space.make
         request_body = { name: 'new_space_name' }.to_json
-        put "/v2/spaces/#{space.guid}", request_body, json_headers(admin_headers)
+        put "/v2/spaces/#{space.guid}", request_body
 
         expect(last_response).to have_status_code(201)
 
@@ -618,7 +630,7 @@ module VCAP::CloudController
         space = Space.make
         organization_guid = space.organization.guid
         space_guid = space.guid
-        delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+        delete "/v2/spaces/#{space_guid}?recursive=true"
 
         expect(last_response).to have_status_code(204)
 
@@ -635,8 +647,10 @@ module VCAP::CloudController
       context 'when recursive is false' do
         let(:space) { Space.make }
 
+        before { set_current_user_as_admin }
+
         it 'successfully deletes spaces with no associations' do
-          delete "/v2/spaces/#{space.guid}", '', json_headers(admin_headers)
+          delete "/v2/spaces/#{space.guid}"
 
           expect(last_response).to have_status_code(204)
           expect(Space.find(guid: space.guid)).to be_nil
@@ -644,7 +658,7 @@ module VCAP::CloudController
 
         it 'fails to delete spaces with v3 apps associated to it' do
           AppModel.make(space_guid: space.guid)
-          delete "/v2/spaces/#{space.guid}", '', json_headers(admin_headers)
+          delete "/v2/spaces/#{space.guid}"
 
           expect(last_response).to have_status_code(400)
           expect(Space.find(guid: space.guid)).not_to be_nil
@@ -654,7 +668,7 @@ module VCAP::CloudController
           let!(:broker) { VCAP::CloudController::ServiceBroker.make(space_guid: space.guid) }
 
           it 'fails to delete spaces with service brokers (private brokers) associated to it' do
-            delete "/v2/spaces/#{space.guid}", '', json_headers(admin_headers)
+            delete "/v2/spaces/#{space.guid}"
 
             expect(last_response).to have_status_code(400)
             expect(Space.find(guid: space.guid)).not_to be_nil
@@ -664,7 +678,8 @@ module VCAP::CloudController
             let(:user) { make_manager_for_org(space.organization) }
 
             it 'fails to delete spaces with associated private service brokers' do
-              delete "/v2/spaces/#{space.guid}", '', headers_for(user)
+              set_current_user(user)
+              delete "/v2/spaces/#{space.guid}"
 
               expect(last_response).to have_status_code(400)
               expect(Space.find(guid: space.guid)).not_to be_nil
@@ -685,10 +700,11 @@ module VCAP::CloudController
 
         before do
           stub_deprovision(service_instance, accepts_incomplete: true)
+          set_current_user(user, admin: true)
         end
 
         it 'successfully deletes spaces with v3 app associations' do
-          delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+          delete "/v2/spaces/#{space_guid}?recursive=true"
 
           expect(last_response).to have_status_code(204)
           expect(Space.find(guid: space_guid)).to be_nil
@@ -697,7 +713,7 @@ module VCAP::CloudController
         end
 
         it 'successfully deletes the space in a background job when async=true' do
-          delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
+          delete "/v2/spaces/#{space_guid}?recursive=true&async=true"
 
           expect(last_response).to have_status_code(202)
           expect(Space.find(guid: space_guid)).not_to be_nil
@@ -721,7 +737,8 @@ module VCAP::CloudController
         end
 
         it 'records an audit event for the deletion of any nested resources' do
-          delete "/v2/spaces/#{space_guid}?recursive=true", '', headers_for(user, email: 'user@email.com')
+          set_current_user(user, email: 'user@email.com')
+          delete "/v2/spaces/#{space_guid}?recursive=true"
 
           event = Event.find(type: 'audit.app.delete-request', actee: app_guid)
           expect(event).not_to be_nil
@@ -746,13 +763,13 @@ module VCAP::CloudController
           end
 
           it 'fails the job with a SpaceDeleteTimeout error' do
-            delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
+            delete "/v2/spaces/#{space_guid}?recursive=true&async=true"
             expect(last_response).to have_status_code(202)
             job_guid = decoded_response['metadata']['guid']
 
             execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
-            get "/v2/jobs/#{job_guid}", {}, json_headers(admin_headers)
+            get "/v2/jobs/#{job_guid}"
             expect(decoded_response['entity']['status']).to eq 'failed'
             expect(decoded_response['entity']['error_details']['error_code']).to eq 'CF-SpaceDeleteTimeout'
           end
@@ -773,7 +790,7 @@ module VCAP::CloudController
           end
 
           it 'successfully deletes spaces with managed service instances' do
-            delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+            delete "/v2/spaces/#{space_guid}?recursive=true"
 
             expect(last_response).to have_status_code(204)
             expect(service_instance_1.exists?).to be_falsey
@@ -782,7 +799,7 @@ module VCAP::CloudController
           end
 
           it 'successfully deletes spaces with user_provided service instances' do
-            delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+            delete "/v2/spaces/#{space_guid}?recursive=true"
 
             expect(last_response).to have_status_code(204)
             expect(user_provided_service_instance.exists?).to be_falsey
@@ -800,7 +817,7 @@ module VCAP::CloudController
             end
 
             it 'deletes the first and third of the instances and their bindings' do
-              delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+              delete "/v2/spaces/#{space_guid}?recursive=true"
 
               expect(last_response).to have_status_code 502
               expect(decoded_response['error_code']).to eq 'CF-SpaceDeletionFailed'
@@ -816,13 +833,13 @@ module VCAP::CloudController
 
             it 'does not delete any of the v2 apps' do
               expect {
-                delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+                delete "/v2/spaces/#{space_guid}?recursive=true"
               }.to_not change { App.count }
             end
 
             it 'deletes all the v3 apps' do
               expect {
-                delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+                delete "/v2/spaces/#{space_guid}?recursive=true"
               }.to change { AppModel.count }.by(-1)
             end
           end
@@ -833,7 +850,8 @@ module VCAP::CloudController
             let!(:broker) { VCAP::CloudController::ServiceBroker.make(space_guid: space.guid) }
 
             it 'successfully deletes spaces with associated private service brokers' do
-              delete "/v2/spaces/#{space.guid}?recursive=true", '', headers_for(user)
+              set_current_user(user)
+              delete "/v2/spaces/#{space.guid}?recursive=true"
 
               expect(last_response).to have_status_code(204)
               expect(Space.find(guid: space.guid)).to be_nil
@@ -854,7 +872,7 @@ module VCAP::CloudController
 
             context 'synchronous' do
               it 'deletes the first and third instances and returns an error' do
-                delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+                delete "/v2/spaces/#{space_guid}?recursive=true"
 
                 expect(last_response).to have_status_code 502
                 expect(decoded_response['error_code']).to eq 'CF-SpaceDeletionFailed'
@@ -868,7 +886,7 @@ module VCAP::CloudController
 
             context 'when async=true' do
               it 'deletes the first and third instances and returns an error' do
-                delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
+                delete "/v2/spaces/#{space_guid}?recursive=true&async=true"
                 expect(last_response).to have_status_code 202
                 job_url = MultiJson.load(last_response.body)['metadata']['url']
 
@@ -878,7 +896,7 @@ module VCAP::CloudController
                 expect(space_delete_jobs.count).to eq 1
                 expect(space_delete_jobs.first.last_error).not_to be_nil
 
-                get job_url, {}, json_headers(admin_headers)
+                get job_url
                 expect(last_response).to have_status_code 200
 
                 expect(MultiJson.load(last_response.body)['entity']['error_details']).to eq({
@@ -902,20 +920,20 @@ module VCAP::CloudController
             end
 
             it 'returns an error to the user' do
-              delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+              delete "/v2/spaces/#{space_guid}?recursive=true"
               expect(last_response).to have_status_code 502
               expect(decoded_response['error_code']).to eq 'CF-SpaceDeletionFailed'
               expect(last_response.body).to match /An operation for service instance #{service_instance_1.name} is in progress./
             end
 
             it 'does not delete that instance' do
-              delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+              delete "/v2/spaces/#{space_guid}?recursive=true"
               expect(space.exists?).to be_truthy
               expect(service_instance_1.exists?).to be_truthy
             end
 
             it 'deletes the other service instances' do
-              delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+              delete "/v2/spaces/#{space_guid}?recursive=true"
               expect(service_instance_2.exists?).to be_falsey
               expect(service_instance_3.exists?).to be_falsey
               expect(user_provided_service_instance.exists?).to be_falsey
@@ -923,7 +941,7 @@ module VCAP::CloudController
 
             context 'when async=true' do
               it 'returns an error to the user' do
-                delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
+                delete "/v2/spaces/#{space_guid}?recursive=true&async=true"
                 expect(last_response).to have_status_code 202
 
                 Delayed::Worker.new.work_off
@@ -934,14 +952,14 @@ module VCAP::CloudController
 
                 job_url = decoded_response['metadata']['url']
 
-                get job_url, {}, json_headers(admin_headers)
+                get job_url
                 expect(last_response).to have_status_code 200
                 expect(decoded_response['entity']['error_details']['error_code']).to eq 'CF-SpaceDeletionFailed'
                 expect(decoded_response['entity']['error_details']['description']).to match /An operation for service instance #{service_instance_1.name} is in progress./
               end
 
               it 'does not delete that instance' do
-                delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
+                delete "/v2/spaces/#{space_guid}?recursive=true&async=true"
 
                 Delayed::Worker.new.work_off
 
@@ -954,7 +972,7 @@ module VCAP::CloudController
               end
 
               it 'deletes the other service instances' do
-                delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
+                delete "/v2/spaces/#{space_guid}?recursive=true&async=true"
 
                 Delayed::Worker.new.work_off
 
@@ -982,12 +1000,14 @@ module VCAP::CloudController
       end
 
       it 'allows space managers' do
-        get "/v2/spaces/#{space.guid}/developers", '', headers_for(mgr)
+        set_current_user(mgr)
+        get "/v2/spaces/#{space.guid}/developers"
         expect(last_response).to have_status_code(200)
       end
 
       it 'allows space developers' do
-        get "/v2/spaces/#{space.guid}/developers", '', headers_for(user)
+        set_current_user(user)
+        get "/v2/spaces/#{space.guid}/developers"
         expect(last_response).to have_status_code(200)
       end
     end
@@ -1001,10 +1021,11 @@ module VCAP::CloudController
           before do
             allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
             organization_one.add_user(user)
+            set_current_user_as_admin
           end
 
           it "makes the user a space #{role}" do
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
             expect(last_response.status).to eq(201)
             expect(space_one.send(plural_role)).to include(user)
@@ -1013,13 +1034,13 @@ module VCAP::CloudController
 
           it 'verifies the user has update access to the space' do
             expect_any_instance_of(SpacesController).to receive(:find_guid_and_validate_access).with(:update, space_one.guid).and_call_original
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
           end
 
           it 'returns a 404 when the user does not exist in UAA' do
             expect_any_instance_of(UaaClient).to receive(:id_for_username).with('fake@example.com').and_return(nil)
 
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' }), admin_headers
+            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' })
 
             expect(last_response.status).to eq(404)
             expect(decoded_response['code']).to eq(20003)
@@ -1028,7 +1049,7 @@ module VCAP::CloudController
           it 'returns an error when UAA is not available' do
             expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaUnavailable)
 
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
             expect(last_response.status).to eq(503)
             expect(decoded_response['code']).to eq(20004)
@@ -1037,7 +1058,7 @@ module VCAP::CloudController
           it 'returns an error when UAA endpoint is disabled' do
             expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaEndpointDisabled)
 
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
             expect(last_response.status).to eq(501)
             expect(decoded_response['code']).to eq(20005)
@@ -1049,14 +1070,15 @@ module VCAP::CloudController
             end
 
             it 'raises a feature flag error for non-admins' do
-              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), headers_for(user)
+              set_current_user(user)
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
               expect(last_response.status).to eq(403)
               expect(decoded_response['code']).to eq(330002)
             end
 
             it 'succeeds for admins' do
-              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
               expect(last_response.status).to eq(201)
               expect(space_one.send(plural_role)).to include(user)
@@ -1077,12 +1099,13 @@ module VCAP::CloudController
             allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
             organization_one.add_user(user)
             space_one.send("add_#{role}", user)
+            set_current_user_as_admin
           end
 
           it "unsets the user as a space #{role}" do
             expect(space_one.send(plural_role)).to include(user)
 
-            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
             expect(last_response.status).to eq(200)
             expect(space_one.reload.send(plural_role)).to_not include(user)
@@ -1091,13 +1114,13 @@ module VCAP::CloudController
 
           it 'verifies the user has update access to the space' do
             expect_any_instance_of(SpacesController).to receive(:find_guid_and_validate_access).with(:update, space_one.guid).and_call_original
-            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
           end
 
           it 'returns a 404 when the user does not exist in CC' do
             expect_any_instance_of(UaaClient).to receive(:id_for_username).with('fake@example.com').and_return('not-a-real-guid')
 
-            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' }), admin_headers
+            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' })
 
             expect(last_response.status).to eq(404)
             expect(decoded_response['code']).to eq(20003)
@@ -1106,7 +1129,7 @@ module VCAP::CloudController
           it 'returns an error when UAA is not available' do
             expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaUnavailable)
 
-            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
             expect(last_response.status).to eq(503)
             expect(decoded_response['code']).to eq(20004)
@@ -1115,7 +1138,7 @@ module VCAP::CloudController
           it 'returns an error when UAA endpoint is disabled' do
             expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaEndpointDisabled)
 
-            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
             expect(last_response.status).to eq(501)
             expect(decoded_response['code']).to eq(20005)
@@ -1127,7 +1150,8 @@ module VCAP::CloudController
             end
 
             it 'raises a feature flag error for non-admins' do
-              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), headers_for(user)
+              set_current_user(user)
+              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
               expect(last_response.status).to eq(403)
               expect(decoded_response['code']).to eq(330002)
@@ -1136,7 +1160,7 @@ module VCAP::CloudController
             it 'succeeds for admins' do
               expect(space_one.send(plural_role)).to include(user)
 
-              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
               expect(last_response.status).to eq(200)
               expect(space_one.reload.send(plural_role)).to_not include(user)

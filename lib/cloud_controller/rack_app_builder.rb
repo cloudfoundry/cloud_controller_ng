@@ -2,11 +2,13 @@ require 'vcap_request_id'
 require 'cors'
 require 'request_metrics'
 require 'request_logs'
+require 'security_context_setter'
 
 module VCAP::CloudController
   class RackAppBuilder
     def build(config, request_metrics)
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
+      configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
 
       logger = access_log(config)
 
@@ -14,6 +16,7 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::RequestMetrics, request_metrics
         use CloudFoundry::Middleware::Cors, config[:allowed_cors_domains]
         use CloudFoundry::Middleware::VcapRequestId
+        use CloudFoundry::Middleware::SecurityContextSetter, configurer
         use CloudFoundry::Middleware::RequestLogs, Steno.logger('cc.api')
         use Rack::CommonLogger, logger if logger
 
@@ -23,7 +26,7 @@ module VCAP::CloudController
         end
 
         map '/' do
-          run FrontController.new(config, token_decoder)
+          run FrontController.new(config)
         end
 
         map '/v3' do

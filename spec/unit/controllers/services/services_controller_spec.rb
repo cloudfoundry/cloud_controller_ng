@@ -111,10 +111,11 @@ module VCAP::CloudController
       before do
         organization.add_user user
         space.add_developer user
+        set_current_user(user)
       end
 
       it 'returns private service plans' do
-        get "/v2/services/#{service.guid}/service_plans", {}, headers_for(user)
+        get "/v2/services/#{service.guid}/service_plans"
         expect(decoded_response['resources'].first['metadata']['guid']).to eq service_plan.guid
       end
     end
@@ -130,8 +131,8 @@ module VCAP::CloudController
       end
 
       let(:user) { VCAP::CloudController::User.make }
-      let(:headers) { headers_for(user) }
       let(:service_broker) { ServiceBroker.make(name: 'FreeWidgets') }
+      before { set_current_user(user) }
 
       let!(:public_and_active) do
         opts = { active: true, long_description: Sham.long_description, service_broker: service_broker }
@@ -190,7 +191,7 @@ module VCAP::CloudController
       end
 
       it 'returns plans visible to the user' do
-        get '/v2/services', {}, headers
+        get '/v2/services'
         expect(last_response.status).to eq 200
         expect(decoded_guids).to eq(visible_services.map(&:guid))
       end
@@ -203,7 +204,7 @@ module VCAP::CloudController
           ServicePlan.make(service: service)
           space.add_developer(user)
 
-          get '/v2/services', {}, headers
+          get '/v2/services'
           expect(last_response.status).to eq 200
 
           expect(decoded_guids).to include(service.guid)
@@ -211,23 +212,17 @@ module VCAP::CloudController
       end
 
       context 'when the user has an invalid auth token' do
-        let(:headers) do
-          {
-            'HTTP_AUTHORIZATION' => "bearer #{SecureRandom.uuid}"
-          }
-        end
-
         it 'raises an InvalidAuthToken error' do
-          get '/v2/services', {}, headers
+          set_current_user(User.make, token: :invalid_token)
+          get '/v2/services'
           expect(last_response.status).to eq 401
         end
       end
 
       context 'when the user has no auth token' do
-        let(:headers) { {} }
-
         it 'does not allow the unauthed user to use inline-relations-depth' do
-          get '/v2/services?inline-relations-depth=1', {}, headers
+          set_current_user(nil)
+          get '/v2/services?inline-relations-depth=1'
           services = decoded_response.fetch('resources').map { |service| service['entity'] }
           services.each do |service|
             expect(service['service_plans']).to be_nil
@@ -242,7 +237,10 @@ module VCAP::CloudController
       let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
       let!(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
       let!(:service_key) { ServiceKey.make(service_instance: service_instance) }
+      let(:email) { 'admin@example.com' }
+      let(:user) { User.make }
 
+      before { set_current_user(user, { email: email, admin: true }) }
       context 'when no purge parameter is given' do
         it 'gives error info to user' do
           delete "/v2/services/#{service.guid}", '{}', admin_headers
@@ -253,15 +251,12 @@ module VCAP::CloudController
       end
 
       context 'when the purge parameter is "true"' do
-        let(:email) { 'admin@example.com' }
-        let(:user) { User.make }
-
         before do
           stub_request(:delete, /#{service.service_broker.broker_url}.*/).to_return(body: '', status: 200)
         end
 
         it 'creates a service delete event' do
-          delete "/v2/services/#{service.guid}?purge=true", '{}', admin_headers_for(user, email: email)
+          delete "/v2/services/#{service.guid}?purge=true"
           expect(last_response.status).to eq(204)
 
           event = Event.order(:id).last
@@ -283,15 +278,17 @@ module VCAP::CloudController
         end
 
         it 'requires admin headers' do
-          delete "/v2/services/#{service.guid}", '{}', headers_for(nil)
+          set_current_user(nil)
+          delete "/v2/services/#{service.guid}"
           expect(last_response.status).to eq 401
 
-          delete "/v2/services/#{service.guid}", '{}', headers_for(User.make)
+          set_current_user(User.make)
+          delete "/v2/services/#{service.guid}"
           expect(last_response.status).to eq 403
         end
 
         it 'deletes the service and its dependent models' do
-          delete "/v2/services/#{service.guid}?purge=true", '{}', admin_headers
+          delete "/v2/services/#{service.guid}?purge=true"
 
           expect(last_response).to have_status_code(204)
           expect(Service.first(guid: service.guid)).to be_nil
@@ -302,7 +299,7 @@ module VCAP::CloudController
         end
 
         it 'does not contact the broker' do
-          delete "/v2/services/#{service.guid}?purge=true", '{}', admin_headers
+          delete "/v2/services/#{service.guid}?purge=true"
 
           expect(a_request(:delete, /#{service.service_broker.broker_url}.*/)).not_to have_been_made
         end
@@ -313,7 +310,7 @@ module VCAP::CloudController
           end
 
           it 'deletes the service and its dependent models' do
-            delete "/v2/services/#{service.guid}?purge=true", '{}', admin_headers
+            delete "/v2/services/#{service.guid}?purge=true"
 
             expect(last_response).to have_status_code(204)
             expect(Service.first(guid: service.guid)).to be_nil

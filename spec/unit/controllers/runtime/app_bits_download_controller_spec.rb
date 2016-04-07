@@ -8,8 +8,12 @@ module VCAP::CloudController
       let(:developer) { make_developer_for_space(app_obj.space) }
 
       context 'dev app download' do
+        before do
+          set_current_user(developer)
+        end
+
         it 'should return 404 for an app without a package' do
-          get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(developer)
+          get "/v2/apps/#{app_obj.guid}/download"
           expect(last_response.status).to eq(404)
         end
 
@@ -22,20 +26,24 @@ module VCAP::CloudController
           end
 
           it 'should return 302' do
-            get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(developer)
+            get "/v2/apps/#{app_obj.guid}/download"
             expect(last_response.status).to eq(302)
           end
         end
 
         it 'should return 404 for non-existent apps' do
-          get '/v2/apps/abcd/download', {}, headers_for(developer)
+          get '/v2/apps/abcd/download'
           expect(last_response.status).to eq(404)
         end
       end
 
       context 'user app download' do
+        before do
+          set_current_user(user)
+        end
+
         it 'should return 403' do
-          get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(user)
+          get "/v2/apps/#{app_obj.guid}/download"
           expect(last_response.status).to eq(403)
         end
       end

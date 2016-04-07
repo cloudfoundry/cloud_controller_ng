@@ -24,7 +24,6 @@ class ApplicationController < ActionController::Base
 
   before_action :set_locale
   around_action :manage_request_id
-  before_action :set_current_user, except: [:internal_error]
   before_action :validate_scheme!, except: [:not_found, :internal_error, :bad_request]
   before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]
   before_action :check_read_permissions!, only: [:index, :show, :show_environment, :stats]
@@ -84,13 +83,6 @@ class ApplicationController < ActionController::Base
     raise VCAP::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !write_scope
   end
 
-  def set_current_user
-    auth_token = request.headers['HTTP_AUTHORIZATION']
-    token_decoder = VCAP::UaaTokenDecoder.new(configuration[:uaa])
-    VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder).configure(auth_token)
-    logger.info("User for request: #{current_user.nil? ? nil : current_user.guid}")
-  end
-
   def validate_scheme!
     validator = VCAP::CloudController::RequestSchemeValidator.new
     validator.validate!(current_user, roles, configuration, request)
@@ -105,8 +97,6 @@ class ApplicationController < ActionController::Base
 
     if VCAP::CloudController::SecurityContext.missing_token?
       raise VCAP::Errors::ApiError.new_from_details('NotAuthenticated')
-    elsif VCAP::CloudController::SecurityContext.invalid_token?
-      raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')
     end
 
     raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')

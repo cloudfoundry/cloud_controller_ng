@@ -14,7 +14,7 @@ describe PackagesController, type: :controller do
 
     before do
       @request.env.merge!(form_headers)
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
@@ -32,7 +32,7 @@ describe PackagesController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -62,7 +62,7 @@ describe PackagesController, type: :controller do
       end
 
       context 'admin user' do
-        before { @request.env.merge!(admin_headers) }
+        before { set_current_user_as_admin }
 
         it 'returns 200 and updates the package state' do
           post :upload, params.merge(guid: package.guid)
@@ -112,7 +112,7 @@ describe PackagesController, type: :controller do
 
     context 'when the user does not have write scope' do
       before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
       end
 
       it 'returns an Unauthorized error' do
@@ -204,7 +204,7 @@ describe PackagesController, type: :controller do
       allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
-      @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make)))
+      set_current_user(VCAP::CloudController::User.make)
     end
 
     it 'returns 302 and the redirect' do
@@ -253,7 +253,7 @@ describe PackagesController, type: :controller do
 
     context 'user does not have read scope' do
       before do
-        @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
       end
 
       it 'returns an Unauthorized error' do
@@ -286,7 +286,7 @@ describe PackagesController, type: :controller do
       let(:download_location) { 'http://package.download.url' }
 
       before do
-        @request.env.merge!(json_headers(admin_headers))
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -307,7 +307,7 @@ describe PackagesController, type: :controller do
       allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       allow(package_presenter).to receive(:present_json).and_return(expected_response)
     end
 
@@ -321,7 +321,7 @@ describe PackagesController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -336,7 +336,7 @@ describe PackagesController, type: :controller do
 
     context 'when the user does not have the read scope' do
       before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
       end
 
       it 'returns a 403 NotAuthorized error' do
@@ -391,7 +391,7 @@ describe PackagesController, type: :controller do
       allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
     end
 
     it 'returns a 204 NO CONTENT and deletes the package' do
@@ -413,7 +413,7 @@ describe PackagesController, type: :controller do
 
     context 'when the user does not have write scope' do
       before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
       end
 
       it 'returns an Unauthorized error' do
@@ -471,7 +471,7 @@ describe PackagesController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -493,7 +493,7 @@ describe PackagesController, type: :controller do
     let!(:admin_package) { VCAP::CloudController::PackageModel.make }
 
     before do
-      @request.env.merge!(headers_for(user))
+      set_current_user(user)
       space.organization.add_user(user)
       space.organization.save
       space.add_developer(user)
@@ -561,7 +561,7 @@ describe PackagesController, type: :controller do
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
+        set_current_user_as_admin
         allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
@@ -590,7 +590,7 @@ describe PackagesController, type: :controller do
 
     context 'when the user does not have the read scope' do
       before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
       end
 
       it 'returns a 403 NotAuthorized error' do
@@ -636,7 +636,7 @@ describe PackagesController, type: :controller do
       let(:req_body) { { type: 'bits' } }
 
       before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+        set_current_user(VCAP::CloudController::User.make)
         allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
         allow(membership).to receive(:has_any_roles?).and_return(true)
       end
@@ -657,7 +657,7 @@ describe PackagesController, type: :controller do
 
         context 'admin' do
           before do
-            @request.env.merge!(admin_headers)
+            set_current_user_as_admin
             allow(membership).to receive(:has_any_roles?).and_return(false)
           end
 
@@ -698,7 +698,7 @@ describe PackagesController, type: :controller do
 
         context 'when the user does not have write scope' do
           before do
-            @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])))
+            set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
           end
 
           it 'returns a 403 NotAuthorized error' do
@@ -789,7 +789,7 @@ describe PackagesController, type: :controller do
       let(:target_app_model) { VCAP::CloudController::AppModel.make }
 
       before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+        set_current_user(VCAP::CloudController::User.make)
         allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
         allow(membership).to receive(:has_any_roles?).and_return(true)
       end
@@ -810,7 +810,7 @@ describe PackagesController, type: :controller do
       context 'permissions' do
         context 'when the user does not have write scope' do
           before do
-            @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])))
+            set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
           end
 
           it 'returns a 403 NotAuthorized error' do
@@ -898,7 +898,7 @@ describe PackagesController, type: :controller do
 
         context 'admin' do
           before do
-            @request.env.merge!(admin_headers)
+            set_current_user_as_admin
             allow(membership).to receive(:has_any_roles?).and_return(false)
           end
 

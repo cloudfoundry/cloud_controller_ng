@@ -15,6 +15,7 @@ module VCAP::CloudController
         @app = AppFactory.make(package_hash: 'abc', package_state: 'STAGED')
         @user = make_user_for_space(@app.space)
         @developer = make_developer_for_space(@app.space)
+        set_current_user(user)
       end
 
       context 'as a developer' do
@@ -24,7 +25,7 @@ module VCAP::CloudController
           @app.state = 'STOPPED'
           @app.save
 
-          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
+          get "/v2/apps/#{@app.guid}/instances"
 
           expect(last_response.status).to eq(400)
 
@@ -37,7 +38,7 @@ module VCAP::CloudController
           @app.package_state = 'FAILED'
           @app.save
 
-          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
+          get "/v2/apps/#{@app.guid}/instances"
 
           expect(last_response.status).to eq(400)
           expect(MultiJson.load(last_response.body)['code']).to eq(170001)
@@ -47,7 +48,7 @@ module VCAP::CloudController
           @app.package_state = 'PENDING'
           @app.save
 
-          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
+          get "/v2/apps/#{@app.guid}/instances"
 
           expect(last_response.status).to eq(400)
           expect(MultiJson.load(last_response.body)['code']).to eq(170002)
@@ -57,7 +58,7 @@ module VCAP::CloudController
           @app.mark_as_failed_to_stage('NoAppDetectedError')
           @app.save
 
-          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
+          get "/v2/apps/#{@app.guid}/instances"
 
           expect(last_response.status).to eq(400)
           expect(MultiJson.load(last_response.body)['code']).to eq(170003)
@@ -67,7 +68,7 @@ module VCAP::CloudController
           @app.mark_as_failed_to_stage('BuildpackCompileFailed')
           @app.save
 
-          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
+          get "/v2/apps/#{@app.guid}/instances"
 
           expect(last_response.status).to eq(400)
           expect(MultiJson.load(last_response.body)['code']).to eq(170004)
@@ -77,7 +78,7 @@ module VCAP::CloudController
           @app.mark_as_failed_to_stage('BuildpackReleaseFailed')
           @app.save
 
-          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
+          get "/v2/apps/#{@app.guid}/instances"
 
           expect(last_response.status).to eq(400)
           expect(MultiJson.load(last_response.body)['code']).to eq(170005)
@@ -111,7 +112,7 @@ module VCAP::CloudController
 
             allow(instances_reporters).to receive(:all_instances_for_app).and_return(instances)
 
-            get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
+            get "/v2/apps/#{@app.guid}/instances"
 
             expect(last_response.status).to eq(200)
             expect(MultiJson.load(last_response.body)).to eq(expected)
@@ -132,7 +133,7 @@ module VCAP::CloudController
             end
 
             it "returns '220001 InstancesError'" do
-              get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
+              get "/v2/apps/#{@app.guid}/instances"
 
               expect(last_response.status).to eq(503)
 
@@ -147,7 +148,7 @@ module VCAP::CloudController
       context 'as a non-developer' do
         let(:user) { @user }
         it 'returns 403' do
-          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
+          get "/v2/apps/#{@app.guid}/instances"
           expect(last_response.status).to eq(403)
         end
       end
@@ -156,13 +157,15 @@ module VCAP::CloudController
     describe 'DELETE /v2/apps/:id/instances/:index' do
       let(:app_obj) { AppFactory.make(state: 'STARTED', instances: 2) }
 
+      before { set_current_user(user) }
+
       context 'as a developer or space manager' do
         let(:user) { make_developer_for_space(app_obj.space) }
 
         it 'stops the instance at the given index' do
           allow(index_stopper).to receive(:stop_index)
 
-          delete "/v2/apps/#{app_obj.guid}/instances/1", '', headers_for(user)
+          delete "/v2/apps/#{app_obj.guid}/instances/1"
 
           expect(last_response.status).to eq(204)
           expect(index_stopper).to have_received(:stop_index).with(app_obj, 1)
@@ -173,7 +176,7 @@ module VCAP::CloudController
         let(:user) { make_user_for_space(app_obj.space) }
 
         it 'returns 403' do
-          delete "/v2/apps/#{app_obj.guid}/instances/1", '', headers_for(user)
+          delete "/v2/apps/#{app_obj.guid}/instances/1"
           expect(last_response.status).to eq(403)
         end
       end

@@ -54,51 +54,53 @@ module VCAP::CloudController
       let(:existing_quota) { VCAP::CloudController::QuotaDefinition.make }
 
       context 'when the user is a cf admin' do
-        let(:headers) { admin_headers }
         let(:quota_name) { 'quota 1' }
 
+        before { set_current_user_as_admin }
+
         it 'does allow creation of a quota def' do
-          post '/v2/quota_definitions', MultiJson.dump(quota_attributes), json_headers(headers)
+          post '/v2/quota_definitions', MultiJson.dump(quota_attributes)
           expect(last_response.status).to eq(201)
         end
 
         it 'does allow read of a quota def' do
-          get "/v2/quota_definitions/#{existing_quota.guid}", {}, headers
+          get "/v2/quota_definitions/#{existing_quota.guid}"
           expect(last_response.status).to eq(200)
         end
 
         it 'does allow update of a quota def' do
-          put "/v2/quota_definitions/#{existing_quota.guid}", MultiJson.dump({ total_services: 2 }), json_headers(headers)
+          put "/v2/quota_definitions/#{existing_quota.guid}", MultiJson.dump({ total_services: 2 })
           expect(last_response.status).to eq(201)
         end
 
         it 'does allow deletion of a quota def' do
-          delete "/v2/quota_definitions/#{existing_quota.guid}", {}, headers
+          delete "/v2/quota_definitions/#{existing_quota.guid}"
           expect(last_response.status).to eq(204)
         end
       end
 
       context 'when the user is not a cf admin' do
-        let(:headers) { headers_for(VCAP::CloudController::User.make(admin: false)) }
         let(:quota_name) { 'quota 2' }
 
+        before { set_current_user(User.make) }
+
         it 'does not allow creation of a quota def' do
-          post '/v2/quota_definitions', MultiJson.dump(quota_attributes), json_headers(headers)
+          post '/v2/quota_definitions', MultiJson.dump(quota_attributes)
           expect(last_response.status).to eq(403)
         end
 
         it 'does allow read of a quota def' do
-          get "/v2/quota_definitions/#{existing_quota.guid}", {}, headers
+          get "/v2/quota_definitions/#{existing_quota.guid}"
           expect(last_response.status).to eq(200)
         end
 
         it 'does not allow update of a quota def' do
-          put "/v2/quota_definitions/#{existing_quota.guid}", MultiJson.dump(quota_attributes), json_headers(headers)
+          put "/v2/quota_definitions/#{existing_quota.guid}", MultiJson.dump(quota_attributes)
           expect(last_response.status).to eq(403)
         end
 
         it 'does not allow deletion of a quota def' do
-          delete "/v2/quota_definitions/#{existing_quota.guid}", {}, headers
+          delete "/v2/quota_definitions/#{existing_quota.guid}"
           expect(last_response.status).to eq(403)
         end
       end
@@ -108,7 +110,9 @@ module VCAP::CloudController
       let(:quota_definition) { QuotaDefinition.make }
 
       it 'returns QuotaDefinitionMemoryLimitNegative error correctly' do
-        put "/v2/quota_definitions/#{quota_definition.guid}", MultiJson.dump({ memory_limit: -100 }), json_headers(admin_headers)
+        set_current_user_as_admin
+
+        put "/v2/quota_definitions/#{quota_definition.guid}", MultiJson.dump({ memory_limit: -100 })
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(240004)

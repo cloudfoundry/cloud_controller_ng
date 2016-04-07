@@ -70,31 +70,51 @@ module ControllerHelpers
              https: false }.merge(opts)
 
     headers = {}
+    headers['HTTP_AUTHORIZATION'] = "bearer #{user_token(user, opts)}"
+    headers['HTTP_X_FORWARDED_PROTO'] = 'https' if opts[:https]
+    headers
+  end
+
+  def user_token(user, opts={})
     token_coder = CF::UAA::TokenCoder.new(audience_ids: TestConfig.config[:uaa][:resource_id],
                                           skey: TestConfig.config[:uaa][:symmetric_secret],
                                           pkey: nil)
 
-    scopes = opts[:scopes]
-    if scopes.nil? && user
-      scopes = %w(cloud_controller.read cloud_controller.write)
-    end
-
-    if opts[:admin] && user
-      scopes << 'cloud_controller.admin'
-    end
-
     if user
+      scopes = opts[:scopes]
+      if scopes.nil?
+        scopes = %w(cloud_controller.read cloud_controller.write)
+      end
+
+      if opts[:admin]
+        scopes << 'cloud_controller.admin'
+      end
+
       user_token = token_coder.encode(
         user_id: user ? user.guid : (rand * 1_000_000_000).ceil,
-        email: opts[:email],
-        scope: scopes
+        email:   opts[:email],
+        scope:   scopes
       )
 
-      headers['HTTP_AUTHORIZATION'] = "bearer #{user_token}"
+      return user_token
     end
 
-    headers['HTTP_X_FORWARDED_PROTO'] = 'https' if opts[:https]
-    headers
+    nil
+  end
+
+  def set_current_user(user, opts={})
+    token_decoder = VCAP::UaaTokenDecoder.new(TestConfig.config[:uaa])
+    header_token = user ? "bearer #{user_token(user, opts)}" : nil
+    token_information = opts[:token] ? opts[:token] : token_decoder.decode_token(header_token)
+    VCAP::CloudController::SecurityContext.set(user, token_information, header_token)
+  end
+
+  # rubocop:disable all
+  def set_current_user_as_admin(opts={})
+  # rubocop:enable all
+    user = User.make
+    set_current_user(user, { admin: true }.merge(opts))
+    user.destroy
   end
 
   def json_headers(headers)

@@ -5,24 +5,25 @@ module VCAP::CloudController
   # tokens only.
   describe VCAP::CloudController::LegacyInfo do
     it 'is deprecated' do
-      get '/info', {}, {}
+      get '/info'
       expect(last_response).to be_a_deprecated_response
     end
 
     it "returns a 'user' entry when authenticated" do
-      get '/info', {}, admin_headers
+      set_current_user_as_admin
+      get '/info'
       hash = MultiJson.load(last_response.body)
       expect(hash).to have_key('user')
     end
 
     it "excludes the 'user' entry when not authenticated" do
-      get '/info', {}, {}
+      get '/info'
       hash = MultiJson.load(last_response.body)
       expect(hash).not_to have_key('user')
     end
 
     it 'includes data from the config' do
-      get '/info', {}, {}
+      get '/info'
       hash = MultiJson.load(last_response.body)
       expect(hash['name']).to eq(TestConfig.config[:info][:name])
       expect(hash['build']).to eq(TestConfig.config[:info][:build])
@@ -36,19 +37,19 @@ module VCAP::CloudController
 
     it 'includes login url when configured' do
       TestConfig.override(login: { url: 'login_url' })
-      get '/info', {}, {}
+      get '/info'
       hash = MultiJson.load(last_response.body)
       expect(hash['authorization_endpoint']).to eq('login_url')
     end
 
     describe 'account capacity' do
-      let(:headers) { headers_for(current_user) }
+      before { set_current_user(current_user) }
 
       describe 'for an admin' do
         let(:current_user) { make_user_with_default_space(admin: true) }
 
         it 'should return admin limits for an admin' do
-          get '/info', {}, headers
+          get '/info'
           expect(last_response.status).to eq(200)
           hash = MultiJson.load(last_response.body)
           expect(hash).to have_key('limits')
@@ -65,7 +66,7 @@ module VCAP::CloudController
         let(:current_user) { make_user }
 
         it 'should not return service usage' do
-          get '/info', {}, headers
+          get '/info'
           expect(last_response.status).to eq(200)
           hash = MultiJson.load(last_response.body)
           expect(hash).not_to have_key('usage')
@@ -76,7 +77,7 @@ module VCAP::CloudController
         let(:current_user) { make_user_with_default_space }
 
         it 'should return default limits for a user' do
-          get '/info', {}, headers
+          get '/info'
           expect(last_response.status).to eq(200)
           hash = MultiJson.load(last_response.body)
           expect(hash).to have_key('limits')
@@ -90,7 +91,7 @@ module VCAP::CloudController
 
         context 'with no apps and services' do
           it 'should return 0 apps and service usage' do
-            get '/info', {}, headers
+            get '/info'
             expect(last_response.status).to eq(200)
             hash = MultiJson.load(last_response.body)
             expect(hash).to have_key('usage')
@@ -131,7 +132,7 @@ module VCAP::CloudController
           end
 
           it 'should return 2 apps and 3 services' do
-            get '/info', {}, headers
+            get '/info'
             expect(last_response.status).to eq(200)
             hash = MultiJson.load(last_response.body)
             expect(hash).to have_key('usage')
