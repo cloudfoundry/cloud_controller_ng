@@ -315,7 +315,7 @@ module VCAP::CloudController::Diego
 
           it 'returns a map of application guid to instance statuses' do
             expected_lrp_instance_map = {
-              app.guid.to_sym => [
+              app.guid => [
                 {
                   process_guid: 'abc',
                   instance_guid: '123',
@@ -324,7 +324,7 @@ module VCAP::CloudController::Diego
                   since: 1257894000,
                 },
               ],
-              app2.guid.to_sym => [
+              app2.guid => [
                 {
                   process_guid: 'def',
                   instance_guid: '456',

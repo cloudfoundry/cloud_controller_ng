@@ -208,7 +208,7 @@ module VCAP::CloudController
         let(:app2) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED', state: 'STARTED', instances: 5) }
         let(:instance_map) do
           {
-            app1.guid.to_sym => [
+            app1.guid => [
               {
                 state: 'RUNNING',
                 index: 0
@@ -226,7 +226,7 @@ module VCAP::CloudController
                 index: 1
               },
             ],
-            app2.guid.to_sym => [
+            app2.guid => [
               {
                 state: 'RUNNING',
                 index: 0

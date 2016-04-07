@@ -22,7 +22,7 @@ module VCAP::CloudController
 
         guids = apps.map { |a| ProcessGuid.from_app(a) }
         path = "/v1/bulk_actual_lrp_status?guids=#{guids.join(',')}"
-        Hash[fetch_from_tps(path, {}).map { |k, v| [ProcessGuid.app_guid(k).to_sym, v] }]
+        Hash[fetch_from_tps(path, {}).map { |k, v| [ProcessGuid.app_guid(k), v] }]
       end
 
       private

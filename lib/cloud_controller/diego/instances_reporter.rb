@@ -35,7 +35,7 @@ module VCAP::CloudController
         apps.each do |application|
           running_indices = Set.new
 
-          for_each_desired_instance(instances_map[application.guid.to_sym] || [], application) do |instance|
+          for_each_desired_instance(instances_map[application.guid] || [], application) do |instance|
             next unless instance[:state] == 'RUNNING' || instance[:state] == 'STARTING'
             running_indices.add(instance[:index])
           end
@@ -135,12 +135,12 @@ module VCAP::CloudController
 
       def for_each_desired_instance(instances, app)
         instances.each do |instance|
-          next unless instance_is_desired(instance, app)
+          next unless instance_is_desired?(instance, app)
           yield(instance)
         end
       end
 
-      def instance_is_desired(instance, app)
+      def instance_is_desired?(instance, app)
         instance[:index] < app.instances
       end
 

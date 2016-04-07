@@ -114,7 +114,7 @@ module VCAP::CloudController::Validators
     end
 
     def has_correct_structure?(value)
-      (value.is_a?(Hash) && (value.keys.map(&:to_sym) == [:guid]))
+      (value.is_a?(Hash) && (value.keys.map(&:to_s) == ['guid']))
     end
   end
 
@@ -144,7 +144,7 @@ module VCAP::CloudController::Validators
     end
 
     def is_a_guid_hash?(hsh)
-      (hsh.keys.map(&:to_sym) == [:guid])
+      (hsh.keys.map(&:to_s) == ['guid'])
     end
   end
 end
