@@ -26,12 +26,20 @@ resource 'App Usage Events', type: [:api, :legacy_api] do
         required: false,
         readonly: true
       field :guid, 'The guid of the event.', required: false
-      field :instance_count, 'How many instance of the app.', required: false, readonly: true
-      field :memory_in_mb_per_instance, 'How much memory per app instance.', required: false, readonly: true, example_values: %w(128 256 512)
+      field :instance_count, 'The number of instance of an application', required: false, readonly: true
+      field :memory_in_mb_per_instance, 'Memory usage per app instance.', required: false, readonly: true, example_values: %w(128 256 512)
       field :org_guid, 'The GUID of the organization.', required: false, readonly: true
       field :package_state, 'The state of the package.', required: false, readonly: true, valid_values: ['PENDING', 'STAGED', ' FAILED']
       field :parent_app_guid, 'The GUID for a parent v3 application if one exists', required: false, readonly: true, experimental: true
       field :parent_app_name, 'The name for a parent v3 application if one exists', required: false, readonly: true, experimental: true
+      field :previous_instance_count, 'The number of instance of an application previously', required: false, readonly: true
+      field :previous_memory_in_mb_per_instance, 'Previous memory usage per app instance.', required: false, readonly: true, example_values: %w(128 256 512)
+      field :previous_package_state, 'The previous state of the package.', required: false, readonly: true, valid_values: ['PENDING', 'STAGED', ' FAILED']
+      field :previous_state,
+        "The previous desired state of the app or 'BUILDPACK_SET' when buildpack info has been set.",
+        required:     false,
+        readonly:     true,
+        valid_values: ['STARTED', 'STOPPED', 'BUILDPACK_SET', 'TASK_STARTED', 'TASK_STOPPED']
       field :process_type, 'The process_type for applications.', required: false, readonly: true, experimental: true
       field :space_guid, 'The GUID of the space.', required: false, readonly: true
       field :space_name, 'The name of the space.', required: false, readonly: true
