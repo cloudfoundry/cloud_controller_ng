@@ -13,7 +13,7 @@ resource 'Files', type: [:api, :legacy_api] do
   get '/v2/apps/:app_guid/instances/:instance_index/files/:file_path' do
     example 'Retrieve File' do
       explanation <<-EOD
-        The endpoint does not function with Deigo apps.
+        The endpoint does not function with Diego apps.
         Please use CF CLI command `cf ssh` for Diego apps.
       EOD
 
