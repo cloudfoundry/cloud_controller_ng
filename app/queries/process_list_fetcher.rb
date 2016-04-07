@@ -1,16 +1,19 @@
 module VCAP::CloudController
   class ProcessListFetcher
-    def fetch_all(pagination_options:)
+    def fetch_all(message:)
+      pagination_options = message.pagination_options
       dataset = ProcessModel.dataset
       paginate(dataset, pagination_options)
     end
 
-    def fetch_for_spaces(pagination_options:, space_guids:)
+    def fetch_for_spaces(space_guids:, message:)
+      pagination_options = message.pagination_options
       dataset = ProcessModel.select_all(:apps).join(:spaces, id: :space_id, guid: space_guids)
       paginate(dataset, pagination_options)
     end
 
-    def fetch_for_app(pagination_options:, app_guid:)
+    def fetch_for_app(app_guid:, message:)
+      pagination_options = message.pagination_options
       app = AppModel.where(guid: app_guid).eager(:space, :organization).all.first
       return nil unless app
       [app, paginate(app.processes_dataset, pagination_options)]

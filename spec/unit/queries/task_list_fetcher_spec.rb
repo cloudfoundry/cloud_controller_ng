@@ -29,19 +29,19 @@ module VCAP::CloudController
 
     describe '#fetch_all' do
       it 'returns a PaginatedResult' do
-        results = fetcher.fetch_all(pagination_options: pagination_options, message: message)
+        results = fetcher.fetch_all(message: message)
         expect(results).to be_a(PaginatedResult)
       end
 
       it 'returns all of the tasks' do
-        results = fetcher.fetch_all(pagination_options: pagination_options, message: message).records
+        results = fetcher.fetch_all(message: message).records
 
         expect(results).to match_array([task_in_space1, task_for_app2, task2_in_space1, task_in_space2, failed_task_in_space2, task_in_org2])
       end
 
       describe 'filtering on message' do
         before do
-          results = fetcher.fetch_all(pagination_options: pagination_options, message: message).records
+          results = fetcher.fetch_all(message: message).records
         end
 
         context 'when task names are provided' do
@@ -96,12 +96,12 @@ module VCAP::CloudController
 
     describe '#fetch_for_spaces' do
       it 'returns a PaginatedResult' do
-        results = fetcher.fetch_for_spaces(pagination_options: pagination_options, message: message, space_guids: [])
+        results = fetcher.fetch_for_spaces(message: message, space_guids: [])
         expect(results).to be_a(PaginatedResult)
       end
 
       it 'only returns tasks in those spaces' do
-        results = fetcher.fetch_for_spaces(pagination_options: pagination_options, message: message, space_guids: [space1.guid, space2.guid]).records
+        results = fetcher.fetch_for_spaces(message: message, space_guids: [space1.guid, space2.guid]).records
 
         expect(results).to match_array([
           task_in_space1,
@@ -114,7 +114,7 @@ module VCAP::CloudController
 
       describe 'filtering on message' do
         before do
-          results = fetcher.fetch_for_spaces(pagination_options: pagination_options, message: message, space_guids: [space2.guid]).records
+          results = fetcher.fetch_for_spaces(message: message, space_guids: [space2.guid]).records
         end
 
         context 'when task names are provided' do
@@ -169,23 +169,23 @@ module VCAP::CloudController
 
     describe '#fetch_for_app' do
       it 'returns a PaginatedResult' do
-        _app, results = fetcher.fetch_for_app(pagination_options: pagination_options, message: message, app_guid: app_in_space1.guid)
+        _app, results = fetcher.fetch_for_app(message: message, app_guid: app_in_space1.guid)
         expect(results).to be_a(PaginatedResult)
       end
 
       it 'only returns tasks for that app' do
-        _app, results = fetcher.fetch_for_app(pagination_options: pagination_options, message: message, app_guid: app_in_space1.guid)
+        _app, results = fetcher.fetch_for_app(message: message, app_guid: app_in_space1.guid)
         expect(results.records).to match_array([task_in_space1, task2_in_space1])
       end
 
       it 'returns the app' do
-        returned_app, results = fetcher.fetch_for_app(pagination_options: pagination_options, message: message, app_guid: app_in_space1.guid)
+        returned_app, results = fetcher.fetch_for_app(message: message, app_guid: app_in_space1.guid)
         expect(returned_app.guid).to eq(app_in_space1.guid)
       end
 
       context 'when the app does not exist' do
         it 'returns nil' do
-          returned_app, results = fetcher.fetch_for_app(pagination_options: pagination_options, message: message, app_guid: 'made-up')
+          returned_app, results = fetcher.fetch_for_app(message: message, app_guid: 'made-up')
           expect(returned_app).to be_nil
           expect(results).to be_nil
         end
@@ -193,7 +193,7 @@ module VCAP::CloudController
 
       describe 'filtering on message' do
         before do
-          _app, results = fetcher.fetch_for_app(pagination_options: pagination_options, message: message, app_guid: app_in_space1.guid)
+          _app, results = fetcher.fetch_for_app(message: message, app_guid: app_in_space1.guid)
         end
 
         context 'when task names are provided' do

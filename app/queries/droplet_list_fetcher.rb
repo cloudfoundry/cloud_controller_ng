@@ -1,16 +1,19 @@
 module VCAP::CloudController
   class DropletListFetcher
-    def fetch_all(pagination_options:, message:)
+    def fetch_all(message:)
+      pagination_options = message.pagination_options
       dataset = DropletModel.dataset
       filter(pagination_options, message, dataset)
     end
 
-    def fetch_for_spaces(pagination_options:, space_guids:, message:)
+    def fetch_for_spaces(space_guids:, message:)
+      pagination_options = message.pagination_options
       dataset = DropletModel.select_all(:v3_droplets).join(:apps_v3, guid: :app_guid, space_guid: space_guids)
       filter(pagination_options, message, dataset)
     end
 
-    def fetch_for_app(pagination_options:, app_guid:, message:)
+    def fetch_for_app(app_guid:, message:)
+      pagination_options = message.pagination_options
       app = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
       return nil unless app
       [app, filter(pagination_options, message, app.droplets_dataset)]

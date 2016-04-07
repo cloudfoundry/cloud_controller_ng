@@ -6,10 +6,10 @@ module VCAP::CloudController
     describe '.from_params' do
       let(:params) do
         {
-          :page            => 4,
-          :per_page        => 56,
-          :order_by        => '+updated_at',
-          :extra           => 'stuff'
+          page: 4,
+          per_page: 56,
+          order_by: '+updated_at',
+          extra: 'stuff'
         }
       end
 
@@ -46,7 +46,6 @@ module VCAP::CloudController
           expect(result.order_direction).to eq('asc')
         end
       end
-
     end
 
     describe 'default values' do

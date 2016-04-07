@@ -5,20 +5,19 @@ require 'messages/service_bindings_list_message'
 module VCAP::CloudController
   describe ServiceBindingListFetcher do
     let(:fetcher) { ServiceBindingListFetcher.new }
-    let(:pagination_options) { PaginationOptions.new({}) }
     let(:message) { ServiceBindingsListMessage.new(filters) }
     let(:filters) { {} }
 
     describe '#fetch_all' do
       it 'returns a PaginatedResult' do
-        results = fetcher.fetch_all(pagination_options)
+        results = fetcher.fetch_all(message: message)
         expect(results).to be_a(PaginatedResult)
       end
 
       it 'includes all the V3 Service Bindings' do
         service_binding_1 = ServiceBindingModel.make
         service_binding_2 = ServiceBindingModel.make
-        results = fetcher.fetch_all(pagination_options).records
+        results = fetcher.fetch_all(message: message).records
         expect(results.length).to eq 2
         expect(results).to include(service_binding_1, service_binding_2)
       end
@@ -33,7 +32,7 @@ module VCAP::CloudController
       let(:space_guids) { [space_1.guid, space_2.guid] }
 
       it 'returns all of the desired service bindings' do
-        results = fetcher.fetch(pagination_options, space_guids).records
+        results = fetcher.fetch(message: message, space_guids: space_guids).records
 
         expect(results).to include(service_binding_1, service_binding_2)
         expect(results).not_to include(undesirable_service_binding)

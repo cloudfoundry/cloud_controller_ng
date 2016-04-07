@@ -156,10 +156,10 @@ describe RouteMappingsController, type: :controller do
            VCAP::CloudController::Membership::SPACE_MANAGER,
            VCAP::CloudController::Membership::SPACE_AUDITOR,
            VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-           and_return(true)
+          and_return(true)
 
-           allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-             and_return(false)
+        allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
+          and_return(false)
       end
 
       it 'raises ApiError NotAuthorized' do

@@ -4,11 +4,11 @@ require 'queries/package_list_fetcher'
 module VCAP::CloudController
   describe PackageListFetcher do
     subject(:fetcher) { described_class.new }
-    let(:pagination_options) { PaginationOptions.new({}) }
+    let(:message) { PackagesListMessage.new {} }
 
     describe '#fetch_all' do
       it 'returns a PaginatedResult' do
-        results = fetcher.fetch_all(pagination_options: pagination_options)
+        results = fetcher.fetch_all(message: message)
         expect(results).to be_a(PaginatedResult)
       end
 
@@ -17,14 +17,14 @@ module VCAP::CloudController
         package2 = PackageModel.make
         package3 = PackageModel.make
 
-        results = fetcher.fetch_all(pagination_options: pagination_options).records
+        results = fetcher.fetch_all(message: message).records
         expect(results).to match_array([package1, package2, package3])
       end
     end
 
     describe '#fetch_for_spaces' do
       it 'returns a PaginatedResult' do
-        results = fetcher.fetch_for_spaces(pagination_options: pagination_options, space_guids: [])
+        results = fetcher.fetch_for_spaces(message: message, space_guids: [])
         expect(results).to be_a(PaginatedResult)
       end
 
@@ -40,7 +40,7 @@ module VCAP::CloudController
 
         PackageModel.make
 
-        results = fetcher.fetch_for_spaces(pagination_options: pagination_options, space_guids: [space1.guid, space2.guid]).records
+        results = fetcher.fetch_for_spaces(message: message, space_guids: [space1.guid, space2.guid]).records
 
         expect(results).to match_array([package1_in_space1, package2_in_space1, package1_in_space2])
       end
@@ -50,7 +50,7 @@ module VCAP::CloudController
       let(:app) { AppModel.make }
 
       it 'returns a PaginatedResult and the app' do
-        returned_app, results = fetcher.fetch_for_app(pagination_options: pagination_options, app_guid: app.guid)
+        returned_app, results = fetcher.fetch_for_app(message: message, app_guid: app.guid)
         expect(results).to be_a(PaginatedResult)
         expect(returned_app.guid).to eq(app.guid)
       end
@@ -61,14 +61,14 @@ module VCAP::CloudController
         PackageModel.make
         PackageModel.make
 
-        _app, results = fetcher.fetch_for_app(pagination_options: pagination_options, app_guid: app.guid)
+        _app, results = fetcher.fetch_for_app(message: message, app_guid: app.guid)
 
         expect(results.records).to match_array([package1, package2])
       end
 
       context 'when the app does not exist' do
         it 'returns nil' do
-          returned_app, results = fetcher.fetch_for_app(pagination_options: pagination_options, app_guid: 'made-up')
+          returned_app, results = fetcher.fetch_for_app(message: message, app_guid: 'made-up')
           expect(results).to be_nil
           expect(returned_app).to be_nil
         end

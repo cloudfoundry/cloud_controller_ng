@@ -49,10 +49,6 @@ module VCAP::CloudController
       end
     end
 
-    def allowed_keys
-      # defined?(allowed_param_keys) ? allowed_param_keys : ALLOWED_PAGINATION_KEYS
-    end
-
     validates_with PaginationPageValidator
     validates_with PaginationOrderValidator, if: -> { @pagination_params[:order_by].present? }
   end

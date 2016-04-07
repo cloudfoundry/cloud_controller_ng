@@ -1,6 +1,12 @@
 require 'spec_helper'
 require 'messages/list_message'
 
+class VCAP::CloudController::ListMessage
+  def allowed_keys
+    # redefining here so NotImplementedError isn't raised
+  end
+end
+
 module VCAP::CloudController
   describe ListMessage do
     describe 'page' do
