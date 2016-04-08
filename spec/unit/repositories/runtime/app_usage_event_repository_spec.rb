@@ -161,6 +161,34 @@ module VCAP::CloudController
             expect(event.process_type).to eq(app.type)
           end
 
+          context 'when the buildpack is a git repository' do
+            let!(:droplet) do
+              DropletModel.make(
+                :buildpack,
+                state: DropletModel::STAGED_STATE,
+                guid:         'droplet-1',
+                memory_limit: 222,
+                app_guid:     v3_app.guid,
+              )
+            end
+
+            before do
+              lifecycle = droplet.lifecycle_data
+              lifecycle.buildpack = 'http://git.url.example.com'
+              lifecycle.save
+
+              v3_app.droplet = droplet
+              v3_app.save
+            end
+
+            it 'sets the event info to the buildpack lifecycle info' do
+              event = repository.create_from_app(app)
+
+              expect(event.buildpack_name).to eq('http://git.url.example.com')
+              expect(event.buildpack_guid).to be_nil
+            end
+          end
+
           context 'when the app has a droplet' do
             let(:droplet) do
               DropletModel.make(
