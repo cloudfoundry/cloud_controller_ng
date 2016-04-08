@@ -1,4 +1,4 @@
-require 'messages/base_message'
+require 'messages/list_message'
 
 module VCAP::CloudController
   class RouteMappingsListMessage < ListMessage
