@@ -4,7 +4,7 @@ require 'request_logs'
 module CloudFoundry
   module Middleware
     describe CefLogs do
-      let(:middleware) { described_class.new(app, logger, '10.10.10.100') }
+      subject(:middleware) { described_class.new(app, logger, '10.10.10.100') }
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:logger) { double('logger', info: nil) }
       let(:fake_request) do
@@ -27,11 +27,11 @@ module CloudFoundry
         }
       end
 
-      describe 'logging' do
-        before do
-          allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-        end
+      before do
+        allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
+      end
 
+      describe 'logging' do
         it 'returns the app response unaltered' do
           expect(middleware.call(env)).to eq([200, {}, 'a body'])
         end
@@ -132,6 +132,113 @@ module CloudFoundry
 
         it 'translates 5xx to serverError' do
           expect(middleware.get_result(534)).to eq('serverError')
+        end
+      end
+
+      describe 'CEF encoding' do
+        # see https://kc.mcafee.com/resources/sites/MCAFEE/content/live/CORP_KNOWLEDGEBASE/78000/KB78712/en_US/CEF_White_Paper_20100722.pdf
+        # Character Encoding section
+
+        before do
+          Timecop.freeze
+        end
+
+        after do
+          Timecop.return
+        end
+
+        it 'escapes "|" in the prefix' do
+          allow(fake_request).to receive(:method).and_return('a|b')
+          allow(fake_request).to receive(:path).and_return('pa|th')
+
+          middleware.call(env)
+
+          expect(logger).to have_received(:info).with(
+            "CEF:0|cloud_foundry|cloud_controller_ng|#{VCAP::CloudController::Constants::API_VERSION}|" \
+            'a\|b pa\|th|a\|b pa\|th|' \
+            '0|' \
+            "rt=#{(Time.now.utc.to_f * 1000).to_i} " \
+            'suser=zach-loves-cake suid=some-guid ' \
+            'request=filtered_path ' \
+            'requestMethod=a|b ' \
+            'src=ip ' \
+            'dst=10.10.10.100 ' \
+            'cs1Label=userAuthenticationMechanism cs1=oauth-access-token ' \
+            'cs2Label=vcapRequestId cs2=ID ' \
+            'cs3Label=result cs3=success ' \
+            'cs4Label=httpStatusCode cs4=200 ' \
+            'cs5Label=xForwardedFor cs5=forwarded_ip'
+          )
+        end
+
+        it 'escapes "\" in the prefix' do
+          allow(fake_request).to receive(:method).and_return('a\b')
+          allow(fake_request).to receive(:path).and_return('pa\th')
+
+          middleware.call(env)
+
+          expect(logger).to have_received(:info).with(
+            "CEF:0|cloud_foundry|cloud_controller_ng|#{VCAP::CloudController::Constants::API_VERSION}|" \
+            'a\\\\b pa\\\\th|a\\\\b pa\\\\th|' \
+            '0|' \
+            "rt=#{(Time.now.utc.to_f * 1000).to_i} " \
+            'suser=zach-loves-cake suid=some-guid ' \
+            'request=filtered_path ' \
+            'requestMethod=a\\\\b ' \
+            'src=ip ' \
+            'dst=10.10.10.100 ' \
+            'cs1Label=userAuthenticationMechanism cs1=oauth-access-token ' \
+            'cs2Label=vcapRequestId cs2=ID ' \
+            'cs3Label=result cs3=success ' \
+            'cs4Label=httpStatusCode cs4=200 ' \
+            'cs5Label=xForwardedFor cs5=forwarded_ip'
+          )
+        end
+
+        it 'escapes "\" in the extensions' do
+          env['cf.user_name'] = 'pot\ato'
+
+          middleware.call(env)
+
+          expect(logger).to have_received(:info).with(
+            "CEF:0|cloud_foundry|cloud_controller_ng|#{VCAP::CloudController::Constants::API_VERSION}|" \
+            'request_method plain_path|request_method plain_path|' \
+            '0|' \
+            "rt=#{(Time.now.utc.to_f * 1000).to_i} " \
+            'suser=pot\\\\ato suid=some-guid ' \
+            'request=filtered_path ' \
+            'requestMethod=request_method ' \
+            'src=ip ' \
+            'dst=10.10.10.100 ' \
+            'cs1Label=userAuthenticationMechanism cs1=oauth-access-token ' \
+            'cs2Label=vcapRequestId cs2=ID ' \
+            'cs3Label=result cs3=success ' \
+            'cs4Label=httpStatusCode cs4=200 ' \
+            'cs5Label=xForwardedFor cs5=forwarded_ip'
+          )
+        end
+
+        it 'escapes "=" in the extensions' do
+          env['cf.user_name'] = 'pot=ato'
+
+          middleware.call(env)
+
+          expect(logger).to have_received(:info).with(
+            "CEF:0|cloud_foundry|cloud_controller_ng|#{VCAP::CloudController::Constants::API_VERSION}|" \
+            'request_method plain_path|request_method plain_path|' \
+            '0|' \
+            "rt=#{(Time.now.utc.to_f * 1000).to_i} " \
+            'suser=pot\=ato suid=some-guid ' \
+            'request=filtered_path ' \
+            'requestMethod=request_method ' \
+            'src=ip ' \
+            'dst=10.10.10.100 ' \
+            'cs1Label=userAuthenticationMechanism cs1=oauth-access-token ' \
+            'cs2Label=vcapRequestId cs2=ID ' \
+            'cs3Label=result cs3=success ' \
+            'cs4Label=httpStatusCode cs4=200 ' \
+            'cs5Label=xForwardedFor cs5=forwarded_ip'
+          )
         end
       end
     end

@@ -7,7 +7,7 @@ module CloudFoundry
       def initialize(app, logger, external_ip)
         @app         = app
         @logger      = logger
-        @external_ip = external_ip
+        @external_ip = escape_extension(external_ip)
       end
 
       def call(env)
@@ -21,16 +21,18 @@ module CloudFoundry
 
         @logger.info(
           "CEF:#{CEF_VERSION}|cloud_foundry|cloud_controller_ng|#{VCAP::CloudController::Constants::API_VERSION}|" \
-          "#{signature_id}|#{name}|#{SEVERITY}|" \
+          "#{escape_prefix(signature_id)}|#{escape_prefix(name)}|#{SEVERITY}|" \
           "rt=#{(Time.now.utc.to_f * 1000).to_i} " \
-          "suser=#{user_name} suid=#{user_guid} " \
-          "request=#{request.filtered_path} requestMethod=#{request.method} " \
-          "src=#{request.ip} dst=#{@external_ip} " \
+          "suser=#{escape_extension(user_name)} " \
+          "suid=#{escape_extension(user_guid)} " \
+          "request=#{escape_extension(request.filtered_path)} "\
+          "requestMethod=#{escape_extension(request.method)} " \
+          "src=#{escape_extension(request.ip)} dst=#{@external_ip} " \
           "cs1Label=userAuthenticationMechanism cs1=#{auth_method} " \
-          "cs2Label=vcapRequestId cs2=#{env['cf.request_id']} " \
+          "cs2Label=vcapRequestId cs2=#{escape_extension(env['cf.request_id'])} " \
           "cs3Label=result cs3=#{get_result(status)} " \
           "cs4Label=httpStatusCode cs4=#{status} " \
-          "cs5Label=xForwardedFor cs5=#{request.headers['HTTP_X_FORWARDED_FOR']}"
+          "cs5Label=xForwardedFor cs5=#{escape_extension(request.headers['HTTP_X_FORWARDED_FOR'])}"
         )
 
         [status, headers, body]
@@ -70,6 +72,20 @@ module CloudFoundry
         when /5\d\d/
           'serverError'
         end
+      end
+
+      private
+
+      def escape_extension(text)
+        return '' if text.nil?
+        # https://www.ruby-forum.com/topic/143645
+        text.gsub('\\', '\\\\\\\\').gsub('=', '\=')
+      end
+
+      def escape_prefix(text)
+        return '' if text.nil?
+        # https://www.ruby-forum.com/topic/143645
+        text.gsub('\\', '\\\\\\\\').gsub('|', '\|')
       end
     end
   end
