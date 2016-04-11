@@ -37,8 +37,10 @@ module VCAP::CloudController
       end
 
       domain
-    rescue
-      raise $!, "Error for shared domain name #{name}: #{$!}", $!.backtrace
+    rescue => e
+      err = e.class.new("Error for shared domain name #{name}: #{e.message}")
+      err.set_backtrace(e.backtrace)
+      raise err
     end
 
     def shared?

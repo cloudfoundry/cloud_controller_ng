@@ -99,5 +99,19 @@ module VCAP::CloudController
         expect { subject.addable_to_organization!(Organization.new) }.to_not raise_error
       end
     end
+
+    describe '.find_or_create' do
+      it 're-raises original err types with an updated message' do
+        expected_error = StandardError.new('original message')
+        expected_error.set_backtrace(['original', 'backtrace'])
+        allow(SharedDomain).to receive(:new).and_raise(expected_error)
+
+        expect { SharedDomain.find_or_create('invalid_domain') }.to raise_error do |e|
+          expect(e).to be_a(StandardError)
+          expect(e.message).to eq('Error for shared domain name invalid_domain: original message')
+          expect(e.backtrace).to eq(['original', 'backtrace'])
+        end
+      end
+    end
   end
 end
