@@ -51,6 +51,14 @@ module VCAP::CloudController
         expect(quota_definition).to be_valid
       end
 
+      it 'total_reserved_route_ports cannot be less than -1' do
+        quota_definition.total_reserved_route_ports = -2
+        expect(quota_definition).not_to be_valid
+        expect(quota_definition.errors.on(:total_reserved_route_ports)).to include(:invalid_total_reserved_route_ports)
+
+        quota_definition.total_reserved_route_ports = -1
+        expect(quota_definition).to be_valid
+      end
       it 'app_instance_limit cannot be less than -1' do
         quota_definition.app_instance_limit = -2
         expect(quota_definition).not_to be_valid
@@ -83,12 +91,12 @@ module VCAP::CloudController
       it {
         is_expected.to export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
                                          :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
-                                         :app_instance_limit, :app_task_limit, :total_service_keys
+                                         :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports
       }
       it {
         is_expected.to import_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
                                          :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
-                                         :app_instance_limit, :app_task_limit, :total_service_keys
+                                         :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports
       }
     end
 

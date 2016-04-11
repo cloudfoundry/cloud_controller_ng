@@ -18,6 +18,7 @@ module VCAP::CloudController
           memory_limit: { type: 'integer', required: true },
           instance_memory_limit: { type: 'integer', required: false, default: -1 },
           app_instance_limit: { type: 'integer', required: false, default: -1 },
+          total_reserved_route_ports: { type: 'integer', required: false, default: 0 },
           app_task_limit: { type: 'integer', required: false, default: -1 }
         })
       end
@@ -33,6 +34,7 @@ module VCAP::CloudController
           memory_limit: { type: 'integer' },
           instance_memory_limit: { type: 'integer' },
           app_instance_limit: { type: 'integer' },
+          total_reserved_route_ports: { type: 'integer' },
           app_task_limit: { type: 'integer' }
         })
       end
@@ -46,6 +48,7 @@ module VCAP::CloudController
           total_services: 1,
           total_routes: 10,
           total_private_domains: 20,
+          total_reserved_route_ports: 20,
           memory_limit: 1024,
           instance_memory_limit: 10_240,
           app_task_limit: 10

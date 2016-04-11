@@ -11,6 +11,7 @@ module VCAP::CloudController
       attribute :instance_memory_limit,      Integer, optional_in: :create, default: -1
       attribute :app_instance_limit,         Integer, optional_in: :create, default: -1
       attribute :app_task_limit,             Integer, optional_in: :create, default: -1
+      attribute :total_reserved_route_ports, Integer, optional_in: :create, default: 0
     end
 
     query_parameters :name
