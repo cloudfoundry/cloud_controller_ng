@@ -358,7 +358,7 @@ GEM
     squash_ruby (2.0.0)
       json
     statsd-ruby (1.2.1)
-    steno (1.2.4)
+    steno (1.3.4)
       fluent-logger
       yajl-ruby (~> 1.0)
     thin (1.6.4)
