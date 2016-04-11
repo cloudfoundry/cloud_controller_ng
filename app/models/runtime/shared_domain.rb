@@ -37,6 +37,8 @@ module VCAP::CloudController
       end
 
       domain
+    rescue
+      raise $!, "Error for shared domain name #{name}: #{$!}", $!.backtrace
     end
 
     def shared?
