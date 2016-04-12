@@ -232,6 +232,7 @@ module VCAP::CloudController
         post '/v2/routes', MultiJson.dump( domain_guid: tcp_domain.guid, space_guid: space.guid, port: 1234)
 
         expect(last_response.status).to eq(400)
+        expect(last_response.body).to include 'Total reserved ports must be less than or equal to total routes.'
         expect(decoded_response['code']).to eq(310009)
       end
 
