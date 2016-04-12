@@ -42,6 +42,7 @@ module VCAP::CloudController
         env = Environment.new(app, EnvironmentVariableGroup.running.environment_json).as_json
         logger.debug2("running environment: #{env.map { |e| e['name'] }}")
         log_guid = app.is_v3? ? app.app.guid : app.guid
+        log_source = app.is_v3? ? "APP/PROC/#{app.type.upcase}" : 'APP'
 
         {
           'process_guid'                    => ProcessGuid.from_app(app),
@@ -55,6 +56,7 @@ module VCAP::CloudController
           'routes'                          => app.uris,
           'routing_info'                    => RoutingInfo.new(app).routing_info,
           'log_guid'                        => log_guid,
+          'log_source'                      => log_source,
           'health_check_type'               => app.health_check_type,
           'health_check_timeout_in_seconds' => app.health_check_timeout || default_health_check_timeout,
           'egress_rules'                    => @egress_rules.running(app),
