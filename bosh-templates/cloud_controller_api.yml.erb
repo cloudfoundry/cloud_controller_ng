@@ -374,3 +374,6 @@ dea_client:
   cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/dea_client.crt
   ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/dea_ca.crt
 <% end %>
+
+security_event_logging:
+  enabled: <%= p("cc.security_event_logging.enabled") %>

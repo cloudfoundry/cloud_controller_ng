@@ -2,44 +2,50 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe RackAppBuilder do
-    subject(:builder) do
-      RackAppBuilder.new
-    end
-
-    let(:use_nginx) { false }
-
-    before do
-      TestConfig.override({
-        nginx: {
-          use_nginx: use_nginx,
-        }
-      })
-
-      allow(Rack::CommonLogger).to receive(:new)
-    end
+    subject(:builder) { RackAppBuilder.new }
 
     describe '#build' do
       let(:request_metrics) { nil }
 
-      context 'when nginx is disabled' do
-        it 'uses Rack::CommonLogger' do
-          builder.build(TestConfig.config, request_metrics).to_app
-          expect(Rack::CommonLogger).to have_received(:new).with(anything, instance_of(File))
-        end
+      it 'returns a Rack application' do
+        expect(builder.build(TestConfig.config, request_metrics)).to be_a(Rack::Builder)
+        expect(builder.build(TestConfig.config, request_metrics)).to respond_to(:call)
       end
 
-      context 'when nginx is enabled' do
-        let(:use_nginx) { true }
+      describe 'Rack::CommonLogger' do
+        before do
+          allow(Rack::CommonLogger).to receive(:new)
+        end
 
-        it 'does not use Rack::CommonLogger' do
-          builder.build(TestConfig.config, request_metrics).to_app
+        it 'uses Rack::CommonLogger when nginx is disabled' do
+          builder.build(TestConfig.override(nginx: { use_nginx: false }), request_metrics).to_app
+
+          expect(Rack::CommonLogger).to have_received(:new).with(anything, instance_of(File))
+        end
+
+        it 'does not use Rack::CommonLogger when nginx is enabled' do
+          builder.build(TestConfig.override(nginx: { use_nginx: true }), request_metrics).to_app
+
           expect(Rack::CommonLogger).to_not have_received(:new)
         end
       end
 
-      it 'returns a Rack application' do
-        expect(builder.build(TestConfig.config, request_metrics)).to be_a(Rack::Builder)
-        expect(builder.build(TestConfig.config, request_metrics)).to respond_to(:call)
+      describe 'CEF logs' do
+        before do
+          allow(CloudFoundry::Middleware::CefLogs).to receive(:new)
+        end
+
+        it 'does not include Cef Middleware when security_event_logging is disabled' do
+          builder.build(TestConfig.override(security_event_logging: { enabled: false }), request_metrics).to_app
+
+          expect(CloudFoundry::Middleware::CefLogs).not_to have_received(:new)
+        end
+
+        it 'includes Cef Middleware when security_event_logging is enabled' do
+          builder.build(TestConfig.override(security_event_logging: { enabled: true }), request_metrics).to_app
+
+          expect(CloudFoundry::Middleware::CefLogs).to have_received(:new)
+        end
       end
     end
   end

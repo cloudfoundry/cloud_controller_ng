@@ -20,7 +20,9 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::VcapRequestId
         use CloudFoundry::Middleware::SecurityContextSetter, configurer
         use CloudFoundry::Middleware::RequestLogs, Steno.logger('cc.api')
-        use CloudFoundry::Middleware::CefLogs, Syslog::Logger.new(HashUtils.dig(config, :logging, :syslog) || 'vcap.cloud_controller_ng'), config[:local_route]
+        if HashUtils.dig(config, :security_event_logging, :enabled)
+          use CloudFoundry::Middleware::CefLogs, Syslog::Logger.new(HashUtils.dig(config, :logging, :syslog) || 'vcap.cloud_controller_ng'), config[:local_route]
+        end
         use Rack::CommonLogger, logger if logger
 
         if config[:development_mode] && config[:newrelic_enabled]
