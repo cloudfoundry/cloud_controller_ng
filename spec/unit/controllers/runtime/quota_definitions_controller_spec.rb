@@ -48,7 +48,7 @@ module VCAP::CloudController
           total_services: 1,
           total_routes: 10,
           total_private_domains: 20,
-          total_reserved_route_ports: 20,
+          total_reserved_route_ports: 2,
           memory_limit: 1024,
           instance_memory_limit: 10_240,
           app_task_limit: 10

@@ -19,6 +19,7 @@ module VCAP::CloudController
       validates_presence :total_services
       validates_presence :total_routes
       validates_presence :memory_limit
+      validate_total_reserved_route_ports
 
       errors.add(:memory_limit, :less_than_zero) if memory_limit && memory_limit < 0
       errors.add(:instance_memory_limit, :invalid_instance_memory_limit) if instance_memory_limit && instance_memory_limit < UNLIMITED
@@ -26,7 +27,6 @@ module VCAP::CloudController
       errors.add(:app_instance_limit, :invalid_app_instance_limit) if app_instance_limit && app_instance_limit < UNLIMITED
       errors.add(:app_task_limit, :invalid_app_task_limit) if app_task_limit && app_task_limit < UNLIMITED
       errors.add(:total_service_keys, :invalid_total_service_keys) if total_service_keys && total_service_keys < UNLIMITED
-      errors.add(:total_reserved_route_ports, :invalid_total_reserved_route_ports) if total_reserved_route_ports && total_reserved_route_ports < UNLIMITED
     end
     # rubocop:enable CyclomaticComplexity
 
@@ -57,6 +57,16 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       full_dataset_filter
+    end
+
+    private
+
+    def validate_total_reserved_route_ports
+      return unless total_reserved_route_ports
+
+      if total_reserved_route_ports < UNLIMITED || total_reserved_route_ports > total_routes
+        errors.add(:total_reserved_route_ports, :invalid_total_reserved_route_ports)
+      end
     end
   end
 end

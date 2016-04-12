@@ -412,6 +412,7 @@ module VCAP::CloudController
             context 'when exceeding total allowed routes' do
               before do
                 org_quota.total_routes = 0
+                org_quota.total_reserved_route_ports = 0
                 org_quota.save
               end
 
@@ -429,6 +430,7 @@ module VCAP::CloudController
               expect(subject).to be_valid
 
               org_quota.total_routes = 0
+              org_quota.total_reserved_route_ports = 0
               org_quota.save
 
               expect(subject).to be_valid
@@ -484,6 +486,7 @@ module VCAP::CloudController
 
           before do
             org_quota.total_routes   = 0
+            org_quota.total_reserved_route_ports = 0
             space_quota.total_routes = 10
 
             org_quota.save

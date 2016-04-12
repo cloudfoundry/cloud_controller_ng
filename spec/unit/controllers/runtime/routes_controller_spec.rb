@@ -214,6 +214,7 @@ module VCAP::CloudController
 
       it 'returns the OrgQuotaTotalRoutesExceeded message' do
         quota_definition = space.organization.quota_definition
+        quota_definition.total_reserved_route_ports = 0
         quota_definition.total_routes = 0
         quota_definition.save
 

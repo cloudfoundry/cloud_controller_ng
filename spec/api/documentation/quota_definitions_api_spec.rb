@@ -46,7 +46,7 @@ resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
   post '/v2/quota_definitions' do
     include_context 'updatable_fields', required: true
     example 'Creating a Organization Quota Definition' do
-      client.post '/v2/quota_definitions', fields_json(instance_memory_limit: 10_240, app_instance_limit: 10, app_task_limit: 5, total_reserved_route_ports: 3), headers
+      client.post '/v2/quota_definitions', fields_json(instance_memory_limit: 10_240, app_instance_limit: 10, app_task_limit: 5, total_routes:4, total_reserved_route_ports: 3), headers
 
       expect(status).to eq(201)
 
@@ -56,6 +56,7 @@ resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
       expect(parsed_response['entity']).to include('app_instance_limit')
       expect(parsed_response['entity']).to include('app_task_limit')
       expect(parsed_response['entity']).to include('total_reserved_route_ports')
+      expect(parsed_response['entity']).to include('total_routes')
     end
   end
 
@@ -72,6 +73,7 @@ resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
       expect(parsed_response['entity']).to include('app_instance_limit')
       expect(parsed_response['entity']).to include('app_task_limit')
       expect(parsed_response['entity']).to include('total_reserved_route_ports')
+      expect(parsed_response['entity']).to include('total_routes')
     end
   end
 end
