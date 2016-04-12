@@ -150,9 +150,12 @@ module VCAP::CloudController
             end
 
             context 'with a tcp route' do
+              let(:space) { Space.make }
+
               before do
-                Route.make(domain: domain, host: '', space: space, port: 1119)
+                Route.make(space: space, domain: domain, host: '', port: 1119)
               end
+
               it 'is valid' do
                 route_obj = Route.new(domain: domain, host: '', space: another_space, port: 1111)
                 expect(route_obj).to be_valid
@@ -223,19 +226,20 @@ module VCAP::CloudController
 
         context 'when port is specified' do
           let(:domain) { SharedDomain.make }
+          let(:space) { Space.make }
 
           before do
-            Route.make(domain: domain, host: '', port: 1)
+            Route.make(space: space, domain: domain, host: '', port: 1)
           end
 
           it 'does not validate uniqueness of host' do
             expect {
-              Route.make(port: 10, host: '', domain: domain)
+              Route.make(space: space, port: 10, host: '', domain: domain)
             }.not_to raise_error
           end
 
           it 'validates the uniqueness of the port' do
-            new_route = Route.new(port: 1, host: '', domain: domain)
+            new_route = Route.new(space: space, port: 1, host: '', domain: domain)
             expect(new_route).not_to be_valid
             expect(new_route.errors.on([:host, :domain_id, :port])).to include :unique
           end
@@ -490,6 +494,66 @@ module VCAP::CloudController
             subject.valid?
             expect(subject.errors.on(:space)).to be_nil
             expect(subject.errors.on(:organization)).to include :total_routes_exceeded
+          end
+        end
+      end
+
+      describe 'total reserved route ports' do
+        let(:space) { Space.make }
+        let(:org_quota) { space.organization.quota_definition }
+        let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
+
+        subject(:route) { Route.new(space: space, domain: domain, host: 'bar', port: 4444) }
+
+        context 'on create' do
+          context 'when not exceeding total allowed routes' do
+            before do
+              org_quota.total_reserved_route_ports = 1
+              org_quota.save
+            end
+
+            it 'does not have an error on organization' do
+              subject.valid?
+              expect(subject.errors.on(:organization)).to be_nil
+            end
+          end
+
+          context 'when exceeding total allowed routes' do
+            before do
+              org_quota.total_reserved_route_ports = 0
+              org_quota.save
+            end
+
+            it 'has the error on organization' do
+              subject.valid?
+              expect(subject.errors.on(:organization)).to include :total_reserved_route_ports_exceeded
+            end
+
+            context 'and the user does not specify a port' do
+              subject(:route) { Route.new(space: space, domain: domain, host: 'bar') }
+
+              it 'is valid' do
+                subject.valid?
+                expect(subject.errors.on(:organization)).to be_nil
+              end
+            end
+          end
+        end
+
+        context 'on update' do
+          before do
+            org_quota.total_reserved_route_ports = 1
+            org_quota.save
+          end
+          it 'should not validate the total routes limit if already existing' do
+            subject.save
+
+            expect(subject).to be_valid
+
+            org_quota.total_reserved_route_ports = 0
+            org_quota.save
+
+            expect(subject).to be_valid
           end
         end
       end

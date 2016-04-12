@@ -95,6 +95,7 @@ module VCAP::CloudController
       validate_domain
       validate_total_routes
       validate_ports
+      validate_total_reserved_route_ports if port > 0
       errors.add(:host, :domain_conflict) if domains_match?
     end
 
@@ -156,16 +157,16 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       {
-        space_id: Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).union(
-          Space.dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__id)
-          ).union(
-            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__id)
-          ).union(
-            Space.dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__id)
-          ).union(
-            Space.dataset.join_table(:inner, :organizations_auditors, organization_id: :organization_id, user_id: user.id).select(:spaces__id)
-          ).select(:id)
-      }
+         space_id: Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).union(
+           Space.dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__id)
+           ).union(
+             Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__id)
+           ).union(
+             Space.dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__id)
+           ).union(
+             Space.dataset.join_table(:inner, :organizations_auditors, organization_id: :organization_id, user_id: user.id).select(:spaces__id)
+           ).select(:id)
+       }
     end
 
     def in_suspended_org?
@@ -246,6 +247,17 @@ module VCAP::CloudController
 
       if !org_routes_policy.allow_more_routes?(1)
         errors.add(:organization, :total_routes_exceeded)
+      end
+    end
+
+    def validate_total_reserved_route_ports
+      return unless new? && space
+      route_port_counter = OrganizationReservedRoutePorts.new(space.organization)
+      quota_definition = space.organization.quota_definition
+      reserved_route_ports_policy = MaxReservedRoutePortsPolicy.new(quota_definition, route_port_counter)
+
+      if !reserved_route_ports_policy.allow_more_route_ports?
+        errors.add(:organization, :total_reserved_route_ports_exceeded)
       end
     end
   end
