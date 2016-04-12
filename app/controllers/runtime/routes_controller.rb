@@ -54,6 +54,10 @@ module VCAP::CloudController
         return Errors::ApiError.new_from_details('OrgQuotaTotalRoutesExceeded')
       end
 
+      if org_errors && org_errors.include?(:total_reserved_route_ports_exceeded)
+        return Errors::ApiError.new_from_details('OrgQuotaTotalReservedRoutePortsExceeded')
+      end
+
       host_and_domain_taken_error = e.errors.on([:domain_id, :host])
       if host_and_domain_taken_error
         return Errors::ApiError.new_from_details('RouteInvalid',

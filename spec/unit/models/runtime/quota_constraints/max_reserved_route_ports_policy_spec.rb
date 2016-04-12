@@ -38,7 +38,7 @@ describe MaxReservedRoutePortsPolicy do
     end
 
     context 'when an unlimited amount of routes are available' do
-      let(:quota_definition) { double(:quota_definition, total_reserved_route_ports: -1) }
+      let(:quota_definition) { instance_double(VCAP::CloudController::QuotaDefinition, total_reserved_route_ports: -1) }
 
       it 'is always true' do
         result = subject.allow_more_route_ports?

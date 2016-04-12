@@ -223,6 +223,17 @@ module VCAP::CloudController
         expect(decoded_response['code']).to eq(310006)
       end
 
+      it 'returns the OrgQuotaTotalReservedRoutePortsExceeded message' do
+        quota_definition = space.organization.quota_definition
+        quota_definition.total_reserved_route_ports = 0
+        quota_definition.save
+
+        post '/v2/routes', MultiJson.dump( domain_guid: tcp_domain.guid, space_guid: space.guid, port: 1234)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(310009)
+      end
+
       it 'returns the RouteInvalid message' do
         post '/v2/routes', MultiJson.dump(host: 'myexample!*', domain_guid: http_domain.guid, space_guid: space.guid)
 

@@ -913,6 +913,11 @@
   http_code: 400
   message: "You have exceeded the instance limit for your space's quota."
 
+310009:
+  name: OrgQuotaTotalReservedRoutePortsExceeded
+  http_code: 400
+  message: "You have exceeded the total reserved route ports for your organization's quota."
+
 320001:
   name: DiegoDisabled
   http_code: 400
