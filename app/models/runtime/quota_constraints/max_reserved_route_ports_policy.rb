@@ -6,9 +6,15 @@ class MaxReservedRoutePortsPolicy
 
   def allow_more_route_ports?
     reservable_ports = @quota_definition.total_reserved_route_ports
+    number_of_existing_ports = @port_counter.count
+    total_routes = @quota_definition.total_routes
 
-    return true if reservable_ports == -1
-    return false if @port_counter.count >= reservable_ports
+    if reservable_ports == VCAP::CloudController::QuotaDefinition::UNLIMITED
+      return false if total_routes <= number_of_existing_ports && total_routes != VCAP::CloudController::QuotaDefinition::UNLIMITED
+      return true
+    end
+
+    return false if number_of_existing_ports >= reservable_ports
 
     true
   end

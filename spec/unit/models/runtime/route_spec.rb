@@ -511,6 +511,7 @@ module VCAP::CloudController
         context 'on create' do
           context 'when not exceeding total allowed routes' do
             before do
+              org_quota.total_routes = 2
               org_quota.total_reserved_route_ports = 1
               org_quota.save
             end
@@ -521,8 +522,9 @@ module VCAP::CloudController
             end
           end
 
-          context 'when exceeding total allowed routes' do
+          context 'when creating a route would exceed total routes' do
             before do
+              org_quota.total_routes = 1
               org_quota.total_reserved_route_ports = 0
               org_quota.save
             end
@@ -532,8 +534,27 @@ module VCAP::CloudController
               expect(subject.errors.on(:organization)).to include :total_reserved_route_ports_exceeded
             end
 
+            context 'and the total reserved route ports is unlimited' do
+              before do
+                org_quota.total_routes = 0
+                org_quota.total_reserved_route_ports = -1
+                org_quota.save
+              end
+
+              it 'has the error on organization' do
+                subject.valid?
+                expect(subject.errors.on(:organization)).to include :total_reserved_route_ports_exceeded
+              end
+            end
+
             context 'and the user does not specify a port' do
               subject(:route) { Route.new(space: space, domain: domain, host: 'bar') }
+
+              before do
+                org_quota.total_routes = 1
+                org_quota.total_reserved_route_ports = 0
+                org_quota.save
+              end
 
               it 'is valid' do
                 subject.valid?
