@@ -22,7 +22,7 @@ function wait_for_blobstore {
     <% elsif p('cc.buildpacks.blobstore_type') == 'webdav' %>
     echo "Checking for blobstore availability"
 
-    curl -s <%= p('cc.buildpacks.webdav_config.private_endpoint') %> <% if p('ssl.skip_cert_verify') %>-k<% end %> >/dev/null
+    curl -s -k <%= p('cc.buildpacks.webdav_config.private_endpoint') %> >/dev/null
     found=$?
     blobstore_check_attempts=0
 
@@ -31,7 +31,7 @@ function wait_for_blobstore {
       sleep $sleep_length
       blobstore_check_attempts=$((blobstore_check_attempts+1))
 
-      curl -s <%= p('cc.buildpacks.webdav_config.private_endpoint') %> <% if p('ssl.skip_cert_verify') %>-k<% end %> >/dev/null
+      curl -s -k <%= p('cc.buildpacks.webdav_config.private_endpoint') %> >/dev/null
       found=$?
 
       if [[ blobstore_check_attempts -eq $max_attempts ]]; then
