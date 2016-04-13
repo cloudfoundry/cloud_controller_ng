@@ -2675,6 +2675,14 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
+      ports
+      <span class="method-list-item-type">array of integers</span>
+    </h4>
+
+    <p class="method-list-item-description">The ports that will be open to accept traffic in the container running the process. <code>web</code> type processes will default to using port 8080. All other process types will default to no ports.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
       health_check
       <span class="method-list-item-type">health_check object</span>
     </h4>
@@ -2863,6 +2871,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "instances": 5,
   "memory_in_mb": 256,
   "disk_in_mb": 1024,
+  "ports": [8080],
   "health_check": {
     "type": "port",
     "data": {
@@ -2983,6 +2992,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "instances": 5,
   "memory_in_mb": 256,
   "disk_in_mb": 1024,
+  "ports": [8080],
   "health_check": {
     "type": "port",
     "data": {
@@ -3026,6 +3036,14 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
+      ports
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">The ports that will be open to accept traffic in the container running the process. <code>web</code> type processes will default to using port 8080. All other process types will default to no ports.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
       health_check
 
       <span class="method-list-item-type">optional</span>
@@ -3062,6 +3080,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "instances": 5,
   "memory_in_mb": 256,
   "disk_in_mb": 1024,
+  "ports": [8080],
   "health_check": {
     "type": "port",
     "data": {
@@ -3188,6 +3207,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "instances": 5,
       "memory_in_mb": 256,
       "disk_in_mb": 1024,
+      "ports": [8080],
       "health_check": {
         "type": "port",
         "data": {
@@ -3219,6 +3239,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "instances": 1,
       "memory_in_mb": 256,
       "disk_in_mb": 1024,
+      "ports": [],
       "health_check": {
         "type": "process",
         "data": {
@@ -3295,6 +3316,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "instances": 5,
   "memory_in_mb": 256,
   "disk_in_mb": 1024,
+  "ports": [8080],
   "health_check": {
     "type": "port",
     "data": {
@@ -3419,6 +3441,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "instances": 5,
   "memory_in_mb": 256,
   "disk_in_mb": 1024,
+  "ports": [8080],
   "health_check": {
     "type": "port",
     "data": {
@@ -3545,6 +3568,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "instances": 5,
       "memory_in_mb": 256,
       "disk_in_mb": 1024,
+      "ports": [8080],
       "health_check": {
         "type": "port",
         "data": {
@@ -3576,6 +3600,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "instances": 1,
       "memory_in_mb": 256,
       "disk_in_mb": 1024,
+      "ports": [],
       "health_check": {
         "type": "process",
         "data": {
