@@ -2614,7 +2614,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
 </ul>
 
-          <h1 id="processes">Processes</h1>
+          <h1 id="processes-by-guid">Processes By Guid</h1>
 
 <p>Processes define the runnable units of an app. An app can have multiple process types, each with differing commands and scale.</p>
 
@@ -3291,6 +3291,241 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
     </h4>
 
     <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+  </li>
+</ul>
+
+          <h1 id="processes-by-app-and-type">Processes By App and Type</h1>
+
+<p>Processes define the runnable units of an app. An app can have multiple process types, each with differing commands and scale.</p>
+
+<p>To configure processes for an app, a Procfile should be provided in the application source.</p>
+
+          <div class='no-margin'></div>
+
+<h2 id="the-process-object">The process object</h2>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guid
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Unique GUID for the process</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      type
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Process type. A unique identifier for processes belonging to an app.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      command
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">The command is used to start the process.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      instances
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">The number of instances to run.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      memory_in_mb
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">The memory in mb allocated per instance.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      disk_in_mb
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">The disk in mb allocated per instance.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      ports
+      <span class="method-list-item-type">array of integers</span>
+    </h4>
+
+    <p class="method-list-item-description">The ports that will be open to accept traffic in the container running the process. <code>web</code> type processes will default to using port 8080. All other process types will default to no ports.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      health_check
+      <span class="method-list-item-type">health_check object</span>
+    </h4>
+
+    <p class="method-list-item-description">The health check to perform on the process. See <a href="#the-health_check-object">health_check</a> for more information.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      created_at
+      <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">The time with zone when the process was created.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      updated_at
+      <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">The time with zone with the process was last updated.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      links
+      <span class="method-list-item-type">object</span>
+    </h4>
+
+    <p class="method-list-item-description">Links to related resources.</p>
+  </li>
+</ul>
+
+          <div class='no-margin'></div>
+
+<h2 id="the-health_check-object">The health_check object</h2>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      type
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">The type of health check to perform. Valid values are <code>port</code> and <code>process</code></p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      data[&lsquo;timeout&rsquo;]
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">The time in seconds that the health check can fail before the process is restarted.</p>
+  </li>
+</ul>
+
+          <div class='no-margin'></div>
+
+<h2 id="the-process-stats-object">The process stats object</h2>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      type
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Process type. A unique identifier for processes belonging to an app.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      index
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">The zero-based index of running intances.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      state
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">The state of the instance. RUNNING, CRASHED, STARTING</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      usage[&lsquo;time&rsquo;]
+      <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">The time when the usage was requested.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      usage['cpu&rsquo;]
+      <span class="method-list-item-type">number</span>
+    </h4>
+
+    <p class="method-list-item-description">The current cpu usage of the instance.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      usage['mem&rsquo;]
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">The current memory usage of the instance.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      usage['disk&rsquo;]
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">The current disk usage of the instance.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      host
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">The host the instance is running on.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      port
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">The open port the instance can use for listening.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      uptime
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">The uptime in seconds for the instance.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      mem_quota
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">The maximum memory the instance is allowed to use.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      disk_quota
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">The maximum disk the instance is allowed to use.</p>
+  </li>
+   <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      fds_quota
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">The maximum file descriptors the instance is allowed to use.</p>
   </li>
 </ul>
 
