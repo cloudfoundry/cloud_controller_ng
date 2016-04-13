@@ -105,6 +105,7 @@ function display_pre_release_branches_with_sha {
 }
 
 function main {
+  update_repos
   first_release_with_sha "${SEARCH_SHA}"
 
   if [[ -n "${release}" ]]; then
