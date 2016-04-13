@@ -54,6 +54,10 @@ includes:
   - processes/scale
   - processes/terminate_instance
   - processes/list
+  - processes/app/header
+  - processes/object
+  - processes/health_check_object
+  - processes/stats_object
   - processes/app/get
   - processes/app/stats
   - processes/app/scale
