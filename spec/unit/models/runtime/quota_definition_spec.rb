@@ -52,11 +52,12 @@ module VCAP::CloudController
       end
 
       context 'total_reserved_route_ports' do
+        let(:err_msg) { 'Total reserved ports must be less than or equal to total routes.' }
         it 'total routes must be greater than the total_reserved_route_ports' do
           quota_definition.total_routes = 2
           quota_definition.total_reserved_route_ports = 3
           expect(quota_definition).not_to be_valid
-          expect(quota_definition.errors.on(:total_reserved_route_ports)).to include(:invalid_total_reserved_route_ports)
+          expect(quota_definition.errors.on(:total_reserved_route_ports)).to include(err_msg)
         end
 
         it 'total routes is equal to total_reserved_route_ports' do
@@ -71,7 +72,7 @@ module VCAP::CloudController
         it 'total_reserved_route_ports cannot be less than -1' do
           quota_definition.total_reserved_route_ports = -2
           expect(quota_definition).not_to be_valid
-          expect(quota_definition.errors.on(:total_reserved_route_ports)).to include(:invalid_total_reserved_route_ports)
+          expect(quota_definition.errors.on(:total_reserved_route_ports)).to include(err_msg)
 
           quota_definition.total_reserved_route_ports = -1
           expect(quota_definition).to be_valid

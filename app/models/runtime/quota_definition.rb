@@ -63,9 +63,9 @@ module VCAP::CloudController
 
     def validate_total_reserved_route_ports
       return unless total_reserved_route_ports
-
+      err_msg = 'Total reserved ports must be less than or equal to total routes.'
       if total_reserved_route_ports < UNLIMITED || total_reserved_route_ports > total_routes
-        errors.add(:total_reserved_route_ports, :invalid_total_reserved_route_ports)
+        errors.add(:total_reserved_route_ports, err_msg)
       end
     end
   end

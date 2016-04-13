@@ -916,7 +916,7 @@
 310009:
   name: OrgQuotaTotalReservedRoutePortsExceeded
   http_code: 400
-  message: "Total reserved ports must be less than or equal to total routes."
+  message: "You have exceeded the total reserved route ports for your organization's quota."
 
 320001:
   name: DiegoDisabled

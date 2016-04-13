@@ -485,7 +485,7 @@ module VCAP::CloudController
           let(:space_quota) { SpaceQuotaDefinition.make(organization: subject.space.organization) }
 
           before do
-            org_quota.total_routes   = 0
+            org_quota.total_routes = 0
             org_quota.total_reserved_route_ports = 0
             space_quota.total_routes = 10
 

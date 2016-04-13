@@ -229,10 +229,10 @@ module VCAP::CloudController
         quota_definition.total_reserved_route_ports = 0
         quota_definition.save
 
-        post '/v2/routes', MultiJson.dump( domain_guid: tcp_domain.guid, space_guid: space.guid, port: 1234)
+        post '/v2/routes', MultiJson.dump(domain_guid: tcp_domain.guid, space_guid: space.guid, port: 1234)
 
         expect(last_response.status).to eq(400)
-        expect(last_response.body).to include 'Total reserved ports must be less than or equal to total routes.'
+        expect(last_response.body).to include 'You have exceeded the total reserved route ports for your organization\'s quota.'
         expect(decoded_response['code']).to eq(310009)
       end
 
