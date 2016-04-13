@@ -17,7 +17,11 @@ resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
     field :total_services, 'How many services an organization can have. (-1 represents an unlimited amount)', required: opts[:required], example_values: [-1, 5, 201]
     field :total_service_keys, 'How many service keys an organization can have. (-1 represents an unlimited amount)', example_values: [-1, 5, 201], default: -1
     field :total_routes, 'How many routes an organization can have. (-1 represents an unlimited amount)', required: opts[:required], example_values: [-1, 10, 23]
-    field :total_reserved_route_ports, 'How many routes an organization can have that use a reserved port. These routes count toward total_routes. (-1 represents an unlimited amount)', default: 0, example_values: [-1, 10, 20]
+    field :total_reserved_route_ports,
+      'How many routes an organization can have that use a reserved port. These routes count toward total_routes. (-1 represents an unlimited amount)',
+      default: 0,
+      example_values: [-1, 10, 20]
+
     field :total_private_domains,
       'How many private domains an organization can have. (-1 represents an unlimited amount)',
       example_values: [-1, 10, 23], default: -1
@@ -46,7 +50,9 @@ resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
   post '/v2/quota_definitions' do
     include_context 'updatable_fields', required: true
     example 'Creating a Organization Quota Definition' do
-      client.post '/v2/quota_definitions', fields_json(instance_memory_limit: 10_240, app_instance_limit: 10, app_task_limit: 5, total_routes: 4, total_reserved_route_ports: 3), headers
+      client.post '/v2/quota_definitions',
+        fields_json(instance_memory_limit: 10_240, app_instance_limit: 10, app_task_limit: 5, total_routes: 4, total_reserved_route_ports: 3),
+        headers
 
       expect(status).to eq(201)
 
