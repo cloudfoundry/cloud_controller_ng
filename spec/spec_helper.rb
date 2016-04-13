@@ -62,6 +62,10 @@ RSpec.configure do |rspec_config|
 
   Delayed::Worker.plugins << DeserializationRetry
 
+  rspec_config.before :suite do
+    VCAP::CloudController::SpecBootstrap.seed
+  end
+
   rspec_config.before :each do
     Fog::Mock.reset
     Delayed::Worker.destroy_failed_jobs = false

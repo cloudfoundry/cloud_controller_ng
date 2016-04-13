@@ -104,14 +104,6 @@ module VCAP::CloudController
       false
     end
 
-    def self.intermediate_domains(name)
-      return [] unless name && name =~ DOMAIN_REGEX
-
-      name.split('.').reverse.inject([]) do |a, e|
-        a.push(a.empty? ? e : "#{e}.#{a.last}")
-      end
-    end
-
     def self.user_visibility_filter(user)
       organizations_filter = dataset.db[:organizations_managers].where(user_id: user.id).select(:organization_id).union(
         dataset.db[:organizations_auditors].where(user_id: user.id).select(:organization_id)
@@ -154,8 +146,13 @@ module VCAP::CloudController
       raise VCAP::Errors::ApiError.new_from_details('DomainInvalid', 'the owning organization cannot be changed')
     end
 
+    # For a domain sub.domain.com, returns [com, domain.com, sub.domain.com]
     def intermediate_domains
-      self.class.intermediate_domains(name)
+      return [] unless name && name =~ DOMAIN_REGEX
+
+      name.split('.').reverse.inject([]) do |array, member|
+        array.push(array.empty? ? member : "#{member}.#{array.last}")
+      end
     end
 
     def validate_add_shared_organization(organization)
