@@ -57,6 +57,7 @@ resource 'Apps', type: [:api, :legacy_api] do
       expect(parsed_response['memory']).to eq(app_obj.memory)
 
       expect(parsed_response['routes'][0]['host']).to eq(route1.host)
+      expect(parsed_response['routes'][0]['port']).to eq(route1.port)
       expect(parsed_response['services'][0]['name']).to eq(service_instance.name)
     end
   end

@@ -45,6 +45,7 @@ module VCAP::CloudController
       {
         guid:   guid,
         host:   host,
+        port:   port,
         path:   path,
         domain: {
           guid: domain.guid,
