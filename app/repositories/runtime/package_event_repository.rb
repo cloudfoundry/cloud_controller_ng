@@ -2,18 +2,22 @@ module VCAP::CloudController
   module Repositories
     module Runtime
       class PackageEventRepository
-        def self.record_app_add_package(package, actor, actor_name, request_attrs)
-          Loggregator.emit(package.app.guid, "Adding app package for app with guid #{package.app.guid}")
+        def self.record_app_package_create(package, actor, actor_name, request_attrs)
+          app_guid = request_attrs.delete('app_guid')
+          Loggregator.emit(app_guid, "Adding app package for app with guid #{app_guid}")
 
-          metadata = { request: request_attrs }
+          metadata = {
+            package_guid: package.guid,
+            request: request_attrs
+          }
 
           Event.create(
             space: package.space,
-            type: 'audit.app.add_package',
+            type: 'audit.app.package.create',
             timestamp: Sequel::CURRENT_TIMESTAMP,
-            actee: package.guid,
-            actee_type: 'package',
-            actee_name: '',
+            actee: app_guid,
+            actee_type: 'v3-app',
+            actee_name: package.app.name,
             actor: actor.guid,
             actor_type: 'user',
             actor_name: actor_name,

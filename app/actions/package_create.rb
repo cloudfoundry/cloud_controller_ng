@@ -21,7 +21,7 @@ module VCAP::CloudController
         package.save
         make_docker_data(message, package)
 
-        Repositories::Runtime::PackageEventRepository.record_app_add_package(
+        Repositories::Runtime::PackageEventRepository.record_app_package_create(
           package,
           @user,
           @user_email,

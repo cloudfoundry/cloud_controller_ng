@@ -22,8 +22,8 @@ module VCAP::CloudController
         expect(created_package.type).to eq(type)
       end
 
-      it 'creates an audit event' do
-        expect(Repositories::Runtime::PackageEventRepository).to receive(:record_app_add_package).with(
+      it 'creates an v3 audit event' do
+        expect(Repositories::Runtime::PackageEventRepository).to receive(:record_app_package_create).with(
           instance_of(PackageModel),
           user,
           user_email,

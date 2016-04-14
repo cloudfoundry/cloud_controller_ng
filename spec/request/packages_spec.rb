@@ -46,9 +46,29 @@ describe 'Packages' do
           }
         }
 
+        expected_metadata = {
+            package_guid: package.guid,
+            request: {
+              type: type,
+              data: data
+            }
+        }.to_json
+
         parsed_response = MultiJson.load(last_response.body)
         expect(last_response.status).to eq(201)
         expect(parsed_response).to be_a_response_like(expected_response)
+
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+          type:              'audit.app.package.create',
+          actee:             package.app.guid,
+          actee_type:        'v3-app',
+          actee_name:        package.app.name,
+          actor:             user.guid,
+          actor_type:        'user',
+          space_guid:        space.guid,
+          metadata: expected_metadata
+        })
       end
     end
 
