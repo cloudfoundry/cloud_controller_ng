@@ -4,25 +4,32 @@ require_relative '../client_shared'
 module CloudController
   module Blobstore
     describe DavClient do
-      subject(:client) { DavClient.new(options, directory_key, root_dir) }
-      let(:response) { instance_double(HTTP::Message) }
-      let(:options) do
-        {
-          private_endpoint: 'http://localhost',
-          public_endpoint: 'http://localhost.public',
-          ca_cert_path: File.join(Paths::FIXTURES, 'certs/webdav_ca.crt')
-        }
+      subject(:client) do
+        DavClient.new(
+          directory_key: directory_key,
+          httpclient:    httpclient,
+          signer:        signer,
+          endpoint:      'http://localhost',
+          user:          user,
+          password:      password,
+          root_dir:      root_dir,
+          min_size:      min_size,
+          max_size:      max_size)
       end
+      let(:httpclient) { instance_double(HTTPClient) }
+      let(:response) { instance_double(HTTP::Message) }
+      let(:signer) { instance_double(NginxSecureLinkSigner) }
       let(:directory_key) { 'droplets' }
       let(:root_dir) { nil }
+      let(:min_size) { nil }
+      let(:max_size) { nil }
+      let(:user) { nil }
+      let(:password) { nil }
 
       describe 'conforms to blobstore client interface' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
-        let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
         let(:deletable_blob) { instance_double(DavBlob, key: nil) }
 
         before do
-          allow(HTTPClient).to receive_messages(new: httpclient)
           allow(httpclient).to receive_messages(head: instance_double(HTTP::Message, status: 200))
           allow(httpclient).to receive_messages(put: instance_double(HTTP::Message, status: 201))
           allow(httpclient).to receive_messages(get: instance_double(HTTP::Message, status: 200))
@@ -33,7 +40,7 @@ module CloudController
         it_behaves_like 'a blobstore client'
       end
 
-      describe '#configure_ssl' do
+      describe '.configure_ssl' do
         let(:httpclient) { HTTPClient.new }
         let(:skip_cert_verify) { true }
         let(:ca_cert_path) { File.join(Paths::FIXTURES, 'certs/webdav_ca.crt') }
@@ -47,7 +54,7 @@ module CloudController
           httpclient.ssl_config.clear_cert_store
           expect(httpclient.ssl_config.cert_store_items).not_to include(:default)
 
-          client.configure_ssl(httpclient, ca_cert_path)
+          DavClient.configure_ssl(httpclient, ca_cert_path)
 
           expect(httpclient.ssl_config.cert_store_items).to include(:default)
         end
@@ -57,7 +64,7 @@ module CloudController
             httpclient.ssl_config.clear_cert_store
             expect(httpclient.ssl_config.cert_store_items).not_to include(:default)
 
-            client.configure_ssl(httpclient, ca_cert_path)
+            DavClient.configure_ssl(httpclient, ca_cert_path)
 
             expect(httpclient.ssl_config.cert_store_items).to include(:default)
             expect(httpclient.ssl_config.cert_store_items).to include(ca_cert_path)
@@ -68,7 +75,7 @@ module CloudController
               httpclient.ssl_config.clear_cert_store
               expect(httpclient.ssl_config.cert_store_items).not_to include(:default)
 
-              client.configure_ssl(httpclient, '/sup/dawg')
+              DavClient.configure_ssl(httpclient, '/sup/dawg')
 
               expect(httpclient.ssl_config.cert_store_items).to include(:default)
             end
@@ -79,7 +86,7 @@ module CloudController
           let(:skip_cert_verify) { true }
 
           it 'uses the VERIFY_NONE mode of ssl validation' do
-            client.configure_ssl(httpclient, ca_cert_path)
+            DavClient.configure_ssl(httpclient, ca_cert_path)
 
             expect(httpclient.ssl_config.verify_mode).to eq(OpenSSL::SSL::VERIFY_NONE)
           end
@@ -89,7 +96,7 @@ module CloudController
           let(:skip_cert_verify) { false }
 
           it 'uses the VERIFY_PEER mode of ssl validation' do
-            client.configure_ssl(httpclient, ca_cert_path)
+            DavClient.configure_ssl(httpclient, ca_cert_path)
 
             expect(httpclient.ssl_config.verify_mode).to eq(OpenSSL::SSL::VERIFY_PEER)
           end
@@ -97,13 +104,8 @@ module CloudController
       end
 
       describe 'basic auth' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
-        let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
-
-        before do
-          allow(HTTPClient).to receive_messages(new: httpclient)
-          options.merge!(username: 'username', password: 'top-sekret')
-        end
+        let(:user) { 'username' }
+        let(:password) { 'top-sekret' }
 
         it 'adds Authorization header when there is a user and password' do
           allow(response).to receive_messages(status: 200)
@@ -116,13 +118,6 @@ module CloudController
       end
 
       describe '#exists?' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
-        let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
-
-        before do
-          allow(HTTPClient).to receive_messages(new: httpclient)
-        end
-
         it 'should return true for an object that already exists' do
           allow(response).to receive_messages(status: 200)
           allow(httpclient).to receive_messages(head: response)
@@ -227,8 +222,6 @@ module CloudController
       end
 
       describe '#cp_to_blobstore' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
-        let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
         let!(:tmpfile) do
           Tempfile.open('') do |tmpfile|
             tmpfile.write(content)
@@ -236,10 +229,6 @@ module CloudController
           end
         end
         let(:content) { 'file content' }
-
-        before do
-          allow(HTTPClient).to receive_messages(new: httpclient)
-        end
 
         after do
           tmpfile.unlink
@@ -320,7 +309,6 @@ module CloudController
         end
 
         describe 'file size limits' do
-          subject(:client) { DavClient.new(options, directory_key, root_dir, min_size, max_size) }
           let(:min_size) { 20 }
           let(:max_size) { 50 }
 
@@ -358,8 +346,6 @@ module CloudController
       end
 
       describe '#cp_r_to_blobstore' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
-        let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
         let(:source_dir) { Dir.mktmpdir }
         let!(:tmpfile1) do
           Tempfile.open('', source_dir) do |tmpfile|
@@ -385,7 +371,6 @@ module CloudController
         let(:nested_tmpfile1_sha) { Digester.new.digest_path(nested_tmpfile1.path) }
 
         before do
-          allow(HTTPClient).to receive_messages(new: httpclient)
           allow(httpclient).to receive_messages(head: instance_double(HTTP::Message, status: 404))
         end
 
@@ -426,7 +411,6 @@ module CloudController
         end
 
         describe 'file size limits' do
-          subject(:client) { DavClient.new(options, directory_key, root_dir, min_size, max_size) }
           let(:min_size) { 20 }
           let(:max_size) { 50 }
 
@@ -480,13 +464,6 @@ module CloudController
       end
 
       describe '#cp_file_between_keys' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
-        let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
-
-        before do
-          allow(HTTPClient).to receive_messages(new: httpclient)
-        end
-
         it 'creates an empty file at the destination location to ensure all folder paths are create before the copy' do
           allow(response).to receive_messages(status: 204, content: '')
           allow(httpclient).to receive(:put).and_return(response)
@@ -559,13 +536,6 @@ module CloudController
       end
 
       describe '#delete' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
-        let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
-
-        before do
-          allow(HTTPClient).to receive_messages(new: httpclient)
-        end
-
         it 'should delete an object' do
           allow(response).to receive_messages(status: 204, content: '')
           allow(httpclient).to receive(:delete).and_return(response)
@@ -607,13 +577,7 @@ module CloudController
       end
 
       describe '#delete_all' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
-        let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
         let(:root_dir) { 'buildpack_cache' }
-
-        before do
-          allow(HTTPClient).to receive_messages(new: httpclient)
-        end
 
         it 'deletes the collection' do
           allow(httpclient).to receive(:delete).and_return(instance_double(HTTP::Message, status: 204, content: ''))
@@ -646,13 +610,7 @@ module CloudController
       end
 
       describe '#delete_all_in_path' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
-        let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
         let(:root_dir) { 'buildpack_cache' }
-
-        before do
-          allow(HTTPClient).to receive_messages(new: httpclient)
-        end
 
         it 'deletes the collection' do
           allow(httpclient).to receive(:delete).and_return(instance_double(HTTP::Message, status: 204, content: ''))
@@ -685,13 +643,6 @@ module CloudController
       end
 
       describe '#blob' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
-        let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
-
-        before do
-          allow(HTTPClient).to receive_messages(new: httpclient)
-        end
-
         it 'returns a blob' do
           allow(response).to receive_messages(status: 200)
           allow(httpclient).to receive_messages(head: response)
@@ -726,13 +677,6 @@ module CloudController
       end
 
       describe '#delete_blob' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
-        let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
-
-        before do
-          allow(HTTPClient).to receive_messages(new: httpclient)
-        end
-
         it 'deletes the blobs key' do
           allow(response).to receive_messages(status: 204, content: '')
           allow(httpclient).to receive_messages(delete: response)
@@ -763,13 +707,7 @@ module CloudController
       end
 
       context 'when root_dir is configured' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
-        let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
         let(:root_dir) { 'root_dir' }
-
-        before do
-          allow(HTTPClient).to receive_messages(new: httpclient)
-        end
 
         it 'includes it in the key' do
           allow(response).to receive_messages(status: 200)

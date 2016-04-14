@@ -34,7 +34,7 @@ module CloudController
         end
 
         def provide_webdav(options, directory_key, root_dir)
-          client = DavClient.new(
+          client = DavClient.build(
             options.fetch(:webdav_config),
             directory_key,
             root_dir,

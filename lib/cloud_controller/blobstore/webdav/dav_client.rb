@@ -6,33 +6,56 @@ require 'cloud_controller/blobstore/webdav/nginx_secure_link_signer'
 module CloudController
   module Blobstore
     class DavClient < BaseClient
-      def initialize(options, directory_key, root_dir=nil, min_size=nil, max_size=nil)
-        @options       = options
+      def initialize(
+        directory_key:,
+        httpclient:,
+        signer:,
+        endpoint:,
+        user: nil,
+        password: nil,
+        root_dir: nil,
+        min_size: nil,
+        max_size: nil)
+
         @directory_key = directory_key
         @min_size      = min_size || 0
         @max_size      = max_size
         @root_dir      = root_dir
+        @client        = httpclient
+        @endpoint      = endpoint
+        @headers       = {}
 
-        @client = HTTPClient.new
-        configure_ssl(@client, @options[:ca_cert_path])
-
-        @endpoint = @options[:private_endpoint]
-        @headers  = {}
-
-        user     = @options[:username]
-        password = @options[:password]
         if user && password
           @headers['Authorization'] = 'Basic ' +
             Base64.strict_encode64("#{user}:#{password}").strip
         end
 
-        @signer = NginxSecureLinkSigner.new(
-          internal_endpoint:    @options[:private_endpoint],
-          internal_path_prefix: @directory_key,
-          public_endpoint:      @options[:public_endpoint],
-          public_path_prefix:   @directory_key,
-          basic_auth_user:      user,
-          basic_auth_password:  password
+        @signer = signer
+      end
+
+      def self.build(options, directory_key, root_dir=nil, min_size=nil, max_size=nil)
+        client = HTTPClient.new
+        configure_ssl(client, options[:ca_cert_path])
+
+        signer = NginxSecureLinkSigner.new(
+          internal_endpoint:    options[:private_endpoint],
+          internal_path_prefix: directory_key,
+          public_endpoint:      options[:public_endpoint],
+          public_path_prefix:   directory_key,
+          basic_auth_user:      options[:username],
+          basic_auth_password:  options[:password]
+        )
+
+        new(
+          directory_key: directory_key,
+          httpclient:    client,
+          signer:        signer,
+          endpoint:      options[:private_endpoint],
+          user:          options[:username],
+          password:      options[:password],
+          root_dir:      root_dir,
+          min_size:      min_size,
+          max_size:      max_size
         )
       end
 
@@ -150,7 +173,7 @@ module CloudController
         raise BlobstoreError.new("Could not delete all in path, #{response.status}/#{response.content}")
       end
 
-      def configure_ssl(httpclient, ca_cert_path)
+      def self.configure_ssl(httpclient, ca_cert_path)
         httpclient.ssl_config.verify_mode = skip_cert_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
         httpclient.ssl_config.set_default_paths
 
@@ -159,11 +182,11 @@ module CloudController
         end
       end
 
-      private
-
-      def skip_cert_verify
+      def self.skip_cert_verify
         VCAP::CloudController::Config.config[:skip_cert_verify]
       end
+
+      private
 
       def url(key)
         [@endpoint, 'admin', @directory_key, partitioned_key(key)].compact.join('/')
