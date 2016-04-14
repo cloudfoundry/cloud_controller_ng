@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'vcap/digester'
 
 describe 'Stable API warning system', api_version_check: true do
-  API_FOLDER_CHECKSUM = 'deddcf2c900f35bd744c469bc1b471d903a3e6e0'.freeze
+  API_FOLDER_CHECKSUM = 'ed87c34288fff57bb4ce2cc7c945a009096e44ca'.freeze
 
   it 'double-checks the version' do
     expect(VCAP::CloudController::Constants::API_VERSION).to eq('2.54.0')
