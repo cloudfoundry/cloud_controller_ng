@@ -37,7 +37,7 @@ module VCAP::CloudController
           event = Event.last
           expect(event.type).to eq('audit.app.ssh-authorized')
           expect(event.actor).to eq(user.guid)
-          expect(event.metadata).to eq({'index' => instance_index})
+          expect(event.metadata).to eq({ 'index' => instance_index })
         end
 
         context 'when the app is not diego app' do
@@ -148,7 +148,7 @@ module VCAP::CloudController
         let(:admin) { User.make }
         before do
           space.organization.add_user(admin)
-          set_current_user(admin, {admin: true})
+          set_current_user(admin, { admin: true })
         end
 
         it 'returns a 200 and ProcessGuid' do
