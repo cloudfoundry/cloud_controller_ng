@@ -1,19 +1,29 @@
+require 'cloud_controller/blobstore/webdav/http_client_provider'
+
 module CloudController
   module Blobstore
     class NginxSecureLinkSigner
+      def self.build(options:, directory_key:)
+        NginxSecureLinkSigner.new(
+          internal_endpoint:    options[:private_endpoint],
+          internal_path_prefix: directory_key,
+          public_endpoint:      options[:public_endpoint],
+          public_path_prefix:   directory_key,
+          basic_auth_user:      options[:username],
+          basic_auth_password:  options[:password],
+          httpclient:           HTTPClientProvider.provide(ca_cert_path: options[:ca_cert_path]),
+        )
+      end
+
       def initialize(internal_endpoint:, internal_path_prefix: nil,
-        public_endpoint:, public_path_prefix: nil, basic_auth_user:, basic_auth_password:)
+        public_endpoint:, public_path_prefix: nil, basic_auth_user:, basic_auth_password:, httpclient:)
 
-        @internal_uri         = URI(internal_endpoint)
-        @internal_path_prefix = internal_path_prefix
-        @public_uri           = URI(public_endpoint)
-        @public_path_prefix   = public_path_prefix
-
-        @client = HTTPClient.new
-        @client.ssl_config.set_default_paths
-        @client.ssl_config.verify_mode = skip_cert_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
-
-        @headers = {}
+        @internal_uri             = URI(internal_endpoint)
+        @internal_path_prefix     = internal_path_prefix
+        @public_uri               = URI(public_endpoint)
+        @public_path_prefix       = public_path_prefix
+        @client                   = httpclient
+        @headers                  = {}
         @headers['Authorization'] = 'Basic ' + Base64.strict_encode64("#{basic_auth_user}:#{basic_auth_password}").strip
       end
 
@@ -40,10 +50,6 @@ module CloudController
       end
 
       private
-
-      def skip_cert_verify
-        VCAP::CloudController::Config.config[:skip_cert_verify]
-      end
 
       def make_request(uri:)
         response = @client.get(uri, header: @headers)

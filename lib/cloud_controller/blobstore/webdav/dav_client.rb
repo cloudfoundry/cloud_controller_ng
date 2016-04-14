@@ -35,19 +35,10 @@ module CloudController
       end
 
       def self.build(options, directory_key, root_dir=nil, min_size=nil, max_size=nil)
-        signer = NginxSecureLinkSigner.new(
-          internal_endpoint:    options[:private_endpoint],
-          internal_path_prefix: directory_key,
-          public_endpoint:      options[:public_endpoint],
-          public_path_prefix:   directory_key,
-          basic_auth_user:      options[:username],
-          basic_auth_password:  options[:password]
-        )
-
         new(
           directory_key: directory_key,
           httpclient:    HTTPClientProvider.provide(ca_cert_path: options[:ca_cert_path]),
-          signer:        signer,
+          signer:        NginxSecureLinkSigner.build(options: options, directory_key: directory_key),
           endpoint:      options[:private_endpoint],
           user:          options[:username],
           password:      options[:password],
