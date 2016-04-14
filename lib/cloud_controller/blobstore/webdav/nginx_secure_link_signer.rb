@@ -51,6 +51,10 @@ module CloudController
         raise SigningRequestError.new("Could not get a signed url, #{response.status}/#{response.content}") unless response.status == 200
 
         URI(response.content)
+      rescue OpenSSL::SSL::SSLError => e
+        err = SigningRequestError.new("Could not get a signed url: #{e.message}")
+        err.set_backtrace(e.backtrace)
+        raise err
       end
 
       def uri(expires:, path:)

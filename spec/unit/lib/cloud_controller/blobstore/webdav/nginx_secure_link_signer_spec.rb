@@ -98,6 +98,14 @@ module CloudController
             }.to raise_error(SigningRequestError, /Could not get a signed url/)
           end
         end
+
+        it 'raises SigningRequestError when HTTPClient raises SSLError' do
+          allow(httpclient).to receive(:get).and_raise(OpenSSL::SSL::SSLError.new('My SSL Error'))
+
+          expect {
+            signer.sign_internal_url(expires: expires, path: 'some/path')
+          }.to raise_error(SigningRequestError, /My SSL Error/)
+        end
       end
 
       describe '#sign_public_url' do
@@ -147,6 +155,14 @@ module CloudController
               signer.sign_public_url(expires: expires, path: 'some/path')
             }.to raise_error(SigningRequestError, /Could not get a signed url/)
           end
+        end
+
+        it 'raises SigningRequestError when HTTPClient raises SSLError' do
+          allow(httpclient).to receive(:get).and_raise(OpenSSL::SSL::SSLError.new('My SSL Error'))
+
+          expect {
+            signer.sign_internal_url(expires: expires, path: 'some/path')
+          }.to raise_error(SigningRequestError, /My SSL Error/)
         end
       end
     end
