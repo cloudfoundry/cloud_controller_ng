@@ -40,69 +40,6 @@ module CloudController
         it_behaves_like 'a blobstore client'
       end
 
-      describe '.configure_ssl' do
-        let(:httpclient) { HTTPClient.new }
-        let(:skip_cert_verify) { true }
-        let(:ca_cert_path) { File.join(Paths::FIXTURES, 'certs/webdav_ca.crt') }
-        let(:config) { { skip_cert_verify: skip_cert_verify } }
-
-        before do
-          allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
-        end
-
-        it 'configures the client to use the default cert store' do
-          httpclient.ssl_config.clear_cert_store
-          expect(httpclient.ssl_config.cert_store_items).not_to include(:default)
-
-          DavClient.configure_ssl(httpclient, ca_cert_path)
-
-          expect(httpclient.ssl_config.cert_store_items).to include(:default)
-        end
-
-        context 'when a ca cert is provided' do
-          it 'loads it into the cert store along with the default store' do
-            httpclient.ssl_config.clear_cert_store
-            expect(httpclient.ssl_config.cert_store_items).not_to include(:default)
-
-            DavClient.configure_ssl(httpclient, ca_cert_path)
-
-            expect(httpclient.ssl_config.cert_store_items).to include(:default)
-            expect(httpclient.ssl_config.cert_store_items).to include(ca_cert_path)
-          end
-
-          context 'and the file does not exist' do
-            it 'does not load the ca cert' do
-              httpclient.ssl_config.clear_cert_store
-              expect(httpclient.ssl_config.cert_store_items).not_to include(:default)
-
-              DavClient.configure_ssl(httpclient, '/sup/dawg')
-
-              expect(httpclient.ssl_config.cert_store_items).to include(:default)
-            end
-          end
-        end
-
-        context 'when skip_cert_verify is true' do
-          let(:skip_cert_verify) { true }
-
-          it 'uses the VERIFY_NONE mode of ssl validation' do
-            DavClient.configure_ssl(httpclient, ca_cert_path)
-
-            expect(httpclient.ssl_config.verify_mode).to eq(OpenSSL::SSL::VERIFY_NONE)
-          end
-        end
-
-        context 'when skip_cert_verify is false' do
-          let(:skip_cert_verify) { false }
-
-          it 'uses the VERIFY_PEER mode of ssl validation' do
-            DavClient.configure_ssl(httpclient, ca_cert_path)
-
-            expect(httpclient.ssl_config.verify_mode).to eq(OpenSSL::SSL::VERIFY_PEER)
-          end
-        end
-      end
-
       describe 'basic auth' do
         let(:user) { 'username' }
         let(:password) { 'top-sekret' }

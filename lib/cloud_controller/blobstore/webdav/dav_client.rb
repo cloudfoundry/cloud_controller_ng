@@ -2,6 +2,7 @@ require 'cloud_controller/blobstore/base_client'
 require 'cloud_controller/blobstore/errors'
 require 'cloud_controller/blobstore/webdav/dav_blob'
 require 'cloud_controller/blobstore/webdav/nginx_secure_link_signer'
+require 'cloud_controller/blobstore/webdav/http_client_provider'
 
 module CloudController
   module Blobstore
@@ -34,9 +35,6 @@ module CloudController
       end
 
       def self.build(options, directory_key, root_dir=nil, min_size=nil, max_size=nil)
-        client = HTTPClient.new
-        configure_ssl(client, options[:ca_cert_path])
-
         signer = NginxSecureLinkSigner.new(
           internal_endpoint:    options[:private_endpoint],
           internal_path_prefix: directory_key,
@@ -48,7 +46,7 @@ module CloudController
 
         new(
           directory_key: directory_key,
-          httpclient:    client,
+          httpclient:    HTTPClientProvider.provide(ca_cert_path: options[:ca_cert_path]),
           signer:        signer,
           endpoint:      options[:private_endpoint],
           user:          options[:username],
@@ -171,19 +169,6 @@ module CloudController
 
         raise FileNotFound.new("Could not find object '#{URI(url).path}', #{response.status}/#{response.content}") if response.status == 404
         raise BlobstoreError.new("Could not delete all in path, #{response.status}/#{response.content}")
-      end
-
-      def self.configure_ssl(httpclient, ca_cert_path)
-        httpclient.ssl_config.verify_mode = skip_cert_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
-        httpclient.ssl_config.set_default_paths
-
-        if ca_cert_path && File.exist?(ca_cert_path)
-          httpclient.ssl_config.add_trust_ca(ca_cert_path)
-        end
-      end
-
-      def self.skip_cert_verify
-        VCAP::CloudController::Config.config[:skip_cert_verify]
       end
 
       private
