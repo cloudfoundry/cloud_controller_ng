@@ -220,8 +220,8 @@ module VCAP::CloudController
           expect(route).not_to be_valid
         end
 
-        it 'defaults the port to 0' do
-          expect(route.port).to eq(0)
+        it 'defaults the port to nil' do
+          expect(route.port).to eq(nil)
         end
 
         context 'when port is specified' do

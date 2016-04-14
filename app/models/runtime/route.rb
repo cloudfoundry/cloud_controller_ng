@@ -59,9 +59,8 @@ module VCAP::CloudController
       old_path.nil? ? '' : old_path
     end
 
-    alias_method :old_port, :port
     def port
-      old_port.nil? ? 0 : old_port
+      super == 0 ? nil : super
     end
 
     def organization
@@ -80,27 +79,21 @@ module VCAP::CloudController
 
       validates_format /^([\w\-]+|\*)$/, :host if host && !host.empty?
 
-      if path.empty?
-        # This is only for routes controller translate_validation_exception method
-        # in order to distinguish between hostname being taken and path being
-        # taken
-        validates_unique [:host, :domain_id, :port] do |ds|
-          ds.where(path: '')
-        end
-      else
-        validates_unique [:host, :domain_id, :path, :port]
-      end
+      validate_uniqueness_on_host_and_domain if path.empty? && port.nil?
+      validate_uniqueness_on_host_domain_and_port if path.empty?
+      validate_uniqueness_on_host_domain_and_path if port.nil?
 
       validate_host_and_domain_in_different_space
       validate_path
       validate_domain
       validate_total_routes
       validate_ports
-      validate_total_reserved_route_ports if port > 0
+      validate_total_reserved_route_ports if port && port > 0
       errors.add(:host, :domain_conflict) if domains_match?
     end
 
     def validate_ports
+      return unless port
       errors.add(:port, :invalid_port) if port < 0 || port > 65535
     end
 
@@ -231,8 +224,12 @@ module VCAP::CloudController
       true
     end
 
+    def domain_shared_and_empty_host_and_port?
+      domain && domain.shared? && (host.blank? && values[:port].blank?)
+    end
+
     def valid_host_for_shared_domain
-      return false if domain && domain.shared? && (!host.present? && !old_port.present?) # domain is shared and no host is present
+      return false if domain_shared_and_empty_host_and_port?
       true
     end
 
@@ -259,6 +256,24 @@ module VCAP::CloudController
 
       if !reserved_route_ports_policy.allow_more_route_ports?
         errors.add(:organization, :total_reserved_route_ports_exceeded)
+      end
+    end
+
+    def validate_uniqueness_on_host_and_domain
+      validates_unique [:host, :domain_id] do |ds|
+        ds.where(path: '', port: 0)
+      end
+    end
+
+    def validate_uniqueness_on_host_domain_and_port
+      validates_unique [:host, :domain_id, :port] do |ds|
+        ds.where(path: '')
+      end
+    end
+
+    def validate_uniqueness_on_host_domain_and_path
+      validates_unique [:host, :domain_id, :path] do |ds|
+        ds.where(port: 0)
       end
     end
   end

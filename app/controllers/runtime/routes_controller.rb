@@ -34,12 +34,12 @@ module VCAP::CloudController
 
     # rubocop:disable Metrics/CyclomaticComplexity
     def self.translate_validation_exception(e, attributes)
-      name_errors = e.errors.on([:host, :domain_id, :port])
+      name_errors = e.errors.on([:host, :domain_id])
       if name_errors && name_errors.include?(:unique)
         return Errors::ApiError.new_from_details('RouteHostTaken', attributes['host'])
       end
 
-      path_errors = e.errors.on([:host, :domain_id, :path, :port])
+      path_errors = e.errors.on([:host, :domain_id, :path])
       if path_errors && path_errors.include?(:unique)
         return Errors::ApiError.new_from_details('RoutePathTaken', attributes['path'])
       end
