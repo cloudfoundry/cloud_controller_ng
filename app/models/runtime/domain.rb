@@ -1,8 +1,8 @@
+require 'cloud_controller/domain_helper'
+
 module VCAP::CloudController
   class Domain < Sequel::Model
     class UnauthorizedAccessToPrivateDomain < RuntimeError; end
-
-    DOMAIN_REGEX = /^(([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\.)+([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])$/ix
 
     dataset.row_proc = proc do |row|
       if row[:owning_organization_id]
@@ -75,7 +75,7 @@ module VCAP::CloudController
       validates_presence :name
       validates_unique :name, dataset: Domain.dataset
 
-      validates_format DOMAIN_REGEX, :name
+      validates_format CloudController::DomainHelper::DOMAIN_REGEX, :name
       validates_length_range 3..255, :name
 
       errors.add(:name, :overlapping_domain) if name_overlaps?
@@ -83,7 +83,7 @@ module VCAP::CloudController
     end
 
     def name_overlaps?
-      return true unless intermediate_domains.drop(1).all? do |suffix|
+      return true unless CloudController::DomainHelper.intermediate_domains(name).all? do |suffix|
         d = Domain.find(name: suffix)
         d.nil? || d.owning_organization == owning_organization || d.shared?
       end
@@ -92,7 +92,7 @@ module VCAP::CloudController
     end
 
     def routes_match?
-      return false unless name && name =~ DOMAIN_REGEX
+      return false unless name && name =~ CloudController::DomainHelper::DOMAIN_REGEX
 
       if name.include?('.')
         route_host = name[0, name.index('.')]
@@ -144,15 +144,6 @@ module VCAP::CloudController
     def validate_change_owning_organization(organization)
       return if self.new? || owning_organization == organization
       raise VCAP::Errors::ApiError.new_from_details('DomainInvalid', 'the owning organization cannot be changed')
-    end
-
-    # For a domain sub.domain.com, returns [com, domain.com, sub.domain.com]
-    def intermediate_domains
-      return [] unless name && name =~ DOMAIN_REGEX
-
-      name.split('.').reverse.inject([]) do |array, member|
-        array.push(array.empty? ? member : "#{member}.#{array.last}")
-      end
     end
 
     def validate_add_shared_organization(organization)
