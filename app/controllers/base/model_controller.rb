@@ -5,7 +5,7 @@ module VCAP::CloudController::RestController
   class ModelController < BaseController
     include Routes
 
-    CENSORED_MESSAGE = 'PRIVATE DATA HIDDEN'.freeze
+    CENSORED_MESSAGE ||= 'PRIVATE DATA HIDDEN'.freeze
 
     attr_reader :object_renderer, :collection_renderer
 
