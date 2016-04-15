@@ -50,7 +50,7 @@ class AppsV3Controller < ApplicationController
     space_not_found! unless can_read?(space.guid, space.organization_guid)
     unauthorized! unless can_create?(message.space_guid)
 
-    if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE && !roles.admin?
+    if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
       FeatureFlag.raise_unless_enabled!('diego_docker')
     end
 
@@ -104,7 +104,7 @@ class AppsV3Controller < ApplicationController
     droplet_not_found! unless app.droplet
     unauthorized! unless can_start?(space.guid)
 
-    if app.droplet.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE && !roles.admin?
+    if app.droplet.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
       FeatureFlag.raise_unless_enabled!('diego_docker')
     end
 

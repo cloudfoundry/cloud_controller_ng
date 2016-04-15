@@ -20,6 +20,8 @@ module VCAP::CloudController
       space_developer_env_var_visibility: true
     }.freeze
 
+    ADMIN_SKIPPABLE = [:diego_docker].freeze
+
     export_attributes :name, :enabled, :error_message
     import_attributes :name, :enabled, :error_message
 
@@ -33,6 +35,7 @@ module VCAP::CloudController
     end
 
     def self.enabled?(feature_flag_name)
+      return true if ADMIN_SKIPPABLE.include?(feature_flag_name.to_sym) && admin?
       feature_flag = FeatureFlag.find(name: feature_flag_name)
       return feature_flag.enabled if feature_flag
       DEFAULT_FLAGS.fetch(feature_flag_name.to_sym)
@@ -58,5 +61,11 @@ module VCAP::CloudController
     rescue KeyError
       raise UndefinedFeatureFlagError.new "invalid key: #{feature_flag_name}"
     end
+
+    def self.admin?
+      VCAP::CloudController::SecurityContext.admin?
+    end
+
+    private_class_method :admin?
   end
 end

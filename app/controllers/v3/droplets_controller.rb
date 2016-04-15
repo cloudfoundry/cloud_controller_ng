@@ -54,7 +54,7 @@ class DropletsController < ApplicationController
     package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
     staging_in_progress! if package.app.staging_in_progress?
 
-    if package.type == VCAP::CloudController::PackageModel::DOCKER_TYPE && !roles.admin?
+    if package.type == VCAP::CloudController::PackageModel::DOCKER_TYPE
       FeatureFlag.raise_unless_enabled!('diego_docker')
     end
 

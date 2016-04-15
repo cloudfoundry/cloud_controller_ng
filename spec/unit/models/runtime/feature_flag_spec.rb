@@ -1,4 +1,3 @@
-# encoding: utf-8
 require 'spec_helper'
 
 module VCAP::CloudController
@@ -125,6 +124,30 @@ module VCAP::CloudController
           expect {
             FeatureFlag.disabled?('bogus_feature_flag')
           }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
+        end
+      end
+
+      context 'when logged in as an admin' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true)
+          stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', { normal: false, blahrgha: false })
+          stub_const('VCAP::CloudController::FeatureFlag::ADMIN_SKIPPABLE', [:blahrgha])
+        end
+
+        context 'when flag is admin enabled' do
+          it 'is always enabled' do
+            FeatureFlag.create(name: 'blahrgha', enabled: false)
+
+            expect(FeatureFlag.enabled?('blahrgha')).to eq(true)
+          end
+        end
+
+        context 'when flag is not admin enabled' do
+          it 'is false if the flag is disabled' do
+            FeatureFlag.create(name: 'normal', enabled: false)
+
+            expect(FeatureFlag.enabled?('normal')).to eq(false)
+          end
         end
       end
     end
