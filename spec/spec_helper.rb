@@ -10,6 +10,7 @@ require 'machinist/sequel'
 require 'machinist/object'
 require 'rack/test'
 require 'timecop'
+require 'awesome_print'
 
 require 'steno'
 require 'webmock/rspec'
