@@ -18,7 +18,32 @@ module CloudController
           to match_array(['long.named.example.com', 'named.example.com', 'example.com'])
       end
     end
+
+    describe '.is_sub_domain?' do
+      it 'returns false when test_domain and domain are equal' do
+        expect(DomainHelper.is_sub_domain?(domain: 'bosh-lite.com', test_domains: ['bosh-lite.com'])).
+          to be_falsey
+      end
+
+      it 'returns false when domains are completely different' do
+        expect(DomainHelper.is_sub_domain?(domain: 'bosh-lite.com', test_domains: ['apps.com'])).
+          to be_falsey
+      end
+
+      it 'returns false when domains are completely different, but end in the same name lexically' do
+        expect(DomainHelper.is_sub_domain?(domain: 'bosh-lite.com', test_domains: ['lite.com'])).
+          to be_falsey
+      end
+
+      it 'returns true when test_domain is a subdomain of domain' do
+        expect(DomainHelper.is_sub_domain?(domain: 'bosh-lite.com', test_domains: ['apps.bosh-lite.com'])).
+          to be_truthy
+      end
+
+      it 'returns true when any test_domain is a subdomain of domain' do
+        expect(DomainHelper.is_sub_domain?(domain: 'bosh-lite.com', test_domains: ['other.com', 'apps.bosh-lite.com', 'example.com'])).
+          to be_truthy
+      end
+    end
   end
 end
-
-

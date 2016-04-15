@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -ex
+
+SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+source "${SCRIPT_DIR}/ruby_version.sh"
+
+app_domains="<%= p('app_domains').join(',') %>"
+system_domain="<%= p('system_domain') %>"
+
+ruby "${SCRIPT_DIR}/check_for_domain_overlap.rb" "${system_domain}" "${app_domains[@]}"
+exit $?
