@@ -3,7 +3,9 @@ require 'actions/package_upload'
 
 module VCAP::CloudController
   describe PackageUpload do
-    subject(:package_upload) { PackageUpload.new }
+    subject(:package_upload) { PackageUpload.new(user, user_email) }
+    let(:user) { User.make }
+    let(:user_email) { 'utako.loves@cats.com' }
 
     describe '#upload' do
       let(:package) { PackageModel.make(type: 'bits') }
@@ -24,6 +26,16 @@ module VCAP::CloudController
       it 'changes the state to pending' do
         package_upload.upload(message, package, config)
         expect(PackageModel.find(guid: package.guid).state).to eq(PackageModel::PENDING_STATE)
+      end
+
+      it 'creates an v3 audit event' do
+        expect(Repositories::Runtime::PackageEventRepository).to receive(:record_app_package_upload).with(
+          instance_of(PackageModel),
+          user,
+          user_email
+        )
+
+        package_upload.upload(message, package, config)
       end
 
       context 'when the package is invalid' do

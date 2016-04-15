@@ -314,7 +314,7 @@ describe 'Packages' do
         VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: type)
       end
       let(:space) { VCAP::CloudController::Space.make }
-      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+      let(:app_model) { VCAP::CloudController::AppModel.make(guid: 'woof', space_guid: space.guid, name: 'meow') }
       let(:guid) { package_model.guid }
       let(:tmpdir) { Dir.mktmpdir }
 
@@ -331,9 +331,49 @@ describe 'Packages' do
       end
 
       it 'uploads the bits for the package' do
-        expect {
-          post "/v3/packages/#{guid}/upload", packages_params, user_header
-        }.to change { Delayed::Job.count }.by(1)
+        expect(Delayed::Job.count).to eq 0
+
+        post "/v3/packages/#{guid}/upload", packages_params, user_header
+
+        expect(Delayed::Job.count).to eq 1
+
+        expected_response = {
+          'type'       => package_model.type,
+          'guid'       => guid,
+          'data'       => {
+            'hash'       => { 'type' => 'sha1', 'value' => nil },
+            'error'      => nil
+          },
+          'state'      => VCAP::CloudController::PackageModel::PENDING_STATE,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'links' => {
+            'self'   => { 'href' => "/v3/packages/#{guid}" },
+            'upload' => { 'href' => "/v3/packages/#{guid}/upload", 'method' => 'POST' },
+            'download' => { 'href' => "/v3/packages/#{guid}/download", 'method' => 'GET' },
+            'stage' => { 'href' => "/v3/packages/#{guid}/droplets", 'method' => 'POST' },
+            'app' => { 'href' => "/v3/apps/#{app_model.guid}" },
+          }
+        }
+        parsed_response = MultiJson.load(last_response.body)
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+
+        expected_metadata = { package_guid: package_model.guid }.to_json
+
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+          type:              'audit.app.package.upload',
+          actor:             user.guid,
+          actor_type:        'user',
+          actor_name:        email,
+          actee:             'woof',
+          actee_type:        'v3-app',
+          actee_name:        'meow',
+          metadata:          expected_metadata,
+          space_guid:        space.guid,
+          organization_guid: space.organization.guid
+        })
       end
     end
 

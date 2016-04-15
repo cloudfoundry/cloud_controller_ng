@@ -46,7 +46,7 @@ class PackagesController < ApplicationController
     bits_already_uploaded! if package.state != PackageModel::CREATED_STATE
 
     begin
-      PackageUpload.new.upload(message, package, configuration)
+      PackageUpload.new(current_user, current_user_email).upload(message, package, configuration)
     rescue PackageUpload::InvalidPackage => e
       unprocessable!(e.message)
     end
