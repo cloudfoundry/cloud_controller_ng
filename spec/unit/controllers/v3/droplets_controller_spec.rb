@@ -19,9 +19,9 @@ describe DropletsController, type: :controller do
       allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
       allow(stagers).to receive(:stager_for_package).and_return(double(:stager, stage: nil))
       VCAP::CloudController::BuildpackLifecycleDataModel.make(
-        app: app_model,
+        app:       app_model,
         buildpack: nil,
-        stack: VCAP::CloudController::Stack.default.name
+        stack:     VCAP::CloudController::Stack.default.name
       )
     end
 
@@ -78,7 +78,7 @@ describe DropletsController, type: :controller do
         set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
       end
 
-      it 'raises an ApiError with a 403 code' do
+      it 'returns an ApiError with a 403 code' do
         post :create, package_guid: package.guid
 
         expect(response.status).to eq(403)
@@ -204,17 +204,17 @@ describe DropletsController, type: :controller do
       let!(:package) do
         VCAP::CloudController::PackageModel.make(:docker,
           app_guid: docker_app_model.guid,
-          type: VCAP::CloudController::PackageModel::DOCKER_TYPE,
-          state: VCAP::CloudController::PackageModel::READY_STATE
+          type:     VCAP::CloudController::PackageModel::DOCKER_TYPE,
+          state:    VCAP::CloudController::PackageModel::READY_STATE
         )
       end
 
       before do
         expect(docker_app_model.lifecycle_type).to eq('docker')
         VCAP::CloudController::BuildpackLifecycleDataModel.make(
-          app: docker_app_model,
+          app:       docker_app_model,
           buildpack: nil,
-          stack: VCAP::CloudController::Stack.default.name
+          stack:     VCAP::CloudController::Stack.default.name
         )
       end
 
@@ -290,7 +290,7 @@ describe DropletsController, type: :controller do
           {
             'environment_variables' => {
               'application_version' => 'whatuuid',
-              'application_name' => 'name-815'
+              'application_name'    => 'name-815'
             }
           }
         end
@@ -424,6 +424,154 @@ describe DropletsController, type: :controller do
           expect(response.body).to include('Staging request')
           expect(response.body).to include('disk limit exceeded')
         end
+      end
+    end
+  end
+
+  describe '#copy' do
+    let(:source_space) { VCAP::CloudController::Space.make }
+    let(:target_space) { VCAP::CloudController::Space.make }
+    let(:target_app) { VCAP::CloudController::AppModel.make(space_guid: target_space.guid) }
+    let(:source_app_guid) { VCAP::CloudController::AppModel.make(space_guid: source_space.guid).guid }
+    let(:target_app_guid) { target_app.guid }
+    let(:state) { 'STAGED' }
+    let!(:source_droplet) { VCAP::CloudController::DropletModel.make(:buildpack, state: state, app_guid: source_app_guid) }
+    let(:source_droplet_guid) { source_droplet.guid }
+    let(:req_body) do
+      {
+        "relationships": {
+          "app": { "guid": target_app_guid }
+        }
+      }
+    end
+
+    before do
+      set_current_user(VCAP::CloudController::User.make)
+      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
+      allow(membership).to receive(:has_any_roles?).and_return(true)
+    end
+
+    it 'returns a 201 OK response with the new droplet' do
+      expect {
+        post :copy, guid: source_droplet_guid, body: req_body
+      }.to change { target_app.reload.droplets.count }.from(0).to(1)
+
+      expect(response.status).to eq(201)
+      expect(target_app.droplets.first.guid).to eq(parsed_body['guid'])
+    end
+
+    context 'when the request is invalid' do
+      it 'raises a 422' do
+        post :copy, guid: source_droplet_guid, body: { 'super_duper': 'bad_request' }
+
+        expect(response.status).to eq(422)
+        expect(response.body).to include('UnprocessableEntity')
+      end
+    end
+
+    describe 'permissions' do
+      context 'admin' do
+        before do
+          set_current_user_as_admin
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 201 OK response and copies the droplet' do
+          expect {
+            post :copy, guid: source_droplet_guid, body: req_body
+          }.to change { VCAP::CloudController::DropletModel.count }.by(1)
+          expect(response.status).to eq 201
+        end
+      end
+
+      context 'when the user is not a member of the space where the source droplet exists' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+          allow(membership).to receive(:has_any_roles?).with(
+            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+             VCAP::CloudController::Membership::SPACE_MANAGER,
+             VCAP::CloudController::Membership::SPACE_AUDITOR,
+             VCAP::CloudController::Membership::ORG_MANAGER], source_space.guid, source_space.organization.guid).
+            and_return(false)
+        end
+
+        it 'returns a not found error' do
+          post :copy, guid: source_droplet_guid, body: req_body
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include 'ResourceNotFound'
+        end
+      end
+
+      context 'when the user is a member of the space where source droplet exists' do
+        context 'when the user does not have read access to the target space' do
+          before do
+            allow(membership).to receive(:has_any_roles?).with(
+              [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+               VCAP::CloudController::Membership::SPACE_MANAGER,
+               VCAP::CloudController::Membership::SPACE_AUDITOR,
+               VCAP::CloudController::Membership::ORG_MANAGER], source_space.guid, source_space.organization.guid).and_return(false)
+          end
+
+          it 'returns a 404 ResourceNotFound error' do
+            post :copy, guid: source_droplet_guid, body: req_body
+
+            expect(response.status).to eq 404
+            expect(response.body).to include 'ResourceNotFound'
+          end
+        end
+
+        context 'when the user does not have write access to the target space' do
+          before do
+            allow(membership).to receive(:has_any_roles?).with(
+              [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+               VCAP::CloudController::Membership::SPACE_MANAGER,
+               VCAP::CloudController::Membership::SPACE_AUDITOR,
+               VCAP::CloudController::Membership::ORG_MANAGER], target_space.guid, target_space.organization.guid).
+              and_return(true)
+            allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], target_space.guid).
+              and_return(false)
+          end
+
+          it 'returns a forbidden error' do
+            post :copy, guid: source_droplet_guid, body: req_body
+
+            expect(response.status).to eq(403)
+            expect(response.body).to include('NotAuthorized')
+          end
+        end
+      end
+    end
+
+    context 'when the source droplet is not STAGED' do
+      let(:state) { 'STAGING' }
+
+      it 'returns an invalid request error ' do
+        post :copy, guid: source_droplet_guid, body: req_body
+
+        expect(response.status).to eq(400)
+        expect(response.body).to include 'UnableToPerform'
+        expect(response.body).to include 'source droplet is not staged'
+      end
+    end
+
+    context 'when the source droplet does not exist' do
+      let(:source_droplet_guid) { 'no-source-droplet-here' }
+      it 'returns a not found error' do
+        post :copy, guid: 'no droplet here', body: req_body
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include 'ResourceNotFound'
+      end
+    end
+
+    context 'when the target application does not exist' do
+      let(:target_app_guid) { 'not a real app guid' }
+      it 'returns a not found error' do
+        post :copy, guid: 'no droplet here', body: req_body
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include 'ResourceNotFound'
       end
     end
   end
@@ -644,7 +792,7 @@ describe DropletsController, type: :controller do
         get :index, params
 
         parsed_response = parsed_body
-        response_guids = parsed_response['resources'].map { |r| r['guid'] }
+        response_guids  = parsed_response['resources'].map { |r| r['guid'] }
         expect(parsed_response['pagination']['total_results']).to eq(2)
         expect(response_guids.length).to eq(per_page)
       end

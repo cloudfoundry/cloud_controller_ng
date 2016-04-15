@@ -46,10 +46,13 @@ module VCAP::CloudController
     def build_links(droplet)
       {
         self:                   { href: "/v3/droplets/#{droplet.guid}" },
-        package:                { href: "/v3/packages/#{droplet.package_guid}" },
+        package:                nil,
         app:                    { href: "/v3/apps/#{droplet.app_guid}" },
         assign_current_droplet: { href: "/v3/apps/#{droplet.app_guid}/current_droplet", method: 'PUT' },
-      }.merge(links_for_lifecyle(droplet))
+      }.tap do |links|
+        links[:package] = { href: "/v3/packages/#{droplet.package_guid}" } if droplet.package_guid.present?
+        links.merge!(links_for_lifecyle(droplet))
+      end
     end
 
     def result_for_lifecycle(droplet)

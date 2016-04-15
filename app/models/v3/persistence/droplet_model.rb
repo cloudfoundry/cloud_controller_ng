@@ -74,6 +74,14 @@ module VCAP::CloudController
       File.join(guid, droplet_hash) if droplet_hash
     end
 
+    def buildpack?
+      lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
+    end
+
+    def docker?
+      lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
+    end
+
     def staged?
       self.state == STAGED_STATE
     end

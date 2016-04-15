@@ -16,8 +16,7 @@ module VCAP::CloudController
           src_package = VCAP::CloudController::PackageModel.find(guid: @src_package_guid)
           raise 'source package does not exist' unless src_package
 
-          package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
-          package_blobstore.cp_file_between_keys(@src_package_guid, @dest_package_guid)
+          CloudController::DependencyLocator.instance.package_blobstore.cp_file_between_keys(@src_package_guid, @dest_package_guid)
 
           dest_package.db.transaction do
             dest_package.lock!

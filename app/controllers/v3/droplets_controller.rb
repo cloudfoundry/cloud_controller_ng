@@ -2,9 +2,11 @@ require 'presenters/v3/droplet_presenter'
 require 'queries/droplet_delete_fetcher'
 require 'queries/droplet_list_fetcher'
 require 'actions/droplet_delete'
+require 'actions/droplet_copy'
 require 'actions/droplet_create'
 require 'messages/droplet_create_message'
 require 'messages/droplets_list_message'
+require 'messages/droplet_copy_message'
 require 'cloud_controller/membership'
 require 'controllers/v3/mixins/app_subresource'
 
@@ -44,6 +46,23 @@ class DropletsController < ApplicationController
     DropletDelete.new.delete(droplet)
 
     head :no_content
+  end
+
+  def copy
+    message = DropletCopyMessage.create_from_http_request(params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    source_droplet = DropletModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
+    droplet_not_found! unless source_droplet && can_read?(source_droplet.space.guid, source_droplet.space.organization.guid)
+    unable_to_perform!('Droplet copy', 'source droplet is not staged') unless source_droplet.staged?
+
+    destination_app = AppModel.where(guid: message.app_guid).eager(:space, :organization).all.first
+    app_not_found! unless destination_app && can_read?(destination_app.space.guid, destination_app.organization.guid)
+    unauthorized! unless can_create?(destination_app.space.guid)
+
+    droplet = DropletCopy.new.copy(source_droplet, destination_app.guid)
+
+    render status: :created, json: droplet_presenter.present_json(droplet)
   end
 
   def create

@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:body) do
       {
         'relationships' => {
-          'app'   => { 'guid' => 'some-app-guid' }
+          'app' => { 'guid' => 'some-app-guid' }
         }
       }
     end
@@ -61,8 +61,6 @@ module VCAP::CloudController
           expect(message.errors_on(:app_guid)).to_not be_empty
         end
       end
-
     end
-
   end
 end

@@ -109,7 +109,6 @@ describe 'Droplets' do
 
   describe 'GET /v3/droplets/:guid' do
     let(:guid) { droplet_model.guid }
-    let(:buildpack_git_url) { 'http://buildpack.git.url.com' }
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:droplet_model) do
       VCAP::CloudController::DropletModel.make(
@@ -117,7 +116,7 @@ describe 'Droplets' do
         state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
         app_guid:                    app_model.guid,
         package_guid:                package_model.guid,
-        buildpack_receipt_buildpack: buildpack_git_url,
+        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-name',
         error:                       'example error',
         environment_variables:       { 'cloud' => 'foundry' },
@@ -131,7 +130,7 @@ describe 'Droplets' do
     let(:app_guid) { droplet_model.app_guid }
 
     before do
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet_model, buildpack: buildpack_git_url, stack: 'stack-name')
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet_model, buildpack: 'http://buildpack.git.url.com', stack: 'stack-name')
     end
 
     it 'gets a droplet' do
@@ -155,7 +154,7 @@ describe 'Droplets' do
         'disk_limit'            => 200,
         'result'                => {
           'hash'                   => { 'type' => 'sha1', 'value' => 'shalalala' },
-          'buildpack'              => buildpack_git_url,
+          'buildpack'              => 'http://buildpack.git.url.com',
           'stack'                  => 'stack-name',
           'execution_metadata'     => 'some-data',
           'process_types'          => { 'web' => 'start-command' }
@@ -178,7 +177,6 @@ describe 'Droplets' do
 
   describe 'GET /v3/droplets' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
-    let(:buildpack_git_url) { 'http://buildpack.git.url.com' }
     let(:package_model) do
       VCAP::CloudController::PackageModel.make(
         app_guid: app_model.guid,
@@ -207,7 +205,7 @@ describe 'Droplets' do
         created_at:                   Time.at(2),
         package_guid:                 package_model.guid,
         droplet_hash:                 'my-hash',
-        buildpack_receipt_buildpack:  buildpack_git_url,
+        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-2',
         state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
         process_types:                { 'web' => 'started' },
@@ -223,7 +221,7 @@ describe 'Droplets' do
 
     before do
       VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet1, buildpack: buildpack.name, stack: 'stack-1')
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet2, buildpack: buildpack_git_url, stack: 'stack-2')
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet2, buildpack: 'http://buildpack.git.url.com', stack: 'stack-2')
     end
 
     it 'list all droplets with a buildpack lifecycle' do
@@ -247,7 +245,7 @@ describe 'Droplets' do
             'lifecycle'             => {
               'type' => 'buildpack',
               'data' => {
-                'buildpack' => buildpack_git_url,
+                'buildpack' => 'http://buildpack.git.url.com',
                 'stack'     => 'stack-2'
               }
             },
@@ -255,7 +253,7 @@ describe 'Droplets' do
             'disk_limit'            => 456,
             'result'                => {
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
-              'buildpack'              => buildpack_git_url,
+              'buildpack'              => 'http://buildpack.git.url.com',
               'stack'                  => 'stack-2',
               'execution_metadata'     => 'black-box-secrets',
               'process_types'          => { 'web' => 'started' }
@@ -329,7 +327,6 @@ describe 'Droplets' do
 
   describe 'GET /v3/apps/:guid/droplets' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
-    let(:buildpack_git_url) { 'http://buildpack.git.url.com' }
     let(:package_model) do
       VCAP::CloudController::PackageModel.make(
         app_guid: app_model.guid,
@@ -358,7 +355,7 @@ describe 'Droplets' do
         created_at:                   Time.at(2),
         package_guid:                 package_model.guid,
         droplet_hash:                 'my-hash',
-        buildpack_receipt_buildpack:  buildpack_git_url,
+        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-2',
         state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
         process_types:                { 'web' => 'started' },
@@ -374,7 +371,7 @@ describe 'Droplets' do
 
     before do
       VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet1, buildpack: buildpack.name, stack: 'stack-1')
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet2, buildpack: buildpack_git_url, stack: 'stack-2')
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet2, buildpack: 'http://buildpack.git.url.com', stack: 'stack-2')
     end
 
     it 'list all droplets with a buildpack lifecycle' do
@@ -398,7 +395,7 @@ describe 'Droplets' do
             'lifecycle'             => {
               'type' => 'buildpack',
               'data' => {
-                'buildpack' => buildpack_git_url,
+                'buildpack' => 'http://buildpack.git.url.com',
                 'stack'     => 'stack-2'
               }
             },
@@ -406,7 +403,7 @@ describe 'Droplets' do
             'disk_limit'            => 456,
             'result'                => {
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
-              'buildpack'              => buildpack_git_url,
+              'buildpack'              => 'http://buildpack.git.url.com',
               'stack'                  => 'stack-2',
               'execution_metadata'     => 'black-box-secrets',
               'process_types'          => { 'web' => 'started' }
@@ -453,6 +450,74 @@ describe 'Droplets' do
             }
           }
         ]
+      })
+    end
+  end
+
+  describe 'POST /v3/droplets/:guid/copy' do
+    let(:new_app) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let!(:og_droplet) do
+      VCAP::CloudController::DropletModel.make(
+        :buildpack,
+        state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
+        app_guid:                    app_model.guid,
+        package_guid:                package_model.guid,
+        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+        buildpack_receipt_stack_name: 'stack-name',
+        error:                       nil,
+        environment_variables:       { 'cloud' => 'foundry' },
+        execution_metadata: 'some-data',
+        droplet_hash: 'shalalala',
+        process_types: { 'web' => 'start-command' },
+        memory_limit: 100,
+        disk_limit: 200,
+      )
+    end
+    let(:app_guid) { droplet_model.app_guid }
+    let(:copy_request_json) do {
+        "relationships": {
+          "app": { "guid": new_app.guid }
+        }
+      }.to_json
+    end
+    before do
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: og_droplet, buildpack: 'http://buildpack.git.url.com', stack: 'stack-name')
+    end
+
+    it 'copies a droplet' do
+      post "/v3/droplets/#{og_droplet.guid}/copy", copy_request_json, json_headers(developer_headers)
+
+      parsed_response = MultiJson.load(last_response.body)
+      copied_droplet = VCAP::CloudController::DropletModel.last
+
+      expect(last_response.status).to eq(201)
+      expect(parsed_response).to be_a_response_like({
+        'guid'                  => copied_droplet.guid,
+        'state'                 => VCAP::CloudController::DropletModel::PENDING_STATE,
+        'error'                 => nil,
+        'lifecycle'             => {
+          'type' => 'buildpack',
+          'data' => {
+            'buildpack' => 'http://buildpack.git.url.com',
+            'stack'     => 'stack-name'
+          }
+        },
+        'memory_limit'          => 100,
+        'disk_limit'            => 200,
+        'result'                => nil,
+        'environment_variables' => { 'cloud' => 'foundry' },
+        'created_at'            => iso8601,
+        'updated_at'            => nil,
+        'links'                 => {
+          'self'                   => { 'href' => "/v3/droplets/#{copied_droplet.guid}" },
+          'package'                => nil,
+          'app'                    => { 'href' => "/v3/apps/#{new_app.guid}" },
+          'assign_current_droplet' => {
+            'href'   => "/v3/apps/#{new_app.guid}/current_droplet",
+            'method' => 'PUT'
+          }
+        }
       })
     end
   end

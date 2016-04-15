@@ -12,7 +12,8 @@ module VCAP::CloudController
         environment_variables: { 'elastic' => 'runtime' },
         memory_limit:          234,
         disk_limit:            934,
-        execution_metadata:    'black-box-string'
+        execution_metadata:    'black-box-string',
+        package_guid:          'abcdefabcdef12345'
       )
     end
 
@@ -111,6 +112,17 @@ module VCAP::CloudController
                 result      = MultiJson.load(json_result)
 
                 expect(result['links']['buildpack']).to be_nil
+              end
+            end
+
+            context 'when there is no package guid' do
+              let(:droplet) { DropletModel.make(:buildpack, package_guid: nil) }
+
+              it 'links to nil' do
+                json_result = DropletPresenter.new.present_json(droplet)
+                result      = MultiJson.load(json_result)
+
+                expect(result['links']['package']).to be nil
               end
             end
           end
