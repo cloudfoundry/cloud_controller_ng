@@ -442,6 +442,17 @@ module VCAP::CloudController
         set_current_user(user)
       end
 
+      context 'when the domain does not exist' do
+        let(:domain_guid) { 'not-exist' }
+
+        it 'returns a 400' do
+          post '/v2/routes?generate_port=true', MultiJson.dump(req)
+
+          expect(last_response).to have_status_code(400)
+          expect(decoded_response['description']).to eq('The domain is invalid: Domain with guid not-exist does not exist')
+        end
+      end
+
       context 'when the domain is a HTTP Domain' do
         context 'when the domain is a shared domain' do
           let(:shared_domain) { SharedDomain.make }

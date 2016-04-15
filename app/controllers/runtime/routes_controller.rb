@@ -243,12 +243,19 @@ module VCAP::CloudController
 
     attr_reader :app_event_repository, :route_event_repository, :routing_api_client
 
+    def domain_invalid!(domain_guid)
+      raise Errors::ApiError.new_from_details('DomainInvalid', "Domain with guid #{domain_guid} does not exist")
+    end
+
     def overwrite_port!
       if @request_attrs['port']
         add_warning('Specified port ignored. Random port generated.')
       end
 
-      domain = Domain[guid: request_attrs['domain_guid']]
+      domain_guid = request_attrs['domain_guid']
+      domain = Domain.find(guid: domain_guid)
+      domain_invalid!(domain_guid) if domain.nil?
+
       raise Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.') unless domain.shared? && domain.tcp?
 
       begin
