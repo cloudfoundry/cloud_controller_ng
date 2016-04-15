@@ -15,7 +15,7 @@ resource 'Private Domains', type: [:api, :legacy_api] do
   describe 'Standard endpoints' do
     shared_context 'updatable_fields' do
       field :name, 'The name of the domain.', required: true, example_values: ['example.com', 'foo.example.com']
-      field :owning_organization_guid, 'The organization that owns the domain. If not specified, the domain is shared.', required: false
+      field :owning_organization_guid, 'The organization that owns the domain.', required: true
     end
 
     standard_model_list :private_domain, VCAP::CloudController::PrivateDomainsController
