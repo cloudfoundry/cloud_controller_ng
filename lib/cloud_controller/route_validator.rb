@@ -1,13 +1,9 @@
 module VCAP::CloudController
   class RouteValidator
-    class ValidationError < StandardError
-    end
-    class DomainInvalid < ValidationError
-    end
-    class RouteInvalid < ValidationError
-    end
-    class RoutePortTaken < ValidationError
-    end
+    class ValidationError < StandardError; end
+    class DomainInvalid < ValidationError; end
+    class RouteInvalid < ValidationError; end
+    class RoutePortTaken < ValidationError; end
 
     attr_reader :domain_guid, :port, :host, :path, :domain
 

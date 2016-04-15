@@ -204,6 +204,12 @@ module VCAP::CloudController::RestController
       raise VCAP::Errors::ApiError.new_from_details('MessageParseError', message)
     end
 
+    def overwrite_request_attr(key, value)
+      @request_attrs = @request_attrs.deep_dup
+      @request_attrs[key] = value
+      @request_attrs.freeze
+    end
+
     attr_reader :config, :logger, :env, :params, :body, :request_attrs
 
     class << self

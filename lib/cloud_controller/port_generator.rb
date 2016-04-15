@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class PortGenerator
-    def initialize(request_attrs)
-      @domain_guid = request_attrs.fetch('domain_guid')
+    def initialize(domain_guid)
+      @domain_guid = domain_guid
     end
 
     def generate_port(possible_ports)

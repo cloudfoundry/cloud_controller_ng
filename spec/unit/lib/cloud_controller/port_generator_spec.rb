@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     let(:domain_guid1) { domain1.guid }
     let(:domain1) { SharedDomain.make(router_group_guid: router_group_guid1) }
-    let(:generator1) { PortGenerator.new({ 'domain_guid' => domain_guid1 }) }
+    let(:generator1) { PortGenerator.new(domain_guid1) }
 
     describe 'generate_port' do
       it 'generates a port' do
@@ -33,7 +33,7 @@ module VCAP::CloudController
         let(:router_group2) { double('router_group2', type: router_group_type, guid: router_group_guid2) }
 
         let(:domain2) { SharedDomain.make(router_group_guid: router_group_guid2) }
-        let(:generator2) { PortGenerator.new({ 'domain_guid' => domain2.guid }) }
+        let(:generator2) { PortGenerator.new(domain2.guid) }
 
         it 'hands out the same port for multiple router groups' do
           Route.make(domain: domain1, port: 60001)

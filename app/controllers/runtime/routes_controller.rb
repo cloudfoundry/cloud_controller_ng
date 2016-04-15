@@ -248,31 +248,31 @@ module VCAP::CloudController
     end
 
     def overwrite_port!
-      if @request_attrs['port']
-        add_warning('Specified port ignored. Random port generated.')
-      end
+      add_warning('Specified port ignored. Random port generated.') if @request_attrs['port']
 
-      domain_guid = request_attrs['domain_guid']
-      domain = Domain.find(guid: domain_guid)
-      domain_invalid!(domain_guid) if domain.nil?
+      generated_port = PortGenerator.new(@request_attrs['domain_guid']).generate_port(validated_router_group.reservable_ports)
+      raise Errors::ApiError.new_from_details('OutOfRouterGroupPorts', validated_router_group.name) if generated_port < 0
+      overwrite_request_attr('port', generated_port)
+    end
 
-      raise Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.') unless domain.shared? && domain.tcp?
-
-      begin
-        router_group = routing_api_client.router_group(domain.router_group_guid)
+    def validated_router_group
+      @router_group ||= begin
+        routing_api_client.router_group(validated_domain.router_group_guid)
       rescue RoutingApi::RoutingApiDisabled
         raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
       end
+    end
 
-      reservable_ports = router_group.reservable_ports
+    def validated_domain
+      domain_guid = @request_attrs['domain_guid']
+      domain = Domain.find(guid: domain_guid)
+      domain_invalid!(domain_guid) if domain.nil?
 
-      @request_attrs = @request_attrs.deep_dup
+      unless domain.shared? && domain.tcp?
+        raise Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.')
+      end
 
-      generated_port = PortGenerator.new(@request_attrs).generate_port(reservable_ports)
-      raise Errors::ApiError.new_from_details('OutOfRouterGroupPorts', router_group.name) if generated_port < 0
-      @request_attrs['port'] = generated_port
-
-      @request_attrs.freeze
+      domain
     end
 
     def convert_flag_to_bool(flag)
