@@ -114,7 +114,7 @@ class PackagesController < ApplicationController
     package_not_found! unless source_package && can_read?(source_package.space.guid, source_package.space.organization.guid)
     unauthorized! unless can_create?(source_package.space.guid)
 
-    package = PackageCopy.new.copy(params[:app_guid], source_package)
+    package = PackageCopy.new(current_user, current_user_email).copy(params[:app_guid], source_package)
 
     render status: :created, json: PackagePresenter.new.present_json(package)
   rescue PackageCopy::InvalidPackage => e

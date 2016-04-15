@@ -1,8 +1,9 @@
 require 'spec_helper'
 
 describe 'Packages' do
+  let(:email) { 'potato@house.com' }
   let(:user) { VCAP::CloudController::User.make }
-  let(:user_header) { headers_for(user)['HTTP_AUTHORIZATION'] }
+  let(:user_header) { headers_for(user, email: email) }
   let(:space) { VCAP::CloudController::Space.make }
   let(:space_guid) { space.guid }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space_guid) }
@@ -25,7 +26,7 @@ describe 'Packages' do
     describe 'creation' do
       it 'creates a package' do
         expect {
-          post "/v3/apps/#{guid}/packages", { type: type, data: data }, headers_for(user)
+          post "/v3/apps/#{guid}/packages", { type: type, data: data }, user_header
         }.to change { VCAP::CloudController::PackageModel.count }.by(1)
 
         package = VCAP::CloudController::PackageModel.last
@@ -61,13 +62,15 @@ describe 'Packages' do
         event = VCAP::CloudController::Event.last
         expect(event.values).to include({
           type:              'audit.app.package.create',
+          actor:             user.guid,
+          actor_type:        'user',
+          actor_name:        email,
           actee:             package.app.guid,
           actee_type:        'v3-app',
           actee_name:        package.app.name,
-          actor:             user.guid,
-          actor_type:        'user',
+          metadata:          expected_metadata,
           space_guid:        space.guid,
-          metadata: expected_metadata
+          organization_guid: space.organization.guid
         })
       end
     end
@@ -84,7 +87,7 @@ describe 'Packages' do
 
       it 'copies a package' do
         expect {
-          post "/v3/apps/#{guid}/packages?source_package_guid=#{source_package_guid}", {}, headers_for(user)
+          post "/v3/apps/#{guid}/packages?source_package_guid=#{source_package_guid}", {}, user_header
         }.to change { VCAP::CloudController::PackageModel.count }.by(1)
 
         package = VCAP::CloudController::PackageModel.last
@@ -108,6 +111,27 @@ describe 'Packages' do
         expect(last_response.status).to eq(201)
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(expected_response)
+
+        expected_metadata = {
+            package_guid: package.guid,
+            request: {
+              source_package_guid: source_package_guid
+            }
+        }.to_json
+
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+          type:              'audit.app.package.create',
+          actor:             user.guid,
+          actor_type:        'user',
+          actor_name:        email,
+          actee:             package.app.guid,
+          actee_type:        'v3-app',
+          actee_name:        package.app.name,
+          metadata:          expected_metadata,
+          space_guid:        space.guid,
+          organization_guid: space.organization.guid
+        })
       end
     end
 
@@ -154,7 +178,7 @@ describe 'Packages' do
           ]
         }
 
-        get "/v3/apps/#{guid}/packages", {}, headers_for(user)
+        get "/v3/apps/#{guid}/packages", {}, user_header
 
         parsed_response = MultiJson.load(last_response.body)
 
@@ -233,7 +257,7 @@ describe 'Packages' do
             ]
         }
 
-        get '/v3/packages', { per_page: per_page }, headers_for(user)
+        get '/v3/packages', { per_page: per_page }, user_header
 
         parsed_response = MultiJson.load(last_response.body)
         expect(last_response.status).to eq(200)
@@ -276,7 +300,7 @@ describe 'Packages' do
           }
         }
 
-        get "v3/packages/#{guid}", {}, headers_for(user)
+        get "v3/packages/#{guid}", {}, user_header
 
         parsed_response = MultiJson.load(last_response.body)
         expect(last_response.status).to eq(200)
@@ -308,7 +332,7 @@ describe 'Packages' do
 
       it 'uploads the bits for the package' do
         expect {
-          post "/v3/packages/#{guid}/upload", packages_params, headers_for(user)
+          post "/v3/packages/#{guid}/upload", packages_params, user_header
         }.to change { Delayed::Job.count }.by(1)
       end
     end
@@ -336,13 +360,13 @@ describe 'Packages' do
       before do
         space.organization.add_user(user)
         space.add_developer(user)
-        post "/v3/packages/#{guid}/upload", upload_body, headers_for(user)
+        post "/v3/packages/#{guid}/upload", upload_body, user_header
         Delayed::Worker.new.work_off
       end
 
       it 'downloads the bit for a package' do
         Timecop.freeze do
-          get "/v3/packages/#{guid}/download", {}, headers_for(user)
+          get "/v3/packages/#{guid}/download", {}, user_header
 
           expect(last_response.status).to eq(302)
           expect(last_response.headers['Location']).to eq(bits_download_url)
@@ -366,7 +390,7 @@ describe 'Packages' do
 
       it 'deletes a package' do
         expect {
-          delete "/v3/packages/#{guid}", {}, headers_for(user)
+          delete "/v3/packages/#{guid}", {}, user_header
         }.to change { VCAP::CloudController::PackageModel.count }.by(-1)
         expect(last_response.status).to eq(204)
       end

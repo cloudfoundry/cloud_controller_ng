@@ -64,6 +64,30 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe 'record_app_package_copy' do
+        let(:source_package_guid) { '123-some-guid' }
+
+        it 'creates a new audit.app.copy event' do
+          event = PackageEventRepository.record_app_package_copy(package, user, email, source_package_guid)
+          event.reload
+
+          expect(event.type).to eq('audit.app.package.create')
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_type).to eq('user')
+          expect(event.actor_name).to eq(email)
+          expect(event.actee).to eq(app.guid)
+          expect(event.actee_type).to eq('v3-app')
+          expect(event.actee_name).to eq('potato')
+          expect(event.space_guid).to eq(app.space.guid)
+
+          request = event.metadata.fetch('request')
+          expect(request).to eq({ 'source_package_guid' => source_package_guid })
+
+          package_guid = event.metadata.fetch('package_guid')
+          expect(package_guid).to eq(package.guid)
+        end
+      end
     end
   end
 end

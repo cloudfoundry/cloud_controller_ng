@@ -3,13 +3,19 @@ require 'actions/package_copy'
 
 module VCAP::CloudController
   describe PackageCopy do
-    let(:package_copy) { PackageCopy.new }
+    let(:package_copy) { PackageCopy.new(user, user_email) }
+    let(:user) { User.make }
+    let(:user_email) { 'amelia@cats.com' }
 
     describe '#copy' do
       let(:target_app) { AppModel.make }
       let!(:source_package) { PackageModel.make(type: type) }
       let(:type) { 'docker' }
       let(:app_guid) { target_app.guid }
+
+      before do
+        allow(Repositories::Runtime::PackageEventRepository).to receive(:record_app_package_copy)
+      end
 
       it 'creates the package with the correct values' do
         result = package_copy.copy(app_guid, source_package)
@@ -26,6 +32,17 @@ module VCAP::CloudController
         created_package = PackageModel.find(guid: result.guid)
 
         expect(created_package.docker_data.image).to eq('image-magick.com')
+      end
+
+      it 'creates an v3 audit event' do
+        expect(Repositories::Runtime::PackageEventRepository).to receive(:record_app_package_copy).with(
+          instance_of(PackageModel),
+          user,
+          user_email,
+          source_package.guid
+        )
+
+        package_copy.copy(app_guid, source_package)
       end
 
       describe 'package state' do
