@@ -334,15 +334,6 @@ module VCAP::CloudController
               expect(subject.insert_seed_data).to be true
             end
           end
-
-          ['-m', '--run-migrations'].each do |flag|
-            let(:argv_options) { [flag] }
-
-            it 'should set insert_seed_data to true' do
-              expect_any_instance_of(Runner).to receive(:deprecation_warning).with('Deprecated: Use -s or --insert-seed flag')
-              expect(subject.insert_seed_data).to be true
-            end
-          end
         end
       end
     end

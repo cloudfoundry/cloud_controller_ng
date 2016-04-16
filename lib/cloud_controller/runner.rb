@@ -49,11 +49,6 @@ module VCAP::CloudController
           @config_file = opt
         end
 
-        opts.on('-m', '--run-migrations', 'Actually it means insert seed data') do
-          deprecation_warning 'Deprecated: Use -s or --insert-seed flag'
-          @insert_seed_data = true
-        end
-
         opts.on('-s', '--insert-seed', 'Insert seed data') do
           @insert_seed_data = true
         end

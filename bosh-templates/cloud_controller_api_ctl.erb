@@ -77,23 +77,16 @@ case $1 in
 
     ulimit -c unlimited
 
-    # TODO: remove the -m when we have a stand alone utility for loading
-    # frameworks etc, and call those utilities here.  See corresponding
-    # comments in cc runner.
-
-
     # Setting ENV['DYNO'] so NewRelic properly names our Hostnames.
     # If this isn't done, all activity will be grouped under 'dynamic hostname'
     # Note: this will only take effect if heroku.use_dyno_names in newrelic.yml
     #       is set to true
-
-
     export DYNO=<%= "#{spec.job.name}-#{spec.index}" %>
 
     cd $CC_PACKAGE_DIR/cloud_controller_ng
 
     <% if spec.index.to_i == 0 %>
-    exec chpst -u vcap:vcap $CC_PACKAGE_DIR/cloud_controller_ng/bin/cloud_controller -m \<% else %>
+    exec chpst -u vcap:vcap $CC_PACKAGE_DIR/cloud_controller_ng/bin/cloud_controller --insert-seed \<% else %>
     exec chpst -u vcap:vcap $CC_PACKAGE_DIR/cloud_controller_ng/bin/cloud_controller \<% end %>
       -c $CLOUD_CONTROLLER_NG_CONFIG
     ;;
