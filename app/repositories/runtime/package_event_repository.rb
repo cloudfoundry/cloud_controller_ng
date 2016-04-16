@@ -37,6 +37,14 @@ module VCAP::CloudController
           create_event(package, type, actor, actor_name, metadata)
         end
 
+        def self.record_app_package_delete(package, actor, actor_name)
+          Loggregator.emit(package.app.guid, "Deleting app package for app with guid #{package.app.guid}")
+          metadata = { package_guid: package.guid }
+          type = 'audit.app.package.delete'
+
+          create_event(package, type, actor, actor_name, metadata)
+        end
+
         def self.create_event(package, type, actor, actor_name, metadata)
           app = package.app
           Event.create(

@@ -58,7 +58,7 @@ module VCAP::CloudController
     end
 
     def packages_to_delete(app_model)
-      app_model.packages_dataset.select(:"#{PackageModel.table_name}__guid", :"#{PackageModel.table_name}__id").all
+      app_model.packages_dataset
     end
 
     def droplets_to_delete(app_model)

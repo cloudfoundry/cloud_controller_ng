@@ -77,7 +77,7 @@ class PackagesController < ApplicationController
     package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
     unauthorized! unless can_delete?(package.space.guid)
 
-    PackageDelete.new.delete(package)
+    PackageDelete.new(current_user, current_user_email).delete(package)
 
     head :no_content
   end

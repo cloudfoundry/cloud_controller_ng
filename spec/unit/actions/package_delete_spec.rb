@@ -3,7 +3,9 @@ require 'actions/package_delete'
 
 module VCAP::CloudController
   describe PackageDelete do
-    subject(:package_delete) { PackageDelete.new }
+    subject(:package_delete) { PackageDelete.new(user, user_email) }
+    let(:user) { User.make }
+    let(:user_email) { 'amandaplease@gmail.com' }
 
     describe '#delete' do
       context 'when the package exists' do
@@ -29,6 +31,16 @@ module VCAP::CloudController
           expect(job.handler).to include('package_blobstore')
           expect(job.queue).to eq('cc-generic')
           expect(job.guid).not_to be_nil
+        end
+
+        it 'creates an v3 audit event' do
+          expect(Repositories::Runtime::PackageEventRepository).to receive(:record_app_package_delete).with(
+            instance_of(PackageModel),
+            user,
+            user_email
+          )
+
+          package_delete.delete(package)
         end
       end
 

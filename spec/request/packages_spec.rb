@@ -415,8 +415,10 @@ describe 'Packages' do
     end
 
     describe 'DELETE /v3/packages/:guid' do
+      let(:app_name) { 'sir meow' }
+      let(:app_guid) { 'meow-the-guid' }
       let(:space) { VCAP::CloudController::Space.make }
-      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: app_name, guid: app_guid) }
       let!(:package_model) do
         VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
       end
@@ -433,6 +435,22 @@ describe 'Packages' do
           delete "/v3/packages/#{guid}", {}, user_header
         }.to change { VCAP::CloudController::PackageModel.count }.by(-1)
         expect(last_response.status).to eq(204)
+
+        expected_metadata = { package_guid: guid }.to_json
+
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+          type:              'audit.app.package.delete',
+          actor:             user.guid,
+          actor_type:        'user',
+          actor_name:        email,
+          actee:             app_guid,
+          actee_type:        'v3-app',
+          actee_name:        app_name,
+          metadata:          expected_metadata,
+          space_guid:        space.guid,
+          organization_guid: space.organization.guid
+        })
       end
     end
   end

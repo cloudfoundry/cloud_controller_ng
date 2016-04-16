@@ -107,6 +107,25 @@ module VCAP::CloudController
           expect(package_guid).to eq(package.guid)
         end
       end
+
+      describe 'record_app_package_upload' do
+        it 'creates a new package delete event' do
+          event = PackageEventRepository.record_app_package_delete(package, user, email)
+          event.reload
+
+          expect(event.type).to eq('audit.app.package.delete')
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_type).to eq('user')
+          expect(event.actor_name).to eq(email)
+          expect(event.actee).to eq(app.guid)
+          expect(event.actee_type).to eq('v3-app')
+          expect(event.actee_name).to eq('potato')
+          expect(event.space_guid).to eq(app.space.guid)
+
+          package_guid = event.metadata.fetch('package_guid')
+          expect(package_guid).to eq(package.guid)
+        end
+      end
     end
   end
 end
