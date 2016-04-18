@@ -112,7 +112,6 @@ describe 'Droplets' do
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:droplet_model) do
       VCAP::CloudController::DropletModel.make(
-        :buildpack,
         state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
         app_guid:                    app_model.guid,
         package_guid:                package_model.guid,
@@ -161,7 +160,7 @@ describe 'Droplets' do
         },
         'environment_variables' => { 'cloud' => 'foundry' },
         'created_at'            => iso8601,
-        'updated_at'            => iso8601,
+        'updated_at'            => nil,
         'links'                 => {
           'self'                   => { 'href' => "/v3/droplets/#{guid}" },
           'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
@@ -186,7 +185,6 @@ describe 'Droplets' do
 
     let!(:droplet1) do
       VCAP::CloudController::DropletModel.make(
-        :buildpack,
         app_guid:                         app_model.guid,
         created_at:                       Time.at(1),
         package_guid:                     package_model.guid,
@@ -200,7 +198,6 @@ describe 'Droplets' do
     end
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
-        :buildpack,
         app_guid:                     app_model.guid,
         created_at:                   Time.at(2),
         package_guid:                 package_model.guid,
@@ -260,7 +257,7 @@ describe 'Droplets' do
             },
             'environment_variables' => {},
             'created_at'            => iso8601,
-            'updated_at'            => iso8601,
+            'updated_at'            => nil,
             'links'                 => {
               'self'                   => { 'href' => "/v3/droplets/#{droplet2.guid}" },
               'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
@@ -287,7 +284,7 @@ describe 'Droplets' do
             'result'                => nil,
             'environment_variables' => { 'yuu' => 'huuu' },
             'created_at'            => iso8601,
-            'updated_at'            => iso8601,
+            'updated_at'            => nil,
             'links'                 => {
               'self'                   => { 'href' => "/v3/droplets/#{droplet1.guid}" },
               'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
@@ -336,7 +333,6 @@ describe 'Droplets' do
 
     let!(:droplet1) do
       VCAP::CloudController::DropletModel.make(
-        :buildpack,
         app_guid:                         app_model.guid,
         created_at:                       Time.at(1),
         package_guid:                     package_model.guid,
@@ -350,7 +346,6 @@ describe 'Droplets' do
     end
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
-        :buildpack,
         app_guid:                     app_model.guid,
         created_at:                   Time.at(2),
         package_guid:                 package_model.guid,
@@ -410,7 +405,7 @@ describe 'Droplets' do
             },
             'environment_variables' => {},
             'created_at'            => iso8601,
-            'updated_at'            => iso8601,
+            'updated_at'            => nil,
             'links'                 => {
               'self'                   => { 'href' => "/v3/droplets/#{droplet2.guid}" },
               'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
@@ -437,7 +432,7 @@ describe 'Droplets' do
             'result'                => nil,
             'environment_variables' => { 'yuu' => 'huuu' },
             'created_at'            => iso8601,
-            'updated_at'            => iso8601,
+            'updated_at'            => nil,
             'links'                 => {
               'self'                   => { 'href' => "/v3/droplets/#{droplet1.guid}" },
               'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
@@ -459,7 +454,6 @@ describe 'Droplets' do
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:og_droplet) do
       VCAP::CloudController::DropletModel.make(
-        :buildpack,
         state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
         app_guid:                    app_model.guid,
         package_guid:                package_model.guid,
@@ -476,8 +470,8 @@ describe 'Droplets' do
     end
     let(:app_guid) { droplet_model.app_guid }
     let(:copy_request_json) do {
-        "relationships": {
-          "app": { "guid": new_app.guid }
+        relationships: {
+          app: { guid: new_app.guid }
         }
       }.to_json
     end
