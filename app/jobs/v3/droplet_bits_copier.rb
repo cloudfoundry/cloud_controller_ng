@@ -27,7 +27,8 @@ module VCAP::CloudController
           source_droplet = DropletModel.find(guid: @src_droplet_guid)
           raise 'source droplet does not exist' unless source_droplet
 
-          CloudController::DependencyLocator.instance.droplet_blobstore.cp_file_between_keys(@src_droplet_guid, @dest_droplet_guid)
+          CloudController::DependencyLocator.instance.droplet_blobstore.
+            cp_file_between_keys(source_droplet.blobstore_key, destination_droplet.blobstore_key(source_droplet.droplet_hash))
 
           destination_droplet.db.transaction do
             destination_droplet.lock!

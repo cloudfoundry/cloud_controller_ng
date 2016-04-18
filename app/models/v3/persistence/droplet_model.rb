@@ -70,8 +70,9 @@ module VCAP::CloudController
         select_all(DropletModel.table_name)
     end
 
-    def blobstore_key
-      File.join(guid, droplet_hash) if droplet_hash
+    def blobstore_key(hash=nil)
+      hash ||= droplet_hash
+      File.join(guid, hash) if hash
     end
 
     def buildpack?

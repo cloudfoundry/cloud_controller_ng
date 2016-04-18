@@ -31,7 +31,7 @@ module VCAP::CloudController
       describe '#perform' do
         before do
           allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_return(droplet_blobstore)
-          droplet_blobstore.cp_to_blobstore(droplet_bits_path, source_droplet.guid)
+          droplet_blobstore.cp_to_blobstore(droplet_bits_path, source_droplet.blobstore_key)
         end
 
         it 'copies the source droplet zip to the droplet blob store for the destination droplet' do
@@ -39,7 +39,7 @@ module VCAP::CloudController
 
           job.perform
 
-          expect(droplet_blobstore.exists?(destination_droplet.guid)).to be true
+          expect(droplet_blobstore.exists?(destination_droplet.reload.blobstore_key)).to be true
         end
 
         it 'updates the destination droplet_hash and state' do

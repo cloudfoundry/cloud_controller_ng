@@ -439,8 +439,8 @@ describe DropletsController, type: :controller do
     let(:source_droplet_guid) { source_droplet.guid }
     let(:req_body) do
       {
-        "relationships": {
-          "app": { "guid": target_app_guid }
+        relationships: {
+          app: { guid: target_app_guid }
         }
       }
     end
@@ -461,11 +461,23 @@ describe DropletsController, type: :controller do
     end
 
     context 'when the request is invalid' do
-      it 'raises a 422' do
+      it 'returns a 422' do
         post :copy, guid: source_droplet_guid, body: { 'super_duper': 'bad_request' }
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
+      end
+    end
+
+    context 'when the source droplet is docker' do
+      let!(:source_droplet) { VCAP::CloudController::DropletModel.make(:docker, state: state, app_guid: source_app_guid) }
+
+      it 'returns a 400' do
+        post :copy, guid: source_droplet_guid, body: req_body
+
+        expect(response.status).to eq(400)
+        expect(response.body).to include('UnableToPerform')
+        expect(response.body).to include('Copy droplet could not be completed: Not supported for docker droplets')
       end
     end
 

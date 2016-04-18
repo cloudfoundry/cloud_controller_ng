@@ -60,7 +60,7 @@ class DropletsController < ApplicationController
     app_not_found! unless destination_app && can_read?(destination_app.space.guid, destination_app.organization.guid)
     unauthorized! unless can_create?(destination_app.space.guid)
 
-    droplet = DropletCopy.new.copy(source_droplet, destination_app.guid)
+    droplet = DropletCopy.new(source_droplet).copy(destination_app.guid)
 
     render status: :created, json: droplet_presenter.present_json(droplet)
   end
