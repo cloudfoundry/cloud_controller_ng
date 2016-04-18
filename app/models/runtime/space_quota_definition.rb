@@ -9,10 +9,10 @@ module VCAP::CloudController
 
     export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
       :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-      :total_service_keys
+      :total_service_keys, :total_reserved_route_ports
     import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
       :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-      :total_service_keys
+      :total_service_keys, :total_reserved_route_ports
 
     add_association_dependencies spaces: :nullify
 
@@ -30,6 +30,7 @@ module VCAP::CloudController
       errors.add(:app_instance_limit, :invalid_app_instance_limit) if app_instance_limit && app_instance_limit < UNLIMITED
       errors.add(:app_task_limit, :invalid_app_task_limit) if app_task_limit && app_task_limit < UNLIMITED
       errors.add(:total_service_keys, :invalid_total_service_keys) if total_service_keys && total_service_keys < UNLIMITED
+      errors.add(:total_reserved_route_ports, :invalid_total_reserved_route_ports) unless valid_total_reserved_route_ports?
     end
 
     def validate_change_organization(new_org)
@@ -43,6 +44,20 @@ module VCAP::CloudController
         [:spaces, user.managed_spaces_dataset],
         [:spaces, user.audited_spaces_dataset]
       ])
+    end
+
+    private
+
+    def valid_total_reserved_route_ports?
+      return true unless total_reserved_route_ports
+      return false if total_reserved_route_ports < UNLIMITED
+      return false if total_reserved_route_ports > total_routes
+      return false if total_reserved_route_ports_greater_than_orgs_ports?
+      true
+    end
+
+    def total_reserved_route_ports_greater_than_orgs_ports?
+      total_reserved_route_ports > organization.quota_definition.total_reserved_route_ports && organization.quota_definition.total_reserved_route_ports != -1
     end
   end
 end

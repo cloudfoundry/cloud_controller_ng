@@ -10,6 +10,7 @@ module VCAP::CloudController
       attribute :instance_memory_limit,      Integer, default: nil
       attribute :app_instance_limit,         Integer, default: nil
       attribute :app_task_limit,             Integer, default: 5
+      attribute :total_reserved_route_ports, Integer, default: -1
 
       to_one :organization
       to_many :spaces, exclude_in: [:create, :update]

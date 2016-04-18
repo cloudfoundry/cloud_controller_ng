@@ -68,6 +68,54 @@ module VCAP::CloudController
         end
       end
 
+      describe "total_reserved_route_ports" do
+        it 'cannot be less than -1' do
+          space_quota_definition.total_reserved_route_ports = -2
+          expect(space_quota_definition).not_to be_valid
+          expect(space_quota_definition.errors.on(:total_reserved_route_ports)).to include(:invalid_total_reserved_route_ports)
+
+          space_quota_definition.total_reserved_route_ports = -1
+          expect(space_quota_definition).to be_valid
+        end
+
+        it "should not exceed org's total_reserved_route_ports" do
+          org_quota_definition = space_quota_definition.organization.quota_definition
+          org_quota_definition.total_reserved_route_ports = 10
+          org_quota_definition.save
+
+          space_quota_definition.total_reserved_route_ports = 11
+          expect(space_quota_definition).not_to be_valid
+          expect(space_quota_definition.errors.on(:total_reserved_route_ports)).to include(:invalid_total_reserved_route_ports)
+
+          space_quota_definition.total_reserved_route_ports = 10
+          expect(space_quota_definition).to be_valid
+
+          space_quota_definition.total_reserved_route_ports = 9
+          expect(space_quota_definition).to be_valid
+
+          org_quota_definition = space_quota_definition.organization.quota_definition
+          org_quota_definition.total_reserved_route_ports = -1
+          org_quota_definition.save
+
+          space_quota_definition.total_reserved_route_ports = 1_000
+          expect(space_quota_definition).to be_valid
+        end
+
+        it "should not exceed total routes for the same space" do
+          space_quota_definition.total_routes = 5
+
+          space_quota_definition.total_reserved_route_ports = 4
+          expect(space_quota_definition).to be_valid
+
+          space_quota_definition.total_reserved_route_ports = 5
+          expect(space_quota_definition).to be_valid
+
+          space_quota_definition.total_reserved_route_ports = 6
+          expect(space_quota_definition).to_not be_valid
+          expect(space_quota_definition.errors.on(:total_reserved_route_ports)).to include(:invalid_total_reserved_route_ports)
+        end
+      end
+
       it 'total_service_keys cannot be less than -1' do
         space_quota_definition.total_service_keys = -2
         expect(space_quota_definition).not_to be_valid
@@ -82,13 +130,13 @@ module VCAP::CloudController
       it do
         is_expected.to export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
           :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-          :total_service_keys
+          :total_service_keys, :total_reserved_route_ports
       end
 
       it do
         is_expected.to import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
           :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-          :total_service_keys
+          :total_service_keys, :total_reserved_route_ports
       end
     end
 
