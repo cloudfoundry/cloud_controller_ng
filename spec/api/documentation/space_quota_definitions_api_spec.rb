@@ -47,9 +47,11 @@ resource 'Space Quota Definitions', type: [:api, :legacy_api] do
     include_context 'updatable_fields', required: true
     example 'Creating a Space Quota Definition' do
       organization_guid = VCAP::CloudController::Organization.make.guid
-      client.post '/v2/space_quota_definitions', MultiJson.dump(required_fields.merge(organization_guid: organization_guid), pretty: true), headers
+      client.post '/v2/space_quota_definitions', MultiJson.dump(required_fields.merge(organization_guid: organization_guid, total_reserved_route_ports: 5, total_routes: 10), pretty: true), headers
 
       expect(status).to eq(201)
+      expect(parsed_response['entity']).to include('total_reserved_route_ports')
+      expect(parsed_response['entity']).to include('total_routes')
       standard_entity_response parsed_response, :space_quota_definition
     end
   end
@@ -59,9 +61,11 @@ resource 'Space Quota Definitions', type: [:api, :legacy_api] do
     include_context 'updatable_fields', required: false
     example 'Updating a Space Quota Definition' do
       new_attributes = { name: 'new_name' }
-      client.put "/v2/space_quota_definitions/#{guid}", MultiJson.dump(new_attributes, pretty: true), headers
+      client.put "/v2/space_quota_definitions/#{guid}", MultiJson.dump(new_attributes, pretty: true, total_reserved_route_ports: 5, total_routes: 10), headers
 
       expect(status).to eq(201)
+      expect(parsed_response['entity']).to include('total_reserved_route_ports')
+      expect(parsed_response['entity']).to include('total_routes')
       standard_entity_response parsed_response, :space_quota_definition, name: 'new_name'
     end
   end
