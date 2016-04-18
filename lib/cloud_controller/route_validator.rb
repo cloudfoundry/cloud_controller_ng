@@ -17,7 +17,7 @@ module VCAP::CloudController
     end
 
     def validate
-      validate_domain_existance
+      validate_domain_existence
 
       if is_tcp_router_group?
         validate_host_not_included
@@ -69,7 +69,7 @@ module VCAP::CloudController
       end
     end
 
-    def validate_domain_existance
+    def validate_domain_existence
       if domain.nil?
         raise DomainInvalid.new("Domain with guid #{domain_guid} does not exist")
       end
