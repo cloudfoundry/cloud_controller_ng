@@ -378,12 +378,15 @@ describe 'Packages' do
     end
 
     describe 'GET /v3/packages/:guid/download' do
+      let(:type) { 'bits' }
       let!(:package_model) do
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: 'bits')
+        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: type)
+      end
+      let(:app_model) do
+        VCAP::CloudController::AppModel.make(guid: 'woof-guid', space_guid: space.guid, name: 'meow')
       end
       let(:space) { VCAP::CloudController::Space.make }
       let(:bits_download_url) { CloudController::DependencyLocator.instance.blobstore_url_generator.package_download_url(package_model) }
-      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
       let(:guid) { package_model.guid }
       let(:temp_file) do
         file = File.join(Dir.mktmpdir, 'application.zip')
@@ -404,12 +407,28 @@ describe 'Packages' do
         Delayed::Worker.new.work_off
       end
 
-      it 'downloads the bit for a package' do
+      it 'downloads the bit(s) for a package' do
         Timecop.freeze do
           get "/v3/packages/#{guid}/download", {}, user_header
 
           expect(last_response.status).to eq(302)
           expect(last_response.headers['Location']).to eq(bits_download_url)
+
+          expected_metadata = { package_guid: package_model.guid }.to_json
+
+          event = VCAP::CloudController::Event.last
+          expect(event.values).to include({
+            type:              'audit.app.package.download',
+            actor:             user.guid,
+            actor_type:        'user',
+            actor_name:        email,
+            actee:             'woof-guid',
+            actee_type:        'v3-app',
+            actee_name:        'meow',
+            metadata:          expected_metadata,
+            space_guid:        space.guid,
+            organization_guid: space.organization.guid
+          })
         end
       end
     end

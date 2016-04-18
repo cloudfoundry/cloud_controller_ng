@@ -195,6 +195,7 @@ describe PackagesController, type: :controller do
     let(:package) { VCAP::CloudController::PackageModel.make(state: 'READY') }
     let(:space) { package.space }
     let(:org) { space.organization }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       blob = instance_double(CloudController::Blobstore::FogBlob, public_download_url: 'http://package.example.com')
@@ -204,7 +205,7 @@ describe PackagesController, type: :controller do
       allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
-      set_current_user(VCAP::CloudController::User.make)
+      set_current_user(user, email: 'utako')
     end
 
     it 'returns 302 and the redirect' do
@@ -212,6 +213,17 @@ describe PackagesController, type: :controller do
 
       expect(response.status).to eq(302)
       expect(response.headers['Location']).to eq('http://package.example.com')
+    end
+
+    it 'creates an audit event' do
+      allow(VCAP::CloudController::Repositories::Runtime::PackageEventRepository).to receive(:record_app_package_download)
+      get :download, guid: package.guid
+
+      expect(VCAP::CloudController::Repositories::Runtime::PackageEventRepository).to have_received(:record_app_package_download) do |package, user_guid, user_name|
+        expect(package).to eq package
+        expect(user_guid).to eq user.guid
+        expect(user_name).to eq 'utako'
+      end
     end
 
     context 'when the package is not of type bits' do

@@ -46,7 +46,7 @@ class PackagesController < ApplicationController
     bits_already_uploaded! if package.state != PackageModel::CREATED_STATE
 
     begin
-      PackageUpload.new(current_user, current_user_email).upload(message, package, configuration)
+      PackageUpload.new(current_user.guid, current_user_email).upload(message, package, configuration)
     rescue PackageUpload::InvalidPackage => e
       unprocessable!(e.message)
     end
@@ -61,8 +61,13 @@ class PackagesController < ApplicationController
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     unprocessable!('Package has no bits to download.') unless package.state == 'READY'
 
-    blob = blobstore.blob(package.guid)
-    BlobDispatcher.new(blob_sender: blob_sender, controller: self).send_or_redirect(local: blobstore.local?, blob: blob)
+    VCAP::CloudController::Repositories::Runtime::PackageEventRepository.record_app_package_download(
+      package,
+      current_user.guid,
+      current_user_email,
+    )
+
+    send_package_blob(package)
   end
 
   def show
@@ -77,7 +82,7 @@ class PackagesController < ApplicationController
     package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
     unauthorized! unless can_delete?(package.space.guid)
 
-    PackageDelete.new(current_user, current_user_email).delete(package)
+    PackageDelete.new(current_user.guid, current_user_email).delete(package)
 
     head :no_content
   end
@@ -98,7 +103,7 @@ class PackagesController < ApplicationController
     app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     unauthorized! unless can_create?(app.space.guid)
 
-    package = PackageCreate.new(current_user, current_user_email).create(message)
+    package = PackageCreate.new(current_user.guid, current_user_email).create(message)
 
     render status: :created, json: PackagePresenter.new.present_json(package)
   rescue PackageCreate::InvalidPackage => e
@@ -114,7 +119,7 @@ class PackagesController < ApplicationController
     package_not_found! unless source_package && can_read?(source_package.space.guid, source_package.space.organization.guid)
     unauthorized! unless can_create?(source_package.space.guid)
 
-    package = PackageCopy.new(current_user, current_user_email).copy(params[:app_guid], source_package)
+    package = PackageCopy.new(current_user.guid, current_user_email).copy(params[:app_guid], source_package)
 
     render status: :created, json: PackagePresenter.new.present_json(package)
   rescue PackageCopy::InvalidPackage => e
@@ -141,12 +146,11 @@ class PackagesController < ApplicationController
     @package_presenter ||= PackagePresenter.new
   end
 
-  def blob_sender
-    CloudController::DependencyLocator.instance.blob_sender
-  end
-
-  def blobstore
-    CloudController::DependencyLocator.instance.package_blobstore
+  def send_package_blob(package)
+    package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
+    blob_sender = CloudController::DependencyLocator.instance.blob_sender
+    blob = package_blobstore.blob(package.guid)
+    BlobDispatcher.new(blob_sender: blob_sender, controller: self).send_or_redirect(local: package_blobstore.local?, blob: blob)
   end
 
   def list_fetcher

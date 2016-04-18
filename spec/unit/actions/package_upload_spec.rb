@@ -3,8 +3,8 @@ require 'actions/package_upload'
 
 module VCAP::CloudController
   describe PackageUpload do
-    subject(:package_upload) { PackageUpload.new(user, user_email) }
-    let(:user) { User.make }
+    subject(:package_upload) { PackageUpload.new(user_guid, user_email) }
+    let(:user_guid) { 'gooid' }
     let(:user_email) { 'utako.loves@cats.com' }
 
     describe '#upload' do
@@ -31,7 +31,7 @@ module VCAP::CloudController
       it 'creates an v3 audit event' do
         expect(Repositories::Runtime::PackageEventRepository).to receive(:record_app_package_upload).with(
           instance_of(PackageModel),
-          user,
+          user_guid,
           user_email
         )
 

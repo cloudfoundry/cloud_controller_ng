@@ -3,8 +3,8 @@ require 'actions/package_copy'
 
 module VCAP::CloudController
   describe PackageCopy do
-    let(:package_copy) { PackageCopy.new(user, user_email) }
-    let(:user) { User.make }
+    let(:package_copy) { PackageCopy.new(user_guid, user_email) }
+    let(:user_guid) { 'gooid' }
     let(:user_email) { 'amelia@cats.com' }
 
     describe '#copy' do
@@ -37,7 +37,7 @@ module VCAP::CloudController
       it 'creates an v3 audit event' do
         expect(Repositories::Runtime::PackageEventRepository).to receive(:record_app_package_copy).with(
           instance_of(PackageModel),
-          user,
+          user_guid,
           user_email,
           source_package.guid
         )

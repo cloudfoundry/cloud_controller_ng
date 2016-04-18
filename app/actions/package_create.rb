@@ -4,8 +4,8 @@ module VCAP::CloudController
   class PackageCreate
     class InvalidPackage < StandardError; end
 
-    def initialize(user, user_email)
-      @user = user
+    def initialize(user_guid, user_email)
+      @user_guid = user_guid
       @user_email = user_email
     end
 
@@ -23,7 +23,7 @@ module VCAP::CloudController
 
         Repositories::Runtime::PackageEventRepository.record_app_package_create(
           package,
-          @user,
+          @user_guid,
           @user_email,
           message.audit_hash)
       end

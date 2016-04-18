@@ -3,8 +3,8 @@ require 'actions/package_delete'
 
 module VCAP::CloudController
   describe PackageDelete do
-    subject(:package_delete) { PackageDelete.new(user, user_email) }
-    let(:user) { User.make }
+    subject(:package_delete) { PackageDelete.new(user_guid, user_email) }
+    let(:user_guid) { 'schmuid' }
     let(:user_email) { 'amandaplease@gmail.com' }
 
     describe '#delete' do
@@ -36,7 +36,7 @@ module VCAP::CloudController
         it 'creates an v3 audit event' do
           expect(Repositories::Runtime::PackageEventRepository).to receive(:record_app_package_delete).with(
             instance_of(PackageModel),
-            user,
+            user_guid,
             user_email
           )
 

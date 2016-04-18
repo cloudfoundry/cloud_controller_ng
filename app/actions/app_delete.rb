@@ -40,7 +40,7 @@ module VCAP::CloudController
     private
 
     def delete_subresources(app)
-      PackageDelete.new.delete(packages_to_delete(app))
+      PackageDelete.new(user_guid, user_email).delete(packages_to_delete(app))
       TaskDelete.new(user_guid, user_email).delete(tasks_to_delete(app))
       DropletDelete.new.delete(droplets_to_delete(app))
       ProcessDelete.new.delete(processes_to_delete(app))

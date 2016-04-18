@@ -2,8 +2,8 @@ module VCAP::CloudController
   class PackageUpload
     class InvalidPackage < StandardError; end
 
-    def initialize(user, user_email)
-      @user = user
+    def initialize(user_guid, user_email)
+      @user_guid = user_guid
       @user_email = user_email
     end
 
@@ -22,7 +22,7 @@ module VCAP::CloudController
 
         Repositories::Runtime::PackageEventRepository.record_app_package_upload(
           package,
-          @user,
+          @user_guid,
           @user_email)
       end
     rescue Sequel::ValidationFailed => e
