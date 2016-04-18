@@ -167,6 +167,10 @@ module VCAP::CloudController
       space.in_suspended_org?
     end
 
+    def tcp?
+      domain.shared? && domain.tcp? && port.present? && port > 0
+    end
+
     private
 
     def before_destroy

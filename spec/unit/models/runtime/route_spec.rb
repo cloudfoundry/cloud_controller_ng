@@ -1,8 +1,75 @@
+
 require 'spec_helper'
 
 module VCAP::CloudController
   describe VCAP::CloudController::Route, type: :model do
     it { is_expected.to have_timestamp_columns }
+
+
+    describe '#tcp?' do
+      context 'when the route belongs to a shared domain' do
+        context 'and that domain is a TCP domain' do
+          let!(:tcp_domain) {SharedDomain.make(router_group_guid: 'guid') }
+
+          context 'and the route has a port' do
+            let(:route) {Route.make(domain: tcp_domain, port: 6000)}
+
+            it 'returns true' do
+              expect(route.tcp?).to equal(true)
+            end
+          end
+
+          context 'and the route does not have a port' do
+            let(:route) {Route.make(domain: tcp_domain)}
+
+            it 'returns false' do
+              expect(route.tcp?).to equal(false)
+            end
+          end
+
+          context 'and that domain is not a TCP domain' do
+            let!(:domain) {SharedDomain.make}
+
+            context 'and the route has a port' do
+              let(:route) {Route.make(domain: domain, port: 6000)}
+
+              it 'returns false' do
+                expect(route.tcp?).to equal(false)
+              end
+            end
+
+            context 'and the route does not have a port' do
+              let(:route) {Route.make(domain: tcp_domain)}
+
+              it 'returns false' do
+                expect(route.tcp?).to equal(false)
+              end
+            end
+          end
+        end
+      end
+
+      context 'when the route belongs to a private domain' do
+        let(:space) {Space.make}
+        let!(:private_domain) { PrivateDomain.make(owning_organization: space.organization) }
+
+        context 'and the route has a port' do
+          let(:route) {Route.make(space: space, domain: private_domain, port: 6000)}
+
+          it 'returns false' do
+            expect(route.tcp?).to equal(false)
+          end
+        end
+
+        context 'and the route does not have a port' do
+          let(:route) {Route.make(space: space, domain: private_domain)}
+
+          it 'returns false' do
+            expect(route.tcp?).to equal(false)
+          end
+        end
+      end
+    end
 
     describe 'Associations' do
       it { is_expected.to have_associated :domain }
