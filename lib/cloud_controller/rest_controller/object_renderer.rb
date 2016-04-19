@@ -29,7 +29,7 @@ module VCAP::CloudController::RestController
     def render_json(controller, obj, opts)
       inline_relations_depth = opts[:inline_relations_depth] || @default_inline_relations_depth
       if inline_relations_depth > @max_inline_relations_depth
-        raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', "inline_relations_depth must be <= #{@max_inline_relations_depth}")
+        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "inline_relations_depth must be <= #{@max_inline_relations_depth}")
       end
 
       eager_loaded_objects = @eager_loader.eager_load_dataset(

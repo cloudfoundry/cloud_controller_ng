@@ -1,4 +1,4 @@
-module VCAP
+module CloudController
   module Errors
     class Details
       def self.yaml_file_path

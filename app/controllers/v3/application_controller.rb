@@ -1,18 +1,18 @@
 module V3ErrorsHelper
   def invalid_request!(message)
-    raise VCAP::Errors::ApiError.new_from_details('InvalidRequest', message)
+    raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', message)
   end
 
   def invalid_param!(message)
-    raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', message)
+    raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', message)
   end
 
   def unprocessable!(message)
-    raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
+    raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', message)
   end
 
   def unauthorized!
-    raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
+    raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
   end
 end
 
@@ -30,7 +30,7 @@ class ApplicationController < ActionController::Base
   before_action :check_write_permissions!, except: [:index, :show, :not_found, :internal_error, :bad_request]
   before_action :null_coalesce_body
 
-  rescue_from VCAP::Errors::ApiError, with: :handle_api_error
+  rescue_from CloudController::Errors::ApiError, with: :handle_api_error
 
   def configuration
     Config.config
@@ -75,16 +75,16 @@ class ApplicationController < ActionController::Base
 
   def check_read_permissions!
     read_scope = SecurityContext.scopes.include?('cloud_controller.read')
-    raise VCAP::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !read_scope
+    raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !read_scope
   end
 
   def check_write_permissions!
     write_scope = SecurityContext.scopes.include?('cloud_controller.write')
-    raise VCAP::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !write_scope
+    raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !write_scope
   end
 
   def validate_scheme!
-    validator = VCAP::CloudController::RequestSchemeValidator.new
+    validator = CloudController::RequestSchemeValidator.new
     validator.validate!(current_user, roles, configuration, request)
   end
 
@@ -96,10 +96,10 @@ class ApplicationController < ActionController::Base
     return if current_user
 
     if VCAP::CloudController::SecurityContext.missing_token?
-      raise VCAP::Errors::ApiError.new_from_details('NotAuthenticated')
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthenticated')
     end
 
-    raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')
+    raise CloudController::Errors::ApiError.new_from_details('InvalidAuthToken')
   end
 
   def handle_api_error(error)
@@ -117,6 +117,6 @@ class ApplicationController < ActionController::Base
   end
 
   def resource_not_found!(resource)
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "#{resource.to_s.humanize} not found")
+    raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "#{resource.to_s.humanize} not found")
   end
 end

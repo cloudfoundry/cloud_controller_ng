@@ -152,7 +152,7 @@ module VCAP::CloudController
 
         before do
           allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_app).and_raise(
-            Errors::InstancesUnavailable.new(SomeInstancesException.new))
+            CloudController::Errors::InstancesUnavailable.new(SomeInstancesException.new))
 
           get "/v2/apps/#{@app.guid}/summary"
         end

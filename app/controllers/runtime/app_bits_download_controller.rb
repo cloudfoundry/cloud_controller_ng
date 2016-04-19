@@ -16,7 +16,7 @@ module VCAP::CloudController
       if blob.nil?
         Loggregator.emit_error(guid, "Could not find package for #{guid}")
         logger.error "could not find package for #{guid}"
-        raise Errors::ApiError.new_from_details('AppPackageNotFound', guid)
+        raise CloudController::Errors::ApiError.new_from_details('AppPackageNotFound', guid)
       end
 
       blob_dispatcher.send_or_redirect(local: @blobstore.local?, blob: blob)

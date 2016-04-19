@@ -22,10 +22,10 @@ module VCAP::CloudController
         end
 
         fill_unreported_instances_with_down_instances(result, app)
-      rescue Errors::InstancesUnavailable => e
+      rescue CloudController::Errors::InstancesUnavailable => e
         raise e
       rescue => e
-        raise Errors::InstancesUnavailable.new(e)
+        raise CloudController::Errors::InstancesUnavailable.new(e)
       end
 
       def number_of_starting_and_running_instances_for_apps(apps)
@@ -44,7 +44,7 @@ module VCAP::CloudController
         end
 
         result
-      rescue Errors::InstancesUnavailable
+      rescue CloudController::Errors::InstancesUnavailable
         apps.each { |application| result[application.guid] = -1 }
         result
       rescue => e
@@ -65,7 +65,7 @@ module VCAP::CloudController
         end
 
         running_indices.length
-      rescue Errors::InstancesUnavailable
+      rescue CloudController::Errors::InstancesUnavailable
         return -1
       rescue => e
         logger.error('tps.error', error: e.to_s)
@@ -88,10 +88,10 @@ module VCAP::CloudController
 
         result
 
-      rescue Errors::InstancesUnavailable => e
+      rescue CloudController::Errors::InstancesUnavailable => e
         raise e
       rescue => e
-        raise Errors::InstancesUnavailable.new(e)
+        raise CloudController::Errors::InstancesUnavailable.new(e)
       end
 
       def stats_for_app(app)
@@ -125,10 +125,10 @@ module VCAP::CloudController
 
         fill_unreported_instances_with_down_instances(result, app)
 
-      rescue Errors::InstancesUnavailable => e
+      rescue CloudController::Errors::InstancesUnavailable => e
         raise e
       rescue => e
-        raise Errors::InstancesUnavailable.new(e)
+        raise CloudController::Errors::InstancesUnavailable.new(e)
       end
 
       private

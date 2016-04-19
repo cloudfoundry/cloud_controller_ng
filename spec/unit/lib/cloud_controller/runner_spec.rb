@@ -383,7 +383,7 @@ module VCAP::CloudController
       end
 
       it 'initializes the i18n framework with the correct locale' do
-        expect(Errors::ApiError).to receive(:setup_i18n).with(anything, 'never_Neverland')
+        expect(CloudController::Errors::ApiError).to receive(:setup_i18n).with(anything, 'never_Neverland')
         subject.run!
       end
     end

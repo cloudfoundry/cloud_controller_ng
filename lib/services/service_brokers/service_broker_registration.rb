@@ -96,7 +96,7 @@ module VCAP::Services::ServiceBrokers
 
     def raise_humanized_exception(errors)
       humanized_message = formatter.format(errors)
-      raise VCAP::Errors::ApiError.new_from_details('ServiceBrokerCatalogInvalid', humanized_message)
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBrokerCatalogInvalid', humanized_message)
     end
 
     def route_service_warning

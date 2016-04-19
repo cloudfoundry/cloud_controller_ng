@@ -37,7 +37,7 @@ module VCAP::CloudController
         context 'when private_domain_creation FeatureFlag is disabled' do
           it 'cannot create a private domain' do
             FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: nil)
-            expect { subject.create?(object) }.to raise_error(VCAP::Errors::ApiError, /private_domain_creation/)
+            expect { subject.create?(object) }.to raise_error(CloudController::Errors::ApiError, /private_domain_creation/)
           end
         end
       end

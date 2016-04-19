@@ -133,7 +133,7 @@ module VCAP::CloudController
             it 'raises ApiError and marks the app as failed to stage' do
               expect {
                 handler.staging_complete(staging_guid, payload)
-              }.to raise_error(VCAP::Errors::ApiError).and change {
+              }.to raise_error(CloudController::Errors::ApiError).and change {
                 app.reload.package_state
               }.from('PENDING').to('FAILED')
             end
@@ -141,7 +141,7 @@ module VCAP::CloudController
             it 'logs an error for the CF operator' do
               expect {
                 handler.staging_complete(staging_guid, payload)
-              }.to raise_error(VCAP::Errors::ApiError)
+              }.to raise_error(CloudController::Errors::ApiError)
 
               expect(logger).to have_received(:error).with(
                 'diego.staging.success.invalid-message',
@@ -154,7 +154,7 @@ module VCAP::CloudController
             it 'logs an error for the CF user' do
               expect {
                 handler.staging_complete(staging_guid, payload)
-              }.to raise_error(VCAP::Errors::ApiError)
+              }.to raise_error(CloudController::Errors::ApiError)
 
               expect(Loggregator).to have_received(:emit_error).with(app.guid, /Malformed message from Diego stager/)
             end
@@ -162,7 +162,7 @@ module VCAP::CloudController
             it 'should not start anything' do
               expect {
                 handler.staging_complete(staging_guid, payload)
-              }.to raise_error(VCAP::Errors::ApiError)
+              }.to raise_error(CloudController::Errors::ApiError)
 
               expect(runners).not_to have_received(:runner_for_app)
               expect(runner).not_to have_received(:start)

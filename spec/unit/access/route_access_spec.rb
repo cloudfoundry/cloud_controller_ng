@@ -142,7 +142,7 @@ module VCAP::CloudController
         before { FeatureFlag.make(name: 'route_creation', enabled: false, error_message: nil) }
 
         it 'raises when attempting to create a route' do
-          expect { subject.create?(object) }.to raise_error(VCAP::Errors::ApiError, /route_creation/)
+          expect { subject.create?(object) }.to raise_error(CloudController::Errors::ApiError, /route_creation/)
         end
 
         it 'allows all other actions' do

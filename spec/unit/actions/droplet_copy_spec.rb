@@ -72,7 +72,7 @@ module VCAP::CloudController
         it 'raises an ApiError' do
           expect {
             droplet_copy.copy(target_app.guid)
-          }.to raise_error(VCAP::Errors::ApiError)
+          }.to raise_error(CloudController::Errors::ApiError)
         end
       end
     end

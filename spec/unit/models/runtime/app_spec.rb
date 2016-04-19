@@ -921,7 +921,7 @@ module VCAP::CloudController
         it 'should fail if routes do not exist in that spaces' do
           app = AppFactory.make
           app.add_route(Route.make(space: app.space))
-          expect { app.space = Space.make }.to raise_error Errors::InvalidRouteRelation
+          expect { app.space = Space.make }.to raise_error CloudController::Errors::InvalidRouteRelation
         end
 
         it 'should fail if service bindings do not exist in that space' do
@@ -943,7 +943,7 @@ module VCAP::CloudController
 
         expect {
           app.add_route(route)
-        }.to raise_error Errors::InvalidRouteRelation
+        }.to raise_error CloudController::Errors::InvalidRouteRelation
       end
     end
 
@@ -1950,7 +1950,7 @@ module VCAP::CloudController
 
         expect {
           app.add_route(route)
-        }.to raise_error(Errors::InvalidRouteRelation, /The requested route relation is invalid/)
+        }.to raise_error(CloudController::Errors::InvalidRouteRelation, /The requested route relation is invalid/)
       end
 
       context 'adding routes to unsaved apps' do
@@ -1968,7 +1968,7 @@ module VCAP::CloudController
                         space: space,
                         stack: Stack.make)
           app.add_route_by_guid(Route.make.guid)
-          expect { app.save }.to raise_error(Errors::InvalidRouteRelation)
+          expect { app.save }.to raise_error(CloudController::Errors::InvalidRouteRelation)
           expect(app.routes).to be_empty
         end
       end
@@ -1999,7 +1999,7 @@ module VCAP::CloudController
             expect {
               app.add_route_by_guid(route_with_service.guid)
               app.save
-            }.to raise_error(Errors::InvalidRouteRelation).
+            }.to raise_error(CloudController::Errors::InvalidRouteRelation).
               with_message("The requested route relation is invalid: #{route_with_service.guid} - Route services are only supported for apps on Diego")
           end
         end
@@ -2336,9 +2336,10 @@ module VCAP::CloudController
           it 'should undo any change', isolation: :truncation do
             allow(UndoAppChanges).to receive(:new).with(app).and_return(undo_app)
 
-            expect(AppObserver).to receive(:updated).once.with(app).and_raise Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty')
+            expect(AppObserver).to receive(:updated).once.with(app).
+              and_raise(CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty'))
             expect(undo_app).to receive(:undo)
-            expect { app.update(state: 'STARTED') }.to raise_error(Errors::ApiError, /app package hash/)
+            expect { app.update(state: 'STARTED') }.to raise_error(CloudController::Errors::ApiError, /app package hash/)
           end
         end
 
@@ -2350,8 +2351,9 @@ module VCAP::CloudController
           let(:app) { AppFactory.make(diego: true) }
 
           it 'does not call UndoAppChanges', isolation: :truncation do
-            expect(AppObserver).to receive(:updated).once.with(app).and_raise Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty')
-            expect { app.update(state: 'STARTED') }.to raise_error(Errors::ApiError, /app package hash/)
+            expect(AppObserver).to receive(:updated).once.with(app).
+              and_raise(CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty'))
+            expect { app.update(state: 'STARTED') }.to raise_error(CloudController::Errors::ApiError, /app package hash/)
             expect(UndoAppChanges).not_to have_received(:new)
           end
         end

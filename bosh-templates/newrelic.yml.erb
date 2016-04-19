@@ -26,7 +26,7 @@
   error_collector:
     enabled: true
     capture_source: true
-    ignore_errors: "VCAP::Errors::NotStaged"
+    ignore_errors: "CloudController::Errors::NotStaged"
 
 <%= properties.cc.newrelic.environment_name %>_background:
   <<: *common_settings

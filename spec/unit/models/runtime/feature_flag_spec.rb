@@ -176,7 +176,7 @@ module VCAP::CloudController
           end
 
           it 'raises FeatureDisabled with feature flag name' do
-            expect { FeatureFlag.raise_unless_enabled!(feature_flag.name) }.to raise_error(VCAP::Errors::ApiError) do |error|
+            expect { FeatureFlag.raise_unless_enabled!(feature_flag.name) }.to raise_error(CloudController::Errors::ApiError) do |error|
               expect(error.name).to eq('FeatureDisabled')
               expect(error.message).to eq("Feature Disabled: #{feature_flag.name}")
             end
@@ -187,7 +187,7 @@ module VCAP::CloudController
           let(:feature_flag) { FeatureFlag.make(error_message: 'foobar') }
 
           it 'raises FeatureDisabled with the custom error message' do
-            expect { FeatureFlag.raise_unless_enabled!(feature_flag.name) }.to raise_error(VCAP::Errors::ApiError) do |error|
+            expect { FeatureFlag.raise_unless_enabled!(feature_flag.name) }.to raise_error(CloudController::Errors::ApiError) do |error|
               expect(error.name).to eq('FeatureDisabled')
               expect(error.message).to eq("Feature Disabled: #{feature_flag.error_message}")
             end

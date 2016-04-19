@@ -9,8 +9,8 @@ require 'allowy'
 require 'eventmachine/schedule_sync'
 
 require 'vcap/common'
-require 'vcap/errors/details'
-require 'vcap/errors/api_error'
+require 'cloud_controller/errors/details'
+require 'cloud_controller/errors/api_error'
 require 'uaa/token_coder'
 
 require 'sinatra/vcap'
@@ -21,8 +21,7 @@ ActiveSupport::JSON::Encoding.time_precision = 0
 
 module VCAP::CloudController; end
 
-require 'vcap/errors/invalid_relation'
-require 'vcap/errors/missing_required_scope_error'
+require 'cloud_controller/errors/invalid_relation'
 require 'delayed_job_plugins/deserialization_retry'
 require 'sequel_plugins/sequel_plugins'
 require 'vcap/sequel_add_association_dependencies_monkeypatch'

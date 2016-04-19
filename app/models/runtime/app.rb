@@ -173,7 +173,7 @@ module VCAP::CloudController
 
     def before_save
       if needs_package_in_current_state? && !package_hash
-        raise VCAP::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
+        raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
       end
 
       self.stack ||= Stack.default
@@ -368,15 +368,15 @@ module VCAP::CloudController
     end
 
     def validate_space(space)
-      objection = Errors::InvalidRouteRelation.new(space.guid)
+      objection = CloudController::Errors::InvalidRouteRelation.new(space.guid)
 
       raise objection unless routes.all? { |route| route.space_id == space.id }
       service_bindings.each { |binding| binding.validate_app_and_service_instance(self, binding.service_instance) }
     end
 
     def validate_route(route)
-      objection = Errors::InvalidRouteRelation.new(route.guid)
-      route_service_objection = Errors::InvalidRouteRelation.new("#{route.guid} - Route services are only supported for apps on Diego")
+      objection = CloudController::Errors::InvalidRouteRelation.new(route.guid)
+      route_service_objection = CloudController::Errors::InvalidRouteRelation.new("#{route.guid} - Route services are only supported for apps on Diego")
 
       raise objection if route.nil?
       raise objection if space.nil?
@@ -473,7 +473,7 @@ module VCAP::CloudController
 
       self.package_state = 'FAILED'
       self.staging_failed_reason = reason
-      self.staging_failed_description = VCAP::Errors::ApiError.new_from_details(reason, 'staging failed').message
+      self.staging_failed_description = CloudController::Errors::ApiError.new_from_details(reason, 'staging failed').message
       self.package_pending_since = nil
       self.state = 'STOPPED' if diego?
       save
@@ -580,7 +580,7 @@ module VCAP::CloudController
 
       begin
         AppObserver.updated(self)
-      rescue Errors::ApiError => e
+      rescue CloudController::Errors::ApiError => e
         UndoAppChanges.new(self).undo(previous_changes) unless diego?
         raise e
       end

@@ -63,7 +63,7 @@ module VCAP::CloudController
       super
       auth = Rack::Auth::Basic::Request.new(env)
       unless auth.provided? && auth.basic? && auth.credentials == self.class.credentials
-        raise Errors::ApiError.new_from_details('NotAuthenticated')
+        raise CloudController::Errors::ApiError.new_from_details('NotAuthenticated')
       end
     end
 

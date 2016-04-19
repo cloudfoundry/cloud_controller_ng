@@ -30,7 +30,7 @@ module VCAP::CloudController::Diego
           it 'retries and eventually raises RunnerUnavailable' do
             stub = stub_request(:put, desire_app_url).to_raise(Errno::ECONNREFUSED)
 
-            expect { client.desire_app(process_guid, desire_message) }.to raise_error(VCAP::Errors::ApiError, /connection refused/i)
+            expect { client.desire_app(process_guid, desire_message) }.to raise_error(CloudController::Errors::ApiError, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
           end
         end
@@ -41,7 +41,7 @@ module VCAP::CloudController::Diego
           end
 
           it 'raises RunnerError' do
-            expect { client.desire_app(process_guid, desire_message) }.to raise_error(VCAP::Errors::ApiError, /desire app failed: 500/i)
+            expect { client.desire_app(process_guid, desire_message) }.to raise_error(CloudController::Errors::ApiError, /desire app failed: 500/i)
           end
         end
 
@@ -74,7 +74,7 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises RunnerUnavailable' do
-          expect { client.desire_app(process_guid, desire_message) }.to raise_error(VCAP::Errors::ApiError, /invalid config/)
+          expect { client.desire_app(process_guid, desire_message) }.to raise_error(CloudController::Errors::ApiError, /invalid config/)
         end
       end
     end
@@ -108,7 +108,7 @@ module VCAP::CloudController::Diego
           it 'retries and eventually raises RunnerUnavailable' do
             stub = stub_request(:delete, stop_app_url).to_raise(Errno::ECONNREFUSED)
 
-            expect { client.stop_app(process_guid) }.to raise_error(VCAP::Errors::ApiError, /connection refused/i)
+            expect { client.stop_app(process_guid) }.to raise_error(CloudController::Errors::ApiError, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
           end
         end
@@ -119,7 +119,7 @@ module VCAP::CloudController::Diego
           end
 
           it 'raises RunnerError' do
-            expect { client.stop_app(process_guid) }.to raise_error(VCAP::Errors::ApiError, /stop app failed: 500/i)
+            expect { client.stop_app(process_guid) }.to raise_error(CloudController::Errors::ApiError, /stop app failed: 500/i)
           end
         end
       end
@@ -155,7 +155,7 @@ module VCAP::CloudController::Diego
           it 'retries and eventually raises RunnerUnavailable' do
             stub = stub_request(:delete, stop_index_url).to_raise(Errno::ECONNREFUSED)
 
-            expect { client.stop_index(process_guid, index) }.to raise_error(VCAP::Errors::ApiError, /connection refused/i)
+            expect { client.stop_index(process_guid, index) }.to raise_error(CloudController::Errors::ApiError, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
           end
         end
@@ -166,7 +166,7 @@ module VCAP::CloudController::Diego
           end
 
           it 'raises RunnerError' do
-            expect { client.stop_index(process_guid, index) }.to raise_error(VCAP::Errors::ApiError, /stop index failed: 500/i)
+            expect { client.stop_index(process_guid, index) }.to raise_error(CloudController::Errors::ApiError, /stop index failed: 500/i)
           end
         end
       end
@@ -177,7 +177,7 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises RunnerUnavailable' do
-          expect { client.stop_index(process_guid, index) }.to raise_error(VCAP::Errors::ApiError, /invalid config/)
+          expect { client.stop_index(process_guid, index) }.to raise_error(CloudController::Errors::ApiError, /invalid config/)
         end
       end
     end
@@ -191,7 +191,7 @@ module VCAP::CloudController::Diego
 
       context 'when the config is missing a diego task url' do
         it 'sets the state to FAILED and returns an error' do
-          expect { client.desire_task(task) }.to raise_error VCAP::Errors::ApiError, /Diego Task URL does not exist/
+          expect { client.desire_task(task) }.to raise_error CloudController::Errors::ApiError, /Diego Task URL does not exist/
           expect(task.state).to eq('FAILED')
           expect(task.failure_reason).to eq('Unable to request task to be run')
         end
@@ -233,7 +233,7 @@ module VCAP::CloudController::Diego
           it 'retries and eventually raises TaskWorkerUnavailable' do
             stub = stub_request(:post, client_url).to_raise(Errno::ECONNREFUSED)
 
-            expect { client.desire_task(task) }.to raise_error(VCAP::Errors::ApiError, /connection refused/i)
+            expect { client.desire_task(task) }.to raise_error(CloudController::Errors::ApiError, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
             expect(task.state).to eq('FAILED')
             expect(task.failure_reason).to eq('Unable to request task to be run')
@@ -246,7 +246,7 @@ module VCAP::CloudController::Diego
           end
 
           it 'raises a TaskError' do
-            expect { client.desire_task(task) }.to raise_error(VCAP::Errors::ApiError, /task failed: 500/i)
+            expect { client.desire_task(task) }.to raise_error(CloudController::Errors::ApiError, /task failed: 500/i)
             expect(task.state).to eq('FAILED')
             expect(task.failure_reason).to eq('Unable to request task to be run')
           end
@@ -262,7 +262,7 @@ module VCAP::CloudController::Diego
 
       context 'when the config is missing a diego task url' do
         it 'leaves the state as CANCELING and returns an error' do
-          expect { client.cancel_task(task) }.to raise_error VCAP::Errors::ApiError, /Diego Task URL does not exist/
+          expect { client.cancel_task(task) }.to raise_error CloudController::Errors::ApiError, /Diego Task URL does not exist/
           expect(task.state).to eq(VCAP::CloudController::TaskModel::CANCELING_STATE)
         end
       end

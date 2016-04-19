@@ -31,7 +31,7 @@ module VCAP::CloudController
       it 'does not let you lock again' do
         expect {
           deleter_lock.lock!
-        }.to raise_error Errors::ApiError
+        }.to raise_error CloudController::Errors::ApiError
       end
     end
 

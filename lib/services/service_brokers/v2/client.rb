@@ -168,7 +168,7 @@ module VCAP::Services::ServiceBrokers::V2
         }
       }
     rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict => e
-      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
+      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
     rescue => e
       raise e.exception("Service instance #{instance.name}: #{e.message}")
     end

@@ -14,13 +14,13 @@ module VCAP::CloudController
       app_route_errors = e.errors.on([:app_id, :route_id])
 
       if port_errors && port_errors.include?(:diego_only)
-        Errors::ApiError.new_from_details('AppPortMappingRequiresDiego')
+        CloudController::Errors::ApiError.new_from_details('AppPortMappingRequiresDiego')
       elsif port_errors && port_errors.include?(:not_bound_to_app)
-        Errors::ApiError.new_from_details('RoutePortNotEnabledOnApp')
+        CloudController::Errors::ApiError.new_from_details('RoutePortNotEnabledOnApp')
       elsif app_route_port_errors && app_route_port_errors.include?(:unique)
-        Errors::ApiError.new_from_details('RouteMappingTaken', route_mapping_taken_message(attributes))
+        CloudController::Errors::ApiError.new_from_details('RouteMappingTaken', route_mapping_taken_message(attributes))
       elsif app_route_errors && app_route_errors.include?(:unique)
-        Errors::ApiError.new_from_details('RouteMappingTaken', route_mapping_taken_message(attributes))
+        CloudController::Errors::ApiError.new_from_details('RouteMappingTaken', route_mapping_taken_message(attributes))
       end
     end
 
@@ -32,11 +32,11 @@ module VCAP::CloudController
       begin
         RouteMappingValidator.new(route, app).validate
       rescue RouteMappingValidator::AppInvalidError
-        raise Errors::ApiError.new_from_details('AppNotFound', request_attrs['app_guid'])
+        raise CloudController::Errors::ApiError.new_from_details('AppNotFound', request_attrs['app_guid'])
       rescue RouteMappingValidator::RouteInvalidError
-        raise Errors::ApiError.new_from_details('RouteNotFound', request_attrs['route_guid'])
+        raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', request_attrs['route_guid'])
       rescue RouteMappingValidator::TcpRoutingDisabledError
-        raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
+        raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
       end
     end
 

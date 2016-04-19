@@ -27,7 +27,7 @@ module VCAP::CloudController
 
           it 'does not desire an app and raises an exception' do
             expect(messenger).to_not receive(:send_desire_request)
-            expect { runner.scale }.to raise_error(VCAP::Errors::ApiError, /App not started/)
+            expect { runner.scale }.to raise_error(CloudController::Errors::ApiError, /App not started/)
           end
         end
       end
@@ -91,7 +91,7 @@ module VCAP::CloudController
 
           it 'does not desire an app and raises an exception' do
             expect(messenger).to_not receive(:send_desire_request)
-            expect { runner.update_routes }.to raise_error(VCAP::Errors::ApiError, /App not started/)
+            expect { runner.update_routes }.to raise_error(CloudController::Errors::ApiError, /App not started/)
           end
         end
       end

@@ -259,12 +259,12 @@ describe AppBitsPackage do
       it 'raises an exception' do
         expect {
           create
-        }.to raise_exception VCAP::Errors::ApiError, /package.+larger/i
+        }.to raise_exception CloudController::Errors::ApiError, /package.+larger/i
       end
 
       it 'removes the compressed path afterwards' do
         expect(FileUtils).to receive(:rm_f).with(compressed_path)
-        expect { create }.to raise_exception VCAP::Errors::ApiError, /package.+larger/i
+        expect { create }.to raise_exception CloudController::Errors::ApiError, /package.+larger/i
       end
     end
 

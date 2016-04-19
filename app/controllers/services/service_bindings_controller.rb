@@ -45,11 +45,11 @@ module VCAP::CloudController
        object_renderer.render_json(self.class, service_binding, @opts)
       ]
     rescue ServiceInstanceBindingManager::ServiceInstanceNotFound
-      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', @request_attrs['service_instance_guid'])
+      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', @request_attrs['service_instance_guid'])
     rescue ServiceInstanceBindingManager::ServiceInstanceNotBindable
-      raise VCAP::Errors::ApiError.new_from_details('UnbindableService')
+      raise CloudController::Errors::ApiError.new_from_details('UnbindableService')
     rescue ServiceInstanceBindingManager::AppNotFound
-      raise VCAP::Errors::ApiError.new_from_details('AppNotFound', @request_attrs['app_guid'])
+      raise CloudController::Errors::ApiError.new_from_details('AppNotFound', @request_attrs['app_guid'])
     end
 
     delete path_guid, :delete
@@ -70,13 +70,13 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       unique_errors = e.errors.on([:app_id, :service_instance_id])
       if unique_errors && unique_errors.include?(:unique)
-        Errors::ApiError.new_from_details('ServiceBindingAppServiceTaken', "#{attributes['app_guid']} #{attributes['service_instance_guid']}")
+        CloudController::Errors::ApiError.new_from_details('ServiceBindingAppServiceTaken', "#{attributes['app_guid']} #{attributes['service_instance_guid']}")
       elsif e.errors.on(:app) && e.errors.on(:app).include?(:presence)
-        Errors::ApiError.new_from_details('AppNotFound', attributes['app_guid'])
+        CloudController::Errors::ApiError.new_from_details('AppNotFound', attributes['app_guid'])
       elsif e.errors.on(:service_instance) && e.errors.on(:service_instance).include?(:presence)
-        Errors::ApiError.new_from_details('ServiceInstanceNotFound', attributes['service_instance_guid'])
+        CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', attributes['service_instance_guid'])
       else
-        Errors::ApiError.new_from_details('ServiceBindingInvalid', e.errors.full_messages)
+        CloudController::Errors::ApiError.new_from_details('ServiceBindingInvalid', e.errors.full_messages)
       end
     end
 

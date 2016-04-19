@@ -32,7 +32,7 @@ resource 'Jobs', type: [:api, :legacy_api] do
 
     class KnownFailingJob < FakeJob
       def perform
-        raise VCAP::Errors::ApiError.new_from_details('MessageParseError', 'arbitrary string')
+        raise CloudController::Errors::ApiError.new_from_details('MessageParseError', 'arbitrary string')
       end
     end
 

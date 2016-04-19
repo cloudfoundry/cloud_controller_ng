@@ -21,7 +21,7 @@ module VCAP::CloudController
         app.lock!
 
         if app.pending?
-          raise VCAP::Errors::ApiError.new_from_details('NotStaged')
+          raise CloudController::Errors::ApiError.new_from_details('NotStaged')
         end
 
         app.restage!
@@ -38,9 +38,9 @@ module VCAP::CloudController
 
     def self.translate_validation_exception(e, attributes)
       docker_errors = e.errors.on(:docker)
-      return Errors::ApiError.new_from_details('DockerDisabled') if docker_errors
+      return CloudController::Errors::ApiError.new_from_details('DockerDisabled') if docker_errors
 
-      Errors::ApiError.new_from_details('StagingError', e.errors.full_messages)
+      CloudController::Errors::ApiError.new_from_details('StagingError', e.errors.full_messages)
     end
   end
 end

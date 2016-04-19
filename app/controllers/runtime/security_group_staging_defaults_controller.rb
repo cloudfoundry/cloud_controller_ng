@@ -9,7 +9,7 @@ module VCAP::CloudController
     end
 
     def self.not_found_exception(guid)
-      Errors::ApiError.new_from_details('SecurityGroupStagingDefaultInvalid', guid)
+      CloudController::Errors::ApiError.new_from_details('SecurityGroupStagingDefaultInvalid', guid)
     end
 
     get path, :enumerate
@@ -44,12 +44,12 @@ module VCAP::CloudController
     end
 
     def read(_)
-      raise Errors::ApiError.new_from_details('NotAuthorized') unless roles.admin?
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless roles.admin?
       super
     end
 
     def enumerate
-      raise Errors::ApiError.new_from_details('NotAuthorized') unless roles.admin?
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless roles.admin?
       super
     end
 

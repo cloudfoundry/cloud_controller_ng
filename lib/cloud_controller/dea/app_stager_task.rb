@@ -22,7 +22,7 @@ module VCAP::CloudController
 
       def stage(&completion_callback)
         @stager_id = @dea_pool.find_stager(@app.stack.name, staging_task_memory_mb, staging_task_disk_mb)
-        raise Errors::ApiError.new_from_details('StagingError', 'no available stagers') unless @stager_id
+        raise CloudController::Errors::ApiError.new_from_details('StagingError', 'no available stagers') unless @stager_id
 
         subject = "staging.#{@stager_id}.start"
         @multi_message_bus_request = MultiResponseMessageBusRequest.new(@message_bus, subject)
@@ -107,7 +107,7 @@ module VCAP::CloudController
 
         if type && message
           @app.mark_as_failed_to_stage(type)
-          raise Errors::ApiError.new_from_details(type, message)
+          raise CloudController::Errors::ApiError.new_from_details(type, message)
         end
       end
 
@@ -139,15 +139,15 @@ module VCAP::CloudController
         rescue => e
           Loggregator.emit_error(@app.guid, "Exception checking staging status: #{e.message}")
           logger.error("Exception checking staging status: #{e.inspect}\n  #{e.backtrace.join("\n  ")}")
-          raise Errors::ApiError.new_from_details('StagingError', "failed to stage application: can't retrieve staging status")
+          raise CloudController::Errors::ApiError.new_from_details('StagingError', "failed to stage application: can't retrieve staging status")
         end
 
         if @app.staging_task_id != task_id
-          raise Errors::ApiError.new_from_details('StagingError', 'failed to stage application: another staging request was initiated')
+          raise CloudController::Errors::ApiError.new_from_details('StagingError', 'failed to stage application: another staging request was initiated')
         end
 
         if @app.staging_failed?
-          raise Errors::ApiError.new_from_details('StagingError', STAGING_ALREADY_FAILURE_MSG)
+          raise CloudController::Errors::ApiError.new_from_details('StagingError', STAGING_ALREADY_FAILURE_MSG)
         end
       end
 

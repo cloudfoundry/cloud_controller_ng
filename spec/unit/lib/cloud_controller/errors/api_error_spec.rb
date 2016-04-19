@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-module VCAP::Errors
+module CloudController::Errors
   describe ApiError do
     def create_details(message)
       double(Details,

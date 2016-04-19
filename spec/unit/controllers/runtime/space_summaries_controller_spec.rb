@@ -86,7 +86,7 @@ module VCAP::CloudController
       context 'when the instances reporter fails' do
         before do
           allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_apps).and_raise(
-            Errors::InstancesUnavailable.new(RuntimeError.new('something went wrong.')))
+            CloudController::Errors::InstancesUnavailable.new(RuntimeError.new('something went wrong.')))
         end
 
         it "returns '220001 InstancesError'" do

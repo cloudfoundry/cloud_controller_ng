@@ -26,7 +26,7 @@ module VCAP::CloudController
           error_parser.validate(payload)
         rescue Membrane::SchemaValidationError => e
           logger.error('diego.staging.failure.invalid-message', staging_guid: staging_guid, payload: payload, error: e.to_s)
-          raise Errors::ApiError.new_from_details('InvalidRequest', payload)
+          raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', payload)
         end
 
         app = get_app(staging_guid)
@@ -53,7 +53,7 @@ module VCAP::CloudController
           logger.error('diego.staging.success.invalid-message', staging_guid: staging_guid, payload: payload, error: e.to_s)
           Loggregator.emit_error(app.guid, 'Malformed message from Diego stager')
 
-          raise Errors::ApiError.new_from_details('InvalidRequest', payload)
+          raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', payload)
         end
 
         begin

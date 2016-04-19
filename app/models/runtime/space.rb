@@ -1,9 +1,9 @@
 module VCAP::CloudController
   class Space < Sequel::Model
-    class InvalidDeveloperRelation < VCAP::Errors::InvalidRelation; end
-    class InvalidAuditorRelation < VCAP::Errors::InvalidRelation; end
-    class InvalidManagerRelation < VCAP::Errors::InvalidRelation; end
-    class InvalidSpaceQuotaRelation < VCAP::Errors::InvalidRelation; end
+    class InvalidDeveloperRelation < CloudController::Errors::InvalidRelation; end
+    class InvalidAuditorRelation < CloudController::Errors::InvalidRelation; end
+    class InvalidManagerRelation < CloudController::Errors::InvalidRelation; end
+    class InvalidSpaceQuotaRelation < CloudController::Errors::InvalidRelation; end
     class UnauthorizedAccessToPrivateDomain < RuntimeError; end
     class OrganizationAlreadySet < RuntimeError; end
 

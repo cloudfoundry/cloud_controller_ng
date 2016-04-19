@@ -54,7 +54,7 @@ module VCAP::CloudController
         msg = "Request failed for app: #{app.name}, path: #{path || '/'}"
         msg << " as the search_param: #{search_param} is invalid."
 
-        raise Errors::ApiError.new_from_details('FileError', msg)
+        raise CloudController::Errors::ApiError.new_from_details('FileError', msg)
       end
     end
   end

@@ -51,7 +51,7 @@ module VCAP::CloudController
 
       def fetch_from_tps(path, headers)
         if @url.nil?
-          raise Errors::InstancesUnavailable.new('TPS URL not configured')
+          raise CloudController::Errors::InstancesUnavailable.new('TPS URL not configured')
         end
 
         response = nil
@@ -62,7 +62,7 @@ module VCAP::CloudController
         rescue Errno::ECONNREFUSED => e
           tries -= 1
           retry unless tries == 0
-          raise Errors::InstancesUnavailable.new(e)
+          raise CloudController::Errors::InstancesUnavailable.new(e)
         end
 
         if response.code == '200'
@@ -71,10 +71,10 @@ module VCAP::CloudController
           return []
         else
           err_msg = "response code: #{response.code}, response body: #{response.body}"
-          raise Errors::InstancesUnavailable.new(err_msg)
+          raise CloudController::Errors::InstancesUnavailable.new(err_msg)
         end
       rescue JSON::JSONError => e
-        raise Errors::InstancesUnavailable.new(e)
+        raise CloudController::Errors::InstancesUnavailable.new(e)
       end
 
       def logger

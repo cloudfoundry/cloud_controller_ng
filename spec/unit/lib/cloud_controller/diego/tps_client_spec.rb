@@ -79,7 +79,7 @@ module VCAP::CloudController::Diego
           it 'retries and eventually raises InstancesUnavailable' do
             stub = stub_request(:get, tps_status_url).to_raise(Errno::ECONNREFUSED)
 
-            expect { client.lrp_instances(app) }.to raise_error(VCAP::Errors::InstancesUnavailable, /connection refused/i)
+            expect { client.lrp_instances(app) }.to raise_error(CloudController::Errors::InstancesUnavailable, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
           end
         end
@@ -102,7 +102,7 @@ module VCAP::CloudController::Diego
           it 'raises InstancesUnavailable' do
             expect {
               client.lrp_instances(app)
-            }.to raise_error(VCAP::Errors::InstancesUnavailable, /response code: 500, response body: This Broke/i)
+            }.to raise_error(CloudController::Errors::InstancesUnavailable, /response code: 500, response body: This Broke/i)
           end
         end
 
@@ -137,7 +137,7 @@ module VCAP::CloudController::Diego
         it 'raises InstancesUnavailable' do
           expect {
             client.lrp_instances(app)
-          }.to raise_error(VCAP::Errors::InstancesUnavailable, 'TPS URL not configured')
+          }.to raise_error(CloudController::Errors::InstancesUnavailable, 'TPS URL not configured')
         end
       end
     end
@@ -222,7 +222,7 @@ module VCAP::CloudController::Diego
 
             expect {
               client.lrp_instances_stats(app)
-            }.to raise_error(VCAP::Errors::InstancesUnavailable, /connection refused/i)
+            }.to raise_error(CloudController::Errors::InstancesUnavailable, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
           end
         end
@@ -245,7 +245,7 @@ module VCAP::CloudController::Diego
           it 'raises InstancesUnavailable' do
             expect {
               client.lrp_instances_stats(app)
-            }.to raise_error(VCAP::Errors::InstancesUnavailable, /response code: 500/i)
+            }.to raise_error(CloudController::Errors::InstancesUnavailable, /response code: 500/i)
           end
         end
 
@@ -280,7 +280,7 @@ module VCAP::CloudController::Diego
         it 'raises InstancesUnavailable' do
           expect {
             client.lrp_instances_stats(app)
-          }.to raise_error(VCAP::Errors::InstancesUnavailable, 'TPS URL not configured')
+          }.to raise_error(CloudController::Errors::InstancesUnavailable, 'TPS URL not configured')
         end
       end
     end
@@ -357,7 +357,7 @@ module VCAP::CloudController::Diego
           it 'retries and eventually raises InstancesUnavailable' do
             stub = stub_request(:get, tps_bulk_status_url).to_raise(Errno::ECONNREFUSED)
 
-            expect { client.bulk_lrp_instances([app, app2]) }.to raise_error(VCAP::Errors::InstancesUnavailable, /connection refused/i)
+            expect { client.bulk_lrp_instances([app, app2]) }.to raise_error(CloudController::Errors::InstancesUnavailable, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
           end
         end
@@ -370,7 +370,7 @@ module VCAP::CloudController::Diego
           it 'raises InstancesUnavailable' do
             expect {
               client.bulk_lrp_instances([app, app2])
-            }.to raise_error(VCAP::Errors::InstancesUnavailable, /response code: 500, response body: This Broke/i)
+            }.to raise_error(CloudController::Errors::InstancesUnavailable, /response code: 500, response body: This Broke/i)
           end
         end
 
@@ -405,7 +405,7 @@ module VCAP::CloudController::Diego
         it 'raises InstancesUnavailable' do
           expect {
             client.bulk_lrp_instances([app])
-          }.to raise_error(VCAP::Errors::InstancesUnavailable, 'TPS URL not configured')
+          }.to raise_error(CloudController::Errors::InstancesUnavailable, 'TPS URL not configured')
         end
       end
     end

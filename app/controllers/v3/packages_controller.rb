@@ -139,7 +139,7 @@ class PackagesController < ApplicationController
   end
 
   def bits_already_uploaded!
-    raise VCAP::Errors::ApiError.new_from_details('PackageBitsAlreadyUploaded')
+    raise CloudController::Errors::ApiError.new_from_details('PackageBitsAlreadyUploaded')
   end
 
   def package_presenter

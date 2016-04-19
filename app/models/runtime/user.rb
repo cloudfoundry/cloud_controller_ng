@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class User < Sequel::Model
-    class InvalidOrganizationRelation < VCAP::Errors::InvalidRelation; end
+    class InvalidOrganizationRelation < CloudController::Errors::InvalidRelation; end
     attr_accessor :username, :organization_roles, :space_roles
 
     no_auto_guid

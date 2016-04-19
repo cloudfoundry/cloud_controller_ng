@@ -45,7 +45,7 @@ module VCAP::CloudController
       [HTTP::CREATED, headers, body]
     rescue ServiceBrokerCreate::SpaceNotFound => e
       logger.error("Space not found: #{params[:space_guid]}, Vcap-Request-Id: #{VCAP::Request.current_id}, Error: #{e.message}")
-      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Space not found')
+      raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Space not found')
     end
 
     def update(guid)
@@ -75,16 +75,16 @@ module VCAP::CloudController
 
       HTTP::NO_CONTENT
     rescue Sequel::ForeignKeyConstraintViolation
-      raise VCAP::Errors::ApiError.new_from_details('ServiceBrokerNotRemovable', broker.name)
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBrokerNotRemovable', broker.name)
     end
 
     def self.translate_validation_exception(e, _)
       if e.errors.on(:name) && e.errors.on(:name).include?(:unique)
-        Errors::ApiError.new_from_details('ServiceBrokerNameTaken', e.model.name)
+        CloudController::Errors::ApiError.new_from_details('ServiceBrokerNameTaken', e.model.name)
       elsif e.errors.on(:broker_url) && e.errors.on(:broker_url).include?(:unique)
-        Errors::ApiError.new_from_details('ServiceBrokerUrlTaken', e.model.broker_url)
+        CloudController::Errors::ApiError.new_from_details('ServiceBrokerUrlTaken', e.model.broker_url)
       else
-        Errors::ApiError.new_from_details('ServiceBrokerCatalogInvalid', e.errors.full_messages)
+        CloudController::Errors::ApiError.new_from_details('ServiceBrokerCatalogInvalid', e.errors.full_messages)
       end
     end
 

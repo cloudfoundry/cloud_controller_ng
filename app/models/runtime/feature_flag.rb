@@ -57,7 +57,7 @@ module VCAP::CloudController
         err_message = feature_flag.error_message
       end
 
-      raise VCAP::Errors::ApiError.new_from_details('FeatureDisabled', err_message) if !enabled?(feature_flag_name)
+      raise CloudController::Errors::ApiError.new_from_details('FeatureDisabled', err_message) if !enabled?(feature_flag_name)
     rescue KeyError
       raise UndefinedFeatureFlagError.new "invalid key: #{feature_flag_name}"
     end

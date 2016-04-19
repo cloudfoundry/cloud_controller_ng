@@ -77,7 +77,9 @@ module VCAP::CloudController
             end
 
             it 'should raise an error for unbind operation' do
-              expect { subject.delete_service_key(service_key) }.to raise_error VCAP::Errors::ApiError, "An operation for service instance #{instance.name} is in progress."
+              expect {
+                subject.delete_service_key(service_key)
+              }.to raise_error(CloudController::Errors::ApiError, "An operation for service instance #{instance.name} is in progress.")
               expect(ServiceKey.find(guid: service_key.guid)).not_to be_nil
             end
           end

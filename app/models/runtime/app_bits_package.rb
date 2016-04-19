@@ -87,7 +87,7 @@ class AppBitsPackage
 
     total_size = local_app_bits.storage_size + fingerprints_in_app_cache.storage_size
     if total_size > max_package_size
-      raise VCAP::Errors::ApiError.new_from_details('AppPackageInvalid', "Package may not be larger than #{max_package_size} bytes")
+      raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', "Package may not be larger than #{max_package_size} bytes")
     end
   end
 

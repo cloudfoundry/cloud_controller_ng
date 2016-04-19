@@ -4,7 +4,7 @@ module VCAP::Services
       module Errors
         class AsyncRequired < HttpResponseError
           def initialize(uri, method, response)
-            message = VCAP::Errors::ApiError.new_from_details('ServiceBrokerAsyncRequired').message
+            message = CloudController::Errors::ApiError.new_from_details('ServiceBrokerAsyncRequired').message
             super(message, uri, method, response)
           end
 

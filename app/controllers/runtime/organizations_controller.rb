@@ -41,11 +41,11 @@ module VCAP::CloudController
       quota_def_errors = e.errors.on(:quota_definition_id)
       name_errors = e.errors.on(:name)
       if quota_def_errors && quota_def_errors.include?(:not_authorized)
-        Errors::ApiError.new_from_details('NotAuthorized', attributes['quota_definition_id'])
+        CloudController::Errors::ApiError.new_from_details('NotAuthorized', attributes['quota_definition_id'])
       elsif name_errors && name_errors.include?(:unique)
-        Errors::ApiError.new_from_details('OrganizationNameTaken', attributes['name'])
+        CloudController::Errors::ApiError.new_from_details('OrganizationNameTaken', attributes['name'])
       else
-        Errors::ApiError.new_from_details('OrganizationInvalid', e.errors.full_messages)
+        CloudController::Errors::ApiError.new_from_details('OrganizationInvalid', e.errors.full_messages)
       end
     end
 
@@ -125,11 +125,11 @@ module VCAP::CloudController
         begin
           user_id = @username_lookup_uaa_client.id_for_username(username)
         rescue UaaUnavailable
-          raise VCAP::Errors::ApiError.new_from_details('UaaUnavailable')
+          raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         rescue UaaEndpointDisabled
-          raise VCAP::Errors::ApiError.new_from_details('UaaEndpointDisabled')
+          raise CloudController::Errors::ApiError.new_from_details('UaaEndpointDisabled')
         end
-        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
+        raise CloudController::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
 
         user = User.where(guid: user_id).first || User.create(guid: user_id)
 
@@ -153,15 +153,15 @@ module VCAP::CloudController
         begin
           user_id = @username_lookup_uaa_client.id_for_username(username)
         rescue UaaUnavailable
-          raise VCAP::Errors::ApiError.new_from_details('UaaUnavailable')
+          raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         rescue UaaEndpointDisabled
-          raise VCAP::Errors::ApiError.new_from_details('UaaEndpointDisabled')
+          raise CloudController::Errors::ApiError.new_from_details('UaaEndpointDisabled')
         end
-        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
+        raise CloudController::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
 
         user = User.where(guid: user_id).first
 
-        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user
+        raise CloudController::Errors::ApiError.new_from_details('UserNotFound', username) unless user
 
         org = find_guid_and_validate_access(:update, guid)
         org.send("remove_#{role}", user)
@@ -175,7 +175,7 @@ module VCAP::CloudController
       raise_if_has_dependent_associations!(org) if v2_api? && !recursive_delete?
 
       if !org.spaces.empty? && !recursive_delete?
-        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name)
+        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name)
       end
 
       delete_action = OrganizationDelete.new(SpaceDelete.new(current_user.guid, current_user_email, @services_event_repository))

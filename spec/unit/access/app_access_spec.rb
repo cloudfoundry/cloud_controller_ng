@@ -55,7 +55,7 @@ module VCAP::CloudController
       context 'app_bits_upload FeatureFlag' do
         it 'disallows when enabled' do
           FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil)
-          expect { subject.upload?(object) }.to raise_error(VCAP::Errors::ApiError, /app_bits_upload/)
+          expect { subject.upload?(object) }.to raise_error(CloudController::Errors::ApiError, /app_bits_upload/)
         end
       end
 
@@ -81,9 +81,9 @@ module VCAP::CloudController
         before { FeatureFlag.make(name: 'app_scaling', enabled: false, error_message: nil) }
 
         it 'cannot scale' do
-          expect { subject.read_for_update?(object, { 'memory' => 2 }) }.to raise_error(VCAP::Errors::ApiError, /app_scaling/)
-          expect { subject.read_for_update?(object, { 'disk_quota' => 2 }) }.to raise_error(VCAP::Errors::ApiError, /app_scaling/)
-          expect { subject.read_for_update?(object, { 'instances' => 2 }) }.to raise_error(VCAP::Errors::ApiError, /app_scaling/)
+          expect { subject.read_for_update?(object, { 'memory' => 2 }) }.to raise_error(CloudController::Errors::ApiError, /app_scaling/)
+          expect { subject.read_for_update?(object, { 'disk_quota' => 2 }) }.to raise_error(CloudController::Errors::ApiError, /app_scaling/)
+          expect { subject.read_for_update?(object, { 'instances' => 2 }) }.to raise_error(CloudController::Errors::ApiError, /app_scaling/)
         end
 
         it 'allows unchanged fields to be specified' do
@@ -99,7 +99,7 @@ module VCAP::CloudController
         before { TestConfig.override(users_can_select_backend: false) }
 
         it 'does not allow user to change the diego flag' do
-          expect { subject.read_for_update?(object, { 'diego' => true }) }.to raise_error(VCAP::Errors::ApiError, /backend/)
+          expect { subject.read_for_update?(object, { 'diego' => true }) }.to raise_error(CloudController::Errors::ApiError, /backend/)
         end
       end
     end

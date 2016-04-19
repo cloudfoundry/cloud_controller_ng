@@ -73,11 +73,11 @@ module VCAP::CloudController
           end
 
           it 'raises an InstancesUnavailable exception' do
-            expect { subject.all_instances_for_app(app) }.to raise_error(VCAP::Errors::InstancesUnavailable, /oh no/)
+            expect { subject.all_instances_for_app(app) }.to raise_error(CloudController::Errors::InstancesUnavailable, /oh no/)
           end
 
           context 'when its an InstancesUnavailable' do
-            let(:error) { Errors::InstancesUnavailable.new('oh my') }
+            let(:error) { CloudController::Errors::InstancesUnavailable.new('oh my') }
             before do
               allow(tps_client).to receive(:lrp_instances).and_raise(error)
             end
@@ -190,7 +190,7 @@ module VCAP::CloudController
             end
 
             context 'when its an InstancesUnavailable' do
-              let(:error) { Errors::InstancesUnavailable.new('oh my') }
+              let(:error) { CloudController::Errors::InstancesUnavailable.new('oh my') }
               before do
                 allow(tps_client).to receive(:lrp_instances).and_raise(error)
               end
@@ -266,7 +266,7 @@ module VCAP::CloudController
           end
 
           context 'when its an InstancesUnavailable' do
-            let(:error) { Errors::InstancesUnavailable.new('oh my') }
+            let(:error) { CloudController::Errors::InstancesUnavailable.new('oh my') }
             before do
               allow(tps_client).to receive(:bulk_lrp_instances).and_raise(error)
             end
@@ -296,11 +296,11 @@ module VCAP::CloudController
           it 'raises an InstancesUnavailable exception' do
             expect {
               subject.crashed_instances_for_app(app)
-            }.to raise_error(Errors::InstancesUnavailable, /oh no/)
+            }.to raise_error(CloudController::Errors::InstancesUnavailable, /oh no/)
           end
 
           context 'when its an InstancesUnavailable' do
-            let(:error) { Errors::InstancesUnavailable.new('oh my') }
+            let(:error) { CloudController::Errors::InstancesUnavailable.new('oh my') }
             before do
               allow(tps_client).to receive(:lrp_instances).and_raise(error)
             end
@@ -426,11 +426,11 @@ module VCAP::CloudController
           it 'raises an InstancesUnavailable exception' do
             expect {
               subject.stats_for_app(app)
-            }.to raise_error(Errors::InstancesUnavailable, /oh no/)
+            }.to raise_error(CloudController::Errors::InstancesUnavailable, /oh no/)
           end
 
           context 'when its an InstancesUnavailable' do
-            let(:error) { Errors::InstancesUnavailable.new('oh my') }
+            let(:error) { CloudController::Errors::InstancesUnavailable.new('oh my') }
             before do
               allow(tps_client).to receive(:lrp_instances_stats).and_raise(error)
             end

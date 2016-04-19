@@ -95,7 +95,7 @@ module VCAP::CloudController
 
         context 'when instance reporter is unavailable' do
           before do
-            allow(instances_reporters).to receive(:stats_for_app).and_raise(VCAP::Errors::InstancesUnavailable.new(StandardError.new))
+            allow(instances_reporters).to receive(:stats_for_app).and_raise(CloudController::Errors::InstancesUnavailable.new(StandardError.new))
             set_current_user(@developer)
           end
 
@@ -111,7 +111,7 @@ module VCAP::CloudController
 
         context 'when there is an error finding instances' do
           before do
-            allow(instances_reporters).to receive(:stats_for_app).and_raise(VCAP::Errors::ApiError.new_from_details('StatsError', 'msg'))
+            allow(instances_reporters).to receive(:stats_for_app).and_raise(CloudController::Errors::ApiError.new_from_details('StatsError', 'msg'))
             set_current_user(@developer)
           end
 

@@ -223,7 +223,7 @@ module VCAP::CloudController::RestController
           obj = obj.to_s
         end
         logger.info('allowy.access-denied.insufficient-scope', op: "#{op}_with_token", obj: obj, user: user, roles: roles)
-        raise VCAP::Errors::ApiError.new_from_details('InsufficientScope')
+        raise CloudController::Errors::ApiError.new_from_details('InsufficientScope')
       end
 
       if @access_context.cannot?(op, obj, *args)
@@ -231,7 +231,7 @@ module VCAP::CloudController::RestController
           obj = obj.to_s
         end
         logger.info('allowy.access-denied.not-authorized', op: op, obj: obj, user: user, roles: roles)
-        raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
+        raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
       end
     end
 
@@ -274,7 +274,7 @@ module VCAP::CloudController::RestController
       end
 
       if associations.any?
-        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', associations.join(', '), obj.class.table_name)
+        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', associations.join(', '), obj.class.table_name)
       end
     end
 
@@ -361,7 +361,7 @@ module VCAP::CloudController::RestController
       # @return [Exception] The vcap not-found exception for this
       # rest/api endpoint.
       def not_found_exception(guid)
-        Errors::ApiError.new_from_details(not_found_exception_name, guid)
+        CloudController::Errors::ApiError.new_from_details(not_found_exception_name, guid)
       end
 
       # Start the DSL for defining attributes.  This is used inside

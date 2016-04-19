@@ -33,7 +33,7 @@ module VCAP::CloudController
         it 'raises' do
           expect {
             subject.validate_app(app)
-          }.to raise_error(Errors::ApiError, /app package is invalid/)
+          }.to raise_error(CloudController::Errors::ApiError, /app package is invalid/)
         end
       end
 
@@ -54,7 +54,7 @@ module VCAP::CloudController
           it 'raises' do
             expect {
               subject.validate_app(app)
-            }.to raise_error(Errors::ApiError, /Custom buildpacks are disabled/)
+            }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
           end
         end
       end
@@ -94,7 +94,7 @@ module VCAP::CloudController
           it 'raises' do
             expect {
               subject.validate_app(app)
-            }.to raise_error(Errors::ApiError, /Docker support has not been enabled/)
+            }.to raise_error(CloudController::Errors::ApiError, /Docker support has not been enabled/)
           end
         end
 
@@ -116,7 +116,7 @@ module VCAP::CloudController
           it 'raises NoBuildpacksFound' do
             expect {
               subject.validate_app(app)
-            }.to raise_error(Errors::ApiError, /There are no buildpacks available/)
+            }.to raise_error(CloudController::Errors::ApiError, /There are no buildpacks available/)
           end
         end
 

@@ -477,21 +477,21 @@ module VCAP::CloudController
           space_1.add_developer(user)
           space_1.refresh
           expect(user.spaces).to include(space_1)
-          expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+          expect { org.remove_user(user) }.to raise_error(CloudController::Errors::ApiError)
         end
 
         it "should raise an error if the user's managed space is associated with an organization's space" do
           space_1.add_manager(user)
           space_1.refresh
           expect(user.managed_spaces).to include(space_1)
-          expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+          expect { org.remove_user(user) }.to raise_error(CloudController::Errors::ApiError)
         end
 
         it "should raise an error if the user's audited space is associated with an organization's space" do
           space_1.add_auditor(user)
           space_1.refresh
           expect(user.audited_spaces).to include(space_1)
-          expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+          expect { org.remove_user(user) }.to raise_error(CloudController::Errors::ApiError)
         end
 
         it "should raise an error if any of the user's spaces are associated with any of the organization's spaces" do
@@ -499,7 +499,7 @@ module VCAP::CloudController
           space_2.add_manager(user)
           space_2.refresh
           expect(user.managed_spaces).to include(space_2)
-          expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+          expect { org.remove_user(user) }.to raise_error(CloudController::Errors::ApiError)
         end
 
         it 'should remove the user from an organization if they are not associated with any spaces' do
@@ -567,7 +567,7 @@ module VCAP::CloudController
           end
 
           it 'raises an exception' do
-            expect { org.save }.to raise_error(VCAP::Errors::ApiError, /Quota Definition could not be found: default/)
+            expect { org.save }.to raise_error(CloudController::Errors::ApiError, /Quota Definition could not be found: default/)
           end
         end
       end
@@ -591,7 +591,7 @@ module VCAP::CloudController
           it 'uses what is provided' do
             expect {
               org.save
-            }.to raise_error(VCAP::Errors::ApiError, /Invalid relation: Could not find VCAP::CloudController::QuotaDefinition with guid: #{quota_definition_guid}/)
+            }.to raise_error(CloudController::Errors::ApiError, /Invalid relation: Could not find VCAP::CloudController::QuotaDefinition with guid: #{quota_definition_guid}/)
           end
         end
       end

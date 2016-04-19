@@ -65,7 +65,7 @@ module VCAP::CloudController
           end
           it 'returns an OrganizationDeletionFailed error' do
             errors = org_delete.delete(org_dataset)
-            expect(errors.first).to be_instance_of(VCAP::Errors::ApiError)
+            expect(errors.first).to be_instance_of(CloudController::Errors::ApiError)
             expect(errors.first.name).to eq 'OrganizationDeletionFailed'
           end
 

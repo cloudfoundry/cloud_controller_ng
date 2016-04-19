@@ -29,7 +29,7 @@ class ErrorHasher < Struct.new(:error)
   end
 
   def api_error?
-    error.is_a?(VCAP::Errors::ApiError) || error.respond_to?(:error_code)
+    error.is_a?(CloudController::Errors::ApiError) || error.respond_to?(:error_code)
   end
 
   def services_error?

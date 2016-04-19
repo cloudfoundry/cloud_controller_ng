@@ -309,7 +309,7 @@ module VCAP::Services::SSO
             end
 
             it 'raises a ServiceBrokerDashboardClientFailure error' do
-              expect { manager.synchronize_clients_with_catalog(catalog) }.to(raise_error(VCAP::Errors::ApiError)) { |err|
+              expect { manager.synchronize_clients_with_catalog(catalog) }.to(raise_error(CloudController::Errors::ApiError)) { |err|
                 expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
                 expect(err.message).to match('my test error')
               }
@@ -356,7 +356,7 @@ module VCAP::Services::SSO
             end
 
             it 'raises a ServiceBrokerDashboardClientFailure error' do
-              expect { manager.synchronize_clients_with_catalog(catalog) }.to(raise_error(VCAP::Errors::ApiError)) { |err|
+              expect { manager.synchronize_clients_with_catalog(catalog) }.to(raise_error(CloudController::Errors::ApiError)) { |err|
                 expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
                 expect(err.message).to match('error message')
               }
@@ -493,7 +493,7 @@ module VCAP::Services::SSO
           end
 
           it 'raises a ServiceBrokerDashboardClientFailure error' do
-            expect { manager.remove_clients_for_broker }.to(raise_error(VCAP::Errors::ApiError)) { |err|
+            expect { manager.remove_clients_for_broker }.to(raise_error(CloudController::Errors::ApiError)) { |err|
               expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
               expect(err.message).to match('error message')
             }
@@ -520,7 +520,7 @@ module VCAP::Services::SSO
           end
 
           it 'raises a ServiceBrokerDashboardClientFailure error' do
-            expect { manager.remove_clients_for_broker }.to(raise_error(VCAP::Errors::ApiError)) { |err|
+            expect { manager.remove_clients_for_broker }.to(raise_error(CloudController::Errors::ApiError)) { |err|
               expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
               expect(err.message).to match('my test error')
             }

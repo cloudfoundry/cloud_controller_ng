@@ -32,20 +32,20 @@ module VCAP::CloudController
       context 'raises an error when it fails' do
         it 'on operation_with_token' do
           expect(access_context).to receive(:cannot?).with(:read_for_update_with_token, obj).ordered.and_return(true)
-          expect { @model_controller.validate_access(:read_for_update, obj) }.to raise_error VCAP::Errors::ApiError
+          expect { @model_controller.validate_access(:read_for_update, obj) }.to raise_error CloudController::Errors::ApiError
 
           expect(access_context).to receive(:cannot?).with(:update_with_token, obj).ordered.and_return(true)
-          expect { @model_controller.validate_access(:update, obj) }.to raise_error VCAP::Errors::ApiError
+          expect { @model_controller.validate_access(:update, obj) }.to raise_error CloudController::Errors::ApiError
         end
 
         it 'on operation' do
           expect(access_context).to receive(:cannot?).with(:read_for_update_with_token, obj).ordered.and_return(false)
           expect(access_context).to receive(:cannot?).with(:read_for_update, obj, fields).ordered.and_return(true)
-          expect { @model_controller.validate_access(:read_for_update, obj, fields) }.to raise_error VCAP::Errors::ApiError
+          expect { @model_controller.validate_access(:read_for_update, obj, fields) }.to raise_error CloudController::Errors::ApiError
 
           expect(access_context).to receive(:cannot?).with(:update_with_token, obj).ordered.and_return(false)
           expect(access_context).to receive(:cannot?).with(:update, obj, fields).ordered.and_return(true)
-          expect { @model_controller.validate_access(:update, obj, fields) }.to raise_error VCAP::Errors::ApiError
+          expect { @model_controller.validate_access(:update, obj, fields) }.to raise_error CloudController::Errors::ApiError
         end
       end
     end
@@ -514,7 +514,7 @@ module VCAP::CloudController
     describe 'error handling' do
       describe '404' do
         before do
-          VCAP::Errors::Details::HARD_CODED_DETAILS['TestModelNotFound'] = {
+          CloudController::Errors::Details::HARD_CODED_DETAILS['TestModelNotFound'] = {
             'code' => 999999999,
             'http_code' => 404,
             'message' => 'Test Model Not Found',
@@ -546,7 +546,7 @@ module VCAP::CloudController
 
       describe 'model errors' do
         before do
-          VCAP::Errors::Details::HARD_CODED_DETAILS['TestModelValidation'] = {
+          CloudController::Errors::Details::HARD_CODED_DETAILS['TestModelValidation'] = {
             'code' => 999999998,
             'http_code' => 400,
             'message' => 'Validation Error',

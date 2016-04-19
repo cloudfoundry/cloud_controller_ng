@@ -65,7 +65,7 @@ module VCAP::CloudController
             Loggregator.emit_error(app.guid, 'Malformed message from Diego stager')
 
             app.mark_as_failed_to_stage('StagingError')
-            raise Errors::ApiError.new_from_details('InvalidRequest', payload)
+            raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', payload)
           end
 
           begin

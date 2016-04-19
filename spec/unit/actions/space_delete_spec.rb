@@ -80,8 +80,8 @@ module VCAP::CloudController
             it 'returns a service broker bad response error' do
               results = space_delete.delete(space_dataset)
               expect(results.length).to eq(2)
-              expect(results.first).to be_instance_of(VCAP::Errors::ApiError)
-              expect(results.second).to be_instance_of(VCAP::Errors::ApiError)
+              expect(results.first).to be_instance_of(CloudController::Errors::ApiError)
+              expect(results.second).to be_instance_of(CloudController::Errors::ApiError)
 
               instance_1_url = remove_basic_auth(deprovision_url(service_instance_1))
               instance_2_url = remove_basic_auth(deprovision_url(service_instance_2))
@@ -114,7 +114,7 @@ module VCAP::CloudController
               expect(result.length).to be(1)
 
               result = result.first
-              expect(result).to be_instance_of(VCAP::Errors::ApiError)
+              expect(result).to be_instance_of(CloudController::Errors::ApiError)
               expect(result.message).to include("An operation for service instance #{service_instance.name} is in progress.")
             end
 
@@ -174,7 +174,7 @@ module VCAP::CloudController
 
             context 'when deleting a service instance associated with a private broker fails' do
               before do
-                error = [VCAP::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', 'fake-name')]
+                error = [CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', 'fake-name')]
                 service_instance_delete = instance_double(ServiceInstanceDelete, delete: error)
                 allow(ServiceInstanceDelete).to receive(:new).and_return(service_instance_delete)
               end

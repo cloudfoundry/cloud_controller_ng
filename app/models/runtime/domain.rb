@@ -143,7 +143,7 @@ module VCAP::CloudController
 
     def validate_change_owning_organization(organization)
       return if self.new? || owning_organization == organization
-      raise VCAP::Errors::ApiError.new_from_details('DomainInvalid', 'the owning organization cannot be changed')
+      raise CloudController::Errors::ApiError.new_from_details('DomainInvalid', 'the owning organization cannot be changed')
     end
 
     def validate_add_shared_organization(organization)

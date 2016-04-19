@@ -8,11 +8,11 @@ module VCAP::CloudController
       begin
         fingerprints_all_clientside_bits = MultiJson.load(body)
       rescue MultiJson::ParseError => e
-        raise Errors::ApiError.new_from_details('MessageParseError', e.message)
+        raise CloudController::Errors::ApiError.new_from_details('MessageParseError', e.message)
       end
 
       unless fingerprints_all_clientside_bits.is_a?(Array)
-        raise Errors::ApiError.new_from_details('UnprocessableEntity', 'must be an array.')
+        raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'must be an array.')
       end
 
       fingerprints_existing_in_blobstore = ResourcePool.instance.match_resources(fingerprints_all_clientside_bits)

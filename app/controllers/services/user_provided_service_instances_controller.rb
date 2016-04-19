@@ -30,19 +30,19 @@ module VCAP::CloudController
       service_instance_errors = e.errors.on(:service_instance)
 
       if space_and_name_errors && space_and_name_errors.include?(:unique)
-        Errors::ApiError.new_from_details('ServiceInstanceNameTaken', attributes['name'])
+        CloudController::Errors::ApiError.new_from_details('ServiceInstanceNameTaken', attributes['name'])
       elsif service_instance_errors.include?(:space_mismatch)
-        Errors::ApiError.new_from_details('ServiceInstanceRouteBindingSpaceMismatch')
+        CloudController::Errors::ApiError.new_from_details('ServiceInstanceRouteBindingSpaceMismatch')
       elsif service_instance_errors.include?(:route_binding_not_allowed)
-        Errors::ApiError.new_from_details('ServiceDoesNotSupportRoutes')
+        CloudController::Errors::ApiError.new_from_details('ServiceDoesNotSupportRoutes')
       elsif service_instance_errors.include?(:route_service_url_not_https)
-        raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid',
+        raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid',
                                                       'Scheme for route_service_url must be https.')
       elsif service_instance_errors.include?(:route_service_url_invalid)
-        raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid',
+        raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid',
                                                       'route_service_url is invalid.')
       else
-        Errors::ApiError.new_from_details('ServiceInstanceInvalid', e.errors.full_messages)
+        CloudController::Errors::ApiError.new_from_details('ServiceInstanceInvalid', e.errors.full_messages)
       end
     end
 
@@ -65,7 +65,7 @@ module VCAP::CloudController
       @request_attrs = decode_update_request_attrs
 
       logger.debug 'cc.update', guid: guid, attributes: request_attrs
-      raise Errors::ApiError.new_from_details('InvalidRequest') unless request_attrs
+      raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless request_attrs
 
       service_instance = find_guid(guid)
       validate_access(:read_for_update, service_instance)
@@ -150,17 +150,17 @@ module VCAP::CloudController
 
       [HTTP::CREATED, object_renderer.render_json(self.class, route_binding.service_instance, @opts)]
     rescue ServiceInstanceBindingManager::RouteNotFound
-      raise VCAP::Errors::ApiError.new_from_details('RouteNotFound', route_guid)
+      raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', route_guid)
     rescue ServiceInstanceBindingManager::ServiceInstanceAlreadyBoundToSameRoute
-      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceAlreadyBoundToSameRoute')
+      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceAlreadyBoundToSameRoute')
     rescue ServiceInstanceBindingManager::RouteAlreadyBoundToServiceInstance
-      raise VCAP::Errors::ApiError.new_from_details('RouteAlreadyBoundToServiceInstance')
+      raise CloudController::Errors::ApiError.new_from_details('RouteAlreadyBoundToServiceInstance')
     rescue ServiceInstanceBindingManager::ServiceInstanceNotFound
-      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', instance_guid)
+      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', instance_guid)
     rescue ServiceInstanceBindingManager::RouteServiceRequiresDiego
-      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceRequiresDiego')
+      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceRequiresDiego')
     rescue ServiceInstanceBindingManager::RouteServiceDisabled
-      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceDisabled')
+      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceDisabled')
     end
 
     def unbind_route(route_guid, instance_guid)
@@ -173,13 +173,13 @@ module VCAP::CloudController
     rescue ServiceInstanceBindingManager::RouteBindingNotFound
       invalid_relation!("Route #{route_guid} is not bound to service instance #{instance_guid}.")
     rescue ServiceInstanceBindingManager::RouteNotFound
-      raise VCAP::Errors::ApiError.new_from_details('RouteNotFound', route_guid)
+      raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', route_guid)
     rescue ServiceInstanceBindingManager::ServiceInstanceNotFound
-      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', instance_guid)
+      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', instance_guid)
     end
 
     def invalid_relation!(message)
-      raise Errors::ApiError.new_from_details('InvalidRelation', message)
+      raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', message)
     end
 
     def decode_create_request_attrs
@@ -203,7 +203,7 @@ module VCAP::CloudController
 
     def validate_space_not_changed(request_attrs, service_instance)
       if request_attrs['space_guid'] && request_attrs['space_guid'] != service_instance.space.guid
-        raise Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'cannot change space for service instance')
+        raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'cannot change space for service instance')
       end
     end
 

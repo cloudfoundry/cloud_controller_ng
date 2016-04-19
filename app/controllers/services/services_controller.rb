@@ -30,14 +30,14 @@ module VCAP::CloudController
       if SecurityContext.missing_token?
         @opts.delete(:inline_relations_depth)
       elsif SecurityContext.invalid_token?
-        raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')
+        raise CloudController::Errors::ApiError.new_from_details('InvalidAuthToken')
       end
 
       super
     end
 
     def self.translate_validation_exception(e, attributes)
-      Errors::ApiError.new_from_details('ServiceInvalid', e.errors.full_messages)
+      CloudController::Errors::ApiError.new_from_details('ServiceInvalid', e.errors.full_messages)
     end
 
     def delete(guid)

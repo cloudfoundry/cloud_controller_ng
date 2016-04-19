@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-module VCAP::Errors
+module CloudController::Errors
   describe Details do
     describe '.new(name)' do
       let(:name) { 'DomainInvalid' }

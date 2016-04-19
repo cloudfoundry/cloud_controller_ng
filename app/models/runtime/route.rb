@@ -4,10 +4,10 @@ module VCAP::CloudController
   class Route < Sequel::Model
     ROUTE_REGEX = /\A#{URI.regexp}\Z/
 
-    class InvalidDomainRelation < VCAP::Errors::InvalidRelation; end
-    class InvalidAppRelation < VCAP::Errors::InvalidRelation; end
-    class InvalidOrganizationRelation < VCAP::Errors::InvalidRelation; end
-    class DockerDisabled < VCAP::Errors::InvalidRelation; end
+    class InvalidDomainRelation < CloudController::Errors::InvalidRelation; end
+    class InvalidAppRelation < CloudController::Errors::InvalidRelation; end
+    class InvalidOrganizationRelation < CloudController::Errors::InvalidRelation; end
+    class DockerDisabled < CloudController::Errors::InvalidRelation; end
 
     many_to_one :domain
     many_to_one :space, after_set: :validate_changed_space

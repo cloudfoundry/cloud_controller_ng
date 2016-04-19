@@ -403,11 +403,11 @@ module VCAP::CloudController
       describe 'stager availability' do
         it 'raises if there are no stagers with that stack' do
           subject.process_advertise_message(dea_advertise_msg)
-          expect { subject.find_stager('unknown-stack-name', 0, 0) }.to raise_error(Errors::ApiError, /The stack could not be found/)
+          expect { subject.find_stager('unknown-stack-name', 0, 0) }.to raise_error(CloudController::Errors::ApiError, /The stack could not be found/)
         end
 
         it 'only finds registered stagers' do
-          expect { subject.find_stager('stack', 0, 0) }.to raise_error(Errors::ApiError, /The stack could not be found/)
+          expect { subject.find_stager('stack', 0, 0) }.to raise_error(CloudController::Errors::ApiError, /The stack could not be found/)
           subject.process_advertise_message(dea_advertise_msg)
           expect(subject.find_stager('stack', 0, 0)).to eq('dea-id')
         end
@@ -491,7 +491,7 @@ module VCAP::CloudController
       describe 'stack availability' do
         it 'only finds deas that can satisfy stack request' do
           subject.process_advertise_message(dea_advertise_msg)
-          expect { subject.find_stager('unknown-stack-name', 0, 0) }.to raise_error(Errors::ApiError, /The stack could not be found/)
+          expect { subject.find_stager('unknown-stack-name', 0, 0) }.to raise_error(CloudController::Errors::ApiError, /The stack could not be found/)
           expect(subject.find_stager('stack', 0, 0)).to eq('dea-id')
         end
       end

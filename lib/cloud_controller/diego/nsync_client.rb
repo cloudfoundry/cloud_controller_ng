@@ -11,7 +11,7 @@ module VCAP::CloudController
 
       def desire_task(task)
         if @url.nil?
-          raise Errors::ApiError.new_from_details('InvalidTaskAddress', 'Diego Task URL does not exist.')
+          raise CloudController::Errors::ApiError.new_from_details('InvalidTaskAddress', 'Diego Task URL does not exist.')
         end
 
         logger.info('task.request', task_guid: task.guid)
@@ -24,11 +24,11 @@ module VCAP::CloudController
           response = http_client.post(path, task_request, REQUEST_HEADERS)
         rescue Errno::ECONNREFUSED, SocketError => e
           retry unless (tries -= 1).zero?
-          raise Errors::ApiError.new_from_details('TaskWorkersUnavailable', e)
+          raise CloudController::Errors::ApiError.new_from_details('TaskWorkersUnavailable', e)
         end
 
         if response.code != '202'
-          raise Errors::ApiError.new_from_details('TaskError', error_message(response))
+          raise CloudController::Errors::ApiError.new_from_details('TaskError', error_message(response))
         end
 
         mark_task_as_running(task)
@@ -41,7 +41,7 @@ module VCAP::CloudController
 
       def cancel_task(task)
         if @url.nil?
-          raise Errors::ApiError.new_from_details('InvalidTaskAddress', 'Diego Task URL does not exist.')
+          raise CloudController::Errors::ApiError.new_from_details('InvalidTaskAddress', 'Diego Task URL does not exist.')
         end
 
         logger.info('cancel.task.request', task_guid: task.guid)
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
       def desire_app(process_guid, desire_message)
         if @url.nil?
-          raise Errors::ApiError.new_from_details('RunnerUnavailable', 'invalid config')
+          raise CloudController::Errors::ApiError.new_from_details('RunnerUnavailable', 'invalid config')
         end
 
         logger.info('desire.app.request', process_guid: process_guid)
@@ -78,13 +78,13 @@ module VCAP::CloudController
           response = http_client.put(path, desire_message, REQUEST_HEADERS)
         rescue Errno::ECONNREFUSED, SocketError => e
           retry unless (tries -= 1).zero?
-          raise Errors::ApiError.new_from_details('RunnerUnavailable', e)
+          raise CloudController::Errors::ApiError.new_from_details('RunnerUnavailable', e)
         end
 
         logger.info('desire.app.response', process_guid: process_guid, response_code: response.code)
 
         if response.code != '202'
-          raise Errors::ApiError.new_from_details('RunnerError', "desire app failed: #{response.code}")
+          raise CloudController::Errors::ApiError.new_from_details('RunnerError', "desire app failed: #{response.code}")
         end
 
         nil
@@ -92,7 +92,7 @@ module VCAP::CloudController
 
       def stop_app(process_guid)
         if @url.nil?
-          raise Errors::ApiError.new_from_details('RunnerUnavailable', 'invalid config')
+          raise CloudController::Errors::ApiError.new_from_details('RunnerUnavailable', 'invalid config')
         end
 
         logger.info('stop.app.request', process_guid: process_guid)
@@ -104,7 +104,7 @@ module VCAP::CloudController
           response = http_client.delete(path, REQUEST_HEADERS)
         rescue Errno::ECONNREFUSED, SocketError => e
           retry unless (tries -= 1).zero?
-          raise Errors::ApiError.new_from_details('RunnerUnavailable', e)
+          raise CloudController::Errors::ApiError.new_from_details('RunnerUnavailable', e)
         end
 
         logger.info('stop.app.response', process_guid: process_guid, response_code: response.code)
@@ -113,7 +113,7 @@ module VCAP::CloudController
         when '202', '404'
           # success
         else
-          raise Errors::ApiError.new_from_details('RunnerError', "stop app failed: #{response.code}")
+          raise CloudController::Errors::ApiError.new_from_details('RunnerError', "stop app failed: #{response.code}")
         end
 
         nil
@@ -121,7 +121,7 @@ module VCAP::CloudController
 
       def stop_index(process_guid, index)
         if @url.nil?
-          raise Errors::ApiError.new_from_details('RunnerUnavailable', 'invalid config')
+          raise CloudController::Errors::ApiError.new_from_details('RunnerUnavailable', 'invalid config')
         end
 
         logger.info('stop.index.request', process_guid: process_guid, index: index)
@@ -133,7 +133,7 @@ module VCAP::CloudController
           response = http_client.delete(path, REQUEST_HEADERS)
         rescue Errno::ECONNREFUSED, SocketError => e
           retry unless (tries -= 1).zero?
-          raise Errors::ApiError.new_from_details('RunnerUnavailable', e)
+          raise CloudController::Errors::ApiError.new_from_details('RunnerUnavailable', e)
         end
 
         logger.info('stop.index.response', process_guid: process_guid, index: index, response_code: response.code)
@@ -142,7 +142,7 @@ module VCAP::CloudController
         when '202', '404'
           # success
         else
-          raise Errors::ApiError.new_from_details('RunnerError', "stop index failed: #{response.code}")
+          raise CloudController::Errors::ApiError.new_from_details('RunnerError', "stop index failed: #{response.code}")
         end
 
         nil

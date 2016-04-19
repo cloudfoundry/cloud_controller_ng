@@ -65,7 +65,7 @@ module VCAP::CloudController
           expect {
             service_binding_create.create(app_model, service_instance, message.type, arbitrary_parameters)
           }.to raise_error do |e|
-            expect(e).to be_a(Errors::ApiError)
+            expect(e).to be_a(CloudController::Errors::ApiError)
             expect(e.message).to include('in progress')
           end
         end

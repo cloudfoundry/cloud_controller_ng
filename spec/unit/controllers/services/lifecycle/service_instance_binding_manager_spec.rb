@@ -79,7 +79,7 @@ module VCAP::CloudController
           expect {
             manager.create_route_service_instance_binding(route.guid, service_instance.guid, arbitrary_parameters, route_services_enabled)
           }.to raise_error do |e|
-            expect(e).to be_a(Errors::ApiError)
+            expect(e).to be_a(CloudController::Errors::ApiError)
             expect(e.message).to include('in progress')
           end
         end
@@ -356,7 +356,7 @@ module VCAP::CloudController
               expect {
                 stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 500)
                 manager.create_route_service_instance_binding(route.guid, service_instance.guid, arbitrary_parameters, route_services_enabled)
-              }.to raise_error(VCAP::Errors::ApiError, /desire app failed: 500/i)
+              }.to raise_error(CloudController::Errors::ApiError, /desire app failed: 500/i)
             end
 
             it 'orphans the route binding and mitigates it' do
@@ -495,7 +495,7 @@ module VCAP::CloudController
           expect {
             manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
           }.to raise_error do |e|
-            expect(e).to be_a(Errors::ApiError)
+            expect(e).to be_a(CloudController::Errors::ApiError)
             expect(e.message).to include('in progress')
           end
 
@@ -548,7 +548,7 @@ module VCAP::CloudController
         expect {
           manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters)
         }.to raise_error do |e|
-          expect(e).to be_a(Errors::ApiError)
+          expect(e).to be_a(CloudController::Errors::ApiError)
           expect(e.message).to include('in progress')
         end
       end

@@ -37,11 +37,11 @@ module VCAP::CloudController
       begin
         json_req = MultiJson.load(body)
       rescue MultiJson::ParseError => e
-        raise Errors::ApiError.new_from_details('MessageParseError', e.message)
+        raise CloudController::Errors::ApiError.new_from_details('MessageParseError', e.message)
       end
 
       if json_req.nil?
-        raise Errors::ApiError.new_from_details('EnvironmentVariableGroupInvalid', "Cannot be 'null'. You may want to try empty object '{}' to clear the group.")
+        raise CloudController::Errors::ApiError.new_from_details('EnvironmentVariableGroupInvalid', "Cannot be 'null'. You may want to try empty object '{}' to clear the group.")
       end
 
       group.environment_json = json_req

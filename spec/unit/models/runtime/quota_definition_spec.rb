@@ -133,7 +133,7 @@ module VCAP::CloudController
 
           expect {
             quota_definition.destroy
-          }.to raise_error VCAP::Errors::ApiError, /Please delete the organization associations for your quota definition./
+          }.to raise_error CloudController::Errors::ApiError, /Please delete the organization associations for your quota definition./
           expect(QuotaDefinition[quota_definition.id]).to eq quota_definition
         end
       end

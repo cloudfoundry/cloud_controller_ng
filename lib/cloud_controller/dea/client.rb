@@ -6,7 +6,7 @@ module VCAP::CloudController
     module Client
       ACTIVE_APP_STATES = [:RUNNING, :STARTING].freeze
       class << self
-        include VCAP::Errors
+        include CloudController::Errors
 
         attr_reader :config, :message_bus, :dea_pool, :message_bus
 
@@ -136,7 +136,7 @@ module VCAP::CloudController
             begin
               callback = start_instance_at_index(app, idx)
               callbacks << callback if callback
-            rescue Errors::ApiError => e
+            rescue CloudController::Errors::ApiError => e
               if e.name == 'InsufficientRunningResourcesAvailable'
                 insufficient_resources_error = true
               else
@@ -145,7 +145,7 @@ module VCAP::CloudController
             end
           end
 
-          raise Errors::ApiError.new_from_details('InsufficientRunningResourcesAvailable') if insufficient_resources_error
+          raise CloudController::Errors::ApiError.new_from_details('InsufficientRunningResourcesAvailable') if insufficient_resources_error
         ensure
           callbacks.each(&:call)
         end
@@ -253,13 +253,13 @@ module VCAP::CloudController
 
           unless start_message.has_app_package?
             logger.error 'dea-client.no-package-found', guid: app.guid
-            raise Errors::ApiError.new_from_details('AppPackageNotFound', app.guid)
+            raise CloudController::Errors::ApiError.new_from_details('AppPackageNotFound', app.guid)
           end
 
           dea = dea_pool.find_dea(mem: app.memory, disk: app.disk_quota, stack: app.stack.name, app_id: app.guid)
           if dea.nil?
             logger.error 'dea-client.no-resources-available', message: scrub_sensitive_fields(start_message)
-            raise Errors::ApiError.new_from_details('InsufficientRunningResourcesAvailable')
+            raise CloudController::Errors::ApiError.new_from_details('InsufficientRunningResourcesAvailable')
           end
 
           callback = dea_send_start(dea, start_message)

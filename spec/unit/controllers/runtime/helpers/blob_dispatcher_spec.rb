@@ -61,7 +61,7 @@ module VCAP::CloudController
             expect {
               dispatcher.send_or_redirect(local: local, blob: blob)
             }.to raise_error do |e|
-              expect(e).to be_a(VCAP::Errors::ApiError)
+              expect(e).to be_a(CloudController::Errors::ApiError)
               expect(e.name).to eq('BlobstoreUnavailable')
             end
           end

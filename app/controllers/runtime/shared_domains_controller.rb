@@ -26,15 +26,15 @@ module VCAP::CloudController
       begin
         @router_group = routing_api_client.router_group(router_group_guid)
       rescue RoutingApi::RoutingApiDisabled
-        raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
+        raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
       rescue RoutingApi::RoutingApiUnavailable
-        raise Errors::ApiError.new_from_details('RoutingApiUnavailable')
+        raise CloudController::Errors::ApiError.new_from_details('RoutingApiUnavailable')
       rescue RoutingApi::UaaUnavailable
-        raise Errors::ApiError.new_from_details('UaaUnavailable')
+        raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
       end
 
       unless @router_group
-        raise Errors::ApiError.new_from_details('DomainInvalid', "router group guid '#{router_group_guid}' not found")
+        raise CloudController::Errors::ApiError.new_from_details('DomainInvalid', "router group guid '#{router_group_guid}' not found")
       end
     end
 
@@ -63,9 +63,9 @@ module VCAP::CloudController
             {},
         )
       rescue RoutingApi::RoutingApiUnavailable
-        raise Errors::ApiError.new_from_details('RoutingApiUnavailable')
+        raise CloudController::Errors::ApiError.new_from_details('RoutingApiUnavailable')
       rescue RoutingApi::UaaUnavailable
-        raise Errors::ApiError.new_from_details('UaaUnavailable')
+        raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
       end
     end
 
@@ -76,11 +76,11 @@ module VCAP::CloudController
         begin
           rtr_grp = routing_api_client.router_group(domain.router_group_guid)
         rescue RoutingApi::RoutingApiDisabled
-          raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
+          raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
         rescue RoutingApi::RoutingApiUnavailable
-          raise Errors::ApiError.new_from_details('RoutingApiUnavailable')
+          raise CloudController::Errors::ApiError.new_from_details('RoutingApiUnavailable')
         rescue RoutingApi::UaaUnavailable
-          raise Errors::ApiError.new_from_details('UaaUnavailable')
+          raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         end
         domain.router_group_type = rtr_grp.type unless rtr_grp.nil?
       end
@@ -93,9 +93,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on(:name)
       if name_errors && name_errors.include?(:unique)
-        Errors::ApiError.new_from_details('DomainNameTaken', attributes['name'])
+        CloudController::Errors::ApiError.new_from_details('DomainNameTaken', attributes['name'])
       else
-        Errors::ApiError.new_from_details('DomainInvalid', e.errors.full_messages)
+        CloudController::Errors::ApiError.new_from_details('DomainInvalid', e.errors.full_messages)
       end
     end
 

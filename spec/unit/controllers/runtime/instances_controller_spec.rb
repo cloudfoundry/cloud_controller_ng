@@ -129,7 +129,7 @@ module VCAP::CloudController
 
             before do
               allow(instances_reporters).to receive(:all_instances_for_app).and_raise(
-                Errors::InstancesUnavailable.new(SomeInstancesException.new))
+                CloudController::Errors::InstancesUnavailable.new(SomeInstancesException.new))
             end
 
             it "returns '220001 InstancesError'" do

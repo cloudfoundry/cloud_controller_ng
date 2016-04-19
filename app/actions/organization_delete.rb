@@ -11,7 +11,7 @@ module VCAP::CloudController
         errs = @space_deleter.delete(org.spaces_dataset)
         unless errs.empty?
           error_message = errs.map(&:message).join("\n\n")
-          return [VCAP::Errors::ApiError.new_from_details('OrganizationDeletionFailed', org.name, error_message)]
+          return [CloudController::Errors::ApiError.new_from_details('OrganizationDeletionFailed', org.name, error_message)]
         end
         org.destroy
         []
@@ -20,7 +20,7 @@ module VCAP::CloudController
 
     def timeout_error(dataset)
       org_name = dataset.first.name
-      VCAP::Errors::ApiError.new_from_details('OrganizationDeleteTimeout', org_name)
+      CloudController::Errors::ApiError.new_from_details('OrganizationDeleteTimeout', org_name)
     end
   end
 end

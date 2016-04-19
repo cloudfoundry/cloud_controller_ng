@@ -26,9 +26,9 @@ class ServiceBindingsController < ApplicationController
       service_binding = ServiceBindingCreate.new.create(app, service_instance, message.type, message.parameters)
       render status: :created, json: service_binding_presenter.present_json(service_binding)
     rescue ServiceBindingCreate::ServiceInstanceNotBindable
-      raise VCAP::Errors::ApiError.new_from_details('UnbindableService')
+      raise CloudController::Errors::ApiError.new_from_details('UnbindableService')
     rescue ServiceBindingCreate::InvalidServiceBinding
-      raise VCAP::Errors::ApiError.new_from_details('ServiceBindingAppServiceTaken', "#{app.guid} #{service_instance.guid}")
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingAppServiceTaken', "#{app.guid} #{service_instance.guid}")
     end
   end
 

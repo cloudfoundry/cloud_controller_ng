@@ -185,7 +185,7 @@ module VCAP::CloudController
         before do
           expect {
             handle_staging_result(malformed_success_response)
-          }.to raise_error(VCAP::Errors::ApiError)
+          }.to raise_error(CloudController::Errors::ApiError)
         end
 
         it 'should not start anything' do

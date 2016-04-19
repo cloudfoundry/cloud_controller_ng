@@ -733,7 +733,7 @@ module VCAP::CloudController
 
           before do
             stub_delete_and_return(403, '{}')
-            allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise(Errors::ApiError.new_from_details(save_error_text))
+            allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise(CloudController::Errors::ApiError.new_from_details(save_error_text))
           end
 
           it 'raises the save error' do

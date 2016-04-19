@@ -58,7 +58,7 @@ module VCAP::CloudController
         before { FeatureFlag.make(name: 'space_scoped_private_broker_creation', enabled: false, error_message: nil) }
 
         it 'does not allow the create' do
-          expect { subject.create?(broker_with_space) }.to raise_error(VCAP::Errors::ApiError, /space_scoped_private_broker_creation/)
+          expect { subject.create?(broker_with_space) }.to raise_error(CloudController::Errors::ApiError, /space_scoped_private_broker_creation/)
         end
       end
 

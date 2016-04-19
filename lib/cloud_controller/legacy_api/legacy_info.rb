@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class LegacyInfo < LegacyApiBase
-    include VCAP::Errors
+    include CloudController::Errors
 
     allow_unauthenticated_access
 

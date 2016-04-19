@@ -21,7 +21,7 @@ module VCAP::CloudController
           instance_errors = delete_service_instance(service_instance)
 
           if service_instance.operation_in_progress? && @multipart_delete && instance_errors.empty?
-            errors_accumulator.push VCAP::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
+            errors_accumulator.push CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
           end
 
           errors_accumulator.concat instance_errors

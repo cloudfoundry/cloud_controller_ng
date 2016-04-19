@@ -109,7 +109,7 @@ module VCAP::CloudController
 
           expect {
             Dea::Client.start_instances(app, [1, 2, 3])
-          }.to raise_error Errors::ApiError, 'One or more instances could not be started because of insufficient running resources.'
+          }.to raise_error CloudController::Errors::ApiError, 'One or more instances could not be started because of insufficient running resources.'
         end
       end
 
@@ -137,7 +137,7 @@ module VCAP::CloudController
         it 'should raise an error if the droplet is missing' do
           expect {
             Dea::Client.start_instances(app, 1)
-          }.to raise_error Errors::ApiError, "The app package could not be found: #{app.guid}"
+          }.to raise_error CloudController::Errors::ApiError, "The app package could not be found: #{app.guid}"
         end
       end
 
@@ -153,7 +153,7 @@ module VCAP::CloudController
 
           expect {
             Dea::Client.start_instances(app, 1)
-          }.to raise_error Errors::ApiError, 'One or more instances could not be started because of insufficient running resources.'
+          }.to raise_error CloudController::Errors::ApiError, 'One or more instances could not be started because of insufficient running resources.'
         end
       end
 
@@ -414,7 +414,7 @@ module VCAP::CloudController
 
         expect {
           Dea::Client.get_file_uri_for_active_instance_by_index(app, path, instance)
-        }.to raise_error Errors::ApiError, "File error: Request failed for app: #{app.name} path: #{path} as the app is in stopped state."
+        }.to raise_error CloudController::Errors::ApiError, "File error: Request failed for app: #{app.name} path: #{path} as the app is in stopped state."
       end
 
       it 'should raise an error if the instance is out of range' do
@@ -426,7 +426,7 @@ module VCAP::CloudController
         expect {
           Dea::Client.get_file_uri_for_active_instance_by_index(app, path, instance)
         }.to raise_error { |error|
-          expect(error).to be_an_instance_of Errors::ApiError
+          expect(error).to be_an_instance_of CloudController::Errors::ApiError
           expect(error.name).to eq('FileError')
 
           msg = "File error: Request failed for app: #{app.name}"
@@ -522,7 +522,7 @@ module VCAP::CloudController
 
         expect {
           Dea::Client.get_file_uri_for_active_instance_by_index(app, path, instance)
-        }.to raise_error Errors::ApiError, msg
+        }.to raise_error CloudController::Errors::ApiError, msg
 
         expect(message_bus).to have_requested_synchronous_messages('dea.find.droplet', search_options, { timeout: 2 })
       end
@@ -541,7 +541,7 @@ module VCAP::CloudController
 
         expect {
           Dea::Client.get_file_uri_by_instance_guid(app, path, instance_id)
-        }.to raise_error Errors::ApiError, msg
+        }.to raise_error CloudController::Errors::ApiError, msg
       end
 
       it 'should return the file uri if the required instance is found via DEA v1' do
@@ -624,7 +624,7 @@ module VCAP::CloudController
         expect {
           Dea::Client.get_file_uri_by_instance_guid(app, path, instance_id)
         }.to raise_error { |error|
-          expect(error).to be_an_instance_of Errors::ApiError
+          expect(error).to be_an_instance_of CloudController::Errors::ApiError
           expect(error.name).to eq('FileError')
 
           msg = "File error: Request failed for app: #{app.name}"

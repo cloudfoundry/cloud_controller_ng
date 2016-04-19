@@ -19,7 +19,7 @@ module VCAP::CloudController::RestController
 
     def validate!
       unless %w(asc desc).include?(@order_direction)
-        raise VCAP::Errors::ApiError.new_from_details(
+        raise CloudController::Errors::ApiError.new_from_details(
           'BadQueryParameter',
           "order_direction must be 'asc' or 'desc' but was '#{@order_direction}'")
       end

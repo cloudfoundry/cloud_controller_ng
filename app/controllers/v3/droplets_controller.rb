@@ -111,11 +111,11 @@ class DropletsController < ApplicationController
   end
 
   def staging_in_progress!
-    raise VCAP::Errors::ApiError.new_from_details('StagingInProgress')
+    raise CloudController::Errors::ApiError.new_from_details('StagingInProgress')
   end
 
   def unable_to_perform!(operation, message)
-    raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', operation, message)
+    raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation, message)
   end
 
   def droplet_presenter

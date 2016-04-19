@@ -44,7 +44,7 @@ module VCAP::CloudController
 
     def validate!
       if @source_droplet.docker?
-        raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', 'Copy droplet', 'Not supported for docker droplets')
+        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'Copy droplet', 'Not supported for docker droplets')
       end
     end
   end

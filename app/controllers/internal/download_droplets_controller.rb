@@ -7,7 +7,7 @@ module VCAP::CloudController
       [:droplet_blobstore, :blobstore_url_generator, :missing_blob_handler, :blob_sender]
     end
 
-    include VCAP::Errors
+    include CloudController::Errors
 
     DROPLET_V2_PATH = '/internal/v2/droplets'.freeze
 

@@ -14,7 +14,7 @@ module VCAP::Services
 
           it 'initializes the base class correctly' do
             exception = AsyncRequired.new(uri, method, response)
-            expect(exception.message).to eq(VCAP::Errors::ApiError.new_from_details('ServiceBrokerAsyncRequired').message)
+            expect(exception.message).to eq(CloudController::Errors::ApiError.new_from_details('ServiceBrokerAsyncRequired').message)
             expect(exception.uri).to eq(uri)
             expect(exception.method).to eq(method)
             expect(exception.source).to eq(MultiJson.load(response.body))

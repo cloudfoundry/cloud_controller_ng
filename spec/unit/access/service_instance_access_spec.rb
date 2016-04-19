@@ -92,7 +92,7 @@ module VCAP::CloudController
         end
 
         it 'allows all operations except create' do
-          expect { subject.create?(service_instance) }.to raise_error(VCAP::Errors::ApiError, /service_instance_creation/)
+          expect { subject.create?(service_instance) }.to raise_error(CloudController::Errors::ApiError, /service_instance_creation/)
         end
       end
 

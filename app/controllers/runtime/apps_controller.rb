@@ -69,39 +69,39 @@ module VCAP::CloudController
       diego_to_dea_errors    = e.errors.on(:diego_to_dea)
 
       if space_and_name_errors && space_and_name_errors.include?(:unique)
-        Errors::ApiError.new_from_details('AppNameTaken', attributes['name'])
+        CloudController::Errors::ApiError.new_from_details('AppNameTaken', attributes['name'])
       elsif memory_errors
         translate_memory_validation_exception(memory_errors)
       elsif instance_number_errors
-        Errors::ApiError.new_from_details('AppInvalid', 'Number of instances less than 0')
+        CloudController::Errors::ApiError.new_from_details('AppInvalid', 'Number of instances less than 0')
       elsif app_instance_limit_errors
         if app_instance_limit_errors.include?(:space_app_instance_limit_exceeded)
-          Errors::ApiError.new_from_details('SpaceQuotaInstanceLimitExceeded')
+          CloudController::Errors::ApiError.new_from_details('SpaceQuotaInstanceLimitExceeded')
         else
-          Errors::ApiError.new_from_details('QuotaInstanceLimitExceeded')
+          CloudController::Errors::ApiError.new_from_details('QuotaInstanceLimitExceeded')
         end
       elsif state_errors
-        Errors::ApiError.new_from_details('AppInvalid', 'Invalid app state provided')
+        CloudController::Errors::ApiError.new_from_details('AppInvalid', 'Invalid app state provided')
       elsif docker_errors && docker_errors.include?(:docker_disabled)
-        Errors::ApiError.new_from_details('DockerDisabled')
+        CloudController::Errors::ApiError.new_from_details('DockerDisabled')
       elsif diego_to_dea_errors
-        Errors::ApiError.new_from_details('MultipleAppPortsMappedDiegoToDea')
+        CloudController::Errors::ApiError.new_from_details('MultipleAppPortsMappedDiegoToDea')
       else
-        Errors::ApiError.new_from_details('AppInvalid', e.errors.full_messages)
+        CloudController::Errors::ApiError.new_from_details('AppInvalid', e.errors.full_messages)
       end
     end
 
     def self.translate_memory_validation_exception(memory_errors)
       if memory_errors.include?(:space_quota_exceeded)
-        Errors::ApiError.new_from_details('SpaceQuotaMemoryLimitExceeded')
+        CloudController::Errors::ApiError.new_from_details('SpaceQuotaMemoryLimitExceeded')
       elsif memory_errors.include?(:space_instance_memory_limit_exceeded)
-        Errors::ApiError.new_from_details('SpaceQuotaInstanceMemoryLimitExceeded')
+        CloudController::Errors::ApiError.new_from_details('SpaceQuotaInstanceMemoryLimitExceeded')
       elsif memory_errors.include?(:quota_exceeded)
-        Errors::ApiError.new_from_details('AppMemoryQuotaExceeded')
+        CloudController::Errors::ApiError.new_from_details('AppMemoryQuotaExceeded')
       elsif memory_errors.include?(:zero_or_less)
-        Errors::ApiError.new_from_details('AppMemoryInvalid')
+        CloudController::Errors::ApiError.new_from_details('AppMemoryInvalid')
       elsif memory_errors.include?(:instance_memory_limit_exceeded)
-        Errors::ApiError.new_from_details('QuotaInstanceMemoryLimitExceeded')
+        CloudController::Errors::ApiError.new_from_details('QuotaInstanceMemoryLimitExceeded')
       end
     end
 
@@ -116,7 +116,7 @@ module VCAP::CloudController
       app = find_guid_and_validate_access(:delete, guid)
 
       if !recursive_delete? && app.service_bindings.present?
-        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_bindings', app.class.table_name)
+        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_bindings', app.class.table_name)
       end
 
       app.destroy
@@ -136,7 +136,7 @@ module VCAP::CloudController
       app = find_guid_and_validate_access(:read, guid)
 
       droplet = app.current_droplet
-      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}") unless droplet && droplet.blob
+      raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}") unless droplet && droplet.blob
 
       blob_dispatcher.send_or_redirect(local: @blobstore.local?, blob: droplet.blob)
     end
@@ -165,9 +165,9 @@ module VCAP::CloudController
       begin
         RouteMappingValidator.new(route, app).validate
       rescue RouteMappingValidator::RouteInvalidError
-        raise Errors::ApiError.new_from_details('RouteNotFound', request_attrs['route_guid'])
+        raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', request_attrs['route_guid'])
       rescue RouteMappingValidator::TcpRoutingDisabledError
-        raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
+        raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
       end
     end
 
@@ -187,7 +187,7 @@ module VCAP::CloudController
       ssh_allowed = global_allow_ssh && (space.allow_ssh || roles.admin?)
 
       if app_enable_ssh && !ssh_allowed
-        raise VCAP::Errors::ApiError.new_from_details(
+        raise CloudController::Errors::ApiError.new_from_details(
           'InvalidRequest',
           'enable_ssh must be false due to global allow_ssh setting',
           )

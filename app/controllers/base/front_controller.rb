@@ -4,8 +4,6 @@ require 'cloud_controller/request_scheme_validator'
 module VCAP::CloudController
   include VCAP::RestAPI
 
-  Errors = VCAP::Errors
-
   class FrontController < Sinatra::Base
     register Sinatra::VCAP
 
@@ -26,7 +24,7 @@ module VCAP::CloudController
     private
 
     def validate_scheme!
-      validator = VCAP::CloudController::RequestSchemeValidator.new
+      validator = CloudController::RequestSchemeValidator.new
       current_user = VCAP::CloudController::SecurityContext.current_user
       roles = VCAP::CloudController::SecurityContext.roles
 

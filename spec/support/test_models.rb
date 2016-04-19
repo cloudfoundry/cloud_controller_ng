@@ -56,7 +56,7 @@ module VCAP::CloudController
     end
 
     def self.translate_validation_exception(_, attributes)
-      Errors::ApiError.new_from_details('TestModelValidation', attributes['unique_value'])
+      CloudController::Errors::ApiError.new_from_details('TestModelValidation', attributes['unique_value'])
     end
   end
 

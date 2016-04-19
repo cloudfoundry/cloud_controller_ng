@@ -7,7 +7,7 @@ module VCAP::CloudController
     end
 
     def self.translate_validation_exception(e, _)
-      Errors::ApiError.new_from_details('FeatureFlagInvalid', e.errors.full_messages)
+      CloudController::Errors::ApiError.new_from_details('FeatureFlagInvalid', e.errors.full_messages)
     end
 
     get path, :enumerate

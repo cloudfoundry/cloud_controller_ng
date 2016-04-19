@@ -62,7 +62,7 @@ module VCAP::CloudController
         app   = AppFactory.make(space: space_a)
         expect {
           RouteMapping.make(app: app, route: route)
-        }.to raise_error Errors::InvalidRouteRelation
+        }.to raise_error CloudController::Errors::InvalidRouteRelation
       end
 
       context 'when docker is disabled' do
@@ -295,7 +295,7 @@ module VCAP::CloudController
           it 'to raise error' do
             expect {
               RouteMapping.make(app: app, route: route_with_service)
-            }.to raise_error(Errors::InvalidRouteRelation).
+            }.to raise_error(CloudController::Errors::InvalidRouteRelation).
               with_message("The requested route relation is invalid: #{route_with_service.guid} - Route services are only supported for apps on Diego")
           end
         end

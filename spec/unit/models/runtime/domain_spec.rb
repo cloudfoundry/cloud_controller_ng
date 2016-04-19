@@ -32,7 +32,7 @@ module VCAP::CloudController
         context 'shared domains' do
           it 'prevents converting a shared domain into a private domain' do
             shared = SharedDomain.make
-            expect { shared.owning_organization = Organization.make }.to raise_error(VCAP::Errors::ApiError, /the owning organization cannot be changed/)
+            expect { shared.owning_organization = Organization.make }.to raise_error(CloudController::Errors::ApiError, /the owning organization cannot be changed/)
           end
 
           it 'succeeds when setting the org to the same thing' do
@@ -44,12 +44,12 @@ module VCAP::CloudController
         context 'private domains' do
           it 'prevents converting a private domain into a shared domain' do
             private_domain = PrivateDomain.make
-            expect { private_domain.owning_organization = nil }.to raise_error(VCAP::Errors::ApiError, /the owning organization cannot be changed/)
+            expect { private_domain.owning_organization = nil }.to raise_error(CloudController::Errors::ApiError, /the owning organization cannot be changed/)
           end
 
           it 'prevents changing orgs on a private domain' do
             private_domain = PrivateDomain.make
-            expect { private_domain.owning_organization = Organization.make }.to raise_error(VCAP::Errors::ApiError, /the owning organization cannot be changed/)
+            expect { private_domain.owning_organization = Organization.make }.to raise_error(CloudController::Errors::ApiError, /the owning organization cannot be changed/)
           end
 
           it 'succeeds when setting the org to the same thing' do

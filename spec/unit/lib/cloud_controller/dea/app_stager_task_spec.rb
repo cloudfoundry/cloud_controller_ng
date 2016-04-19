@@ -74,7 +74,7 @@ module VCAP::CloudController
       it 'should raise an error' do
         expect {
           staging_task.stage
-        }.to raise_error(Errors::ApiError, /no available stagers/)
+        }.to raise_error(CloudController::Errors::ApiError, /no available stagers/)
       end
     end
 
@@ -212,7 +212,7 @@ module VCAP::CloudController
           let(:first_reply_json) { 'invalid-json' }
 
           it 'raises a StagingError' do
-            expect { stage }.to raise_error(Errors::ApiError, /failed to stage/)
+            expect { stage }.to raise_error(CloudController::Errors::ApiError, /failed to stage/)
           end
 
           it 'keeps the app as not staged' do
@@ -254,7 +254,7 @@ module VCAP::CloudController
           let(:first_reply_json_error) { 'staging failed' }
 
           it 'raises a StagingError' do
-            expect { stage }.to raise_error(Errors::ApiError, /failed to stage/)
+            expect { stage }.to raise_error(CloudController::Errors::ApiError, /failed to stage/)
           end
 
           it 'keeps the app as not staged' do
@@ -423,7 +423,7 @@ module VCAP::CloudController
               expect {
                 stage
               }.to raise_error(
-                Errors::ApiError,
+                CloudController::Errors::ApiError,
                 /another staging request was initiated/
               )
             end
@@ -473,7 +473,7 @@ module VCAP::CloudController
               expect {
                 stage
               }.to raise_error(
-                Errors::ApiError,
+                CloudController::Errors::ApiError,
                 /staging had already been marked as failed, this could mean that staging took too long/
               )
             end
@@ -639,7 +639,7 @@ module VCAP::CloudController
 
     def ignore_staging_error
       yield
-    rescue VCAP::Errors::ApiError => e
+    rescue CloudController::Errors::ApiError => e
       raise e unless e.name == 'StagingError'
     end
   end

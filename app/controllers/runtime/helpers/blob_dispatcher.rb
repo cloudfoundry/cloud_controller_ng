@@ -17,7 +17,7 @@ module VCAP::CloudController
           end
         rescue CloudController::Blobstore::SigningRequestError => e
           logger.error("failed to get download url: #{e.message}")
-          raise VCAP::Errors::ApiError.new_from_details('BlobstoreUnavailable')
+          raise CloudController::Errors::ApiError.new_from_details('BlobstoreUnavailable')
         end
       end
     end

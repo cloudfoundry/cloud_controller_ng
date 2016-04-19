@@ -36,31 +36,31 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:host, :domain_id])
       if name_errors && name_errors.include?(:unique)
-        return Errors::ApiError.new_from_details('RouteHostTaken', attributes['host'])
+        return CloudController::Errors::ApiError.new_from_details('RouteHostTaken', attributes['host'])
       end
 
       path_errors = e.errors.on([:host, :domain_id, :path])
       if path_errors && path_errors.include?(:unique)
-        return Errors::ApiError.new_from_details('RoutePathTaken', attributes['path'])
+        return CloudController::Errors::ApiError.new_from_details('RoutePathTaken', attributes['path'])
       end
 
       space_errors = e.errors.on(:space)
       if space_errors && space_errors.include?(:total_routes_exceeded)
-        return Errors::ApiError.new_from_details('SpaceQuotaTotalRoutesExceeded')
+        return CloudController::Errors::ApiError.new_from_details('SpaceQuotaTotalRoutesExceeded')
       end
 
       org_errors = e.errors.on(:organization)
       if org_errors && org_errors.include?(:total_routes_exceeded)
-        return Errors::ApiError.new_from_details('OrgQuotaTotalRoutesExceeded')
+        return CloudController::Errors::ApiError.new_from_details('OrgQuotaTotalRoutesExceeded')
       end
 
       if org_errors && org_errors.include?(:total_reserved_route_ports_exceeded)
-        return Errors::ApiError.new_from_details('OrgQuotaTotalReservedRoutePortsExceeded')
+        return CloudController::Errors::ApiError.new_from_details('OrgQuotaTotalReservedRoutePortsExceeded')
       end
 
       host_and_domain_taken_error = e.errors.on([:domain_id, :host])
       if host_and_domain_taken_error
-        return Errors::ApiError.new_from_details('RouteInvalid',
+        return CloudController::Errors::ApiError.new_from_details('RouteInvalid',
                                                  'Routes for this host and domain have been reserved for another space.')
       end
 
@@ -71,10 +71,10 @@ module VCAP::CloudController
 
       service_instance_errors = e.errors.on(:service_instance)
       if service_instance_errors && service_instance_errors.include?(:route_binding_not_allowed)
-        return Errors::ApiError.new_from_details('ServiceDoesNotSupportRoutes')
+        return CloudController::Errors::ApiError.new_from_details('ServiceDoesNotSupportRoutes')
       end
 
-      Errors::ApiError.new_from_details('RouteInvalid', e.errors.full_messages)
+      CloudController::Errors::ApiError.new_from_details('RouteInvalid', e.errors.full_messages)
     end
     # rubocop:enable Metrics/CyclomaticComplexity
 
@@ -117,7 +117,7 @@ module VCAP::CloudController
         [HTTP::NO_CONTENT, nil]
       end
     rescue RouteDelete::ServiceInstanceAssociationError
-      raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_instance', route.class.table_name)
+      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_instance', route.class.table_name)
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
@@ -225,9 +225,9 @@ module VCAP::CloudController
         begin
           RouteMappingValidator.new(route, app).validate
         rescue RouteMappingValidator::AppInvalidError
-          raise Errors::ApiError.new_from_details('AppNotFound', request_attrs['app'])
+          raise CloudController::Errors::ApiError.new_from_details('AppNotFound', request_attrs['app'])
         rescue RouteMappingValidator::TcpRoutingDisabledError
-          raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
+          raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
         end
       end
     end
@@ -244,14 +244,14 @@ module VCAP::CloudController
     attr_reader :app_event_repository, :route_event_repository, :routing_api_client
 
     def domain_invalid!(domain_guid)
-      raise Errors::ApiError.new_from_details('DomainInvalid', "Domain with guid #{domain_guid} does not exist")
+      raise CloudController::Errors::ApiError.new_from_details('DomainInvalid', "Domain with guid #{domain_guid} does not exist")
     end
 
     def overwrite_port!
       add_warning('Specified port ignored. Random port generated.') if @request_attrs['port']
 
       generated_port = PortGenerator.new(@request_attrs['domain_guid']).generate_port(validated_router_group.reservable_ports)
-      raise Errors::ApiError.new_from_details('OutOfRouterGroupPorts', validated_router_group.name) if generated_port < 0
+      raise CloudController::Errors::ApiError.new_from_details('OutOfRouterGroupPorts', validated_router_group.name) if generated_port < 0
       overwrite_request_attr('port', generated_port)
     end
 
@@ -259,7 +259,7 @@ module VCAP::CloudController
       @router_group ||= begin
         routing_api_client.router_group(validated_domain.router_group_guid)
       rescue RoutingApi::RoutingApiDisabled
-        raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
+        raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
       end
     end
 
@@ -269,27 +269,27 @@ module VCAP::CloudController
       domain_invalid!(domain_guid) if domain.nil?
 
       unless domain.shared? && domain.tcp?
-        raise Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.')
+        raise CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.')
       end
 
       domain
     end
 
     def convert_flag_to_bool(flag)
-      raise Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag
+      raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag
       flag == 'true'
     end
 
     def validate_route(domain_guid)
       RouteValidator.new(@routing_api_client, domain_guid, assemble_route_attrs).validate
     rescue RouteValidator::ValidationError => e
-      raise Errors::ApiError.new_from_details(e.class.name.demodulize, e.message)
+      raise CloudController::Errors::ApiError.new_from_details(e.class.name.demodulize, e.message)
     rescue RoutingApi::RoutingApiDisabled
-      raise Errors::ApiError.new_from_details('TcpRoutingDisabled')
+      raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
     rescue RoutingApi::RoutingApiUnavailable
-      raise Errors::ApiError.new_from_details('RoutingApiUnavailable')
+      raise CloudController::Errors::ApiError.new_from_details('RoutingApiUnavailable')
     rescue RoutingApi::UaaUnavailable
-      raise Errors::ApiError.new_from_details('UaaUnavailable')
+      raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
     end
 
     def assemble_route_attrs
@@ -301,13 +301,13 @@ module VCAP::CloudController
 
     def self.path_errors(path_error, attributes)
       if path_error.include?(:single_slash)
-        return Errors::ApiError.new_from_details('PathInvalid', 'the path cannot be a single slash')
+        return CloudController::Errors::ApiError.new_from_details('PathInvalid', 'the path cannot be a single slash')
       elsif path_error.include?(:missing_beginning_slash)
-        return Errors::ApiError.new_from_details('PathInvalid', 'the path must start with a "/"')
+        return CloudController::Errors::ApiError.new_from_details('PathInvalid', 'the path must start with a "/"')
       elsif path_error.include?(:path_contains_question)
-        return Errors::ApiError.new_from_details('PathInvalid', 'illegal "?" character')
+        return CloudController::Errors::ApiError.new_from_details('PathInvalid', 'illegal "?" character')
       elsif path_error.include?(:invalid_path)
-        return Errors::ApiError.new_from_details('PathInvalid', attributes['path'])
+        return CloudController::Errors::ApiError.new_from_details('PathInvalid', attributes['path'])
       end
     end
     private_class_method :path_errors

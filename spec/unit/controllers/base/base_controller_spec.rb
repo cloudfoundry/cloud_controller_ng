@@ -41,7 +41,7 @@ module VCAP::CloudController
       define_route :get, '/test_json_error', :test_json_error
 
       def test_invalid_relation_error
-        raise VCAP::Errors::InvalidRelation.new('error')
+        raise CloudController::Errors::InvalidRelation.new('error')
       end
       define_route :get, '/test_invalid_relation_error', :test_invalid_relation_error
 
@@ -347,7 +347,7 @@ module VCAP::CloudController
         it 'raises an unauthorized API error' do
           expect {
             base_controller.check_read_permissions!
-          }.to raise_error VCAP::Errors::ApiError
+          }.to raise_error CloudController::Errors::ApiError
         end
       end
     end
@@ -390,7 +390,7 @@ module VCAP::CloudController
         it 'raises an unauthorized API error' do
           expect {
             base_controller.check_write_permissions!
-          }.to raise_error VCAP::Errors::ApiError
+          }.to raise_error CloudController::Errors::ApiError
         end
       end
     end

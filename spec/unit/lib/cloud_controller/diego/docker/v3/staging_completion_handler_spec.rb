@@ -145,7 +145,7 @@ module VCAP::CloudController
                 before do
                   expect {
                     handler.staging_complete(droplet, payload)
-                  }.to raise_error(VCAP::Errors::ApiError)
+                  }.to raise_error(CloudController::Errors::ApiError)
                 end
 
                 it 'logs an error for the CF operator' do
@@ -176,7 +176,7 @@ module VCAP::CloudController
                 it 'should mark the droplet as failed' do
                   expect {
                     handler.staging_complete(droplet, payload)
-                  }.to raise_error(VCAP::Errors::ApiError)
+                  }.to raise_error(CloudController::Errors::ApiError)
 
                   expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
                   expect(droplet.error).to eq('StagingError - Malformed message from Diego stager')
@@ -185,7 +185,7 @@ module VCAP::CloudController
                 it 'logs an error for the CF user' do
                   expect {
                     handler.staging_complete(droplet, payload)
-                  }.to raise_error(VCAP::Errors::ApiError)
+                  }.to raise_error(CloudController::Errors::ApiError)
 
                   expect(Loggregator).to have_received(:emit_error).with(droplet.guid, /Malformed message from Diego stager/)
                 end
@@ -193,7 +193,7 @@ module VCAP::CloudController
                 it 'logs an error for the CF operator' do
                   expect {
                     handler.staging_complete(droplet, payload)
-                  }.to raise_error(VCAP::Errors::ApiError)
+                  }.to raise_error(CloudController::Errors::ApiError)
 
                   expect(logger).to have_received(:error).with(
                     'diego.docker.staging.v3.failure.invalid-message',

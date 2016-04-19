@@ -115,7 +115,7 @@ module VCAP::CloudController
         end
 
         it 'propagates api errors from staging_response' do
-          expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(Errors::ApiError.new_from_details('JobTimeout'))
+          expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(CloudController::Errors::ApiError.new_from_details('JobTimeout'))
 
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(524)
@@ -166,7 +166,7 @@ module VCAP::CloudController
       end
 
       it 'propagates api errors from staging_response' do
-        expect_any_instance_of(Diego::V3::Stager).to receive(:staging_complete).and_raise(Errors::ApiError.new_from_details('JobTimeout'))
+        expect_any_instance_of(Diego::V3::Stager).to receive(:staging_complete).and_raise(CloudController::Errors::ApiError.new_from_details('JobTimeout'))
 
         post url, MultiJson.dump(staging_response)
         expect(last_response.status).to eq(524)

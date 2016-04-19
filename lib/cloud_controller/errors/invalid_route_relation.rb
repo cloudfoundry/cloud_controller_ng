@@ -1,4 +1,4 @@
-module VCAP::CloudController
+module CloudController
   module Errors
     class InvalidRouteRelation < InvalidRelation
       def to_s

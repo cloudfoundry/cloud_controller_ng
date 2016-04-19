@@ -143,7 +143,7 @@ module VCAP::CloudController
 
       it 'fails if there are apps' do
         AppFactory.make(stack: stack)
-        expect { stack.destroy }.to raise_error VCAP::Errors::ApiError, /Please delete the app associations for your stack/
+        expect { stack.destroy }.to raise_error CloudController::Errors::ApiError, /Please delete the app associations for your stack/
       end
     end
   end

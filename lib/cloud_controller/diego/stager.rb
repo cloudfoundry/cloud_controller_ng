@@ -18,7 +18,7 @@ module VCAP::CloudController
         @app.save_changes
 
         send_stage_app_request
-      rescue Errors::ApiError => e
+      rescue CloudController::Errors::ApiError => e
         logger.error('stage.app', staging_guid: StagingGuid.from_app(@app), error: e)
         staging_complete(StagingGuid.from_app(@app), { error: { id: 'StagingError', message: e.message } })
         raise e
@@ -40,10 +40,10 @@ module VCAP::CloudController
 
       def send_stage_app_request
         @messenger.send_stage_request(@app, @config)
-      rescue Errors::ApiError => e
+      rescue CloudController::Errors::ApiError => e
         raise e
       rescue => e
-        raise Errors::ApiError.new_from_details('StagerError', e)
+        raise CloudController::Errors::ApiError.new_from_details('StagerError', e)
       end
     end
   end

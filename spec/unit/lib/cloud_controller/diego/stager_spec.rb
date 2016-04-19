@@ -59,12 +59,12 @@ module VCAP::CloudController
           end
 
           before do
-            allow(messenger).to receive(:send_stage_request).and_raise Errors::ApiError.new_from_details('StagerError', 'staging failed')
+            allow(messenger).to receive(:send_stage_request).and_raise(CloudController::Errors::ApiError.new_from_details('StagerError', 'staging failed'))
             allow(stager).to receive(:staging_complete)
           end
 
           it 'attempts to stop the outstanding stage request' do
-            expect { stager.stage }.to raise_error(Errors::ApiError)
+            expect { stager.stage }.to raise_error(CloudController::Errors::ApiError)
             app.reload
             expect(stager).to have_received(:staging_complete).with(StagingGuid.from_app(app), error)
           end

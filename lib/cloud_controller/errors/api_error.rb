@@ -1,4 +1,4 @@
-module VCAP
+module CloudController
   module Errors
     class ApiError < StandardError
       attr_accessor :args

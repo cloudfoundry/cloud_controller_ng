@@ -29,7 +29,7 @@ module VCAP::CloudController
           dataset = @model_class.where(guid: @guid)
           @delete_action.timeout_error(dataset)
         else
-          VCAP::Errors::ApiError.new_from_details('JobTimeout')
+          CloudController::Errors::ApiError.new_from_details('JobTimeout')
         end
       end
     end

@@ -13,7 +13,7 @@ module VCAP::CloudController
         instance_delete_errors = delete_service_instances(space_model)
         unless instance_delete_errors.empty?
           error_message = instance_delete_errors.map { |error| "\t#{error.message}" }.join("\n\n")
-          errors.push VCAP::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_model.name, error_message)
+          errors.push CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_model.name, error_message)
         end
 
         delete_apps(space_model)
@@ -21,7 +21,7 @@ module VCAP::CloudController
         broker_delete_errors = delete_service_brokers(space_model)
         unless broker_delete_errors.empty?
           error_message = broker_delete_errors.map { |error| "\t#{error.message}" }.join("\n\n")
-          errors.push VCAP::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_model.name, error_message)
+          errors.push CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_model.name, error_message)
         end
 
         space_model.destroy if instance_delete_errors.empty?
@@ -31,7 +31,7 @@ module VCAP::CloudController
 
     def timeout_error(dataset)
       space_name = dataset.first.name
-      VCAP::Errors::ApiError.new_from_details('SpaceDeleteTimeout', space_name)
+      CloudController::Errors::ApiError.new_from_details('SpaceDeleteTimeout', space_name)
     end
 
     private
@@ -67,7 +67,7 @@ module VCAP::CloudController
       errors_accumulator = []
       brokers_with_remaining_instances = private_service_brokers - deletable_brokers
       brokers_with_remaining_instances.each do |broker|
-        errors_accumulator.push VCAP::Errors::ApiError.new_from_details('ServiceBrokerNotRemovable', broker.name)
+        errors_accumulator.push CloudController::Errors::ApiError.new_from_details('ServiceBrokerNotRemovable', broker.name)
       end
       errors_accumulator
     end

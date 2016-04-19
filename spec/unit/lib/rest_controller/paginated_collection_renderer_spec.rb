@@ -50,7 +50,7 @@ module VCAP::CloudController::RestController
           let(:results_per_page) { 11 }
 
           it 'raises ApiError error' do
-            expect { render_json_call }.to raise_error(VCAP::Errors::ApiError, /results_per_page/)
+            expect { render_json_call }.to raise_error(CloudController::Errors::ApiError, /results_per_page/)
           end
         end
 
@@ -94,7 +94,7 @@ module VCAP::CloudController::RestController
           it 'raises BadQueryParameter error' do
             expect {
               render_json_call
-            }.to raise_error(VCAP::Errors::ApiError, /inline_relations_depth/)
+            }.to raise_error(CloudController::Errors::ApiError, /inline_relations_depth/)
           end
         end
 
