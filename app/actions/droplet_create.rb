@@ -3,6 +3,7 @@ require 'cloud_controller/backends/staging_disk_calculator'
 require 'cloud_controller/backends/staging_environment_builder'
 require 'cloud_controller/diego/v3/staging_details'
 require 'cloud_controller/diego/lifecycles/lifecycle_provider'
+require 'repositories/runtime/droplet_event_repository'
 
 module VCAP::CloudController
   class DropletCreate
@@ -13,14 +14,18 @@ module VCAP::CloudController
 
     def initialize(memory_limit_calculator=StagingMemoryCalculator.new,
       disk_limit_calculator=StagingDiskCalculator.new,
-      environment_presenter=StagingEnvironmentBuilder.new)
+      environment_presenter=StagingEnvironmentBuilder.new,
+      actor:,
+      actor_email:)
 
       @memory_limit_calculator = memory_limit_calculator
       @disk_limit_calculator   = disk_limit_calculator
       @environment_builder     = environment_presenter
+      @actor = actor
+      @actor_name = actor_email
     end
 
-    def create_and_stage(package, lifecycle)
+    def create_and_stage(package, lifecycle, message)
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
 
       staging_details = get_staging_details(package, lifecycle)
@@ -38,6 +43,16 @@ module VCAP::CloudController
         droplet.save
         staging_details.droplet = droplet
         lifecycle.create_lifecycle_data_model(droplet)
+
+        Repositories::Runtime::DropletEventRepository.record_dropet_create_by_staging(
+          droplet,
+          @actor,
+          @actor_name,
+          message.audit_hash,
+          package.app.name,
+          package.app.space_guid,
+          package.app.space.organization_guid
+          )
       end
 
       load_association(droplet)
