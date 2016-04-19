@@ -2,7 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe RouteValidator do
-    let(:validator) { RouteValidator.new(domain_guid, route_attrs) }
+    let(:route) { Route.new 'port' => port, 'host' => host, 'path' => path }
+    let(:validator) { RouteValidator.new(domain_guid, route) }
     let(:routing_api_client) { double('routing_api', router_group: router_group) }
     let(:router_group) { double(:router_group, type: router_group_type, guid: router_group_guid, reservable_ports: [3, 4, 5, 8080]) }
     let(:router_group_type) { 'tcp' }
@@ -10,9 +11,8 @@ module VCAP::CloudController
     let(:domain_guid) { domain.guid }
     let(:domain) { SharedDomain.make(router_group_guid: router_group_guid) }
     let(:port) { 8080 }
-    let(:host) { nil }
-    let(:path) { nil }
-    let(:route_attrs) { { 'port' => port, 'host' => host, 'path' => path } }
+    let(:host) { '' }
+    let(:path) { '' }
 
     before do
       allow(CloudController::DependencyLocator).to receive(:instance).
@@ -145,7 +145,7 @@ module VCAP::CloudController
     end
 
     context 'when the routing api is disabled' do
-      let(:validator) { RouteValidator.new(domain_guid, route_attrs) }
+      let(:validator) { RouteValidator.new(domain_guid, route) }
 
       before do
         allow(CloudController::DependencyLocator).to receive(:instance).
