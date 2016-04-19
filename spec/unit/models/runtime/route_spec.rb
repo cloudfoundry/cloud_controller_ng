@@ -571,9 +571,17 @@ module VCAP::CloudController
       describe 'total reserved route ports' do
         let(:space) { Space.make }
         let(:org_quota) { space.organization.quota_definition }
-        let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
+        let(:space_quota) { space.space_quota_definition }
+        let(:http_domain) { SharedDomain.make }
+        let(:tcp_domain) { SharedDomain.make(router_group_guid: 'guid') }
 
-        subject(:route) { Route.new(space: space, domain: domain, host: 'bar', port: 4444) }
+        subject(:http_route) { Route.new(space: space,
+                                    domain: http_domain,
+                                    host: 'bar') }
+        subject(:tcp_route) { Route.new(space: space,
+                                        domain: tcp_domain,
+                                        host: '',
+                                        port: 6000) }
 
         context 'on create' do
           context 'when not exceeding total allowed routes' do
@@ -583,9 +591,32 @@ module VCAP::CloudController
               org_quota.save
             end
 
-            it 'does not have an error on organization' do
-              subject.valid?
-              expect(subject.errors.on(:organization)).to be_nil
+            it 'is valid' do
+              expect(subject).to be_valid
+            end
+
+            context 'when creating another http route' do
+              subject(:another_route) { Route.new(space: space, domain: http_domain, host: 'foo') }
+
+              before do
+                http_route.save
+              end
+
+              it 'is valid' do
+                expect(subject).to be_valid
+              end
+            end
+
+            context 'when creating another tcp route' do
+                subject(:another_route) { Route.new(space: space, domain: tcp_domain, host: '', port: 4444) }
+
+                before do
+                  tcp_route.save
+                end
+
+                it 'is invalid' do
+                  expect(subject).to_not be_valid
+                end
             end
           end
 
@@ -615,7 +646,7 @@ module VCAP::CloudController
             end
 
             context 'and the user does not specify a port' do
-              subject(:route) { Route.new(space: space, domain: domain, host: 'bar') }
+              subject(:route) { Route.new(space: space, domain: http_domain, host: 'bar') }
 
               before do
                 org_quota.total_routes = 1
