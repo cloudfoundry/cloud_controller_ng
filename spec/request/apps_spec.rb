@@ -801,39 +801,38 @@ describe 'Apps' do
   end
 
   describe 'PUT /v3/apps/:guid/current_droplet' do
-    it 'assigns the current droplet of the app' do
-      stack     = VCAP::CloudController::Stack.make(name: 'stack-name')
-      app_model = VCAP::CloudController::AppModel.make(
+    let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
+    let(:app_model) do
+      VCAP::CloudController::AppModel.make(
         :buildpack,
         name:          'my_app',
         space:         space,
         desired_state: 'STOPPED',
       )
+    end
 
+    before do
       app_model.lifecycle_data.buildpack = 'http://example.com/git'
       app_model.lifecycle_data.stack     = stack.name
       app_model.lifecycle_data.save
+    end
 
-      process_to_delete = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'bob', space: app_model.space)
-      process_to_update = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'jerry', command: 'original', space: app_model.space, metadata: {})
-
+    it 'assigns the current droplet of the app' do
       droplet = VCAP::CloudController::DropletModel.make(
         app:           app_model,
-        process_types: { web: 'rackup', other: 'cron', jerry: 'not original' },
+        process_types: { web: 'rackup' },
         state:         VCAP::CloudController::DropletModel::STAGED_STATE
       )
 
-      droplet_request = {
-        droplet_guid: droplet.guid
-      }
+      request_body = { droplet_guid: droplet.guid }
 
-      put "/v3/apps/#{app_model.guid}/current_droplet", droplet_request, user_header
+      put "/v3/apps/#{app_model.guid}/current_droplet", request_body, user_header
 
       expected_response = {
         'name'                    => 'my_app',
         'guid'                    => app_model.guid,
         'desired_state'           => 'STOPPED',
-        'total_desired_instances' => 2,
+        'total_desired_instances' => 1,
         'environment_variables'   => {},
         'created_at'              => iso8601,
         'updated_at'              => iso8601,
@@ -879,7 +878,23 @@ describe 'Apps' do
       })
       expect(droplet_event.metadata).to eq({ 'request' => { 'droplet_guid' => droplet.guid } })
 
-      expect(app_model.reload.processes.count).to eq(3)
+      expect(app_model.reload.processes.count).to eq(1)
+    end
+
+    it 'creates audit.app.process.create events' do
+      droplet = VCAP::CloudController::DropletModel.make(
+        app:           app_model,
+        process_types: { web: 'rackup', other: 'cron' },
+        state:         VCAP::CloudController::DropletModel::STAGED_STATE
+      )
+
+      request_body = { droplet_guid: droplet.guid }
+
+      put "/v3/apps/#{app_model.guid}/current_droplet", request_body, user_header
+
+      events = VCAP::CloudController::Event.where(actor: user.guid).all
+
+      expect(app_model.reload.processes.count).to eq(2)
       web_process   = app_model.processes.find { |i| i.type == 'web' }
       other_process = app_model.processes.find { |i| i.type == 'other' }
       expect(web_process).to be_present
@@ -910,19 +925,24 @@ describe 'Apps' do
         organization_guid: space.organization.guid
       })
       expect(other_process_event.metadata).to eq({ 'process_guid' => other_process.guid, 'process_type' => 'other' })
+    end
 
-      delete_event = events.find { |e| e.metadata['process_guid'] == process_to_delete.guid }
-      expect(delete_event.values).to include({
-        type:              'audit.app.process.delete',
-        actee:             app_model.guid,
-        actee_type:        'v3-app',
-        actee_name:        'my_app',
-        actor:             user.guid,
-        actor_type:        'user',
-        space_guid:        space.guid,
-        organization_guid: space.organization.guid
-      })
-      expect(delete_event.metadata).to eq({ 'process_guid' => process_to_delete.guid, 'process_type' => 'bob' })
+    it 'creates audit.app.process.update events' do
+      process_to_update = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'web', command: 'original', space: app_model.space, metadata: {})
+
+      droplet = VCAP::CloudController::DropletModel.make(
+        app:           app_model,
+        process_types: { web: 'rackup' },
+        state:         VCAP::CloudController::DropletModel::STAGED_STATE
+      )
+
+      request_body = { droplet_guid: droplet.guid }
+
+      put "/v3/apps/#{app_model.guid}/current_droplet", request_body, user_header
+
+      events = VCAP::CloudController::Event.where(actor: user.guid).all
+
+      expect(app_model.reload.processes.count).to eq(1)
 
       update_event = events.find { |e| e.metadata['process_guid'] == process_to_update.guid }
       expect(update_event.values).to include({
@@ -937,13 +957,42 @@ describe 'Apps' do
       })
       expect(update_event.metadata).to eq({
         'process_guid' => process_to_update.guid,
-        'process_type' => 'jerry',
+        'process_type' => 'web',
         'request'      => {
           'command' => 'PRIVATE DATA HIDDEN'
         }
       })
+    end
 
-      expect(events.length).to eq(5)
+    it 'creates audit.app.process.delete events' do
+      process_to_delete = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'bob', space: app_model.space)
+
+      droplet = VCAP::CloudController::DropletModel.make(
+        app:           app_model,
+        process_types: { web: 'rackup' },
+        state:         VCAP::CloudController::DropletModel::STAGED_STATE
+      )
+
+      request_body = { droplet_guid: droplet.guid }
+
+      put "/v3/apps/#{app_model.guid}/current_droplet", request_body, user_header
+
+      events = VCAP::CloudController::Event.where(actor: user.guid).all
+
+      expect(app_model.reload.processes.count).to eq(1)
+
+      delete_event = events.find { |e| e.metadata['process_guid'] == process_to_delete.guid }
+      expect(delete_event.values).to include({
+        type:              'audit.app.process.delete',
+        actee:             app_model.guid,
+        actee_type:        'v3-app',
+        actee_name:        'my_app',
+        actor:             user.guid,
+        actor_type:        'user',
+        space_guid:        space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(delete_event.metadata).to eq({ 'process_guid' => process_to_delete.guid, 'process_type' => 'bob' })
     end
   end
 end
