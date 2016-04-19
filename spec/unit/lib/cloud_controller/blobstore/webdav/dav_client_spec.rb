@@ -555,11 +555,9 @@ module CloudController
           expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/buildpack_cache/fo/ob/foobar/', header: {})
         end
 
-        it 'raises FileNotfound when the server returns 404' do
+        it 'does not fail when the collection does not exist' do
           allow(httpclient).to receive(:delete).and_return(instance_double(HTTP::Message, status: 404, content: ''))
-          expect {
-            client.delete_all_in_path('foobar')
-          }.to raise_error(FileNotFound, /Could not find object/)
+          client.delete_all_in_path('foobar')
           expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/buildpack_cache/fo/ob/foobar/', header: {})
         end
 

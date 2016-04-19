@@ -158,7 +158,9 @@ module CloudController
         response = with_error_handling { @client.delete(url, header: @headers) }
         return if response.status == 204
 
-        raise FileNotFound.new("Could not find object '#{URI(url).path}', #{response.status}/#{response.content}") if response.status == 404
+        # requesting to delete something which is already gone is ok
+        return if response.status == 404
+
         raise BlobstoreError.new("Could not delete all in path, #{response.status}/#{response.content}")
       end
 
