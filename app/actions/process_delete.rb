@@ -1,9 +1,17 @@
 module VCAP::CloudController
   class ProcessDelete
+    def initialize(user_guid, user_email)
+      @user_guid = user_guid
+      @user_email = user_email
+    end
+
     def delete(processes)
       processes = Array(processes)
 
-      processes.each(&:destroy)
+      processes.each do |process|
+        Repositories::Runtime::ProcessEventRepository.record_delete(process, @user_guid, @user_email)
+        process.destroy
+      end
     end
   end
 end

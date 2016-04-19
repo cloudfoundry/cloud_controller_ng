@@ -36,7 +36,7 @@ module VCAP::CloudController
         add_or_update_process(app, type, command)
       end
       processes = app.processes_dataset.where(Sequel.~(type: types))
-      ProcessDelete.new.delete(processes.all)
+      ProcessDelete.new(user_guid, user_email).delete(processes.all)
     end
 
     def add_or_update_process(app, type, command)

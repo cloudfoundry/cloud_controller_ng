@@ -802,16 +802,19 @@ describe 'Apps' do
 
   describe 'PUT /v3/apps/:guid/current_droplet' do
     it 'assigns the current droplet of the app' do
-      stack                              = VCAP::CloudController::Stack.make(name: 'stack-name')
-      app_model                          = VCAP::CloudController::AppModel.make(
+      stack     = VCAP::CloudController::Stack.make(name: 'stack-name')
+      app_model = VCAP::CloudController::AppModel.make(
         :buildpack,
         name:          'my_app',
         space:         space,
         desired_state: 'STOPPED',
       )
+
       app_model.lifecycle_data.buildpack = 'http://example.com/git'
       app_model.lifecycle_data.stack     = stack.name
       app_model.lifecycle_data.save
+
+      process_to_delete = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'bob', space: app_model.space)
 
       droplet = VCAP::CloudController::DropletModel.make(
         app:           app_model,
@@ -907,7 +910,20 @@ describe 'Apps' do
       })
       expect(other_process_event.metadata).to eq({ 'process_guid' => other_process.guid, 'process_type' => 'other' })
 
-      expect(events.length).to eq(3)
+      delete_event = events.find { |e| e.metadata['process_guid'] == process_to_delete.guid }
+      expect(delete_event.values).to include({
+        type:              'audit.app.process.delete',
+        actee:             app_model.guid,
+        actee_type:        'v3-app',
+        actee_name:        'my_app',
+        actor:             user.guid,
+        actor_type:        'user',
+        space_guid:        space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(delete_event.metadata).to eq({ 'process_guid' => process_to_delete.guid, 'process_type' => 'bob' })
+
+      expect(events.length).to eq(4)
     end
   end
 end

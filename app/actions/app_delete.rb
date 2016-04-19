@@ -43,7 +43,7 @@ module VCAP::CloudController
       PackageDelete.new(user_guid, user_email).delete(packages_to_delete(app))
       TaskDelete.new(user_guid, user_email).delete(tasks_to_delete(app))
       DropletDelete.new(user_guid, user_email).delete(droplets_to_delete(app))
-      ProcessDelete.new.delete(processes_to_delete(app))
+      ProcessDelete.new(user_guid, user_email).delete(processes_to_delete(app))
       RouteMappingDelete.new(user_guid, user_email).delete(route_mappings_to_delete(app))
       delete_buildpack_cache(app)
     end
@@ -77,7 +77,8 @@ module VCAP::CloudController
         select(:"#{ProcessModel.table_name}__guid",
         :"#{ProcessModel.table_name}__id",
         :"#{ProcessModel.table_name}__app_guid",
-        :"#{ProcessModel.table_name}__name").all
+        :"#{ProcessModel.table_name}__name",
+        :"#{ProcessModel.table_name}__space_id").all
     end
 
     def tasks_to_delete(app_model)
