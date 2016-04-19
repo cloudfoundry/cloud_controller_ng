@@ -12,7 +12,7 @@ module VCAP::CloudController
                       instances: instances,
                       )
     end
-    let(:changes) { { updated_at: [1, app.updated_at] } }
+    let(:changes) { { updated_at: [2.days.ago, app.updated_at] } }
     let(:undo_changes) { UndoAppChanges.new(app) }
 
     describe '#undo' do
@@ -23,14 +23,7 @@ module VCAP::CloudController
           expect(app.state).to eq('STOPPED')
         end
 
-        it 'does not undo when the final app state does not match the desired app state' do
-          app.state = 'CRASHED'
-          changes[:state] = ['STARTED', 'STOPPED']
-          undo_changes.undo(changes)
-          expect(app.state).to eq('CRASHED')
-        end
-
-        context('when the app is stopped') do
+        context 'when the app is stopped' do
           let(:state) { 'STOPPED' }
 
           it 'should not undo any stop' do

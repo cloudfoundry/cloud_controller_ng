@@ -168,6 +168,28 @@ module VCAP::CloudController
       end
     end
 
+    describe '#after_commit' do
+      let(:error) { CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty') }
+
+      # undo happens in after_commit, which only runs if tests use a :truncation strategy instead of :transaction
+      context 'when an error happens in AppObserver update' do
+        it 'undoes previous changes', isolation: :truncation do
+          app                 = AppFactory.make(instances: 1)
+          original_updated_at = app.updated_at
+
+          allow(AppObserver).to receive(:updated).and_raise(error)
+
+          expect {
+            app.update(instances: 2)
+          }.to raise_error(CloudController::Errors::ApiError)
+
+          app.reload
+          expect(app.instances).to eq(1)
+          expect(app.updated_at).to eq(original_updated_at)
+        end
+      end
+    end
+
     describe 'Validations' do
       let(:app) { AppFactory.make }
 
