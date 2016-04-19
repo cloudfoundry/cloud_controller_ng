@@ -148,9 +148,7 @@ class PackagesController < ApplicationController
 
   def send_package_blob(package)
     package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
-    blob_sender = CloudController::DependencyLocator.instance.blob_sender
-    blob = package_blobstore.blob(package.guid)
-    BlobDispatcher.new(blob_sender: blob_sender, controller: self).send_or_redirect(local: package_blobstore.local?, blob: blob)
+    BlobDispatcher.new(blobstore: package_blobstore, controller: self).send_or_redirect(guid: package.guid)
   end
 
   def list_fetcher

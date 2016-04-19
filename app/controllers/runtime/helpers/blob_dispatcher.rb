@@ -1,13 +1,21 @@
 module VCAP::CloudController
   class BlobDispatcher
-    def initialize(blob_sender:, controller:)
-      @blob_sender = blob_sender
-      @controller  = controller
+    def initialize(blobstore:, controller:)
+      @blobstore = blobstore
+      @controller = controller
     end
 
-    def send_or_redirect(local:, blob:)
-      if local
-        @blob_sender.send_blob(blob, @controller)
+    def send_or_redirect(guid:)
+      raise CloudController::Errors::BlobNotFound unless guid
+      blob = @blobstore.blob(guid)
+      raise CloudController::Errors::BlobNotFound unless blob
+      send_or_redirect_blob(blob)
+    end
+
+    def send_or_redirect_blob(blob)
+      raise CloudController::Errors::BlobNotFound unless blob
+      if @blobstore.local?
+        blob_sender.send_blob(blob, @controller)
       else
         begin
           if @controller.is_a?(ActionController::Base)
@@ -26,6 +34,10 @@ module VCAP::CloudController
 
     def logger
       @logger ||= Steno.logger('cc.blob_dispatcher')
+    end
+
+    def blob_sender
+      @blob_sender ||= CloudController::DependencyLocator.instance.blob_sender
     end
   end
 end
