@@ -1,4 +1,5 @@
 require 'cloud_controller/procfile'
+require 'repositories/runtime/process_event_repository'
 
 module VCAP::CloudController
   class CurrentProcessTypes
@@ -43,16 +44,15 @@ module VCAP::CloudController
       if existing_process
         message = { command: command }
         existing_process.update(message)
-        process_event_repository.record_app_update(existing_process, app.space, user_guid, user_email, message)
       else
         message = {
-          diego: true,
-          command: command,
-          type: type,
-          space: app.space,
-          name: "v3-#{app.name}-#{type}",
-          metadata: {},
-          instances: type == 'web' ? 1 : 0,
+          diego:             true,
+          command:           command,
+          type:              type,
+          space:             app.space,
+          name:              "v3-#{app.name}-#{type}",
+          metadata:          {},
+          instances:         type == 'web' ? 1 : 0,
           health_check_type: type == 'web' ? 'port' : 'process'
         }
 
@@ -62,12 +62,14 @@ module VCAP::CloudController
           RouteMappingModel.where(app_guid: app.guid, process_type: type).select_map(:route_guid).each do |route_guid|
             process.add_route_by_guid(route_guid)
           end
+
+          process_event_repository.record_create(process, user_guid, user_email)
         end
       end
     end
 
     def process_event_repository
-      Repositories::Runtime::AppEventRepository.new
+      Repositories::Runtime::ProcessEventRepository
     end
   end
 end
