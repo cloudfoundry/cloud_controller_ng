@@ -281,7 +281,7 @@ module VCAP::CloudController
     end
 
     def validate_route(domain_guid)
-      RouteValidator.new(@routing_api_client, domain_guid, assemble_route_attrs).validate
+      RouteValidator.new(domain_guid, assemble_route_attrs).validate
     rescue RouteValidator::ValidationError => e
       raise CloudController::Errors::ApiError.new_from_details(e.class.name.demodulize, e.message)
     rescue RoutingApi::RoutingApiDisabled

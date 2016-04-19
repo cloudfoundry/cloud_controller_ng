@@ -438,7 +438,7 @@ module VCAP::CloudController
         allow(route_event_repository).to receive(:record_route_create)
         space.organization.add_user(user)
         space.add_developer(user)
-        allow(RouteValidator).to receive(:new).with(routing_api_client, domain_guid, route_attrs).and_return(tcp_route_validator)
+        allow(RouteValidator).to receive(:new).with(domain_guid, route_attrs).and_return(tcp_route_validator)
         set_current_user(user)
       end
 
@@ -633,7 +633,7 @@ module VCAP::CloudController
               context 'generate_port is "false"' do
                 before do
                   allow(RouteValidator).to receive(:new).
-                    with(routing_api_client, domain_guid, route_attrs).
+                    with(domain_guid, route_attrs).
                     and_raise(RouteValidator::RouteInvalid.new('For TCP routes you must specify a port or request a random one.'))
                 end
 
@@ -691,7 +691,7 @@ module VCAP::CloudController
       before do
         space.organization.add_user(user)
         space.add_developer(user)
-        allow(RouteValidator).to receive(:new).with(routing_api_client, domain_guid, route_attrs).and_return(tcp_route_validator)
+        allow(RouteValidator).to receive(:new).with(domain_guid, route_attrs).and_return(tcp_route_validator)
         allow(route_event_repository).to receive(:record_route_update)
         set_current_user(user)
       end

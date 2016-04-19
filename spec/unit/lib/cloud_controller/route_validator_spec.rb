@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe RouteValidator do
-    let(:validator) { RouteValidator.new(routing_api_client, domain_guid, route_attrs) }
+    let(:validator) { RouteValidator.new(domain_guid, route_attrs) }
     let(:routing_api_client) { double('routing_api', router_group: router_group) }
     let(:router_group) { double(:router_group, type: router_group_type, guid: router_group_guid, reservable_ports: [3, 4, 5, 8080]) }
     let(:router_group_type) { 'tcp' }
@@ -13,6 +13,12 @@ module VCAP::CloudController
     let(:host) { nil }
     let(:path) { nil }
     let(:route_attrs) { { 'port' => port, 'host' => host, 'path' => path } }
+
+    before do
+      allow(CloudController::DependencyLocator).to receive(:instance).
+        and_return(double('routing_api_double',
+                          routing_api_client: routing_api_client))
+    end
 
     context 'when non-existent domain is specified' do
       let(:domain_guid) { 'non-existent-domain' }
@@ -139,7 +145,13 @@ module VCAP::CloudController
     end
 
     context 'when the routing api is disabled' do
-      let(:validator) { RouteValidator.new(RoutingApi::DisabledClient.new, domain_guid, route_attrs) }
+      let(:validator) { RouteValidator.new(domain_guid, route_attrs) }
+
+      before do
+        allow(CloudController::DependencyLocator).to receive(:instance).
+          and_return(double('routing_api_double',
+                            routing_api_client: RoutingApi::DisabledClient.new))
+      end
 
       it 'raises a routing api disabled error' do
         expect { validator.validate }.

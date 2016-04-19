@@ -7,8 +7,8 @@ module VCAP::CloudController
 
     attr_reader :domain_guid, :port, :host, :path, :domain
 
-    def initialize(routing_api_client, domain_guid, route_attrs)
-      @routing_api_client = routing_api_client
+    def initialize(domain_guid, route_attrs)
+      @routing_api_client = CloudController::DependencyLocator.instance.routing_api_client
       @domain_guid = domain_guid
       @port = route_attrs['port']
       @host = route_attrs['host']
