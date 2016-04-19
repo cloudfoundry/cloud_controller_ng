@@ -2,13 +2,12 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe RouteValidator do
-    let(:route) { Route.new 'port' => port, 'host' => host, 'path' => path }
-    let(:validator) { RouteValidator.new(domain_guid, route) }
-    let(:routing_api_client) { double('routing_api', router_group: router_group) }
+    let(:route) { Route.new port: port, host: host, path: path, domain: domain, space: Space.make }
+    let(:validator) { RouteValidator.new(route) }
+    let(:routing_api_client) { double('routing_api', router_group: router_group, enabled?: true) }
     let(:router_group) { double(:router_group, type: router_group_type, guid: router_group_guid, reservable_ports: [3, 4, 5, 8080]) }
     let(:router_group_type) { 'tcp' }
     let(:router_group_guid) { 'router-group-guid' }
-    let(:domain_guid) { domain.guid }
     let(:domain) { SharedDomain.make(router_group_guid: router_group_guid) }
     let(:port) { 8080 }
     let(:host) { '' }
@@ -20,24 +19,15 @@ module VCAP::CloudController
                           routing_api_client: routing_api_client))
     end
 
-    context 'when non-existent domain is specified' do
-      let(:domain_guid) { 'non-existent-domain' }
-
-      it 'raises a DomainInvalid error' do
-        expect { validator.validate }.
-          to raise_error(RouteValidator::DomainInvalid, 'Domain with guid non-existent-domain does not exist')
-      end
-    end
-
     context 'when creating a route with a null port value' do
       let(:port) { nil }
 
       context 'with a tcp domain' do
         let(:domain) { SharedDomain.make(router_group_guid: router_group_guid) }
 
-        it 'raises a RouteInvalid error' do
-          expect { validator.validate }.
-            to raise_error(RouteValidator::RouteInvalid, 'For TCP routes you must specify a port or request a random one.')
+        it 'adds port_unavailable error to the route' do
+          validator.validate
+          expect(route.errors.on(:port)).to include(:port_unavailable)
         end
       end
     end
@@ -46,81 +36,86 @@ module VCAP::CloudController
       context 'with a domain without a router_group_guid' do
         let(:domain) { SharedDomain.make(router_group_guid: nil) }
 
-        it 'raises a RouteInvalid error' do
-          expect { validator.validate }.
-            to raise_error(RouteValidator::RouteInvalid, 'Port is supported for domains of TCP router groups only.')
+        it 'adds port_unsupported error to the route' do
+          validator.validate
+          expect(route.errors.on(:port)).to include(:port_unsupported)
         end
+
       end
 
       context 'with a domain with a router_group_guid and type tcp' do
-        it 'does not raise an error' do
-          expect { validator.validate }.not_to raise_error
+        it 'does not add the error' do
+          validator.validate
+          expect(route.errors).to be_empty
         end
 
         context 'with port that is not part of the reservable port range' do
           let(:port) { 1023 }
 
-          it 'raises a RouteInvalid error' do
-            err_msg = 'The requested port is not available for reservation. Try a different port or request a random one be generated for you.'
-            expect { validator.validate }.
-              to raise_error(RouteValidator::RouteInvalid, err_msg)
+          it 'adds port_unavailable error to the route' do
+            validator.validate
+            expect(route.errors.on(:port)).to include(:port_unavailable)
           end
         end
 
         context 'host is included in request' do
           let(:host) { 'abc' }
-          it 'raises a RouteInvalid error' do
-            expect { validator.validate }.
-              to raise_error(RouteValidator::RouteInvalid, 'Host and path are not supported, as domain belongs to a TCP router group.')
+
+          it 'adds host_and_path_domain_tcp to route model errors' do
+            validator.validate
+            expect(route.errors.on(:host)).to include(:host_and_path_domain_tcp)
           end
         end
 
         context 'host is empty in request' do
           let(:host) { '' }
-          it 'does not raise an error' do
-            expect { validator.validate }.not_to raise_error
+          it 'does not add errors' do
+            validator.validate
+            expect(route.errors).to be_empty
           end
         end
 
         context 'path is included in request' do
           let(:path) { '/fake/path' }
-          it 'raises a RouteInvalid error' do
-            expect { validator.validate }.
-              to raise_error(RouteValidator::RouteInvalid, 'Host and path are not supported, as domain belongs to a TCP router group.')
+
+          it 'adds host_and_path_domain_tcp to route model errors' do
+            validator.validate
+            expect(route.errors.on(:host)).to include(:host_and_path_domain_tcp)
           end
         end
 
         context 'path is empty in request' do
           let(:path) { '' }
-          it 'does not raise an error' do
-            expect { validator.validate }.not_to raise_error
+          it 'does not add an error to the route' do
+            validator.validate
+            expect(route.errors).to be_empty
           end
         end
 
         context 'when port is already taken in the same router group' do
+          let(:another_route) { Route.new(domain: domain, port: port, space: Space.make) }
+
           before do
-            domain_in_same_router_group = SharedDomain.make(router_group_guid: router_group_guid)
-            Route.make(domain: domain_in_same_router_group, port: port)
+            route.save
           end
 
-          it 'raises a RoutePortTaken error' do
-            error_message = "Port #{port} is not available on this domain's router group. " \
-                'Try a different port, request an random port, or ' \
-                'use a domain of a different router group.'
-
-            expect { validator.validate }.
-              to raise_error(RouteValidator::RoutePortTaken, error_message)
+          it 'adds a route_port_taken error to the route' do
+            RouteValidator.new(another_route).validate
+            expect(another_route.errors.on(:port)).to include(:port_taken)
           end
         end
 
         context 'when port is already taken in a different router group' do
+          let(:domain_in_different_router_group) {SharedDomain.make(router_group_guid: 'different-router-group')}
+          let(:another_route) {Route.new(domain: domain_in_different_router_group, port: port, space: Space.make)}
+
           before do
-            domain_in_different_router_group = SharedDomain.make(router_group_guid: 'different-router-group')
-            Route.make(domain: domain_in_different_router_group, port: port)
+            route.save
           end
 
-          it 'does not raise an error' do
-            expect { validator.validate }.not_to raise_error
+          it 'does not add an error to the route' do
+            RouteValidator.new(another_route).validate
+            expect(another_route.errors).to be_empty
           end
         end
       end
@@ -128,24 +123,26 @@ module VCAP::CloudController
       context 'with a domain without a router_group_guid' do
         let(:domain) { SharedDomain.make(router_group_guid: nil) }
 
-        it 'rejects the request with a RouteInvalid error' do
-          expect { validator.validate }.
-            to raise_error(RouteValidator::RouteInvalid, 'Port is supported for domains of TCP router groups only.')
+        it 'adds port_unsupported error to the route model' do
+          validator.validate
+          expect(route.errors.on(:port)).to include(:port_unsupported)
         end
       end
 
       context 'with a domain with a router_group_guid of type other than tcp' do
         let(:router_group_type) { 'http' }
 
-        it 'rejects the request with a RouteInvalid error' do
-          expect { validator.validate }.
-            to raise_error(RouteValidator::RouteInvalid, 'Port is supported for domains of TCP router groups only.')
+        it 'adds port_unsupported error to the route' do
+          # expect { validator.validate }.
+          #   to raise_error(RouteValidator::RouteInvalid, 'Port is supported for domains of TCP router groups only.')
+          validator.validate
+          expect(route.errors.on(:port)).to include(:port_unsupported)
         end
       end
     end
 
     context 'when the routing api is disabled' do
-      let(:validator) { RouteValidator.new(domain_guid, route) }
+      let(:validator) { RouteValidator.new(route) }
 
       before do
         allow(CloudController::DependencyLocator).to receive(:instance).

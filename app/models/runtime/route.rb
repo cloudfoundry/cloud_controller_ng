@@ -90,6 +90,10 @@ module VCAP::CloudController
       validate_ports
       validate_total_reserved_route_ports if port && port > 0
       errors.add(:host, :domain_conflict) if domains_match?
+
+      RouteValidator.new(self).validate
+    rescue RoutingApi::RoutingApiDisabled
+      errors.add(:routing_api, :routing_api_disabled)
     end
 
     def validate_ports

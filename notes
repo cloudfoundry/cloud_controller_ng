@@ -1,0 +1,28 @@
+today:
+1. change shared domain model to get router_group_type from the routing api
+2. move route validations to the route model (no need to pass routing api client since a route can ask a domain if it's a tcp domain)
+3. ship it
+
+
+
+
+RoutesController#create
+Request goes to the controller
+Route.create_from_hash(params)
+
+
+validations
+
+- RouteValidator (model)
+  - Talk to apiclient to get the route group
+  - Validate using all the rules
+  - return true or false
+
+- Model validations (that we already have)
+
+- Save
+
+- Return back to controller
+
+
+

@@ -206,10 +206,10 @@ module VCAP::CloudController
 
     def before_create
       super
-      domain_guid = request_attrs['domain_guid']
-      return if domain_guid.nil?
+      # domain_guid = request_attrs['domain_guid']
+      # return if domain_guid.nil?
 
-      validate_route(domain_guid)
+      # validate_route(domain_guid)
     end
 
     def after_create(route)
@@ -280,6 +280,7 @@ module VCAP::CloudController
       flag == 'true'
     end
 
+    # FIXME: remove this later
     def validate_route(domain_guid)
       RouteValidator.new(domain_guid, assemble_route_attrs).validate
     rescue RouteValidator::ValidationError => e
