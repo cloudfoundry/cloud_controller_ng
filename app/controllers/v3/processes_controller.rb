@@ -53,7 +53,7 @@ class ProcessesController < ApplicationController
     process_not_found! unless process && can_read?(process.space.guid, process.organization.guid)
     unauthorized! unless can_update?(process.space.guid)
 
-    ProcessUpdate.new(current_user, current_user_email).update(process, message)
+    ProcessUpdate.new(current_user.guid, current_user_email).update(process, message)
 
     render status: :ok, json: process_presenter.present_json(process)
   rescue ProcessUpdate::InvalidProcess => e

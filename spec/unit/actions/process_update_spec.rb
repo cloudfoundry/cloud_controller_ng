@@ -3,7 +3,7 @@ require 'actions/process_update'
 
 module VCAP::CloudController
   describe ProcessUpdate do
-    subject(:process_update) { ProcessUpdate.new(user, user_email) }
+    subject(:process_update) { ProcessUpdate.new(user_guid, user_email) }
 
     let(:health_check) do
       {
@@ -16,14 +16,14 @@ module VCAP::CloudController
     let(:message) { ProcessUpdateMessage.new({ command: 'new', health_check: health_check, ports: [1234, 5678] }) }
     let!(:process) do
       App.make(
-        diego:                true,
+        :process,
         command:              'initial command',
         health_check_type:    'port',
         health_check_timeout: 10,
-        ports:                [1574, 3389],
-        metadata:             {})
+        ports:                [1574, 3389]
+      )
     end
-    let(:user) { User.make }
+    let(:user_guid) { 'user-guid' }
     let(:user_email) { 'user@example.com' }
 
     describe '#update' do
@@ -68,10 +68,9 @@ module VCAP::CloudController
       end
 
       it 'creates an audit event' do
-        expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_update).with(
+        expect(Repositories::Runtime::ProcessEventRepository).to receive(:record_update).with(
           process,
-          process.space,
-          user.guid,
+          user_guid,
           user_email,
           {
             'command'      => 'new',

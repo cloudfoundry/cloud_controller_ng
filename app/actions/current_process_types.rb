@@ -35,6 +35,7 @@ module VCAP::CloudController
         types << type
         add_or_update_process(app, type, command)
       end
+
       processes = app.processes_dataset.where(Sequel.~(type: types))
       ProcessDelete.new(user_guid, user_email).delete(processes.all)
     end
@@ -42,9 +43,7 @@ module VCAP::CloudController
     def add_or_update_process(app, type, command)
       existing_process = app.processes_dataset.where(type: type).first
       if existing_process
-        message = { command: command }
-        existing_process.update(message)
-        process_event_repository.record_update(existing_process, user_guid, user_email, message)
+        ProcessUpdate.new(user_guid, user_email).update(existing_process, ProcessUpdateMessage.new({ command: command }))
       else
         message = {
           diego:             true,
@@ -64,13 +63,9 @@ module VCAP::CloudController
             process.add_route_by_guid(route_guid)
           end
 
-          process_event_repository.record_create(process, user_guid, user_email)
+          Repositories::Runtime::ProcessEventRepository.record_create(process, user_guid, user_email)
         end
       end
-    end
-
-    def process_event_repository
-      Repositories::Runtime::ProcessEventRepository
     end
   end
 end

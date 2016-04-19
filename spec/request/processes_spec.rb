@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe 'Processes' do
   let(:space) { VCAP::CloudController::Space.make }
-  let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+  let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my_app') }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer) }
 
@@ -266,8 +266,30 @@ describe 'Processes' do
       expect(process.ports).to match_array([1234, 5678])
 
       event = VCAP::CloudController::Event.last
-      expect(event.type).to eq('audit.app.update')
-      expect(event.actee).to eq(process.guid)
+      expect(event.values).to include({
+        type:              'audit.app.process.update',
+        actee:             app_model.guid,
+        actee_type:        'v3-app',
+        actee_name:        'my_app',
+        actor:             developer.guid,
+        actor_type:        'user',
+        space_guid:        space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(event.metadata).to eq({
+        'process_guid' => process.guid,
+        'process_type' => 'web',
+        'request'      => {
+          'command' => 'PRIVATE DATA HIDDEN',
+          'ports' => [1234, 5678],
+          'health_check' => {
+            'type' => 'process',
+            'data' => {
+              'timeout' => 20,
+            }
+          }
+        }
+      })
     end
   end
 

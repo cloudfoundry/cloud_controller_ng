@@ -273,7 +273,7 @@ describe ProcessesController, type: :controller do
   end
 
   describe '#update' do
-    let(:process_type) { VCAP::CloudController::App.make }
+    let(:process_type) { VCAP::CloudController::App.make(:process) }
     let(:req_body) do
       {
           'command' => 'new command',

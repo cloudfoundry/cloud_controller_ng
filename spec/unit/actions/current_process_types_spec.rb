@@ -81,24 +81,11 @@ module VCAP::CloudController
         expect(process_to_delete.exists?).to be_falsey
       end
 
-      describe 'updating processes' do
-        let!(:existing_process) { AppFactory.make(type: 'other', command: 'old', space: app.space, app: app) }
-
-        it 'updates existing processes' do
-          expect {
-            current_process_types.process_current_droplet(app)
-          }.to change { existing_process.refresh.command }.from('old').to('stuff')
-        end
-
-        it 'creates an "audit.app.process.update" event' do
+      it 'updates existing processes' do
+        existing_process = AppFactory.make(type: 'other', command: 'old', space: app.space, app: app)
+        expect {
           current_process_types.process_current_droplet(app)
-          app.reload
-
-          process = App.where(app_guid: app.guid, type: 'other').first
-          event = Event.all.find { |e| e.metadata['process_guid'] == process.guid }
-
-          expect(event.type).to eq('audit.app.process.update')
-        end
+        }.to change { existing_process.refresh.command }.from('old').to('stuff')
       end
 
       context 'when the app does not have droplet' do
