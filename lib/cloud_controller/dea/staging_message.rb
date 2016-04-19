@@ -58,7 +58,7 @@ module VCAP::CloudController
       end
 
       def admin_buildpacks
-        AdminBuildpacksPresenter.new(@blobstore_url_generator).to_staging_message_array
+        AdminBuildpacksPresenter.enabled_buildpacks
       end
 
       def start_app_message(app)

@@ -13,9 +13,7 @@ module VCAP::CloudController
 
     get '/internal/buildpacks', :list
     def list
-      dependency_locator = CloudController::DependencyLocator.instance
-      buildpacks_presenter = AdminBuildpacksPresenter.new(dependency_locator.blobstore_url_generator)
-      [HTTP::OK, MultiJson.dump(buildpacks_presenter.to_staging_message_array)]
+      [HTTP::OK, MultiJson.dump(AdminBuildpacksPresenter.enabled_buildpacks)]
     end
   end
 end
