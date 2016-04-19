@@ -1,5 +1,5 @@
 require 'cloud_controller/procfile'
-require 'repositories/runtime/process_event_repository'
+require 'actions/process_create'
 
 module VCAP::CloudController
   class CurrentProcessTypes
@@ -7,9 +7,9 @@ module VCAP::CloudController
     class ProcessTypesNotFound < StandardError; end
 
     def initialize(user_guid, user_email)
-      @user_guid = user_guid
+      @user_guid  = user_guid
       @user_email = user_email
-      @logger = Steno.logger('cc.action.current_process_types')
+      @logger     = Steno.logger('cc.action.current_process_types')
     end
 
     def process_current_droplet(app)
@@ -45,26 +45,7 @@ module VCAP::CloudController
       if existing_process
         ProcessUpdate.new(user_guid, user_email).update(existing_process, ProcessUpdateMessage.new({ command: command }))
       else
-        message = {
-          diego:             true,
-          command:           command,
-          type:              type,
-          space:             app.space,
-          name:              "v3-#{app.name}-#{type}",
-          metadata:          {},
-          instances:         type == 'web' ? 1 : 0,
-          health_check_type: type == 'web' ? 'port' : 'process'
-        }
-
-        app.class.db.transaction do
-          process = app.add_process(message)
-
-          RouteMappingModel.where(app_guid: app.guid, process_type: type).select_map(:route_guid).each do |route_guid|
-            process.add_route_by_guid(route_guid)
-          end
-
-          Repositories::Runtime::ProcessEventRepository.record_create(process, user_guid, user_email)
-        end
+        ProcessCreate.new(user_guid, user_email).create(app, { type: type, command: command })
       end
     end
   end

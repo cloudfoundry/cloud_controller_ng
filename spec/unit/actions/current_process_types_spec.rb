@@ -12,65 +12,12 @@ module VCAP::CloudController
       let(:process_types) { { web: 'thing', other: 'stuff' } }
       let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, process_types: process_types) }
 
-      describe 'adding processes' do
-        it 'adds missing processes' do
-          expect(app.processes.count).to eq(0)
-          current_process_types.process_current_droplet(app)
+      it 'adds missing processes' do
+        expect(app.processes.count).to eq(0)
+        current_process_types.process_current_droplet(app)
 
-          app.reload
-          expect(app.processes.count).to eq(2)
-        end
-
-        it 'adds the route to the process' do
-          route = Route.make(space: app.space)
-          RouteMappingModel.make(route: route, app: app, process_type: 'web')
-
-          current_process_types.process_current_droplet(app)
-
-          process = App.where(app_guid: app.guid, type: 'web').first
-          expect(process.routes).to include(route)
-        end
-
-        it 'records an "audit.app.process.create" event' do
-          current_process_types.process_current_droplet(app)
-
-          app.reload
-
-          web_process   = App.where(app_guid: app.guid, type: 'web').first
-          other_process = App.where(app_guid: app.guid, type: 'other').first
-
-          web_event   = Event.all.find { |e| e.metadata['process_guid'] == web_process.guid }
-          other_event = Event.all.find { |e| e.metadata['process_guid'] == other_process.guid }
-
-          expect(web_event.type).to eq('audit.app.process.create')
-          expect(other_event.type).to eq('audit.app.process.create')
-        end
-
-        describe 'default values for web processes' do
-          let(:process_types) { { web: 'thing' } }
-
-          it '1 instance, port health_check_type, nil ports' do
-            current_process_types.process_current_droplet(app)
-            app.reload
-
-            expect(app.processes[0].instances).to eq(1)
-            expect(app.processes[0].health_check_type).to eq('port')
-            expect(app.processes[0].ports).to eq(nil)
-          end
-        end
-
-        describe 'default values for non-web processes' do
-          let(:process_types) { { other: 'stuff' } }
-
-          it '0 instances, process health_check_type, nil ports' do
-            current_process_types.process_current_droplet(app)
-            app.reload
-
-            expect(app.processes[0].instances).to eq(0)
-            expect(app.processes[0].health_check_type).to eq('process')
-            expect(app.processes[0].ports).to eq(nil)
-          end
-        end
+        app.reload
+        expect(app.processes.count).to eq(2)
       end
 
       it 'deletes processes that are no longer mentioned' do
