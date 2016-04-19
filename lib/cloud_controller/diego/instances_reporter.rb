@@ -124,7 +124,6 @@ module VCAP::CloudController
         end
 
         fill_unreported_instances_with_down_instances(result, app)
-
       rescue CloudController::Errors::InstancesUnavailable => e
         raise e
       rescue => e
@@ -148,8 +147,8 @@ module VCAP::CloudController
         app.instances.times do |i|
           unless reported_instances[i]
             reported_instances[i] = {
-                state: 'DOWN',
-                uptime: 0,
+              'state'  => 'DOWN',
+              'uptime' => 0,
             }
           end
         end

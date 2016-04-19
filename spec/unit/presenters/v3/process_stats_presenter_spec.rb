@@ -48,6 +48,10 @@ module VCAP::CloudController
                 'disk' => 1024,
               }
             }
+          },
+          2 => {
+            'state' => 'DOWN',
+            'uptime' => 0,
           }
         }
       end
@@ -68,6 +72,7 @@ module VCAP::CloudController
                                           cpu: 80,
                                           mem: 128,
                                           disk: 1024 })
+
         expect(result[1][:type]).to eq(process.type)
         expect(result[1][:index]).to eq(1)
         expect(result[1][:state]).to eq('CRASHED')
@@ -78,6 +83,13 @@ module VCAP::CloudController
                                           cpu: 70,
                                           mem: 128,
                                           disk: 1024 })
+
+        expect(result[2]).to eq(
+          type:  process.type,
+          index: 2,
+          state: 'DOWN',
+          uptime: 0
+        )
       end
     end
   end

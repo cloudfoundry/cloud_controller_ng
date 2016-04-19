@@ -1,16 +1,23 @@
 module VCAP::CloudController
   class ProcessStatsPresenter
     def present_stats_hash(type, process_stats)
-      stats = []
-      process_stats.each do |index, instance_stats|
-        stats << instance_stats_hash(type, index, instance_stats)
-      end
-      stats.sort_by { |s| s[:index] }
+      process_stats.each.map do |index, instance_stats|
+        instance_stats_hash(type, index, instance_stats)
+      end.sort_by { |s| s[:index] }
     end
 
     private
 
     def instance_stats_hash(type, index, stats)
+      case stats['state']
+      when 'DOWN'
+        down_instance_stats_hash(type, index, stats)
+      else
+        found_instance_stats_hash(type, index, stats)
+      end
+    end
+
+    def found_instance_stats_hash(type, index, stats)
       {
         type:       type,
         index:      index,
@@ -27,6 +34,15 @@ module VCAP::CloudController
         mem_quota:  stats['stats']['mem_quota'],
         disk_quota: stats['stats']['disk_quota'],
         fds_quota:  stats['stats']['fds_quota']
+      }
+    end
+
+    def down_instance_stats_hash(type, index, stats)
+      {
+        type: type,
+        index: index,
+        state: stats['state'],
+        uptime: stats['uptime']
       }
     end
   end

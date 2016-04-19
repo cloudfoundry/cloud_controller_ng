@@ -63,8 +63,8 @@ module VCAP::CloudController
 
           expect(tps_client).to have_received(:lrp_instances).with(app)
           expect(result.length).to eq(app.instances)
-          expect(result[5][:state]).to eq('DOWN')
-          expect(result[6][:state]).to eq('DOWN')
+          expect(result[5]['state']).to eq('DOWN')
+          expect(result[6]['state']).to eq('DOWN')
         end
 
         context 'when an error is raised' do
@@ -386,8 +386,8 @@ module VCAP::CloudController
 
           expect(tps_client).to have_received(:lrp_instances_stats).with(app)
           expect(result.length).to eq(app.instances)
-          expect(result[5][:state]).to eq('DOWN')
-          expect(result[6][:state]).to eq('DOWN')
+          expect(result[5]['state']).to eq('DOWN')
+          expect(result[6]['state']).to eq('DOWN')
         end
 
         context 'when no stats are returned for an instance' do
