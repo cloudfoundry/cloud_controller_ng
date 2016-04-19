@@ -8,7 +8,6 @@ module VCAP::CloudController
     attr_reader :domain_guid, :port, :host, :path, :domain
 
     def initialize(domain_guid, route_attrs)
-      @routing_api_client = CloudController::DependencyLocator.instance.routing_api_client
       @domain_guid = domain_guid
       @port = route_attrs['port']
       @host = route_attrs['host']
@@ -33,8 +32,9 @@ module VCAP::CloudController
     private
 
     def routing_api_client
-      raise RoutingApi::Client::RoutingApiDisabled if @routing_api_client.nil?
-      @routing_api_client
+      routing_api_client = CloudController::DependencyLocator.instance.routing_api_client
+      raise RoutingApi::Client::RoutingApiDisabled unless routing_api_client
+      routing_api_client
     end
 
     def is_tcp_router_group?
