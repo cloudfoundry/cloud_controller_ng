@@ -815,10 +815,11 @@ describe 'Apps' do
       app_model.lifecycle_data.save
 
       process_to_delete = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'bob', space: app_model.space)
+      process_to_update = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'jerry', command: 'original', space: app_model.space, metadata: {})
 
       droplet = VCAP::CloudController::DropletModel.make(
         app:           app_model,
-        process_types: { web: 'rackup', other: 'cron' },
+        process_types: { web: 'rackup', other: 'cron', jerry: 'not original' },
         state:         VCAP::CloudController::DropletModel::STAGED_STATE
       )
 
@@ -832,7 +833,7 @@ describe 'Apps' do
         'name'                    => 'my_app',
         'guid'                    => app_model.guid,
         'desired_state'           => 'STOPPED',
-        'total_desired_instances' => 1,
+        'total_desired_instances' => 2,
         'environment_variables'   => {},
         'created_at'              => iso8601,
         'updated_at'              => iso8601,
@@ -878,7 +879,7 @@ describe 'Apps' do
       })
       expect(droplet_event.metadata).to eq({ 'request' => { 'droplet_guid' => droplet.guid } })
 
-      expect(app_model.reload.processes.count).to eq(2)
+      expect(app_model.reload.processes.count).to eq(3)
       web_process   = app_model.processes.find { |i| i.type == 'web' }
       other_process = app_model.processes.find { |i| i.type == 'other' }
       expect(web_process).to be_present
@@ -923,7 +924,26 @@ describe 'Apps' do
       })
       expect(delete_event.metadata).to eq({ 'process_guid' => process_to_delete.guid, 'process_type' => 'bob' })
 
-      expect(events.length).to eq(4)
+      update_event = events.find { |e| e.metadata['process_guid'] == process_to_update.guid }
+      expect(update_event.values).to include({
+        type:              'audit.app.process.update',
+        actee:             app_model.guid,
+        actee_type:        'v3-app',
+        actee_name:        'my_app',
+        actor:             user.guid,
+        actor_type:        'user',
+        space_guid:        space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(update_event.metadata).to eq({
+        'process_guid' => process_to_update.guid,
+        'process_type' => 'jerry',
+        'request'      => {
+          'command' => 'PRIVATE DATA HIDDEN'
+        }
+      })
+
+      expect(events.length).to eq(5)
     end
   end
 end

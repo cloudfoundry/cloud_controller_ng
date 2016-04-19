@@ -2,6 +2,8 @@ module VCAP::CloudController
   module Repositories
     module Runtime
       class ProcessEventRepository
+        CENSORED_MESSAGE = 'PRIVATE DATA HIDDEN'.freeze
+
         def self.record_create(process, user_guid, user_name)
           Loggregator.emit(process.app.guid, "Added process: \"#{process.type}\"")
 
@@ -28,6 +30,25 @@ module VCAP::CloudController
             metadata:  {
               process_guid: process.guid,
               process_type: process.type
+            }
+          )
+        end
+
+        def self.record_update(process, user_guid, user_name, request)
+          Loggregator.emit(process.app.guid, "Updating process: \"#{process.type}\"")
+
+          request = request.dup.symbolize_keys
+          request[:command] = CENSORED_MESSAGE if request.key?(:command)
+
+          create_event(
+            process:   process,
+            type:      'audit.app.process.update',
+            user_guid: user_guid,
+            user_name: user_name,
+            metadata:  {
+              process_guid: process.guid,
+              process_type: process.type,
+              request: request
             }
           )
         end
