@@ -25,6 +25,8 @@ resource 'Security Group Running Defaults', type: [:api, :legacy_api] do
   end
 
   get '/v2/config/running_security_groups' do
+    pagination_parameters
+
     example 'Return the Security Groups used for running Apps' do
       client.get '/v2/config/running_security_groups', {}, headers
       expect(status).to eq(200)

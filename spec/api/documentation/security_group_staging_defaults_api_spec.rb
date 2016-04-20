@@ -25,6 +25,8 @@ resource 'Security Group Staging Defaults', type: [:api, :legacy_api] do
   end
 
   get '/v2/config/staging_security_groups' do
+    pagination_parameters
+
     example 'Return the Security Groups used for staging' do
       client.get '/v2/config/staging_security_groups', {}, headers
       expect(status).to eq(200)
