@@ -18,7 +18,7 @@ module VCAP::CloudController
       @source_droplet = source_droplet
     end
 
-    def copy(destination_app_guid)
+    def copy(destination_app_guid, user_guid, user_email, source_app_guid, source_app_name, space_guid, organization_guid)
       validate!
       new_droplet = DropletModel.new(state: DropletModel::PENDING_STATE, app_guid: destination_app_guid)
 
@@ -38,6 +38,17 @@ module VCAP::CloudController
           copy_job = Jobs::V3::DropletBitsCopier.new(@source_droplet.guid, new_droplet.guid)
           Jobs::Enqueuer.new(copy_job, queue: 'cc-generic').enqueue
         end
+
+        Repositories::Runtime::DropletEventRepository.record_dropet_create_by_copying(
+          destination_app_guid,
+          @source_droplet.guid,
+          user_guid,
+          user_email,
+          source_app_guid,
+          source_app_name,
+          space_guid,
+          organization_guid
+          )
       end
       new_droplet.reload
     end
