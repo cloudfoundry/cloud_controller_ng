@@ -44,7 +44,7 @@ module VCAP::CloudController
         staging_details.droplet = droplet
         lifecycle.create_lifecycle_data_model(droplet)
 
-        Repositories::DropletEventRepository.record_dropet_create_by_staging(
+        Repositories::DropletEventRepository.record_create_by_staging(
           droplet,
           @actor,
           @actor_name,

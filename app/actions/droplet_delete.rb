@@ -16,7 +16,7 @@ module VCAP::CloudController
           Jobs::Enqueuer.new(blobstore_delete, queue: 'cc-generic').enqueue
         end
 
-        Repositories::DropletEventRepository.record_dropet_delete(
+        Repositories::DropletEventRepository.record_delete(
           droplet,
           @actor_guid,
           @actor_name,

@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:droplet) { DropletModel.make(app_guid: app.guid) }
       let(:email) { 'user-email' }
 
-      describe '#record_dropet_create_by_staging' do
+      describe '#record_create_by_staging' do
         let(:request_attrs) do
           {
             'app_guid' => 'app-guid',
@@ -20,7 +20,7 @@ module VCAP::CloudController
         end
 
         it 'creates a new audit.app.droplet.create event' do
-          event = DropletEventRepository.record_dropet_create_by_staging(droplet, user, email, request_attrs, app.name, package.space.guid, package.space.organization.guid)
+          event = DropletEventRepository.record_create_by_staging(droplet, user, email, request_attrs, app.name, package.space.guid, package.space.organization.guid)
           event.reload
 
           expect(event.type).to eq('audit.app.droplet.create')
@@ -43,11 +43,11 @@ module VCAP::CloudController
         end
       end
 
-      describe '#record_dropet_create_by_copying' do
+      describe '#record_create_by_copying' do
         let(:source_droplet_guid) { 'source-droplet-guid' }
 
         it 'creates a new audit.app.droplet.create event' do
-          event = DropletEventRepository.record_dropet_create_by_copying(droplet.guid,
+          event = DropletEventRepository.record_create_by_copying(droplet.guid,
                                                                          source_droplet_guid,
                                                                          user.guid,
                                                                          email,
@@ -78,9 +78,9 @@ module VCAP::CloudController
         end
       end
 
-      describe '#record_dropet_delete' do
+      describe '#record_delete' do
         it 'creates a new audit.app.droplet.delete event' do
-          event = DropletEventRepository.record_dropet_delete(droplet, user.guid, email, app.name, package.space.guid, package.space.organization.guid)
+          event = DropletEventRepository.record_delete(droplet, user.guid, email, app.name, package.space.guid, package.space.organization.guid)
           event.reload
 
           expect(event.type).to eq('audit.app.droplet.delete')
@@ -100,9 +100,9 @@ module VCAP::CloudController
         end
       end
 
-      describe '#record_dropet_download' do
+      describe '#record_download' do
         it 'creates a new audit.app.droplet.download event' do
-          event = DropletEventRepository.record_dropet_download(droplet, user, email, app.name, package.space.guid, package.space.organization.guid)
+          event = DropletEventRepository.record_download(droplet, user, email, app.name, package.space.guid, package.space.organization.guid)
           event.reload
 
           expect(event.type).to eq('audit.app.droplet.download')

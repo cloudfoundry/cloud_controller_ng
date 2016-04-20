@@ -49,7 +49,7 @@ module VCAP::CloudController
       end
 
       it 'creates an audit event' do
-        expect(Repositories::DropletEventRepository).to receive(:record_dropet_create_by_copying).with(
+        expect(Repositories::DropletEventRepository).to receive(:record_create_by_copying).with(
           target_app.guid,
           source_droplet.guid,
           'user-guid',

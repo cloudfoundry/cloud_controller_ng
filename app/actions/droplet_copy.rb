@@ -39,7 +39,7 @@ module VCAP::CloudController
           Jobs::Enqueuer.new(copy_job, queue: 'cc-generic').enqueue
         end
 
-        Repositories::DropletEventRepository.record_dropet_create_by_copying(
+        Repositories::DropletEventRepository.record_create_by_copying(
           destination_app_guid,
           @source_droplet.guid,
           user_guid,
