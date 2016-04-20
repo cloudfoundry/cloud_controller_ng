@@ -379,7 +379,7 @@ describe 'Processes' do
 
   describe 'DELETE /v3/processes/:guid/instances/:index' do
     it 'terminates a single instance of a process' do
-      process = VCAP::CloudController::ProcessModel.make(:process, space: space)
+      process = VCAP::CloudController::ProcessModel.make(:process, space: space, type: 'web', app: app_model)
 
       process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(process)
       stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/apps/#{process_guid}/index/0").to_return(status: 202, body: '')
@@ -387,6 +387,24 @@ describe 'Processes' do
       delete "/v3/processes/#{process.guid}/instances/0", nil, developer_headers
 
       expect(last_response.status).to eq(204)
+
+      events = VCAP::CloudController::Event.where(actor: developer.guid).all
+      process_event = events.find { |e| e.type == 'audit.app.process.terminate_instance' }
+      expect(process_event.values).to include({
+        type:              'audit.app.process.terminate_instance',
+        actee:             app_model.guid,
+        actee_type:        'v3-app',
+        actee_name:        'my_app',
+        actor:             developer.guid,
+        actor_type:        'user',
+        space_guid:        space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(process_event.metadata).to eq({
+        'process_guid' => process.guid,
+        'process_type' => 'web',
+        'process_index' => 0
+      })
     end
   end
 
@@ -678,6 +696,24 @@ describe 'Processes' do
       delete "/v3/apps/#{app_model.guid}/processes/web/instances/0", nil, developer_headers
 
       expect(last_response.status).to eq(204)
+
+      events = VCAP::CloudController::Event.where(actor: developer.guid).all
+      process_event = events.find { |e| e.type == 'audit.app.process.terminate_instance' }
+      expect(process_event.values).to include({
+        type:              'audit.app.process.terminate_instance',
+        actee:             app_model.guid,
+        actee_type:        'v3-app',
+        actee_name:        'my_app',
+        actor:             developer.guid,
+        actor_type:        'user',
+        space_guid:        space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(process_event.metadata).to eq({
+        'process_guid' => process.guid,
+        'process_type' => 'web',
+        'process_index' => 0
+      })
     end
   end
 end

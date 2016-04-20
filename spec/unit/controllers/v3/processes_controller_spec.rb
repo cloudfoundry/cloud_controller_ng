@@ -396,13 +396,14 @@ describe ProcessesController, type: :controller do
   end
 
   describe '#terminate' do
-    let(:process_type) { VCAP::CloudController::AppFactory.make }
+    let(:app) { VCAP::CloudController::AppModel.make }
+    let(:process_type) { VCAP::CloudController::AppFactory.make(app: app) }
     let(:index_stopper) { instance_double(VCAP::CloudController::IndexStopper) }
 
     before do
       set_current_user(VCAP::CloudController::User.make)
       allow(index_stopper).to receive(:stop_index)
-      allow_any_instance_of(ProcessesController).to receive(:index_stopper).and_return(index_stopper)
+      allow(CloudController::DependencyLocator.instance).to receive(:index_stopper).and_return(index_stopper)
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
     end

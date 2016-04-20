@@ -5,6 +5,7 @@ require 'queries/process_list_fetcher'
 require 'queries/process_fetcher'
 require 'messages/process_scale_message'
 require 'actions/process_scale'
+require 'actions/process_terminate'
 require 'actions/process_update'
 require 'messages/process_update_message'
 require 'messages/processes_list_message'
@@ -72,12 +73,11 @@ class ProcessesController < ApplicationController
 
     unauthorized! unless can_terminate?(space.guid)
 
-    index = params[:index].to_i
-    instance_not_found! unless index < process.instances && index >= 0
-
-    index_stopper.stop_index(process, index)
+    ProcessTerminate.new(current_user.guid, current_user_email, process, params[:index].to_i).terminate
 
     head :no_content
+  rescue ProcessTerminate::InstanceNotFound
+    resource_not_found!(:instance)
   end
 
   def scale
@@ -127,19 +127,11 @@ class ProcessesController < ApplicationController
     ProcessPresenter.new
   end
 
-  def index_stopper
-    CloudController::DependencyLocator.instance.index_stopper
-  end
-
   def can_update?(space_guid)
     roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
   end
   alias_method :can_terminate?, :can_update?
   alias_method :can_scale?, :can_update?
-
-  def instance_not_found!
-    resource_not_found!(:instance)
-  end
 
   def process_not_found!
     resource_not_found!(:process)

@@ -69,6 +69,22 @@ module VCAP::CloudController
           )
         end
 
+        def self.record_terminate(process, user_guid, user_name, index)
+          Loggregator.emit(process.app.guid, "Terminating process: \"#{process.type}\", index: \"#{index}\"")
+
+          create_event(
+            process:   process,
+            type:      'audit.app.process.terminate_instance',
+            user_guid: user_guid,
+            user_name: user_name,
+            metadata:  {
+              process_guid: process.guid,
+              process_type: process.type,
+              process_index: index
+            }
+          )
+        end
+
         class << self
           private
 
