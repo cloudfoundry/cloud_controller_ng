@@ -21,7 +21,8 @@ module VCAP::CloudController
                                               'source-app-name',
                                               target_app.space_guid,
                                               target_app.space.organization_guid
-                                             )}
+                                             )
+    }
 
     describe '#copy' do
       it 'copies the passed in droplet to the target app' do
