@@ -97,7 +97,7 @@ class ProcessesController < ApplicationController
 
     unauthorized! unless can_scale?(space.guid)
 
-    ProcessScale.new(current_user, current_user_email).scale(process, message)
+    ProcessScale.new(current_user, current_user_email, process, message).scale
 
     render status: :accepted, json: process_presenter.present_json(process)
   rescue ProcessScale::InvalidProcess => e

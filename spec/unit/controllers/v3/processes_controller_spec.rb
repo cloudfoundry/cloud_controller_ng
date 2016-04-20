@@ -547,7 +547,8 @@ describe ProcessesController, type: :controller do
 
   describe '#scale' do
     let(:req_body) { { instances: 2, memory_in_mb: 100, disk_in_mb: 200 } }
-    let(:process_type) { VCAP::CloudController::App.make }
+    let(:app) { VCAP::CloudController::AppModel.make }
+    let(:process_type) { VCAP::CloudController::App.make(app: app) }
 
     before do
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)

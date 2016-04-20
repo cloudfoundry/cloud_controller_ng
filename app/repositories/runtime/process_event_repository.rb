@@ -53,6 +53,22 @@ module VCAP::CloudController
           )
         end
 
+        def self.record_scale(process, user_guid, user_name, request)
+          Loggregator.emit(process.app.guid, "Scaling process: \"#{process.type}\"")
+
+          create_event(
+            process:   process,
+            type:      'audit.app.process.scale',
+            user_guid: user_guid,
+            user_name: user_name,
+            metadata:  {
+              process_guid: process.guid,
+              process_type: process.type,
+              request: request
+            }
+          )
+        end
+
         class << self
           private
 

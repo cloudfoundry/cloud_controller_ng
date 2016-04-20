@@ -348,9 +348,32 @@ describe 'Processes' do
       expect(process.memory).to eq(10)
       expect(process.disk_quota).to eq(20)
 
-      event = VCAP::CloudController::Event.last
-      expect(event.type).to eq('audit.app.update')
-      expect(event.actee).to eq(process.guid)
+      events = VCAP::CloudController::Event.where(actor: developer.guid).all
+
+      app_event = events.find { |e| e.type == 'audit.app.update' }
+      expect(app_event.type).to eq('audit.app.update')
+      expect(app_event.actee).to eq(process.guid)
+
+      process_event = events.find { |e| e.type == 'audit.app.process.scale' }
+      expect(process_event.values).to include({
+        type:              'audit.app.process.scale',
+        actee:             app_model.guid,
+        actee_type:        'v3-app',
+        actee_name:        'my_app',
+        actor:             developer.guid,
+        actor_type:        'user',
+        space_guid:        space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(process_event.metadata).to eq({
+        'process_guid' => process.guid,
+        'process_type' => 'web',
+        'request'      => {
+          'instances' => '5',
+          'memory_in_mb' => '10',
+          'disk_in_mb' => '20'
+        }
+      })
     end
   end
 
@@ -561,7 +584,7 @@ describe 'Processes' do
     end
   end
 
-  describe 'PUT /v3/apps/:guid//processes/:type/scale' do
+  describe 'PUT /v3/apps/:guid/processes/:type/scale' do
     it 'scales the process belonging to an app' do
       process = VCAP::CloudController::ProcessModel.make(
         :process,
@@ -616,9 +639,32 @@ describe 'Processes' do
       expect(process.memory).to eq(10)
       expect(process.disk_quota).to eq(20)
 
-      event = VCAP::CloudController::Event.last
-      expect(event.type).to eq('audit.app.update')
-      expect(event.actee).to eq(process.guid)
+      events = VCAP::CloudController::Event.where(actor: developer.guid).all
+
+      app_event = events.find { |e| e.type == 'audit.app.update' }
+      expect(app_event.type).to eq('audit.app.update')
+      expect(app_event.actee).to eq(process.guid)
+
+      process_event = events.find { |e| e.type == 'audit.app.process.scale' }
+      expect(process_event.values).to include({
+        type:              'audit.app.process.scale',
+        actee:             app_model.guid,
+        actee_type:        'v3-app',
+        actee_name:        'my_app',
+        actor:             developer.guid,
+        actor_type:        'user',
+        space_guid:        space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(process_event.metadata).to eq({
+        'process_guid' => process.guid,
+        'process_type' => 'web',
+        'request'      => {
+          'instances' => '5',
+          'memory_in_mb' => '10',
+          'disk_in_mb' => '20'
+        }
+      })
     end
   end
 
