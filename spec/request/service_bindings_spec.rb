@@ -102,8 +102,8 @@ describe 'v3 service bindings' do
 
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
-        fb = FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
-        fb.credentials = { 'username' => 'managed_username' }
+        fb                  = FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
+        fb.credentials      = { 'username' => 'managed_username' }
         fb.syslog_drain_url = 'syslog://mydrain.example.com'
         fb
       end
@@ -118,13 +118,13 @@ describe 'v3 service bindings' do
             app:              { guid: app_guid },
             service_instance: { guid: service_instance_guid },
           },
-          data: { parameters: { potato: 'tomato' } }
+          data:          { parameters: { potato: 'tomato' } }
         }.to_json,
         user_headers
       )
 
       parsed_response = MultiJson.load(last_response.body)
-      guid = parsed_response['guid']
+      guid            = parsed_response['guid']
 
       expected_response = {
         'guid'       => guid,
@@ -138,7 +138,7 @@ describe 'v3 service bindings' do
         'created_at' => iso8601,
         'updated_at' => nil,
         'links'      => {
-          'self' => {
+          'self'             => {
             'href' => "/v3/service_bindings/#{guid}"
           },
           'service_instance' => {
@@ -195,13 +195,30 @@ describe 'v3 service bindings' do
     end
 
     describe 'DELETE /v3/service_bindings/:guid' do
-      let!(:service_binding) { VCAP::CloudController::ServiceBindingModel.make }
+      let(:space) { VCAP::CloudController::Space.find(guid: space_guid) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let!(:service_binding) { VCAP::CloudController::ServiceBindingModel.make(service_instance: service_instance) }
 
       it 'deletes the service binding and returns a 204' do
-        delete "/v3/service_bindings/#{service_binding.guid}", {}, admin_headers
+        delete "/v3/service_bindings/#{service_binding.guid}", nil, user_headers
 
         expect(last_response.status).to eq(204)
         expect(service_binding.exists?).to be_falsey
+
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to match(
+          hash_including({
+            type:              'audit.service_binding.delete',
+            actee:             service_binding.guid,
+            actee_type:        'v3-service-binding',
+            actee_name:        '',
+            actor:             user.guid,
+            actor_type:        'user',
+            space_guid:        space.guid,
+            organization_guid: space.organization.guid,
+            metadata:          '{}'
+          })
+        )
       end
     end
   end
@@ -239,7 +256,7 @@ describe 'v3 service bindings' do
       )
 
       parsed_response = MultiJson.load(last_response.body)
-      guid = parsed_response['guid']
+      guid            = parsed_response['guid']
 
       expected_response = {
         'guid'       => guid,
@@ -253,7 +270,7 @@ describe 'v3 service bindings' do
         'created_at' => iso8601,
         'updated_at' => nil,
         'links'      => {
-          'self' => {
+          'self'             => {
             'href' => "/v3/service_bindings/#{guid}"
           },
           'service_instance' => {

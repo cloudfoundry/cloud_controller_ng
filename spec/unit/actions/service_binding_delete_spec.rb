@@ -3,7 +3,9 @@ require 'actions/service_binding_delete'
 
 module VCAP::CloudController
   describe ServiceBindingModelDelete do
-    subject(:service_binding_delete) { described_class.new }
+    subject(:service_binding_delete) { described_class.new(user_guid, user_email) }
+    let(:user_guid) { 'user-guid' }
+    let(:user_email) { 'user@example.com' }
 
     describe '#synchronous_delete' do
       let(:service_binding) { ServiceBindingModel.make }
@@ -15,6 +17,15 @@ module VCAP::CloudController
       it 'deletes the service binding' do
         service_binding_delete.synchronous_delete(service_binding)
         expect(service_binding.exists?).to be_falsey
+      end
+
+      it 'creates an audit.service_binding.delete event' do
+        service_binding_delete.synchronous_delete(service_binding)
+
+        event = Event.last
+        expect(event.type).to eq('audit.service_binding.delete')
+        expect(event.actee).to eq(service_binding.guid)
+        expect(event.actee_type).to eq('v3-service-binding')
       end
 
       it 'asks the broker to unbind the instance' do
