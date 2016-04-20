@@ -519,15 +519,13 @@ module VCAP::CloudController
           let!(:route_mapping_1) { RouteMapping.make(app: app_obj, route: route, app_port: 9090) }
           let!(:route_mapping_2) { RouteMapping.make(app: app_obj, route: route, app_port: 5222) }
           let(:error_message) do
-            'The app has routes mapped to multiple ports. ' \
-            'Multiple ports are supported for Diego only. ' \
-            'Please unmap routes from all but one app port. ' \
-            'Multiple routes can be mapped to the same port if desired.'
+            'Multiple ports are supported for Diego only'
           end
 
           it 'returns an error' do
             put "/v2/apps/#{app_obj.guid}", '{ "diego": false }'
             expect(last_response).to have_status_code(400)
+            expect(decoded_response['error_code']).to eq('CF-MultipleAppPortsMappedDiegoToDea')
             expect(decoded_response['description']).to include(error_message)
           end
         end
