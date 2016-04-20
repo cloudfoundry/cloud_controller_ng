@@ -153,7 +153,6 @@ module VCAP::CloudController
         }
 
         it 'creates a new audit.app.crash event' do
-          index = 0
           event = ProcessEventRepository.record_crash(process, crash_payload)
           event.reload
 
