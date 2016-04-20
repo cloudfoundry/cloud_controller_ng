@@ -3,7 +3,10 @@ require 'actions/droplet_delete'
 
 module VCAP::CloudController
   describe DropletDelete do
-    subject(:droplet_delete) { DropletDelete.new }
+    let(:user) { User.make }
+    let(:user_email) { 'user@example.com' }
+
+    subject(:droplet_delete) { DropletDelete.new(user, user_email) }
 
     describe '#delete' do
       let!(:droplet) { DropletModel.make(droplet_hash: 'droplet_hash') }
@@ -13,6 +16,19 @@ module VCAP::CloudController
           droplet_delete.delete([droplet])
         }.to change { DropletModel.count }.by(-1)
         expect { droplet.refresh }.to raise_error Sequel::Error, 'Record not found'
+      end
+
+      it 'creates an audit event' do
+        expect(Repositories::Runtime::DropletEventRepository).to receive(:record_dropet_delete).with(
+          instance_of(DropletModel),
+          user,
+          user_email,
+          droplet.app.name,
+          droplet.app.space_guid,
+          droplet.app.space.organization_guid
+        )
+
+        droplet_delete.delete([droplet])
       end
 
       it 'schedules a job to the delete the blobstore item' do

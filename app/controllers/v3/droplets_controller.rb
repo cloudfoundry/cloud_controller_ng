@@ -43,7 +43,8 @@ class DropletsController < ApplicationController
 
     unauthorized! unless can_delete?(space.guid)
 
-    DropletDelete.new.delete(droplet)
+    droplet_deletor = DropletDelete.new(current_user.guid, current_user_email)
+    droplet_deletor.delete(droplet)
 
     head :no_content
   end
