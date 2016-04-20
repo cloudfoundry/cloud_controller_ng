@@ -70,6 +70,7 @@ module VCAP::CloudController
           )
         end
 
+        # Emit this event once we have droplet download capability
         def self.record_dropet_download(droplet, actor, actor_name, v3_app_name, space_guid, org_guid)
           Loggregator.emit(droplet.app_guid, "Downloading droplet for app with guid #{droplet.app_guid}")
 
