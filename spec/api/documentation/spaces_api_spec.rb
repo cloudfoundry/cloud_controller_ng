@@ -321,7 +321,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
     describe 'Events' do
       before do
         user                   = VCAP::CloudController::User.make
-        space_event_repository = VCAP::CloudController::Repositories::Runtime::SpaceEventRepository.new
+        space_event_repository = VCAP::CloudController::Repositories::SpaceEventRepository.new
         space_event_repository.record_space_update(space, user, 'user@example.com', { 'name' => 'new_name' })
       end
 

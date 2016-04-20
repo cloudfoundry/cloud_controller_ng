@@ -14,7 +14,7 @@ module VCAP::CloudController
     def reset
       validate_access(:reset, model)
 
-      repository = Repositories::Services::ServiceUsageEventRepository.new
+      repository = Repositories::ServiceUsageEventRepository.new
       repository.purge_and_reseed_service_instances!
 
       [HTTP::NO_CONTENT, nil]
@@ -29,7 +29,7 @@ module VCAP::CloudController
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
       after_guid = params['after_guid']
       if after_guid
-        repository = Repositories::Services::ServiceUsageEventRepository.new
+        repository = Repositories::ServiceUsageEventRepository.new
         previous_event = repository.find(after_guid)
         raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', after_guid) unless previous_event
         ds = ds.filter { id > previous_event.id }

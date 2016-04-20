@@ -1,4 +1,4 @@
-require 'repositories/runtime/app_usage_event_repository'
+require 'repositories/app_usage_event_repository'
 
 module VCAP::CloudController
   class AppUsageEventsController < RestController::ModelController
@@ -17,7 +17,7 @@ module VCAP::CloudController
     def reset
       validate_access(:reset, model)
 
-      repository = Repositories::Runtime::AppUsageEventRepository.new
+      repository = Repositories::AppUsageEventRepository.new
       repository.purge_and_reseed_started_apps!
 
       [HTTP::NO_CONTENT, nil]
@@ -37,7 +37,7 @@ module VCAP::CloudController
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
       after_guid = params['after_guid']
       if after_guid
-        repository = Repositories::Runtime::AppUsageEventRepository.new
+        repository = Repositories::AppUsageEventRepository.new
         previous_event = repository.find(after_guid)
         raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', after_guid) unless previous_event
         ds = ds.filter { id > previous_event.id }

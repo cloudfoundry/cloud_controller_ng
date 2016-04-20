@@ -1,4 +1,4 @@
-require 'repositories/runtime/process_event_repository'
+require 'repositories/process_event_repository'
 
 module VCAP::CloudController
   class ProcessCreate
@@ -25,7 +25,7 @@ module VCAP::CloudController
           process.add_route_by_guid(route_guid)
         end
 
-        Repositories::Runtime::ProcessEventRepository.record_create(process, @user_guid, @user_email)
+        Repositories::ProcessEventRepository.record_create(process, @user_guid, @user_email)
       end
 
       process

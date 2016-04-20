@@ -26,7 +26,7 @@ module VCAP::CloudController
 
         delete_subresources(app)
 
-        Repositories::Runtime::AppEventRepository.new.record_app_delete_request(
+        Repositories::AppEventRepository.new.record_app_delete_request(
           app,
           app.space,
           @user_guid,

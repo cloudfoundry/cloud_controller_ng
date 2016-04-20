@@ -7,7 +7,7 @@ module VCAP::Services::ServiceBrokers
     let(:client_manager) { instance_double(VCAP::Services::SSO::DashboardClientManager, synchronize_clients_with_catalog: true, warnings: []) }
     let(:catalog) { instance_double(VCAP::Services::ServiceBrokers::V2::Catalog, valid?: true) }
     let(:service_manager) { instance_double(VCAP::Services::ServiceBrokers::ServiceManager, sync_services_and_plans: true, has_warnings?: false) }
-    let(:services_event_repository) { instance_double(VCAP::CloudController::Repositories::Services::EventRepository) }
+    let(:services_event_repository) { instance_double(VCAP::CloudController::Repositories::ServiceEventRepository) }
 
     describe 'initializing' do
       let(:broker) { VCAP::CloudController::ServiceBroker.make }

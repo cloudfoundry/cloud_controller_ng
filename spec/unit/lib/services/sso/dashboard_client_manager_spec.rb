@@ -6,7 +6,7 @@ module VCAP::Services::SSO
     let(:user) { VCAP::CloudController::User.make }
     let(:email) { 'email@example.com' }
     let(:security_context) { double(:security_context, current_user: user, current_user_email: email) }
-    let(:services_event_repository) { VCAP::CloudController::Repositories::Services::EventRepository.new(user: user, user_email: email) }
+    let(:services_event_repository) { VCAP::CloudController::Repositories::ServiceEventRepository.new(user: user, user_email: email) }
 
     context 'for service brokers' do
       let(:service_broker) { VCAP::CloudController::ServiceBroker.make }

@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'repositories/runtime/process_event_repository'
+require 'repositories/process_event_repository'
 
 module VCAP::CloudController
-  module Repositories::Runtime
+  module Repositories
     describe ProcessEventRepository do
       let(:app) { AppModel.make(name: 'zach-loves-kittens') }
       let(:process) { App.make(app: app, space: app.space, type: 'potato') }

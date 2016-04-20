@@ -12,7 +12,7 @@ module VCAP::CloudController
       app.db.transaction do
         app.update(desired_state: 'STOPPED')
 
-        Repositories::Runtime::AppEventRepository.new.record_app_stop(
+        Repositories::AppEventRepository.new.record_app_stop(
           app,
           @user.guid,
           @user_email

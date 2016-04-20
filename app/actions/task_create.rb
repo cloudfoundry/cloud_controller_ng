@@ -1,5 +1,5 @@
 require 'cloud_controller/diego/v3/environment'
-require 'repositories/runtime/task_event_repository'
+require 'repositories/task_event_repository'
 
 module VCAP::CloudController
   class TaskCreate
@@ -51,11 +51,11 @@ module VCAP::CloudController
     end
 
     def app_usage_event_repository
-      Repositories::Runtime::AppUsageEventRepository.new
+      Repositories::AppUsageEventRepository.new
     end
 
     def task_event_repository
-      Repositories::Runtime::TaskEventRepository.new
+      Repositories::TaskEventRepository.new
     end
   end
 end

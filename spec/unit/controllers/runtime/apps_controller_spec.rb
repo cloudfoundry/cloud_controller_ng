@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::AppsController do
     let(:admin_user) { User.make }
     let(:non_admin_user) { User.make }
-    let(:app_event_repository) { Repositories::Runtime::AppEventRepository.new }
+    let(:app_event_repository) { Repositories::AppEventRepository.new }
     before do
       set_current_user(non_admin_user)
       CloudController::DependencyLocator.instance.register(:app_event_repository, app_event_repository)

@@ -320,7 +320,7 @@ module VCAP::CloudController
           }.to change { ServiceUsageEvent.count }.by(1)
 
           event = ServiceUsageEvent.last
-          expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::CREATED_EVENT_STATE)
+          expect(event.state).to eq(Repositories::ServiceUsageEventRepository::CREATED_EVENT_STATE)
           expect(event).to match_service_instance(instance)
         end
 
@@ -1172,7 +1172,7 @@ module VCAP::CloudController
 
           expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
           event = ServiceUsageEvent.last
-          expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
+          expect(event.state).to eq(Repositories::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
           expect(event).to match_service_instance(service_instance)
         end
 
@@ -1270,7 +1270,7 @@ module VCAP::CloudController
 
             expect(service_instance.reload.name).to eq('new-name')
             event = ServiceUsageEvent.last
-            expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
+            expect(event.state).to eq(Repositories::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
             expect(event).to match_service_instance(service_instance)
           end
 
@@ -1637,7 +1637,7 @@ module VCAP::CloudController
 
               expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
               event = ServiceUsageEvent.last
-              expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
+              expect(event.state).to eq(Repositories::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
               expect(event).to match_service_instance(service_instance)
             end
 

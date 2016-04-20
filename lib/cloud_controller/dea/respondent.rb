@@ -1,4 +1,4 @@
-require 'repositories/runtime/app_event_repository'
+require 'repositories/app_event_repository'
 
 module VCAP::CloudController
   module Dea
@@ -47,7 +47,7 @@ module VCAP::CloudController
               metadata: metadata
             )
           else
-            app_event_repository = Repositories::Runtime::AppEventRepository.new
+            app_event_repository = Repositories::AppEventRepository.new
             app_event_repository.create_app_exit_event(app, decoded_message)
           end
         end

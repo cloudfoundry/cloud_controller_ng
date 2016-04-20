@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  module Repositories::Runtime
+  module Repositories
     describe SpaceEventRepository do
       let(:request_attrs) { { 'name' => 'new-space' } }
       let(:user) { User.make }

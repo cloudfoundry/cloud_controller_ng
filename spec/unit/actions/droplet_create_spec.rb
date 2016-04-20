@@ -64,7 +64,7 @@ module VCAP::CloudController
       end
 
       it 'creates an audit event' do
-        expect(Repositories::Runtime::DropletEventRepository).to receive(:record_dropet_create_by_staging).with(
+        expect(Repositories::DropletEventRepository).to receive(:record_dropet_create_by_staging).with(
           instance_of(DropletModel),
           user,
           user_email,

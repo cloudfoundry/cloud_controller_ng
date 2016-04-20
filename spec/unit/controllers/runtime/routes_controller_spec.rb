@@ -17,8 +17,8 @@ module VCAP::CloudController
         RoutingApi::RouterGroup.new({ 'guid' => http_group, 'type' => 'http' }),
       ]
     end
-    let(:app_event_repository) { instance_double(Repositories::Runtime::AppEventRepository) }
-    let(:route_event_repository) { instance_double(Repositories::Runtime::RouteEventRepository) }
+    let(:app_event_repository) { instance_double(Repositories::AppEventRepository) }
+    let(:route_event_repository) { instance_double(Repositories::RouteEventRepository) }
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).and_return(routing_api_client)

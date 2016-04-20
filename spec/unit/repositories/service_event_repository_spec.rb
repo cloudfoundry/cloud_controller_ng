@@ -1,12 +1,12 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  module Repositories::Services
-    describe EventRepository do
+  module Repositories
+    describe ServiceEventRepository do
       let(:user) { VCAP::CloudController::User.make }
       let(:email) { 'email@example.com' }
       let(:logger) { double(:logger, error: nil) }
-      let(:repository) { EventRepository.new(user: user, user_email: email) }
+      let(:repository) { ServiceEventRepository.new(user: user, user_email: email) }
       before do
         allow(repository).to receive(:logger).and_return(logger)
       end

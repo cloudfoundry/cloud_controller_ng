@@ -61,7 +61,7 @@ class PackagesController < ApplicationController
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     unprocessable!('Package has no bits to download.') unless package.state == 'READY'
 
-    VCAP::CloudController::Repositories::Runtime::PackageEventRepository.record_app_package_download(
+    VCAP::CloudController::Repositories::PackageEventRepository.record_app_package_download(
       package,
       current_user.guid,
       current_user_email,

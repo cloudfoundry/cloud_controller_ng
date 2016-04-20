@@ -1,4 +1,4 @@
-require 'repositories/services/service_usage_event_repository'
+require 'repositories/service_usage_event_repository'
 
 module VCAP::CloudController
   class ServiceInstance < Sequel::Model
@@ -170,7 +170,7 @@ module VCAP::CloudController
     end
 
     def service_instance_usage_event_repository
-      @repository ||= Repositories::Services::ServiceUsageEventRepository.new
+      @repository ||= Repositories::ServiceUsageEventRepository.new
     end
   end
 end

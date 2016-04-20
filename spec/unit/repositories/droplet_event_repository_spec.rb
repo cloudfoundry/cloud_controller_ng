@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'repositories/runtime/droplet_event_repository'
+require 'repositories/droplet_event_repository'
 
 module VCAP::CloudController
-  module Repositories::Runtime
+  module Repositories
     describe DropletEventRepository do
       let(:app) { AppModel.make }
       let(:user) { User.make }

@@ -30,7 +30,7 @@ module VCAP::CloudController
       private
 
       def app_usage_event_repository
-        Repositories::Runtime::AppUsageEventRepository.new
+        Repositories::AppUsageEventRepository.new
       end
 
       def logger

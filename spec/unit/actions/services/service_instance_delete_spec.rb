@@ -3,7 +3,7 @@ require 'actions/services/service_instance_delete'
 
 module VCAP::CloudController
   describe ServiceInstanceDelete do
-    let(:event_repository) { Repositories::Services::EventRepository.new(user: user, user_email: user_email) }
+    let(:event_repository) { Repositories::ServiceEventRepository.new(user: user, user_email: user_email) }
 
     subject(:service_instance_delete) { ServiceInstanceDelete.new(event_repository: event_repository) }
 

@@ -17,7 +17,7 @@ module VCAP::CloudController
         app.lock!
         app.update(desired_state: 'STARTED')
 
-        Repositories::Runtime::AppEventRepository.new.record_app_start(
+        Repositories::AppEventRepository.new.record_app_start(
           app,
           @user.guid,
           @user_email

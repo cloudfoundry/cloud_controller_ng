@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       it 'creates an v3 audit event' do
-        expect(Repositories::Runtime::PackageEventRepository).to receive(:record_app_package_upload).with(
+        expect(Repositories::PackageEventRepository).to receive(:record_app_package_upload).with(
           instance_of(PackageModel),
           user_guid,
           user_email

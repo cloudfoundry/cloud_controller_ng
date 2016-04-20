@@ -197,7 +197,7 @@ module VCAP::CloudController
     end
 
     describe '#purge' do
-      let!(:event_repository) { double(Repositories::Services::ServiceUsageEventRepository) }
+      let!(:event_repository) { double(Repositories::ServiceUsageEventRepository) }
       let!(:service_plan) { ServicePlan.make(service: service) }
       let!(:service_plan_visibility) { ServicePlanVisibility.make(service_plan: service_plan) }
       let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
@@ -210,7 +210,7 @@ module VCAP::CloudController
       let!(:service) { Service.make }
 
       before do
-        allow(Repositories::Services::ServiceUsageEventRepository).to receive(:new).and_return(event_repository)
+        allow(Repositories::ServiceUsageEventRepository).to receive(:new).and_return(event_repository)
         allow(event_repository).to receive(:record_service_binding_event)
         allow(event_repository).to receive(:deleted_event_from_service_instance)
         allow(event_repository).to receive(:record_service_instance_event)

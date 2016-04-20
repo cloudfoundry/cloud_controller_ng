@@ -131,19 +131,19 @@ resource 'Events', type: [:api, :legacy_api] do
     end
 
     let(:app_event_repository) do
-      VCAP::CloudController::Repositories::Runtime::AppEventRepository.new
+      VCAP::CloudController::Repositories::AppEventRepository.new
     end
 
     let(:space_event_repository) do
-      VCAP::CloudController::Repositories::Runtime::SpaceEventRepository.new
+      VCAP::CloudController::Repositories::SpaceEventRepository.new
     end
 
     let(:route_event_repository) do
-      VCAP::CloudController::Repositories::Runtime::RouteEventRepository.new
+      VCAP::CloudController::Repositories::RouteEventRepository.new
     end
 
     let(:service_event_repository) do
-      VCAP::CloudController::Repositories::Services::EventRepository.new(user: test_user, user_email: test_user_email)
+      VCAP::CloudController::Repositories::ServiceEventRepository.new(user: test_user, user_email: test_user_email)
     end
 
     example 'List App Create Events' do

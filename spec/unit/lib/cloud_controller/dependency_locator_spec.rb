@@ -119,7 +119,7 @@ describe CloudController::DependencyLocator do
   describe '#app_event_repository' do
     subject { locator.app_event_repository }
 
-    it { is_expected.to be_a(VCAP::CloudController::Repositories::Runtime::AppEventRepository) }
+    it { is_expected.to be_a(VCAP::CloudController::Repositories::AppEventRepository) }
 
     it 'memoizes the instance' do
       expect(locator.app_event_repository).to eq(locator.app_event_repository)
@@ -129,7 +129,7 @@ describe CloudController::DependencyLocator do
   describe '#space_event_repository' do
     subject { locator.space_event_repository }
 
-    it { is_expected.to be_a(VCAP::CloudController::Repositories::Runtime::SpaceEventRepository) }
+    it { is_expected.to be_a(VCAP::CloudController::Repositories::SpaceEventRepository) }
   end
 
   describe '#object_renderer' do

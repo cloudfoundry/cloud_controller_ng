@@ -48,7 +48,7 @@ module VCAP::CloudController
     end
 
     def event_repository
-      Repositories::Runtime::AppEventRepository.new
+      Repositories::AppEventRepository.new
     end
 
     def logger

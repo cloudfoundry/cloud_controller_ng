@@ -1,4 +1,4 @@
-require 'repositories/runtime/package_event_repository'
+require 'repositories/package_event_repository'
 
 module VCAP::CloudController
   class PackageCopy
@@ -27,7 +27,7 @@ module VCAP::CloudController
           Jobs::Enqueuer.new(copy_job, queue: 'cc-generic').enqueue
         end
 
-        Repositories::Runtime::PackageEventRepository.record_app_package_copy(
+        Repositories::PackageEventRepository.record_app_package_copy(
           package,
           @user_guid,
           @user_email,

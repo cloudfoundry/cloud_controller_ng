@@ -143,7 +143,7 @@ module VCAP::CloudController
           service_instance.destroy
         }.to change { ServiceUsageEvent.count }.by(1)
         event = ServiceUsageEvent.last
-        expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::DELETED_EVENT_STATE)
+        expect(event.state).to eq(Repositories::ServiceUsageEventRepository::DELETED_EVENT_STATE)
         expect(event).to match_service_instance(service_instance)
       end
     end
@@ -161,7 +161,7 @@ module VCAP::CloudController
           }.to change { ServiceUsageEvent.count }.by 1
 
           event = ServiceUsageEvent.last
-          expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
+          expect(event.state).to eq(Repositories::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
           expect(event).to match_service_instance(service_instance)
         end
       end
@@ -175,7 +175,7 @@ module VCAP::CloudController
           }.to change { ServiceUsageEvent.count }.by 1
 
           event = ServiceUsageEvent.last
-          expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
+          expect(event.state).to eq(Repositories::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
           expect(event).to match_service_instance(service_instance)
         end
       end

@@ -3,7 +3,7 @@ require 'cloud_controller/backends/staging_disk_calculator'
 require 'cloud_controller/backends/staging_environment_builder'
 require 'cloud_controller/diego/v3/staging_details'
 require 'cloud_controller/diego/lifecycles/lifecycle_provider'
-require 'repositories/runtime/droplet_event_repository'
+require 'repositories/droplet_event_repository'
 
 module VCAP::CloudController
   class DropletCreate
@@ -44,7 +44,7 @@ module VCAP::CloudController
         staging_details.droplet = droplet
         lifecycle.create_lifecycle_data_model(droplet)
 
-        Repositories::Runtime::DropletEventRepository.record_dropet_create_by_staging(
+        Repositories::DropletEventRepository.record_dropet_create_by_staging(
           droplet,
           @actor,
           @actor_name,

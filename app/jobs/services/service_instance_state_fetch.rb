@@ -47,7 +47,7 @@ module VCAP::CloudController
         def get_repository(user_guid, user_email)
           user = User.find(guid: user_guid)
           if user
-            Repositories::Services::EventRepository.new(user: user, user_email: user_email)
+            Repositories::ServiceEventRepository.new(user: user, user_email: user_email)
           end
         end
 

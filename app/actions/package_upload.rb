@@ -20,7 +20,7 @@ module VCAP::CloudController
 
         Jobs::Enqueuer.new(bits_upload_job, queue: Jobs::LocalQueue.new(config)).enqueue
 
-        Repositories::Runtime::PackageEventRepository.record_app_package_upload(
+        Repositories::PackageEventRepository.record_app_package_upload(
           package,
           @user_guid,
           @user_email)

@@ -68,7 +68,7 @@ module VCAP::CloudController
       end
 
       it 'creates an audit event' do
-        expect(Repositories::Runtime::ProcessEventRepository).to receive(:record_update).with(
+        expect(Repositories::ProcessEventRepository).to receive(:record_update).with(
           process,
           user_guid,
           user_email,

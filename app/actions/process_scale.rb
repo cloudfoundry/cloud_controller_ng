@@ -28,7 +28,7 @@ module VCAP::CloudController
     private
 
     def record_audit_events
-      Repositories::Runtime::AppEventRepository.new.record_app_update(
+      Repositories::AppEventRepository.new.record_app_update(
         @process,
         @process.space,
         @user.guid,
@@ -36,7 +36,7 @@ module VCAP::CloudController
         @message.audit_hash
       )
 
-      Repositories::Runtime::ProcessEventRepository.record_scale(
+      Repositories::ProcessEventRepository.record_scale(
         @process,
         @user.guid,
         @user_email,

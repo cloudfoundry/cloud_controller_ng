@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'repositories/runtime/package_event_repository'
+require 'repositories/package_event_repository'
 
 module VCAP::CloudController
-  module Repositories::Runtime
+  module Repositories
     describe PackageEventRepository do
       let(:app) { AppModel.make(name: 'potato') }
       let(:user_guid) { 'user_guid' }

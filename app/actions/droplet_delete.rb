@@ -1,3 +1,5 @@
+require 'repositories/droplet_event_repository'
+
 module VCAP::CloudController
   class DropletDelete
     def initialize(actor_guid, actor_email)
@@ -14,7 +16,7 @@ module VCAP::CloudController
           Jobs::Enqueuer.new(blobstore_delete, queue: 'cc-generic').enqueue
         end
 
-        Repositories::Runtime::DropletEventRepository.record_dropet_delete(
+        Repositories::DropletEventRepository.record_dropet_delete(
           droplet,
           @actor_guid,
           @actor_name,

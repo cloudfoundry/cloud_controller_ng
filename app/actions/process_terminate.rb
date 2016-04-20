@@ -18,7 +18,7 @@ module VCAP::CloudController
     private
 
     def record_audit_events
-      Repositories::Runtime::ProcessEventRepository.record_terminate(
+      Repositories::ProcessEventRepository.record_terminate(
         @process,
         @user_guid,
         @user_email,

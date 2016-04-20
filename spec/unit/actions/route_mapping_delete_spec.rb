@@ -70,10 +70,10 @@ module VCAP::CloudController
         end
 
         context 'recording events' do
-          let(:event_repository) { instance_double(Repositories::Runtime::AppEventRepository) }
+          let(:event_repository) { instance_double(Repositories::AppEventRepository) }
 
           before do
-            allow(Repositories::Runtime::AppEventRepository).to receive(:new).and_return(event_repository)
+            allow(Repositories::AppEventRepository).to receive(:new).and_return(event_repository)
             allow(event_repository).to receive(:record_unmap_route)
           end
 

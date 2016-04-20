@@ -18,7 +18,7 @@ module VCAP::CloudController
 
         process.save
 
-        Repositories::Runtime::ProcessEventRepository.record_update(process, @user_guid, @user_email, message.audit_hash)
+        Repositories::ProcessEventRepository.record_update(process, @user_guid, @user_email, message.audit_hash)
       end
     rescue Sequel::ValidationFailed => e
       raise InvalidProcess.new(e.message)

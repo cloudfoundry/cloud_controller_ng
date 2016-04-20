@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'repositories/services/service_usage_event_repository'
+require 'repositories/service_usage_event_repository'
 
 module VCAP::CloudController
-  module Repositories::Services
+  module Repositories
     describe ServiceUsageEventRepository do
       let(:guid_pattern) { '[[:alnum:]-]+' }
 

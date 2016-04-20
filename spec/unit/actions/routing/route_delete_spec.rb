@@ -2,8 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe RouteDelete do
-    let(:app_event_repository) { instance_double(Repositories::Runtime::AppEventRepository) }
-    let(:route_event_repository) { instance_double(Repositories::Runtime::RouteEventRepository) }
+    let(:app_event_repository) { instance_double(Repositories::AppEventRepository) }
+    let(:route_event_repository) { instance_double(Repositories::RouteEventRepository) }
 
     let(:user) { instance_double(User, guid: '1234') }
     let(:user_email) { 'user@email.dads' }
@@ -69,7 +69,7 @@ module VCAP::CloudController
         before do
           allow(SecurityContext).to receive(:current_user).and_return(user)
           allow(SecurityContext).to receive(:current_user_email).and_return(user_email)
-          allow(Repositories::Runtime::AppEventRepository).to receive(:new).and_return(app_event_repository)
+          allow(Repositories::AppEventRepository).to receive(:new).and_return(app_event_repository)
           allow(app_event_repository).to receive(:record_map_route)
         end
 

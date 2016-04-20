@@ -5,7 +5,7 @@ require 'cloud_controller/backends/stagers'
 require 'cloud_controller/backends/runners'
 require 'cloud_controller/index_stopper'
 require 'cloud_controller/backends/instances_reporters'
-require 'repositories/services/event_repository'
+require 'repositories/service_event_repository'
 
 # Config template for cloud controller
 module VCAP::CloudController
@@ -291,7 +291,7 @@ module VCAP::CloudController
         tps_client = Diego::TPSClient.new(@config)
         dependency_locator.register(:tps_client, tps_client)
         dependency_locator.register(:upload_handler, UploadHandler.new(config))
-        dependency_locator.register(:app_event_repository, Repositories::Runtime::AppEventRepository.new)
+        dependency_locator.register(:app_event_repository, Repositories::AppEventRepository.new)
 
         blobstore_url_generator = dependency_locator.blobstore_url_generator
         dea_pool = Dea::Pool.new(@config, message_bus)

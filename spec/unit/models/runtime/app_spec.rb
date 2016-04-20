@@ -1706,10 +1706,10 @@ module VCAP::CloudController
           end
 
           context 'audit events' do
-            let(:app_event_repository) { Repositories::Runtime::AppEventRepository.new }
+            let(:app_event_repository) { Repositories::AppEventRepository.new }
 
             before do
-              allow(Repositories::Runtime::AppEventRepository).to receive(:new).and_return(app_event_repository)
+              allow(Repositories::AppEventRepository).to receive(:new).and_return(app_event_repository)
             end
 
             it 'creates audit events for both adding routes' do

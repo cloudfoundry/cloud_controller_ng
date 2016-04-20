@@ -13,7 +13,7 @@ module VCAP::CloudController
         Jobs::Enqueuer.new(blobstore_delete, queue: 'cc-generic').enqueue
         package.destroy
 
-        Repositories::Runtime::PackageEventRepository.record_app_package_delete(
+        Repositories::PackageEventRepository.record_app_package_delete(
           package,
           @user_guid,
           @user_email)

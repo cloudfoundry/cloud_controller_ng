@@ -19,7 +19,7 @@ module VCAP::CloudController
 
         lifecycle.create_lifecycle_data_model(app)
 
-        Repositories::Runtime::AppEventRepository.new.record_app_create(
+        Repositories::AppEventRepository.new.record_app_create(
           app,
           app.space,
           @user.guid,

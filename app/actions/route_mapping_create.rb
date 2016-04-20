@@ -51,7 +51,7 @@ module VCAP::CloudController
     end
 
     def app_event_repository
-      Repositories::Runtime::AppEventRepository.new
+      Repositories::AppEventRepository.new
     end
   end
 end

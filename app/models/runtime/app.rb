@@ -3,7 +3,7 @@ require 'cloud_controller/database_uri_generator'
 require 'cloud_controller/undo_app_changes'
 require 'cloud_controller/errors/application_missing'
 require 'cloud_controller/errors/invalid_route_relation'
-require 'repositories/runtime/app_usage_event_repository'
+require 'repositories/app_usage_event_repository'
 require 'actions/services/service_binding_delete'
 require 'presenters/message_bus/service_binding_presenter'
 require 'presenters/v3/cache_key_presenter'
@@ -606,7 +606,7 @@ module VCAP::CloudController
     def handle_add_route(route)
       mark_routes_changed
       if is_v2?
-        Repositories::Runtime::AppEventRepository.new.record_map_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
+        Repositories::AppEventRepository.new.record_map_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
       end
     end
 
@@ -619,7 +619,7 @@ module VCAP::CloudController
     def handle_remove_route(route)
       mark_routes_changed
       if is_v2?
-        Repositories::Runtime::AppEventRepository.new.record_unmap_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
+        Repositories::AppEventRepository.new.record_unmap_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
       end
     end
 
@@ -724,7 +724,7 @@ module VCAP::CloudController
     end
 
     def app_usage_event_repository
-      @repository ||= Repositories::Runtime::AppUsageEventRepository.new
+      @repository ||= Repositories::AppUsageEventRepository.new
     end
 
     def create_app_usage_buildpack_event

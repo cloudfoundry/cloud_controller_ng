@@ -16,7 +16,7 @@ module VCAP::CloudController
 
     def cancel_running_task(task)
       return unless task.state == TaskModel::RUNNING_STATE
-      Repositories::Runtime::TaskEventRepository.new.record_task_cancel(task, @user_guid, @email)
+      Repositories::TaskEventRepository.new.record_task_cancel(task, @user_guid, @email)
 
       begin
         nsync_client.cancel_task(task)

@@ -52,7 +52,7 @@ module VCAP::CloudController
           end
 
           it 'creates an audit event' do
-            expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_start).with(
+            expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_start).with(
               app_model,
               user.guid,
               user_email

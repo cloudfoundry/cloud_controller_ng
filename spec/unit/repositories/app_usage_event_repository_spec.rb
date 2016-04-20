@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'repositories/runtime/app_usage_event_repository'
+require 'repositories/app_usage_event_repository'
 
 module VCAP::CloudController
-  module Repositories::Runtime
+  module Repositories
     describe AppUsageEventRepository do
       subject(:repository) do
         AppUsageEventRepository.new

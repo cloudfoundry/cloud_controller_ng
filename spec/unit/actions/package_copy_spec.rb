@@ -14,7 +14,7 @@ module VCAP::CloudController
       let(:app_guid) { target_app.guid }
 
       before do
-        allow(Repositories::Runtime::PackageEventRepository).to receive(:record_app_package_copy)
+        allow(Repositories::PackageEventRepository).to receive(:record_app_package_copy)
       end
 
       it 'creates the package with the correct values' do
@@ -35,7 +35,7 @@ module VCAP::CloudController
       end
 
       it 'creates an v3 audit event' do
-        expect(Repositories::Runtime::PackageEventRepository).to receive(:record_app_package_copy).with(
+        expect(Repositories::PackageEventRepository).to receive(:record_app_package_copy).with(
           instance_of(PackageModel),
           user_guid,
           user_email,

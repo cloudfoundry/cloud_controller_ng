@@ -19,7 +19,7 @@ module VCAP::CloudController
       end
 
       it 'creates an audit event' do
-        expect(Repositories::Runtime::DropletEventRepository).to receive(:record_dropet_delete).with(
+        expect(Repositories::DropletEventRepository).to receive(:record_dropet_delete).with(
           instance_of(DropletModel),
           user,
           user_email,

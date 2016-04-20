@@ -1,4 +1,4 @@
-require 'repositories/runtime/package_event_repository'
+require 'repositories/package_event_repository'
 
 module VCAP::CloudController
   class PackageCreate
@@ -21,7 +21,7 @@ module VCAP::CloudController
         package.save
         make_docker_data(message, package)
 
-        Repositories::Runtime::PackageEventRepository.record_app_package_create(
+        Repositories::PackageEventRepository.record_app_package_create(
           package,
           @user_guid,
           @user_email,

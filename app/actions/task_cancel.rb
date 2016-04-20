@@ -1,4 +1,4 @@
-require 'repositories/runtime/task_event_repository'
+require 'repositories/task_event_repository'
 
 module VCAP::CloudController
   class TaskCancel
@@ -31,7 +31,7 @@ module VCAP::CloudController
     end
 
     def task_event_repository
-      Repositories::Runtime::TaskEventRepository.new
+      Repositories::TaskEventRepository.new
     end
   end
 end
