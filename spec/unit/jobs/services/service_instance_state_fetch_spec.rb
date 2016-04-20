@@ -204,7 +204,7 @@ module VCAP::CloudController
                   event = Event.find(type: 'audit.service_instance.create')
                   expect(event).to be
                   expect(event.actee).to eq(service_instance.guid)
-                  expect(event.metadata['request']).to eq({ 'dummy_data' => 'dummy_data' })
+                  expect(event.metadata['request']).to have_key('dummy_data')
                 end
               end
             end

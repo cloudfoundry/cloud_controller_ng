@@ -1156,11 +1156,7 @@ module VCAP::CloudController
           expect(event.actee_name).to eq(service_instance.name)
           expect(event.space_guid).to eq(service_instance.space.guid)
           expect(event.organization_guid).to eq(service_instance.space.organization.guid)
-          expect(event.metadata).to include({
-            'request' => {
-              'service_plan_guid' => new_service_plan.guid,
-            }
-          })
+          expect(event.metadata['request']).to include({ 'service_plan_guid' => new_service_plan.guid })
         end
 
         it 'returns a 201 and updates to the new plan' do
@@ -1538,11 +1534,7 @@ module VCAP::CloudController
           expect(event.actee_name).to eq(service_instance.name)
           expect(event.space_guid).to eq(service_instance.space.guid)
           expect(event.organization_guid).to eq(service_instance.space.organization.guid)
-          expect(event.metadata).to include({
-            'request' => {
-              'service_plan_guid' => new_service_plan.guid,
-            }
-          })
+          expect(event.metadata['request']).to include({ 'service_plan_guid' => new_service_plan.guid })
         end
 
         it 'returns 201' do
@@ -1665,11 +1657,7 @@ module VCAP::CloudController
               expect(event.actee_name).to eq(service_instance.name)
               expect(event.space_guid).to eq(service_instance.space.guid)
               expect(event.organization_guid).to eq(service_instance.space.organization.guid)
-              expect(event.metadata).to include({
-                'request' => {
-                  'service_plan_guid' => new_service_plan.guid,
-                }
-              })
+              expect(event.metadata['request']).to include({ 'service_plan_guid' => new_service_plan.guid })
             end
           end
 
@@ -1946,7 +1934,7 @@ module VCAP::CloudController
           expect(event.actee_name).to eq(service_instance.name)
           expect(event.space_guid).to eq(service_instance.space.guid)
           expect(event.organization_guid).to eq(service_instance.space.organization.guid)
-          expect(event.metadata).to eq({ 'request' => {} })
+          expect(event.metadata).to have_key('request')
         end
 
         context 'when the instance has bindings' do
@@ -2210,7 +2198,7 @@ module VCAP::CloudController
               expect(event.actee_name).to eq(service_instance.name)
               expect(event.space_guid).to eq(service_instance.space.guid)
               expect(event.organization_guid).to eq(service_instance.space.organization.guid)
-              expect(event.metadata).to eq({ 'request' => {} })
+              expect(event.metadata).to have_key('request')
             end
 
             context 'and with ?async=true' do
@@ -2315,7 +2303,7 @@ module VCAP::CloudController
             expect(event.actee_name).to eq(service_instance.name)
             expect(event.space_guid).to eq(service_instance.space.guid)
             expect(event.organization_guid).to eq(service_instance.space.organization.guid)
-            expect(event.metadata).to eq({ 'request' => {} })
+            expect(event.metadata).to have_key('request')
           end
 
           it 'does not get stuck in progress if the service instance is delete synchronously before the job runs' do
@@ -2494,7 +2482,7 @@ module VCAP::CloudController
           expect(event.actee_name).to eq(service_instance.name)
           expect(event.space_guid).to eq(service_instance.space.guid)
           expect(event.organization_guid).to eq(service_instance.space.organization.guid)
-          expect(event.metadata).to eq({ 'request' => {} })
+          expect(event.metadata).to have_key('request')
         end
 
         it 'deletes the service instance with the given guid' do

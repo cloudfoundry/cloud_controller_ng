@@ -86,7 +86,8 @@ module VCAP::CloudController
             actee_name: service_instance.name,
           }
           space_data = { space: service_instance.space }
-          create_event("audit.service_instance.#{type}", user_actor, actee, { request: params }, space_data)
+
+          create_event("audit.service_instance.#{type}", user_actor, actee, { request: with_parameters_redacted(params) }, space_data)
         end
 
         def record_user_provided_service_instance_event(type, service_instance, params)
@@ -172,6 +173,11 @@ module VCAP::CloudController
         end
 
         private
+
+        def with_parameters_redacted(params)
+          return params unless params.respond_to? :[]=
+          params.dup.tap { |p| p['parameters'] = '[PRIVATE DATA HIDDEN]' }
+        end
 
         def event_type(object, object_type)
           if object.new?

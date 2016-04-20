@@ -755,6 +755,7 @@ resource 'Events', type: [:api, :legacy_api] do
                                    'name' => instance.name,
                                    'service_plan_guid' => instance.service_plan.guid,
                                    'space_guid' => instance.space_guid,
+                                   'parameters' => '[PRIVATE DATA HIDDEN]'
                                  }
                                }
     end
@@ -778,6 +779,7 @@ resource 'Events', type: [:api, :legacy_api] do
                                metadata: {
                                  'request' => {
                                    'service_plan_guid' => instance.service_plan.guid,
+                                   'parameters' => '[PRIVATE DATA HIDDEN]'
                                  }
                                }
     end
@@ -797,7 +799,9 @@ resource 'Events', type: [:api, :legacy_api] do
                                actee_name: instance.name,
                                space_guid: instance.space_guid,
                                metadata: {
-                                 'request' => {}
+                                 'request' => {
+                                   'parameters' => '[PRIVATE DATA HIDDEN]'
+                                 }
                                }
     end
 
