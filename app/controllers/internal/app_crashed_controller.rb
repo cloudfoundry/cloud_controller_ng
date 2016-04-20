@@ -22,14 +22,20 @@ module VCAP::CloudController
 
       app_guid = Diego::ProcessGuid.app_guid(process_guid)
 
-      app = App.find(guid: app_guid)
-      raise CloudController::Errors::ApiError.new_from_details('NotFound') unless app
-      raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'AppCrashed', 'not a diego app') unless app.diego?
+      process = App.find(guid: app_guid)
+      raise CloudController::Errors::ApiError.new_from_details('NotFound') unless process
+      raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'AppCrashed', 'not a diego app') unless process.diego?
 
       crash_payload['version'] = Diego::ProcessGuid.app_version(process_guid)
 
-      app_for_event = app.is_v3? ? app.app : app
-      Repositories::Runtime::AppEventRepository.new.create_app_exit_event(app_for_event, crash_payload)
+      if process.is_v3?
+        Repositories::Runtime::ProcessEventRepository.record_crash(
+          process,
+          crash_payload
+        )
+      else
+        Repositories::Runtime::AppEventRepository.new.create_app_exit_event(process, crash_payload)
+      end
     end
 
     private

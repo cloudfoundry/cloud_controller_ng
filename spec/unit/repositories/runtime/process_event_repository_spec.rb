@@ -4,7 +4,7 @@ require 'repositories/runtime/process_event_repository'
 module VCAP::CloudController
   module Repositories::Runtime
     describe ProcessEventRepository do
-      let(:app) { AppModel.make(name: 'potato') }
+      let(:app) { AppModel.make(name: 'zach-loves-kittens') }
       let(:process) { App.make(app: app, space: app.space, type: 'potato') }
       let(:user_guid) { 'user_guid' }
       let(:email) { 'user-email' }
@@ -20,7 +20,7 @@ module VCAP::CloudController
           expect(event.actor_name).to eq(email)
           expect(event.actee).to eq(app.guid)
           expect(event.actee_type).to eq('v3-app')
-          expect(event.actee_name).to eq('potato')
+          expect(event.actee_name).to eq('zach-loves-kittens')
           expect(event.space_guid).to eq(app.space.guid)
           expect(event.organization_guid).to eq(app.space.organization.guid)
 
@@ -42,7 +42,7 @@ module VCAP::CloudController
           expect(event.actor_name).to eq(email)
           expect(event.actee).to eq(app.guid)
           expect(event.actee_type).to eq('v3-app')
-          expect(event.actee_name).to eq('potato')
+          expect(event.actee_name).to eq('zach-loves-kittens')
           expect(event.space_guid).to eq(app.space.guid)
           expect(event.organization_guid).to eq(app.space.organization.guid)
 
@@ -65,7 +65,7 @@ module VCAP::CloudController
           expect(event.actor_name).to eq(email)
           expect(event.actee).to eq(app.guid)
           expect(event.actee_type).to eq('v3-app')
-          expect(event.actee_name).to eq('potato')
+          expect(event.actee_name).to eq('zach-loves-kittens')
           expect(event.space_guid).to eq(app.space.guid)
           expect(event.organization_guid).to eq(app.space.organization.guid)
 
@@ -92,7 +92,7 @@ module VCAP::CloudController
           expect(event.actor_name).to eq(email)
           expect(event.actee).to eq(app.guid)
           expect(event.actee_type).to eq('v3-app')
-          expect(event.actee_name).to eq('potato')
+          expect(event.actee_name).to eq('zach-loves-kittens')
           expect(event.space_guid).to eq(app.space.guid)
           expect(event.organization_guid).to eq(app.space.organization.guid)
 
@@ -129,7 +129,7 @@ module VCAP::CloudController
           expect(event.actor_name).to eq(email)
           expect(event.actee).to eq(app.guid)
           expect(event.actee_type).to eq('v3-app')
-          expect(event.actee_name).to eq('potato')
+          expect(event.actee_name).to eq('zach-loves-kittens')
           expect(event.space_guid).to eq(app.space.guid)
           expect(event.organization_guid).to eq(app.space.organization.guid)
 
@@ -139,16 +139,35 @@ module VCAP::CloudController
             'process_index' => 0
           })
         end
+      end
 
-        it 'redacts metadata.request.command' do
-          event = ProcessEventRepository.record_update(process, user_guid, email, { command: 'censor this' })
+      describe '.record_crash' do
+        let(:crash_payload) {
+          {
+            'instance' => Sham.guid,
+            'index' => 3,
+            'exit_status' => 137,
+            'exit_description' => 'description',
+            'reason' => 'CRASHED'
+          }
+        }
+
+        it 'creates a new audit.app.crash event' do
+          index = 0
+          event = ProcessEventRepository.record_crash(process, crash_payload)
           event.reload
 
-          expect(event.metadata).to match(hash_including(
-                                            'request' => {
-                                              'command' => 'PRIVATE DATA HIDDEN'
-                                            }
-          ))
+          expect(event.type).to eq('audit.app.process.crash')
+          expect(event.actor).to eq(process.guid)
+          expect(event.actor_type).to eq('v3-process')
+          expect(event.actor_name).to eq('potato')
+          expect(event.actee).to eq(app.guid)
+          expect(event.actee_type).to eq('v3-app')
+          expect(event.actee_name).to eq('zach-loves-kittens')
+          expect(event.space_guid).to eq(app.space.guid)
+          expect(event.organization_guid).to eq(app.space.organization.guid)
+
+          expect(event.metadata).to eq(crash_payload)
         end
       end
     end

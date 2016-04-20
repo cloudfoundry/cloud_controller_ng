@@ -10,8 +10,8 @@ module VCAP::CloudController
           create_event(
             process:   process,
             type:      'audit.app.process.create',
-            user_guid: user_guid,
-            user_name: user_name,
+            actor_guid: user_guid,
+            actor_name: user_name,
             metadata:  {
               process_guid: process.guid,
               process_type: process.type
@@ -25,8 +25,8 @@ module VCAP::CloudController
           create_event(
             process:   process,
             type:      'audit.app.process.delete',
-            user_guid: user_guid,
-            user_name: user_name,
+            actor_guid: user_guid,
+            actor_name: user_name,
             metadata:  {
               process_guid: process.guid,
               process_type: process.type
@@ -43,8 +43,8 @@ module VCAP::CloudController
           create_event(
             process:   process,
             type:      'audit.app.process.update',
-            user_guid: user_guid,
-            user_name: user_name,
+            actor_guid: user_guid,
+            actor_name: user_name,
             metadata:  {
               process_guid: process.guid,
               process_type: process.type,
@@ -59,8 +59,8 @@ module VCAP::CloudController
           create_event(
             process:   process,
             type:      'audit.app.process.scale',
-            user_guid: user_guid,
-            user_name: user_name,
+            actor_guid: user_guid,
+            actor_name: user_name,
             metadata:  {
               process_guid: process.guid,
               process_type: process.type,
@@ -75,8 +75,8 @@ module VCAP::CloudController
           create_event(
             process:   process,
             type:      'audit.app.process.terminate_instance',
-            user_guid: user_guid,
-            user_name: user_name,
+            actor_guid: user_guid,
+            actor_name: user_name,
             metadata:  {
               process_guid: process.guid,
               process_type: process.type,
@@ -85,19 +85,32 @@ module VCAP::CloudController
           )
         end
 
+        def self.record_crash(process, crash_payload)
+          Loggregator.emit(process.app.guid, "Process has crashed with type: \"#{process.type}\"")
+
+          create_event(
+            process:   process,
+            type:      'audit.app.process.crash',
+            actor_guid: process.guid,
+            actor_name: process.type,
+            actor_type: 'v3-process',
+            metadata:  crash_payload
+          )
+        end
+
         class << self
           private
 
-          def create_event(process:, type:, user_guid:, user_name:, metadata:)
+          def create_event(process:, type:, actor_guid:, actor_name:, metadata:, actor_type: 'user')
             app = process.app
             Event.create(
               type:       type,
               actee:      app.guid,
               actee_type: 'v3-app',
               actee_name: app.name,
-              actor:      user_guid,
-              actor_type: 'user',
-              actor_name: user_name,
+              actor:      actor_guid,
+              actor_type: actor_type,
+              actor_name: actor_name,
               timestamp:  Sequel::CURRENT_TIMESTAMP,
               space:      process.space,
               metadata:   metadata
