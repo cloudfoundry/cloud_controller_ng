@@ -1,5 +1,6 @@
 require 'actions/services/synchronous_orphan_mitigate'
 require 'actions/services/locks/lock_check'
+require 'repositories/service_binding_event_repository'
 
 module VCAP::CloudController
   class ServiceBindingCreate
@@ -9,17 +10,22 @@ module VCAP::CloudController
 
     include VCAP::CloudController::LockCheck
 
-    def create(app_model, service_instance, type, arbitrary_parameters)
+    def initialize(user_guid, user_email)
+      @user_guid = user_guid
+      @user_email = user_email
+    end
+
+    def create(app_model, service_instance, message)
       raise ServiceInstanceNotBindable unless service_instance.bindable?
       service_binding = ServiceBindingModel.new(service_instance: service_instance,
                                                 app: app_model,
                                                 credentials: {},
-                                                type: type)
+                                                type: message.type)
       raise InvalidServiceBinding unless service_binding.valid?
 
       raise_if_locked(service_binding.service_instance)
 
-      raw_attrs = service_instance.client.bind(service_binding, arbitrary_parameters)
+      raw_attrs = service_instance.client.bind(service_binding, message.parameters)
       attrs = raw_attrs.tap { |r| r.delete(:route_service_url) }
 
       service_binding.set_all(attrs)
@@ -27,7 +33,7 @@ module VCAP::CloudController
       begin
         service_binding.save
 
-        service_event_repository.record_service_binding_event(:create, service_binding)
+        Repositories::ServiceBindingEventRepository.record_create(service_binding, @user_guid, @user_email, message.audit_hash)
       rescue => e
         logger.error "Failed to save state of create for service binding #{service_binding.guid} with exception: #{e}"
         mitigate_orphan(service_binding)
@@ -44,10 +50,6 @@ module VCAP::CloudController
 
     def logger
       @logger ||= Steno.logger('cc.action.service_binding_create')
-    end
-
-    def service_event_repository
-      CloudController::DependencyLocator.instance.services_event_repository
     end
   end
 end

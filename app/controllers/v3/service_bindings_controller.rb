@@ -23,7 +23,7 @@ class ServiceBindingsController < ApplicationController
     unauthorized! unless can_create?(app.space.guid)
 
     begin
-      service_binding = ServiceBindingCreate.new.create(app, service_instance, message.type, message.parameters)
+      service_binding = ServiceBindingCreate.new(current_user.guid, current_user_email).create(app, service_instance, message)
       render status: :created, json: service_binding_presenter.present_json(service_binding)
     rescue ServiceBindingCreate::ServiceInstanceNotBindable
       raise CloudController::Errors::ApiError.new_from_details('UnbindableService')

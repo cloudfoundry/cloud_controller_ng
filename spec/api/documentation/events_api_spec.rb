@@ -60,7 +60,7 @@ resource 'Events', type: [:api, :legacy_api] do
   field :actor_type, 'The actor type.', required: false, readonly: true, example_values: %w(user app)
   field :actor_name, 'The name of the actor.', required: false, readonly: true
   field :actee, 'The GUID of the actee.', required: false, readonly: true
-  field :actee_type, 'The actee type.', required: false, readonly: true, example_values: %w(space app v3-app)
+  field :actee_type, 'The actee type.', required: false, readonly: true, example_values: ['space', 'app', 'v3-app (experimental)', 'v3-service-binding (experimental)']
   field :actee_name, 'The name of the actee.', required: false, readonly: true
   field :timestamp, 'The event creation time.', required: false, readonly: true
   field :metadata, 'The additional information about event.', required: false, readonly: true, default: {}

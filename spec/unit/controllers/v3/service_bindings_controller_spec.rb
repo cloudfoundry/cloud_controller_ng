@@ -26,8 +26,6 @@ describe ServiceBindingsController, type: :controller do
         }
       }
     end
-    let(:current_user) { double(:current_user, guid: 'some-guid') }
-    let(:current_user_email) { 'are@youreddy.com' }
     let(:body) do
       { 'credentials' => { 'super' => 'secret' },
         'syslog_drain_url' => 'syslog://syslog-drain.com'
@@ -46,11 +44,6 @@ describe ServiceBindingsController, type: :controller do
       stub_bind(service_instance, opts)
       service_instance.service.requires = ['syslog_drain']
       service_instance.service.save
-
-      allow(VCAP::CloudController::SecurityContext).to receive(:current_user).
-        and_return(current_user)
-      allow(VCAP::CloudController::SecurityContext).to receive(:current_user_email).
-        and_return(current_user_email)
     end
 
     it 'returns a 201 Created and the service binding' do
@@ -63,33 +56,6 @@ describe ServiceBindingsController, type: :controller do
       expect(parsed_body['type']).to eq(service_binding_type)
       expect(parsed_body['data']['syslog_drain_url']).to eq('syslog://syslog-drain.com')
       expect(parsed_body['data']['credentials']).to eq({ 'super' => 'secret' })
-    end
-
-    describe 'arbitrary parameters' do
-      let(:req_body) do
-        {
-          type: service_binding_type,
-          relationships: {
-            app: { guid: app_model.guid },
-            service_instance: { guid: service_instance.guid }
-          },
-          data: {
-            parameters: { 'arbi' => 'trary', 'par' => 'ameters' }
-          }
-        }
-      end
-
-      it 'passes them to ServiceBindingCreate' do
-        service_binding_create = VCAP::CloudController::ServiceBindingCreate.new
-        allow(service_binding_create).to receive(:create).and_call_original
-        allow(VCAP::CloudController::ServiceBindingCreate).to receive(:new).and_return service_binding_create
-
-        post :create, body: req_body
-
-        expect(service_binding_create).to have_received(:create) do |_, _, _, arbitrary_parameters|
-          expect(arbitrary_parameters).to eq('arbi' => 'trary', 'par' => 'ameters')
-        end
-      end
     end
 
     context 'admin' do

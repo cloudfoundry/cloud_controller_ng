@@ -117,7 +117,8 @@ describe 'v3 service bindings' do
           relationships: {
             app:              { guid: app_guid },
             service_instance: { guid: service_instance_guid },
-          }
+          },
+          data: { parameters: { potato: 'tomato' } }
         }.to_json,
         user_headers
       )
@@ -152,6 +153,36 @@ describe 'v3 service bindings' do
       expect(last_response.status).to eq(201)
       expect(parsed_response).to be_a_response_like(expected_response)
       expect(VCAP::CloudController::ServiceBindingModel.find(guid: guid)).to be_present
+
+      space = VCAP::CloudController::Space.find(guid: space_guid)
+
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to match(
+        hash_including({
+          type:              'audit.service_binding.create',
+          actee:             guid,
+          actee_type:        'v3-service-binding',
+          actee_name:        '',
+          actor:             user.guid,
+          actor_type:        'user',
+          space_guid:        space.guid,
+          organization_guid: space.organization.guid
+        })
+      )
+      expect(event.metadata).to eq({
+        'request' => {
+          'type'          => 'app',
+          'relationships' => {
+            'app' => {
+              'guid' => app_guid,
+            },
+            'service_instance' => {
+              'guid' => service_instance_guid,
+            },
+          },
+          'data' => 'PRIVATE DATA HIDDEN'
+        }
+      })
 
       get(
         "/v3/service_bindings/#{guid}",
