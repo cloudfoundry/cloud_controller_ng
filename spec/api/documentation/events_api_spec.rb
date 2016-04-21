@@ -43,6 +43,16 @@ resource 'Events', type: [:api, :legacy_api] do
     audit.route.update
     audit.route.delete-request
   ).freeze
+
+  EXPERIMENTAL_EVENT_TYPES = %w(
+    audit.app.process.crash
+    audit.app.process.create
+    audit.app.process.delete
+    audit.app.process.scale
+    audit.app.process.terminate_instance
+    audit.app.process.update
+  ).freeze
+
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   authenticated_request
 
@@ -56,6 +66,7 @@ resource 'Events', type: [:api, :legacy_api] do
 
   field :guid, 'The guid of the event.', required: false
   field :type, 'The type of the event.', required: false, readonly: true, valid_values: DOCUMENTED_EVENT_TYPES, example_values: %w(app.crash audit.app.update)
+  field :type, 'The type of the event.', experimental: true, required: false, valid_values: EXPERIMENTAL_EVENT_TYPES, example_values: %w(audit.app.process.crash)
   field :actor, 'The GUID of the actor.', required: false, readonly: true
   field :actor_type, 'The actor type.', required: false, readonly: true, example_values: %w(user app)
   field :actor_name, 'The name of the actor.', required: false, readonly: true
