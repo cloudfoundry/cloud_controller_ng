@@ -45,6 +45,8 @@ resource 'Events', type: [:api, :legacy_api] do
   ).freeze
 
   EXPERIMENTAL_EVENT_TYPES = %w(
+    audit.app.droplet.create
+    audit.app.droplet.delete
     audit.app.process.crash
     audit.app.process.create
     audit.app.process.delete
