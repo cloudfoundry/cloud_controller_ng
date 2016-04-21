@@ -1,5 +1,6 @@
 require 'cloud_controller/blobstore/client'
 require 'cloud_controller/blobstore/fog/fog_client'
+require 'cloud_controller/blobstore/fog/error_handling_client'
 require 'cloud_controller/blobstore/webdav/dav_client'
 require 'cloud_controller/blobstore/safe_delete_client'
 
@@ -30,7 +31,7 @@ module CloudController
             options[:maximum_size]
           )
 
-          Client.new(SafeDeleteClient.new(client, root_dir))
+          Client.new(ErrorHandlingClient.new(SafeDeleteClient.new(client, root_dir)))
         end
 
         def provide_webdav(options, directory_key, root_dir)

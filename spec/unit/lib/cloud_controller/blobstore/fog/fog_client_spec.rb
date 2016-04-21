@@ -330,7 +330,7 @@ module CloudController
             end
 
             context 'and the error is a Excon::Errors::BadRequest' do
-              it 'succeeds when the underlying call eventually succeds' do
+              it 'succeeds when the underlying call eventually succeeds' do
                 called = 0
                 expect_any_instance_of(Fog::Storage::AWS::Files).to receive(:create).exactly(3).times do |_|
                   called += 1
