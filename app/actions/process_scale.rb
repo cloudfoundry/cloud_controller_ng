@@ -19,7 +19,7 @@ module VCAP::CloudController
 
         @process.save
 
-        record_audit_events
+        record_audit_event
       end
     rescue Sequel::ValidationFailed => e
       raise InvalidProcess.new(e.message)
@@ -27,15 +27,7 @@ module VCAP::CloudController
 
     private
 
-    def record_audit_events
-      Repositories::AppEventRepository.new.record_app_update(
-        @process,
-        @process.space,
-        @user.guid,
-        @user_email,
-        @message.audit_hash
-      )
-
+    def record_audit_event
       Repositories::ProcessEventRepository.record_scale(
         @process,
         @user.guid,

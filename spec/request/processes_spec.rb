@@ -350,10 +350,6 @@ describe 'Processes' do
 
       events = VCAP::CloudController::Event.where(actor: developer.guid).all
 
-      app_event = events.find { |e| e.type == 'audit.app.update' }
-      expect(app_event.type).to eq('audit.app.update')
-      expect(app_event.actee).to eq(process.guid)
-
       process_event = events.find { |e| e.type == 'audit.app.process.scale' }
       expect(process_event.values).to include({
         type:              'audit.app.process.scale',
@@ -658,10 +654,6 @@ describe 'Processes' do
       expect(process.disk_quota).to eq(20)
 
       events = VCAP::CloudController::Event.where(actor: developer.guid).all
-
-      app_event = events.find { |e| e.type == 'audit.app.update' }
-      expect(app_event.type).to eq('audit.app.update')
-      expect(app_event.actee).to eq(process.guid)
 
       process_event = events.find { |e| e.type == 'audit.app.process.scale' }
       expect(process_event.values).to include({

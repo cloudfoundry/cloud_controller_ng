@@ -51,22 +51,6 @@ module VCAP::CloudController
         expect(process.disk_quota).to eq(original_value)
       end
 
-      it 'creates an app audit event' do
-        expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_update).with(
-          process,
-            process.space,
-            user.guid,
-            user_email,
-            {
-              'instances'    => 2,
-              'memory_in_mb' => 100,
-              'disk_in_mb'   => 200
-            }
-        )
-
-        process_scale.scale
-      end
-
       it 'creates a process audit event' do
         expect(Repositories::ProcessEventRepository).to receive(:record_scale).with(
           process,
