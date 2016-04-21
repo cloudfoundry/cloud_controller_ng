@@ -21,20 +21,21 @@ module VCAP::CloudController
             since: 101,
             host: 'myhost',
             port: 8080,
+            net_info: { foo: 'ports-A' },
             stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
           },
           { process_guid: 'process-guid', instance_guid: 'instance-B', index: 1, state: 'RUNNING', uptime: 2, since: 202, host: 'myhost1', port: 8081,
-            stats: { time: usage_time, cpu: 70, mem: 128, disk: 1024 } },
+            net_info: { foo: 'ports-B' }, stats: { time: usage_time, cpu: 70, mem: 128, disk: 1024 } },
           { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'CRASHED', uptime: 3, since: 303, host: 'myhost1', port: 8081,
-            stats: { time: usage_time, cpu: 70, mem: 128, disk: 1024 } },
+            net_info: { foo: 'ports-C' }, stats: { time: usage_time, cpu: 70, mem: 128, disk: 1024 } },
           { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'RUNNING', uptime: 4, since: 404, host: 'myhost2', port: 8082,
-            stats: { time: usage_time, cpu: 80, mem: 256, disk: 1024 } },
+            net_info: { foo: 'ports-D' }, stats: { time: usage_time, cpu: 80, mem: 256, disk: 1024 } },
           { process_guid: 'process-guid', instance_guid: 'instance-E', index: 2, state: 'STARTING', uptime: 5, since: 505, host: 'myhost2', port: 8082,
-            stats: { time: usage_time, cpu: 80, mem: 256, disk: 1024 } },
+            net_info: { foo: 'ports-E' }, stats: { time: usage_time, cpu: 80, mem: 256, disk: 1024 } },
           { process_guid: 'process-guid', instance_guid: 'instance-F', index: 3, state: 'STARTING', uptime: 6, since: 606, host: 'myhost3', port: 8083,
-            stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 } },
+            net_info: { foo: 'ports-F' }, stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 } },
           { process_guid: 'process-guid', instance_guid: 'instance-G', index: 4, state: 'CRASHED', uptime: 7, since: 707, host: 'myhost4', port: 8084,
-            stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 } },
+            net_info: { foo: 'ports-G' }, stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 } },
         ]
       }
 
@@ -63,8 +64,8 @@ module VCAP::CloudController
 
           expect(tps_client).to have_received(:lrp_instances).with(app)
           expect(result.length).to eq(app.instances)
-          expect(result[5]['state']).to eq('DOWN')
-          expect(result[6]['state']).to eq('DOWN')
+          expect(result[5][:state]).to eq('DOWN')
+          expect(result[6][:state]).to eq('DOWN')
         end
 
         context 'when an error is raised' do
@@ -319,60 +320,63 @@ module VCAP::CloudController
           expect(result).to eq(
             {
               0 => {
-                'state' => 'RUNNING',
-                'details' => 'some-details',
-                'stats' => {
-                  'name' => app.name,
-                  'uris' => app.uris,
-                  'host' => 'myhost',
-                  'port' => 8080,
-                  'uptime' => instances_to_return[0][:uptime],
-                  'mem_quota'  => app[:memory] * 1024 * 1024,
-                  'disk_quota' => app[:disk_quota] * 1024 * 1024,
-                  'fds_quota' => app.file_descriptors,
-                  'usage' => {
-                    'time' => usage_time,
-                    'cpu'  => 80,
-                    'mem'  => 128,
-                    'disk' => 1024,
+                state:  'RUNNING',
+                stats:  {
+                  name:  app.name,
+                  uris:  app.uris,
+                  host:  'myhost',
+                  port:  8080,
+                  net_info:  { foo:  'ports-A' },
+                  uptime:  instances_to_return[0][:uptime],
+                  mem_quota:   app[:memory] * 1024 * 1024,
+                  disk_quota:  app[:disk_quota] * 1024 * 1024,
+                  fds_quota:  app.file_descriptors,
+                  usage:  {
+                    time:  usage_time,
+                    cpu:   80,
+                    mem:   128,
+                    disk:  1024,
                   }
-                }
+                },
+                details:  'some-details',
               },
               1 => {
-                'state' => 'CRASHED',
-                'stats' => {
-                  'name' => app.name,
-                  'uris' => app.uris,
-                  'host' => 'myhost1',
-                  'port' => 8081,
-                  'uptime' => instances_to_return[2][:uptime],
-                  'mem_quota'  => app[:memory] * 1024 * 1024,
-                  'disk_quota' => app[:disk_quota] * 1024 * 1024,
-                  'fds_quota' => app.file_descriptors,
-                  'usage' => {
-                    'time' => usage_time,
-                    'cpu'  => 70,
-                    'mem'  => 128,
-                    'disk' => 1024,
+                state:  'CRASHED',
+                stats:  {
+                  name:  app.name,
+                  uris:  app.uris,
+                  host:  'myhost1',
+                  port:  8081,
+                  net_info:  { foo:  'ports-C' },
+                  uptime:  instances_to_return[2][:uptime],
+                  mem_quota:   app[:memory] * 1024 * 1024,
+                  disk_quota:  app[:disk_quota] * 1024 * 1024,
+                  fds_quota:  app.file_descriptors,
+                  usage:  {
+                    time:  usage_time,
+                    cpu:   70,
+                    mem:   128,
+                    disk:  1024,
                   }
                 }
               },
               2 => {
-                'state' => 'STARTING',
-                'stats' => {
-                  'name' => app.name,
-                  'uris' => app.uris,
-                  'host' => 'myhost2',
-                  'port' => 8082,
-                  'uptime' => instances_to_return[4][:uptime],
-                  'mem_quota'  => app[:memory] * 1024 * 1024,
-                  'disk_quota' => app[:disk_quota] * 1024 * 1024,
-                  'fds_quota' => app.file_descriptors,
-                  'usage' => {
-                    'time' => usage_time,
-                    'cpu'  => 80,
-                    'mem'  => 256,
-                    'disk' => 1024,
+                state:  'STARTING',
+                stats:  {
+                  name:  app.name,
+                  uris:  app.uris,
+                  host:  'myhost2',
+                  port:  8082,
+                  net_info:  { foo:  'ports-E' },
+                  uptime:  instances_to_return[4][:uptime],
+                  mem_quota:   app[:memory] * 1024 * 1024,
+                  disk_quota:  app[:disk_quota] * 1024 * 1024,
+                  fds_quota:  app.file_descriptors,
+                  usage:  {
+                    time:  usage_time,
+                    cpu:   80,
+                    mem:   256,
+                    disk:  1024,
                   }
                 }
               }
@@ -386,8 +390,8 @@ module VCAP::CloudController
 
           expect(tps_client).to have_received(:lrp_instances_stats).with(app)
           expect(result.length).to eq(app.instances)
-          expect(result[5]['state']).to eq('DOWN')
-          expect(result[6]['state']).to eq('DOWN')
+          expect(result[5][:state]).to eq('DOWN')
+          expect(result[6][:state]).to eq('DOWN')
         end
 
         context 'when no stats are returned for an instance' do
@@ -399,20 +403,21 @@ module VCAP::CloudController
             allow(Time).to receive(:now).and_return(now)
             result = subject.stats_for_app(app)
 
-            expect(result[0]['stats']).to eq({
-              'name' => app.name,
-              'uris' => app.uris,
-              'host' => 'myhost',
-              'port' => 8080,
-              'uptime' => instances_to_return[0][:uptime],
-              'mem_quota'  => app[:memory] * 1024 * 1024,
-              'disk_quota' => app[:disk_quota] * 1024 * 1024,
-              'fds_quota' => app.file_descriptors,
-              'usage' => {
-                'time' => usage_time,
-                'cpu'  => 0,
-                'mem'  => 0,
-                'disk' => 0,
+            expect(result[0][:stats]).to eq({
+              name: app.name,
+              uris: app.uris,
+              host: 'myhost',
+              port: 8080,
+              net_info: { foo: 'ports-A' },
+              uptime: instances_to_return[0][:uptime],
+              mem_quota:  app[:memory] * 1024 * 1024,
+              disk_quota: app[:disk_quota] * 1024 * 1024,
+              fds_quota: app.file_descriptors,
+              usage: {
+                time: usage_time,
+                cpu:  0,
+                mem:  0,
+                disk: 0,
               }
             })
           end

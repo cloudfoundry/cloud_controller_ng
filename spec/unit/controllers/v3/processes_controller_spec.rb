@@ -790,7 +790,7 @@ describe ProcessesController, type: :controller do
   describe '#stats' do
     let(:process_type) { VCAP::CloudController::AppFactory.make(diego: true, type: 'potato') }
     let(:space) { process_type.space }
-    let(:stats) { { 0 => { 'stats' => { 'usage' => {} } } } }
+    let(:stats) { { 0 => { stats: { usage: {}, net_info: { ports: [] } } } } }
     let(:instances_reporters) { double(:instances_reporters) }
 
     before do

@@ -101,25 +101,26 @@ module VCAP::CloudController
         for_each_desired_instance(instances, app) do |instance|
           usage = instance[:stats] || {}
           info = {
-            'state' => instance[:state],
-            'stats' => {
-              'name' => app.name,
-              'uris' => app.uris,
-              'host' => instance[:host],
-              'port' => instance[:port],
-              'uptime' => instance[:uptime],
-              'mem_quota'  => app[:memory] * 1024 * 1024,
-              'disk_quota' => app[:disk_quota] * 1024 * 1024,
-              'fds_quota' => app.file_descriptors,
-              'usage' => {
-                  'time' => usage[:time] || Time.now.utc.to_s,
-                  'cpu'  => usage[:cpu] || 0,
-                  'mem'  => usage[:mem] || 0,
-                  'disk' => usage[:disk] || 0,
+            state: instance[:state],
+            stats: {
+              name: app.name,
+              uris: app.uris,
+              host: instance[:host],
+              port: instance[:port],
+              net_info: instance[:net_info],
+              uptime: instance[:uptime],
+              mem_quota:  app[:memory] * 1024 * 1024,
+              disk_quota: app[:disk_quota] * 1024 * 1024,
+              fds_quota: app.file_descriptors,
+              usage: {
+                  time: usage[:time] || Time.now.utc.to_s,
+                  cpu:  usage[:cpu] || 0,
+                  mem:  usage[:mem] || 0,
+                  disk: usage[:disk] || 0,
               }
             }
           }
-          info['details'] = instance[:details] if instance[:details]
+          info[:details] = instance[:details] if instance[:details]
           result[instance[:index]] = info
         end
 
@@ -147,8 +148,8 @@ module VCAP::CloudController
         app.instances.times do |i|
           unless reported_instances[i]
             reported_instances[i] = {
-              'state'  => 'DOWN',
-              'uptime' => 0,
+              state:  'DOWN',
+              uptime: 0,
             }
           end
         end

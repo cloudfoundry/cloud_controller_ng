@@ -147,6 +147,34 @@ describe 'Processes' do
   end
 
   describe 'GET /v3/processes/:guid/stats' do
+    it 'succeeds when TPS is an older version without net_info' do
+      process = VCAP::CloudController::ProcessModel.make(:process, type: 'worker', app: app_model, space: space, diego: true)
+
+      usage_time = Time.now.utc.to_s
+      tps_response = [{
+        process_guid:  process.guid,
+        instance_guid: 'instance-A',
+        index:         0,
+        state:         'RUNNING',
+        details:       'some-details',
+        uptime:        1,
+        since:         101,
+        host:          'toast',
+        port:          8080,
+        stats:         { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
+      }].to_json
+
+      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(process)
+      stub_request(:get, "http://tps.service.cf.internal:1518/v1/actual_lrps/#{process_guid}/stats").to_return(status: 200, body: tps_response)
+
+      get "/v3/apps/#{app_model.guid}/processes/worker/stats", nil, developer_headers
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['resources'][0]['port']).to eq(8080)
+    end
+
     it 'retrieves the stats for a process' do
       process = VCAP::CloudController::ProcessModel.make(:process, type: 'worker', space: space, diego: true)
 
@@ -160,7 +188,13 @@ describe 'Processes' do
         uptime:        1,
         since:         101,
         host:          'toast',
-        port:          8080,
+        net_info: {
+          address: 'host',
+          ports: [
+            { container_port: 7890, host_port: 5432 },
+            { container_port: 8080, host_port: 1234 }
+          ]
+        },
         stats:         { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
       }].to_json
 
@@ -180,8 +214,17 @@ describe 'Processes' do
             'mem'  => 128,
             'disk' => 1024,
           },
-          'host'       => 'toast',
-          'port'       => 8080,
+          'host' => 'toast',
+          'instance_ports' => [
+            {
+              'external' => 5432,
+              'internal' => 7890
+            },
+            {
+              'external' => 1234,
+              'internal' => 8080
+            }
+          ],
           'uptime'     => 1,
           'mem_quota'  => 1073741824,
           'disk_quota' => 1073741824,
@@ -543,7 +586,7 @@ describe 'Processes' do
   end
 
   describe 'GET /v3/apps/:guid/processes/:type/stats' do
-    it 'retrieves the stats for a process belonging to an app' do
+    it 'succeeds when TPS is an older version without net_info' do
       process = VCAP::CloudController::ProcessModel.make(:process, type: 'worker', app: app_model, space: space, diego: true)
 
       usage_time = Time.now.utc.to_s
@@ -565,6 +608,40 @@ describe 'Processes' do
 
       get "/v3/apps/#{app_model.guid}/processes/worker/stats", nil, developer_headers
 
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['resources'][0]['port']).to eq(8080)
+    end
+
+    it 'retrieves the stats for a process belonging to an app' do
+      process = VCAP::CloudController::ProcessModel.make(:process, type: 'worker', app: app_model, space: space, diego: true)
+
+      usage_time = Time.now.utc.to_s
+      tps_response = [{
+        process_guid:  process.guid,
+        instance_guid: 'instance-A',
+        index:         0,
+        state:         'RUNNING',
+        details:       'some-details',
+        uptime:        1,
+        since:         101,
+        host:          'toast',
+        net_info: {
+          address: 'host',
+          ports: [
+            { container_port: 7890, host_port: 5432 },
+            { container_port: 8080, host_port: 1234 }
+          ]
+        },
+        stats:         { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
+      }].to_json
+
+      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(process)
+      stub_request(:get, "http://tps.service.cf.internal:1518/v1/actual_lrps/#{process_guid}/stats").to_return(status: 200, body: tps_response)
+
+      get "/v3/apps/#{app_model.guid}/processes/worker/stats", nil, developer_headers
+
       expected_response = {
         'resources' => [{
           'type'       => 'worker',
@@ -576,8 +653,17 @@ describe 'Processes' do
             'mem'  => 128,
             'disk' => 1024,
           },
-          'host'       => 'toast',
-          'port'       => 8080,
+          'host' => 'toast',
+          'instance_ports' => [
+            {
+              'external' => 5432,
+              'internal' => 7890
+            },
+            {
+              'external' => 1234,
+              'internal' => 8080
+            }
+          ],
           'uptime'     => 1,
           'mem_quota'  => 1073741824,
           'disk_quota' => 1073741824,
