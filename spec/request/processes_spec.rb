@@ -167,13 +167,6 @@ describe 'Processes' do
       get "/v3/processes/#{process.guid}/stats", nil, developer_headers
 
       expected_response = {
-        'pagination' => {
-          'total_results' => 1,
-          'first'         => { 'href' => "/v3/processes/#{process.guid}/stats" },
-          'last'          => { 'href' => "/v3/processes/#{process.guid}/stats" },
-          'next'          => nil,
-          'previous'      => nil,
-        },
         'resources' => [{
           'type'       => 'worker',
           'index'      => 0,
@@ -565,13 +558,6 @@ describe 'Processes' do
       get "/v3/apps/#{app_model.guid}/processes/worker/stats", nil, developer_headers
 
       expected_response = {
-        'pagination' => {
-          'total_results' => 1,
-          'first'         => { 'href' => "/v3/apps/#{app_model.guid}/processes/worker/stats" },
-          'last'          => { 'href' => "/v3/apps/#{app_model.guid}/processes/worker/stats" },
-          'next'          => nil,
-          'previous'      => nil,
-        },
         'resources' => [{
           'type'       => 'worker',
           'index'      => 0,

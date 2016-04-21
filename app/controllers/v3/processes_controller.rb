@@ -109,16 +109,14 @@ class ProcessesController < ApplicationController
       process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
       app_not_found! unless app && can_read?(space.guid, org.guid)
       process_not_found! unless process
-      base_url = "/v3/apps/#{app.guid}/processes/#{process.type}/stats"
     else
       process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
       process_not_found! unless process && can_read?(space.guid, org.guid)
-      base_url = "/v3/processes/#{process.guid}/stats"
     end
 
     process_stats = instances_reporters.stats_for_app(process)
 
-    render status: :ok, json: process_presenter.present_json_stats(process, process_stats, base_url)
+    render status: :ok, json: process_presenter.present_json_stats(process, process_stats)
   end
 
   private

@@ -833,11 +833,6 @@ describe ProcessesController, type: :controller do
         expect(parsed_body['resources'][0]['type']).to eq('potato')
       end
 
-      it 'provides the correct base url in the pagination links' do
-        put :stats, { app_guid: app.guid, type: process_type.type }
-        expect(parsed_body['pagination']['first']['href']).to include("/v3/apps/#{app.guid}/processes/#{process_type.type}/stats")
-      end
-
       context 'admin' do
         before do
           set_current_user_as_admin

@@ -65,7 +65,6 @@ module VCAP::CloudController
       let(:process) { AppFactory.make }
       let(:process_presenter) { ProcessPresenter.new }
       let(:process_usage) { process.type.usage }
-      let(:base_url) { '/v3/chimpanzee-driving-a-boat' }
       let(:stats_for_app) do
         {
           0 => {
@@ -111,7 +110,7 @@ module VCAP::CloudController
       end
 
       it 'presents the process stats as json' do
-        json_result = process_presenter.present_json_stats(process, stats_for_app, base_url)
+        json_result = process_presenter.present_json_stats(process, stats_for_app)
         result      = MultiJson.load(json_result)
 
         stats = result['resources']
@@ -140,11 +139,11 @@ module VCAP::CloudController
                                           'disk'                                 => 1024 })
       end
 
-      it 'includes a pagination section' do
-        json_result = process_presenter.present_json_stats(process, stats_for_app, base_url)
+      it 'does not include a pagination section' do
+        json_result = process_presenter.present_json_stats(process, stats_for_app)
         result      = MultiJson.load(json_result)
 
-        expect(result).to have_key('pagination')
+        expect(result).not_to have_key('pagination')
       end
     end
 

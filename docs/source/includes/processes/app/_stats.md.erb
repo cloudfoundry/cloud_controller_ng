@@ -25,7 +25,7 @@ Example Response
 ```http
 HTTP/1.1 200 OK
 
-<%= yield_content :paginated_list_of_process_stats, '/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web' %>
+<%= yield_content :list_of_process_stats, '/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web/stats' %>
 ```
 
 This endpoint retrieves the stats for a specific process belonging to an app.
