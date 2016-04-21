@@ -69,11 +69,11 @@
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      port
-      <span class="method-list-item-type">integer</span>
+      instance_ports
+      <span class="method-list-item-type">object</span>
     </h4>
 
-    <p class="method-list-item-description">The open port the instance can use for listening.</p>
+    <p class="method-list-item-description">JSON array of port mappings between the network-exposed port used to communicate with the app ("external") and port opened to the running process that it can listen on ("internal").</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
