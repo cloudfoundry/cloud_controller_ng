@@ -62,6 +62,7 @@ describe 'Processes' do
               'scale' => { 'href' => "/v3/processes/#{process1.guid}/scale", 'method' => 'PUT' },
               'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
               'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+              'stats' => { 'href' => "/v3/processes/#{process1.guid}/stats" },
             },
           },
           {
@@ -85,6 +86,7 @@ describe 'Processes' do
               'scale' => { 'href' => "/v3/processes/#{process2.guid}/scale", 'method' => 'PUT' },
               'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
               'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+              'stats' => { 'href' => "/v3/processes/#{process2.guid}/stats" },
             },
           }
         ]
@@ -133,6 +135,7 @@ describe 'Processes' do
           'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+          'stats' => { 'href' => "/v3/processes/#{process.guid}/stats" },
         },
       }
 
@@ -244,6 +247,7 @@ describe 'Processes' do
           'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+          'stats' => { 'href' => "/v3/processes/#{process.guid}/stats" },
         },
       }
 
@@ -328,6 +332,7 @@ describe 'Processes' do
           'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+          'stats' => { 'href' => "/v3/processes/#{process.guid}/stats" },
         },
       }
 
@@ -453,6 +458,7 @@ describe 'Processes' do
               'scale' => { 'href' => "/v3/processes/#{process1.guid}/scale", 'method' => 'PUT' },
               'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
               'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+              'stats' => { 'href' => "/v3/processes/#{process1.guid}/stats" },
             },
           },
           {
@@ -476,6 +482,7 @@ describe 'Processes' do
               'scale' => { 'href' => "/v3/processes/#{process2.guid}/scale", 'method' => 'PUT' },
               'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
               'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+              'stats' => { 'href' => "/v3/processes/#{process2.guid}/stats" },
             },
           }
         ]
@@ -524,6 +531,7 @@ describe 'Processes' do
           'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+          'stats' => { 'href' => "/v3/apps/#{app_model.guid}/processes/web/stats" },
         },
       }
 
@@ -626,6 +634,7 @@ describe 'Processes' do
           'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+          'stats' => { 'href' => "/v3/apps/#{app_model.guid}/processes/web/stats" },
         },
       }
 

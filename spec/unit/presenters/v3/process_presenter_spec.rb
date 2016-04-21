@@ -20,7 +20,8 @@ module VCAP::CloudController
           created_at:           Time.at(1)
         )
       }
-      let(:json_result) { ProcessPresenter.new.present_json(process) }
+      let(:json_result) { ProcessPresenter.new.present_json(process, base_url) }
+      let(:base_url) { nil }
       subject(:result) { MultiJson.load(json_result) }
 
       before do
@@ -33,6 +34,7 @@ module VCAP::CloudController
           'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "/v2/spaces/#{process.space_guid}" },
+          'stats' => { 'href' => "/v3/processes/#{process.guid}/stats" },
         }
 
         expect(result['guid']).to eq(process.guid)
@@ -57,6 +59,14 @@ module VCAP::CloudController
 
         it 'uses those ports' do
           expect(result['ports']).to match_array([5678])
+        end
+      end
+
+      context 'when base_url is set' do
+        let(:base_url) { '/v3/monkeys' }
+
+        it 'uses the base_url for stats' do
+          expect(result['links']['stats']['href']).to eq('/v3/monkeys/stats')
         end
       end
     end
