@@ -232,18 +232,19 @@ module VCAP::CloudController
       )
     end
 
-    get "#{path}/reserved/domain/:domain_guid/host/:host", :route_reserved
-    def route_reserved(domain_guid, host)
-      validate_access(:reserved, model)
-      domain = Domain[guid: domain_guid]
-      if domain
-        path = params['path']
-        routes = Route.where(domain: domain, host: host)
-        routes = routes.where(path: path) if path
+    get "#{path}/reserved/domain/:domain_guid", :route_reserved
+    def route_reserved(domain_guid)
+      host = params['host']
+      path = params['path']
+      port = params['port']
 
-        return [HTTP::NO_CONTENT, nil] if routes.count > 0
-      end
-      [HTTP::NOT_FOUND, nil]
+      check_route_reserved(domain_guid, host, path, port)
+    end
+
+    get "#{path}/reserved/domain/:domain_guid/host/:host", :http_route_reserved
+    def http_route_reserved(domain_guid, host)
+      path = params['path']
+      check_route_reserved(domain_guid, host, path, nil)
     end
 
     def after_create(route)
@@ -274,6 +275,20 @@ module VCAP::CloudController
     private
 
     attr_reader :app_event_repository, :route_event_repository, :routing_api_client
+
+    def check_route_reserved(domain_guid, host, path, port)
+      validate_access(:reserved, model)
+      domain = Domain[guid: domain_guid]
+      if domain
+        routes = Route.where(domain: domain)
+        routes = routes.where(host: host) if host
+        routes = routes.where(path: path) if path
+        routes = routes.where(port: port) if port
+
+        return [HTTP::NO_CONTENT, nil] if routes.count > 0
+      end
+      [HTTP::NOT_FOUND, nil]
+    end
 
     def domain_invalid!(domain_guid)
       raise CloudController::Errors::ApiError.new_from_details('DomainInvalid', "Domain with guid #{domain_guid} does not exist")

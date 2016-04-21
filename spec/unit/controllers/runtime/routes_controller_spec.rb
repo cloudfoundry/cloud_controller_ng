@@ -1077,5 +1077,98 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'GET /v2/routes/reserved/domain/:domain_guid' do
+      before { set_current_user(User.make) }
+
+      context 'when the domain does not exist' do
+        it 'returns a NOT_FOUND (404)' do
+          get '/v2/routes/reserved/domain/nothere'
+          expect(last_response).to have_status_code(404)
+        end
+      end
+
+      context 'when the domain exists' do
+        let(:route) { Route.make }
+
+        context 'when the domain is a private domain' do
+          let(:domain) { PrivateDomain.make }
+          let(:route) { Route.make(domain: domain, host: '', space: Space.make(organization: domain.owning_organization)) }
+
+          it 'returns NO_CONTENT (204)' do
+            get "/v2/routes/reserved/domain/#{route.domain_guid}"
+            expect(last_response).to have_status_code(204)
+          end
+        end
+
+        context 'when the hostname is not reserved' do
+          it 'returns a NOT_FOUND (404)' do
+            get "/v2/routes/reserved/domain/#{route.domain_guid}?host=myhost"
+            expect(last_response).to have_status_code(404)
+          end
+        end
+
+        context 'when the hostname is reserved' do
+          it 'returns a NO_CONTENT (204)' do
+            get "/v2/routes/reserved/domain/#{route.domain_guid}?host=#{route.host}"
+            expect(last_response).to have_status_code(204)
+          end
+        end
+
+        context 'when the route is tcp route' do
+          let(:tcp_domain) { SharedDomain.make(router_group_guid: 'tcp-group-1') }
+          let(:tcp_route) { Route.make(domain: tcp_domain, port: 1234) }
+          before do
+            allow_any_instance_of(RouteValidator).to receive(:validate)
+          end
+
+          context 'when the port is not reserved' do
+            it 'returns a NOT_FOUND (404)' do
+              get "/v2/routes/reserved/domain/#{tcp_route.domain_guid}?port=61234"
+              expect(last_response.status).to eq(404)
+            end
+          end
+
+          context 'when the port is reserved' do
+            it 'returns a NO_CONTENT (204)' do
+              get "/v2/routes/reserved/domain/#{tcp_route.domain_guid}?port=#{tcp_route.port}"
+              expect(last_response.status).to eq(204)
+            end
+          end
+        end
+
+        context 'when a path is provided as a param' do
+          context 'when the path does not exist' do
+            it 'returns a NOT_FOUND (404)' do
+              get "/v2/routes/reserved/domain/#{route.domain_guid}?host=#{route.host}&path=not_mypath"
+              expect(last_response.status).to eq(404)
+            end
+          end
+
+          context ' when the path does exist' do
+            context 'when the path does not contain url encoding' do
+              let(:path) { '/my_path' }
+              let(:route) { Route.make(path: path) }
+
+              it 'returns a NO_CONTENT (204)' do
+                get "/v2/routes/reserved/domain/#{route.domain_guid}?host=#{route.host}&path=#{path}"
+                expect(last_response.status).to eq(204)
+              end
+            end
+
+            context 'when the path is url encoded' do
+              let(:path) { '/my%20path' }
+              let(:route) { Route.make(path: path) }
+
+              it 'returns a NO_CONTENT' do
+                uri_encoded_path = '%2Fmy%2520path'
+                get "/v2/routes/reserved/domain/#{route.domain_guid}?host=#{route.host}&path=#{uri_encoded_path}"
+                expect(last_response.status).to eq(204)
+              end
+            end
+          end
+        end
+      end
+    end
   end
 end

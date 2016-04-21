@@ -135,6 +135,24 @@ EOF
   end
 
   describe 'Reserved Routes' do
+    let(:route) { VCAP::CloudController::Route.make(domain: domain, port: 61000, space: space) }
+    get '/v2/routes/reserved/domain/:domain_guid?host=:host&path=:path&port=:port' do
+      request_parameter :domain_guid, 'The guid of a domain'
+      request_parameter :host, 'The host portion of the route. Required for shared-domains.', required: false
+      request_parameter :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
+      request_parameter :port, 'The port of the route. Supported for domains of TCP router groups only.',
+        required: false, example_values: [60027, 1234]
+
+      example 'Check a Route exists' do
+        explanation 'This endpoint returns a status code of 204 if the route exists, and 404 if it does not.'
+
+        client.get "/v2/routes/reserved/domain/#{domain.guid}?port=#{route.port}", {}, headers
+        expect(status).to eq 204
+      end
+    end
+  end
+
+  describe 'HTTP Reserved Routes' do
     before do
       route.path = route_path
       route.save
@@ -144,7 +162,7 @@ EOF
       request_parameter :host, 'The host portion of the route. Required for shared-domains.'
       request_parameter :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
 
-      example 'Check a Route exists' do
+      example 'Check a HTTP Route exists' do
         explanation 'This endpoint returns a status code of 204 if the route exists, and 404 if it does not.'
 
         client.get "/v2/routes/reserved/domain/#{domain.guid}/host/#{route.host}?path=#{route_path}", {}, headers
