@@ -17,9 +17,9 @@ module VCAP::CloudController
       @source_droplet = source_droplet
     end
 
-    def copy(destination_app_guid, user_guid, user_email, source_app_guid, source_app_name, space_guid, organization_guid)
+    def copy(destination_app, user_guid, user_email)
       validate!
-      new_droplet = DropletModel.new(state: DropletModel::PENDING_STATE, app_guid: destination_app_guid)
+      new_droplet = DropletModel.new(state: DropletModel::PENDING_STATE, app_guid: destination_app.guid)
 
       # Needed to execute serializers and deserializers correctly on source and destination models
       CLONED_ATTRIBUTES.each do |attr|
@@ -39,14 +39,14 @@ module VCAP::CloudController
         end
 
         Repositories::DropletEventRepository.record_create_by_copying(
-          destination_app_guid,
+          destination_app.guid,
           @source_droplet.guid,
           user_guid,
           user_email,
-          source_app_guid,
-          source_app_name,
-          space_guid,
-          organization_guid
+          @source_droplet.app.guid,
+          @source_droplet.app.name,
+          destination_app.space_guid,
+          destination_app.space.organization_guid
           )
       end
       new_droplet.reload

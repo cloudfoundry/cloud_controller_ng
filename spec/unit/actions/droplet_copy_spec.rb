@@ -6,28 +6,19 @@ module VCAP::CloudController
     let(:droplet_copy) { DropletCopy.new(source_droplet) }
     let(:source_space) { VCAP::CloudController::Space.make }
     let(:target_app) { VCAP::CloudController::AppModel.make }
-    let(:source_app_guid) { VCAP::CloudController::AppModel.make(name: 'source-app-name', space_guid: source_space.guid) }
+    let(:source_app) { VCAP::CloudController::AppModel.make(name: 'source-app-name', space_guid: source_space.guid) }
     let(:lifecycle_type) { :buildpack }
     let!(:source_droplet) { VCAP::CloudController::DropletModel.make(lifecycle_type,
-      app_guid: source_app_guid,
+      app_guid: source_app.guid,
       droplet_hash: 'abcdef',
       process_types: { web: 'bundle exec rails s' },
       environment_variables: { 'THING' => 'STUFF' })
-    }
-    let(:perform_copying) { droplet_copy.copy(target_app.guid,
-                                              'user-guid',
-                                              'user-email',
-                                              source_app_guid,
-                                              'source-app-name',
-                                              target_app.space_guid,
-                                              target_app.space.organization_guid
-                                             )
     }
 
     describe '#copy' do
       it 'copies the passed in droplet to the target app' do
         expect {
-          perform_copying
+          droplet_copy.copy(target_app, 'user-guid', 'user-email')
         }.to change { DropletModel.count }.by(1)
 
         copied_droplet = DropletModel.last
@@ -54,19 +45,19 @@ module VCAP::CloudController
           source_droplet.guid,
           'user-guid',
           'user-email',
-          source_app_guid,
+          source_app.guid,
           'source-app-name',
           target_app.space_guid,
           target_app.space.organization_guid
         )
 
-        perform_copying
+        droplet_copy.copy(target_app, 'user-guid', 'user-email')
       end
 
       context 'when lifecycle is buildpack' do
         it 'creates a buildpack_lifecycle_data record for the new droplet' do
           expect {
-            perform_copying
+            droplet_copy.copy(target_app, 'user-guid', 'user-email')
           }.to change { BuildpackLifecycleDataModel.count }.by(1)
 
           copied_droplet = DropletModel.last
@@ -79,7 +70,7 @@ module VCAP::CloudController
           copied_droplet = nil
 
           expect {
-            copied_droplet = perform_copying
+            copied_droplet = droplet_copy.copy(target_app, 'user-guid', 'user-email')
           }.to change { Delayed::Job.count }.by(1)
 
           job = Delayed::Job.last
@@ -95,7 +86,7 @@ module VCAP::CloudController
 
         it 'raises an ApiError' do
           expect {
-            perform_copying
+            droplet_copy.copy(target_app, 'user-guid', 'user-email')
           }.to raise_error(CloudController::Errors::ApiError)
         end
       end
