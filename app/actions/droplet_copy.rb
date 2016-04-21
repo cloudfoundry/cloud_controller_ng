@@ -39,12 +39,12 @@ module VCAP::CloudController
         end
 
         Repositories::DropletEventRepository.record_create_by_copying(
-          destination_app.guid,
+          new_droplet.guid,
           @source_droplet.guid,
           user_guid,
           user_email,
-          @source_droplet.app.guid,
-          @source_droplet.app.name,
+          destination_app.guid,
+          destination_app.name,
           destination_app.space_guid,
           destination_app.space.organization_guid
           )

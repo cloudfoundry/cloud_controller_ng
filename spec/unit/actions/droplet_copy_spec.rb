@@ -5,7 +5,7 @@ module VCAP::CloudController
   describe DropletCopy do
     let(:droplet_copy) { DropletCopy.new(source_droplet) }
     let(:source_space) { VCAP::CloudController::Space.make }
-    let(:target_app) { VCAP::CloudController::AppModel.make }
+    let(:target_app) { VCAP::CloudController::AppModel.make(name: 'target-app-name') }
     let(:source_app) { VCAP::CloudController::AppModel.make(name: 'source-app-name', space_guid: source_space.guid) }
     let(:lifecycle_type) { :buildpack }
     let!(:source_droplet) { VCAP::CloudController::DropletModel.make(lifecycle_type,
@@ -41,12 +41,12 @@ module VCAP::CloudController
 
       it 'creates an audit event' do
         expect(Repositories::DropletEventRepository).to receive(:record_create_by_copying).with(
-          target_app.guid,
+          String, # the copied_droplet doesn't exist yet to know its guid
           source_droplet.guid,
           'user-guid',
           'user-email',
-          source_app.guid,
-          'source-app-name',
+          target_app.guid,
+          'target-app-name',
           target_app.space_guid,
           target_app.space.organization_guid
         )
