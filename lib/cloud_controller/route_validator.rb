@@ -42,59 +42,46 @@ module VCAP::CloudController
     def validate_host_not_included
       unless route.host.blank?
         route.errors.add(:host, :host_and_path_domain_tcp)
-        # raise RouteInvalid.new('Host and path are not supported, as domain belongs to a TCP router group.')
       end
     end
 
     def validate_path_not_included
       unless route.path.blank?
         route.errors.add(:host, :host_and_path_domain_tcp)
-        # raise RouteInvalid.new('Host and path are not supported, as domain belongs to a TCP router group.')
       end
     end
 
     def validate_port_included
       if route.port.nil?
         route.errors.add(:port, :port_required)
-        # raise RouteInvalid.new('For TCP routes you must specify a port or request a random one.')
       end
     end
 
     def validate_port_not_included
       if route.port.present?
         route.errors.add(:port, :port_unsupported)
-        # raise RouteInvalid.new('Port is supported for domains of TCP router groups only.')
       end
     end
 
     def validate_port_number
-      # err_msg = 'The requested port is not available for reservation. Try a different port or request a random one be generated for you.'
-      # raise RouteInvalid.new(err_msg)
-      unless router_group.reservable_ports.include? route.port
+      if route.port && router_group.reservable_ports.exclude?(route.port)
         route.errors.add(:port, :port_unavailable)
       end
     end
 
     def validate_port_not_taken
-      if port_taken?(route.port, route.domain.router_group_guid)
-        # raise RoutePortTaken.new(port_taken_error_message(port))
+      if port_taken?
         route.errors.add(:port, :port_taken)
       end
     end
 
-    def port_taken?(port, router_group_guid)
+    def port_taken?
       domains = Route.dataset.select_all(Route.table_name).
                 join(Domain.table_name, id: :domain_id).
-                where(:"#{Domain.table_name}__router_group_guid" => router_group_guid,
-                      :"#{Route.table_name}__port" => port)
+                where(:"#{Domain.table_name}__router_group_guid" => route.domain.router_group_guid,
+                      :"#{Route.table_name}__port" => route.port)
 
       domains.count > 0
-    end
-
-    def port_taken_error_message(port)
-      "Port #{port} is not available on this domain's router group. " \
-        'Try a different port, request an random port, or ' \
-        'use a domain of a different router group.'
     end
   end
 end

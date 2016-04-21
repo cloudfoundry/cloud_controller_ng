@@ -92,6 +92,10 @@ module VCAP::CloudController
       errors.add(:host, :domain_conflict) if domains_match?
 
       RouteValidator.new(self).validate
+    rescue RoutingApi::UaaUnavailable
+      errors.add(:routing_api, :uaa_unavailable)
+    rescue RoutingApi::RoutingApiUnavailable
+      errors.add(:routing_api, :routing_api_unavailable)
     rescue RoutingApi::RoutingApiDisabled
       errors.add(:routing_api, :routing_api_disabled)
     end
@@ -258,11 +262,19 @@ module VCAP::CloudController
 
     def validate_total_reserved_route_ports
       return unless new? && space
-      route_port_counter = OrganizationReservedRoutePorts.new(space.organization)
-      quota_definition = space.organization.quota_definition
-      reserved_route_ports_policy = MaxReservedRoutePortsPolicy.new(quota_definition, route_port_counter)
+      org_route_port_counter = OrganizationReservedRoutePorts.new(space.organization)
+      org_quota_definition = space.organization.quota_definition
+      org_reserved_route_ports_policy = MaxReservedRoutePortsPolicy.new(org_quota_definition, org_route_port_counter)
 
-      if !reserved_route_ports_policy.allow_more_route_ports?
+      space_route_port_counter = SpaceReservedRoutePorts.new(space.organization)
+      space_quota_definition = space.space_quota_definition
+      space_reserved_route_ports_policy = MaxReservedRoutePortsPolicy.new(space_quota_definition, space_route_port_counter)
+
+      if !space_reserved_route_ports_policy.allow_more_route_ports?
+        errors.add(:space, :total_reserved_route_ports_exceeded)
+      end
+
+      if !org_reserved_route_ports_policy.allow_more_route_ports?
         errors.add(:organization, :total_reserved_route_ports_exceeded)
       end
     end

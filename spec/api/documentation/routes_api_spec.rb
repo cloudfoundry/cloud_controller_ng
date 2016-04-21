@@ -3,14 +3,15 @@ require 'rspec_api_documentation/dsl'
 
 resource 'Routes', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make }
+  let(:space) { VCAP::CloudController::Space.make(organization: space_quota.organization, space_quota_definition: space_quota) }
   let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'tcp-group') }
   let(:route_path) { '/apps/v1/path' }
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }
   let(:route) { VCAP::CloudController::Route.make(domain: domain, space: space) }
   let(:guid) { route.guid }
 
-  let(:routing_api_client) { double('routing_api_client') }
+  let(:routing_api_client) { double('routing_api_client', enabled?: true) }
   let(:router_group) {
     VCAP::CloudController::RoutingApi::RouterGroup.new({
                                                            'guid' => 'tcp-guid',
@@ -22,6 +23,7 @@ resource 'Routes', type: [:api, :legacy_api] do
     allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
       and_return(routing_api_client)
     allow(routing_api_client).to receive(:router_group).and_return(router_group)
+    allow_any_instance_of(VCAP::CloudController::RouteValidator).to receive(:validate)
   end
 
   authenticated_request

@@ -5,8 +5,13 @@ module VCAP::CloudController
     let(:app) { AppFactory.make }
     let(:tcp_domain) { SharedDomain.make(router_group_guid: 'router-group-guid') }
     let(:domain) { SharedDomain.make }
-    let(:http_route) { Route.make(domain: domain, host: 'test') }
-    let(:tcp_route) { Route.make(domain: tcp_domain, port: 9090, host: '') }
+    let(:space_quota) { SpaceQuotaDefinition.make(organization: app.organization) }
+    let(:space) { Space.make(space_quota_definition: space_quota, organization: app.organization) }
+    let(:http_route) { Route.make(domain: domain, host: 'test', space: space) }
+    let(:tcp_route) { Route.make(domain: tcp_domain, port: 9090, host: '', space: space) }
+    before do
+      allow_any_instance_of(RouteValidator).to receive(:validate)
+    end
 
     context 'when app does not exist' do
       it 'raises an error' do

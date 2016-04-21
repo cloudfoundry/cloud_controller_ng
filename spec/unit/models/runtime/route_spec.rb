@@ -8,10 +8,10 @@ module VCAP::CloudController
     describe '#tcp?' do
       context 'when the route belongs to a shared domain' do
         context 'and that domain is a TCP domain' do
-          let!(:tcp_domain) {SharedDomain.make(router_group_guid: 'guid') }
+          let!(:tcp_domain) { SharedDomain.make(router_group_guid: 'guid') }
 
           context 'and the route has a port' do
-            let(:route) {Route.new(domain: tcp_domain, port: 6000)}
+            let(:route) { Route.new(domain: tcp_domain, port: 6000) }
 
             it 'returns true' do
               expect(route.tcp?).to equal(true)
@@ -19,7 +19,7 @@ module VCAP::CloudController
           end
 
           context 'and the route does not have a port' do
-            let(:route) {Route.new(domain: tcp_domain)}
+            let(:route) { Route.new(domain: tcp_domain) }
 
             it 'returns false' do
               expect(route.tcp?).to equal(false)
@@ -27,10 +27,10 @@ module VCAP::CloudController
           end
 
           context 'and that domain is not a TCP domain' do
-            let!(:domain) {SharedDomain.make}
+            let!(:domain) { SharedDomain.make }
 
             context 'and the route has a port' do
-              let(:route) {Route.new(domain: domain, port: 6000)}
+              let(:route) { Route.new(domain: domain, port: 6000) }
 
               it 'returns false' do
                 expect(route.tcp?).to equal(false)
@@ -38,7 +38,7 @@ module VCAP::CloudController
             end
 
             context 'and the route does not have a port' do
-              let(:route) {Route.new(domain: tcp_domain)}
+              let(:route) { Route.new(domain: tcp_domain) }
 
               it 'returns false' do
                 expect(route.tcp?).to equal(false)
@@ -49,11 +49,11 @@ module VCAP::CloudController
       end
 
       context 'when the route belongs to a private domain' do
-        let(:space) {Space.make}
+        let(:space) { Space.make }
         let!(:private_domain) { PrivateDomain.make(owning_organization: space.organization) }
 
         context 'and the route has a port' do
-          let(:route) {Route.new(space: space, domain: private_domain, port: 6000)}
+          let(:route) { Route.new(space: space, domain: private_domain, port: 6000) }
 
           it 'returns false' do
             expect(route.tcp?).to equal(false)
@@ -61,7 +61,7 @@ module VCAP::CloudController
         end
 
         context 'and the route does not have a port' do
-          let(:route) {Route.new(space: space, domain: private_domain)}
+          let(:route) { Route.new(space: space, domain: private_domain) }
 
           it 'returns false' do
             expect(route.tcp?).to equal(false)
@@ -210,6 +210,32 @@ module VCAP::CloudController
         end
       end
 
+      context 'when routing api raises UaaUnavailable error' do
+        before do
+          validator = double
+          allow(RouteValidator).to receive(:new).and_return(validator)
+          allow(validator).to receive(:validate).and_raise(RoutingApi::UaaUnavailable)
+        end
+
+        it 'should add uaa_unavailable to errors' do
+          route.validate
+          expect(route.errors.on(:routing_api)).to include :uaa_unavailable
+        end
+      end
+
+      context 'when routing api raises RoutingApiUnavailable error' do
+        before do
+          validator = double
+          allow(RouteValidator).to receive(:new).and_return(validator)
+          allow(validator).to receive(:validate).and_raise(RoutingApi::RoutingApiUnavailable)
+        end
+
+        it 'should add routing_api_unavailable to errors' do
+          route.validate
+          expect(route.errors.on(:routing_api)).to include :routing_api_unavailable
+        end
+      end
+
       context 'when a route with the same hostname and domain already exists' do
         let(:domain) { SharedDomain.make }
         let(:space) { Space.make }
@@ -292,26 +318,30 @@ module VCAP::CloudController
           expect(route.port).to eq(nil)
         end
 
-        # context 'when port is specified' do
-        #   let(:domain) { SharedDomain.make }
-        #   let(:space) { Space.make }
+        context 'when port is specified' do
+          let(:domain) { SharedDomain.make(router_group_guid: 'tcp-router-group') }
+          let(:space_quota_definition) { SpaceQuotaDefinition.make }
+          let(:space) { Space.make(space_quota_definition: space_quota_definition, organization: space_quota_definition.organization) }
 
-        #   before do
-        #     Route.make(space: space, domain: domain, host: '', port: 1)
-        #   end
+          before do
+            validator = double
+            allow(RouteValidator).to receive(:new).and_return(validator)
+            allow(validator).to receive(:validate)
+            Route.make(space: space, domain: domain, host: '', port: 1)
+          end
 
-        #   it 'does not validate uniqueness of host' do
-        #     expect {
-        #       Route.make(space: space, port: 10, host: '', domain: domain)
-        #     }.not_to raise_error
-        #   end
+          it 'does not validate uniqueness of host' do
+            expect {
+              Route.make(space: space, port: 10, host: '', domain: domain)
+            }.not_to raise_error
+          end
 
-        #   it 'validates the uniqueness of the port' do
-        #     new_route = Route.new(space: space, port: 1, host: '', domain: domain)
-        #     expect(new_route).not_to be_valid
-        #     expect(new_route.errors.on([:host, :domain_id, :port])).to include :unique
-        #   end
-        # end
+          it 'validates the uniqueness of the port' do
+            new_route = Route.new(space: space, port: 1, host: '', domain: domain)
+            expect(new_route).not_to be_valid
+            expect(new_route.errors.on([:host, :domain_id, :port])).to include :unique
+          end
+        end
       end
 
       context 'unescaped paths' do
@@ -513,6 +543,7 @@ module VCAP::CloudController
 
         context 'for space quotas' do
           let(:space_quota) { SpaceQuotaDefinition.make(organization: subject.space.organization) }
+          let(:tcp_domain) { SharedDomain.make(router_group_guid: 'guid') }
 
           context 'on create' do
             context 'when not exceeding total allowed routes' do
@@ -536,6 +567,25 @@ module VCAP::CloudController
               it 'has the error on the space' do
                 subject.valid?
                 expect(subject.errors.on(:space)).to include :total_routes_exceeded
+              end
+            end
+
+            context 'when creating another tcp route' do
+              subject(:another_route) { Route.new(space: space, domain: tcp_domain, host: '', port: 4444) }
+              let!(:mock_router_api_client) do
+                router_group = double('router_group', type: 'tcp', reservable_ports: [4444, 6000, 1234, 3455, 2222])
+                routing_api_client = double('routing_api_client', router_group: router_group, enabled?: true)
+                allow(CloudController::DependencyLocator).to receive(:instance).and_return(double(:api_client, routing_api_client: routing_api_client))
+              end
+
+              before do
+                space_quota.total_reserved_route_ports = 0
+                space_quota.save
+              end
+
+              it 'is invalid' do
+                expect(subject).to_not be_valid
+                expect(subject.errors.on(:space)).to include :total_reserved_route_ports_exceeded
               end
             end
           end
@@ -575,25 +625,23 @@ module VCAP::CloudController
       end
 
       describe 'total reserved route ports' do
-        let(:space) { Space.make }
+        let(:space_quota) { SpaceQuotaDefinition.make }
+        let(:space) { Space.make(space_quota_definition: space_quota, organization: space_quota.organization) }
         let(:org_quota) { space.organization.quota_definition }
-        let(:space_quota) { space.space_quota_definition }
         let(:http_domain) { SharedDomain.make }
         let(:tcp_domain) { SharedDomain.make(router_group_guid: 'guid') }
         let(:validator) { double }
 
         let(:http_route) { Route.new(space: space,
-                                    domain: http_domain,
-                                    host: 'bar') }
+                                     domain: http_domain,
+                                     host: 'bar')
+        }
         subject(:tcp_route) { Route.new(space: space,
                                         domain: tcp_domain,
                                         host: '',
-                                        port: 6000) }
+                                        port: 6000)
+        }
         before do
-          # allow(RouteValidator).to receive(:new).and_return(validator)
-          # allow(validator).to receive(:validate)
-          # allow(validator).to receive(:router_group).and_return('tcp')
-          # allow_any_instance_of(RouteValidator).to receive(:validate).and_return(nil)
           router_group = double('router_group', type: 'tcp', reservable_ports: [4444, 6000])
           routing_api_client = double('routing_api_client', router_group: router_group, enabled?: true)
           allow(CloudController::DependencyLocator).to receive(:instance).and_return(double(:api_client, routing_api_client: routing_api_client))

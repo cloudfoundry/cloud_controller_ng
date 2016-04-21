@@ -2,7 +2,9 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe RouteValidator do
-    let(:route) { Route.new port: port, host: host, path: path, domain: domain, space: Space.make }
+    let(:space_quota) { SpaceQuotaDefinition.make }
+    let(:space) { Space.make(space_quota_definition: space_quota, organization: space_quota.organization) }
+    let(:route) { Route.new port: port, host: host, path: path, domain: domain, space: space }
     let(:validator) { RouteValidator.new(route) }
     let(:routing_api_client) { double('routing_api', router_group: router_group, enabled?: true) }
     let(:router_group) { double(:router_group, type: router_group_type, guid: router_group_guid, reservable_ports: [3, 4, 5, 8080]) }
@@ -25,9 +27,9 @@ module VCAP::CloudController
       context 'with a tcp domain' do
         let(:domain) { SharedDomain.make(router_group_guid: router_group_guid) }
 
-        it 'adds port_unavailable error to the route' do
+        it 'adds port_required error to the route' do
           validator.validate
-          expect(route.errors.on(:port)).to include(:port_unavailable)
+          expect(route.errors.on(:port)).to include(:port_required)
         end
       end
     end
@@ -40,7 +42,6 @@ module VCAP::CloudController
           validator.validate
           expect(route.errors.on(:port)).to include(:port_unsupported)
         end
-
       end
 
       context 'with a domain with a router_group_guid and type tcp' do
@@ -93,21 +94,37 @@ module VCAP::CloudController
         end
 
         context 'when port is already taken in the same router group' do
-          let(:another_route) { Route.new(domain: domain, port: port, space: Space.make) }
+          context 'in same domain' do
+            let(:another_route) { Route.new(domain: domain, port: port, space: space) }
 
-          before do
-            route.save
+            before do
+              route.save
+            end
+
+            it 'adds a route_port_taken error to the route' do
+              RouteValidator.new(another_route).validate
+              expect(another_route.errors.on(:port)).to include(:port_taken)
+            end
           end
 
-          it 'adds a route_port_taken error to the route' do
-            RouteValidator.new(another_route).validate
-            expect(another_route.errors.on(:port)).to include(:port_taken)
+          context 'in different domain' do
+            let(:another_domain) { SharedDomain.make(router_group_guid: router_group_guid) }
+            let(:another_route) { Route.new(domain: another_domain, port: port, space: Space.make) }
+
+            before do
+              route.save
+            end
+
+            it 'adds a route_port_taken error to the route' do
+              RouteValidator.new(another_route).validate
+              expect(another_route.errors.on(:port)).to include(:port_taken)
+            end
           end
         end
 
         context 'when port is already taken in a different router group' do
-          let(:domain_in_different_router_group) {SharedDomain.make(router_group_guid: 'different-router-group')}
-          let(:another_route) {Route.new(domain: domain_in_different_router_group, port: port, space: Space.make)}
+          let(:domain_in_different_router_group) { SharedDomain.make(router_group_guid: 'different-router-group') }
+          let(:another_route) { Route.new(domain: domain_in_different_router_group, port: port, space: Space.make) }
 
           before do
             route.save

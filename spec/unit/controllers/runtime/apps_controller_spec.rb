@@ -635,8 +635,14 @@ module VCAP::CloudController
       end
 
       context 'when associating with route' do
+        let(:space_quota) { SpaceQuotaDefinition.make(organization: app_obj.space.organization) }
         let(:domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: 'guid_1') }
         let(:route) { Route.make(space: app_obj.space, domain: domain, port: 9090, host: '') }
+
+        before do
+          allow_any_instance_of(RouteValidator).to receive(:validate)
+          app_obj.space.space_quota_definition = space_quota
+        end
 
         it 'allows updating app' do
           put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil

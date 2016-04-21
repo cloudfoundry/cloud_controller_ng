@@ -918,6 +918,11 @@
   http_code: 400
   message: "You have exceeded the total reserved route ports for your organization's quota."
 
+310010:
+  name: SpaceQuotaTotalReservedRoutePortsExceeded
+  http_code: 400
+  message: "You have exceeded the total reserved route ports for your space's quota."
+
 320001:
   name: DiegoDisabled
   http_code: 400

@@ -68,7 +68,7 @@ module VCAP::CloudController
         end
       end
 
-      describe "total_reserved_route_ports" do
+      describe 'total_reserved_route_ports' do
         it 'cannot be less than -1' do
           space_quota_definition.total_reserved_route_ports = -2
           expect(space_quota_definition).not_to be_valid
@@ -101,7 +101,7 @@ module VCAP::CloudController
           expect(space_quota_definition).to be_valid
         end
 
-        it "should not exceed total routes for the same space" do
+        it 'should not exceed total routes for the same space' do
           space_quota_definition.total_routes = 5
 
           space_quota_definition.total_reserved_route_ports = 4

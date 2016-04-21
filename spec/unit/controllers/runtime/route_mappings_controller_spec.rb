@@ -369,6 +369,7 @@ module VCAP::CloudController
         end
 
         context 'when the Routing API is not enabled' do
+          let(:space_quota) { SpaceQuotaDefinition.make(organization: space.organization) }
           let(:tcp_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: 'guid_1') }
           let(:tcp_route) { Route.make(port: 9090, host: '', space: space, domain: tcp_domain) }
           let(:app_obj) { AppFactory.make(space: space, ports: [9090], diego: true) }
@@ -381,6 +382,8 @@ module VCAP::CloudController
           end
 
           before do
+            space.space_quota_definition = space_quota
+            allow_any_instance_of(RouteValidator).to receive(:validate)
             TestConfig.override(routing_api: nil)
           end
 

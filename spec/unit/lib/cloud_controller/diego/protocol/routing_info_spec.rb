@@ -8,7 +8,8 @@ module VCAP::CloudController
           subject(:routing_info) { RoutingInfo.new(app).routing_info }
 
           let(:org) { Organization.make }
-          let(:space) { Space.make(organization: org) }
+          let(:space_quota) { SpaceQuotaDefinition.make(organization: org) }
+          let(:space) { Space.make(organization: org, space_quota_definition: space_quota) }
           let(:domain) { PrivateDomain.make(name: 'mydomain.com', owning_organization: org) }
           let(:app) { AppFactory.make(space: space, diego: true) }
           let(:route_without_service) { Route.make(host: 'host2', domain: domain, space: space, path: '/my%20path') }
@@ -17,6 +18,9 @@ module VCAP::CloudController
             service_instance = ManagedServiceInstance.make(:routing, space: space)
             RouteBinding.make(route: route, service_instance: service_instance)
             route
+          end
+          before do
+            allow_any_instance_of(RouteValidator).to receive(:validate)
           end
 
           context 'with no app ports specified in route mapping' do

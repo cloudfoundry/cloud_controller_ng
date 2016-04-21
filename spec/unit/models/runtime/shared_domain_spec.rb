@@ -67,6 +67,10 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
+      before do
+        allow_any_instance_of(RouteValidator).to receive(:validate)
+      end
+
       it 'destroys the routes' do
         route = Route.make(domain: subject)
 

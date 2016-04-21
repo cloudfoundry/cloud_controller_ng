@@ -33,7 +33,45 @@ module VCAP::CloudController
     end
 
     # rubocop:disable Metrics/CyclomaticComplexity
+    # rubocop:disable Metrics/MethodLength
     def self.translate_validation_exception(e, attributes)
+      if e.errors.on(:routing_api) == [:routing_api_disabled]
+        return CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+      end
+
+      if e.errors.on(:routing_api) == [:uaa_unavailable]
+        return CloudController::Errors::ApiError.new_from_details('UaaUnavailable', 'The UAA service is currently unavailable')
+      end
+
+      if e.errors.on(:routing_api) == [:routing_api_unavailable]
+        return CloudController::Errors::ApiError.new_from_details('RoutingApiUnavailable')
+      end
+
+      if e.errors.on(:port) == [:port_taken]
+        port_taken_error_message = "Port #{attributes['port']} is not available on this domain's router group. " \
+          'Try a different port, request an random port, or ' \
+          'use a domain of a different router group.'
+
+        return CloudController::Errors::ApiError.new_from_details('RoutePortTaken', port_taken_error_message)
+      end
+
+      if e.errors.on(:port) == [:port_unsupported]
+        return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.')
+      end
+
+      if e.errors.on(:port) == [:port_required]
+        return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'For TCP routes you must specify a port or request a random one.')
+      end
+
+      if e.errors.on(:port) == [:port_unavailable]
+        return CloudController::Errors::ApiError.new_from_details('RouteInvalid',
+                 'The requested port is not available for reservation. ' \
+                 'Try a different port or request a random one be generated for you.')
+      end
+      if e.errors.on(:host) == [:host_and_path_domain_tcp]
+        return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Host and path are not supported, as domain belongs to a TCP router group.')
+      end
+
       name_errors = e.errors.on([:host, :domain_id])
       if name_errors && name_errors.include?(:unique)
         return CloudController::Errors::ApiError.new_from_details('RouteHostTaken', attributes['host'])
@@ -47,6 +85,10 @@ module VCAP::CloudController
       space_errors = e.errors.on(:space)
       if space_errors && space_errors.include?(:total_routes_exceeded)
         return CloudController::Errors::ApiError.new_from_details('SpaceQuotaTotalRoutesExceeded')
+      end
+
+      if space_errors && space_errors.include?(:total_reserved_route_ports_exceeded)
+        return CloudController::Errors::ApiError.new_from_details('SpaceQuotaTotalReservedRoutePortsExceeded')
       end
 
       org_errors = e.errors.on(:organization)
@@ -204,23 +246,13 @@ module VCAP::CloudController
       [HTTP::NOT_FOUND, nil]
     end
 
-    def before_create
-      super
-      # domain_guid = request_attrs['domain_guid']
-      # return if domain_guid.nil?
-
-      # validate_route(domain_guid)
-    end
-
     def after_create(route)
       @route_event_repository.record_route_create(route, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
     end
 
     def before_update(route)
       super
-      if request_attrs['app'].nil?
-        validate_route(route.domain.guid) if request_attrs['port'] != route.port
-      else
+      unless request_attrs['app'].nil?
         app = App.find(guid: request_attrs['app'])
         begin
           RouteMappingValidator.new(route, app).validate
@@ -278,19 +310,6 @@ module VCAP::CloudController
     def convert_flag_to_bool(flag)
       raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag
       flag == 'true'
-    end
-
-    # FIXME: remove this later
-    def validate_route(domain_guid)
-      RouteValidator.new(domain_guid, assemble_route_attrs).validate
-    rescue RouteValidator::ValidationError => e
-      raise CloudController::Errors::ApiError.new_from_details(e.class.name.demodulize, e.message)
-    rescue RoutingApi::RoutingApiDisabled
-      raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
-    rescue RoutingApi::RoutingApiUnavailable
-      raise CloudController::Errors::ApiError.new_from_details('RoutingApiUnavailable')
-    rescue RoutingApi::UaaUnavailable
-      raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
     end
 
     def assemble_route_attrs
