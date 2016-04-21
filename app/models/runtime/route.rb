@@ -266,12 +266,15 @@ module VCAP::CloudController
       org_quota_definition = space.organization.quota_definition
       org_reserved_route_ports_policy = MaxReservedRoutePortsPolicy.new(org_quota_definition, org_route_port_counter)
 
-      space_route_port_counter = SpaceReservedRoutePorts.new(space.organization)
       space_quota_definition = space.space_quota_definition
-      space_reserved_route_ports_policy = MaxReservedRoutePortsPolicy.new(space_quota_definition, space_route_port_counter)
 
-      if !space_reserved_route_ports_policy.allow_more_route_ports?
-        errors.add(:space, :total_reserved_route_ports_exceeded)
+      if space_quota_definition.present?
+        space_route_port_counter = SpaceReservedRoutePorts.new(space.organization)
+        space_reserved_route_ports_policy = MaxReservedRoutePortsPolicy.new(space_quota_definition, space_route_port_counter)
+
+        if !space_reserved_route_ports_policy.allow_more_route_ports?
+          errors.add(:space, :total_reserved_route_ports_exceeded)
+        end
       end
 
       if !org_reserved_route_ports_policy.allow_more_route_ports?

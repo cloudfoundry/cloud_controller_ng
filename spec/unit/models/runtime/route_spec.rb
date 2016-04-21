@@ -1,4 +1,3 @@
-
 require 'spec_helper'
 
 module VCAP::CloudController
@@ -648,6 +647,14 @@ module VCAP::CloudController
         end
 
         context 'on create' do
+          context 'when the space does not have a space quota' do
+            let(:space) { Space.make }
+
+            it 'is valid' do
+              expect(subject).to be_valid
+            end
+          end
+
           context 'when not exceeding total allowed routes' do
             before do
               org_quota.total_routes = 2
