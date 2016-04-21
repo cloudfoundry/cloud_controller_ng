@@ -4,7 +4,6 @@ module VCAP::CloudController
       :buildpack_receipt_buildpack_guid,
       :detected_start_command,
       :salt,
-      :environment_variables,
       :process_types,
       :buildpack_receipt_buildpack,
       :buildpack_receipt_stack_name,

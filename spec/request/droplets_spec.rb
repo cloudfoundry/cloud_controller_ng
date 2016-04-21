@@ -500,7 +500,7 @@ describe 'Droplets' do
         'memory_limit'          => 100,
         'disk_limit'            => 200,
         'result'                => nil,
-        'environment_variables' => { 'cloud' => 'foundry' },
+        'environment_variables' => {},
         'created_at'            => iso8601,
         'updated_at'            => nil,
         'links'                 => {
