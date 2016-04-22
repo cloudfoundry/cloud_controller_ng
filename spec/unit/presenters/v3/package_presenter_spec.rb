@@ -95,7 +95,7 @@ module VCAP::CloudController
       end
 
       it 'presents the packages as a json array under resources' do
-        json_result = presenter.present_json_list(paginated_result, 'potato')
+        json_result = presenter.present_json_list(paginated_result, 'potato', {})
         result      = MultiJson.load(json_result)
 
         guids = result['resources'].collect { |package_json| package_json['guid'] }
@@ -103,10 +103,17 @@ module VCAP::CloudController
       end
 
       it 'includes pagination section' do
-        json_result = presenter.present_json_list(paginated_result, 'bazooka')
+        json_result = presenter.present_json_list(paginated_result, 'bazooka', {})
         result      = MultiJson.load(json_result)
 
         expect(result['pagination']).to eq('pagination-bazooka')
+      end
+
+      let(:params) { { 'states' => ['foo'] } }
+      it 'passes the parameters to the pagination presenter' do
+        expect(pagination_presenter).to receive(:present_pagination_hash).with(paginated_result, 'pagination', params)
+
+        presenter.present_json_list(paginated_result, 'pagination', params)
       end
     end
   end

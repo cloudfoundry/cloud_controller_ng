@@ -6,6 +6,7 @@ module VCAP::CloudController
     describe '.from_params' do
       let(:params) do
         {
+          'states'   => 'state1,state2',
           'page'     => 1,
           'per_page' => 5,
         }
@@ -17,6 +18,7 @@ module VCAP::CloudController
         expect(message).to be_a(PackagesListMessage)
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
+        expect(message.states).to eq(['state1', 'state2'])
       end
 
       it 'converts requested keys to symbols' do
@@ -24,6 +26,7 @@ module VCAP::CloudController
 
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
+        expect(message.requested?(:states)).to be_truthy
       end
     end
 
@@ -47,6 +50,14 @@ module VCAP::CloudController
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
+      end
+    end
+
+    describe 'validations' do
+      it 'validates states to be an array' do
+        message = PackagesListMessage.new(states: 'not array at all')
+        expect(message).to be_invalid
+        expect(message.errors[:states].length).to eq 1
       end
     end
   end

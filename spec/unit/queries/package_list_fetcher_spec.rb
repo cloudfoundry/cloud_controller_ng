@@ -4,7 +4,8 @@ require 'queries/package_list_fetcher'
 module VCAP::CloudController
   describe PackageListFetcher do
     subject(:fetcher) { described_class.new }
-    let(:message) { PackagesListMessage.new {} }
+    let(:message) { PackagesListMessage.new(filters) }
+    let(:filters) { {} }
 
     describe '#fetch_all' do
       it 'returns a PaginatedResult' do
@@ -64,6 +65,24 @@ module VCAP::CloudController
         _app, results = fetcher.fetch_for_app(message: message, app_guid: app.guid)
 
         expect(results.records).to match_array([package1, package2])
+      end
+
+      context 'filtering states' do
+        let(:filters) { { states: [PackageModel::CREATED_STATE, PackageModel::READY_STATE] } }
+
+        before do
+        end
+
+        it 'returns all of the packages with the requested states' do
+          package1 = PackageModel.make(app_guid: app.guid, state: PackageModel::CREATED_STATE)
+          package2 = PackageModel.make(app_guid: app.guid, state: PackageModel::READY_STATE)
+          PackageModel.make(app_guid: app.guid, state: PackageModel::FAILED_STATE)
+          PackageModel.make(state: PackageModel::READY_STATE)
+          PackageModel.make
+
+          results = fetcher.fetch_for_app(app_guid: app.guid, message: message)
+          expect(results.last.records).to match_array([package1, package2])
+        end
       end
 
       context 'when the app does not exist' do

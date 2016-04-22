@@ -29,7 +29,7 @@ class PackagesController < ApplicationController
                          end
     end
 
-    render status: :ok, json: package_presenter.present_json_list(paginated_result, base_url(resource: 'packages'))
+    render status: :ok, json: package_presenter.present_json_list(paginated_result, base_url(resource: 'packages'), message)
   end
 
   def upload

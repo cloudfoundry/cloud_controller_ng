@@ -185,6 +185,32 @@ describe 'Packages' do
         expect(last_response.status).to eq(200)
         expect(parsed_response).to be_a_response_like(expected_response)
       end
+
+      context 'faceted search' do
+        it 'filters by states' do
+          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::READY_STATE)
+          VCAP::CloudController::PackageModel.make(state: VCAP::CloudController::PackageModel::PENDING_STATE)
+
+          get "/v3/apps/#{app_model.guid}/packages?states=PROCESSING_UPLOAD", {}, user_header
+
+          expected_pagination = {
+            'total_results' => 2,
+            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
+            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
+            'next'          => nil,
+            'previous'      => nil
+          }
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].count).to eq(2)
+          expect(parsed_response['resources'].map { |r| r['state'] }.uniq).to eq(['PROCESSING_UPLOAD'])
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+      end
     end
 
     describe 'GET /v3/packages' do
@@ -262,6 +288,35 @@ describe 'Packages' do
         parsed_response = MultiJson.load(last_response.body)
         expect(last_response.status).to eq(200)
         expect(parsed_response).to be_a_response_like(expected_response)
+      end
+
+      context 'faceted search' do
+        it 'filters by states' do
+          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::READY_STATE)
+
+          another_app_in_same_space = VCAP::CloudController::AppModel.make(space_guid: space_guid)
+          VCAP::CloudController::PackageModel.make(app_guid: another_app_in_same_space.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+
+
+          get "/v3/packages?states=PROCESSING_UPLOAD", {}, user_header
+
+          expected_pagination = {
+            'total_results' => 3,
+            'first'         => { 'href' => "/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
+            'last'          => { 'href' => "/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
+            'next'          => nil,
+            'previous'      => nil
+          }
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].count).to eq(3)
+          expect(parsed_response['resources'].map { |r| r['state'] }.uniq).to eq(['PROCESSING_UPLOAD'])
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
       end
     end
 

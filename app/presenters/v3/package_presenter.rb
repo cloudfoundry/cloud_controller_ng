@@ -10,12 +10,12 @@ module VCAP::CloudController
       MultiJson.dump(package_hash, pretty: true)
     end
 
-    def present_json_list(paginated_result, base_url)
+    def present_json_list(paginated_result, base_url, params)
       packages       = paginated_result.records
       package_hashes = packages.collect { |package| package_hash(package) }
 
       paginated_response = {
-        pagination: @pagination_presenter.present_pagination_hash(paginated_result, base_url),
+        pagination: @pagination_presenter.present_pagination_hash(paginated_result, base_url, params),
         resources:  package_hashes
       }
 
