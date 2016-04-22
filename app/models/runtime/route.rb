@@ -84,6 +84,8 @@ module VCAP::CloudController
       validate_uniqueness_on_host_domain_and_path if port.nil?
 
       validate_host_and_domain_in_different_space
+      validate_host
+      validate_fqdn
       validate_path
       validate_domain
       validate_total_routes
@@ -218,6 +220,18 @@ module VCAP::CloudController
 
     def handle_remove_app(app)
       app.handle_remove_route(self)
+    end
+
+    def validate_host
+      errors.add(:host, "must be no more than #{Domain::MAXIMUM_DOMAIN_LABEL_LENGTH} characters") if host && host.length > Domain::MAXIMUM_DOMAIN_LABEL_LENGTH
+    end
+
+    def validate_fqdn
+      return unless host
+      length_with_period_separator = host.length + 1
+      host_label_length = host.length > 0 ? length_with_period_separator : 0
+      total_domain_too_long = host_label_length + domain.name.length > Domain::MAXIMUM_FQDN_DOMAIN_LENGTH
+      errors.add(:host, "must be no more than #{Domain::MAXIMUM_FQDN_DOMAIN_LENGTH} characters when combined with domain name") if total_domain_too_long
     end
 
     def validate_domain

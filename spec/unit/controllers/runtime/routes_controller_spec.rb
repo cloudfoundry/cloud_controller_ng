@@ -458,7 +458,6 @@ module VCAP::CloudController
           port: port,
           path: ''
       } }
-      let(:route_attrs) { { 'port' => port, 'host' => host, 'path' => '' } }
 
       before do
         allow(route_event_repository).to receive(:record_route_create)
@@ -490,7 +489,6 @@ module VCAP::CloudController
 
             context 'and a user tries to create another route in a different space' do
               let(:another_space) { Space.make }
-              let(:route_attrs) { { 'port' => nil, 'host' => host, 'path' => '/foo' } }
               let(:req) do
                 {
                   domain_guid: shared_domain.guid,
@@ -513,6 +511,25 @@ module VCAP::CloudController
                 expect(decoded_response['description']).
                   to include('Routes for this host and domain have been reserved for another space')
               end
+            end
+          end
+
+          context 'and a route is too long' do
+            let(:host) { 'f' * 64 }
+            let(:req) do
+              {
+                domain_guid: shared_domain.guid,
+                space_guid: space.guid,
+                host: host,
+              }
+            end
+
+            it 'fails with an RouteInvalid' do
+              post '/v2/routes', MultiJson.dump(req)
+
+              expect(last_response).to have_status_code(400)
+              expect(decoded_response['description']).
+                to include('host must be no more than')
             end
           end
         end
@@ -613,7 +630,6 @@ module VCAP::CloudController
               let(:generated_port) { -1 }
               let(:domain) { SharedDomain.make(router_group_guid: tcp_group_3) }
               let(:domain_guid) { domain.guid }
-              let(:route_attrs) { { 'port' => generated_port, 'host' => host, 'path' => '' } }
 
               before do
                 allow_any_instance_of(PortGenerator).to receive(:generate_port).and_return(generated_port)
@@ -635,7 +651,6 @@ module VCAP::CloudController
                 let(:generated_port) { 10005 }
                 let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
                 let(:domain_guid) { domain.guid }
-                let(:route_attrs) { { 'port' => generated_port, 'host' => host, 'path' => '' } }
 
                 before do
                   allow_any_instance_of(RouteValidator).to receive(:validate)
@@ -676,7 +691,6 @@ module VCAP::CloudController
                 let(:generated_port) { 14098 }
                 let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
                 let(:domain_guid) { domain.guid }
-                let(:route_attrs) { { 'port' => generated_port, 'host' => '', 'path' => '' } }
 
                 before do
                   allow_any_instance_of(PortGenerator).to receive(:generate_port).and_return(generated_port)
@@ -730,7 +744,6 @@ module VCAP::CloudController
         let(:req) { {
           port: new_port,
         } }
-        let(:route_attrs) { { 'port' => new_port, 'host' => nil, 'path' => nil } }
 
         context 'when port is not in reservable port range' do
           it 'returns an error' do

@@ -4,6 +4,14 @@ module VCAP::CloudController
   class Domain < Sequel::Model
     class UnauthorizedAccessToPrivateDomain < RuntimeError; end
 
+    # The maximum fully-qualified domain length is 255 including separators, but this includes two "invisible"
+    # characters at the beginning and end of the domain, so for string comparisons, the correct length is 253.
+    #
+    # The first character denotes the length of the first label, and the last character denotes the termination
+    # of the domain.
+    MAXIMUM_FQDN_DOMAIN_LENGTH = 253
+    MAXIMUM_DOMAIN_LABEL_LENGTH = 63
+
     dataset.row_proc = proc do |row|
       if row[:owning_organization_id]
         PrivateDomain.call(row)
@@ -76,7 +84,7 @@ module VCAP::CloudController
       validates_unique :name, dataset: Domain.dataset
 
       validates_format CloudController::DomainHelper::DOMAIN_REGEX, :name
-      validates_length_range 3..255, :name
+      validates_length_range 3..MAXIMUM_FQDN_DOMAIN_LENGTH, :name
 
       errors.add(:name, :overlapping_domain) if name_overlaps?
       errors.add(:name, :route_conflict) if routes_match?

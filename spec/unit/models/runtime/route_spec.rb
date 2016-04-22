@@ -458,6 +458,58 @@ module VCAP::CloudController
           }.to raise_error(Sequel::ValidationFailed)
         end
 
+        it 'should not allow a long host' do
+          expect {
+            Route.make(
+              space: space,
+              domain: domain,
+              host: 'f' * 63
+            )
+          }.to_not raise_error
+
+          expect {
+            Route.make(
+              space: space,
+              domain: domain,
+              host: 'f' * 64
+            )
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+
+        it 'should not allow a host which, along with the domain, exceeds the maximum length' do
+          domain_200_chars = "#{'f' * 49}.#{'f' * 49}.#{'f' * 49}.#{'f' * 50}"
+          domain_253_chars = "#{'f' * 49}.#{'f' * 49}.#{'f' * 49}.#{'f' * 49}.#{'f' * 50}.ff"
+          domain = PrivateDomain.make(owning_organization: space.organization, name: domain_200_chars)
+          domain_that_cannot_have_a_host = PrivateDomain.make(owning_organization: space.organization, name: domain_253_chars)
+
+          valid_host = 'f' * 52
+          invalid_host = 'f' * 53
+
+          expect {
+            Route.make(
+              space: space,
+              domain: domain,
+              host: valid_host
+            )
+          }.to_not raise_error
+
+          expect {
+            Route.make(
+              space: space,
+              domain: domain_that_cannot_have_a_host,
+              host: ''
+            )
+          }.to_not raise_error
+
+          expect {
+            Route.make(
+              space: space,
+              domain: domain,
+              host: invalid_host
+            )
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+
         context 'shared domains' do
           it 'should not allow route to match existing domain' do
             SharedDomain.make name: 'bar.foo.com'
