@@ -36,10 +36,14 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
+      # use select_map so the query is run now instead of being added as a where filter later. When this instead
+      # generates a subselect in the filter query directly, performance degrades significantly in MySQL.
       Sequel.or([
-        [:space, user.audited_spaces_dataset],
-        [:space, user.spaces_dataset],
-        [:organization_guid, user.audited_organizations_dataset.map(&:guid)]
+        [:space_guid, Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:guid).
+          union(
+            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:guid)
+          ).select_map(:guid)],
+        [:organization_guid, Organization.dataset.where(auditors: user).select_map(:guid)]
       ])
     end
   end

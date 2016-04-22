@@ -97,6 +97,21 @@ module VCAP::CloudController
           expect(parsed_body['total_results']).to eq(1)
         end
       end
+
+      context 'as a space manager' do
+        before do
+          @space_a.add_manager(@user_a)
+          @space_b.add_manager(@user_b)
+          set_current_user(@user_a)
+        end
+
+        it 'includes no events' do
+          get '/v2/events'
+
+          parsed_body = MultiJson.load(last_response.body)
+          expect(parsed_body['total_results']).to eq(0)
+        end
+      end
     end
   end
 end
