@@ -93,7 +93,32 @@
 
           <h1 id="overview">Overview</h1>
 
-<p>Welcome to the CF API docs!  These docs are under construction and is not yet complete.  If you can&rsquo;t find it here, please look at our older docs at apidocs.cloudfoundry.org</p>
+<p>Welcome to the Cloud Foundry V3 API docs! Version 3 will add support for several
+key features:</p>
+
+<ul>
+<li>Running one-off tasks on Cloud Foundry</li>
+<li>Applications consisting of several processes via a Procfile</li>
+<li>Direct access to application packages and droplets</li>
+</ul>
+
+<h2 id="more-resources">More Resources</h2>
+
+<p>The API team is currently focused on getting to MVP for V3. As such, this documentation
+doesn&rsquo;t have all the information needed to interact with the V3 API. Here are a
+few resources that will help until we have everything documented here:</p>
+
+<ul>
+<li><a href="http://apidocs.cloudfoundry.org/">Cloud Foundry Version 2 Documentation</a></li>
+<li><a href="https://docs.google.com/document/d/1CCHDUa2UWRjXkxEdksX4M9BGQ8hBqiMys46wxeF5XE4/edit?usp=sharing">Tasks
+Proposal</a></li>
+<li><a href="https://cfsummit2016.sched.org/event/6ZkB/do-more-with-your-apps-unleashing-the-power-of-the-cloud-controller-v3-api-utako-ueda-daniel-wendorf-pivotal">Upcoming talk at Cloud Foundry
+Summit</a></li>
+<li><a href="https://github.com/cloudfoundry/v3-cli-plugin">CF CLI V3 Plugin - Experimental</a></li>
+<li><a href="https://github.com/cloudfoundry/cloud_controller_ng/wiki/How-to-Create-an-App-Using-V3-of-the-CC-API">Push an app with cf
+curl</a></li>
+<li><a href="https://cloudfoundry.slack.com/messages/capi/">CAPI Slack Channel</a></li>
+</ul>
 
           <h1 id="apps">Apps</h1>
 
@@ -2943,18 +2968,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "disk_quota": 1073741824,
       "fds_quota": 16384
     }
-  ],
-  "pagination": {
-    "total_results": 1,
-    "first": {
-      "href": "/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
-    },
-    "last": {
-      "href": "/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
-    },
-    "next": null,
-    "previous": null
-  }
+  ]
 }
 
 </code></pre>
@@ -3623,18 +3637,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "disk_quota": 1073741824,
       "fds_quota": 16384
     }
-  ],
-  "pagination": {
-    "total_results": 1,
-    "first": {
-      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web/stats"
-    },
-    "last": {
-      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web/stats"
-    },
-    "next": null,
-    "previous": null
-  }
+  ]
 }
 
 </code></pre>
