@@ -7,6 +7,7 @@ module VCAP::CloudController
       let(:params) do
         {
           'states'   => 'state1,state2',
+          'types'   => 'type1,type2',
           'page'     => 1,
           'per_page' => 5,
         }
@@ -19,6 +20,7 @@ module VCAP::CloudController
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.states).to eq(['state1', 'state2'])
+        expect(message.types).to eq(['type1', 'type2'])
       end
 
       it 'converts requested keys to symbols' do
@@ -27,6 +29,7 @@ module VCAP::CloudController
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
         expect(message.requested?(:states)).to be_truthy
+        expect(message.requested?(:types)).to be_truthy
       end
     end
 
@@ -54,6 +57,12 @@ module VCAP::CloudController
     end
 
     describe 'validations' do
+      it 'validates types to be an array' do
+        message = PackagesListMessage.new(types: 'not array at all')
+        expect(message).to be_invalid
+        expect(message.errors[:types].length).to eq 1
+      end
+
       it 'validates states to be an array' do
         message = PackagesListMessage.new(states: 'not array at all')
         expect(message).to be_invalid

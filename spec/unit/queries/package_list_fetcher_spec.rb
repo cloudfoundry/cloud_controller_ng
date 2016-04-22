@@ -67,11 +67,22 @@ module VCAP::CloudController
         expect(results.records).to match_array([package1, package2])
       end
 
+      context 'filtering types' do
+        let(:filters) { { types: [PackageModel::BITS_TYPE] } }
+
+        it 'returns all of the packages with the requested types' do
+          package1 = PackageModel.make(app_guid: app.guid, type: PackageModel::BITS_TYPE)
+          package2 = PackageModel.make(app_guid: app.guid, type: PackageModel::BITS_TYPE)
+          PackageModel.make(app_guid: app.guid, type: PackageModel::DOCKER_TYPE)
+          PackageModel.make(type: PackageModel::BITS_TYPE)
+
+          results = fetcher.fetch_for_app(app_guid: app.guid, message: message)
+          expect(results.last.records).to match_array([package1, package2])
+        end
+      end
+
       context 'filtering states' do
         let(:filters) { { states: [PackageModel::CREATED_STATE, PackageModel::READY_STATE] } }
-
-        before do
-        end
 
         it 'returns all of the packages with the requested states' do
           package1 = PackageModel.make(app_guid: app.guid, state: PackageModel::CREATED_STATE)

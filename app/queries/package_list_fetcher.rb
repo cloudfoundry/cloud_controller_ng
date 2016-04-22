@@ -28,6 +28,10 @@ module VCAP::CloudController
         dataset = dataset.where(state: message.states)
       end
 
+      if message.requested? :types
+        dataset = dataset.where(type: message.types)
+      end
+
       SequelPaginator.new.get_page(dataset, pagination_options)
     end
   end
