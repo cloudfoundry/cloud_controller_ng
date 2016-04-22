@@ -79,11 +79,6 @@ module VCAP::CloudController
           expect(message).to be_valid
         end
 
-        it 'validates when order_by is `+id`' do
-          message = described_class.new order_by: '+id'
-          expect(message).to be_valid
-        end
-
         it 'validates when order_by is `-updated_at`' do
           message = described_class.new order_by: '-updated_at'
           expect(message).to be_valid

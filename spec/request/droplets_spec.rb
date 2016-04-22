@@ -19,15 +19,16 @@ describe 'Droplets' do
         }
       }
     end
-    let!(:package) {
+    let!(:package) do
       VCAP::CloudController::PackageModel.make(
         app_guid: app_model.guid,
         state:    VCAP::CloudController::PackageModel::READY_STATE,
         type:     VCAP::CloudController::PackageModel::BITS_TYPE,
         url:      'hello.com'
       )
-    }
-    let(:create_request_json) {
+    end
+
+    let(:create_request_json) do
       {
         environment_variables: { 'CUSTOMENV' => 'env value' },
         memory_limit:          1024,
@@ -40,7 +41,7 @@ describe 'Droplets' do
           }
         },
       }.to_json
-    }
+    end
 
     before do
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:v3_app_buildpack_cache_download_url).and_return('some-string')
