@@ -155,6 +155,19 @@ class AppsV3Controller < ApplicationController
     unprocessable!(e.message)
   end
 
+  def stats
+    app_guid = params[:guid]
+    app, space, org = AppFetcher.new.fetch(app_guid)
+    app_not_found! if app.nil?
+    app_not_found! unless can_read?(space.guid, org.guid)
+
+    process_stats = app.processes.map do |process|
+      { type: process.type, stats: instances_reporters.stats_for_app(process) }
+    end
+
+    render status: :ok, json: AppStatsPresenter.new.present_json(process_stats)
+  end
+
   private
 
   def can_read?(space_guid, org_guid)
