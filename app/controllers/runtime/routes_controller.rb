@@ -234,9 +234,9 @@ module VCAP::CloudController
 
     get "#{path}/reserved/domain/:domain_guid", :route_reserved
     def route_reserved(domain_guid)
-      host = params['host']
+      host = params['host'] || ''
       path = params['path']
-      port = params['port']
+      port = params['port'] || 0
 
       check_route_reserved(domain_guid, host, path, port)
     end
@@ -280,7 +280,9 @@ module VCAP::CloudController
       validate_access(:reserved, model)
       domain = Domain[guid: domain_guid]
       if domain
-        routes = Route.where(domain: domain)
+        ds = domain.router_group_guid.present? ? Domain.where(router_group_guid: domain.router_group_guid) : domain
+
+        routes = Route.where(domain: ds)
         routes = routes.where(host: host) if host
         routes = routes.where(path: path) if path
         routes = routes.where(port: port) if port

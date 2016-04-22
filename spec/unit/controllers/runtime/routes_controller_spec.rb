@@ -1104,6 +1104,11 @@ module VCAP::CloudController
       context 'when the domain exists' do
         let(:route) { Route.make }
 
+        it 'returns a NOT_FOUND (404)' do
+          get "/v2/routes/reserved/domain/#{route.domain_guid}"
+          expect(last_response).to have_status_code(404)
+        end
+
         context 'when the domain is a private domain' do
           let(:domain) { PrivateDomain.make }
           let(:route) { Route.make(domain: domain, host: '', space: Space.make(organization: domain.owning_organization)) }
@@ -1130,22 +1135,35 @@ module VCAP::CloudController
 
         context 'when the route is tcp route' do
           let(:tcp_domain) { SharedDomain.make(router_group_guid: 'tcp-group-1') }
-          let(:tcp_route) { Route.make(domain: tcp_domain, port: 1234) }
+          let(:tcp_2_domain) { SharedDomain.make(router_group_guid: 'tcp-group-1') }
+          let(:tcp_route) { Route.make(domain: tcp_domain, host: '', port: 1234) }
           before do
             allow_any_instance_of(RouteValidator).to receive(:validate)
+          end
+
+          it 'returns a NOT_FOUND (404)' do
+            get "/v2/routes/reserved/domain/#{tcp_route.domain_guid}"
+            expect(last_response).to have_status_code(404)
           end
 
           context 'when the port is not reserved' do
             it 'returns a NOT_FOUND (404)' do
               get "/v2/routes/reserved/domain/#{tcp_route.domain_guid}?port=61234"
-              expect(last_response.status).to eq(404)
+              expect(last_response).to have_status_code(404)
             end
           end
 
           context 'when the port is reserved' do
             it 'returns a NO_CONTENT (204)' do
               get "/v2/routes/reserved/domain/#{tcp_route.domain_guid}?port=#{tcp_route.port}"
-              expect(last_response.status).to eq(204)
+              expect(last_response).to have_status_code(204)
+            end
+
+            context 'and the route has a different domain but same router group' do
+              it 'returns a NO_CONTENT (204)' do
+                get "/v2/routes/reserved/domain/#{tcp_2_domain.guid}?port=#{tcp_route.port}"
+                expect(last_response).to have_status_code(204)
+              end
             end
           end
         end

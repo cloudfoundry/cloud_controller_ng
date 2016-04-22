@@ -135,7 +135,7 @@ EOF
   end
 
   describe 'Reserved Routes' do
-    let(:route) { VCAP::CloudController::Route.make(domain: domain, port: 61000, space: space) }
+    let(:route) { VCAP::CloudController::Route.make(domain: domain, port: 61000, host: '', space: space) }
     get '/v2/routes/reserved/domain/:domain_guid?host=:host&path=:path&port=:port' do
       request_parameter :domain_guid, 'The guid of a domain'
       request_parameter :host, 'The host portion of the route. Required for shared-domains.', required: false
