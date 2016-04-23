@@ -1092,7 +1092,7 @@ It will include environment variables for Environment Variable Groups and Servic
 
     <p class="method-list-item-description">
     Value to sort by. Prepend with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo; to change sort direction to ascending or descending, respectively.
-    <br>Possible values are <code>created_at</code>, <code>updated_at</code>m <code>id</code>
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
     </p>
   </li>
 </ul>
@@ -1694,7 +1694,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
     </h4>
 
     <p class="method-list-item-description">
-      Valid values are &ldquo;created_at&rdquo;, &ldquo;updated_at&rdquo; or &ldquo;id&rdquo;. Prepend the value with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo;
+      Valid values are <code>created_at</code> or <code>updated_at</code>. Prepend the value with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo;
       to specify ascending or descending order.
     </p>
   </li>
@@ -1864,7 +1864,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
     </h4>
 
     <p class="method-list-item-description">
-      Valid values are &ldquo;created_at&rdquo;, &ldquo;updated_at&rdquo; or &ldquo;id&rdquo;. Prepend the value with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo;
+      Valid values are <code>created_at</code> or <code>updated_at</code>. Prepend the value with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo;
       to specify ascending or descending order.
     </p>
   </li>
@@ -2834,11 +2834,11 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      port
-      <span class="method-list-item-type">integer</span>
+      instance_ports
+      <span class="method-list-item-type">object</span>
     </h4>
 
-    <p class="method-list-item-description">The open port the instance can use for listening.</p>
+    <p class="method-list-item-description">JSON array of port mappings between the network-exposed port used to communicate with the app (&ldquo;external&rdquo;) and port opened to the running process that it can listen on (&ldquo;internal&rdquo;).</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -2962,7 +2962,12 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
         "disk": 69705728
       },
       "host": "10.244.16.10",
-      "port": 60040,
+      "instance_ports": [
+        {
+          "external": 64546,
+          "internal": 8080
+        }
+      ],
       "uptime": 9042,
       "mem_quota": 268435456,
       "disk_quota": 1073741824,
@@ -3503,11 +3508,11 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      port
-      <span class="method-list-item-type">integer</span>
+      instance_ports
+      <span class="method-list-item-type">object</span>
     </h4>
 
-    <p class="method-list-item-description">The open port the instance can use for listening.</p>
+    <p class="method-list-item-description">JSON array of port mappings between the network-exposed port used to communicate with the app (&ldquo;external&rdquo;) and port opened to the running process that it can listen on (&ldquo;internal&rdquo;).</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -3631,7 +3636,12 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
         "disk": 69705728
       },
       "host": "10.244.16.10",
-      "port": 60040,
+      "instance_ports": [
+        {
+          "external": 64546,
+          "internal": 8080
+        }
+      ],
       "uptime": 9042,
       "mem_quota": 268435456,
       "disk_quota": 1073741824,
