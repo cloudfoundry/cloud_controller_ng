@@ -360,6 +360,7 @@ describe 'Droplets' do
 
     it 'list all droplets with a buildpack lifecycle' do
       get "/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&per_page=#{per_page}", nil, developer_headers
+
       expect(last_response.status).to eq(200)
       expect(parsed_response['resources']).to include(hash_including('guid' => droplet1.guid))
       expect(parsed_response['resources']).to include(hash_including('guid' => droplet2.guid))

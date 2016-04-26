@@ -44,12 +44,15 @@ module VCAP::CloudController
       if message.requested?(:names)
         task_dataset = task_dataset.where(name: message.names)
       end
+
       if message.requested?(:states)
         task_dataset = task_dataset.where(state: message.states)
       end
+
       if message.requested?(:guids)
         task_dataset = task_dataset.where(guid: message.guids)
       end
+
       task_dataset
     end
   end

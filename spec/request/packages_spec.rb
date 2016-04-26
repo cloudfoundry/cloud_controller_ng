@@ -139,7 +139,6 @@ describe 'Packages' do
   describe 'GET /v3/apps/:guid/packages' do
     let(:space) { VCAP::CloudController::Space.make }
     let!(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:guid) { app_model.guid }
 
@@ -194,12 +193,12 @@ describe 'Packages' do
         VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::DOCKER_TYPE)
         VCAP::CloudController::PackageModel.make(type: VCAP::CloudController::PackageModel::BITS_TYPE)
 
-        get "/v3/packages?types=bits", {}, user_header
+        get '/v3/packages?types=bits', {}, user_header
 
         expected_pagination = {
           'total_results' => 3,
-          'first'         => { 'href' => "/v3/packages?page=1&per_page=50&types=bits" },
-          'last'          => { 'href' => "/v3/packages?page=1&per_page=50&types=bits" },
+          'first'         => { 'href' => '/v3/packages?page=1&per_page=50&types=bits' },
+          'last'          => { 'href' => '/v3/packages?page=1&per_page=50&types=bits' },
           'next'          => nil,
           'previous'      => nil
         }
@@ -241,77 +240,76 @@ describe 'Packages' do
   describe 'GET /v3/packages' do
     let(:bits_type) { 'bits' }
     let(:docker_type) { 'docker' }
-    let!(:bits_package) { VCAP::CloudController::PackageModel.make(type: bits_type, app_guid: app_model.guid) }
-    let!(:docker_package) do
-      VCAP::CloudController::PackageModel.make(type: docker_type, app_guid: app_model.guid,
-                                               state: VCAP::CloudController::PackageModel::READY_STATE,
-                                              )
-    end
-    let!(:docker_package2) { VCAP::CloudController::PackageModel.make(type: docker_type, app_guid: app_model.guid) }
-    let!(:unrelated_package) { VCAP::CloudController::PackageModel.make(app_guid: VCAP::CloudController::AppModel.make.guid) }
     let(:page) { 1 }
     let(:per_page) { 2 }
 
     before do
       space.organization.add_user(user)
       space.add_developer(user)
-
-      VCAP::CloudController::PackageDockerDataModel.create(package: docker_package, image: 'http://location-of-image.com')
-      VCAP::CloudController::PackageDockerDataModel.create(package: docker_package2, image: 'http://location-of-image-2.com')
     end
 
     it 'gets all the packages' do
+      bits_package = VCAP::CloudController::PackageModel.make(type: bits_type, app_guid: app_model.guid)
+      docker_package = VCAP::CloudController::PackageModel.make(
+        type: docker_type,
+        app_guid: app_model.guid,
+        state: VCAP::CloudController::PackageModel::READY_STATE)
+      docker_package2 = VCAP::CloudController::PackageModel.make(type: docker_type, app_guid: app_model.guid)
+      VCAP::CloudController::PackageModel.make(app_guid: VCAP::CloudController::AppModel.make.guid)
+      VCAP::CloudController::PackageDockerDataModel.create(package: docker_package, image: 'http://location-of-image.com')
+      VCAP::CloudController::PackageDockerDataModel.create(package: docker_package2, image: 'http://location-of-image-2.com')
+
       expected_response =
         {
-          'pagination' => {
-            'total_results' => 3,
-            'first'         => { 'href' => '/v3/packages?page=1&per_page=2' },
-            'last'          => { 'href' => '/v3/packages?page=2&per_page=2' },
-            'next'          => { 'href' => '/v3/packages?page=2&per_page=2' },
-            'previous'      => nil,
-          },
-          'resources' => [
-            {
-              'guid'       => bits_package.guid,
-              'type'       => 'bits',
-              'data'       => {
-                'hash'       => { 'type' => 'sha1', 'value' => nil },
-                'error'      => nil
-              },
-              'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
-              'created_at' => iso8601,
-              'updated_at' => nil,
-              'links' => {
-                'self'   => { 'href' => "/v3/packages/#{bits_package.guid}" },
-                'upload' => { 'href' => "/v3/packages/#{bits_package.guid}/upload", 'method' => 'POST' },
-                'download' => { 'href' => "/v3/packages/#{bits_package.guid}/download", 'method' => 'GET' },
-                'stage' => { 'href' => "/v3/packages/#{bits_package.guid}/droplets", 'method' => 'POST' },
-                'app' => { 'href' => "/v3/apps/#{bits_package.app_guid}" },
-              }
+        'pagination' => {
+              'total_results' => 3,
+              'first'         => { 'href' => '/v3/packages?page=1&per_page=2' },
+              'last'          => { 'href' => '/v3/packages?page=2&per_page=2' },
+              'next'          => { 'href' => '/v3/packages?page=2&per_page=2' },
+              'previous'      => nil,
             },
-            {
-              'guid'       => docker_package.guid,
-              'type'       => 'docker',
-              'data'       => {
-                'image'    => 'http://location-of-image.com'
-              },
-              'state'      => VCAP::CloudController::PackageModel::READY_STATE,
-              'created_at' => iso8601,
-              'updated_at' => nil,
-              'links' => {
-                'self' => { 'href' => "/v3/packages/#{docker_package.guid}" },
-                'app'  => { 'href' => "/v3/apps/#{docker_package.app_guid}" },
-                'stage' => { 'href' => "/v3/packages/#{docker_package.guid}/droplets", 'method' => 'POST' },
-              }
+        'resources' => [
+          {
+            'guid'       => bits_package.guid,
+            'type'       => 'bits',
+            'data'       => {
+              'hash'       => { 'type' => 'sha1', 'value' => nil },
+              'error'      => nil
+            },
+            'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
+            'created_at' => iso8601,
+            'updated_at' => nil,
+            'links' => {
+              'self'   => { 'href' => "/v3/packages/#{bits_package.guid}" },
+              'upload' => { 'href' => "/v3/packages/#{bits_package.guid}/upload", 'method' => 'POST' },
+              'download' => { 'href' => "/v3/packages/#{bits_package.guid}/download", 'method' => 'GET' },
+              'stage' => { 'href' => "/v3/packages/#{bits_package.guid}/droplets", 'method' => 'POST' },
+              'app' => { 'href' => "/v3/apps/#{bits_package.app_guid}" },
             }
-          ]
-      }
+          },
+          {
+            'guid'       => docker_package.guid,
+            'type'       => 'docker',
+            'data'       => {
+              'image'    => 'http://location-of-image.com'
+            },
+            'state'      => VCAP::CloudController::PackageModel::READY_STATE,
+            'created_at' => iso8601,
+            'updated_at' => nil,
+            'links' => {
+              'self' => { 'href' => "/v3/packages/#{docker_package.guid}" },
+              'app'  => { 'href' => "/v3/apps/#{docker_package.app_guid}" },
+              'stage' => { 'href' => "/v3/packages/#{docker_package.guid}/droplets", 'method' => 'POST' },
+            }
+          }
+        ]
+        }
 
-        get '/v3/packages', { per_page: per_page }, user_header
+      get '/v3/packages', { per_page: per_page }, user_header
 
-        parsed_response = MultiJson.load(last_response.body)
-        expect(last_response.status).to eq(200)
-        expect(parsed_response).to be_a_response_like(expected_response)
+      parsed_response = MultiJson.load(last_response.body)
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
 
     context 'faceted search' do
@@ -323,12 +321,12 @@ describe 'Packages' do
         another_app_in_same_space = VCAP::CloudController::AppModel.make(space_guid: space_guid)
         VCAP::CloudController::PackageModel.make(app_guid: another_app_in_same_space.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
 
-        get "/v3/packages?types=bits", {}, user_header
+        get '/v3/packages?types=bits', {}, user_header
 
         expected_pagination = {
-          'total_results' => 4,
-          'first'         => { 'href' => "/v3/packages?page=1&per_page=50&types=bits" },
-          'last'          => { 'href' => "/v3/packages?page=1&per_page=50&types=bits" },
+          'total_results' => 3,
+          'first'         => { 'href' => '/v3/packages?page=1&per_page=50&types=bits' },
+          'last'          => { 'href' => '/v3/packages?page=1&per_page=50&types=bits' },
           'next'          => nil,
           'previous'      => nil
         }
@@ -336,7 +334,7 @@ describe 'Packages' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].count).to eq(4)
+        expect(parsed_response['resources'].count).to eq(3)
         expect(parsed_response['resources'].map { |r| r['type'] }.uniq).to eq(['bits'])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -349,13 +347,12 @@ describe 'Packages' do
         another_app_in_same_space = VCAP::CloudController::AppModel.make(space_guid: space_guid)
         VCAP::CloudController::PackageModel.make(app_guid: another_app_in_same_space.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
 
-
-        get "/v3/packages?states=PROCESSING_UPLOAD", {}, user_header
+        get '/v3/packages?states=PROCESSING_UPLOAD', {}, user_header
 
         expected_pagination = {
           'total_results' => 3,
-          'first'         => { 'href' => "/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
-          'last'          => { 'href' => "/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
+          'first'         => { 'href' => '/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD' },
+          'last'          => { 'href' => '/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD' },
           'next'          => nil,
           'previous'      => nil
         }
@@ -365,6 +362,29 @@ describe 'Packages' do
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].count).to eq(3)
         expect(parsed_response['resources'].map { |r| r['state'] }.uniq).to eq(['PROCESSING_UPLOAD'])
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'filters by app guids' do
+        app_model2 = VCAP::CloudController::AppModel.make(space_guid: space_guid)
+        package1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+        package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
+        VCAP::CloudController::PackageModel.make
+
+        get "/v3/packages?app_guids=#{app_model.guid},#{app_model2.guid}", {}, user_header
+
+        expected_pagination = {
+          'total_results' => 2,
+          'first'         => { 'href' => "/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
+          'last'          => { 'href' => "/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
+          'next'          => nil,
+          'previous'      => nil
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package1.guid, package2.guid])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end

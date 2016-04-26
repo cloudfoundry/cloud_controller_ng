@@ -8,6 +8,8 @@ module VCAP::CloudController
     let(:filters) { {} }
 
     describe '#fetch_all' do
+      let(:app) { AppModel.make }
+
       it 'returns a PaginatedResult' do
         results = fetcher.fetch_all(message: message)
         expect(results).to be_a(PaginatedResult)
@@ -21,9 +23,51 @@ module VCAP::CloudController
         results = fetcher.fetch_all(message: message).records
         expect(results).to match_array([package1, package2, package3])
       end
+
+      context 'filtering types' do
+        let(:filters) { { types: [PackageModel::BITS_TYPE] } }
+        let!(:package1) { PackageModel.make(app_guid: app.guid, type: PackageModel::BITS_TYPE) }
+        let!(:package2) { PackageModel.make(app_guid: app.guid, type: PackageModel::BITS_TYPE) }
+
+        before { PackageModel.make(app_guid: app.guid, type: PackageModel::DOCKER_TYPE) }
+
+        it 'returns all of the packages with the requested types' do
+          results = fetcher.fetch_all(message: message)
+          expect(results.records).to match_array([package1, package2])
+        end
+      end
+
+      context 'filtering states' do
+        let(:filters) { { states: [PackageModel::CREATED_STATE, PackageModel::READY_STATE] } }
+        let!(:package1) { PackageModel.make(app_guid: app.guid, state: PackageModel::CREATED_STATE) }
+        let!(:package2) { PackageModel.make(app_guid: app.guid, state: PackageModel::READY_STATE) }
+
+        before { PackageModel.make(app_guid: app.guid, state: PackageModel::FAILED_STATE) }
+
+        it 'returns all of the packages with the requested states' do
+          results = fetcher.fetch_all(message: message)
+          expect(results.records).to match_array([package1, package2])
+        end
+      end
+
+      context 'filtering app guids' do
+        let(:app2) { AppModel.make }
+        let!(:package1) { PackageModel.make(app_guid: app.guid) }
+        let!(:package2) { PackageModel.make(app_guid: app2.guid) }
+        let(:filters) { { app_guids: [app.guid, app2.guid] } }
+
+        before { PackageModel.make }
+
+        it 'returns all the packages associated with the requested app guid' do
+          results = fetcher.fetch_all(message: message)
+          expect(results.records).to match_array([package1, package2])
+        end
+      end
     end
 
     describe '#fetch_for_spaces' do
+      let(:app) { AppModel.make }
+
       it 'returns a PaginatedResult' do
         results = fetcher.fetch_for_spaces(message: message, space_guids: [])
         expect(results).to be_a(PaginatedResult)
@@ -44,6 +88,53 @@ module VCAP::CloudController
         results = fetcher.fetch_for_spaces(message: message, space_guids: [space1.guid, space2.guid]).records
 
         expect(results).to match_array([package1_in_space1, package2_in_space1, package1_in_space2])
+      end
+
+      context 'filtering types' do
+        let(:filters) { { types: [PackageModel::BITS_TYPE] } }
+        let!(:package1) { PackageModel.make(app_guid: app.guid, type: PackageModel::BITS_TYPE) }
+        let!(:package2) { PackageModel.make(app_guid: app.guid, type: PackageModel::BITS_TYPE) }
+
+        before do
+          PackageModel.make(app_guid: app.guid, type: PackageModel::DOCKER_TYPE)
+          PackageModel.make(type: PackageModel::BITS_TYPE)
+        end
+
+        it 'returns all of the packages with the requested types' do
+          results = fetcher.fetch_for_spaces(message: message, space_guids: [app.space_guid])
+          expect(results.records).to match_array([package1, package2])
+        end
+      end
+
+      context 'filtering states' do
+        let(:filters) { { states: [PackageModel::CREATED_STATE, PackageModel::READY_STATE] } }
+        let!(:package1) { PackageModel.make(app_guid: app.guid, state: PackageModel::CREATED_STATE) }
+        let!(:package2) { PackageModel.make(app_guid: app.guid, state: PackageModel::READY_STATE) }
+
+        before do
+          PackageModel.make(app_guid: app.guid, state: PackageModel::FAILED_STATE)
+          PackageModel.make(state: PackageModel::READY_STATE)
+          PackageModel.make
+        end
+
+        it 'returns all of the packages with the requested states' do
+          results = fetcher.fetch_for_spaces(message: message, space_guids: [app.space_guid])
+          expect(results.records).to match_array([package1, package2])
+        end
+      end
+
+      context 'filtering app guids' do
+        let(:app2) { AppModel.make }
+        let!(:package1) { PackageModel.make(app_guid: app.guid) }
+        let!(:package2) { PackageModel.make(app_guid: app2.guid) }
+        let(:filters) { { app_guids: [app.guid, app2.guid] } }
+
+        before { PackageModel.make }
+
+        it 'returns all the packages associated with the requested app guid' do
+          results = fetcher.fetch_for_spaces(message: message, space_guids: [app.space_guid, app2.space_guid])
+          expect(results.records).to match_array([package1, package2])
+        end
       end
     end
 

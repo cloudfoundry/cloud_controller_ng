@@ -15,7 +15,7 @@ class PackagesController < ApplicationController
   before_action :check_read_permissions!, only: [:index, :show, :download]
 
   def index
-    message = PackagesListMessage.from_params(query_params)
+    message = PackagesListMessage.from_params(app_subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
