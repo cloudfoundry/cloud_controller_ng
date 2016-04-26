@@ -243,7 +243,7 @@ module VCAP::CloudController
 
       arbitrary_parameters = @request_attrs['parameters']
 
-      binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
+      binding_manager = ServiceInstanceBindingManager.new(self, logger)
       route_binding = binding_manager.create_route_service_instance_binding(route_guid, instance_guid, arbitrary_parameters, route_services_enabled?)
 
       [HTTP::CREATED, object_renderer.render_json(self.class, route_binding.service_instance, @opts)]
@@ -271,7 +271,7 @@ module VCAP::CloudController
     def unbind_route(route_guid, instance_guid)
       logger.debug 'cc.association.remove', guid: instance_guid, association: :routes, other_guid: route_guid
 
-      binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
+      binding_manager = ServiceInstanceBindingManager.new(self, logger)
       binding_manager.delete_route_service_instance_binding(route_guid, instance_guid)
 
       [HTTP::NO_CONTENT]

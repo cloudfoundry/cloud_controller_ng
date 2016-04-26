@@ -14,8 +14,7 @@ module VCAP::CloudController
 
     include VCAP::CloudController::LockCheck
 
-    def initialize(services_event_repository, access_validator, logger)
-      @services_event_repository = services_event_repository
+    def initialize(access_validator, logger)
       @access_validator = access_validator
       @logger = logger
     end
@@ -95,6 +94,8 @@ module VCAP::CloudController
         raise e
       end
 
+      services_event_repository.record_service_binding_event(:create, service_binding)
+
       service_binding
     end
 
@@ -103,7 +104,7 @@ module VCAP::CloudController
       deletion_job = Jobs::DeleteActionJob.new(ServiceBinding, service_binding.guid, delete_action)
       delete_and_audit_job = Jobs::AuditEventJob.new(
         deletion_job,
-        @services_event_repository,
+        services_event_repository,
         :record_service_binding_event,
         :delete,
         service_binding.class,
@@ -170,6 +171,10 @@ module VCAP::CloudController
       mitigate_orphan(route_binding)
       route_binding.destroy
       raise e
+    end
+
+    def services_event_repository
+      ::CloudController::DependencyLocator.instance.services_event_repository
     end
   end
 end
