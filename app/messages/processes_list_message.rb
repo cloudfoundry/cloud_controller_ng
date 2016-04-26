@@ -2,7 +2,7 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class ProcessesListMessage < ListMessage
-    ALLOWED_KEYS = [:page, :per_page].freeze
+    ALLOWED_KEYS = [:page, :per_page, :app_guid].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 

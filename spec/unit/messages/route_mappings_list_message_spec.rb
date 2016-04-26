@@ -8,6 +8,7 @@ module VCAP::CloudController
         {
           'page' => 1,
           'per_page' => 5,
+          'app_guid' => 'some_guid'
         }
       end
 
@@ -24,6 +25,7 @@ module VCAP::CloudController
 
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
+        expect(message.requested?(:app_guid)).to be_truthy
       end
     end
 
@@ -46,6 +48,7 @@ module VCAP::CloudController
         message = RouteMappingsListMessage.new({
           page: 1,
           per_page: 5,
+          app_guid: 'some-guid'
         })
         expect(message).to be_valid
       end

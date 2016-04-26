@@ -11,7 +11,7 @@ class RouteMappingsController < ApplicationController
   include AppSubresource
 
   def index
-    message = RouteMappingsListMessage.from_params(query_params)
+    message = RouteMappingsListMessage.from_params(app_subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?

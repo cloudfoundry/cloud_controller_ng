@@ -15,7 +15,7 @@ class ProcessesController < ApplicationController
   include AppSubresource
 
   def index
-    message = ProcessesListMessage.from_params(query_params)
+    message = ProcessesListMessage.from_params(app_subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?

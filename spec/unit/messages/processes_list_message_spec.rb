@@ -8,6 +8,7 @@ module VCAP::CloudController
         {
           'page'     => 1,
           'per_page' => 5,
+          'app_guid' => 'some-app-guid',
         }
       end
 
@@ -17,6 +18,7 @@ module VCAP::CloudController
         expect(message).to be_a(ProcessesListMessage)
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
+        expect(message.app_guid).to eq('some-app-guid')
       end
 
       it 'converts requested keys to symbols' do
@@ -24,6 +26,7 @@ module VCAP::CloudController
 
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
+        expect(message.requested?(:app_guid)).to be_truthy
       end
     end
 
@@ -33,7 +36,9 @@ module VCAP::CloudController
           ProcessesListMessage.new({
               page:               1,
               per_page:           5,
-            })
+              app_guid:           'some-app-guid'
+
+          })
         }.not_to raise_error
       end
 

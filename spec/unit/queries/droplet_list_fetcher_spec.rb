@@ -98,36 +98,38 @@ module VCAP::CloudController
       let(:app) { AppModel.make }
       let!(:staged_droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::STAGED_STATE) }
       let!(:failed_droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::FAILED_STATE) }
+      let(:filters) { { app_guid: app.guid } }
 
       it 'returns a PaginatedResult' do
-        _app, results = fetcher.fetch_for_app(app_guid: app.guid, message: message)
+        _app, results = fetcher.fetch_for_app(message: message)
         expect(results).to be_a(PaginatedResult)
       end
 
       it 'returns the app' do
-        returned_app, _results = fetcher.fetch_for_app(app_guid: app.guid, message: message)
+        returned_app, _results = fetcher.fetch_for_app(message: message)
         expect(returned_app.guid).to eq(app.guid)
       end
 
       it 'returns all of the desired droplets for the requested app' do
-        _app, results = fetcher.fetch_for_app(app_guid: app.guid, message: message)
+        _app, results = fetcher.fetch_for_app(message: message)
         expect(results.records).to match_array([staged_droplet, failed_droplet])
       end
 
       context 'when app does not exist' do
+        let(:filters) { { app_guid: 'made up guid lol' } }
         it 'returns nil' do
-          returned_app, results = fetcher.fetch_for_app(app_guid: 'made-up', message: message)
+          returned_app, results = fetcher.fetch_for_app(message: message)
           expect(returned_app).to be_nil
           expect(results).to be_nil
         end
       end
 
       context 'filtering states' do
-        let(:filters) { { states: [DropletModel::FAILED_STATE] } }
+        let(:filters) { { states: [DropletModel::FAILED_STATE], app_guid: app.guid } }
         let!(:failed_droplet_not_on_app) { DropletModel.make(state: DropletModel::FAILED_STATE) }
 
         it 'returns all of the desired droplets with the requested droplet states' do
-          _app, results = fetcher.fetch_for_app(app_guid: app.guid, message: message)
+          _app, results = fetcher.fetch_for_app(message: message)
           expect(results.records).to match_array([failed_droplet])
         end
       end

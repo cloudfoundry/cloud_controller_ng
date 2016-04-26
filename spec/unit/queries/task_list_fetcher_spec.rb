@@ -168,24 +168,28 @@ module VCAP::CloudController
     end
 
     describe '#fetch_for_app' do
+      let(:filters) { { app_guid: app_in_space1.guid } }
+
       it 'returns a PaginatedResult' do
-        _app, results = fetcher.fetch_for_app(message: message, app_guid: app_in_space1.guid)
+        _app, results = fetcher.fetch_for_app(message: message)
         expect(results).to be_a(PaginatedResult)
       end
 
       it 'only returns tasks for that app' do
-        _app, results = fetcher.fetch_for_app(message: message, app_guid: app_in_space1.guid)
+        _app, results = fetcher.fetch_for_app(message: message)
         expect(results.records).to match_array([task_in_space1, task2_in_space1])
       end
 
       it 'returns the app' do
-        returned_app, results = fetcher.fetch_for_app(message: message, app_guid: app_in_space1.guid)
+        returned_app, results = fetcher.fetch_for_app(message: message)
         expect(returned_app.guid).to eq(app_in_space1.guid)
       end
 
       context 'when the app does not exist' do
+        let(:filters) { { app_guid: 'made up' } }
+
         it 'returns nil' do
-          returned_app, results = fetcher.fetch_for_app(message: message, app_guid: 'made-up')
+          returned_app, results = fetcher.fetch_for_app(message: message)
           expect(returned_app).to be_nil
           expect(results).to be_nil
         end
@@ -193,11 +197,11 @@ module VCAP::CloudController
 
       describe 'filtering on message' do
         before do
-          _app, results = fetcher.fetch_for_app(message: message, app_guid: app_in_space1.guid)
+          _app, results = fetcher.fetch_for_app(message: message)
         end
 
         context 'when task names are provided' do
-          let(:filters) { { names: [task_in_space1.name, task_in_space2.name] } }
+          let(:filters) { { names: [task_in_space1.name, task_in_space2.name], app_guid: app_in_space1.guid } }
 
           it 'returns the correct set of tasks' do
             expect(results.records).to match_array([task_in_space1])
@@ -205,7 +209,7 @@ module VCAP::CloudController
         end
 
         context 'when task states are provided' do
-          let(:filters) { { states: ['FAILED'] } }
+          let(:filters) { { states: ['FAILED'], app_guid: app_in_space1.guid } }
 
           it 'returns the correct set of tasks' do
             expect(results.records).to match_array([])
@@ -213,23 +217,15 @@ module VCAP::CloudController
         end
 
         context 'when task guids are provided' do
-          let(:filters) { { guids: [task_in_space1.guid, task_in_space2.guid] } }
+          let(:filters) { { guids: [task_in_space1.guid, task_in_space2.guid], app_guid: app_in_space1.guid } }
 
           it 'returns the correct set of tasks' do
             expect(results.records).to match_array([task_in_space1])
           end
         end
 
-        context 'when app guids are provided' do
-          let(:filters) { { app_guids: [app2_in_space1.guid, app_in_space2.guid] } }
-
-          it 'returns the correct set of tasks' do
-            expect(results.records).to match_array([])
-          end
-        end
-
         context 'when space guids are provided' do
-          let(:filters) { { space_guids: [space2.guid] } }
+          let(:filters) { { space_guids: [space2.guid], app_guid: app_in_space1.guid } }
 
           it 'returns the correct set of tasks' do
             expect(results.records).to match_array([])
@@ -237,7 +233,7 @@ module VCAP::CloudController
         end
 
         context 'when org guids are provided' do
-          let(:filters) { { organization_guids: [org2.guid] } }
+          let(:filters) { { organization_guids: [org2.guid], app_guid: app_in_space1.guid } }
 
           it 'returns the correct set of tasks' do
             expect(results.records).to match_array([])

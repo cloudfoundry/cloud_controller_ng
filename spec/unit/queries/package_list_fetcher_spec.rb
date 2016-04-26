@@ -140,9 +140,10 @@ module VCAP::CloudController
 
     describe '#fetch_for_app' do
       let(:app) { AppModel.make }
+      let(:filters) { { app_guid: app.guid } }
 
       it 'returns a PaginatedResult and the app' do
-        returned_app, results = fetcher.fetch_for_app(message: message, app_guid: app.guid)
+        returned_app, results = fetcher.fetch_for_app(message: message)
         expect(results).to be_a(PaginatedResult)
         expect(returned_app.guid).to eq(app.guid)
       end
@@ -153,13 +154,13 @@ module VCAP::CloudController
         PackageModel.make
         PackageModel.make
 
-        _app, results = fetcher.fetch_for_app(message: message, app_guid: app.guid)
+        _app, results = fetcher.fetch_for_app(message: message)
 
         expect(results.records).to match_array([package1, package2])
       end
 
       context 'filtering types' do
-        let(:filters) { { types: [PackageModel::BITS_TYPE] } }
+        let(:filters) { { types: [PackageModel::BITS_TYPE], app_guid: app.guid } }
 
         it 'returns all of the packages with the requested types' do
           package1 = PackageModel.make(app_guid: app.guid, type: PackageModel::BITS_TYPE)
@@ -167,13 +168,13 @@ module VCAP::CloudController
           PackageModel.make(app_guid: app.guid, type: PackageModel::DOCKER_TYPE)
           PackageModel.make(type: PackageModel::BITS_TYPE)
 
-          results = fetcher.fetch_for_app(app_guid: app.guid, message: message)
+          results = fetcher.fetch_for_app(message: message)
           expect(results.last.records).to match_array([package1, package2])
         end
       end
 
       context 'filtering states' do
-        let(:filters) { { states: [PackageModel::CREATED_STATE, PackageModel::READY_STATE] } }
+        let(:filters) { { states: [PackageModel::CREATED_STATE, PackageModel::READY_STATE], app_guid: app.guid } }
 
         it 'returns all of the packages with the requested states' do
           package1 = PackageModel.make(app_guid: app.guid, state: PackageModel::CREATED_STATE)
@@ -182,14 +183,15 @@ module VCAP::CloudController
           PackageModel.make(state: PackageModel::READY_STATE)
           PackageModel.make
 
-          results = fetcher.fetch_for_app(app_guid: app.guid, message: message)
+          results = fetcher.fetch_for_app(message: message)
           expect(results.last.records).to match_array([package1, package2])
         end
       end
 
       context 'when the app does not exist' do
+        let(:filters) { { app_guid: 'not a real guid' } }
         it 'returns nil' do
-          returned_app, results = fetcher.fetch_for_app(message: message, app_guid: 'made-up')
+          returned_app, results = fetcher.fetch_for_app(message: message)
           expect(results).to be_nil
           expect(returned_app).to be_nil
         end

@@ -12,9 +12,9 @@ module VCAP::CloudController
       filter(pagination_options, message, dataset)
     end
 
-    def fetch_for_app(app_guid:, message:)
+    def fetch_for_app(message:)
       pagination_options = message.pagination_options
-      app = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
+      app = AppModel.where(guid: message.app_guid).eager(:space, space: :organization).all.first
       return nil unless app
       [app, filter(pagination_options, message, app.droplets_dataset)]
     end

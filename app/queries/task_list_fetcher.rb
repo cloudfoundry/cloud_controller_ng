@@ -12,9 +12,9 @@ module VCAP::CloudController
       SequelPaginator.new.get_page(filter(message: message, app_dataset: app_dataset), pagination_options)
     end
 
-    def fetch_for_app(message:, app_guid:)
+    def fetch_for_app(message:)
       pagination_options = message.pagination_options
-      app_dataset = AppModel.where(guid: app_guid).eager(:space, space: :organization)
+      app_dataset = AppModel.where(guid: message.app_guid).eager(:space, space: :organization)
       app = app_dataset.first
       return nil unless app
       [app, SequelPaginator.new.get_page(filter(message: message, app_dataset: app_dataset), pagination_options)]

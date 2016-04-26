@@ -18,7 +18,7 @@ class DropletsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
-      app, paginated_result = list_fetcher.fetch_for_app(app_guid: params[:app_guid], message: message)
+      app, paginated_result = list_fetcher.fetch_for_app(message: message)
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
       paginated_result = if roles.admin?
