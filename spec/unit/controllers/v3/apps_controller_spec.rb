@@ -227,10 +227,10 @@ describe AppsV3Controller, type: :controller do
     end
 
     context 'when the request has invalid data' do
-      let(:req_body) { { name: 200000 } }
+      let(:req_body) { { name: 'missing-all-other-required-fields' } }
 
       it 'returns an UnprocessableEntity error' do
-        post :create, body: req_body
+        post :create, req_body.to_json
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
