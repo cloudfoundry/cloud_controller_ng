@@ -10,7 +10,8 @@ module VCAP::CloudController
               command: 'start_me',
               diego:   true,
               type:    type,
-              ports:   ports
+              ports:   ports,
+              health_check_type: 'process'
             )
           end
           let(:type) { 'web' }
@@ -21,6 +22,14 @@ module VCAP::CloudController
           context 'when the process has ports' do
             it 'returns those ports' do
               expect(open_ports).to eq([1111, 2222])
+            end
+
+            context 'but the ports it has is explicitly empty' do
+              let(:ports) { [] }
+
+              it 'respects the desire to have no ports' do
+                expect(open_ports).to eq([])
+              end
             end
           end
 

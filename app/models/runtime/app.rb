@@ -141,7 +141,15 @@ module VCAP::CloudController
       validates_includes STAGING_FAILED_REASONS, :staging_failed_reason, allow_nil: true
       validates_includes HEALTH_CHECK_TYPES, :health_check_type, allow_missing: true, message: 'must be one of ' + HEALTH_CHECK_TYPES.join(', ')
 
+      validate_health_check_type_and_port_presence_are_in_agreement
       validation_policies.map(&:validate)
+    end
+
+    def validate_health_check_type_and_port_presence_are_in_agreement
+      default_to_port = nil
+      if [default_to_port, 'port'].include?(health_check_type) && ports == []
+        errors.add(:ports, 'ports array cannot be empty when health check type is "port"')
+      end
     end
 
     def before_create

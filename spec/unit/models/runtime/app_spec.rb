@@ -1,4 +1,3 @@
-# encoding: utf-8
 require 'spec_helper'
 
 module VCAP::CloudController
@@ -593,6 +592,37 @@ module VCAP::CloudController
             expect {
               AppFactory.make
             }.to_not raise_error
+          end
+        end
+      end
+
+      describe 'ports and health check type' do
+        describe 'health check type is not "ports"' do
+          before do
+            app.health_check_type = 'process'
+          end
+
+          it 'allows empty ports' do
+            app.ports = []
+            expect { app.save }.to_not raise_error
+          end
+        end
+
+        describe 'health check type is "port"' do
+          before do
+            app.health_check_type = 'port'
+          end
+
+          it 'disallows empty ports' do
+            app.ports = []
+            expect { app.save }.to raise_error(/ports array/)
+          end
+        end
+
+        describe 'health check type is not specified' do
+          it 'disallows empty ports' do
+            app = App.new(ports: [], name: 'cool-app', space_guid: space.guid)
+            expect { app.save }.to raise_error(/ports array/)
           end
         end
       end

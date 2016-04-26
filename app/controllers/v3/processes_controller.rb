@@ -47,7 +47,7 @@ class ProcessesController < ApplicationController
 
   def update
     guid    = params[:process_guid]
-    message = ProcessUpdateMessage.create_from_http_request(params[:body])
+    message = ProcessUpdateMessage.create_from_http_request(unmunged_body)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     process = ProcessModel.where(guid: guid).eager(:space, :organization).all.first

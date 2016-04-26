@@ -10,7 +10,7 @@ module VCAP::CloudController
 
         def to_a
           return nil unless process.diego?
-          return process.ports if process.ports.present?
+          return process.ports unless process.ports.nil?
           return process.docker_ports if process.docker?
           return [VCAP::CloudController::App::DEFAULT_HTTP_PORT] if process.type == 'web'
           []

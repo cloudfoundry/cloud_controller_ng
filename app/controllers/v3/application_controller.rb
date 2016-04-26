@@ -40,6 +40,10 @@ class ApplicationController < ActionController::Base
     request.query_parameters.with_indifferent_access
   end
 
+  def unmunged_body
+    JSON.parse(request.body.string)
+  end
+
   def roles
     VCAP::CloudController::SecurityContext.roles
   end

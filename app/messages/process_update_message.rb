@@ -40,7 +40,7 @@ module VCAP::CloudController
 
     def port_validations
       unless ports.is_a?(Array)
-        errors.add(:ports, 'must be an array of integers')
+        errors.add(:ports, 'must be an array')
         return
       end
 

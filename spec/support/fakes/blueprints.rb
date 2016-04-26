@@ -211,7 +211,6 @@ module VCAP::CloudController
   App.blueprint(:process) do
     app { AppModel.make }
     diego { true }
-    ports { [] }
     name { Sham.name }
     space { app.space }
     stack { Stack.make }

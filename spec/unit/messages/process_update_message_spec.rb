@@ -181,7 +181,7 @@ module VCAP::CloudController
         it 'is not valid' do
           message = ProcessUpdateMessage.new(params)
           expect(message).not_to be_valid
-          expect(message.errors_on(:ports)).to include('must be an array of integers')
+          expect(message.errors_on(:ports)).to include('must be an array')
         end
       end
 
@@ -237,7 +237,7 @@ module VCAP::CloudController
         it 'is not valid' do
           message = ProcessUpdateMessage.new(params)
           expect(message).not_to be_valid
-          expect(message.errors_on(:ports)).to include('must be an array of integers')
+          expect(message.errors_on(:ports)).to include('must be an array')
         end
       end
 

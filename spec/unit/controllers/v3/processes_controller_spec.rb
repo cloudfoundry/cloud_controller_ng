@@ -289,7 +289,7 @@ describe ProcessesController, type: :controller do
     it 'updates the process and returns the correct things' do
       expect(process_type.command).not_to eq('new command')
 
-      patch :update, { process_guid: process_type.guid, body: req_body }
+      patch :update, req_body.to_json, { process_guid: process_type.guid }
 
       expect(process_type.reload.command).to eq('new command')
       expect(response.status).to eq(200)
@@ -305,7 +305,7 @@ describe ProcessesController, type: :controller do
       it 'updates the process and returns the correct things' do
         expect(process_type.command).not_to eq('new command')
 
-        patch :update, { process_guid: process_type.guid, body: req_body }
+        patch :update, req_body.to_json, { process_guid: process_type.guid }
 
         expect(process_type.reload.command).to eq('new command')
         expect(response.status).to eq(200)
@@ -313,9 +313,19 @@ describe ProcessesController, type: :controller do
       end
     end
 
+    context 'when the provided request to update the port is an empty array' do
+      it 'update the model successfully' do
+        patch :update, { ports: [], health_check: { type: 'process' } }.to_json, { process_guid: process_type.guid, type: :json }
+
+        expect(parsed_body['ports']).to eq([])
+        expect(process_type.reload.ports).to eq([])
+        expect(response.status).to eq(200)
+      end
+    end
+
     context 'when the process does not exist' do
       it 'raises an ApiError with a 404 code' do
-        patch :update, { process_guid: 'made-up-guid', body: req_body }
+        patch :update, req_body.to_json, { process_guid: 'made-up-guid' }
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
@@ -326,7 +336,7 @@ describe ProcessesController, type: :controller do
       before { set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']) }
 
       it 'raises an ApiError with a 403 code' do
-        patch :update, { process_guid: process_type.guid, body: req_body }
+        patch :update, req_body.to_json, { process_guid: process_type.guid }
 
         expect(response.body).to include('NotAuthorized')
         expect(response.status).to eq(403)
@@ -339,7 +349,7 @@ describe ProcessesController, type: :controller do
       end
 
       it 'returns 422' do
-        patch :update, { process_guid: process_type.guid, body: req_body }
+        patch :update, req_body.to_json, { process_guid: process_type.guid }
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
@@ -351,7 +361,7 @@ describe ProcessesController, type: :controller do
       let(:req_body) { { command: false } }
 
       it 'returns 422' do
-        patch :update, { process_guid: process_type.guid, body: req_body }
+        patch :update, req_body.to_json, { process_guid: process_type.guid }
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
@@ -365,7 +375,7 @@ describe ProcessesController, type: :controller do
       end
 
       it 'raises 404' do
-        patch :update, { process_guid: process_type.guid, body: req_body }
+        patch :update, req_body.to_json, { process_guid: process_type.guid }
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
@@ -384,7 +394,7 @@ describe ProcessesController, type: :controller do
       end
 
       it 'raises an ApiError with a 403 code' do
-        patch :update, { process_guid: process_type.guid, body: req_body }
+        patch :update, req_body.to_json, { process_guid: process_type.guid }
 
         expect(response.status).to eq 403
         expect(response.body).to include('NotAuthorized')
