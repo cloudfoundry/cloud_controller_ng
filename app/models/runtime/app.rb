@@ -130,6 +130,7 @@ module VCAP::CloudController
 
     def validate
       validates_presence :name
+      validates_max_length 255, :name, message: 'must be fewer than 255 characters'
       validates_presence :space
       validates_unique [:space_id, :name]
       validates_format APP_NAME_REGEX, :name
