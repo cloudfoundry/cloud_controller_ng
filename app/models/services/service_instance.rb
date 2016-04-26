@@ -136,6 +136,7 @@ module VCAP::CloudController
 
     def after_update
       super
+      update_service_bindings
       if @columns_updated.key?(:service_plan_id) || @columns_updated.key?(:name)
         service_instance_usage_event_repository.updated_event_from_service_instance(self)
       end
@@ -171,6 +172,12 @@ module VCAP::CloudController
 
     def service_instance_usage_event_repository
       @repository ||= Repositories::ServiceUsageEventRepository.new
+    end
+
+    def update_service_bindings
+      if @columns_updated.key?(:syslog_drain_url)
+        service_bindings_dataset.update(syslog_drain_url: syslog_drain_url)
+      end
     end
   end
 end

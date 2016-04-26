@@ -179,6 +179,28 @@ module VCAP::CloudController
           expect(event).to match_service_instance(service_instance)
         end
       end
+
+      context 'when a service binding exists' do
+        let(:process) { App.make(space: service_instance.space) }
+        let(:process2) { App.make(space: service_instance.space) }
+        let!(:service_binding) {
+          ServiceBinding.make(app_guid: process.guid, service_instance_guid: service_instance.guid)
+        }
+        let!(:service_binding2) {
+          ServiceBinding.make(app_guid: process2.guid, service_instance_guid: service_instance.guid)
+        }
+
+        context 'and syslog_drain_url changes' do
+          it 'updates the service binding' do
+            expect {
+              service_instance.update(syslog_drain_url: 'syslog-tls://logs.example.com')
+            }.to change {
+              service_binding.reload.syslog_drain_url
+            }.to('syslog-tls://logs.example.com')
+            expect(service_binding2.reload.syslog_drain_url).to eq('syslog-tls://logs.example.com')
+          end
+        end
+      end
     end
 
     describe '#credentials' do
