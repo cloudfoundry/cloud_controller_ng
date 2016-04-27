@@ -3,6 +3,7 @@ require 'cloud_controller/diego/process_guid'
 require 'cloud_controller/diego/staging_request'
 require 'cloud_controller/diego/protocol/open_process_ports'
 require 'cloud_controller/diego/protocol/routing_info'
+require 'cloud_controller/diego/protocol/container_network_info'
 
 module VCAP::CloudController
   module Diego
@@ -62,7 +63,8 @@ module VCAP::CloudController
           'egress_rules'                    => @egress_rules.running(app),
           'etag'                            => app.updated_at.to_f.to_s,
           'allow_ssh'                       => app.enable_ssh,
-          'ports'                           => OpenProcessPorts.new(app).to_a
+          'ports'                           => OpenProcessPorts.new(app).to_a,
+          'network'                         => ContainerNetworkInfo.new(app).to_h,
         }.merge(@lifecycle_protocol.desired_app_message(app))
       end
 

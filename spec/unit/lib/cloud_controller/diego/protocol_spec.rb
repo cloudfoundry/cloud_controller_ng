@@ -207,7 +207,14 @@ module VCAP::CloudController
             'egress_rules' => ['running_egress_rule'],
             'etag' => app.updated_at.to_f.to_s,
             'allow_ssh' => true,
-            'ports' => [2222, 3333]
+            'ports' => [2222, 3333],
+            'network' => {
+              'properties' => {
+                'app_id' => app.guid,
+                'space_id' => app.space.guid,
+                'org_id' => app.organization.guid,
+              }
+            }
           }.merge(lifecycle_protocol.desired_app_message(double(:app))))
         end
 
