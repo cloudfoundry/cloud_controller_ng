@@ -711,7 +711,7 @@ describe 'Apps' do
     end
   end
 
-  describe 'PUT /v3/apps/:guid/current_droplet' do
+  describe 'PUT /v3/apps/:guid/droplets/current' do
     let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
     let(:app_model) do
       VCAP::CloudController::AppModel.make(
@@ -737,7 +737,7 @@ describe 'Apps' do
 
       request_body = { droplet_guid: droplet.guid }
 
-      put "/v3/apps/#{app_model.guid}/current_droplet", request_body, user_header
+      put "/v3/apps/#{app_model.guid}/droplets/current", request_body, user_header
 
       expected_response = {
         'name'                    => 'my_app',
@@ -801,7 +801,9 @@ describe 'Apps' do
 
       request_body = { droplet_guid: droplet.guid }
 
-      put "/v3/apps/#{app_model.guid}/current_droplet", request_body, user_header
+      put "/v3/apps/#{app_model.guid}/droplets/current", request_body, user_header
+
+      expect(last_response.status).to eq(200)
 
       events = VCAP::CloudController::Event.where(actor: user.guid).all
 
@@ -849,7 +851,9 @@ describe 'Apps' do
 
       request_body = { droplet_guid: droplet.guid }
 
-      put "/v3/apps/#{app_model.guid}/current_droplet", request_body, user_header
+      put "/v3/apps/#{app_model.guid}/droplets/current", request_body, user_header
+
+      expect(last_response.status).to eq(200)
 
       events = VCAP::CloudController::Event.where(actor: user.guid).all
 
@@ -886,7 +890,9 @@ describe 'Apps' do
 
       request_body = { droplet_guid: droplet.guid }
 
-      put "/v3/apps/#{app_model.guid}/current_droplet", request_body, user_header
+      put "/v3/apps/#{app_model.guid}/droplets/current", request_body, user_header
+
+      expect(last_response.status).to eq(200)
 
       events = VCAP::CloudController::Event.where(actor: user.guid).all
 
