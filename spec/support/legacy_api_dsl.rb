@@ -105,7 +105,7 @@ module LegacyApiDsl
       "#{api_version}/#{model.to_s.pluralize}"
     end
 
-    def standard_model_list(model, controller, options={})
+    def standard_model_list(model, controller, options={}, &block)
       outer_model_description = ''
       model_name = options[:path] || model
       title = options[:title] || model_name.to_s.pluralize.titleize
@@ -122,7 +122,8 @@ module LegacyApiDsl
       get root(path) do
         include_context 'response_fields' if options[:response_fields]
 
-        standard_list_parameters controller, outer_model: outer_model, exclude_parameters: options.fetch(:exclude_parameters, [])
+        standard_list_parameters controller, outer_model: outer_model, exclude_parameters: options.fetch(:exclude_parameters, []), &block
+
         example_request "List all #{title}#{outer_model_description}" do
           expect(status).to eq 200
           standard_list_response parsed_response, model
@@ -201,7 +202,7 @@ module LegacyApiDsl
       end
     end
 
-    def standard_list_parameters(controller, outer_model: nil, exclude_parameters: [])
+    def standard_list_parameters(controller, outer_model: nil, exclude_parameters: [], &block)
       query_parameters = controller.query_parameters - exclude_parameters
       if query_parameters.size > 0
         query_parameter_description = 'Parameters used to filter the result set.<br/>'
@@ -217,6 +218,7 @@ module LegacyApiDsl
         request_parameter :q, query_parameter_description, { html: true, example_values: examples }
       end
       pagination_parameters
+      instance_eval &block if block_given?
       request_parameter :'inline-relations-depth', "0 - don't inline any relations and return URLs.  Otherwise, inline to depth N.", deprecated: true
       request_parameter :'orphan-relations', '0 - de-duplicate object entries in response', deprecated: true
       request_parameter :'exclude-relations', 'comma-delimited list of relations to drop from response', deprecated: true

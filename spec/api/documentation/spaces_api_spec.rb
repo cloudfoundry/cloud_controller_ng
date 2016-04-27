@@ -36,7 +36,9 @@ resource 'Spaces', type: [:api, :legacy_api] do
       field :allow_ssh, 'Whether or not Space Developers can enable ssh on apps in the space'
     end
 
-    standard_model_list :space, VCAP::CloudController::SpacesController
+    standard_model_list :space, VCAP::CloudController::SpacesController do
+      request_parameter :'order-by', 'Parameter to order results by', valid_values: ['name', 'id']
+    end
     standard_model_get :space, nested_associations: [:organization]
     standard_model_delete :space do
       parameter :recursive, 'Will delete all apps, services, routes, and service brokers associated with the space', valid_values: [true, false]

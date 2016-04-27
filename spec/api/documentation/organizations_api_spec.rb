@@ -21,7 +21,9 @@ resource 'Organizations', type: [:api, :legacy_api] do
       field :billing_enabled, 'If billing is enabled for this organization', deprecated: true
     end
 
-    standard_model_list :organization, VCAP::CloudController::OrganizationsController
+    standard_model_list :organization, VCAP::CloudController::OrganizationsController do
+      request_parameter :'order-by', 'Parameter to order results by', valid_values: ['name', 'id']
+    end
     standard_model_get :organization, nested_associations: [:quota_definition]
     standard_model_delete :organization do
       parameter :recursive, 'Will delete all spaces, apps, services, routes, and private domains associated with the org', valid_values: [true, false]
