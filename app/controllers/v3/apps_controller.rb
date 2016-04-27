@@ -155,6 +155,15 @@ class AppsV3Controller < ApplicationController
     unprocessable!(e.message)
   end
 
+  def current_droplet
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    droplet = DropletModel.where(guid: app.droplet_guid).eager(:space, space: :organization).all.first
+
+    droplet_not_found! unless droplet
+    render status: :ok, json: DropletPresenter.new.present_json(droplet)
+  end
+
   private
 
   def can_read?(space_guid, org_guid)

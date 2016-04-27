@@ -708,6 +708,73 @@ describe 'Apps' do
     end
   end
 
+  describe 'GET /v3/apps/:guid/droplets/current' do
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+    let(:guid) { droplet_model.guid }
+    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let!(:droplet_model) do
+      VCAP::CloudController::DropletModel.make(
+        state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
+        app_guid:                    app_model.guid,
+        package_guid:                package_model.guid,
+        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+        buildpack_receipt_stack_name: 'stack-name',
+        error:                       'example error',
+        environment_variables:       { 'cloud' => 'foundry' },
+        execution_metadata: 'some-data',
+        droplet_hash: 'shalalala',
+        process_types: { 'web' => 'start-command' },
+        memory_limit: 100,
+        disk_limit: 200,
+      )
+    end
+    let(:app_guid) { droplet_model.app_guid }
+
+    before do
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet_model, buildpack: 'http://buildpack.git.url.com', stack: 'stack-name')
+      app_model.droplet_guid = droplet_model.guid
+      app_model.save
+    end
+
+    it 'gets the current droplet' do
+      get "/v3/apps/#{app_model.guid}/droplets/current", nil, user_header
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like({
+        'guid'                  => droplet_model.guid,
+        'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
+        'error'                 => 'example error',
+        'lifecycle'             => {
+          'type' => 'buildpack',
+          'data' => {
+            'buildpack' => 'http://buildpack.git.url.com',
+            'stack'     => 'stack-name'
+          }
+        },
+        'memory_limit'          => 100,
+        'disk_limit'            => 200,
+        'result'                => {
+          'hash'                   => { 'type' => 'sha1', 'value' => 'shalalala' },
+          'buildpack'              => 'http://buildpack.git.url.com',
+          'stack'                  => 'stack-name',
+          'execution_metadata'     => 'some-data',
+          'process_types'          => { 'web' => 'start-command' }
+        },
+        'environment_variables' => { 'cloud' => 'foundry' },
+        'created_at'            => iso8601,
+        'updated_at'            => nil,
+        'links'                 => {
+          'self'                   => { 'href' => "/v3/droplets/#{guid}" },
+          'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
+          'app'                    => { 'href' => "/v3/apps/#{app_guid}" },
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_guid}/droplets/current", 'method' => 'PUT' },
+        }
+      })
+    end
+  end
+
   describe 'PUT /v3/apps/:guid/droplets/current' do
     let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
     let(:app_model) do

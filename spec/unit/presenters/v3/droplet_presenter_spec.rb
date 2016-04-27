@@ -49,7 +49,7 @@ module VCAP::CloudController
           expect(result['links']).to include('package')
           expect(result['links']['package']['href']).to eq("/v3/packages/#{droplet.package_guid}")
           expect(result['links']['app']['href']).to eq("/v3/apps/#{droplet.app_guid}")
-          expect(result['links']['assign_current_droplet']['href']).to eq("/v3/apps/#{droplet.app_guid}/current_droplet")
+          expect(result['links']['assign_current_droplet']['href']).to eq("/v3/apps/#{droplet.app_guid}/droplets/current")
           expect(result['links']['assign_current_droplet']['method']).to eq('PUT')
         end
 

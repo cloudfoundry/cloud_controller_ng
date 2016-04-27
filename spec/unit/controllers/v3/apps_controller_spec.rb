@@ -1532,4 +1532,94 @@ describe AppsV3Controller, type: :controller do
       end
     end
   end
+
+  describe 'current_droplet' do
+    let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid) }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(process_types: { 'web' => 'start app' }, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let(:droplet_link) { { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" } }
+    let(:space) { app_model.space }
+    let(:org) { space.organization }
+
+    before do
+      app_model.add_droplet(droplet)
+      set_current_user(VCAP::CloudController::User.make)
+      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
+      allow(membership).to receive(:has_any_roles?).and_return(true)
+    end
+
+    it 'returns a 200 OK and the droplet' do
+      get :current_droplet, guid: app_model.guid
+
+      expect(response.status).to eq(200)
+      expect(parsed_body['guid']).to eq(droplet.guid)
+    end
+
+    context 'admin' do
+      before do
+        set_current_user_as_admin
+        allow(membership).to receive(:has_any_roles?).and_return(false)
+      end
+
+      it 'returns a 200 OK and the droplet' do
+        get :current_droplet, guid: app_model.guid
+
+        expect(response.status).to eq(200)
+        expect(parsed_body['guid']).to eq(droplet.guid)
+      end
+    end
+
+    context 'when the application does not exist' do
+      it 'returns a 404 ResourceNotFound' do
+        get :current_droplet, guid: 'i do not exist'
+
+        expect(response.status).to eq 404
+        expect(response.body).to include 'ResourceNotFound'
+      end
+    end
+
+    context 'when the current droplet is not set' do
+      let(:app_model) { VCAP::CloudController::AppModel.make }
+
+      it 'returns a 404 Not Found' do
+        get :current_droplet, guid: app_model.guid
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+      end
+    end
+
+    context 'when the user does not have the read scope' do
+      before do
+        set_current_user(VCAP::CloudController::User.make, scopes: [])
+      end
+
+      it 'returns a 403 NotAuthorized error' do
+        get :current_droplet, guid: app_model.guid
+
+        expect(response.status).to eq(403)
+        expect(response.body).to include('NotAuthorized')
+      end
+    end
+
+    context 'when the user has incorrect roles' do
+      let(:space) { droplet.space }
+      let(:org) { space.organization }
+
+      before do
+        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+        allow(membership).to receive(:has_any_roles?).with(
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+           VCAP::CloudController::Membership::SPACE_MANAGER,
+           VCAP::CloudController::Membership::SPACE_AUDITOR,
+           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+      end
+
+      it 'returns a 404 not found' do
+        get :current_droplet, guid: app_model.guid
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+      end
+    end
+  end
 end
