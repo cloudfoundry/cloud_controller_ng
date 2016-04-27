@@ -26,6 +26,7 @@ module VCAP::CloudController
     end
 
     query_parameters :name, :organization_guid, :developer_guid, :app_guid
+    sortable_parameters :id, :name
 
     deprecated_endpoint "#{path_guid}/domains"
 

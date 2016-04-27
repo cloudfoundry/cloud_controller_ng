@@ -22,6 +22,8 @@ module VCAP::CloudController
           },
           'entity' => {
             'unique_value' => 'something',
+            'sortable_value' => nil,
+            'nonsortable_value' => nil,
             'test_model_many_to_ones_url' => "/v2/test_models/#{test_model.guid}/test_model_many_to_ones",
             'test_model_many_to_manies_url' => "/v2/test_models/#{test_model.guid}/test_model_many_to_manies",
             'test_model_many_to_manies_link_only_url' => "/v2/test_models/#{test_model.guid}/test_model_many_to_manies_link_only"
@@ -168,6 +170,8 @@ module VCAP::CloudController
             },
             'entity' => {
               'unique_value' => test_model_many_to_one.test_model.unique_value,
+              'sortable_value' => nil,
+              'nonsortable_value' => nil,
               'test_model_many_to_ones_url' => "/v2/test_models/#{test_model_many_to_one.test_model.guid}/test_model_many_to_ones",
               'test_model_many_to_manies_url' => "/v2/test_models/#{test_model_many_to_one.test_model.guid}/test_model_many_to_manies",
               'test_model_many_to_manies_link_only_url' => "/v2/test_models/#{test_model_many_to_one.test_model.guid}/test_model_many_to_manies_link_only"

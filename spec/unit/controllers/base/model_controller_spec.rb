@@ -400,9 +400,9 @@ module VCAP::CloudController
 
     describe '#enumerate' do
       let(:timestamp) { Time.now.utc.change(usec: 0) }
-      let!(:model1) { TestModel.make(created_at: timestamp) }
-      let!(:model2) { TestModel.make(created_at: timestamp + 1.second) }
-      let!(:model3) { TestModel.make(created_at: timestamp + 2.seconds) }
+      let!(:model1) { TestModel.make(created_at: timestamp, sortable_value: 'zelda') }
+      let!(:model2) { TestModel.make(created_at: timestamp + 1.second, sortable_value: 'artichoke') }
+      let!(:model3) { TestModel.make(created_at: timestamp + 2.seconds, sortable_value: 'marigold') }
 
       before { set_current_user_as_admin }
 
@@ -507,6 +507,24 @@ module VCAP::CloudController
 
           expect(decoded_response['total_results']).to eq(1)
           expect(decoded_response['resources'][0]['metadata']['guid']).to eq(model2.guid)
+        end
+      end
+
+      describe 'ordering by specific columns' do
+        it 'can order by approved columns' do
+          get '/v2/test_models?order-by=sortable_value'
+
+          expect(last_response.status).to eq(200)
+          sorted_values = decoded_response['resources'].map { |r| r['entity']['sortable_value'] }
+          expect(sorted_values).to eq(['artichoke', 'marigold', 'zelda'])
+        end
+
+        it 'fails when trying to order by unapproved columns' do
+          get '/v2/test_models?order-by=nonsortable_value'
+
+          expect(last_response.status).to eq(500)
+          expect(last_response.body).to match /Cannot order/
+          expect(last_response.body).to match /nonsortable_value/
         end
       end
     end

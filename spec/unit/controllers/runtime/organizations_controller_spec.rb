@@ -192,6 +192,10 @@ module VCAP::CloudController
       end
     end
 
+    it 'can order by name and id when listing' do
+      expect(described_class.sortable_parameters).to match_array([:id, :name])
+    end
+
     describe 'GET /v2/organizations/:guid/user_roles' do
       context 'for an organization that does not exist' do
         it 'returns a 404' do

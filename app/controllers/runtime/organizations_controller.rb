@@ -34,6 +34,7 @@ module VCAP::CloudController
     query_parameters :name, :space_guid, :user_guid,
       :manager_guid, :billing_manager_guid,
       :auditor_guid, :status
+    sortable_parameters :id, :name
 
     deprecated_endpoint "#{path_guid}/domains"
 

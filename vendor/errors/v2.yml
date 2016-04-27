@@ -78,6 +78,11 @@
   http_code: 500
   message: "Database error"
 
+10012:
+  name: OrderByParameterInvalid
+  http_code: 500
+  message: "Cannot order by: %s"
+
 20001:
   name: UserInvalid
   http_code: 400
