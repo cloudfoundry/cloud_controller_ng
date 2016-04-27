@@ -58,6 +58,11 @@ module VCAP::CloudController
           quota_definition.total_reserved_route_ports = 3
           expect(quota_definition).not_to be_valid
           expect(quota_definition.errors.on(:total_reserved_route_ports)).to include(err_msg)
+
+          quota_definition.total_routes = 0
+          quota_definition.total_reserved_route_ports = 1
+          expect(quota_definition).not_to be_valid
+          expect(quota_definition.errors.on(:total_reserved_route_ports)).to include(err_msg)
         end
 
         it 'total routes is equal to total_reserved_route_ports' do
@@ -76,6 +81,22 @@ module VCAP::CloudController
 
           quota_definition.total_reserved_route_ports = -1
           expect(quota_definition).to be_valid
+        end
+
+        context 'when total_routes is -1' do
+          it 'total_reserved_route_ports can be any value' do
+            quota_definition.total_routes = -1
+            quota_definition.total_reserved_route_ports = 2
+            expect(quota_definition).to be_valid
+
+            quota_definition.total_routes = -1
+            quota_definition.total_reserved_route_ports = 0
+            expect(quota_definition).to be_valid
+
+            quota_definition.total_routes = -1
+            quota_definition.total_reserved_route_ports = -1
+            expect(quota_definition).to be_valid
+          end
         end
       end
 
