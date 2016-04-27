@@ -8,9 +8,9 @@ module VCAP::CloudController
       expect(subject).to respond_to(:stop_stage)
     end
 
-    it 'defines #staging_complete' do
+    it 'defines #staging_complete, expecting 2 arguments' do
       expect(subject).to respond_to(:staging_complete)
-      expect { subject.staging_complete }.to raise_error(ArgumentError, 'wrong number of arguments (0 for 2)')
+      expect(subject.method(:staging_complete).arity).to eq(2)
     end
   end
 end
