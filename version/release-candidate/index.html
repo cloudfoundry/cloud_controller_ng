@@ -471,46 +471,6 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <p>This endpoint retrieves the environment variables that will be provided to an app at runtime.
 It will include environment variables for Environment Variable Groups and Service Bindings.</p>
 
-          <h2 id="get-stats-for-an-app">Get stats for an app</h2>
-<pre class="highlight plaintext"><code>Definition
-</code></pre>
-<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/stats</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/stats"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-
-{
-  "processes": [
-    {
-      "type": "web",
-      "index": 0,
-      "state": "RUNNING",
-      "usage": {
-        "time": "2016-03-23T23:17:30.476314154Z",
-        "cpu": 0.00038711029163348665,
-        "mem": 19177472,
-        "disk": 69705728
-      },
-      "host": "10.244.16.10",
-      "port": 60040,
-      "uptime": 9042,
-      "mem_quota": 268435456,
-      "disk_quota": 1073741824,
-      "fds_quota": 16384
-    }
-  ]
-}
-</code></pre>
-
-<p>This endpoint retrieves the stats for all proceses of an app. See the <a href="#the-process-stats-object">process stats object</a> for more details.</p>
-
           <h2 id="update-an-app">Update an app</h2>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
