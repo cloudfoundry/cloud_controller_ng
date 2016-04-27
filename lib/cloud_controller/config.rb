@@ -62,6 +62,12 @@ module VCAP::CloudController
           url: String
         },
 
+        optional(:dea_client) => {
+          :ca_file    => String,
+          :cert_file  => String,
+          :key_file   => String,
+        },
+
         :uaa => {
           :url                => String,
           :resource_id        => String,
