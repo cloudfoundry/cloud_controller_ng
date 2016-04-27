@@ -40,30 +40,9 @@ module VCAP::CloudController
 
         if stager.url && Client.enabled?
           return stage_with_http(stager.url, staging_msg)
+        else
+          return stage_with_nats(staging_msg)
         end
-
-        subject = "staging.#{@stager_id}.start"
-        @multi_message_bus_request = MultiResponseMessageBusRequest.new(@message_bus, subject)
-
-        staging_result = EM.schedule_sync do |promise|
-          # First response is blocking stage_app.
-          @multi_message_bus_request.on_response(staging_timeout) do |response, error|
-            logger.info('staging.first-response', app_guid: @app.guid, response: response, error: error)
-            handle_first_response(response, error, promise)
-          end
-
-          # Second message is received after app staging finished and
-          # droplet was uploaded to the CC.
-          # Second response does NOT block stage_app
-          @multi_message_bus_request.on_response(staging_timeout) do |response, error|
-            logger.info('staging.second-response', app_guid: @app.guid, response: response, error: error)
-            handle_second_response(response, error)
-          end
-
-          @multi_message_bus_request.request(staging_msg)
-        end
-
-        staging_result
       end
 
       # We never stage if there is not a start request
@@ -72,7 +51,7 @@ module VCAP::CloudController
       end
 
       def handle_http_response(response)
-        ensure_staging_is_current!
+        check_staging_failed!
         check_staging_error!(response)
         process_response(response)
       rescue => e
@@ -91,8 +70,34 @@ module VCAP::CloudController
         raise e
       end
 
+      def stage_with_nats(msg)
+        subject = "staging.#{@stager_id}.start"
+        @multi_message_bus_request = MultiResponseMessageBusRequest.new(@message_bus, subject)
+
+        staging_result = EM.schedule_sync do |promise|
+          # First response is blocking stage_app.
+          @multi_message_bus_request.on_response(staging_timeout) do |response, error|
+            logger.info('staging.first-response', app_guid: @app.guid, response: response, error: error)
+            handle_first_response(response, error, promise)
+          end
+
+          # Second message is received after app staging finished and
+          # droplet was uploaded to the CC.
+          # Second response does NOT block stage_app
+          @multi_message_bus_request.on_response(staging_timeout) do |response, error|
+            logger.info('staging.second-response', app_guid: @app.guid, response: response, error: error)
+            handle_second_response(response, error)
+          end
+
+          @multi_message_bus_request.request(msg)
+        end
+
+        staging_result
+      end
+
       def handle_first_response(response, error, promise)
-        ensure_staging_is_current!(false)
+        ensure_staging_is_current!
+        check_staging_failed!
         check_staging_error!(response)
         promise.deliver(StagingResponse.new(response))
       rescue => e
@@ -103,7 +108,8 @@ module VCAP::CloudController
 
       def handle_second_response(response, error)
         @multi_message_bus_request.ignore_subsequent_responses
-        ensure_staging_is_current!(false)
+        ensure_staging_is_current!
+        check_staging_failed!
         check_staging_error!(response)
         process_response(response)
       rescue => e
@@ -154,7 +160,7 @@ module VCAP::CloudController
         end
       end
 
-      def ensure_staging_is_current!(use_http=true)
+      def ensure_staging_is_current!
         begin
           # Reload to find other updates of staging task id
           # which means that there was a new staging process initiated
@@ -165,8 +171,10 @@ module VCAP::CloudController
           raise CloudController::Errors::ApiError.new_from_details('StagingError', "failed to stage application: can't retrieve staging status")
         end
 
-        check_task_id unless use_http
+        check_task_id
+      end
 
+      def check_staging_failed!
         if @app.staging_failed?
           raise CloudController::Errors::ApiError.new_from_details('StagingError', STAGING_ALREADY_FAILURE_MSG)
         end
