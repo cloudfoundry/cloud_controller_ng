@@ -20,6 +20,7 @@ includes:
   - apps/env
   - apps/update
   - apps/current_droplet
+  - apps/get_current_droplet
   - apps/start
   - apps/stop
   - apps/delete
