@@ -218,7 +218,7 @@ module LegacyApiDsl
         request_parameter :q, query_parameter_description, { html: true, example_values: examples }
       end
       pagination_parameters
-      instance_eval &block if block_given?
+      instance_eval(&block) if block_given?
       request_parameter :'inline-relations-depth', "0 - don't inline any relations and return URLs.  Otherwise, inline to depth N.", deprecated: true
       request_parameter :'orphan-relations', '0 - de-duplicate object entries in response', deprecated: true
       request_parameter :'exclude-relations', 'comma-delimited list of relations to drop from response', deprecated: true
