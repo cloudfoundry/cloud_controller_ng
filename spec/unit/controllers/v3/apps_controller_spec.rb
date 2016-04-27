@@ -1377,7 +1377,7 @@ describe AppsV3Controller, type: :controller do
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:droplet) { VCAP::CloudController::DropletModel.make(process_types: { 'web' => 'start app' }, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:req_body) { { droplet_guid: droplet.guid } }
-    let(:droplet_link) { { 'href' => "/v3/droplets/#{droplet.guid}" } }
+    let(:droplet_link) { { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" } }
     let(:space) { app_model.space }
     let(:org) { space.organization }
 

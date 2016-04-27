@@ -51,12 +51,12 @@ describe 'Apps' do
           'processes'              => { 'href' => "/v3/apps/#{created_app.guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{created_app.guid}/packages" },
           'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
+          'droplet'                => { 'href' => "/v3/apps/#{created_app.guid}/droplets/current" },
           'droplets'               => { 'href' => "/v3/apps/#{created_app.guid}/droplets" },
           'tasks'                  => { 'href' => "/v3/apps/#{created_app.guid}/tasks" },
           'route_mappings'         => { 'href' => "/v3/apps/#{created_app.guid}/route_mappings" },
           'start'                  => { 'href' => "/v3/apps/#{created_app.guid}/start", 'method' => 'PUT' },
           'stop'                   => { 'href' => "/v3/apps/#{created_app.guid}/stop", 'method' => 'PUT' },
-          'assign_current_droplet' => { 'href' => "/v3/apps/#{created_app.guid}/current_droplet", 'method' => 'PUT' }
         }
       }
 
@@ -115,12 +115,12 @@ describe 'Apps' do
             'processes'              => { 'href' => "/v3/apps/#{created_app.guid}/processes" },
             'packages'               => { 'href' => "/v3/apps/#{created_app.guid}/packages" },
             'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
+            'droplet'                => { 'href' => "/v3/apps/#{created_app.guid}/droplets/current" },
             'droplets'               => { 'href' => "/v3/apps/#{created_app.guid}/droplets" },
             'tasks'                  => { 'href' => "/v3/apps/#{created_app.guid}/tasks" },
             'route_mappings'         => { 'href' => "/v3/apps/#{created_app.guid}/route_mappings" },
             'start'                  => { 'href' => "/v3/apps/#{created_app.guid}/start", 'method' => 'PUT' },
             'stop'                   => { 'href' => "/v3/apps/#{created_app.guid}/stop", 'method' => 'PUT' },
-            'assign_current_droplet' => { 'href' => "/v3/apps/#{created_app.guid}/current_droplet", 'method' => 'PUT' }
           }
         }
 
@@ -196,12 +196,12 @@ describe 'Apps' do
               'processes'              => { 'href' => "/v3/apps/#{app_model1.guid}/processes" },
               'packages'               => { 'href' => "/v3/apps/#{app_model1.guid}/packages" },
               'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
+              'droplet'                => { 'href' => "/v3/apps/#{app_model1.guid}/droplets/current" },
               'droplets'               => { 'href' => "/v3/apps/#{app_model1.guid}/droplets" },
               'tasks'                  => { 'href' => "/v3/apps/#{app_model1.guid}/tasks" },
               'route_mappings'         => { 'href' => "/v3/apps/#{app_model1.guid}/route_mappings" },
               'start'                  => { 'href' => "/v3/apps/#{app_model1.guid}/start", 'method' => 'PUT' },
               'stop'                   => { 'href' => "/v3/apps/#{app_model1.guid}/stop", 'method' => 'PUT' },
-              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model1.guid}/current_droplet", 'method' => 'PUT' }
             }
           },
           {
@@ -221,12 +221,12 @@ describe 'Apps' do
               'processes'              => { 'href' => "/v3/apps/#{app_model2.guid}/processes" },
               'packages'               => { 'href' => "/v3/apps/#{app_model2.guid}/packages" },
               'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
+              'droplet'                => { 'href' => "/v3/apps/#{app_model2.guid}/droplets/current" },
               'droplets'               => { 'href' => "/v3/apps/#{app_model2.guid}/droplets" },
               'tasks'                  => { 'href' => "/v3/apps/#{app_model2.guid}/tasks" },
               'route_mappings'         => { 'href' => "/v3/apps/#{app_model2.guid}/route_mappings" },
               'start'                  => { 'href' => "/v3/apps/#{app_model2.guid}/start", 'method' => 'PUT' },
               'stop'                   => { 'href' => "/v3/apps/#{app_model2.guid}/stop", 'method' => 'PUT' },
-              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model2.guid}/current_droplet", 'method' => 'PUT' }
             }
           }
         ]
@@ -371,13 +371,12 @@ describe 'Apps' do
           'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
           'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
-          'droplet'                => { 'href' => '/v3/droplets/a-droplet-guid' },
+          'droplet'                => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" },
           'droplets'               => { 'href' => "/v3/apps/#{app_model.guid}/droplets" },
           'tasks'                  => { 'href' => "/v3/apps/#{app_model.guid}/tasks" },
           'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
           'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
-          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
         }
       }
 
@@ -542,12 +541,12 @@ describe 'Apps' do
           'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
           'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
+          'droplet'                => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" },
           'droplets'               => { 'href' => "/v3/apps/#{app_model.guid}/droplets" },
           'tasks'                  => { 'href' => "/v3/apps/#{app_model.guid}/tasks" },
           'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
           'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
-          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
         }
       }
 
@@ -613,13 +612,12 @@ describe 'Apps' do
           'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
           'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
-          'droplet'                => { 'href' => "/v3/droplets/#{droplet.guid}" },
+          'droplet'                => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" },
           'droplets'               => { 'href' => "/v3/apps/#{app_model.guid}/droplets" },
           'tasks'                  => { 'href' => "/v3/apps/#{app_model.guid}/tasks" },
           'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
           'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
-          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
         }
       }
 
@@ -682,13 +680,12 @@ describe 'Apps' do
           'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
           'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
-          'droplet'                => { 'href' => "/v3/droplets/#{droplet.guid}" },
+          'droplet'                => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" },
           'droplets'               => { 'href' => "/v3/apps/#{app_model.guid}/droplets" },
           'tasks'                  => { 'href' => "/v3/apps/#{app_model.guid}/tasks" },
           'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
           'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
-          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
         }
       }
 
@@ -759,13 +756,12 @@ describe 'Apps' do
           'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
           'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
-          'droplet'                => { 'href' => "/v3/droplets/#{droplet.guid}" },
+          'droplet'                => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" },
           'droplets'               => { 'href' => "/v3/apps/#{app_model.guid}/droplets" },
           'tasks'                  => { 'href' => "/v3/apps/#{app_model.guid}/tasks" },
           'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
           'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
-          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
         }
       }
 
