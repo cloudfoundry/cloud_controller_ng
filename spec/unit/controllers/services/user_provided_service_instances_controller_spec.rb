@@ -495,12 +495,27 @@ module VCAP::CloudController
       end
 
       it 'associates the route and the service instance' do
+        set_current_user(developer, email: 'developer@example.com')
         get "/v2/user_provided_service_instances/#{service_instance.guid}/routes"
         expect(last_response.status).to eq(200)
         expect(JSON.parse(last_response.body)['total_results']).to eql(0)
 
         put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}"
         expect(last_response).to have_status_code(201)
+
+        event = VCAP::CloudController::Event.first(type: 'audit.service_instance.bind_route')
+        expect(event).not_to be_nil
+        expect(event.type).to eq('audit.service_instance.bind_route')
+        expect(event.actor_type).to eq('user')
+        expect(event.actor).to eq(developer.guid)
+        expect(event.actor_name).to eq('developer@example.com')
+        expect(event.timestamp).to be
+        expect(event.actee).to eq(service_instance.guid)
+        expect(event.actee_type).to eq('service_instance')
+        expect(event.actee_name).to eq(service_instance.name)
+        expect(event.space_guid).to eq(service_instance.space.guid)
+        expect(event.organization_guid).to eq(service_instance.space.organization.guid)
+        expect(event.metadata['request']).to include({ 'route_guid' => route.guid })
 
         get "/v2/user_provided_service_instances/#{service_instance.guid}/routes"
         expect(last_response.status).to eq(200)
@@ -681,6 +696,7 @@ module VCAP::CloudController
         let!(:route_binding) { RouteBinding.make(route: route, service_instance: service_instance) }
 
         it 'deletes the association between the route and the service instance' do
+          set_current_user(developer, email: 'developer@example.com')
           get "/v2/user_provided_service_instances/#{service_instance.guid}/routes"
           expect(last_response).to have_status_code(200)
           expect(JSON.parse(last_response.body)['total_results']).to eql(1)
@@ -688,6 +704,19 @@ module VCAP::CloudController
           delete "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}"
           expect(last_response).to have_status_code(204)
           expect(last_response.body).to be_empty
+          event = VCAP::CloudController::Event.first(type: 'audit.service_instance.unbind_route')
+          expect(event).not_to be_nil
+          expect(event.type).to eq('audit.service_instance.unbind_route')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor).to eq(developer.guid)
+          expect(event.actor_name).to eq('developer@example.com')
+          expect(event.timestamp).to be
+          expect(event.actee).to eq(service_instance.guid)
+          expect(event.actee_type).to eq('service_instance')
+          expect(event.actee_name).to eq(service_instance.name)
+          expect(event.space_guid).to eq(service_instance.space.guid)
+          expect(event.organization_guid).to eq(service_instance.space.organization.guid)
+          expect(event.metadata['request']).to include({ 'route_guid' => route.guid })
 
           get "/v2/user_provided_service_instances/#{service_instance.guid}/routes"
           expect(last_response).to have_status_code(200)

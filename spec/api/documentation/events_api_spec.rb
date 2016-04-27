@@ -32,6 +32,8 @@ resource 'Events', type: [:api, :legacy_api] do
     audit.service_instance.create
     audit.service_instance.update
     audit.service_instance.delete
+    audit.service_instance.bind_route
+    audit.service_instance.unbind_route
     audit.user_provided_service_instance.create
     audit.user_provided_service_instance.update
     audit.user_provided_service_instance.delete
@@ -813,6 +815,56 @@ resource 'Events', type: [:api, :legacy_api] do
                                space_guid: instance.space_guid,
                                metadata: {
                                  'request' => {
+                                   'parameters' => '[PRIVATE DATA HIDDEN]'
+                                 }
+                               }
+    end
+
+    example 'List Service Instance Bind route Events' do
+      space = VCAP::CloudController::Space.make
+      instance = VCAP::CloudController::ManagedServiceInstance.make(space: space)
+      route = VCAP::CloudController::Route.make(space: space)
+
+      service_event_repository.record_service_instance_event(:bind_route, instance, { route_guid: route.guid })
+
+      client.get '/v2/events?q=type:audit.service_instance.bind_route', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'service_instance',
+                               actee: instance.guid,
+                               actee_name: instance.name,
+                               space_guid: instance.space_guid,
+                               metadata: {
+                                 'request' => {
+                                   'route_guid' => route.guid,
+                                   'parameters' => '[PRIVATE DATA HIDDEN]'
+                                 }
+                               }
+    end
+
+    example 'List Service Instance Unbind route Events' do
+      space = VCAP::CloudController::Space.make
+      instance = VCAP::CloudController::ManagedServiceInstance.make(space: space)
+      route = VCAP::CloudController::Route.make(space: space)
+
+      service_event_repository.record_service_instance_event(:unbind_route, instance, { route_guid: route.guid })
+
+      client.get '/v2/events?q=type:audit.service_instance.unbind_route', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'service_instance',
+                               actee: instance.guid,
+                               actee_name: instance.name,
+                               space_guid: instance.space_guid,
+                               metadata: {
+                                 'request' => {
+                                   'route_guid' => route.guid,
                                    'parameters' => '[PRIVATE DATA HIDDEN]'
                                  }
                                }

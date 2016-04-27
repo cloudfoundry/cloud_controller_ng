@@ -51,6 +51,8 @@ module VCAP::CloudController
 
       notify_diego(route_binding, attributes_to_update)
 
+      services_event_repository.record_service_instance_event(:bind_route, route_binding.service_instance, { route_guid: route.guid })
+
       route_binding
     end
 
@@ -66,6 +68,8 @@ module VCAP::CloudController
 
       @access_validator.validate_access(:update, route_binding.service_instance)
       delete_route_binding(route_binding)
+
+      services_event_repository.record_service_instance_event(:unbind_route, route_binding.service_instance, { route_guid: route.guid })
 
       route_binding.notify_diego if route_binding.route_service_url
     end

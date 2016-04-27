@@ -215,6 +215,7 @@ EOF
           expect(status).to eq(201)
           expect(parsed_response['metadata']['guid']).to eq(service_instance.guid)
           expect(parsed_response['entity']['routes_url']).to eq("/v2/service_instances/#{service_instance.guid}/routes")
+          audited_event VCAP::CloudController::Event.find(type: 'audit.service_instance.bind_route', actee: service_instance.guid)
         end
       end
 
@@ -228,6 +229,7 @@ EOF
           client.delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers
           expect(status).to eq(204)
           expect(response_body).to be_empty
+          audited_event VCAP::CloudController::Event.find(type: 'audit.service_instance.unbind_route', actee: service_instance.guid)
         end
       end
 
