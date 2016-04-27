@@ -9,6 +9,9 @@ language: ruby
 bundler_args: --deployment --without development
 cache: bundler
 
+rvm:
+  - 2.2.4
+
 before_script:
   - bundle exec rake db:create
   - gem install travis-artifacts
