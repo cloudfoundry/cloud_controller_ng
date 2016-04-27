@@ -96,10 +96,7 @@ describe 'Droplets' do
           'self'                   => { 'href' => "/v3/droplets/#{created_droplet.guid}" },
           'package'                => { 'href' => "/v3/packages/#{package.guid}" },
           'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'assign_current_droplet' => {
-            'href'   => "/v3/apps/#{app_model.guid}/current_droplet",
-            'method' => 'PUT'
-          }
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
         }
       }
 
@@ -166,10 +163,7 @@ describe 'Droplets' do
           'self'                   => { 'href' => "/v3/droplets/#{guid}" },
           'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
           'app'                    => { 'href' => "/v3/apps/#{app_guid}" },
-          'assign_current_droplet' => {
-            'href'   => "/v3/apps/#{app_guid}/current_droplet",
-            'method' => 'PUT'
-          }
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_guid}/droplets/current", 'method' => 'PUT' },
         }
       })
     end
@@ -263,10 +257,7 @@ describe 'Droplets' do
               'self'                   => { 'href' => "/v3/droplets/#{droplet2.guid}" },
               'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => {
-                'href'   => "/v3/apps/#{app_model.guid}/current_droplet",
-                'method' => 'PUT'
-              }
+              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
             }
           },
           {
@@ -290,11 +281,8 @@ describe 'Droplets' do
               'self'                   => { 'href' => "/v3/droplets/#{droplet1.guid}" },
               'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => {
-                'href'   => "/v3/apps/#{app_model.guid}/current_droplet",
-                'method' => 'PUT'
-              },
-              'buildpack' => { 'href' => "/v2/buildpacks/#{buildpack.guid}" }
+              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+              'buildpack'              => { 'href' => "/v2/buildpacks/#{buildpack.guid}" }
             }
           }
         ]
@@ -411,10 +399,7 @@ describe 'Droplets' do
               'self'                   => { 'href' => "/v3/droplets/#{droplet2.guid}" },
               'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => {
-                'href'   => "/v3/apps/#{app_model.guid}/current_droplet",
-                'method' => 'PUT'
-              }
+              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
             }
           },
           {
@@ -438,11 +423,8 @@ describe 'Droplets' do
               'self'                   => { 'href' => "/v3/droplets/#{droplet1.guid}" },
               'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => {
-                'href'   => "/v3/apps/#{app_model.guid}/current_droplet",
-                'method' => 'PUT'
-              },
-              'buildpack' => { 'href' => "/v2/buildpacks/#{buildpack.guid}" }
+              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+              'buildpack'              => { 'href' => "/v2/buildpacks/#{buildpack.guid}" }
             }
           }
         ]
@@ -508,10 +490,7 @@ describe 'Droplets' do
           'self'                   => { 'href' => "/v3/droplets/#{copied_droplet.guid}" },
           'package'                => nil,
           'app'                    => { 'href' => "/v3/apps/#{new_app.guid}" },
-          'assign_current_droplet' => {
-            'href'   => "/v3/apps/#{new_app.guid}/current_droplet",
-            'method' => 'PUT'
-          }
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{new_app.guid}/droplets/current", 'method' => 'PUT' },
         }
       })
     end
