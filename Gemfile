@@ -4,7 +4,10 @@ source 'http://rubygems.org'
 gem 'addressable'
 gem 'railties', '~>4.2.5.2'
 gem 'rake'
-gem 'eventmachine', '~> 1.0.0'
+
+# nats wants to lock us to an older version. we already use eventmachine 1.0.9, so do not want a downgrade.
+gem 'eventmachine', '~> 1.0.9'
+
 gem 'fog'
 gem 'i18n'
 gem 'nokogiri', '~> 1.6.2'
@@ -74,6 +77,6 @@ end
 
 group :development do
   gem 'roodi'
-  gem 'ruby-debug-ide'
+  # gem 'ruby-debug-ide'
   gem 'byebug'
 end
