@@ -97,7 +97,7 @@ HTTP/1.1 201 Created
       "href": "/v3/apps/f82a88a2-2197-45b2-8b6d-84d1be8e2d0e"
     },
     "assign_current_droplet": {
-      "href": "/v3/apps/f82a88a2-2197-45b2-8b6d-84d1be8e2d0e/current_droplet",
+      "href": "/v3/apps/f82a88a2-2197-45b2-8b6d-84d1be8e2d0e/droplets/current",
       "method": "PUT"
     }
   }
