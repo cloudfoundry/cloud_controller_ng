@@ -234,6 +234,28 @@ describe 'Packages' do
         expect(parsed_response['resources'].map { |r| r['state'] }.uniq).to eq(['PROCESSING_UPLOAD'])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
+
+      it 'filters by package guids' do
+        package1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+        package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+        VCAP::CloudController::PackageModel.make
+
+        get "/v3/apps/#{app_model.guid}/packages?guids=#{package1.guid},#{package2.guid}", {}, user_header
+
+        expected_pagination = {
+          'total_results' => 2,
+          'first'         => { 'href' => "/v3/apps/#{app_model.guid}/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
+          'last'          => { 'href' => "/v3/apps/#{app_model.guid}/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
+          'next'          => nil,
+          'previous'      => nil
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package1.guid, package2.guid])
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
     end
   end
 
@@ -377,6 +399,29 @@ describe 'Packages' do
           'total_results' => 2,
           'first'         => { 'href' => "/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
           'last'          => { 'href' => "/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
+          'next'          => nil,
+          'previous'      => nil
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package1.guid, package2.guid])
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'filters by package guids' do
+        app_model2 = VCAP::CloudController::AppModel.make(space_guid: space_guid)
+        package1 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
+        package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
+        VCAP::CloudController::PackageModel.make
+
+        get "/v3/packages?guids=#{package1.guid},#{package2.guid}", {}, user_header
+
+        expected_pagination = {
+          'total_results' => 2,
+          'first'         => { 'href' => "/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
+          'last'          => { 'href' => "/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
           'next'          => nil,
           'previous'      => nil
         }

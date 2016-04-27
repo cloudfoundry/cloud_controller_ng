@@ -2,7 +2,7 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class PackagesListMessage < ListMessage
-    ALLOWED_KEYS = [:page, :per_page, :states, :types, :app_guids, :app_guid].freeze
+    ALLOWED_KEYS = [:page, :per_page, :states, :types, :guids, :app_guids, :app_guid].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 
@@ -10,6 +10,7 @@ module VCAP::CloudController
 
     validates :states, array: true, allow_nil: true
     validates :types,  array: true, allow_nil: true
+    validates :guids,  array: true, allow_nil: true
     validates :app_guids, array: true, allow_nil: true
     validate :app_nested_request, if: -> { app_guid.present? }
 
@@ -19,7 +20,7 @@ module VCAP::CloudController
 
     def self.from_params(params)
       opts = params.dup
-      ['types', 'states', 'app_guids'].each do |attribute|
+      ['types', 'states', 'guids', 'app_guids'].each do |attribute|
         to_array! opts, attribute
       end
       new(opts.symbolize_keys)

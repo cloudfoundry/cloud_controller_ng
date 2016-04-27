@@ -82,7 +82,7 @@ module VCAP::CloudController
         it 'validates types to be an array' do
           message = PackagesListMessage.new(types: 'not array at all')
           expect(message).to be_invalid
-          expect(message.errors[:types].length).to eq 1
+          expect(message.errors[:types]).to include('must be an array')
         end
 
         it 'allows types to be nil' do
@@ -95,7 +95,7 @@ module VCAP::CloudController
         it 'validates states to be an array' do
           message = PackagesListMessage.new(states: 'not array at all')
           expect(message).to be_invalid
-          expect(message.errors[:states].length).to eq 1
+          expect(message.errors[:states]).to include('must be an array')
         end
 
         it 'allows states to be nil' do
@@ -108,7 +108,7 @@ module VCAP::CloudController
         it 'validates app_guids is an array' do
           message = PackagesListMessage.new app_guids: 'tricked you, not an array'
           expect(message).to be_invalid
-          expect(message.errors[:app_guids].length).to eq 1
+          expect(message.errors[:app_guids]).to include('must be an array')
         end
 
         context 'when it is an app nested query and the user provides app_guids' do
@@ -117,6 +117,19 @@ module VCAP::CloudController
             expect(message).to_not be_valid
             expect(message.errors[:base]).to include("Unknown query parameter(s): 'app_guids'")
           end
+        end
+      end
+
+      context 'guids' do
+        it 'is not valid if guids is not an array' do
+          message = PackagesListMessage.new guids: 'tricked you, not an array'
+          expect(message).to be_invalid
+          expect(message.errors[:guids]). to include('must be an array')
+        end
+
+        it 'allows guids to be nil' do
+          message = PackagesListMessage.new(guids: nil)
+          expect(message).to be_valid
         end
       end
     end

@@ -3,7 +3,6 @@ require 'queries/package_list_fetcher'
 
 module VCAP::CloudController
   describe PackageListFetcher do
-
     let(:space1) { Space.make }
     let(:space2) { Space.make }
     let(:app_in_space1) { AppModel.make(space_guid: space1.guid) }
@@ -59,6 +58,14 @@ module VCAP::CloudController
             expect(results.records).to match_array([package_in_space1, package2_in_space1, package_for_app3])
           end
         end
+
+        context 'filtering guids' do
+          let(:filters) { { guids: [package_for_app2.guid, package_for_app3.guid] } }
+
+          it 'returns all the packages associated with the requested app guid' do
+            expect(results.records).to match_array([package_for_app2, package_for_app3])
+          end
+        end
       end
     end
 
@@ -75,7 +82,6 @@ module VCAP::CloudController
       end
 
       describe 'filtering on messages' do
-
         context 'filtering types' do
           let(:filters) { { types: [PackageModel::BITS_TYPE] } }
 
@@ -94,6 +100,14 @@ module VCAP::CloudController
 
         context 'filtering app guids' do
           let(:filters) { { app_guids: [app_in_space1.guid] } }
+
+          it 'returns all the packages associated with the requested app guid' do
+            expect(results.records).to match_array([package_in_space1, package2_in_space1])
+          end
+        end
+
+        context 'filtering guids' do
+          let(:filters) { { guids: [package_in_space1.guid, package2_in_space1.guid] } }
 
           it 'returns all the packages associated with the requested app guid' do
             expect(results.records).to match_array([package_in_space1, package2_in_space1])
@@ -120,12 +134,10 @@ module VCAP::CloudController
       end
 
       describe 'filtering on messages' do
-
         context 'filtering types' do
           let(:filters) { { types: [PackageModel::BITS_TYPE], app_guid: app_in_space1.guid } }
 
           it 'returns all of the packages with the requested types' do
-            puts results.inspect
             expect(results.records).to match_array([package_in_space1])
           end
         end
