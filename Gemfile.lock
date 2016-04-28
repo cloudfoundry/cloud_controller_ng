@@ -288,7 +288,7 @@ GEM
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
     rainbow (2.1.0)
-    rake (10.5.0)
+    rake (11.1.2)
     rbvmomi (1.8.2)
       builder
       nokogiri (>= 1.4.1)
