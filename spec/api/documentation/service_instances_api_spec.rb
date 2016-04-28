@@ -261,7 +261,7 @@ EOF
       expect(parsed_response['total_pages']).to eq(1)
       expect(parsed_response['resources'][0]['metadata']['guid']).to eq(service_key.guid)
       expect(parsed_response['resources'][0]['metadata']['url']).to eq("/v2/service_keys/#{service_key.guid}")
-      expect(parsed_response['resources'][0]['entity']['name']).to eq("a-service-key")
+      expect(parsed_response['resources'][0]['entity']['name']).to eq('a-service-key')
       expect(parsed_response['resources'][0]['entity']['service_instance_guid']).to eq(service_instance.guid)
     end
   end
