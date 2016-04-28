@@ -52,6 +52,10 @@ module VCAP::CloudController
         app_dataset = app_dataset.where(space_guid: message.space_guids)
       end
 
+      if message.requested? :organization_guids
+        app_dataset = app_dataset.where(space_guid: Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:guid))
+      end
+
       app_dataset
     end
   end

@@ -6,6 +6,9 @@ module VCAP::CloudController
     let(:space1) { Space.make }
     let(:space2) { Space.make }
     let(:space3) { Space.make }
+    let(:org_1_guid) { space1.organization.guid }
+    let(:org_2_guid) { space2.organization.guid }
+    let(:org_3_guid) { space3.organization.guid }
     let(:app_in_space1) { AppModel.make(space_guid: space1.guid) }
     let(:app2_in_space1) { AppModel.make(space_guid: space1.guid) }
     let(:app3_in_space2) { AppModel.make(space_guid: space2.guid) }
@@ -62,7 +65,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'filtering guids' do
+        context 'filtering package guids' do
           let(:filters) { { guids: [package_for_app2.guid, package_for_app3.guid] } }
 
           it 'returns all the packages associated with the requested app guid' do
@@ -75,6 +78,14 @@ module VCAP::CloudController
 
           it 'returns all the packages associated with the requested app guid' do
             expect(results.records).to match_array([package_in_space1, package2_in_space1, package_for_app2, package_for_app3])
+          end
+        end
+
+        context 'filtering org guids' do
+          let(:filters) { { organization_guids: [org_2_guid, org_3_guid] } }
+
+          it 'returns the correct set of tasks' do
+            expect(results.records).to match_array([package_in_space3, package_for_app3])
           end
         end
       end
@@ -117,7 +128,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'filtering guids' do
+        context 'filtering package guids' do
           let(:filters) { { guids: [package_in_space1.guid, package2_in_space1.guid] } }
 
           it 'returns all the packages associated with the requested app guid' do
@@ -129,6 +140,14 @@ module VCAP::CloudController
           let(:filters) { { space_guids: [space3.guid] } }
 
           it 'returns all the packages associated with the requested space guid' do
+            expect(results.records).to match_array([package_in_space3])
+          end
+        end
+
+        context 'filtering org guids' do
+          let(:filters) { { organization_guids: [org_2_guid, org_3_guid] } }
+
+          it 'returns the correct set of tasks' do
             expect(results.records).to match_array([package_in_space3])
           end
         end
@@ -166,6 +185,14 @@ module VCAP::CloudController
 
           it 'returns all of the packages with the requested states' do
             expect(results.records).to match_array([package2_in_space1])
+          end
+        end
+
+        context 'filtering package guids' do
+          let(:filters) { { guids: [package_in_space1.guid, package2_in_space1.guid], app_guid: app_in_space1.guid } }
+
+          it 'returns all the packages associated with the requested app guid' do
+            expect(results.records).to match_array([package_in_space1, package2_in_space1])
           end
         end
 

@@ -462,6 +462,43 @@ describe 'Packages' do
         expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package_on_space2.guid, package_on_space1.guid])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
+
+      it 'filters by org guids' do
+        org1_guid = space.organization.guid
+
+        package_in_org1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+
+        space2 = VCAP::CloudController::Space.make
+        org2_guid = space2.organization.guid
+        app_model2 = VCAP::CloudController::AppModel.make(space_guid: space2.guid)
+
+        space2.organization.add_user(user)
+        space2.add_developer(user)
+
+        package_in_org2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
+
+        space3 = VCAP::CloudController::Space.make
+        space3.organization.add_user(user)
+        space3.add_developer(user)
+        app_model3 = VCAP::CloudController::AppModel.make(space_guid: space3.guid)
+        VCAP::CloudController::PackageModel.make(app_guid: app_model3.guid)
+
+        get "/v3/packages?organization_guids=#{org1_guid},#{org2_guid}", {}, user_header
+
+        expected_pagination = {
+          'total_results' => 2,
+          'first'         => { 'href' => "/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
+          'last'          => { 'href' => "/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
+          'next'          => nil,
+          'previous'      => nil
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package_in_org1.guid, package_in_org2.guid])
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
     end
   end
 
