@@ -9,6 +9,11 @@ language: ruby
 bundler_args: --deployment --without development
 cache: bundler
 
+# Travis cannot find the binary for Ruby 2.3, so we specifically choose 2.3.1
+# instead of using the .ruby-version file
+rvm:
+  - 2.3.1
+
 before_script:
   - bundle exec rake db:create
   - gem install travis-artifacts
