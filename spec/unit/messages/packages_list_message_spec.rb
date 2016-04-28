@@ -8,7 +8,9 @@ module VCAP::CloudController
         {
           'states' => 'state1,state2',
           'types' => 'type1,type2',
-          'app_guids' => 'guid1,guid2',
+          'app_guids' => 'appguid1,appguid2',
+          'space_guids' => 'spaceguid1,spaceguid2',
+          'guids' => 'guid1,guid2',
           'page'     => 1,
           'per_page' => 5,
         }
@@ -22,7 +24,9 @@ module VCAP::CloudController
         expect(message.per_page).to eq(5)
         expect(message.states).to eq(['state1', 'state2'])
         expect(message.types).to eq(['type1', 'type2'])
-        expect(message.app_guids).to eq(['guid1', 'guid2'])
+        expect(message.app_guids).to eq(['appguid1', 'appguid2'])
+        expect(message.guids).to eq(['guid1', 'guid2'])
+        expect(message.space_guids).to eq(['spaceguid1', 'spaceguid2'])
       end
 
       it 'converts requested keys to symbols' do
@@ -33,23 +37,26 @@ module VCAP::CloudController
         expect(message.requested?(:states)).to be_truthy
         expect(message.requested?(:types)).to be_truthy
         expect(message.requested?(:app_guids)).to be_truthy
+        expect(message.requested?(:space_guids)).to be_truthy
       end
     end
 
     describe '#to_param_hash' do
       let(:opts) do
         {
-          types:             ['bits', 'docker'],
+          types:              ['bits', 'docker'],
           states:             ['SUCCEEDED', 'FAILED'],
+          guids:              ['guid1', 'guid2'],
+          space_guids:        ['spaceguid1', 'spaceguid2'],
           app_guids:          ['appguid1', 'appguid2'],
-          app_guid:          'appguid',
+          app_guid:           'appguid',
           page:               1,
           per_page:           5,
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:states, :types, :app_guids]
+        expected_params = [:states, :types, :app_guids, :guids, :space_guids]
         expect(PackagesListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -58,8 +65,13 @@ module VCAP::CloudController
       it 'accepts a set of fields' do
         expect {
           PackagesListMessage.new({
-              page:               1,
-              per_page:           5,
+              page:           1,
+              per_page:       5,
+              states:         ['READY'],
+              types:          ['bits'],
+              guids:          ['package-guid'],
+              app_guids:      ['app-guid'],
+              space_guids:      ['space-guid'],
             })
         }.not_to raise_error
       end
@@ -129,6 +141,19 @@ module VCAP::CloudController
 
         it 'allows guids to be nil' do
           message = PackagesListMessage.new(guids: nil)
+          expect(message).to be_valid
+        end
+      end
+
+      context 'space_guids' do
+        it 'validates space_guids to be an array' do
+          message = PackagesListMessage.new(space_guids: 'not an array at all')
+          expect(message).to be_invalid
+          expect(message.errors[:space_guids]).to include('must be an array')
+        end
+
+        it 'allows space_guids to be nil' do
+          message = PackagesListMessage.new(space_guids: nil)
           expect(message).to be_valid
         end
       end

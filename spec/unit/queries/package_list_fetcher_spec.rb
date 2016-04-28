@@ -5,12 +5,15 @@ module VCAP::CloudController
   describe PackageListFetcher do
     let(:space1) { Space.make }
     let(:space2) { Space.make }
+    let(:space3) { Space.make }
     let(:app_in_space1) { AppModel.make(space_guid: space1.guid) }
     let(:app2_in_space1) { AppModel.make(space_guid: space1.guid) }
     let(:app3_in_space2) { AppModel.make(space_guid: space2.guid) }
+    let(:app4_in_space3) { AppModel.make(space_guid: space3.guid) }
 
     let!(:package_in_space1) { PackageModel.make(app_guid: app_in_space1.guid, type: PackageModel::BITS_TYPE, state: PackageModel::FAILED_STATE) }
     let!(:package2_in_space1) { PackageModel.make(app_guid: app_in_space1.guid, type: PackageModel::DOCKER_TYPE, state: PackageModel::READY_STATE) }
+    let!(:package_in_space3) { PackageModel.make(app_guid: app4_in_space3.guid, type: PackageModel::DOCKER_TYPE, state: PackageModel::FAILED_STATE) }
 
     let!(:package_for_app2) { PackageModel.make(app_guid: app2_in_space1.guid, type: PackageModel::DOCKER_TYPE, state: PackageModel::CREATED_STATE) }
     let!(:package_for_app3) { PackageModel.make(app_guid: app3_in_space2.guid, type: PackageModel::BITS_TYPE) }
@@ -31,7 +34,7 @@ module VCAP::CloudController
       end
 
       it 'returns all of the packages' do
-        expect(results.records).to match_array([package_in_space1, package2_in_space1, package_for_app2, package_for_app3])
+        expect(results.records).to match_array([package_in_space1, package2_in_space1, package_for_app2, package_for_app3, package_in_space3])
       end
 
       describe 'filtering on messages' do
@@ -47,7 +50,7 @@ module VCAP::CloudController
           let(:filters) { { states: [PackageModel::READY_STATE, PackageModel::FAILED_STATE] } }
 
           it 'returns all of the packages with the requested states' do
-            expect(results.records).to match_array([package_in_space1, package2_in_space1])
+            expect(results.records).to match_array([package_in_space1, package2_in_space1, package_in_space3])
           end
         end
 
@@ -66,19 +69,27 @@ module VCAP::CloudController
             expect(results.records).to match_array([package_for_app2, package_for_app3])
           end
         end
+
+        context 'filtering space_guids' do
+          let(:filters) { { space_guids: [space1.guid, space2.guid] } }
+
+          it 'returns all the packages associated with the requested app guid' do
+            expect(results.records).to match_array([package_in_space1, package2_in_space1, package_for_app2, package_for_app3])
+          end
+        end
       end
     end
 
     describe '#fetch_for_spaces' do
       before do
-        results = fetcher.fetch_for_spaces(message: message, space_guids: [space1.guid])
+        results = fetcher.fetch_for_spaces(message: message, space_guids: [space1.guid, space3.guid])
       end
       it 'returns a PaginatedResult' do
         expect(results).to be_a(PaginatedResult)
       end
 
       it 'returns only the packages in spaces requested' do
-        expect(results.records).to match_array([package_in_space1, package2_in_space1, package_for_app2])
+        expect(results.records).to match_array([package_in_space1, package2_in_space1, package_for_app2, package_in_space3])
       end
 
       describe 'filtering on messages' do
@@ -111,6 +122,14 @@ module VCAP::CloudController
 
           it 'returns all the packages associated with the requested app guid' do
             expect(results.records).to match_array([package_in_space1, package2_in_space1])
+          end
+        end
+
+        context 'filtering space guids' do
+          let(:filters) { { space_guids: [space3.guid] } }
+
+          it 'returns all the packages associated with the requested space guid' do
+            expect(results.records).to match_array([package_in_space3])
           end
         end
       end

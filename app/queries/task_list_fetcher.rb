@@ -1,30 +1,28 @@
 module VCAP::CloudController
   class TaskListFetcher
     def fetch_for_spaces(message:, space_guids:)
-      pagination_options = message.pagination_options
       app_dataset = AppModel.select(:id).where(space_guid: space_guids)
-      SequelPaginator.new.get_page(filter(message: message, app_dataset: app_dataset), pagination_options)
+      filtered_paginator(message, app_dataset)
     end
 
     def fetch_all(message:)
-      pagination_options = message.pagination_options
       app_dataset = AppModel.select(:id)
-      SequelPaginator.new.get_page(filter(message: message, app_dataset: app_dataset), pagination_options)
+      filtered_paginator(message, app_dataset)
     end
 
     def fetch_for_app(message:)
-      pagination_options = message.pagination_options
       app_dataset = AppModel.where(guid: message.app_guid).eager(:space, space: :organization)
       app = app_dataset.first
       return nil unless app
-      [app, SequelPaginator.new.get_page(filter(message: message, app_dataset: app_dataset), pagination_options)]
+      [app, filtered_paginator(message, app_dataset)]
     end
 
     private
 
-    def filter(message:, app_dataset:)
+    def filtered_paginator(message, app_dataset)
       task_dataset = TaskModel.dataset
-      filter_task_dataset(message, task_dataset).where(app: filter_app_dataset(message, app_dataset))
+      filtered_dataset = filter_task_dataset(message, task_dataset).where(app: filter_app_dataset(message, app_dataset))
+      SequelPaginator.new.get_page(filtered_dataset, message.pagination_options)
     end
 
     def filter_app_dataset(message, app_dataset)

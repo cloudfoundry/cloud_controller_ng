@@ -1,46 +1,58 @@
 module VCAP::CloudController
   class PackageListFetcher
     def fetch_all(message:)
-      pagination_options = message.pagination_options
-      dataset = PackageModel.dataset.eager(:docker_data)
-      filter(pagination_options, message, dataset)
+      app_dataset = AppModel.select(:id)
+      filtered_paginator(message, app_dataset)
     end
 
     def fetch_for_spaces(message:, space_guids:)
-      pagination_options = message.pagination_options
-      dataset = PackageModel.select_all(:packages).join(:apps_v3, guid: :app_guid, space_guid: space_guids).eager(:docker_data)
-      filter(pagination_options, message, dataset)
+      app_dataset = AppModel.select(:id).where(space_guid: space_guids)
+
+      filtered_paginator(message, app_dataset)
     end
 
     def fetch_for_app(message:)
-      pagination_options = message.pagination_options
-      app = AppModel.where(guid: message.app_guid).eager(:space, :organization).first
+      app_dataset = AppModel.where(guid: message.app_guid).eager(:space, :organization)
+      app = app_dataset.first
       return nil unless app
 
-      dataset = app.packages_dataset.eager(:docker_data)
-      [app, filter(pagination_options, message, dataset)]
+      [app, filtered_paginator(message, app_dataset)]
     end
 
     private
 
-    def filter(pagination_options, message, dataset)
+    def filtered_paginator(message, dataset)
+      package_dataset = PackageModel.dataset.eager(:docker_data)
+      filtered_dataset = filter_package_dataset(message, package_dataset).where(app: filter_app_dataset(message, dataset))
+      SequelPaginator.new.get_page(filtered_dataset, message.pagination_options)
+    end
+
+    def filter_package_dataset(message, package_dataset)
       if message.requested? :states
-        dataset = dataset.where(state: message.states)
+        package_dataset = package_dataset.where(state: message.states)
       end
 
       if message.requested? :types
-        dataset = dataset.where(type: message.types)
-      end
-
-      if message.requested? :app_guids
-        dataset = dataset.where(app_guid: message.app_guids)
+        package_dataset = package_dataset.where(type: message.types)
       end
 
       if message.requested? :guids
-        dataset = dataset.where(:"#{PackageModel.table_name}__guid" => message.guids)
+        package_dataset = package_dataset.where(:"#{PackageModel.table_name}__guid" => message.guids)
       end
 
-      SequelPaginator.new.get_page(dataset, pagination_options)
+      package_dataset
+    end
+
+    def filter_app_dataset(message, app_dataset)
+      if message.requested? :app_guids
+        app_dataset = app_dataset.where(app_guid: message.app_guids)
+      end
+
+      if message.requested? :space_guids
+        app_dataset = app_dataset.where(space_guid: message.space_guids)
+      end
+
+      app_dataset
     end
   end
 end
