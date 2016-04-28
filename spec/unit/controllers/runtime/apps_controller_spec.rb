@@ -1522,36 +1522,6 @@ module VCAP::CloudController
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(310008)
       end
-
-      context 'when an app exists with name greater than 255 characters' do
-        let(:database_type) { VCAP::CloudController::App.dataset.db.database_type }
-
-        def postgres?
-          database_type == :postgres
-        end
-
-        before do
-          if postgres?
-            app_obj.name = 'super-long' * 26
-            app_obj.save(validate: false)
-          end
-        end
-
-        it 'validates existing name before changing other things' do
-          next unless postgres?
-          put "/v2/apps/#{app_obj.guid}", MultiJson.dump(instances: 2)
-          expect(last_response.status).to eq(400)
-          expect(decoded_response['code']).to eq(100001)
-          expect(decoded_response['description']).to match(/name must be fewer than 255 characters/)
-        end
-      end
-
-      it 'validates length of name' do
-        put "/v2/apps/#{app_obj.guid}", MultiJson.dump(name: 'super-long' * 26)
-        expect(last_response.status).to eq(400)
-        expect(decoded_response['code']).to eq(100001)
-        expect(decoded_response['description']).to match(/name must be fewer than 255 characters/)
-      end
     end
   end
 end

@@ -417,12 +417,6 @@ module VCAP::CloudController
             app.save
           }.to raise_error(Sequel::ValidationFailed)
         end
-
-        it 'does not allow greater than 255 characters' do
-          app.name = 'super-long' * 26
-          expect { app.save }.to raise_error(Sequel::ValidationFailed)
-          expect(app.errors[:name]).to include('must be fewer than 255 characters')
-        end
       end
 
       describe 'metadata' do
