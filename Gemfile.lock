@@ -112,7 +112,7 @@ GEM
     erubis (2.7.0)
     eventmachine (1.0.9.1)
     excon (0.48.0)
-    fakefs (0.6.0)
+    fakefs (0.8.1)
     fission (0.5.0)
       CFPropertyList (~> 2.2)
     fluent-logger (0.5.1)
