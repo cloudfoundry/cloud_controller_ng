@@ -4,8 +4,9 @@ require 'queries/process_list_fetcher'
 module VCAP::CloudController
   describe ProcessListFetcher do
     let(:pagination_options) { PaginationOptions.new({}) }
-    let(:message) { ProcessesListMessage.new({}) }
+    let(:message) { ProcessesListMessage.new(filters) }
     let(:fetcher) { described_class.new }
+    let(:filters) { {} }
 
     describe '#fetch_all' do
       it 'returns a PaginatedResult' do
@@ -20,6 +21,19 @@ module VCAP::CloudController
 
         results = fetcher.fetch_all(message: message).records
         expect(results).to match_array([app1, app2, app3])
+      end
+
+      context 'with a type filter' do
+        let(:filters) { { types: ['web'] } }
+
+        it 'excludes non-matching processes' do
+          web1 = App.make(type: 'web')
+          web2 = App.make(type: 'web')
+          worker1 = App.make(type: 'worker')
+
+          results = fetcher.fetch_all(message: message).records
+          expect(results).to match_array([web1, web2])
+        end
       end
     end
 

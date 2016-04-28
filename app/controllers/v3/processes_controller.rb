@@ -29,7 +29,7 @@ class ProcessesController < ApplicationController
                          end
     end
 
-    render status: :ok, json: process_presenter.present_json_list(paginated_result, base_url(resource: 'processes'))
+    render status: :ok, json: process_presenter.present_json_list(paginated_result, base_url(resource: 'processes'), message)
   end
 
   def show

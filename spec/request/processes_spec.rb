@@ -7,8 +7,8 @@ describe 'Processes' do
   let(:developer_headers) { headers_for(developer) }
 
   describe 'GET /v3/processes' do
-    it 'returns a paginated list of processes' do
-      process1 = VCAP::CloudController::ProcessModel.make(
+    let!(:process1) {
+      VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
         space:      space,
@@ -18,7 +18,10 @@ describe 'Processes' do
         disk_quota: 1024,
         command:    'rackup',
       )
-      process2 = VCAP::CloudController::ProcessModel.make(
+    }
+
+    let!(:process2) {
+      VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
         space:      space,
@@ -28,8 +31,13 @@ describe 'Processes' do
         disk_quota: 200,
         command:    'start worker',
       )
-      VCAP::CloudController::ProcessModel.make(:process, app: app_model, space: space)
+    }
 
+    let!(:process3) {
+      VCAP::CloudController::ProcessModel.make(:process, app: app_model, space: space)
+    }
+
+    it 'returns a paginated list of processes' do
       get '/v3/processes?per_page=2', nil, developer_headers
 
       expected_response = {
@@ -96,6 +104,53 @@ describe 'Processes' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    context 'given a type filter' do
+      it 'returns only the matching process' do
+        get '/v3/processes?per_page=2&types=worker,doesnotexist', nil, developer_headers
+
+        expected_response = {
+          'pagination' => {
+            'total_results' => 1,
+            'first'         => { 'href' => '/v3/processes?page=1&per_page=2&types=worker%2Cdoesnotexist' },
+            'last'          => { 'href' => '/v3/processes?page=1&per_page=2&types=worker%2Cdoesnotexist' },
+            'next'          => nil,
+            'previous'      => nil,
+          },
+          'resources' => [
+            {
+              'guid'         => process2.guid,
+              'type'         => 'worker',
+              'command'      => 'start worker',
+              'instances'    => 1,
+              'memory_in_mb' => 100,
+              'disk_in_mb'   => 200,
+              'ports'        => [],
+              'health_check' => {
+                'type' => 'port',
+                'data' => {
+                  'timeout' => nil
+                }
+              },
+              'created_at'   => iso8601,
+              'updated_at'   => nil,
+              'links'        => {
+                'self'  => { 'href' => "/v3/processes/#{process2.guid}" },
+                'scale' => { 'href' => "/v3/processes/#{process2.guid}/scale", 'method' => 'PUT' },
+                'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
+                'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+                'stats' => { 'href' => "/v3/processes/#{process2.guid}/stats" },
+              },
+            },
+          ]
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
     end
   end
 
@@ -446,8 +501,8 @@ describe 'Processes' do
   end
 
   describe 'GET /v3/apps/:guid/processes' do
-    it 'returns a paginated list of processes for an app' do
-      process1 = VCAP::CloudController::ProcessModel.make(
+    let!(:process1) {
+      VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
         space:      space,
@@ -457,7 +512,10 @@ describe 'Processes' do
         disk_quota: 1024,
         command:    'rackup',
       )
-      process2 = VCAP::CloudController::ProcessModel.make(
+    }
+
+    let!(:process2) {
+      VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
         space:      space,
@@ -467,8 +525,13 @@ describe 'Processes' do
         disk_quota: 200,
         command:    'start worker',
       )
-      VCAP::CloudController::ProcessModel.make(:process, app: app_model, space: space)
+    }
 
+    let!(:process3) {
+      VCAP::CloudController::ProcessModel.make(:process, app: app_model, space: space)
+    }
+
+    it 'returns a paginated list of processes for an app' do
       get "/v3/apps/#{app_model.guid}/processes?per_page=2", nil, developer_headers
 
       expected_response = {
@@ -535,6 +598,53 @@ describe 'Processes' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    context 'given a type filter' do
+      it 'returns only the matching processes' do
+        get "/v3/apps/#{app_model.guid}/processes?per_page=2&types=worker", nil, developer_headers
+
+        expected_response = {
+          'pagination' => {
+            'total_results' => 1,
+            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=1&per_page=2&types=worker" },
+            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=1&per_page=2&types=worker" },
+            'next'          => nil,
+            'previous'      => nil,
+          },
+          'resources' => [
+            {
+              'guid'         => process2.guid,
+              'type'         => 'worker',
+              'command'      => 'start worker',
+              'instances'    => 1,
+              'memory_in_mb' => 100,
+              'disk_in_mb'   => 200,
+              'ports'        => [],
+              'health_check' => {
+                'type' => 'port',
+                'data' => {
+                  'timeout' => nil
+                }
+              },
+              'created_at'   => iso8601,
+              'updated_at'   => nil,
+              'links'        => {
+                'self'  => { 'href' => "/v3/processes/#{process2.guid}" },
+                'scale' => { 'href' => "/v3/processes/#{process2.guid}/scale", 'method' => 'PUT' },
+                'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
+                'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+                'stats' => { 'href' => "/v3/processes/#{process2.guid}/stats" },
+              },
+            }
+          ]
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
     end
   end
 
