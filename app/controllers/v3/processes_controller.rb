@@ -52,7 +52,7 @@ class ProcessesController < ApplicationController
 
     process = ProcessModel.where(guid: guid).eager(:space, :organization).all.first
     process_not_found! unless process && can_read?(process.space.guid, process.organization.guid)
-    unauthorized! unless can_update?(process.space.guid)
+    unauthorized! unless can_write?(process.space.guid)
 
     ProcessUpdate.new(current_user.guid, current_user_email).update(process, message)
 
@@ -71,7 +71,7 @@ class ProcessesController < ApplicationController
       process_not_found! unless process && can_read?(space.guid, org.guid)
     end
 
-    unauthorized! unless can_terminate?(space.guid)
+    unauthorized! unless can_write?(space.guid)
 
     ProcessTerminate.new(current_user.guid, current_user_email, process, params[:index].to_i).terminate
 
@@ -95,7 +95,7 @@ class ProcessesController < ApplicationController
       process_not_found! unless process && can_read?(space.guid, org.guid)
     end
 
-    unauthorized! unless can_scale?(space.guid)
+    unauthorized! unless can_write?(space.guid)
 
     ProcessScale.new(current_user, current_user_email, process, message).scale
 
@@ -128,12 +128,6 @@ class ProcessesController < ApplicationController
   def process_presenter
     ProcessPresenter.new
   end
-
-  def can_update?(space_guid)
-    roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
-  end
-  alias_method :can_terminate?, :can_update?
-  alias_method :can_scale?, :can_update?
 
   def process_not_found!
     resource_not_found!(:process)

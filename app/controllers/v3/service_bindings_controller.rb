@@ -20,7 +20,7 @@ class ServiceBindingsController < ApplicationController
     app, service_instance = ServiceBindingCreateFetcher.new.fetch(app_guid, service_instance_guid)
     app_not_found! unless app
     service_instance_not_found! unless service_instance
-    unauthorized! unless can_create?(app.space.guid)
+    unauthorized! unless can_write?(app.space.guid)
 
     begin
       service_binding = ServiceBindingCreate.new(current_user.guid, current_user_email).create(app, service_instance, message)
@@ -46,7 +46,7 @@ class ServiceBindingsController < ApplicationController
     paginated_result = if roles.admin?
                          ServiceBindingListFetcher.new.fetch_all(message: message)
                        else
-                         ServiceBindingListFetcher.new.fetch(message: message, space_guids: readable_space_guids_for_user)
+                         ServiceBindingListFetcher.new.fetch(message: message, space_guids: readable_space_guids)
                        end
 
     render status: :ok, json: service_binding_presenter.present_json_list(paginated_result, '/v3/service_bindings')
@@ -56,7 +56,7 @@ class ServiceBindingsController < ApplicationController
     service_binding = VCAP::CloudController::ServiceBindingModel.find(guid: params[:guid])
 
     service_binding_not_found! unless service_binding && can_read?(service_binding.space.guid, service_binding.space.organization.guid)
-    unauthorized! unless can_delete?(service_binding.space.guid)
+    unauthorized! unless can_write?(service_binding.space.guid)
 
     ServiceBindingModelDelete.new(current_user.guid, current_user_email).synchronous_delete(service_binding)
 
@@ -71,15 +71,6 @@ class ServiceBindingsController < ApplicationController
   def service_binding_presenter
     ServiceBindingModelPresenter.new
   end
-
-  def readable_space_guids_for_user
-    membership.space_guids_for_roles(ROLES_FOR_READING)
-  end
-
-  def can_create?(space_guid)
-    roles.admin? || membership.has_any_roles?([VCAP::CloudController::Membership::SPACE_DEVELOPER], space_guid)
-  end
-  alias_method :can_delete?, :can_create?
 
   def service_instance_not_found!
     resource_not_found!(:service_instance)

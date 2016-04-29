@@ -41,7 +41,7 @@ class DropletsController < ApplicationController
     droplet, space, org = DropletDeleteFetcher.new.fetch(params[:guid])
     droplet_not_found! unless droplet && can_read?(space.guid, org.guid)
 
-    unauthorized! unless can_delete?(space.guid)
+    unauthorized! unless can_write?(space.guid)
 
     droplet_deletor = DropletDelete.new(current_user.guid, current_user_email)
     droplet_deletor.delete(droplet)
@@ -59,7 +59,7 @@ class DropletsController < ApplicationController
 
     destination_app = AppModel.where(guid: message.app_guid).eager(:space, :organization).all.first
     app_not_found! unless destination_app && can_read?(destination_app.space.guid, destination_app.organization.guid)
-    unauthorized! unless can_create?(destination_app.space.guid)
+    unauthorized! unless can_write?(destination_app.space.guid)
 
     droplet = DropletCopy.new(source_droplet).copy(destination_app, current_user.guid, current_user_email)
 
@@ -78,7 +78,7 @@ class DropletsController < ApplicationController
       FeatureFlag.raise_unless_enabled!('diego_docker')
     end
 
-    unauthorized! unless can_create?(package.space.guid)
+    unauthorized! unless can_write?(package.space.guid)
 
     lifecycle = LifecycleProvider.provide(package, staging_message)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
@@ -99,11 +99,6 @@ class DropletsController < ApplicationController
   end
 
   private
-
-  def can_create?(space_guid)
-    roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
-  end
-  alias_method :can_delete?, :can_create?
 
   def droplet_not_found!
     resource_not_found!(:droplet)

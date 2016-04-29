@@ -311,7 +311,7 @@ describe RouteMappingsController, type: :controller do
     context 'when accessed as an app subresource' do
       before do
         allow(membership).to receive(:has_any_roles?).with(
-          AppSubresource::ROLES_FOR_READING, app.space.guid, app.organization.guid).and_return(true)
+          VCAP::CloudController::Permissions::ROLES_FOR_READING, app.space.guid, app.organization.guid).and_return(true)
       end
 
       it 'uses the app as a filter' do
@@ -361,7 +361,7 @@ describe RouteMappingsController, type: :controller do
       context 'when the user does not have permissions to read the app' do
         before do
           allow(membership).to receive(:has_any_roles?).with(
-            AppSubresource::ROLES_FOR_READING, app.space.guid, app.organization.guid).and_return(false)
+            VCAP::CloudController::Permissions::ROLES_FOR_READING, app.space.guid, app.organization.guid).and_return(false)
         end
 
         it 'returns a 404 Resource Not Found error' do
@@ -375,7 +375,7 @@ describe RouteMappingsController, type: :controller do
       context 'when the user can read, but not write to the space' do
         before do
           allow(membership).to receive(:has_any_roles?).with(
-            AppSubresource::ROLES_FOR_READING, app.space.guid, app.organization.guid).and_return(true)
+            VCAP::CloudController::Permissions::ROLES_FOR_READING, app.space.guid, app.organization.guid).and_return(true)
         end
 
         it 'returns a 200' do

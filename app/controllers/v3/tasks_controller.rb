@@ -39,7 +39,7 @@ class TasksController < ApplicationController
     app, space, org, droplet = TaskCreateFetcher.new.fetch(app_guid: params[:app_guid], droplet_guid: message.droplet_guid)
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_create?(space.guid)
+    unauthorized! unless can_write?(space.guid)
     droplet_not_found! if message.requested?(:droplet_guid) && droplet.nil?
 
     task = TaskCreate.new(configuration).create(app, message, current_user.guid, current_user_email, droplet: droplet)
@@ -59,7 +59,7 @@ class TasksController < ApplicationController
       task_not_found! unless task && can_read?(space.guid, org.guid)
     end
 
-    unauthorized! unless can_cancel?(space.guid)
+    unauthorized! unless can_write?(space.guid)
 
     TaskCancel.new.cancel(task: task, user: current_user, email: current_user_email)
 
@@ -90,11 +90,6 @@ class TasksController < ApplicationController
   def droplet_not_found!
     resource_not_found!(:droplet)
   end
-
-  def can_create?(space_guid)
-    roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
-  end
-  alias_method :can_cancel?, :can_create?
 
   def list_fetcher
     @list_fetcher ||= TaskListFetcher.new

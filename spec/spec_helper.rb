@@ -42,6 +42,7 @@ RSpec.configure do |rspec_config|
   rspec_config.include BackgroundJobHelpers
 
   rspec_config.include ServiceBrokerHelpers
+  rspec_config.include UserHelpers
   rspec_config.include ControllerHelpers, type: :v2_controller, file_path: EscapedPath.join(%w(spec unit controllers))
   rspec_config.include ControllerHelpers, type: :api
   rspec_config.include ControllerHelpers, file_path: EscapedPath.join(%w(spec acceptance))

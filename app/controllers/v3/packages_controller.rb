@@ -40,7 +40,7 @@ class PackagesController < ApplicationController
 
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
     package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
-    unauthorized! unless can_upload?(package.space.guid)
+    unauthorized! unless can_write?(package.space.guid)
 
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     bits_already_uploaded! if package.state != PackageModel::CREATED_STATE
@@ -80,7 +80,7 @@ class PackagesController < ApplicationController
   def destroy
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
     package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
-    unauthorized! unless can_delete?(package.space.guid)
+    unauthorized! unless can_write?(package.space.guid)
 
     PackageDelete.new(current_user.guid, current_user_email).delete(package)
 
@@ -101,7 +101,7 @@ class PackagesController < ApplicationController
 
     app = AppModel.where(guid: params[:app_guid]).eager(:space, :organization).all.first
     app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
-    unauthorized! unless can_create?(app.space.guid)
+    unauthorized! unless can_write?(app.space.guid)
 
     package = PackageCreate.new(current_user.guid, current_user_email).create(message)
 
@@ -113,11 +113,11 @@ class PackagesController < ApplicationController
   def create_copy
     destination_app = AppModel.where(guid: params[:app_guid]).eager(:space, :organization).all.first
     app_not_found! unless destination_app && can_read?(destination_app.space.guid, destination_app.organization.guid)
-    unauthorized! unless can_create?(destination_app.space.guid)
+    unauthorized! unless can_write?(destination_app.space.guid)
 
     source_package = PackageModel.where(guid: params[:source_package_guid]).eager(:app, :space, space: :organization).eager(:docker_data).all.first
     package_not_found! unless source_package && can_read?(source_package.space.guid, source_package.space.organization.guid)
-    unauthorized! unless can_create?(source_package.space.guid)
+    unauthorized! unless can_write?(source_package.space.guid)
 
     package = PackageCopy.new(current_user.guid, current_user_email).copy(params[:app_guid], source_package)
 
@@ -127,12 +127,6 @@ class PackagesController < ApplicationController
   end
 
   private
-
-  def can_create?(space_guid)
-    roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
-  end
-  alias_method :can_delete?, :can_create?
-  alias_method :can_upload?, :can_create?
 
   def package_not_found!
     resource_not_found!(:package)

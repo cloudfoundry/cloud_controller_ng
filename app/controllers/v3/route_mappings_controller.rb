@@ -63,7 +63,7 @@ class RouteMappingsController < ApplicationController
     route_mapping = RouteMappingModel.where(guid: params['route_mapping_guid']).eager(:route, :space, space: :organization, app: :processes).all.first
 
     route_mapping_not_found! unless route_mapping && can_read?(route_mapping.space.guid, route_mapping.space.organization.guid)
-    unauthorized! unless can_delete?(route_mapping.space.guid)
+    unauthorized! unless can_write?(route_mapping.space.guid)
 
     RouteMappingDelete.new(current_user, current_user_email).delete(route_mapping)
     head :no_content
@@ -76,11 +76,6 @@ class RouteMappingsController < ApplicationController
   def route_not_found!
     resource_not_found!(:route)
   end
-
-  def can_write?(space_guid)
-    roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
-  end
-  alias_method :can_delete?, :can_write?
 
   def list_fetcher
     RouteMappingListFetcher.new

@@ -27,7 +27,7 @@ class AppsV3Controller < ApplicationController
     paginated_result = if roles.admin?
                          AppListFetcher.new.fetch_all(pagination_options, message)
                        else
-                         AppListFetcher.new.fetch(pagination_options, message, allowed_space_guids)
+                         AppListFetcher.new.fetch(pagination_options, message, readable_space_guids)
                        end
 
     render status: :ok, json: AppPresenter.new.present_json_list(paginated_result, message)
@@ -48,7 +48,7 @@ class AppsV3Controller < ApplicationController
     space = Space.where(guid: message.space_guid).first
     space_not_found! unless space
     space_not_found! unless can_read?(space.guid, space.organization_guid)
-    unauthorized! unless can_create?(message.space_guid)
+    unauthorized! unless can_write?(message.space_guid)
 
     if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
       FeatureFlag.raise_unless_enabled!('diego_docker')
@@ -71,7 +71,7 @@ class AppsV3Controller < ApplicationController
     app, space, org = AppFetcher.new.fetch(params[:guid])
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_update?(space.guid)
+    unauthorized! unless can_write?(space.guid)
 
     lifecycle = AppLifecycleProvider.provide_for_update(message, app)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
@@ -89,7 +89,7 @@ class AppsV3Controller < ApplicationController
     app, space, org = AppDeleteFetcher.new.fetch(params[:guid])
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_delete?(space.guid)
+    unauthorized! unless can_write?(space.guid)
 
     AppDelete.new(current_user.guid, current_user_email).delete(app)
 
@@ -102,8 +102,7 @@ class AppsV3Controller < ApplicationController
     app, space, org = AppFetcher.new.fetch(params[:guid])
     app_not_found! unless app && can_read?(space.guid, org.guid)
     droplet_not_found! unless app.droplet
-    unauthorized! unless can_start?(space.guid)
-
+    unauthorized! unless can_write?(space.guid)
     if app.droplet.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
       FeatureFlag.raise_unless_enabled!('diego_docker')
     end
@@ -118,7 +117,7 @@ class AppsV3Controller < ApplicationController
   def stop
     app, space, org = AppFetcher.new.fetch(params[:guid])
     app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_stop?(space.guid)
+    unauthorized! unless can_write?(space.guid)
 
     AppStop.new(current_user, current_user_email).stop(app)
 
@@ -130,7 +129,7 @@ class AppsV3Controller < ApplicationController
   def show_environment
     app, space, org = AppFetcher.new.fetch(params[:guid])
     app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_read_envs?(space.guid)
+    unauthorized! unless can_write?(space.guid)
 
     FeatureFlag.raise_unless_enabled!('space_developer_env_var_visibility') unless roles.admin?
 
@@ -143,7 +142,7 @@ class AppsV3Controller < ApplicationController
     app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_update?(space.guid)
+    unauthorized! unless can_write?(space.guid)
     unprocessable!('Stop the app before changing droplet') if app.desired_state != 'STOPPED'
 
     droplet_not_found! if droplet.nil?
@@ -165,31 +164,6 @@ class AppsV3Controller < ApplicationController
   end
 
   private
-
-  def can_read?(space_guid, org_guid)
-    roles.admin? ||
-      membership.has_any_roles?([VCAP::CloudController::Membership::SPACE_DEVELOPER,
-                                 VCAP::CloudController::Membership::SPACE_MANAGER,
-                                 VCAP::CloudController::Membership::SPACE_AUDITOR,
-                                 VCAP::CloudController::Membership::ORG_MANAGER], space_guid, org_guid)
-  end
-
-  def allowed_space_guids
-    membership.space_guids_for_roles([VCAP::CloudController::Membership::SPACE_DEVELOPER,
-                                      VCAP::CloudController::Membership::SPACE_MANAGER,
-                                      VCAP::CloudController::Membership::SPACE_AUDITOR,
-                                      VCAP::CloudController::Membership::ORG_MANAGER])
-  end
-
-  def can_create?(space_guid)
-    roles.admin? ||
-      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
-  end
-  alias_method :can_update?, :can_create?
-  alias_method :can_delete?, :can_create?
-  alias_method :can_start?, :can_create?
-  alias_method :can_stop?, :can_create?
-  alias_method :can_read_envs?, :can_create?
 
   def droplet_not_found!
     resource_not_found!(:droplet)

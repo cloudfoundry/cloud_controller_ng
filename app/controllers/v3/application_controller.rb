@@ -67,6 +67,22 @@ class ApplicationController < ActionController::Base
   private
 
   ###
+  ### PERMISSIONS
+  ###
+
+  def can_read?(space_guid, org_guid)
+    VCAP::CloudController::Permissions.new(current_user).can_read_from_space?(space_guid, org_guid)
+  end
+
+  def can_write?(space_guid)
+    VCAP::CloudController::Permissions.new(current_user).can_write_to_space?(space_guid)
+  end
+
+  def readable_space_guids
+    VCAP::CloudController::Permissions.new(current_user).readable_space_guids
+  end
+
+  ###
   ### FILTERS
   ###
 
