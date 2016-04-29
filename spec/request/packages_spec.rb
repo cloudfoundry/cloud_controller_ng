@@ -138,25 +138,48 @@ describe 'Packages' do
 
   describe 'GET /v3/apps/:guid/packages' do
     let(:space) { VCAP::CloudController::Space.make }
-    let!(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let!(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, created_at: Time.at(1)) }
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:guid) { app_model.guid }
+    let(:page) { 1 }
+    let(:per_page) { 2 }
+    let(:order_by) { '-created_at' }
 
     before do
       space.organization.add_user(user)
       space.add_developer(user)
     end
 
-    it 'List associated packages' do
+    it 'lists paginated result of all packages for an app' do
+      package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, created_at: Time.at(2))
+
       expected_response = {
         'pagination' => {
-          'total_results' => 1,
-          'first'         => { 'href' => "/v3/apps/#{guid}/packages?page=1&per_page=50" },
-          'last'          => { 'href' => "/v3/apps/#{guid}/packages?page=1&per_page=50" },
+          'total_results' => 2,
+          'first'         => { 'href' => "/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
+          'last'          => { 'href' => "/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
           'next'          => nil,
           'previous'      => nil,
         },
         'resources' => [
+          {
+            'guid'       => package2.guid,
+            'type'       => 'bits',
+            'data'       => {
+              'hash'       => { 'type' => 'sha1', 'value' => nil },
+              'error'      => nil
+            },
+            'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
+            'created_at' => iso8601,
+            'updated_at' => nil,
+            'links' => {
+              'self'   => { 'href' => "/v3/packages/#{package2.guid}" },
+              'upload' => { 'href' => "/v3/packages/#{package2.guid}/upload", 'method' => 'POST' },
+              'download' => { 'href' => "/v3/packages/#{package2.guid}/download", 'method' => 'GET' },
+              'stage' => { 'href' => "/v3/packages/#{package2.guid}/droplets", 'method' => 'POST' },
+              'app' => { 'href' => "/v3/apps/#{guid}" },
+            }
+          },
           {
             'guid'       => package.guid,
             'type'       => 'bits',
@@ -174,11 +197,11 @@ describe 'Packages' do
               'stage' => { 'href' => "/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
               'app' => { 'href' => "/v3/apps/#{guid}" },
             }
-          }
+          },
         ]
       }
 
-      get "/v3/apps/#{guid}/packages", {}, user_header
+      get "/v3/apps/#{guid}/packages?page=#{page}&per_page=#{per_page}&order_by=#{order_by}", {}, user_header
 
       parsed_response = MultiJson.load(last_response.body)
 

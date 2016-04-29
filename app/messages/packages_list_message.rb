@@ -2,7 +2,7 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class PackagesListMessage < ListMessage
-    ALLOWED_KEYS = [:page, :per_page, :states, :types, :guids, :app_guids, :app_guid, :space_guids, :organization_guids].freeze
+    ALLOWED_KEYS = [:page, :per_page, :order_by, :states, :types, :guids, :app_guids, :app_guid, :space_guids, :organization_guids].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 
@@ -29,7 +29,7 @@ module VCAP::CloudController
     end
 
     def to_param_hash
-      super(exclude: [:page, :per_page, :app_guid])
+      super(exclude: [:page, :per_page, :order_by, :app_guid])
     end
 
     private
