@@ -63,9 +63,9 @@ module VCAP::CloudController
         },
 
         optional(:dea_client) => {
-          :ca_file    => String,
-          :cert_file  => String,
-          :key_file   => String,
+          ca_file: String,
+          cert_file: String,
+          key_file: String,
         },
 
         :uaa => {
