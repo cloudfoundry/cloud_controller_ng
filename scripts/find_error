@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+# This script is used to help find errors in running bosh VMs by Cloud Controller request ID
+#
+# Each CC response includes a X-Vcap-Request-Id header. If you have one that has errored with
+# a 500 response code, call this script with `find_error <VCAP_REQUEST_ID>`.
+#
+# This script is not deployed to your bosh VM by default. To install it, run the following script:
+#
+# apt-get install jq
+# wget https://raw.githubusercontent.com/cloudfoundry/cloud_controller_ng/master/scripts/find_error -O /usr/local/bin/find_error
+# chmod +x /usr/local/bin/find_error
+
+request_id=$1
+zgrep --no-filename "$request_id" /var/vcap/sys/log/cloud_controller_ng/cloud_controller* | \
+grep "Request failed: 500" | \
+jq .message --raw-output | \
+sed 's/Request failed: 500: //' | \
+ruby -e '
+
+def color(id, str)
+  "\e[#{id}m#{str}\e[0m"
+end
+
+def yellow(str)
+  color 33, str
+end
+
+def red(str)
+  color 31, str
+end
+
+error = eval(ARGF.read)
+
+puts <<-RESULT
+  ERROR DESCRIPTION:
+
+  #{yellow error["description"]}
+
+  STACKTRACE:
+
+  #{red error["backtrace"].join("\n")}
+RESULT
+'
