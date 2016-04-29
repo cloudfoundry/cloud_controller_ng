@@ -269,6 +269,9 @@ information for your packages, droplets, processes, tasks, and more.</p>
     "packages": {
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
     },
+    "droplet": {
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
+    },
     "droplets": {
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
     },
@@ -281,10 +284,6 @@ information for your packages, droplets, processes, tasks, and more.</p>
     },
     "stop": {
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
-      "method": "PUT"
-    },
-    "assign_current_droplet": {
-      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/current_droplet",
       "method": "PUT"
     }
   }
@@ -383,6 +382,9 @@ information for your packages, droplets, processes, tasks, and more.</p>
     "packages": {
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
     },
+    "droplet": {
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
+    },
     "droplets": {
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
     },
@@ -395,10 +397,6 @@ information for your packages, droplets, processes, tasks, and more.</p>
     },
     "stop": {
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
-      "method": "PUT"
-    },
-    "assign_current_droplet": {
-      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/current_droplet",
       "method": "PUT"
     }
   }
@@ -532,7 +530,7 @@ It will include environment variables for Environment Variable Groups and Servic
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
     },
     "droplet": {
-      "href": "/v3/droplets/98fa704c-6703-418d-9fec-0dbfffa2186e"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
     },
     "droplets": {
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
@@ -546,10 +544,6 @@ It will include environment variables for Environment Variable Groups and Servic
     },
     "stop": {
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
-      "method": "PUT"
-    },
-    "assign_current_droplet": {
-      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/current_droplet",
       "method": "PUT"
     }
   }
@@ -594,11 +588,11 @@ It will include environment variables for Environment Variable Groups and Servic
           <h2 id="set-current-droplet-for-an-app">Set current droplet for an app</h2>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
-<pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/apps/:guid/current_droplet</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/apps/:guid/droplets/current</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/current_droplet"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/droplets/current"</span> <span class="se">\</span>
   -X PUT <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{ "droplet_guid": "[droplet_guid]" }'</span>
@@ -641,7 +635,7 @@ It will include environment variables for Environment Variable Groups and Servic
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
     },
     "droplet": {
-      "href": "/v3/droplets/98fa704c-6703-418d-9fec-0dbfffa2186e"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
     },
     "droplets": {
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
@@ -656,10 +650,6 @@ It will include environment variables for Environment Variable Groups and Servic
     "stop": {
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
       "method": "PUT"
-    },
-    "assign_current_droplet": {
-      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/current_droplet",
-      "method": "PUT"
     }
   }
 }
@@ -667,6 +657,104 @@ It will include environment variables for Environment Variable Groups and Servic
 </code></pre>
 
 <p>This endpoint sets the current droplet for an app. The current droplet is the droplet that the app will use when running.</p>
+
+          <h2 id="get-current-droplet-for-an-app">Get current droplet for an app</h2>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/droplets/current</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/droplets/current"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+
+{
+  "guid": "585bc3c1-3743-497d-88b0-403ad6b56d16",
+  "state": "STAGED",
+  "error": null,
+  "lifecycle": {
+    "type": "buildpack",
+    "data": {
+      "buildpack": null,
+      "stack": null
+    }
+  },
+  "memory_limit": 1024,
+  "disk_limit": 4096,
+  "result": {
+    "execution_metadata": "",
+    "process_types": {
+      "rake": "bundle exec rake",
+      "web": "bundle exec rackup config.ru -p $PORT"
+    },
+    "hash": {
+      "type": "sha1",
+      "value": "0cd90dd63dd9f42db25340445d203fba25c69cf6"
+    },
+    "buildpack": "ruby 1.6.14",
+    "stack": "cflinuxfs2"
+  },
+  "environment_variables": {
+    "CF_STACK": "cflinuxfs2",
+    "VCAP_APPLICATION": {
+      "limits": {
+        "mem": 1024,
+        "disk": 4096,
+        "fds": 16384
+      },
+      "application_id": "7b34f1cf-7e73-428a-bb5a-8a17a8058396",
+      "application_version": "d5985d64-c455-44d0-99a5-285b6521f84c",
+      "application_name": "my_app",
+      "application_uris": [
+        "my_app.example.com"
+      ],
+      "version": "d5985d64-c455-44d0-99a5-285b6521f84c",
+      "name": "my_app",
+      "space_name": "my_space",
+      "space_id": "2f35885d-0c9d-4423-83ad-fd05066f8576",
+      "uris": [
+        "my_app.example.com"
+      ],
+      "users": null
+    },
+    "MEMORY_LIMIT": "1024m",
+    "VCAP_SERVICES": {}
+  },
+  "created_at": "2016-03-28T23:39:34Z",
+  "updated_at": "2016-03-28T23:39:47Z",
+  "links": {
+    "self": {
+      "href": "/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
+    },
+    "package": {
+      "href": "/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
+    },
+    "app": {
+      "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+    },
+    "assign_current_droplet": {
+      "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
+      "method": "PUT"
+    }
+  }
+}
+
+</code></pre>
+
+<p>This endpoint retrieves the current droplet for an app.</p>
+
+<h3 id="body-parameters">Body Parameters</h3>
+
+<p class='no-body-parameters-outer'>
+  <span class='no-body-parameters-required'>
+    No arguments
+  </span>
+</p>
 
           <h2 id="start-an-app">Start an app</h2>
 <pre class="highlight plaintext"><code>Definition
@@ -717,7 +805,7 @@ It will include environment variables for Environment Variable Groups and Servic
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
     },
     "droplet": {
-      "href": "/v3/droplets/98fa704c-6703-418d-9fec-0dbfffa2186e"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
     },
     "droplets": {
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
@@ -731,10 +819,6 @@ It will include environment variables for Environment Variable Groups and Servic
     },
     "stop": {
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
-      "method": "PUT"
-    },
-    "assign_current_droplet": {
-      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/current_droplet",
       "method": "PUT"
     }
   }
@@ -793,7 +877,7 @@ It will include environment variables for Environment Variable Groups and Servic
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
     },
     "droplet": {
-      "href": "/v3/droplets/98fa704c-6703-418d-9fec-0dbfffa2186e"
+      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
     },
     "droplets": {
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
@@ -807,10 +891,6 @@ It will include environment variables for Environment Variable Groups and Servic
     },
     "stop": {
       "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
-      "method": "PUT"
-    },
-    "assign_current_droplet": {
-      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/current_droplet",
       "method": "PUT"
     }
   }
@@ -902,7 +982,7 @@ It will include environment variables for Environment Variable Groups and Servic
           "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
         },
         "droplet": {
-          "href": "/v3/droplets/98fa704c-6703-418d-9fec-0dbfffa2186e"
+          "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
         },
         "droplets": {
           "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
@@ -916,10 +996,6 @@ It will include environment variables for Environment Variable Groups and Servic
         },
         "stop": {
           "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
-          "method": "PUT"
-        },
-        "assign_current_droplet": {
-          "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/current_droplet",
           "method": "PUT"
         }
       }
@@ -955,6 +1031,9 @@ It will include environment variables for Environment Variable Groups and Servic
         "packages": {
           "href": "/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/packages"
         },
+        "droplet": {
+          "href": "/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets/current"
+        },
         "droplets": {
           "href": "/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets"
         },
@@ -967,10 +1046,6 @@ It will include environment variables for Environment Variable Groups and Servic
         },
         "stop": {
           "href": "/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/stop",
-          "method": "PUT"
-        },
-        "assign_current_droplet": {
-          "href": "/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/current_droplet",
           "method": "PUT"
         }
       }
@@ -1326,7 +1401,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
       "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
     },
     "assign_current_droplet": {
-      "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/current_droplet",
+      "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
       "method": "PUT"
     }
   }
@@ -1464,7 +1539,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
       "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
     },
     "assign_current_droplet": {
-      "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/current_droplet",
+      "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
       "method": "PUT"
     }
   }
@@ -1601,7 +1676,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
           "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
         },
         "assign_current_droplet": {
-          "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/current_droplet",
+          "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
           "method": "PUT"
         }
       }
@@ -1631,7 +1706,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
           "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
         },
         "assign_current_droplet": {
-          "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/current_droplet",
+          "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
           "method": "PUT"
         }
       }
@@ -1771,7 +1846,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
           "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
         },
         "assign_current_droplet": {
-          "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/current_droplet",
+          "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
           "method": "PUT"
         }
       }
@@ -1801,7 +1876,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
           "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
         },
         "assign_current_droplet": {
-          "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/current_droplet",
+          "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
           "method": "PUT"
         }
       }
@@ -2159,7 +2234,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
       "href": "/v3/apps/f82a88a2-2197-45b2-8b6d-84d1be8e2d0e"
     },
     "assign_current_droplet": {
-      "href": "/v3/apps/f82a88a2-2197-45b2-8b6d-84d1be8e2d0e/current_droplet",
+      "href": "/v3/apps/f82a88a2-2197-45b2-8b6d-84d1be8e2d0e/droplets/current",
       "method": "PUT"
     }
   }
