@@ -1629,9 +1629,9 @@ describe AppsV3Controller, type: :controller do
       before do
         allow(membership).to receive(:has_any_roles?).with(
           [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-            VCAP::CloudController::Membership::SPACE_MANAGER,
-            VCAP::CloudController::Membership::SPACE_AUDITOR,
-            VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
+           VCAP::CloudController::Membership::SPACE_MANAGER,
+           VCAP::CloudController::Membership::SPACE_AUDITOR,
+           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
           and_return(true)
         allow(membership).to receive(:has_any_roles?).with(
           [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
