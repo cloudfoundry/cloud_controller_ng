@@ -132,7 +132,7 @@ describe RouteMappingsController, type: :controller do
       end
     end
 
-    context 'when the user does not have the required space and org roles to see the app or route' do
+    context 'when the user does not have read access to the space' do
       before do
         allow(membership).to receive(:has_any_roles?).with(
           [VCAP::CloudController::Membership::SPACE_DEVELOPER,
@@ -149,7 +149,7 @@ describe RouteMappingsController, type: :controller do
       end
     end
 
-    context 'when the user can read but cannot write to the route' do
+    context 'when the user can read but cannot write to the space' do
       before do
         allow(membership).to receive(:has_any_roles?).with(
           [VCAP::CloudController::Membership::SPACE_DEVELOPER,
@@ -371,37 +371,51 @@ describe RouteMappingsController, type: :controller do
           expect(response.status).to eq 404
         end
       end
-    end
 
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
+      context 'when the user can read, but not write to the space' do
+        before do
+          allow(membership).to receive(:has_any_roles?).with(
+            AppSubresource::ROLES_FOR_READING, app.space.guid, app.organization.guid).and_return(true)
+        end
 
-      it 'lists all route_mappings' do
-        route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app_guid: app.guid)
-        route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app_guid: app.guid)
-        route_mapping_3 = VCAP::CloudController::RouteMappingModel.make
-
-        get :index
-
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
-        expect(response.status).to eq(200)
-        expect(response_guids).to match_array([route_mapping_1.guid, route_mapping_2.guid, route_mapping_3.guid])
+        it 'returns a 200' do
+          get :index, app_guid: app.guid
+          expect(response.status).to eq 200
+        end
       end
     end
 
-    context 'when the user does not have read scope' do
-      before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+    context 'permissions' do
+      context 'admin' do
+        before do
+          set_current_user_as_admin
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'lists all route_mappings' do
+          route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app_guid: app.guid)
+          route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app_guid: app.guid)
+          route_mapping_3 = VCAP::CloudController::RouteMappingModel.make
+
+          get :index
+
+          response_guids = parsed_body['resources'].map { |r| r['guid'] }
+          expect(response.status).to eq(200)
+          expect(response_guids).to match_array([route_mapping_1.guid, route_mapping_2.guid, route_mapping_3.guid])
+        end
       end
 
-      it 'raises an ApiError with a 403 code' do
-        get :index
+      context 'when the user does not have read scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+        end
 
-        expect(response.status).to eq 403
-        expect(response.body).to include 'NotAuthorized'
+        it 'raises an ApiError with a 403 code' do
+          get :index
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
     end
   end
@@ -445,7 +459,7 @@ describe RouteMappingsController, type: :controller do
       end
     end
 
-    context 'when the user is not a space developer' do
+    context 'when the user can read, but not write to the space' do
       before do
         allow(membership).to receive(:has_any_roles?).with(
           [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
