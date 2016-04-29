@@ -388,7 +388,7 @@ describe ProcessesController, type: :controller do
       end
     end
 
-    context 'when the user cannot update the process due to membership' do
+    context 'when the user can read but not write to the process due to membership' do
       before do
         allow(membership).to receive(:has_any_roles?).and_return(true, false)
       end
@@ -539,7 +539,7 @@ describe ProcessesController, type: :controller do
       end
     end
 
-    context 'when the user cannot update the process due to membership' do
+    context 'when the user can read but not write to the process due to membership' do
       before do
         allow(membership).to receive(:has_any_roles?).and_return(true, false)
       end
@@ -662,7 +662,7 @@ describe ProcessesController, type: :controller do
         end
       end
 
-      context 'when the user cannot scale the process due to membership' do
+      context 'when the user can read but not write to the process due to membership' do
         before do
           allow(membership).to receive(:has_any_roles?).with(
             [VCAP::CloudController::Membership::SPACE_DEVELOPER,
