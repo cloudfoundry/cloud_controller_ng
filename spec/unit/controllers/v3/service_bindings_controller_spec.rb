@@ -76,7 +76,7 @@ describe ServiceBindingsController, type: :controller do
     end
 
     context 'permissions' do
-      context 'when the user is not a space developer of the requested space' do
+      context 'when the user has read, but not write permissions to the space' do
         before do
           allow(membership).to receive(:has_any_roles?).
             with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
@@ -312,7 +312,7 @@ describe ServiceBindingsController, type: :controller do
     end
   end
 
-  describe 'show' do
+  describe '#show' do
     let(:service_binding) { VCAP::CloudController::ServiceBindingModel.make(syslog_drain_url: 'syslog://syslog-drain.com') }
     let(:space) { service_binding.space }
 
@@ -398,7 +398,7 @@ describe ServiceBindingsController, type: :controller do
     end
   end
 
-  describe 'index' do
+  describe '#index' do
     let!(:allowed_binding_1) { VCAP::CloudController::ServiceBindingModel.make(syslog_drain_url: 'syslog://syslog-drain.com') }
     let!(:allowed_binding_2) { VCAP::CloudController::ServiceBindingModel.make(syslog_drain_url: 'syslog://syslog-drain.com', service_instance: service_instance) }
     let!(:allowed_binding_3) { VCAP::CloudController::ServiceBindingModel.make(syslog_drain_url: 'syslog://syslog-drain.com', service_instance: service_instance) }
@@ -497,7 +497,7 @@ describe ServiceBindingsController, type: :controller do
     end
   end
 
-  describe 'destroy' do
+  describe '#destroy' do
     let(:service_binding) { VCAP::CloudController::ServiceBindingModel.make(syslog_drain_url: 'syslog://syslog-drain.com') }
     let(:space) { service_binding.space }
 
@@ -533,7 +533,7 @@ describe ServiceBindingsController, type: :controller do
         end
       end
 
-      context 'when the user has read-only permissions' do
+      context 'when the user has read, but not write persimmons on the space' do
         before do
           allow(membership).to receive(:has_any_roles?).
             with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
