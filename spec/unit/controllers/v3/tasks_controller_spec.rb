@@ -360,6 +360,22 @@ describe TasksController, type: :controller do
           expect(response.body).to include 'Task not found'
         end
       end
+
+      context 'when the user has read, but not write permissions on the app space' do
+        before do
+          allow(membership).to receive(:has_any_roles?).with(
+            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+             VCAP::CloudController::Membership::SPACE_MANAGER,
+             VCAP::CloudController::Membership::SPACE_AUDITOR,
+             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
+        end
+
+        it 'returns a 200' do
+          get :show, task_guid: task.guid
+
+          expect(response.status).to eq 200
+        end
+      end
     end
 
     it 'returns a 404 if the task does not exist' do
@@ -621,7 +637,7 @@ describe TasksController, type: :controller do
       end
     end
 
-    context 'when the user can see the task but does not have write permissions' do
+    context 'when the user has read, but not write permissions on the app space' do
       before do
         allow(membership).to receive(:has_any_roles?).with(
           [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
