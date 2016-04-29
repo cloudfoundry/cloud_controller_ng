@@ -128,11 +128,29 @@ module VCAP::CloudController
           expect(message.errors[:app_guids]).to include('must be an array')
         end
 
-        context 'when it is an app nested query and the user provides app_guids' do
-          it 'is not valid' do
-            message = PackagesListMessage.new({ app_guid: 'blah', app_guids: ['app1', 'app2'] })
-            expect(message).to_not be_valid
-            expect(message.errors[:base]).to include("Unknown query parameter(s): 'app_guids'")
+        context 'app nested requests' do
+          context 'user provides app_guids' do
+            it 'is not valid' do
+              message = PackagesListMessage.new({ app_guid: 'blah', app_guids: ['app1', 'app2'] })
+              expect(message).to_not be_valid
+              expect(message.errors[:base]).to include("Unknown query parameter(s): 'app_guids'")
+            end
+          end
+
+          context 'user provides organization_guids' do
+            it 'is not valid' do
+              message = PackagesListMessage.new({ app_guid: 'blah', organization_guids: ['orgguid1', 'orgguid2'] })
+              expect(message).to_not be_valid
+              expect(message.errors[:base]).to include("Unknown query parameter(s): 'organization_guids'")
+            end
+          end
+
+          context 'user provides space guids' do
+            it 'is not valid' do
+              message = PackagesListMessage.new({ app_guid: 'blah', space_guids: ['space1', 'space2'] })
+              expect(message).to_not be_valid
+              expect(message.errors[:base]).to include("Unknown query parameter(s): 'space_guids'")
+            end
           end
         end
       end
