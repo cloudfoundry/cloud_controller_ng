@@ -533,7 +533,7 @@ describe DropletsController, type: :controller do
           end
         end
 
-        context 'when the user does not have write access to the target space' do
+        context 'when the user has read access, but not write access to the target space' do
           before do
             allow(membership).to receive(:has_any_roles?).with(
               [VCAP::CloudController::Membership::SPACE_DEVELOPER,
@@ -640,7 +640,7 @@ describe DropletsController, type: :controller do
       end
     end
 
-    context 'when the user has incorrect roles' do
+    context 'when the user can not read from the space' do
       let(:space) { droplet.space }
       let(:org) { space.organization }
 
@@ -737,7 +737,7 @@ describe DropletsController, type: :controller do
       end
     end
 
-    context 'when the user can read but cannot write to the droplet' do
+    context 'when the user can read but cannot write to the space' do
       let(:space) { droplet.space }
       let(:org) { space.organization }
 
@@ -853,32 +853,6 @@ describe DropletsController, type: :controller do
       end
     end
 
-    context 'when the user is an admin' do
-      before do
-        set_current_user_as_admin
-      end
-
-      it 'returns all droplets' do
-        get :index
-
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
-        expect(response_guids).to match_array([user_droplet_1, user_droplet_2, admin_droplet].map(&:guid))
-      end
-    end
-
-    context 'when the user does not have read scope' do
-      before do
-        set_current_user(user, scopes: ['cloud_controller.write'])
-      end
-
-      it 'returns a 403 Not Authorized error' do
-        get :index
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
-
     context 'query params' do
       context 'invalid param format' do
         let(:params) { { 'order_by' => '^%' } }
@@ -914,6 +888,45 @@ describe DropletsController, type: :controller do
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
           expect(response.body).to include('Per page must be between')
+        end
+      end
+    end
+
+    context 'permissions' do
+      context 'when the user does not have read scope' do
+        before do
+          set_current_user(user, scopes: ['cloud_controller.write'])
+        end
+
+        it 'returns a 403 Not Authorized error' do
+          get :index
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
+      end
+
+      context 'when the user is an admin' do
+        before do
+          set_current_user_as_admin
+        end
+
+        it 'returns all droplets' do
+          get :index
+
+          response_guids = parsed_body['resources'].map { |r| r['guid'] }
+          expect(response_guids).to match_array([user_droplet_1, user_droplet_2, admin_droplet].map(&:guid))
+        end
+      end
+
+      context 'when the user has read access, but not write access to the space' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_return(true)
+        end
+
+        it 'returns 200' do
+          get :index
+          expect(response.status).to eq(200)
         end
       end
     end
