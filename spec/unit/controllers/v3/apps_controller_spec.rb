@@ -273,7 +273,7 @@ describe AppsV3Controller, type: :controller do
       end
     end
 
-    context 'when the user is a space manager and thus can see the space but not create apps' do
+    context 'when the user is a space manager/org manager and thus can see the space but not create apps' do
       before do
         allow(membership).to receive(:has_any_roles?).with(
           [VCAP::CloudController::Membership::SPACE_DEVELOPER,
@@ -1510,7 +1510,7 @@ describe AppsV3Controller, type: :controller do
         end
       end
 
-      context 'when the user cannot update the application' do
+      context 'when the user can read but not update the application' do
         before do
           allow(membership).to receive(:has_any_roles?).with(
             [VCAP::CloudController::Membership::SPACE_DEVELOPER,
@@ -1601,7 +1601,7 @@ describe AppsV3Controller, type: :controller do
       end
     end
 
-    context 'when the user has incorrect roles' do
+    context 'when the user can not read the space' do
       let(:space) { droplet.space }
       let(:org) { space.organization }
 
@@ -1619,6 +1619,29 @@ describe AppsV3Controller, type: :controller do
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
+      end
+    end
+
+    context 'when the user can read but not update the application' do
+      let(:space) { droplet.space }
+      let(:org) { space.organization }
+
+      before do
+        allow(membership).to receive(:has_any_roles?).with(
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+            VCAP::CloudController::Membership::SPACE_MANAGER,
+            VCAP::CloudController::Membership::SPACE_AUDITOR,
+            VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
+          and_return(true)
+        allow(membership).to receive(:has_any_roles?).with(
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
+          and_return(false)
+      end
+
+      it 'returns a 200 OK' do
+        get :current_droplet, guid: app_model.guid
+
+        expect(response.status).to eq(200)
       end
     end
   end
