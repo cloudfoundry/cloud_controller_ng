@@ -37,6 +37,21 @@ module VCAP::CloudController
           end
         end
 
+        def enabled?
+          @http_client != nil
+        end
+
+        def stage(url, msg)
+          raise ApiError.new_from_details('StagerError', 'Client not HTTP enabled') unless enabled?
+
+          begin
+            response = @http_client.post("#{url}/v1/stage", header: { 'Content-Type' => 'application/json' }, body: MultiJson.dump(msg))
+          rescue => e
+            raise ApiError.new_from_details('StagerError', "url: #{url}/v1/stage, error: #{e.message}")
+          end
+          raise ApiError.new_from_details('StagerError', "received #{response.status} from #{url}/v1/stage") unless response.status == 202
+        end
+
         def start(app, options={})
           instances_to_start = options[:instances_to_start] || app.instances
           start_instances(app, ((app.instances - instances_to_start)...app.instances))

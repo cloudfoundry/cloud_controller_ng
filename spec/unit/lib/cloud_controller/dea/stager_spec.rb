@@ -52,13 +52,15 @@ module VCAP::CloudController
       let(:staging_result) { StagingResponse.new(reply_json) }
       let(:staging_error) { nil }
 
+      let(:response) { reply_json }
+
+      let(:thing_to_stage) { AppFactory.make }
+
       it_behaves_like 'a stager' do
         let(:thing_to_stage) { nil }
       end
 
       describe '#stage' do
-        let(:thing_to_stage) { AppFactory.make }
-
         before do
           allow(AppStagerTask).to receive(:new).and_return(stager_task)
           allow(stager_task).to receive(:stage).and_yield('fake-staging-result').and_return('fake-stager-response')
@@ -84,6 +86,21 @@ module VCAP::CloudController
         it 'records the stager response on the app' do
           stager.stage
           expect(thing_to_stage.last_stager_response).to eq('fake-stager-response')
+        end
+      end
+
+      describe '#staging_complete' do
+        before do
+          allow(AppStagerTask).to receive(:new).and_return(stager_task)
+          allow(stager_task).to receive(:stage).and_yield('fake-staging-result').and_return('fake-stager-response')
+          allow(runners).to receive(:runner_for_app).with(thing_to_stage).and_return(runner)
+          allow(runner).to receive(:start).with('fake-staging-result')
+          stager.stage
+        end
+
+        it 'invokes AppStagerTask#handle_http_response for response handling' do
+          expect(stager_task).to receive(:handle_http_response).with(response)
+          stager.staging_complete(nil, response)
         end
       end
     end

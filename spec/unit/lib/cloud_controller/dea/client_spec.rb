@@ -27,6 +27,15 @@ module VCAP::CloudController
       double('blobstore_url_generator', droplet_download_url: 'app_uri')
     end
 
+    let(:http_overrides) do
+      {
+        dea_client: {
+          key_file: File.join(Paths::FIXTURES, 'certs/dea_client.key'),
+          cert_file: File.join(Paths::FIXTURES, 'certs/dea_client.crt'),
+          ca_file: File.join(Paths::FIXTURES, 'certs/dea_ca.crt'),
+        }
+      }
+    end
     let(:overrides) { {} }
 
     def create_ad(id, url=nil)
@@ -39,6 +48,20 @@ module VCAP::CloudController
       TestConfig.override(overrides)
 
       Dea::Client.configure(TestConfig.config, message_bus, dea_pool, blobstore_url_generator)
+    end
+
+    describe '#enabled?' do
+      it 'returns false by default' do
+        expect(Dea::Client.enabled?).to be_falsey
+      end
+
+      context 'when configured for http' do
+        let(:overrides) { http_overrides }
+
+        it 'returns true' do
+          expect(Dea::Client.enabled?).to be_truthy
+        end
+      end
     end
 
     describe '.run' do
@@ -193,6 +216,47 @@ module VCAP::CloudController
       end
     end
 
+    describe '#stage' do
+      let(:stager_url) { 'https://host:1234' }
+      let(:staging_msg) { 'staging message' }
+      let(:overrides) { http_overrides }
+      let(:post_url) { "#{stager_url}/v1/stage" }
+
+      it 'sends a stage message to the dea' do
+        stub_request(:post, post_url).with(body: /#{staging_msg}/, headers: { 'Content-Type' => 'application/json' }).to_return(status: [202, 'Accepted'])
+        expect { Dea::Client.stage(stager_url, staging_msg) }.not_to raise_error
+      end
+
+      context 'when an error occurs' do
+        context 'when we get a status other than 202' do
+          it 'raises an error' do
+            stub_request(:post, post_url).with(body: /#{staging_msg}/, headers: { 'Content-Type' => 'application/json' }).to_return(status: [500, 'Internal Server Error'])
+            expect { Dea::Client.stage(stager_url, staging_msg) }.to raise_error CloudController::Errors::ApiError, /received 500 from #{post_url}/
+          end
+        end
+
+        context 'when an exception occurs' do
+          it 'raises an appropriate error' do
+            stub_request(:post, post_url).with(body: /#{staging_msg}/, headers: { 'Content-Type' => 'application/json' }).to_raise 'failed to connect'
+            expect { Dea::Client.stage(stager_url, staging_msg) }.to raise_error CloudController::Errors::ApiError, /#{stager_url}.*failed to connect/
+          end
+        end
+      end
+
+      context 'when not configured for HTTP' do
+        before do
+          allow(Dea::Client).to receive(:enabled?).and_return(false)
+        end
+        it 'raises an error' do
+          expect { Dea::Client.stage(stager_url, staging_msg) }.to raise_error { |error|
+            expect(error).to be_an_instance_of(CloudController::Errors::ApiError)
+            expect(error.name).to eq('StagerError')
+            expect(error.message).to eq('Stager error: Client not HTTP enabled')
+          }
+        end
+      end
+    end
+
     describe 'start' do
       it 'should send start messages to deas' do
         app.instances = 2
@@ -252,15 +316,7 @@ module VCAP::CloudController
       end
 
       context 'when http is enabled' do
-        let(:overrides) do
-          {
-            dea_client: {
-              key_file: File.join(Paths::FIXTURES, 'certs/dea_client.key'),
-              cert_file: File.join(Paths::FIXTURES, 'certs/dea_client.crt'),
-              ca_file: File.join(Paths::FIXTURES, 'certs/dea_ca.crt'),
-            }
-          }
-        end
+        let(:overrides) { http_overrides }
 
         it 'should send start messages to deas' do
           app.instances = 2
