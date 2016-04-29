@@ -141,7 +141,7 @@ describe PackagesController, type: :controller do
       end
     end
 
-    context 'when the user does not have correct roles to upload' do
+    context 'when the user can read but not write to the space' do
       before do
         allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
         allow(membership).to receive(:has_any_roles?).with(
@@ -368,12 +368,11 @@ describe PackagesController, type: :controller do
       end
     end
 
-    context 'when the user has incorrect roles' do
+    context 'when the user can not read from the space' do
       let(:space) { package.space }
       let(:org) { space.organization }
 
       before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
         allow(membership).to receive(:has_any_roles?).with(
           [VCAP::CloudController::Membership::SPACE_DEVELOPER,
            VCAP::CloudController::Membership::SPACE_MANAGER,
@@ -638,6 +637,19 @@ describe PackagesController, type: :controller do
         end
       end
     end
+
+    describe 'permissions' do
+      context 'when the user can read but not write to the space' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_return(true)
+        end
+
+        it 'returns a 200 OK' do
+          get :index
+          expect(response.status).to eq(200)
+        end
+      end
+    end
   end
 
   describe '#create' do
@@ -738,7 +750,7 @@ describe PackagesController, type: :controller do
           end
         end
 
-        context 'when the user cannot create the package' do
+        context 'when the user can read but not write to the space' do
           before do
             allow(membership).to receive(:has_any_roles?).with(
               [VCAP::CloudController::Membership::SPACE_DEVELOPER,
