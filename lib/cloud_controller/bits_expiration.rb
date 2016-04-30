@@ -22,7 +22,7 @@ module VCAP::CloudController
 
     def expire_packages!(app)
       return unless is_v3? app
-      current_package_guid = app.droplet ? app.droplet.package.guid : nil
+      current_package_guid = app.droplet ? app.droplet.package_guid : nil
       dataset = PackageModel.where(state: PackageModel::READY_STATE, app_guid: app.guid).
                 exclude(guid: current_package_guid)
       return if dataset.count < packages_storage_count

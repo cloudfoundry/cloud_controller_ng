@@ -124,6 +124,13 @@ module VCAP::CloudController
         expect(@current_package.state).to eq(PackageModel::READY_STATE)
       end
 
+      it 'does not blow up if the current droplet has no package' do
+        app.droplet.update(package_guid: nil)
+        app.droplet.save
+
+        expect { BitsExpiration.new.expire_packages!(app) }.not_to raise_error
+      end
+
       it 'removes package_hash from expired package' do
         BitsExpiration.new.expire_packages!(app)
         expired_droplets = PackageModel.where(state: PackageModel::EXPIRED_STATE, app_guid: app.guid, package_hash: nil).all
