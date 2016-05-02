@@ -56,8 +56,8 @@ resource 'Apps', type: [:api, :legacy_api] do
 
       {
         name: :docker_image,
-        description: 'Name of the Docker image containing the app',
-        custom_params: { default: nil, example_values: ['cloudfoundry/helloworld', 'registry.example.com:5000/user/repository/tag'] }
+        description: 'Name of the Docker image containing the app. The "diego_docker" feature flag must be enabled in order to create Docker image apps.',
+        custom_params: { default: nil, example_values: ['cloudfoundry/diego-docker-app', 'registry.example.com:5000/user/repository/tag'] }
       },
 
       {
@@ -144,12 +144,12 @@ resource 'Apps', type: [:api, :legacy_api] do
       example 'Creating a Docker App (experimental)' do
         space_guid = VCAP::CloudController::Space.make.guid
 
-        data = required_fields.merge(space_guid: space_guid, name: 'docker_app', docker_image: 'cloudfoundry/hello', diego: true)
+        data = required_fields.merge(space_guid: space_guid, name: 'docker_app', docker_image: 'cloudfoundry/diego-docker-app', diego: true)
         client.post '/v2/apps', MultiJson.dump(data, pretty: true), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :app
-        expect(parsed_response['entity']['docker_image']).to eq('cloudfoundry/hello:latest')
+        expect(parsed_response['entity']['docker_image']).to eq('cloudfoundry/diego-docker-app:latest')
         expect(parsed_response['entity']['diego']).to be_truthy
 
         app_guid = parsed_response['metadata']['guid']
