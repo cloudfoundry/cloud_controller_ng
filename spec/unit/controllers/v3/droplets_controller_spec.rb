@@ -1,8 +1,6 @@
 require 'rails_helper'
 
 describe DropletsController, type: :controller do
-  let(:membership) { instance_double(VCAP::CloudController::Membership) }
-
   describe '#create' do
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:stagers) { instance_double(VCAP::CloudController::Stagers) }
@@ -11,11 +9,12 @@ describe DropletsController, type: :controller do
                                                type: VCAP::CloudController::PackageModel::BITS_TYPE,
                                                state: VCAP::CloudController::PackageModel::READY_STATE)
     end
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:space) { app_model.space }
 
     before do
-      set_current_user(VCAP::CloudController::User.make)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
       allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
       allow(stagers).to receive(:stager_for_package).and_return(double(:stager, stage: nil))
       VCAP::CloudController::BuildpackLifecycleDataModel.make(
@@ -50,20 +49,6 @@ describe DropletsController, type: :controller do
       end
     end
 
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns a 201 Created response and creates a droplet' do
-        expect {
-          post :create, package_guid: package.guid
-        }.to change { VCAP::CloudController::DropletModel.count }.from(0).to(1)
-        expect(response.status).to eq 201
-      end
-    end
-
     context 'when the package does not exist' do
       it 'returns a 404 ResourceNotFound error' do
         post :create, package_guid: 'made-up-guid'
@@ -91,12 +76,7 @@ describe DropletsController, type: :controller do
       let(:org) { space.organization }
 
       before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
       end
 
       it 'returns a 404 ResourceNotFound error' do
@@ -112,15 +92,8 @@ describe DropletsController, type: :controller do
       let(:org) { space.organization }
 
       before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-          and_return(true)
-        allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-          and_return(false)
+        allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+        disallow_user_write_access(user, space_guid: space.guid, org_guid: org.guid)
       end
 
       it 'raises ApiError NotAuthorized' do
@@ -199,7 +172,7 @@ describe DropletsController, type: :controller do
     end
 
     describe 'docker lifecycle' do
-      let(:docker_app_model) { VCAP::CloudController::AppModel.make(:docker) }
+      let(:docker_app_model) { VCAP::CloudController::AppModel.make(:docker, space: space) }
       let(:req_body) { { lifecycle: { type: 'docker', data: {} } } }
       let!(:package) do
         VCAP::CloudController::PackageModel.make(:docker,
@@ -270,8 +243,7 @@ describe DropletsController, type: :controller do
 
         context 'admin user' do
           before do
-            set_current_user_as_admin
-            allow(membership).to receive(:has_any_roles?).and_return(false)
+            set_current_user_as_admin(user: user)
           end
 
           it 'returns a 201 Created response and creates a droplet' do
@@ -444,11 +416,12 @@ describe DropletsController, type: :controller do
         }
       }
     end
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      set_current_user(VCAP::CloudController::User.make)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow_user_read_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
+      allow_user_read_access(user, space_guid: target_space.guid, org_guid: target_space.organization_guid)
+      allow_user_write_access(user, space_guid: target_space.guid, org_guid: target_space.organization_guid)
     end
 
     it 'returns a 201 OK response with the new droplet' do
@@ -482,29 +455,9 @@ describe DropletsController, type: :controller do
     end
 
     describe 'permissions' do
-      context 'admin' do
-        before do
-          set_current_user_as_admin
-          allow(membership).to receive(:has_any_roles?).and_return(false)
-        end
-
-        it 'returns a 201 OK response and copies the droplet' do
-          expect {
-            post :copy, guid: source_droplet_guid, body: req_body
-          }.to change { VCAP::CloudController::DropletModel.count }.by(1)
-          expect(response.status).to eq 201
-        end
-      end
-
       context 'when the user is not a member of the space where the source droplet exists' do
         before do
-          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], source_space.guid, source_space.organization.guid).
-            and_return(false)
+          disallow_user_read_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
         end
 
         it 'returns a not found error' do
@@ -516,13 +469,13 @@ describe DropletsController, type: :controller do
       end
 
       context 'when the user is a member of the space where source droplet exists' do
+        before do
+          allow_user_read_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
+        end
+
         context 'when the user does not have read access to the target space' do
           before do
-            allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-               VCAP::CloudController::Membership::SPACE_MANAGER,
-               VCAP::CloudController::Membership::SPACE_AUDITOR,
-               VCAP::CloudController::Membership::ORG_MANAGER], source_space.guid, source_space.organization.guid).and_return(false)
+            disallow_user_read_access(user, space_guid: target_space.guid, org_guid: target_space.organization_guid)
           end
 
           it 'returns a 404 ResourceNotFound error' do
@@ -535,14 +488,8 @@ describe DropletsController, type: :controller do
 
         context 'when the user has read access, but not write access to the target space' do
           before do
-            allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-               VCAP::CloudController::Membership::SPACE_MANAGER,
-               VCAP::CloudController::Membership::SPACE_AUDITOR,
-               VCAP::CloudController::Membership::ORG_MANAGER], target_space.guid, target_space.organization.guid).
-              and_return(true)
-            allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], target_space.guid).
-              and_return(false)
+            allow_user_read_access(user, space_guid: target_space.guid, org_guid: target_space.organization_guid)
+            disallow_user_write_access(user, space_guid: target_space.guid, org_guid: target_space.organization_guid)
           end
 
           it 'returns a forbidden error' do
@@ -590,11 +537,11 @@ describe DropletsController, type: :controller do
 
   describe '#show' do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:space) { droplet.space }
 
     before do
-      set_current_user(VCAP::CloudController::User.make)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
     end
 
     it 'returns a 200 OK and the droplet' do
@@ -602,20 +549,6 @@ describe DropletsController, type: :controller do
 
       expect(response.status).to eq(200)
       expect(parsed_body['guid']).to eq(droplet.guid)
-    end
-
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns a 200 OK and the droplet' do
-        get :show, guid: droplet.guid
-
-        expect(response.status).to eq(200)
-        expect(parsed_body['guid']).to eq(droplet.guid)
-      end
     end
 
     context 'when the droplet does not exist' do
@@ -629,7 +562,7 @@ describe DropletsController, type: :controller do
 
     context 'when the user does not have the read scope' do
       before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+        set_current_user(user, scopes: ['cloud_controller.write'])
       end
 
       it 'returns a 403 NotAuthorized error' do
@@ -645,12 +578,7 @@ describe DropletsController, type: :controller do
       let(:org) { space.organization }
 
       before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
       end
 
       it 'returns a 404 not found' do
@@ -664,11 +592,12 @@ describe DropletsController, type: :controller do
 
   describe '#destroy' do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:space) { droplet.space }
 
     before do
-      set_current_user(VCAP::CloudController::User.make)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
     end
 
     it 'returns a 204 NO CONTENT' do
@@ -677,21 +606,6 @@ describe DropletsController, type: :controller do
       expect(response.status).to eq(204)
       expect(response.body).to be_empty
       expect(droplet.exists?).to be_falsey
-    end
-
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns a 204 NO CONTENT' do
-        delete :destroy, guid: droplet.guid
-
-        expect(response.status).to eq(204)
-        expect(response.body).to be_empty
-        expect(droplet.exists?).to be_falsey
-      end
     end
 
     context 'when the droplet does not exist' do
@@ -717,16 +631,8 @@ describe DropletsController, type: :controller do
     end
 
     context 'when the user cannot read the droplet due to roles' do
-      let(:space) { droplet.space }
-      let(:org) { space.organization }
-
       before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
       end
 
       it 'returns a 404 ResourceNotFound error' do
@@ -738,19 +644,9 @@ describe DropletsController, type: :controller do
     end
 
     context 'when the user can read but cannot write to the space' do
-      let(:space) { droplet.space }
-      let(:org) { space.organization }
-
       before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-          and_return(true)
-        allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-          and_return(false)
+        allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        disallow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
       end
 
       it 'returns 403 NotAuthorized' do
@@ -763,7 +659,7 @@ describe DropletsController, type: :controller do
   end
 
   describe '#index' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:app) { VCAP::CloudController::AppModel.make }
     let(:space) { app.space }
     let!(:user_droplet_1) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
@@ -771,7 +667,6 @@ describe DropletsController, type: :controller do
     let!(:admin_droplet) { VCAP::CloudController::DropletModel.make }
 
     before do
-      set_current_user(user)
       space.organization.add_user(user)
       space.organization.save
       space.add_developer(user)
@@ -908,7 +803,7 @@ describe DropletsController, type: :controller do
 
       context 'when the user is an admin' do
         before do
-          set_current_user_as_admin
+          set_current_user_as_admin(user: user)
         end
 
         it 'returns all droplets' do
@@ -921,7 +816,9 @@ describe DropletsController, type: :controller do
 
       context 'when the user has read access, but not write access to the space' do
         before do
-          allow(membership).to receive(:has_any_roles?).and_return(true)
+          allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+          disallow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+          allow(permissions_double(user)).to receive(:readable_space_guids).and_return([])
         end
 
         it 'returns 200' do
