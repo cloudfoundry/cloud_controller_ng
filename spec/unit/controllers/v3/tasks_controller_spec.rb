@@ -2,25 +2,13 @@ require 'rails_helper'
 
 describe TasksController, type: :controller do
   let(:tasks_enabled) { true }
-  let(:membership) { instance_double(VCAP::CloudController::Membership) }
   let(:app_model) { VCAP::CloudController::AppModel.make }
   let(:space) { app_model.space }
   let(:org) { space.organization }
 
-  before do
-    set_current_user(VCAP::CloudController::User.make)
-
-    allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-    allow(membership).to receive(:has_any_roles?).with(
-      [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(true)
-    allow(membership).to receive(:has_any_roles?).with(
-      [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-       VCAP::CloudController::Membership::SPACE_MANAGER,
-       VCAP::CloudController::Membership::SPACE_AUDITOR,
-       VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
-  end
-
   describe '#create' do
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+
     let(:droplet) do
       VCAP::CloudController::DropletModel.make(
         app_guid: app_model.guid,
@@ -40,6 +28,8 @@ describe TasksController, type: :controller do
     let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
 
     before do
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
       VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: tasks_enabled, error_message: nil)
 
       app_model.droplet = droplet
@@ -73,13 +63,11 @@ describe TasksController, type: :controller do
       task_create = instance_double(VCAP::CloudController::TaskCreate, create: task)
       allow(VCAP::CloudController::TaskCreate).to receive(:new).and_return(task_create)
 
-      user_double = instance_double(VCAP::CloudController::User, guid: 'user-guid')
-      allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(user_double)
-      allow(VCAP::CloudController::SecurityContext).to receive(:current_user_email).and_return('user-email')
+      set_current_user(user, email: 'user-email')
 
       post :create, app_guid: app_model.guid, body: req_body
 
-      expect(task_create).to have_received(:create).with(anything, anything, 'user-guid', 'user-email', droplet: nil)
+      expect(task_create).to have_received(:create).with(anything, anything, user.guid, 'user-email', droplet: nil)
     end
 
     describe 'access permissions' do
@@ -95,7 +83,7 @@ describe TasksController, type: :controller do
         end
 
         it 'succeeds for admins' do
-          set_current_user_as_admin
+          set_current_user_as_admin(user: user)
           post :create, app_guid: app_model.guid, body: req_body
 
           expect(response.status).to eq(202)
@@ -104,7 +92,7 @@ describe TasksController, type: :controller do
 
       context 'when the user does not have write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(user, scopes: ['cloud_controller.read'])
         end
 
         it 'raises 403' do
@@ -117,13 +105,8 @@ describe TasksController, type: :controller do
 
       context 'when the user does not have write permissions on the app space' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
         end
 
         it 'returns a 403 unauthorized' do
@@ -136,11 +119,7 @@ describe TasksController, type: :controller do
 
       context 'when the user does not have read permissions on the app space' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 ResourceNotFound' do
@@ -271,6 +250,11 @@ describe TasksController, type: :controller do
 
   describe '#show' do
     let!(:task) { VCAP::CloudController::TaskModel.make name: 'mytask', app_guid: app_model.guid, memory_in_mb: 2048 }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    before do
+      allow_user_read_access(user, space: space)
+    end
 
     it 'returns a 200 and the task' do
       get :show, task_guid: task.guid
@@ -312,11 +296,7 @@ describe TasksController, type: :controller do
 
       context 'when the user cannot read the app' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404' do
@@ -332,7 +312,7 @@ describe TasksController, type: :controller do
     describe 'access permissions' do
       context 'when the user does not have read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(user, scopes: [])
         end
 
         it 'raises 403' do
@@ -345,11 +325,7 @@ describe TasksController, type: :controller do
 
       context 'when the user does not have read permissions on the app space' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 ResourceNotFound' do
@@ -363,11 +339,8 @@ describe TasksController, type: :controller do
 
       context 'when the user has read, but not write permissions on the app space' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
         end
 
         it 'returns a 200' do
@@ -388,13 +361,11 @@ describe TasksController, type: :controller do
   end
 
   describe '#index' do
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+
     before do
-      allow(membership).to receive(:space_guids_for_roles).with(
-        [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-         VCAP::CloudController::Membership::SPACE_MANAGER,
-         VCAP::CloudController::Membership::SPACE_AUDITOR,
-         VCAP::CloudController::Membership::ORG_MANAGER
-        ]).and_return([space.guid])
+      allow_user_read_access(user, space: space)
+      stub_readable_space_guids_for(user, space)
     end
 
     it 'returns tasks the user has roles to see' do
@@ -463,11 +434,7 @@ describe TasksController, type: :controller do
 
       context 'when the user does not have permissions to read the app' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 Resource Not Found error' do
@@ -490,7 +457,7 @@ describe TasksController, type: :controller do
 
     context 'admin' do
       before do
-        set_current_user_as_admin
+        set_current_user_as_admin(user: user)
       end
 
       it 'returns a 200 and all tasks' do
@@ -534,8 +501,11 @@ describe TasksController, type: :controller do
   describe '#cancel' do
     let!(:task) { VCAP::CloudController::TaskModel.make name: 'usher', app_guid: app_model.guid }
     let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
       locator = CloudController::DependencyLocator.instance
       allow(locator).to receive(:nsync_client).and_return(client)
       allow(client).to receive(:cancel_task).and_return(nil)
@@ -569,11 +539,7 @@ describe TasksController, type: :controller do
 
       context 'when the user does not have permissions to read the app' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 App Not Found error' do
@@ -621,11 +587,7 @@ describe TasksController, type: :controller do
 
     context 'when the user does not have read permissions on the app space' do
       before do
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'returns a 404 ResourceNotFound' do
@@ -639,13 +601,8 @@ describe TasksController, type: :controller do
 
     context 'when the user has read, but not write permissions on the app space' do
       before do
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
+        allow_user_read_access(user, space: space)
+        disallow_user_write_access(user, space: space)
       end
 
       it 'returns a 403 NotAuthorized' do
