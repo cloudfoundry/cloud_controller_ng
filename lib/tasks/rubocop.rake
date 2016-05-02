@@ -15,6 +15,15 @@ begin
       exit_code = cli.run(changelist.uniq.unshift('--auto-correct'))
       exit(exit_code) if exit_code != 0
     end
+
+    desc 'Auto-correct files changed from origin'
+    task :local do
+      require 'rubocop'
+      changelist = `git diff --name-only origin`.chomp.split("\n")
+      cli = RuboCop::CLI.new
+      exit_code = cli.run(changelist.uniq.unshift('--auto-correct'))
+      exit(exit_code) if exit_code != 0
+    end
   end
 rescue LoadError
 

@@ -2,7 +2,6 @@ require 'rails_helper'
 require 'actions/service_binding_create'
 
 describe ServiceBindingsController, type: :controller do
-
   describe '#create' do
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }
