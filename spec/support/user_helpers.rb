@@ -57,6 +57,10 @@ module UserHelpers
     allow(permissions_double(user)).to receive(:can_write_to_space?).with(space_guid).and_return(false)
   end
 
+  def stub_readable_space_guids_for(user, space)
+    allow(permissions_double(user)).to receive(:readable_space_guids).and_return([space.guid])
+  end
+
   def permissions_double(user)
     @permissions ||= {}
     @permissions[user.guid] ||= begin

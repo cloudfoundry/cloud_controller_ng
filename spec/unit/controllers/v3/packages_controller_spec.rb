@@ -2,7 +2,6 @@ require 'rails_helper'
 
 describe PackagesController, type: :controller do
   let(:package_presenter) { instance_double(VCAP::CloudController::PackagePresenter) }
-  let(:membership) { instance_double(VCAP::CloudController::Membership) }
 
   describe '#upload' do
     let(:package) { VCAP::CloudController::PackageModel.make }
@@ -11,14 +10,15 @@ describe PackagesController, type: :controller do
     let(:params) { { 'bits_path' => 'path/to/bits' } }
     let(:expected_response) { 'response stuff' }
     let(:form_headers) { { 'CONTENT_TYPE' => 'application/x-www-form-urlencoded' } }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       @request.env.merge!(form_headers)
-      set_current_user(VCAP::CloudController::User.make)
       allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
       allow(package_presenter).to receive(:present_json).and_return(expected_response)
+
+      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
     end
 
     it 'returns 200 and updates the package state' do
@@ -28,22 +28,6 @@ describe PackagesController, type: :controller do
       expect(response.body).to eq(expected_response)
       expect(package_presenter).to have_received(:present_json).with(an_instance_of(VCAP::CloudController::PackageModel))
       expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::PENDING_STATE)
-    end
-
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns 200 and updates the package state' do
-        post :upload, params.merge(guid: package.guid)
-
-        expect(response.status).to eq(200)
-        expect(response.body).to eq(expected_response)
-        expect(package_presenter).to have_received(:present_json).with(an_instance_of(VCAP::CloudController::PackageModel))
-        expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::PENDING_STATE)
-      end
     end
 
     context 'when app_bits_upload is disabled' do
@@ -62,7 +46,7 @@ describe PackagesController, type: :controller do
       end
 
       context 'admin user' do
-        before { set_current_user_as_admin }
+        before { set_current_user_as_admin(user: user) }
 
         it 'returns 200 and updates the package state' do
           post :upload, params.merge(guid: package.guid)
@@ -112,7 +96,7 @@ describe PackagesController, type: :controller do
 
     context 'when the user does not have write scope' do
       before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+        set_current_user(user, scopes: ['cloud_controller.read'])
       end
 
       it 'returns an Unauthorized error' do
@@ -125,12 +109,7 @@ describe PackagesController, type: :controller do
 
     context 'when the user cannot read the package' do
       before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
       end
 
       it 'returns a 404' do
@@ -143,14 +122,8 @@ describe PackagesController, type: :controller do
 
     context 'when the user can read but not write to the space' do
       before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
+        allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+        disallow_user_write_access(user, space_guid: space.guid, org_guid: org.guid)
       end
 
       it 'returns a 403' do
@@ -158,8 +131,6 @@ describe PackagesController, type: :controller do
 
         expect(response.status).to eq(403)
         expect(response.body).to include('NotAuthorized')
-
-        expect(membership).to have_received(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid)
       end
     end
 
@@ -195,7 +166,7 @@ describe PackagesController, type: :controller do
     let(:package) { VCAP::CloudController::PackageModel.make(state: 'READY') }
     let(:space) { package.space }
     let(:org) { space.organization }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { set_current_user(VCAP::CloudController::User.make, email: 'utako') }
 
     before do
       blob = instance_double(CloudController::Blobstore::FogBlob, public_download_url: 'http://package.example.com')
@@ -203,9 +174,8 @@ describe PackagesController, type: :controller do
       allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
 
       allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
-      set_current_user(user, email: 'utako')
+
+      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
     end
 
     it 'returns 302 and the redirect' do
@@ -278,12 +248,7 @@ describe PackagesController, type: :controller do
 
     context 'user does not have package read permissions' do
       before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
       end
 
       it 'returns 404' do
@@ -293,34 +258,19 @@ describe PackagesController, type: :controller do
         expect(response.body).to include('ResourceNotFound')
       end
     end
-
-    context 'user is an admin' do
-      let(:download_location) { 'http://package.download.url' }
-
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns 302' do
-        get :download, guid: package.guid
-
-        expect(response.status).to eq(302)
-        expect(response.headers['Location']).to eq('http://package.example.com')
-      end
-    end
   end
 
   describe '#show' do
     let(:package) { VCAP::CloudController::PackageModel.make }
     let(:expected_response) { 'im a response' }
+    let(:space) { package.space }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
-      set_current_user(VCAP::CloudController::User.make)
       allow(package_presenter).to receive(:present_json).and_return(expected_response)
+
+      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
     end
 
     it 'returns a 200 OK and the package' do
@@ -331,24 +281,9 @@ describe PackagesController, type: :controller do
       expect(package_presenter).to have_received(:present_json).with(package)
     end
 
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns a 200 OK and the package' do
-        get :show, guid: package.guid
-
-        expect(response.status).to eq(200)
-        expect(response.body).to eq(expected_response)
-        expect(package_presenter).to have_received(:present_json).with(package)
-      end
-    end
-
     context 'when the user does not have the read scope' do
       before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+        set_current_user(user, scopes: ['cloud_controller.write'])
       end
 
       it 'returns a 403 NotAuthorized error' do
@@ -369,15 +304,8 @@ describe PackagesController, type: :controller do
     end
 
     context 'when the user can not read from the space' do
-      let(:space) { package.space }
-      let(:org) { space.organization }
-
       before do
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
       end
 
       it 'returns a 404 not found' do
@@ -385,24 +313,19 @@ describe PackagesController, type: :controller do
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
-
-        expect(membership).to have_received(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid)
       end
     end
   end
 
   describe '#destroy' do
     let(:package) { VCAP::CloudController::PackageModel.make }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:space) { package.space }
 
     before do
       allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
-      set_current_user(VCAP::CloudController::User.make)
+      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
     end
 
     it 'returns a 204 NO CONTENT and deletes the package' do
@@ -424,7 +347,7 @@ describe PackagesController, type: :controller do
 
     context 'when the user does not have write scope' do
       before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+        set_current_user(user, scopes: ['cloud_controller.read'])
       end
 
       it 'returns an Unauthorized error' do
@@ -436,16 +359,8 @@ describe PackagesController, type: :controller do
     end
 
     context 'when the user cannot read the package' do
-      let(:space) { package.space }
-      let(:org) { space.organization }
-
       before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
       end
 
       it 'returns a 404 ResourceNotFound error' do
@@ -457,19 +372,9 @@ describe PackagesController, type: :controller do
     end
 
     context 'when the user can read but cannot write to the package' do
-      let(:space) { package.space }
-      let(:org) { space.organization }
-
       before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-          and_return(true)
-        allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-          and_return(false)
+        allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        disallow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
       end
 
       it 'raises ApiError NotAuthorized' do
@@ -477,20 +382,6 @@ describe PackagesController, type: :controller do
 
         expect(response.status).to eq(403)
         expect(response.body).to include('NotAuthorized')
-      end
-    end
-
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns a 204 NO CONTENT' do
-        delete :destroy, guid: package.guid
-
-        expect(response.status).to eq(204)
-        expect(response.body).to be_empty
       end
     end
   end
@@ -572,8 +463,7 @@ describe PackagesController, type: :controller do
 
     context 'admin' do
       before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
+        set_current_user_as_admin(user: user)
       end
 
       it 'lists all the packages' do
@@ -641,7 +531,9 @@ describe PackagesController, type: :controller do
     describe 'permissions' do
       context 'when the user can read but not write to the space' do
         before do
-          allow(membership).to receive(:has_any_roles?).and_return(true)
+          allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+          disallow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+          stub_readable_space_guids_for(user, space)
         end
 
         it 'returns a 200 OK' do
@@ -658,11 +550,11 @@ describe PackagesController, type: :controller do
       let(:space) { app_model.space }
       let(:org) { space.organization }
       let(:req_body) { { type: 'bits' } }
+      let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
       before do
-        set_current_user(VCAP::CloudController::User.make)
-        allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-        allow(membership).to receive(:has_any_roles?).and_return(true)
+        allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        allow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
       end
 
       context 'bits' do
@@ -677,26 +569,6 @@ describe PackagesController, type: :controller do
 
           response_guid = parsed_body['guid']
           expect(response_guid).to eq created_package.guid
-        end
-
-        context 'admin' do
-          before do
-            set_current_user_as_admin
-            allow(membership).to receive(:has_any_roles?).and_return(false)
-          end
-
-          it 'returns a 201 and the response' do
-            expect(app_model.packages.count).to eq(0)
-
-            post :create, app_guid: app_model.guid, body: req_body
-
-            expect(response.status).to eq 201
-            expect(app_model.reload.packages.count).to eq(1)
-            created_package = app_model.packages.first
-
-            response_guid = parsed_body['guid']
-            expect(response_guid).to eq created_package.guid
-          end
         end
 
         context 'with an invalid type field' do
@@ -722,7 +594,7 @@ describe PackagesController, type: :controller do
 
         context 'when the user does not have write scope' do
           before do
-            set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+            set_current_user(user, scopes: ['cloud_controller.read'])
           end
 
           it 'returns a 403 NotAuthorized error' do
@@ -735,11 +607,7 @@ describe PackagesController, type: :controller do
 
         context 'when the user cannot read the app' do
           before do
-            allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-               VCAP::CloudController::Membership::SPACE_MANAGER,
-               VCAP::CloudController::Membership::SPACE_AUDITOR,
-               VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+            disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
           end
 
           it 'returns a 404 ResourceNotFound error' do
@@ -752,13 +620,7 @@ describe PackagesController, type: :controller do
 
         context 'when the user can read but not write to the space' do
           before do
-            allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-               VCAP::CloudController::Membership::SPACE_MANAGER,
-               VCAP::CloudController::Membership::SPACE_AUDITOR,
-               VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
-            allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
+            disallow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
           end
 
           it 'returns a 403 NotAuthorized error' do
@@ -811,11 +673,15 @@ describe PackagesController, type: :controller do
       let(:source_app_model) { VCAP::CloudController::AppModel.make }
       let(:original_package) { VCAP::CloudController::PackageModel.make(type: 'bits', app_guid: source_app_model.guid) }
       let(:target_app_model) { VCAP::CloudController::AppModel.make }
+      let(:user) { set_current_user(VCAP::CloudController::User.make) }
+      let(:source_space) { source_app_model.space }
+      let(:destination_space) { target_app_model.space }
 
       before do
-        set_current_user(VCAP::CloudController::User.make)
-        allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-        allow(membership).to receive(:has_any_roles?).and_return(true)
+        allow_user_read_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
+        allow_user_write_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
+        allow_user_read_access(user, space_guid: destination_space.guid, org_guid: destination_space.organization_guid)
+        allow_user_write_access(user, space_guid: destination_space.guid, org_guid: destination_space.organization_guid)
       end
 
       it 'returns a 201 and the response' do
@@ -847,13 +713,7 @@ describe PackagesController, type: :controller do
 
         context 'when the user cannot read the source package' do
           before do
-            allow(membership).to receive(:has_any_roles?).and_return(true)
-            allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-               VCAP::CloudController::Membership::SPACE_MANAGER,
-               VCAP::CloudController::Membership::SPACE_AUDITOR,
-               VCAP::CloudController::Membership::ORG_MANAGER],
-              source_app_model.space.guid, source_app_model.space.organization.guid).and_return(false)
+            disallow_user_read_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
           end
 
           it 'returns a 404 ResourceNotFound error' do
@@ -866,14 +726,8 @@ describe PackagesController, type: :controller do
 
         context 'when the user cannot modify the source target_app' do
           before do
-            allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-               VCAP::CloudController::Membership::SPACE_MANAGER,
-               VCAP::CloudController::Membership::SPACE_AUDITOR,
-               VCAP::CloudController::Membership::ORG_MANAGER],
-              source_app_model.space.guid, source_app_model.space.organization.guid).and_return(true)
-            allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER], source_app_model.space.guid).and_return(false)
+            allow_user_read_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
+            disallow_user_write_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
           end
 
           it 'returns a 403 NotAuthorized error' do
@@ -886,11 +740,7 @@ describe PackagesController, type: :controller do
 
         context 'when the user cannot read the target app' do
           before do
-            allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-               VCAP::CloudController::Membership::SPACE_MANAGER,
-               VCAP::CloudController::Membership::SPACE_AUDITOR,
-               VCAP::CloudController::Membership::ORG_MANAGER], target_app_model.space.guid, target_app_model.space.organization.guid).and_return(false)
+            disallow_user_read_access(user, space_guid: destination_space.guid, org_guid: destination_space.organization_guid)
           end
 
           it 'returns a 404 ResourceNotFound error' do
@@ -903,13 +753,8 @@ describe PackagesController, type: :controller do
 
         context 'when the user cannot create the package' do
           before do
-            allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-               VCAP::CloudController::Membership::SPACE_MANAGER,
-               VCAP::CloudController::Membership::SPACE_AUDITOR,
-               VCAP::CloudController::Membership::ORG_MANAGER], target_app_model.space.guid, target_app_model.space.organization.guid).and_return(true)
-            allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER], target_app_model.space.guid).and_return(false)
+            allow_user_read_access(user, space_guid: destination_space.guid, org_guid: destination_space.organization_guid)
+            disallow_user_write_access(user, space_guid: destination_space.guid, org_guid: destination_space.organization_guid)
           end
 
           it 'returns a 403 NotAuthorized error' do
@@ -917,26 +762,6 @@ describe PackagesController, type: :controller do
 
             expect(response.status).to eq 403
             expect(response.body).to include 'NotAuthorized'
-          end
-        end
-
-        context 'admin' do
-          before do
-            set_current_user_as_admin
-            allow(membership).to receive(:has_any_roles?).and_return(false)
-          end
-
-          it 'returns a 201 and the response' do
-            expect(target_app_model.packages.count).to eq(0)
-
-            post :create, app_guid: target_app_model.guid, source_package_guid: original_package.guid
-
-            copied_package = target_app_model.reload.packages.first
-            response_guid  = parsed_body['guid']
-
-            expect(response.status).to eq 201
-            expect(copied_package.type).to eq(original_package.type)
-            expect(response_guid).to eq copied_package.guid
           end
         end
       end
