@@ -626,6 +626,32 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe "uniqueness of types for v3 app processes" do
+        context "when the app (process) belongs to app model (v3)" do
+          let(:app_model) { AppModel.make }
+
+          before do
+            App.make(app: app_model, type: "web")
+          end
+
+          it "validates uniqueness of process types for the belonging app" do
+            msg = "type process type provided isn't unique for this app: [Web, web]"
+            expect {
+              App.make(app: app_model, type: "Web")
+            }.to raise_error(Sequel::ValidationFailed).with_message(msg)
+          end
+        end
+
+        context "when the app (process) doesn't belong to app model (v2)" do
+          before { App.make(type: "web") }
+
+          it "doesn't validate against type" do
+            valid_app = App.make(type: "Web")
+            expect(valid_app).to be_valid
+          end
+        end
+      end
     end
 
     describe 'Serialization' do

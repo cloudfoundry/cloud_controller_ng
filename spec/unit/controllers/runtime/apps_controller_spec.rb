@@ -454,7 +454,7 @@ module VCAP::CloudController
       end
 
       context 'switch from dea to diego' do
-        let(:app_obj) { AppFactory.make(instances: 1, diego: false) }
+        let(:app_obj) { AppFactory.make(instances: 1, diego: false, type: 'web') }
         let(:developer) { make_developer_for_space(app_obj.space) }
         let(:route) { Route.make(space: app_obj.space) }
         let(:route_mapping) { RouteMapping.make(app_id: app_obj.id, route_id: route.id) }

@@ -205,7 +205,7 @@ module VCAP::CloudController
     space             { Space.make }
     stack             { Stack.make }
     instances         { 1 }
-    type              { 'web' }
+    type              { Sham.name }
   end
 
   App.blueprint(:process) do
@@ -215,7 +215,7 @@ module VCAP::CloudController
     space { app.space }
     stack { Stack.make }
     instances { 1 }
-    type { 'web' }
+    type { Sham.name }
     metadata { {} }
   end
 

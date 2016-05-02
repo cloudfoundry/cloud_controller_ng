@@ -142,7 +142,15 @@ module VCAP::CloudController
       validates_includes HEALTH_CHECK_TYPES, :health_check_type, allow_missing: true, message: 'must be one of ' + HEALTH_CHECK_TYPES.join(', ')
 
       validate_health_check_type_and_port_presence_are_in_agreement
+      validate_uniqueness_of_type_for_same_app_model if is_v3?
       validation_policies.map(&:validate)
+    end
+
+    def validate_uniqueness_of_type_for_same_app_model
+      if non_unique_process_types.present? && new?
+        non_unique_process_types_message = non_unique_process_types.push(type).sort.join(', ')
+        errors.add(:type, "process type provided isn't unique for this app: [#{non_unique_process_types_message}]")
+      end
     end
 
     def validate_health_check_type_and_port_presence_are_in_agreement
@@ -663,6 +671,12 @@ module VCAP::CloudController
 
     private
 
+    def non_unique_process_types
+      @non_unique_process_types ||= app.processes_dataset.select_map(:type).select do |process_type|
+        process_type.downcase == type.downcase
+      end
+    end
+
     def changed_from_diego_to_dea?
       column_changed?(:diego) && initial_value(:diego).present? && !diego
     end
@@ -764,6 +778,7 @@ module VCAP::CloudController
     end
   end
   # rubocop:enable ClassLength
+
 end
 
 module VCAP::CloudController
