@@ -13,8 +13,8 @@ describe DropletsController, type: :controller do
     let(:space) { app_model.space }
 
     before do
-      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-      allow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
       allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
       allow(stagers).to receive(:stager_for_package).and_return(double(:stager, stage: nil))
       VCAP::CloudController::BuildpackLifecycleDataModel.make(
@@ -76,7 +76,7 @@ describe DropletsController, type: :controller do
       let(:org) { space.organization }
 
       before do
-        disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'returns a 404 ResourceNotFound error' do
@@ -92,8 +92,8 @@ describe DropletsController, type: :controller do
       let(:org) { space.organization }
 
       before do
-        allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
-        disallow_user_write_access(user, space_guid: space.guid, org_guid: org.guid)
+        allow_user_read_access(user, space: space)
+        disallow_user_write_access(user, space: space)
       end
 
       it 'raises ApiError NotAuthorized' do
@@ -419,9 +419,9 @@ describe DropletsController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
-      allow_user_read_access(user, space_guid: target_space.guid, org_guid: target_space.organization_guid)
-      allow_user_write_access(user, space_guid: target_space.guid, org_guid: target_space.organization_guid)
+      allow_user_read_access(user, space: source_space)
+      allow_user_read_access(user, space: target_space)
+      allow_user_write_access(user, space: target_space)
     end
 
     it 'returns a 201 OK response with the new droplet' do
@@ -457,7 +457,7 @@ describe DropletsController, type: :controller do
     describe 'permissions' do
       context 'when the user is not a member of the space where the source droplet exists' do
         before do
-          disallow_user_read_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
+          disallow_user_read_access(user, space: source_space)
         end
 
         it 'returns a not found error' do
@@ -470,12 +470,12 @@ describe DropletsController, type: :controller do
 
       context 'when the user is a member of the space where source droplet exists' do
         before do
-          allow_user_read_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
+          allow_user_read_access(user, space: source_space)
         end
 
         context 'when the user does not have read access to the target space' do
           before do
-            disallow_user_read_access(user, space_guid: target_space.guid, org_guid: target_space.organization_guid)
+            disallow_user_read_access(user, space: target_space)
           end
 
           it 'returns a 404 ResourceNotFound error' do
@@ -488,8 +488,8 @@ describe DropletsController, type: :controller do
 
         context 'when the user has read access, but not write access to the target space' do
           before do
-            allow_user_read_access(user, space_guid: target_space.guid, org_guid: target_space.organization_guid)
-            disallow_user_write_access(user, space_guid: target_space.guid, org_guid: target_space.organization_guid)
+            allow_user_read_access(user, space: target_space)
+            disallow_user_write_access(user, space: target_space)
           end
 
           it 'returns a forbidden error' do
@@ -541,7 +541,7 @@ describe DropletsController, type: :controller do
     let(:space) { droplet.space }
 
     before do
-      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_read_access(user, space: space)
     end
 
     it 'returns a 200 OK and the droplet' do
@@ -578,7 +578,7 @@ describe DropletsController, type: :controller do
       let(:org) { space.organization }
 
       before do
-        disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'returns a 404 not found' do
@@ -596,8 +596,8 @@ describe DropletsController, type: :controller do
     let(:space) { droplet.space }
 
     before do
-      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-      allow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
     end
 
     it 'returns a 204 NO CONTENT' do
@@ -632,7 +632,7 @@ describe DropletsController, type: :controller do
 
     context 'when the user cannot read the droplet due to roles' do
       before do
-        disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'returns a 404 ResourceNotFound error' do
@@ -645,8 +645,8 @@ describe DropletsController, type: :controller do
 
     context 'when the user can read but cannot write to the space' do
       before do
-        allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-        disallow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        allow_user_read_access(user, space: space)
+        disallow_user_write_access(user, space: space)
       end
 
       it 'returns 403 NotAuthorized' do
@@ -816,8 +816,8 @@ describe DropletsController, type: :controller do
 
       context 'when the user has read access, but not write access to the space' do
         before do
-          allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-          disallow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
           allow(permissions_double(user)).to receive(:readable_space_guids).and_return([])
         end
 

@@ -41,20 +41,20 @@ module UserHelpers
     nil
   end
 
-  def allow_user_read_access(user, space_guid:, org_guid:)
-    allow(permissions_double(user)).to receive(:can_read_from_space?).with(space_guid, org_guid).and_return(true)
+  def allow_user_read_access(user, space:)
+    allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(true)
   end
 
-  def allow_user_write_access(user, space_guid:, org_guid: nil)
-    allow(permissions_double(user)).to receive(:can_write_to_space?).with(space_guid).and_return(true)
+  def allow_user_write_access(user, space:)
+    allow(permissions_double(user)).to receive(:can_write_to_space?).with(space.guid).and_return(true)
   end
 
-  def disallow_user_read_access(user, space_guid:, org_guid:)
-    allow(permissions_double(user)).to receive(:can_read_from_space?).with(space_guid, org_guid).and_return(false)
+  def disallow_user_read_access(user, space:)
+    allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(false)
   end
 
-  def disallow_user_write_access(user, space_guid:, org_guid: nil)
-    allow(permissions_double(user)).to receive(:can_write_to_space?).with(space_guid).and_return(false)
+  def disallow_user_write_access(user, space:)
+    allow(permissions_double(user)).to receive(:can_write_to_space?).with(space.guid).and_return(false)
   end
 
   def stub_readable_space_guids_for(user, space)

@@ -17,8 +17,8 @@ describe PackagesController, type: :controller do
       allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
       allow(package_presenter).to receive(:present_json).and_return(expected_response)
 
-      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-      allow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
     end
 
     it 'returns 200 and updates the package state' do
@@ -109,7 +109,7 @@ describe PackagesController, type: :controller do
 
     context 'when the user cannot read the package' do
       before do
-        disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'returns a 404' do
@@ -122,8 +122,8 @@ describe PackagesController, type: :controller do
 
     context 'when the user can read but not write to the space' do
       before do
-        allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
-        disallow_user_write_access(user, space_guid: space.guid, org_guid: org.guid)
+        allow_user_read_access(user, space: space)
+        disallow_user_write_access(user, space: space)
       end
 
       it 'returns a 403' do
@@ -175,7 +175,7 @@ describe PackagesController, type: :controller do
 
       allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
 
-      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+      allow_user_read_access(user, space: space)
     end
 
     it 'returns 302 and the redirect' do
@@ -248,7 +248,7 @@ describe PackagesController, type: :controller do
 
     context 'user does not have package read permissions' do
       before do
-        disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'returns 404' do
@@ -270,7 +270,7 @@ describe PackagesController, type: :controller do
       allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
       allow(package_presenter).to receive(:present_json).and_return(expected_response)
 
-      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_read_access(user, space: space)
     end
 
     it 'returns a 200 OK and the package' do
@@ -305,7 +305,7 @@ describe PackagesController, type: :controller do
 
     context 'when the user can not read from the space' do
       before do
-        disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'returns a 404 not found' do
@@ -324,8 +324,8 @@ describe PackagesController, type: :controller do
 
     before do
       allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
-      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-      allow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
     end
 
     it 'returns a 204 NO CONTENT and deletes the package' do
@@ -360,7 +360,7 @@ describe PackagesController, type: :controller do
 
     context 'when the user cannot read the package' do
       before do
-        disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'returns a 404 ResourceNotFound error' do
@@ -373,8 +373,8 @@ describe PackagesController, type: :controller do
 
     context 'when the user can read but cannot write to the package' do
       before do
-        allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-        disallow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        allow_user_read_access(user, space: space)
+        disallow_user_write_access(user, space: space)
       end
 
       it 'raises ApiError NotAuthorized' do
@@ -531,8 +531,8 @@ describe PackagesController, type: :controller do
     describe 'permissions' do
       context 'when the user can read but not write to the space' do
         before do
-          allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-          disallow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
           stub_readable_space_guids_for(user, space)
         end
 
@@ -553,8 +553,8 @@ describe PackagesController, type: :controller do
       let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
       before do
-        allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-        allow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        allow_user_read_access(user, space: space)
+        allow_user_write_access(user, space: space)
       end
 
       context 'bits' do
@@ -607,7 +607,7 @@ describe PackagesController, type: :controller do
 
         context 'when the user cannot read the app' do
           before do
-            disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+            disallow_user_read_access(user, space: space)
           end
 
           it 'returns a 404 ResourceNotFound error' do
@@ -620,7 +620,7 @@ describe PackagesController, type: :controller do
 
         context 'when the user can read but not write to the space' do
           before do
-            disallow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+            disallow_user_write_access(user, space: space)
           end
 
           it 'returns a 403 NotAuthorized error' do
@@ -678,10 +678,10 @@ describe PackagesController, type: :controller do
       let(:destination_space) { target_app_model.space }
 
       before do
-        allow_user_read_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
-        allow_user_write_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
-        allow_user_read_access(user, space_guid: destination_space.guid, org_guid: destination_space.organization_guid)
-        allow_user_write_access(user, space_guid: destination_space.guid, org_guid: destination_space.organization_guid)
+        allow_user_read_access(user, space: source_space)
+        allow_user_write_access(user, space: source_space)
+        allow_user_read_access(user, space: destination_space)
+        allow_user_write_access(user, space: destination_space)
       end
 
       it 'returns a 201 and the response' do
@@ -713,7 +713,7 @@ describe PackagesController, type: :controller do
 
         context 'when the user cannot read the source package' do
           before do
-            disallow_user_read_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
+            disallow_user_read_access(user, space: source_space)
           end
 
           it 'returns a 404 ResourceNotFound error' do
@@ -726,8 +726,8 @@ describe PackagesController, type: :controller do
 
         context 'when the user cannot modify the source target_app' do
           before do
-            allow_user_read_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
-            disallow_user_write_access(user, space_guid: source_space.guid, org_guid: source_space.organization_guid)
+            allow_user_read_access(user, space: source_space)
+            disallow_user_write_access(user, space: source_space)
           end
 
           it 'returns a 403 NotAuthorized error' do
@@ -740,7 +740,7 @@ describe PackagesController, type: :controller do
 
         context 'when the user cannot read the target app' do
           before do
-            disallow_user_read_access(user, space_guid: destination_space.guid, org_guid: destination_space.organization_guid)
+            disallow_user_read_access(user, space: destination_space)
           end
 
           it 'returns a 404 ResourceNotFound error' do
@@ -753,8 +753,8 @@ describe PackagesController, type: :controller do
 
         context 'when the user cannot create the package' do
           before do
-            allow_user_read_access(user, space_guid: destination_space.guid, org_guid: destination_space.organization_guid)
-            disallow_user_write_access(user, space_guid: destination_space.guid, org_guid: destination_space.organization_guid)
+            allow_user_read_access(user, space: destination_space)
+            disallow_user_write_access(user, space: destination_space)
           end
 
           it 'returns a 403 NotAuthorized error' do

@@ -8,7 +8,7 @@ describe ProcessesController, type: :controller do
 
     before do
       stub_readable_space_guids_for(user, space)
-      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_read_access(user, space: space)
     end
 
     it 'returns 200 and lists the processes' do
@@ -72,7 +72,7 @@ describe ProcessesController, type: :controller do
 
       context 'when the user does not have permissions to read the app' do
         before do
-          disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 Resource Not Found error' do
@@ -124,7 +124,7 @@ describe ProcessesController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_read_access(user, space: space)
     end
 
     it 'returns 200 OK with process' do
@@ -171,7 +171,7 @@ describe ProcessesController, type: :controller do
 
       context 'when the user cannot read the app due to membership' do
         before do
-          disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404' do
@@ -207,7 +207,7 @@ describe ProcessesController, type: :controller do
 
     context 'when the user cannot read the process due to roles' do
       before do
-        disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'raises 404' do
@@ -230,8 +230,8 @@ describe ProcessesController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-      allow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
     end
 
     it 'updates the process and returns the correct things' do
@@ -302,7 +302,7 @@ describe ProcessesController, type: :controller do
 
     context 'when the user cannot read the process' do
       before do
-        disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'raises 404' do
@@ -315,8 +315,8 @@ describe ProcessesController, type: :controller do
 
     context 'when the user can read but not write to the process due to membership' do
       before do
-        allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-        disallow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        allow_user_read_access(user, space: space)
+        disallow_user_write_access(user, space: space)
       end
 
       it 'raises an ApiError with a 403 code' do
@@ -337,8 +337,8 @@ describe ProcessesController, type: :controller do
     before do
       allow(index_stopper).to receive(:stop_index)
       allow(CloudController::DependencyLocator.instance).to receive(:index_stopper).and_return(index_stopper)
-      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-      allow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
     end
 
     it 'terminates the process instance' do
@@ -379,7 +379,7 @@ describe ProcessesController, type: :controller do
 
       context 'when the user cannot read the app' do
         before do
-          disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'raises 404' do
@@ -421,7 +421,7 @@ describe ProcessesController, type: :controller do
 
     context 'when the user cannot read the process' do
       before do
-        disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'raises 404' do
@@ -434,8 +434,8 @@ describe ProcessesController, type: :controller do
 
     context 'when the user can read but not write to the process due to membership' do
       before do
-        allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-        disallow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        allow_user_read_access(user, space: space)
+        disallow_user_write_access(user, space: space)
       end
 
       it 'raises an ApiError with a 403 code' do
@@ -454,8 +454,8 @@ describe ProcessesController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-      allow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
     end
 
     it 'scales the process and returns the correct things' do
@@ -512,7 +512,7 @@ describe ProcessesController, type: :controller do
 
       context 'when the user cannot read the app' do
         before do
-          disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'raises 404' do
@@ -526,8 +526,8 @@ describe ProcessesController, type: :controller do
 
       context 'when the user can read but not write to the process due to membership' do
         before do
-          allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-          disallow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -601,7 +601,7 @@ describe ProcessesController, type: :controller do
 
     context 'when the user cannot read the process' do
       before do
-        disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'raises 404' do
@@ -614,8 +614,8 @@ describe ProcessesController, type: :controller do
 
     context 'when the user can read but cannot write to the process' do
       before do
-        allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-        disallow_user_write_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        allow_user_read_access(user, space: space)
+        disallow_user_write_access(user, space: space)
       end
 
       it 'raises an ApiError with a 403 code' do
@@ -635,7 +635,7 @@ describe ProcessesController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_read_access(user, space: space)
       CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
       allow(instances_reporters).to receive(:stats_for_app).and_return(stats)
     end
@@ -657,7 +657,7 @@ describe ProcessesController, type: :controller do
 
       context 'when the user cannot read the app' do
         before do
-          disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'raises 404 error' do
@@ -712,7 +712,7 @@ describe ProcessesController, type: :controller do
 
     context 'when the user cannot read the process' do
       before do
-        disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'raises 404' do

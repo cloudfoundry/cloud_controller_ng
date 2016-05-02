@@ -9,7 +9,7 @@ describe AppsV3Controller, type: :controller do
 
     before do
       set_current_user(user)
-      allow_user_read_access(user, space_guid: space_1.guid, org_guid: space_1.organization.guid)
+      allow_user_read_access(user, space: space_1)
       allow(controller).to receive(:readable_space_guids).and_return([space_1.guid])
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
@@ -30,7 +30,7 @@ describe AppsV3Controller, type: :controller do
 
       before do
         set_current_user_as_admin
-        disallow_user_read_access(user, space_guid: space_1.guid, org_guid: space_1.organization.guid)
+        disallow_user_read_access(user, space: space_1)
         VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
         VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
         VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_3, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
@@ -102,7 +102,7 @@ describe AppsV3Controller, type: :controller do
     end
 
     it 'returns a 200 and the app' do
-      allow_user_read_access(user, space_guid: space.guid, org_guid: app_model.organization.guid)
+      allow_user_read_access(user, space: space)
 
       get :show, guid: app_model.guid
 
@@ -137,7 +137,7 @@ describe AppsV3Controller, type: :controller do
       let(:org) { space.organization }
 
       before do
-        disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'returns a 404 ResourceNotFound error' do
@@ -161,8 +161,8 @@ describe AppsV3Controller, type: :controller do
     end
 
     before do
-      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-      allow_user_write_access(user, space_guid: space.guid)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
     end
 
     it 'returns a 201 Created and the app' do
@@ -216,7 +216,7 @@ describe AppsV3Controller, type: :controller do
 
     context 'when the user is not a member of the requested space' do
       before do
-        disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'returns an NotFound error' do
@@ -230,8 +230,8 @@ describe AppsV3Controller, type: :controller do
 
     context 'when the user is a space manager/org manager and thus can see the space but not create apps' do
       before do
-        allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
-        disallow_user_write_access(user, space_guid: space.guid)
+        allow_user_read_access(user, space: space)
+        disallow_user_write_access(user, space: space)
       end
 
       it 'returns an Unauthorized error' do
@@ -426,8 +426,8 @@ describe AppsV3Controller, type: :controller do
     before do
       user = VCAP::CloudController::User.make
       set_current_user(user)
-      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
-      allow_user_write_access(user, space_guid: space.guid)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
     end
 
     it 'returns a 200 OK and the app' do
@@ -736,7 +736,7 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user cannot read the app' do
         before do
-          disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -749,8 +749,8 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user can read but cannot write to the app' do
         before do
-          allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
-          disallow_user_write_access(user, space_guid: space.guid)
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
         end
 
         it 'raises ApiError NotAuthorized' do
@@ -770,8 +770,8 @@ describe AppsV3Controller, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
-      allow_user_write_access(user, space_guid: space.guid, org_guid: org.guid)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
@@ -798,7 +798,7 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user cannot read the app' do
         before do
-          disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -811,8 +811,8 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user can read but cannot write to the app' do
         before do
-          allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
-          disallow_user_write_access(user, space_guid: space.guid, org_guid: org.guid)
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
         end
 
         it 'raises ApiError NotAuthorized' do
@@ -856,8 +856,8 @@ describe AppsV3Controller, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
-      allow_user_write_access(user, space_guid: space.guid, org_guid: org.guid)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
@@ -888,7 +888,7 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user cannot read the app' do
         before do
-          disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -901,7 +901,7 @@ describe AppsV3Controller, type: :controller do
       end
       context 'when the user can read but cannot write to the app' do
         before do
-          disallow_user_write_access(user, space_guid: space.guid, org_guid: org.guid)
+          disallow_user_write_access(user, space: space)
         end
 
         it 'raises ApiError NotAuthorized' do
@@ -998,8 +998,8 @@ describe AppsV3Controller, type: :controller do
 
     before do
       set_current_user(user)
-      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
-      allow_user_write_access(user, space_guid: space.guid)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
@@ -1029,7 +1029,7 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user cannot read the app' do
         before do
-          disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -1042,8 +1042,8 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user can read but cannot write to the app' do
         before do
-          allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
-          disallow_user_write_access(user, space_guid: space.guid)
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
         end
 
         it 'raises ApiError NotAuthorized' do
@@ -1087,8 +1087,8 @@ describe AppsV3Controller, type: :controller do
 
     before do
       set_current_user(user)
-      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
-      allow_user_write_access(user, space_guid: space.guid)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
@@ -1115,7 +1115,7 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user cannot read the app' do
         before do
-          disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -1128,8 +1128,8 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user can read but cannot write to the app' do
         before do
-          allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
-          disallow_user_write_access(user, space_guid: space.guid)
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
         end
 
         it 'raises ApiError NotAuthorized' do
@@ -1162,8 +1162,8 @@ describe AppsV3Controller, type: :controller do
 
         context 'when the user can read but cannot write to the app' do
           before do
-            allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
-            disallow_user_write_access(user, space_guid: space.guid)
+            allow_user_read_access(user, space: space)
+            disallow_user_write_access(user, space: space)
           end
 
           it 'raises ApiError NotAuthorized as opposed to FeatureDisabled' do
@@ -1198,8 +1198,8 @@ describe AppsV3Controller, type: :controller do
     before do
       app_model.add_droplet(droplet)
       set_current_user(user)
-      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
-      allow_user_write_access(user, space_guid: space.guid)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
@@ -1290,7 +1290,7 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user can not read the applicaiton' do
         before do
-          disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 ResourceNotFound' do
@@ -1303,8 +1303,8 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user can read but not update the application' do
         before do
-          allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
-          disallow_user_write_access(user, space_guid: space.guid)
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
         end
 
         it 'returns a 403 NotAuthorized' do
@@ -1328,7 +1328,7 @@ describe AppsV3Controller, type: :controller do
     before do
       app_model.add_droplet(droplet)
       set_current_user(user)
-      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+      allow_user_read_access(user, space: space)
     end
 
     it 'returns a 200 OK and the droplet' do
@@ -1376,7 +1376,7 @@ describe AppsV3Controller, type: :controller do
       let(:org) { space.organization }
 
       before do
-        disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'returns a 404 not found' do
@@ -1392,8 +1392,8 @@ describe AppsV3Controller, type: :controller do
       let(:org) { space.organization }
 
       before do
-        allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
-        disallow_user_write_access(user, space_guid: space.guid)
+        allow_user_read_access(user, space: space)
+        disallow_user_write_access(user, space: space)
       end
 
       it 'returns a 200 OK' do
