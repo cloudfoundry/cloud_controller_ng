@@ -7,6 +7,7 @@ module VCAP::CloudController
 
     export_attributes :app_guid, :service_instance_guid, :credentials,
                       :binding_options, :gateway_data, :gateway_name, :syslog_drain_url
+    export_attributes_from_methods volume_mounts: :filter_volume_mounts
 
     import_attributes :app_guid, :service_instance_guid, :credentials,
                       :binding_options, :gateway_data, :syslog_drain_url
@@ -123,6 +124,15 @@ module VCAP::CloudController
 
     def binding_options=(values)
       super(MultiJson.dump(values))
+    end
+
+    def filter_volume_mounts
+      return [] unless volume_mounts.is_a?(Array)
+
+      volume_mounts.each do |mount_info|
+        mount_info.delete('private')
+        mount_info
+      end
     end
 
     private

@@ -273,5 +273,45 @@ module VCAP::CloudController
         expect(visible_to_other_user.all).to be_empty
       end
     end
+
+    describe '#filter_volume_mounts' do
+      it 'removes the private key from all mounts' do
+        binding = described_class.new
+        binding.volume_mounts = [
+          {
+            hash1: 'val1',
+            private: {
+              hash1_private: 'val1_private'
+            }
+          },
+          {
+            hash2: 'val2',
+            private: {
+              hash2_private: 'val2_private'
+            }
+          }
+        ]
+
+        expect(binding.filter_volume_mounts).to match_array(
+          [
+            { 'hash1' => 'val1' },
+            { 'hash2' => 'val2' }
+          ])
+      end
+
+      it 'handles nil volume_mounts' do
+        binding = described_class.new
+        binding.volume_mounts = nil
+
+        expect(binding.filter_volume_mounts).to eq([])
+      end
+
+      it 'handles empty string volume_mounts' do
+        binding = described_class.new
+        binding.volume_mounts = ''
+
+        expect(binding.filter_volume_mounts).to eq([])
+      end
+    end
   end
 end
