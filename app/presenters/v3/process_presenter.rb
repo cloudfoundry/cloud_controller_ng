@@ -19,7 +19,7 @@ module VCAP::CloudController
       MultiJson.dump(response, pretty: true)
     end
 
-    def present_json_list(paginated_result, base_pagination_url, filters = {})
+    def present_json_list(paginated_result, base_pagination_url, filters=nil)
       processes      = paginated_result.records
       process_hashes = processes.collect { |app| process_hash(app, nil) }
 
