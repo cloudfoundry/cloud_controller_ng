@@ -84,6 +84,18 @@ module VCAP::CloudController
     end
     alias_method_chain :credentials, 'serialization'
 
+    def volume_mounts_with_serialization=(val)
+      self.volume_mounts_without_serialization = MultiJson.dump(val)
+    end
+    alias_method_chain :volume_mounts=, 'serialization'
+
+    def volume_mounts_with_serialization
+      string = volume_mounts_without_serialization
+      return if string.blank?
+      MultiJson.load string
+    end
+    alias_method_chain :volume_mounts, 'serialization'
+
     def gateway_data=(val)
       val = MultiJson.dump(val)
       super(val)

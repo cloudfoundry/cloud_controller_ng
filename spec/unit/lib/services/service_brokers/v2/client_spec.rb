@@ -922,6 +922,39 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
+      context 'with volume mounts' do
+        let(:response_data) do
+          {
+            'volume_mounts' => [{ 'mount' => 'olympus' }, { 'mount' => 'everest' }]
+          }
+        end
+
+        it 'stores the volume mount on the service binding' do
+          attributes = client.bind(binding, arbitrary_parameters)
+
+          binding.set_all(attributes)
+          binding.save
+
+          expect(binding.volume_mounts).to match_array([{ 'mount' => 'olympus' }, { 'mount' => 'everest' }])
+        end
+
+        context 'when the volume mounts cause an error to be raised' do
+          let(:response_data) do
+            {
+              'volume_mounts' => 'invalid'
+            }
+          end
+
+          it 'raises an error and initiates orphan mitigation' do
+            expect {
+              client.bind(binding, arbitrary_parameters)
+            }.to raise_error(Errors::ServiceBrokerInvalidVolumeMounts)
+
+            expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
+          end
+        end
+      end
+
       context 'when binding fails' do
         let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
         let(:binding) do

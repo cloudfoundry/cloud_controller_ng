@@ -113,7 +113,7 @@ module VCAP::Services::ServiceBrokers::V2
       parsed_response = @response_parser.parse_bind(path, response, service_guid: binding.service.guid)
 
       attributes = {
-        credentials: parsed_response['credentials']
+        credentials: parsed_response['credentials'],
       }
 
       if parsed_response.key?('syslog_drain_url')
@@ -124,9 +124,14 @@ module VCAP::Services::ServiceBrokers::V2
         attributes[:route_service_url] = parsed_response['route_service_url']
       end
 
+      if parsed_response.key?('volume_mounts')
+        attributes[:volume_mounts] = parsed_response['volume_mounts']
+      end
+
       attributes
     rescue Errors::ServiceBrokerApiTimeout,
            Errors::ServiceBrokerBadResponse,
+           Errors::ServiceBrokerInvalidVolumeMounts,
            Errors::ServiceBrokerInvalidSyslogDrainUrl => e
       @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
       raise e
