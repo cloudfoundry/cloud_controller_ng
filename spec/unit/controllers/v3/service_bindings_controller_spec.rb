@@ -2,13 +2,6 @@ require 'rails_helper'
 require 'actions/service_binding_create'
 
 describe ServiceBindingsController, type: :controller do
-  let(:membership) { instance_double(VCAP::CloudController::Membership) }
-
-  before do
-    set_current_user(VCAP::CloudController::User.make)
-    allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-    allow(membership).to receive(:has_any_roles?).and_return(true)
-  end
 
   describe '#create' do
     let(:app_model) { VCAP::CloudController::AppModel.make }
@@ -39,8 +32,11 @@ describe ServiceBindingsController, type: :controller do
         body: body
       }
     end
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
       stub_bind(service_instance, opts)
       service_instance.service.requires = ['syslog_drain']
       service_instance.service.save
@@ -58,29 +54,11 @@ describe ServiceBindingsController, type: :controller do
       expect(parsed_body['data']['credentials']).to eq({ 'super' => 'secret' })
     end
 
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns a 201 and the service binding' do
-        post :create, body: req_body
-
-        service_binding = app_model.service_bindings.last
-
-        expect(response.status).to eq 201
-        expect(parsed_body['guid']).to eq(service_binding.guid)
-        expect(parsed_body['type']).to eq(service_binding_type)
-      end
-    end
-
     context 'permissions' do
       context 'when the user has read, but not write permissions to the space' do
         before do
-          allow(membership).to receive(:has_any_roles?).
-            with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-            and_return(false)
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
         end
 
         it 'returns a 403 Not Authorized' do
@@ -93,7 +71,7 @@ describe ServiceBindingsController, type: :controller do
 
       context 'when the user does not have write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(user, scopes: ['cloud_controller.read'])
         end
 
         it 'returns a 403 NotAuthorized error' do
@@ -315,6 +293,11 @@ describe ServiceBindingsController, type: :controller do
   describe '#show' do
     let(:service_binding) { VCAP::CloudController::ServiceBindingModel.make(syslog_drain_url: 'syslog://syslog-drain.com') }
     let(:space) { service_binding.space }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    before do
+      allow_user_read_access(user, space: space)
+    end
 
     it 'returns a 200 OK and the service binding' do
       get :show, guid: service_binding.guid
@@ -326,29 +309,11 @@ describe ServiceBindingsController, type: :controller do
       expect(parsed_body['data']['credentials']).to eq(service_binding.credentials)
     end
 
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns a 200 OK and the service binding' do
-        get :show, guid: service_binding.guid
-
-        expect(response.status).to eq 200
-        expect(parsed_body['guid']).to eq(service_binding.guid)
-        expect(parsed_body['type']).to eq(service_binding.type)
-        expect(parsed_body['data']['syslog_drain_url']).to eq('syslog://syslog-drain.com')
-        expect(parsed_body['data']['credentials']).to eq(service_binding.credentials)
-      end
-    end
-
     context 'permissions' do
       context 'when the user has read-only permissions' do
         before do
-          allow(membership).to receive(:has_any_roles?).
-            with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-            and_return(false)
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
         end
 
         it 'returns a 200' do
@@ -360,7 +325,7 @@ describe ServiceBindingsController, type: :controller do
 
       context 'when the user does not have read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+          set_current_user(user, scopes: ['cloud_controller.write'])
         end
 
         it 'returns a 403 NotAuthorized error' do
@@ -373,8 +338,7 @@ describe ServiceBindingsController, type: :controller do
 
       context 'when the does not have read permissions' do
         before do
-          allow(membership).to receive(:has_any_roles?).
-            and_return(false)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404' do
@@ -406,15 +370,10 @@ describe ServiceBindingsController, type: :controller do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: allowed_space) }
     let(:allowed_space) { allowed_binding_1.space }
     let(:unauthorized_space) { binding_in_unauthorized_space.space }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow(membership).to receive(:space_guids_for_roles).
-        with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER]
-        ).and_return(allowed_space.guid)
+      stub_readable_space_guids_for(user, allowed_space)
     end
 
     it 'returns a 200 and all service bindings the user is allowed to see' do
@@ -430,7 +389,7 @@ describe ServiceBindingsController, type: :controller do
         [allowed_binding_1, allowed_binding_2, allowed_binding_3, binding_in_unauthorized_space].map(&:guid)
       end
       before do
-        set_current_user_as_admin
+        set_current_user_as_admin(user: user)
       end
 
       it 'returns all service bindings' do
@@ -459,7 +418,7 @@ describe ServiceBindingsController, type: :controller do
 
     context 'when the user does not have the read scope' do
       before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+        set_current_user(user, scopes: ['cloud_controller.write'])
       end
 
       it 'returns a 403 NotAuthorized error' do
@@ -500,8 +459,11 @@ describe ServiceBindingsController, type: :controller do
   describe '#destroy' do
     let(:service_binding) { VCAP::CloudController::ServiceBindingModel.make(syslog_drain_url: 'syslog://syslog-drain.com') }
     let(:space) { service_binding.space }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
       stub_unbind(service_binding)
     end
 
@@ -512,19 +474,6 @@ describe ServiceBindingsController, type: :controller do
     end
 
     context 'permissions' do
-      context 'admin with no other roles' do
-        before do
-          set_current_user_as_admin
-          allow(membership).to receive(:has_any_roles?).and_return(false)
-        end
-
-        it 'returns a 204 and deletes the service binding' do
-          delete :destroy, guid: service_binding.guid
-          expect(response.status).to eq 204
-          expect(service_binding.exists?).to be_falsey
-        end
-      end
-
       context 'when the service binding does not exist' do
         it 'returns a 404' do
           delete :destroy, guid: 'fake-guid'
@@ -535,9 +484,8 @@ describe ServiceBindingsController, type: :controller do
 
       context 'when the user has read, but not write persimmons on the space' do
         before do
-          allow(membership).to receive(:has_any_roles?).
-            with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-            and_return(false)
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
         end
 
         it 'returns a 403 Not Authorized and does NOT delete the binding' do
@@ -551,7 +499,7 @@ describe ServiceBindingsController, type: :controller do
 
       context 'when the user does not have the write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(user, scopes: ['cloud_controller.read'])
         end
 
         it 'returns a 403 NotAuthorized error and does NOT delete the binding' do
@@ -565,7 +513,7 @@ describe ServiceBindingsController, type: :controller do
 
       context 'when the user does not have read permissions' do
         before do
-          allow(membership).to receive(:has_any_roles?).and_return(false)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 and does NOT delete the binding' do
