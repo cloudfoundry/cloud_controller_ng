@@ -60,18 +60,37 @@ module VCAP::CloudController
       end
     end
 
-    it_behaves_like 'a model with an encrypted attribute' do
-      let(:service_instance) { ManagedServiceInstance.make }
+    describe 'encrypted columns' do
+      describe 'credentials' do
+        it_behaves_like 'a model with an encrypted attribute' do
+          let(:service_instance) { ManagedServiceInstance.make }
 
-      def new_model
-        ServiceBinding.make(
-          service_instance: service_instance,
-          credentials: value_to_encrypt
-        )
+          def new_model
+            ServiceBinding.make(
+              service_instance: service_instance,
+              credentials: value_to_encrypt
+            )
+          end
+
+          let(:encrypted_attr) { :credentials }
+          let(:attr_salt) { :salt }
+        end
       end
 
-      let(:encrypted_attr) { :credentials }
-      let(:attr_salt) { :salt }
+      describe 'volume_mounts' do
+        it_behaves_like 'a model with an encrypted attribute' do
+          let(:service_instance) { ManagedServiceInstance.make }
+
+          def new_model
+            ServiceBinding.make(
+              service_instance: service_instance,
+              volume_mounts: value_to_encrypt
+            )
+          end
+
+          let(:encrypted_attr) { :volume_mounts }
+        end
+      end
     end
 
     describe 'bad relationships' do

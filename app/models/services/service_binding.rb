@@ -20,6 +20,7 @@ module VCAP::CloudController
     plugin :after_initialize
 
     encrypt :credentials, salt: :salt
+    encrypt :volume_mounts, salt: :volume_mounts_salt
 
     def validate
       validates_presence :app

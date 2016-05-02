@@ -35,7 +35,7 @@ module VCAP::CloudController
       saved_attribute = last_row[storage_column]
 
       expect(
-        Encryptor.decrypt(saved_attribute, model.salt)
+        Encryptor.decrypt(saved_attribute, model.send(attr_salt))
       ).to include(value_to_encrypt)
 
       saved_attribute = last_row[storage_column]
