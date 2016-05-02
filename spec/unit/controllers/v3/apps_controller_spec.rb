@@ -1,23 +1,16 @@
 require 'rails_helper'
 
 describe AppsV3Controller, type: :controller do
-  let(:membership) { instance_double(VCAP::CloudController::Membership) }
-
   describe '#list' do
     let(:app_model_1) { VCAP::CloudController::AppModel.make }
     let!(:app_model_2) { VCAP::CloudController::AppModel.make }
     let!(:space_1) { app_model_1.space }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
-      set_current_user(VCAP::CloudController::User.make)
-
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
-      allow(membership).to receive(:space_guids_for_roles).with(
-        [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-         VCAP::CloudController::Membership::SPACE_MANAGER,
-         VCAP::CloudController::Membership::SPACE_AUDITOR,
-         VCAP::CloudController::Membership::ORG_MANAGER]).and_return(space_1.guid)
+      set_current_user(user)
+      allow_user_read_access(user, space_guid: space_1.guid, org_guid: space_1.organization.guid)
+      allow(controller).to receive(:readable_space_guids).and_return([space_1.guid])
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
@@ -37,7 +30,7 @@ describe AppsV3Controller, type: :controller do
 
       before do
         set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
+        disallow_user_read_access(user, space_guid: space_1.guid, org_guid: space_1.organization.guid)
         VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
         VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
         VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_3, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
@@ -100,33 +93,21 @@ describe AppsV3Controller, type: :controller do
 
   describe '#show' do
     let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:space) { app_model.space }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
-      set_current_user(VCAP::CloudController::User.make)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      set_current_user(user)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns a 200 and the app' do
+      allow_user_read_access(user, space_guid: space.guid, org_guid: app_model.organization.guid)
+
       get :show, guid: app_model.guid
 
       expect(response.status).to eq 200
       expect(parsed_body['guid']).to eq(app_model.guid)
-    end
-
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns a 200 and the app' do
-        get :show, guid: app_model.guid
-
-        expect(response.status).to eq 200
-        expect(parsed_body['guid']).to eq(app_model.guid)
-      end
     end
 
     context 'when the app does not exist' do
@@ -156,11 +137,7 @@ describe AppsV3Controller, type: :controller do
       let(:org) { space.organization }
 
       before do
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
       end
 
       it 'returns a 404 ResourceNotFound error' do
@@ -173,6 +150,7 @@ describe AppsV3Controller, type: :controller do
   end
 
   describe '#create' do
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:space) { VCAP::CloudController::Space.make }
     let(:req_body) do
       {
@@ -183,10 +161,8 @@ describe AppsV3Controller, type: :controller do
     end
 
     before do
-      set_current_user(VCAP::CloudController::User.make)
-
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+      allow_user_write_access(user, space_guid: space.guid)
     end
 
     it 'returns a 201 Created and the app' do
@@ -208,21 +184,6 @@ describe AppsV3Controller, type: :controller do
 
         expect(response.status).to eq 403
         expect(response.body).to include 'NotAuthorized'
-      end
-    end
-
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns a 201 Created and the app' do
-        post :create, body: req_body
-        app_model = space.app_models.last
-
-        expect(response.status).to eq 201
-        expect(parsed_body['guid']).to eq(app_model.guid)
       end
     end
 
@@ -255,13 +216,7 @@ describe AppsV3Controller, type: :controller do
 
     context 'when the user is not a member of the requested space' do
       before do
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER],
-          space.guid, space.organization_guid).
-          and_return(false)
+        disallow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
       end
 
       it 'returns an NotFound error' do
@@ -275,17 +230,8 @@ describe AppsV3Controller, type: :controller do
 
     context 'when the user is a space manager/org manager and thus can see the space but not create apps' do
       before do
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER],
-          space.guid, space.organization_guid).
-          and_return(true)
-
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-          and_return(false)
+        allow_user_read_access(user, space_guid: space.guid, org_guid: space.organization_guid)
+        disallow_user_write_access(user, space_guid: space.guid)
       end
 
       it 'returns an Unauthorized error' do
@@ -445,8 +391,7 @@ describe AppsV3Controller, type: :controller do
 
       context 'admin' do
         before do
-          set_current_user_as_admin
-          allow(membership).to receive(:has_any_roles?).and_return(false)
+          set_current_user_as_admin(user: user)
         end
 
         it 'returns a 201 Created and the app' do
@@ -479,10 +424,10 @@ describe AppsV3Controller, type: :controller do
     let(:req_body) { { name: 'new-name' } }
 
     before do
-      set_current_user(VCAP::CloudController::User.make)
-
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      user = VCAP::CloudController::User.make
+      set_current_user(user)
+      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+      allow_user_write_access(user, space_guid: space.guid)
     end
 
     it 'returns a 200 OK and the app' do
@@ -491,20 +436,6 @@ describe AppsV3Controller, type: :controller do
       expect(response.status).to eq 200
       expect(parsed_body['guid']).to eq(app_model.guid)
       expect(parsed_body['name']).to eq('new-name')
-    end
-
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-      end
-
-      it 'returns a 200 OK and the app' do
-        put :update, guid: app_model.guid, body: req_body
-
-        expect(response.status).to eq 200
-        expect(parsed_body['guid']).to eq(app_model.guid)
-        expect(parsed_body['name']).to eq('new-name')
-      end
     end
 
     context 'when the request has invalid data' do
@@ -797,44 +728,37 @@ describe AppsV3Controller, type: :controller do
       end
     end
 
-    context 'when the user cannot read the app' do
-      before do
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
-      end
-
-      it 'returns a 404 ResourceNotFound error' do
-        put :update, guid: app_model.guid, body: req_body
-
-        expect(response.status).to eq 404
-        expect(response.body).to include 'ResourceNotFound'
-      end
-    end
-
-    context 'when the user can read but cannot write to the app' do
+    context 'permissions' do
       let(:app_model) { VCAP::CloudController::AppModel.make }
       let(:space) { app_model.space }
       let(:org) { space.organization }
+      let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
-      before do
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
-        allow(membership).to receive(:has_any_roles?).
-          with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-          and_return(false)
+      context 'when the user cannot read the app' do
+        before do
+          disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          put :update, guid: app_model.guid, body: req_body
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+        end
       end
 
-      it 'raises ApiError NotAuthorized' do
-        put :update, guid: app_model.guid, body: req_body
+      context 'when the user can read but cannot write to the app' do
+        before do
+          allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+          disallow_user_write_access(user, space_guid: space.guid)
+        end
 
-        expect(response.status).to eq 403
-        expect(response.body).to include 'NotAuthorized'
+        it 'raises ApiError NotAuthorized' do
+          put :update, guid: app_model.guid, body: req_body
+
+          expect(response.status).to eq 403
+          expect(response.body).to include 'NotAuthorized'
+        end
       end
     end
   end
@@ -843,12 +767,11 @@ describe AppsV3Controller, type: :controller do
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }
     let(:org) { space.organization }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      set_current_user(VCAP::CloudController::User.make)
-
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+      allow_user_write_access(user, space_guid: space.guid, org_guid: org.guid)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
@@ -857,19 +780,6 @@ describe AppsV3Controller, type: :controller do
 
       expect(response.status).to eq 204
       expect { app_model.reload }.to raise_error(Sequel::Error, 'Record not found')
-    end
-
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns a 204' do
-        delete :destroy, guid: app_model.guid
-
-        expect(response.status).to eq 204
-      end
     end
 
     context 'permissions' do
@@ -888,11 +798,7 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user cannot read the app' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+          disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -905,14 +811,8 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user can read but cannot write to the app' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-            and_return(true)
-          allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-            and_return(false)
+          allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+          disallow_user_write_access(user, space_guid: space.guid, org_guid: org.guid)
         end
 
         it 'raises ApiError NotAuthorized' do
@@ -953,12 +853,11 @@ describe AppsV3Controller, type: :controller do
     let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      set_current_user(VCAP::CloudController::User.make)
-
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+      allow_user_write_access(user, space_guid: space.guid, org_guid: org.guid)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
@@ -973,23 +872,6 @@ describe AppsV3Controller, type: :controller do
     end
 
     context 'permissions' do
-      context 'admin' do
-        before do
-          set_current_user_as_admin
-          allow(membership).to receive(:has_any_roles?).and_return(false)
-        end
-
-        it 'returns a 200 and the app' do
-          put :start, guid: app_model.guid
-
-          response_body = parsed_body
-
-          expect(response.status).to eq 200
-          expect(response_body['guid']).to eq app_model.guid
-          expect(response_body['desired_state']).to eq 'STARTED'
-        end
-      end
-
       context 'when the user does not have write permissions' do
         before do
           set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
@@ -1006,11 +888,7 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user cannot read the app' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+          disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -1023,14 +901,7 @@ describe AppsV3Controller, type: :controller do
       end
       context 'when the user can read but cannot write to the app' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-            and_return(true)
-          allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-            and_return(false)
+          disallow_user_write_access(user, space_guid: space.guid, org_guid: org.guid)
         end
 
         it 'raises ApiError NotAuthorized' do
@@ -1092,9 +963,7 @@ describe AppsV3Controller, type: :controller do
 
       context 'admin' do
         before do
-          set_current_user_as_admin
-
-          allow(membership).to receive(:has_any_roles?).and_return(false)
+          set_current_user_as_admin(user: user)
         end
 
         it 'returns a 200 and the app' do
@@ -1125,11 +994,12 @@ describe AppsV3Controller, type: :controller do
     let(:droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
-      set_current_user(VCAP::CloudController::User.make)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      set_current_user(user)
+      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+      allow_user_write_access(user, space_guid: space.guid)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
@@ -1141,23 +1011,6 @@ describe AppsV3Controller, type: :controller do
       expect(response.status).to eq 200
       expect(response_body['guid']).to eq(app_model.guid)
       expect(response_body['desired_state']).to eq('STOPPED')
-    end
-
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns a 200 and the app' do
-        put :stop, guid: app_model.guid
-
-        response_body = parsed_body
-
-        expect(response.status).to eq 200
-        expect(response_body['guid']).to eq(app_model.guid)
-        expect(response_body['desired_state']).to eq('STOPPED')
-      end
     end
 
     context 'permissions' do
@@ -1176,11 +1029,7 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user cannot read the app' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+          disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -1193,15 +1042,8 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user can read but cannot write to the app' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-            and_return(true)
-          allow(membership).to receive(:has_any_roles?).
-            with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-            and_return(false)
+          allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+          disallow_user_write_access(user, space_guid: space.guid)
         end
 
         it 'raises ApiError NotAuthorized' do
@@ -1241,11 +1083,12 @@ describe AppsV3Controller, type: :controller do
     let(:app_model) { VCAP::CloudController::AppModel.make(environment_variables: { meep: 'moop', beep: 'boop' }) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
-      set_current_user(VCAP::CloudController::User.make)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      set_current_user(user)
+      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+      allow_user_write_access(user, space_guid: space.guid)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
@@ -1254,20 +1097,6 @@ describe AppsV3Controller, type: :controller do
 
       expect(response.status).to eq 200
       expect(parsed_body['environment_variables']).to eq(app_model.environment_variables)
-    end
-
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns 200' do
-        get :show_environment, guid: app_model.guid
-
-        expect(response.status).to eq(200)
-        expect(parsed_body['environment_variables']).to eq(app_model.environment_variables)
-      end
     end
 
     context 'permissions' do
@@ -1286,11 +1115,7 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user cannot read the app' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+          disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -1303,14 +1128,8 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user can read but cannot write to the app' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-            and_return(true)
-          allow(membership).to receive(:has_any_roles?).
-            with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
+          allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+          disallow_user_write_access(user, space_guid: space.guid)
         end
 
         it 'raises ApiError NotAuthorized' do
@@ -1335,7 +1154,7 @@ describe AppsV3Controller, type: :controller do
         end
 
         it 'succeeds for admins' do
-          set_current_user_as_admin
+          set_current_user_as_admin(user: user)
           get :show_environment, guid: app_model.guid
 
           expect(response.status).to eq(200)
@@ -1343,14 +1162,8 @@ describe AppsV3Controller, type: :controller do
 
         context 'when the user can read but cannot write to the app' do
           before do
-            allow(membership).to receive(:has_any_roles?).with(
-              [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-               VCAP::CloudController::Membership::SPACE_MANAGER,
-               VCAP::CloudController::Membership::SPACE_AUDITOR,
-               VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-              and_return(true)
-            allow(membership).to receive(:has_any_roles?).
-              with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
+            allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+            disallow_user_write_access(user, space_guid: space.guid)
           end
 
           it 'raises ApiError NotAuthorized as opposed to FeatureDisabled' do
@@ -1380,12 +1193,13 @@ describe AppsV3Controller, type: :controller do
     let(:droplet_link) { { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" } }
     let(:space) { app_model.space }
     let(:org) { space.organization }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       app_model.add_droplet(droplet)
-      set_current_user(VCAP::CloudController::User.make)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      set_current_user(user)
+      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+      allow_user_write_access(user, space_guid: space.guid)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
@@ -1397,24 +1211,6 @@ describe AppsV3Controller, type: :controller do
       expect(response.status).to eq(200)
       expect(response_body['guid']).to eq(app_model.guid)
       expect(response_body['links']['droplet']).to eq(droplet_link)
-    end
-
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns 200' do
-        put :assign_current_droplet, guid: app_model.guid, body: req_body
-
-        response_body = parsed_body
-
-        expect(response.status).to eq(200)
-        expect(response_body['guid']).to eq(app_model.guid)
-        expect(response_body['links']['droplet']).to eq(droplet_link)
-      end
     end
 
     context 'and the droplet is not associated with the application' do
@@ -1494,12 +1290,7 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user can not read the applicaiton' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-            and_return(false)
+          disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
         end
 
         it 'returns a 404 ResourceNotFound' do
@@ -1512,15 +1303,8 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user can read but not update the application' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-            and_return(true)
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-            and_return(false)
+          allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+          disallow_user_write_access(user, space_guid: space.guid)
         end
 
         it 'returns a 403 NotAuthorized' do
@@ -1539,12 +1323,12 @@ describe AppsV3Controller, type: :controller do
     let(:droplet_link) { { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" } }
     let(:space) { app_model.space }
     let(:org) { space.organization }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       app_model.add_droplet(droplet)
-      set_current_user(VCAP::CloudController::User.make)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      set_current_user(user)
+      allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
     end
 
     it 'returns a 200 OK and the droplet' do
@@ -1552,20 +1336,6 @@ describe AppsV3Controller, type: :controller do
 
       expect(response.status).to eq(200)
       expect(parsed_body['guid']).to eq(droplet.guid)
-    end
-
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns a 200 OK and the droplet' do
-        get :current_droplet, guid: app_model.guid
-
-        expect(response.status).to eq(200)
-        expect(parsed_body['guid']).to eq(droplet.guid)
-      end
     end
 
     context 'when the application does not exist' do
@@ -1606,12 +1376,7 @@ describe AppsV3Controller, type: :controller do
       let(:org) { space.organization }
 
       before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        disallow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
       end
 
       it 'returns a 404 not found' do
@@ -1627,15 +1392,8 @@ describe AppsV3Controller, type: :controller do
       let(:org) { space.organization }
 
       before do
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-          and_return(true)
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-          and_return(false)
+        allow_user_read_access(user, space_guid: space.guid, org_guid: org.guid)
+        disallow_user_write_access(user, space_guid: space.guid)
       end
 
       it 'returns a 200 OK' do

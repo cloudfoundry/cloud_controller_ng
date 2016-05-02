@@ -4,6 +4,14 @@ module UserHelpers
     header_token = user ? "bearer #{user_token(user, opts)}" : nil
     token_information = opts[:token] ? opts[:token] : token_decoder.decode_token(header_token)
     VCAP::CloudController::SecurityContext.set(user, token_information, header_token)
+    user
+  end
+
+  # rubocop:disable all
+  def set_current_user_as_admin(opts={})
+    # rubocop:enable all
+    user = opts.delete(:user) || VCAP::CloudController::User.make
+    set_current_user(user, { admin: true }.merge(opts))
   end
 
   def user_token(user, opts={})
@@ -31,5 +39,30 @@ module UserHelpers
     end
 
     nil
+  end
+
+  def allow_user_read_access(user, space_guid:, org_guid:)
+    allow(permissions_double(user)).to receive(:can_read_from_space?).with(space_guid, org_guid).and_return(true)
+  end
+
+  def allow_user_write_access(user, space_guid:, org_guid: nil)
+    allow(permissions_double(user)).to receive(:can_write_to_space?).with(space_guid).and_return(true)
+  end
+
+  def disallow_user_read_access(user, space_guid:, org_guid:)
+    allow(permissions_double(user)).to receive(:can_read_from_space?).with(space_guid, org_guid).and_return(false)
+  end
+
+  def disallow_user_write_access(user, space_guid:, org_guid: nil)
+    allow(permissions_double(user)).to receive(:can_write_to_space?).with(space_guid).and_return(false)
+  end
+
+  def permissions_double(user)
+    @permissions ||= {}
+    @permissions[user.guid] ||= begin
+      instance_double(VCAP::CloudController::Permissions).tap do |permissions|
+        allow(VCAP::CloudController::Permissions).to receive(:new).with(user).and_return(permissions)
+      end
+    end
   end
 end

@@ -75,14 +75,6 @@ module ControllerHelpers
     headers
   end
 
-  # rubocop:disable all
-  def set_current_user_as_admin(opts={})
-  # rubocop:enable all
-    user = User.make
-    set_current_user(user, { admin: true }.merge(opts))
-    user.destroy
-  end
-
   def json_headers(headers)
     headers.merge({ 'CONTENT_TYPE' => 'application/json' })
   end

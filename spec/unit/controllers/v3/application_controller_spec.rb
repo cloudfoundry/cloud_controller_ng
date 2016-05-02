@@ -16,6 +16,16 @@ describe ApplicationController, type: :controller do
     def create
       head 201
     end
+
+    def read_access
+      can_read?(params[:space_guid], params[:org_guid])
+      head 200
+    end
+
+    def write_access
+      can_write?(params[:space_guid])
+      head 200
+    end
   end
 
   describe 'read permission scope validation' do
@@ -172,6 +182,36 @@ describe ApplicationController, type: :controller do
         expect(response.status).to eq(401)
         expect(parsed_body['description']).to eq('Invalid Auth Token')
       end
+    end
+  end
+
+  describe '#can_read?' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'asks for #can_read_from_space? on behalf of the current user' do
+      routes.draw { get 'read_access' => 'anonymous#read_access' }
+
+      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_space?: true)
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      get :read_access, space_guid: 'space-guid', org_guid: 'org-guid'
+
+      expect(permissions).to have_received(:can_read_from_space?).with('space-guid', 'org-guid')
+    end
+  end
+
+  describe '#can_write?' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'asks for #can_read_from_space? on behalf of the current user' do
+      routes.draw { get 'write_access' => 'anonymous#write_access' }
+
+      permissions = instance_double(VCAP::CloudController::Permissions, can_write_to_space?: true)
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      get :write_access, space_guid: 'space-guid', org_guid: 'org-guid'
+
+      expect(permissions).to have_received(:can_write_to_space?).with('space-guid')
     end
   end
 end
