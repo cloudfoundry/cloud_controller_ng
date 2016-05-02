@@ -242,6 +242,23 @@ module VCAP::Services
           "Status Code: #{status} message, Body: #{body}"
         end
 
+        def self.invalid_volume_mounts_error(body, uri)
+          "The service broker returned an invalid response for the request to #{uri}: " \
+          "expected \"volume_mounts\" key to contain an array of JSON objects in body, broker returned '#{body}'"
+        end
+
+        def self.with_valid_volume_mounts
+          {
+            'volume_mounts' => [{}]
+          }
+        end
+
+        def self.with_invalid_volume_mounts
+          {
+            'volume_mounts' => {}
+          }
+        end
+
         # rubocop:disable Metrics/LineLength
         test_case(:provision, 200, broker_partial_json,                              error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, instance_uri))
         test_case(:provision, 200, broker_malformed_json,                            error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json, instance_uri))
@@ -286,7 +303,10 @@ module VCAP::Services
         test_case(:bind,      200, with_invalid_route_service_url_with_space.to_json,      error: Errors::ServiceBrokerBadResponse)
         test_case(:bind,      200, with_invalid_route_service_url_with_no_host.to_json,    error: Errors::ServiceBrokerBadResponse)
         test_case(:bind,      200, with_http_route_service_url.to_json,              error: Errors::ServiceBrokerBadResponse)
+        test_case(:bind,      200, with_valid_volume_mounts.to_json,                result: client_result_with_state('succeeded').merge(with_valid_volume_mounts))
+        test_case(:bind,      200, with_invalid_volume_mounts.to_json,              error: Errors::ServiceBrokerInvalidVolumeMounts, description: invalid_volume_mounts_error(with_invalid_volume_mounts.to_json, binding_uri))
         test_pass_through(:bind, 200, with_credentials,                              expected_state: 'succeeded')
+
         test_case(:bind,      201, broker_partial_json,                              error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, binding_uri))
         test_case(:bind,      201, broker_malformed_json,                            error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json, binding_uri))
         test_case(:bind,      201, broker_empty_json,                                result: client_result_with_state('succeeded'))
@@ -298,7 +318,10 @@ module VCAP::Services
         test_case(:bind,      201, with_invalid_route_service_url_with_space.to_json, error: Errors::ServiceBrokerBadResponse)
         test_case(:bind,      201, with_invalid_route_service_url_with_no_host.to_json, error: Errors::ServiceBrokerBadResponse)
         test_case(:bind,      201, with_http_route_service_url.to_json,              error: Errors::ServiceBrokerBadResponse)
+        test_case(:bind,      201, with_valid_volume_mounts.to_json,                result: client_result_with_state('succeeded').merge(with_valid_volume_mounts))
+        test_case(:bind,      201, with_invalid_volume_mounts.to_json,              error: Errors::ServiceBrokerInvalidVolumeMounts, description: invalid_volume_mounts_error(with_invalid_volume_mounts.to_json, binding_uri))
         test_pass_through(:bind, 201, with_credentials,                              expected_state: 'succeeded')
+
         test_case(:bind,      202, broker_empty_json,                                error: Errors::ServiceBrokerBadResponse)
         test_case(:bind,      204, broker_partial_json,                              error: Errors::ServiceBrokerBadResponse)
         test_case(:bind,      204, broker_malformed_json,                            error: Errors::ServiceBrokerBadResponse)

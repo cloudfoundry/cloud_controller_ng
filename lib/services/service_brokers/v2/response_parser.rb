@@ -44,7 +44,8 @@ module VCAP::Services
               JsonObjectValidator.new(@logger,
                 SyslogDrainValidator.new(opts[:service_guid],
                   RouteServiceURLValidator.new(
-                    SuccessValidator.new(state: 'succeeded'))))
+                    VolumeMountsValidator.new(
+                      SuccessValidator.new(state: 'succeeded')))))
             when 202
               JsonObjectValidator.new(@logger,
                 FailingValidator.new(Errors::ServiceBrokerBadResponse))
@@ -202,6 +203,27 @@ module VCAP::Services
               code: @code,
               response: @response,
             }
+          end
+        end
+
+        class VolumeMountsValidator
+          def initialize(validator)
+            @validator = validator
+          end
+
+          def validate(method:, uri:, code:, response:)
+            parsed_response = MultiJson.load(response.body)
+
+            if !parsed_response['volume_mounts'].nil? &&
+              (!parsed_response['volume_mounts'].is_a?(Array) || parsed_response['volume_mounts'].any? { |mount_info| !mount_info.is_a?(Hash) })
+              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, error_description(response.body))
+            end
+
+            @validator.validate(method: method, uri: uri, code: code, response: response)
+          end
+
+          def error_description(body)
+            "expected \"volume_mounts\" key to contain an array of JSON objects in body, broker returned '#{body}'"
           end
         end
 
