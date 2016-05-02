@@ -1,7 +1,6 @@
 require 'rails_helper'
 
 describe RouteMappingsController, type: :controller do
-  let(:membership) { instance_double(VCAP::CloudController::Membership) }
   let(:app) { VCAP::CloudController::AppModel.make }
   let(:space) { app.space }
   let(:org) { space.organization }
@@ -19,11 +18,11 @@ describe RouteMappingsController, type: :controller do
         }
       }
     end
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      set_current_user(VCAP::CloudController::User.make)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
     end
 
     it 'successfully creates a route mapping' do
@@ -121,7 +120,7 @@ describe RouteMappingsController, type: :controller do
 
     context 'when the user does not have write scope' do
       before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+        set_current_user(user, scopes: ['cloud_controller.read'])
       end
 
       it 'raises an ApiError with a 403 code' do
@@ -134,11 +133,7 @@ describe RouteMappingsController, type: :controller do
 
     context 'when the user does not have read access to the space' do
       before do
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        disallow_user_read_access(user, space: space)
       end
 
       it 'returns a 404 ResourceNotFound error' do
@@ -151,15 +146,8 @@ describe RouteMappingsController, type: :controller do
 
     context 'when the user can read but cannot write to the space' do
       before do
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-          and_return(true)
-
-        allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-          and_return(false)
+        allow_user_read_access(user, space: space)
+        disallow_user_write_access(user, space: space)
       end
 
       it 'raises ApiError NotAuthorized' do
@@ -182,19 +170,6 @@ describe RouteMappingsController, type: :controller do
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
-      end
-    end
-
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns 201' do
-        post :create, body: req_body
-
-        expect(response.status).to eq(201)
       end
     end
 
@@ -221,11 +196,10 @@ describe RouteMappingsController, type: :controller do
 
   describe '#show' do
     let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      set_current_user(VCAP::CloudController::User.make)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow_user_read_access(user, space: space)
     end
 
     it 'successfully get a route mapping' do
@@ -246,7 +220,7 @@ describe RouteMappingsController, type: :controller do
     describe 'access permissions' do
       context 'when the user does not have read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(user, scopes: [])
         end
 
         it 'raises 403' do
@@ -259,11 +233,7 @@ describe RouteMappingsController, type: :controller do
 
       context 'when the user does not have read permissions on the app space' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 ResourceNotFound' do
@@ -278,17 +248,11 @@ describe RouteMappingsController, type: :controller do
   end
 
   describe '#index' do
-    before do
-      set_current_user(VCAP::CloudController::User.make)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
-      allow(membership).to receive(:space_guids_for_roles).with(
-        [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-         VCAP::CloudController::Membership::SPACE_MANAGER,
-         VCAP::CloudController::Membership::SPACE_AUDITOR,
-         VCAP::CloudController::Membership::ORG_MANAGER]
-      ).and_return([space.guid])
+    before do
+      allow_user_read_access(user, space: space)
+      stub_readable_space_guids_for(user, space)
     end
 
     it 'returns route mappings the user has roles to see' do
@@ -309,11 +273,6 @@ describe RouteMappingsController, type: :controller do
     end
 
     context 'when accessed as an app subresource' do
-      before do
-        allow(membership).to receive(:has_any_roles?).with(
-          VCAP::CloudController::Permissions::ROLES_FOR_READING, app.space.guid, app.organization.guid).and_return(true)
-      end
-
       it 'uses the app as a filter' do
         route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app: app)
         route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app: app)
@@ -360,8 +319,7 @@ describe RouteMappingsController, type: :controller do
 
       context 'when the user does not have permissions to read the app' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            VCAP::CloudController::Permissions::ROLES_FOR_READING, app.space.guid, app.organization.guid).and_return(false)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 Resource Not Found error' do
@@ -374,8 +332,8 @@ describe RouteMappingsController, type: :controller do
 
       context 'when the user can read, but not write to the space' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(
-            VCAP::CloudController::Permissions::ROLES_FOR_READING, app.space.guid, app.organization.guid).and_return(true)
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
         end
 
         it 'returns a 200' do
@@ -388,8 +346,7 @@ describe RouteMappingsController, type: :controller do
     context 'permissions' do
       context 'admin' do
         before do
-          set_current_user_as_admin
-          allow(membership).to receive(:has_any_roles?).and_return(false)
+          set_current_user_as_admin(user: user)
         end
 
         it 'lists all route_mappings' do
@@ -407,7 +364,7 @@ describe RouteMappingsController, type: :controller do
 
       context 'when the user does not have read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+          set_current_user(user, scopes: ['cloud_controller.write'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -421,10 +378,11 @@ describe RouteMappingsController, type: :controller do
   end
 
   describe '#destroy' do
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+
     before do
-      set_current_user(VCAP::CloudController::User.make)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
     end
 
     let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route) }
@@ -434,19 +392,6 @@ describe RouteMappingsController, type: :controller do
 
       expect(response.status).to eq 204
       expect(route_mapping.exists?).to be_falsey
-    end
-
-    context 'admin' do
-      before do
-        set_current_user_as_admin
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'succeeds' do
-        delete :destroy, app_guid: app.guid, route_mapping_guid: route_mapping.guid
-
-        expect(response.status).to eq 204
-      end
     end
 
     context 'when the route mapping does not exist' do
@@ -461,9 +406,8 @@ describe RouteMappingsController, type: :controller do
 
     context 'when the user can read, but not write to the space' do
       before do
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-          and_return(false)
+        allow_user_read_access(user, space: space)
+        disallow_user_write_access(user, space: space)
       end
 
       it 'raises an API 403 error' do
@@ -476,7 +420,7 @@ describe RouteMappingsController, type: :controller do
 
     context 'when the user does not have write scope' do
       before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+        set_current_user(user, scopes: ['cloud_controller.read'])
       end
 
       it 'raises an ApiError with a 403 code' do
