@@ -35,6 +35,48 @@ This endpoint retrieves the packages that associates with the given app guid.
 <ul class="method-list-group">
   <li class="method-list-item">
     <h4 class="method-list-item-label">
+      states
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">State of package to filter by.</p>
+    </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      types
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Type of package to filter by.</p>
+    </li>
+  <li class="method-list-item">
+  <h4 class="method-list-item-label">
+      guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Guids of packages to filter by.</p>
+    </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      Valid values are <code>created_at</code> or <code>updated_at</code>. Prepend the value with a url encoded "+" or "-"
+      to specify ascending or descending order.
+    </p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
       page
 
       <span class="method-list-item-type">optional</span>
