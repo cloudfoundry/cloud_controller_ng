@@ -5,6 +5,7 @@ module VCAP::CloudController
     class InvalidServiceBinding < StandardError; end
 
     ROUTE_SERVICE_WARNING = 'Support for route services is disabled. This service instance cannot be bound to a route.'.freeze
+    VOLUME_SERVICE_WARNING = 'Support for volume services is disabled. This service instance cannot be bound to an app.'.freeze
 
     plugin :serialization
     plugin :single_table_inheritance, :is_gateway_service,
@@ -151,6 +152,10 @@ module VCAP::CloudController
     end
 
     def route_service?
+      false
+    end
+
+    def volume_service?
       false
     end
 

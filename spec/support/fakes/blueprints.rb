@@ -150,6 +150,10 @@ module VCAP::CloudController
     requires { ['route_forwarding'] }
   end
 
+  Service.blueprint(:volume_mount) do
+    requires { ['volume_mount'] }
+  end
+
   ServiceInstance.blueprint do
     name              { Sham.name }
     credentials       { Sham.service_credentials }

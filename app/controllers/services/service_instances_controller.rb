@@ -99,6 +99,8 @@ module VCAP::CloudController
 
       route_service_warning(service_instance) unless route_services_enabled?
 
+      volume_service_warning(service_instance) unless volume_services_enabled?
+
       [status_from_operation_state(service_instance),
        { 'Location' => "#{self.class.path}/#{service_instance.guid}" },
        object_renderer.render_json(self.class, service_instance, @opts)
@@ -289,9 +291,19 @@ module VCAP::CloudController
       @config[:route_services_enabled]
     end
 
+    def volume_services_enabled?
+      @config[:volume_services_enabled]
+    end
+
     def route_service_warning(service_instance)
       if service_instance.route_service?
         add_warning(ServiceInstance::ROUTE_SERVICE_WARNING)
+      end
+    end
+
+    def volume_service_warning(service_instance)
+      if service_instance.volume_service?
+        add_warning(ServiceInstance::VOLUME_SERVICE_WARNING)
       end
     end
 

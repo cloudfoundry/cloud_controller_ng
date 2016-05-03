@@ -125,5 +125,9 @@ module VCAP::CloudController
     def route_service?
       requires.include?('route_forwarding')
     end
+
+    def volume_service?
+      requires.include?('volume_mount')
+    end
   end
 end

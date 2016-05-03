@@ -103,6 +103,10 @@ module VCAP::CloudController
       service.route_service?
     end
 
+    def volume_service?
+      service.volume_service?
+    end
+
     def logger
       @logger ||= Steno.logger('cc.models.service_instance')
     end
