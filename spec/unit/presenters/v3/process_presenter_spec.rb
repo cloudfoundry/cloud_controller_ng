@@ -71,32 +71,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#present_json_stats' do
-      let(:process) { AppFactory.make }
-      let(:process_presenter) { ProcessPresenter.new }
-      let(:process_usage) { process.type.usage }
-
-      before do
-        allow_any_instance_of(ProcessStatsPresenter).to receive(:present_stats_hash).
-          with(process.type, :initial_stats).
-          and_return(:presented_stats)
-      end
-
-      it 'presents the process stats as json' do
-        json_result = process_presenter.present_json_stats(process, :initial_stats)
-        result      = MultiJson.load(json_result)
-
-        expect(result['resources']).to eq('presented_stats')
-      end
-
-      it 'does not include a pagination section' do
-        json_result = process_presenter.present_json_stats(process, :initial_stats)
-        result      = MultiJson.load(json_result)
-
-        expect(result).not_to have_key('pagination')
-      end
-    end
-
     describe '#present_json_list' do
       let(:pagination_presenter) { double(:pagination_presenter) }
       let(:process1) { AppFactory.make }

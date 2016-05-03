@@ -3,10 +3,10 @@ require 'presenters/v3/process_stats_presenter'
 
 module VCAP::CloudController
   describe ProcessStatsPresenter do
-    subject(:presenter) { described_class.new }
+    subject(:presenter) { described_class.new(process.type, stats_for_process) }
+    let(:process) { AppFactory.make }
 
     describe '#present_stats_hash' do
-      let(:process) { AppFactory.make }
       let(:process_usage) { process.type.usage }
       let(:net_info_1) {
         {
@@ -111,7 +111,7 @@ module VCAP::CloudController
       end
 
       it 'presents the process stats as a hash' do
-        result = presenter.present_stats_hash(process.type, stats_for_process)
+        result = presenter.present_stats_hash
 
         expect(result[0][:type]).to eq(process.type)
         expect(result[0][:index]).to eq(0)
@@ -144,6 +144,14 @@ module VCAP::CloudController
           state: 'DOWN',
           uptime: 0
         )
+      end
+    end
+
+    describe '#to_json' do
+      let(:stats_for_process) { {} }
+      it 'maps the content of #present_stats_hash to :resources' do
+        allow(presenter).to receive(:present_stats_hash).and_return({ a: 1, b: 2 })
+        expect(MultiJson.load(presenter.to_json)).to eq({ 'resources' => { 'a' => 1, 'b' => 2 } })
       end
     end
   end

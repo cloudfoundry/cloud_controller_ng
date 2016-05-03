@@ -1,25 +1,34 @@
 module VCAP::CloudController
   class ProcessStatsPresenter
-    def present_stats_hash(type, process_stats)
-      process_stats.each.map do |index, instance_stats|
-        instance_stats_hash(type, index, instance_stats)
+    def initialize(type, process_stats)
+      @type = type
+      @process_stats = process_stats
+    end
+
+    def present_stats_hash
+      @process_stats.map do |index, instance_stats|
+        instance_stats_hash(index, instance_stats)
       end.sort_by { |s| s[:index] }
+    end
+
+    def to_json
+      MultiJson.dump({ resources: present_stats_hash }, pretty: true)
     end
 
     private
 
-    def instance_stats_hash(type, index, stats)
+    def instance_stats_hash(index, stats)
       case stats[:state]
       when 'DOWN'
-        down_instance_stats_hash(type, index, stats)
+        down_instance_stats_hash(index, stats)
       else
-        found_instance_stats_hash(type, index, stats)
+        found_instance_stats_hash(index, stats)
       end
     end
 
-    def found_instance_stats_hash(type, index, stats)
+    def found_instance_stats_hash(index, stats)
       {
-        type:       type,
+        type:       @type,
         index:      index,
         state:      stats[:state],
         usage:      {
@@ -36,9 +45,9 @@ module VCAP::CloudController
       }.tap { |presented_stats| add_port_info(presented_stats, stats) }
     end
 
-    def down_instance_stats_hash(type, index, stats)
+    def down_instance_stats_hash(index, stats)
       {
-        type: type,
+        type: @type,
         index: index,
         state: stats[:state],
         uptime: stats[:uptime]

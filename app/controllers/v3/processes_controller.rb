@@ -118,7 +118,7 @@ class ProcessesController < ApplicationController
 
     process_stats = instances_reporters.stats_for_app(process)
 
-    render status: :ok, json: process_presenter.present_json_stats(process, process_stats)
+    render status: :ok, json: ProcessStatsPresenter.new(process.type, process_stats).to_json
   end
 
   private
