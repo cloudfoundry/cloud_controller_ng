@@ -476,6 +476,93 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'when the catalog response includes services that require volume mounting' do
+          context 'for a single service' do
+            before do
+              catalog_json['services'][0]['requires'] = ['volume_mount']
+              stub_catalog
+            end
+
+            context 'when volume_services_enabled is enabled' do
+              before do
+                TestConfig.config[:volume_services_enabled] = true
+              end
+
+              it 'should succeed without warnings' do
+                post '/v2/service_brokers', body
+
+                expect(last_response).to have_status_code(201)
+                warning = last_response.headers['X-Cf-Warnings']
+                expect(warning).to be_nil
+              end
+            end
+
+            context 'when route-services are not enabled' do
+              before do
+                TestConfig.config[:volume_services_enabled] = false
+              end
+              it 'should succeed with a warning' do
+                post '/v2/service_brokers', body
+
+                expect(last_response).to have_status_code(201)
+                warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+                expect(warning).to match /fake-service.+volume mount services is disabled/
+              end
+            end
+          end
+
+          context 'for multiple services' do
+            before do
+              catalog_json['services'] <<
+                {
+                  'name' => 'fake-service2',
+                  'id' => 'a479b64b-7c25-42e6-8d8f-e6d22c456c9b',
+                  'description' => 'fake service',
+                  'bindable' => true,
+                  'requires' => ['volume_mount'],
+                  'plans' => [{
+                    'name' => 'fake-plan',
+                    'id' => 'a52eabf8-e38d-422f-8ef9-9dc83b75cc05',
+                    'description' => 'Shared fake Server, 5tb persistent disk, 40 max concurrent connections',
+                  }],
+                }
+            end
+
+            context 'when volume_services_enabled are not enabled' do
+              before do
+                TestConfig.config[:volume_services_enabled] = false
+              end
+
+              context 'when all services require volume mounting' do
+                before do
+                  catalog_json['services'][0]['requires'] = ['volume_mount']
+                  stub_catalog
+                end
+                it 'should succeed with two warnings' do
+                  post '/v2/service_brokers', body
+
+                  expect(last_response).to have_status_code(201)
+                  warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+                  expect(warning).to match /fake-service.+volume mount services is disabled.+fake-service2.+volume mount services is disabled/
+                end
+              end
+
+              context 'when only some services require volume mounting' do
+                before do
+                  stub_catalog
+                end
+                it 'should succeed with one warnings' do
+                  post '/v2/service_brokers', body
+
+                  expect(last_response).to have_status_code(201)
+                  warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+                  expect(warning).to match /fake-service2.+volume mount services is disabled/
+                end
+              end
+            end
+          end
+        end
       end
 
       context 'when the CC is not configured to use the UAA correctly and the service broker requests dashboard access' do

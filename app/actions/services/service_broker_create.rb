@@ -6,12 +6,13 @@ module VCAP::CloudController
 
     include ServiceBrokerRegistrationErrorParser
 
-    def initialize(service_manager, services_event_repository, warning_observer, access_validator, route_services_enabled)
+    def initialize(service_manager, services_event_repository, warning_observer, access_validator, route_services_enabled, volume_services_enabled)
       @service_manager = service_manager
       @services_event_repository = services_event_repository
       @warning_observer = warning_observer
       @access_validator = access_validator
       @route_services_enabled = route_services_enabled
+      @volume_services_enabled = volume_services_enabled
     end
 
     def create(params)
@@ -23,7 +24,13 @@ module VCAP::CloudController
       broker = ServiceBroker.new(params)
       access_validator.validate_access(:create, broker, params)
 
-      registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker, @service_manager, @services_event_repository, @route_services_enabled)
+      registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(
+        broker,
+        @service_manager,
+        @services_event_repository,
+        @route_services_enabled,
+        @volume_services_enabled
+      )
       unless registration.create
         raise get_exception_from_errors(registration)
       end

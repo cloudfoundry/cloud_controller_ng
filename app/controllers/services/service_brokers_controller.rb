@@ -35,7 +35,8 @@ module VCAP::CloudController
         @services_event_repository,
         self,
         self,
-        route_services_enabled?
+        route_services_enabled?,
+        volume_services_enabled?
       )
 
       broker = create_action.create(params)
@@ -57,7 +58,8 @@ module VCAP::CloudController
         @service_manager,
         @services_event_repository,
         self,
-        route_services_enabled?
+        route_services_enabled?,
+        volume_services_enabled?
       )
       params = UpdateMessage.decode(body).extract
       broker = update_action.update(guid, params)
@@ -95,6 +97,10 @@ module VCAP::CloudController
 
     def route_services_enabled?
       @config[:route_services_enabled]
+    end
+
+    def volume_services_enabled?
+      @config[:volume_services_enabled]
     end
 
     def url_of(broker)

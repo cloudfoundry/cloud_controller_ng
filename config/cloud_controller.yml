@@ -87,6 +87,7 @@ routing_api:
   routing_client_secret: 'routing-secret'
 
 route_services_enabled: true
+volume_services_enabled: true
 
 cc_partition: ng
 

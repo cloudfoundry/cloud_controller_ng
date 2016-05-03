@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers
   describe ServiceBrokerRegistration do
-    subject(:registration) { ServiceBrokerRegistration.new(broker, service_manager, services_event_repository, false) }
+    subject(:registration) { ServiceBrokerRegistration.new(broker, service_manager, services_event_repository, false, false) }
 
     let(:client_manager) { instance_double(VCAP::Services::SSO::DashboardClientManager, synchronize_clients_with_catalog: true, warnings: []) }
     let(:catalog) { instance_double(VCAP::Services::ServiceBrokers::V2::Catalog, valid?: true) }
@@ -88,7 +88,6 @@ module VCAP::Services::ServiceBrokers
       context 'when invalid' do
         context 'because the broker has errors' do
           let(:broker) { VCAP::CloudController::ServiceBroker.new }
-          let(:registration) { ServiceBrokerRegistration.new(broker, service_manager, services_event_repository, false) }
 
           it 'returns nil' do
             expect(registration.create).to be_nil
@@ -295,6 +294,23 @@ module VCAP::Services::ServiceBrokers
           expect(registration.warnings).to eq(['warning1', 'warning2'])
         end
       end
+
+      context 'when volume_services_enabled is false and a service requires volume_mount' do
+        let(:volume_mount_plan) { instance_double(V2::CatalogService, route_service?: false, volume_mount_service?: true, name: 'service-name') }
+
+        before do
+          allow(catalog).to receive(:services).and_return([volume_mount_plan])
+        end
+
+        it 'adds a warning' do
+          registration.create
+
+          expected_warning = 'Service service-name is declared to be a volume mount service but support for volume mount services is disabled.' \
+                       ' Users will be prevented from binding instances of this service with apps.'
+
+          expect(registration.warnings).to include(expected_warning)
+        end
+      end
     end
 
     describe '#update' do
@@ -397,8 +413,6 @@ module VCAP::Services::ServiceBrokers
 
       context 'when invalid' do
         context 'because the broker has errors' do
-          let(:registration) { ServiceBrokerRegistration.new(broker, service_manager, services_event_repository, false) }
-
           before do
             broker.name = nil
           end
@@ -602,6 +616,23 @@ module VCAP::Services::ServiceBrokers
           registration.update
 
           expect(registration.warnings).to eq(['warning1', 'warning2'])
+        end
+      end
+
+      context 'when volume_services_enabled is false and a service requires volume_mount' do
+        let(:volume_mount_plan) { instance_double(V2::CatalogService, route_service?: false, volume_mount_service?: true, name: 'service-name') }
+
+        before do
+          allow(catalog).to receive(:services).and_return([volume_mount_plan])
+        end
+
+        it 'adds a warning' do
+          registration.update
+
+          expected_warning = 'Service service-name is declared to be a volume mount service but support for volume mount services is disabled.' \
+                       ' Users will be prevented from binding instances of this service with apps.'
+
+          expect(registration.warnings).to include(expected_warning)
         end
       end
     end

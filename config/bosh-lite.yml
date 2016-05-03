@@ -64,6 +64,7 @@ nginx:
 index: 0
 name: api_z1
 route_services_enabled: true
+volume_services_enabled: true
 
 info:
   name: ""
