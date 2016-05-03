@@ -291,7 +291,7 @@ module VCAP::CloudController
         it 'leaves the app with a generic staging failed reason' do
           expect {
             ignore_staging_error { staging_task.handle_http_response(response) }
-          }.to change { app.staging_failed_reason }.to('StagingError')
+          }.to change { app.staging_failed_reason }.to('StagerError')
         end
       end
 
@@ -366,10 +366,10 @@ module VCAP::CloudController
         context 'when a staging error is not present' do
           let(:reply_error_info) { nil }
 
-          it 'sets staging failed reason to StagingError' do
+          it 'sets staging failed reason to StagerError' do
             expect {
               ignore_staging_error { staging_task.handle_http_response(response) }
-            }.to change { app.staging_failed_reason }.to('StagingError')
+            }.to change { app.staging_failed_reason }.to('StagerError')
           end
         end
       end
@@ -826,7 +826,7 @@ module VCAP::CloudController
           end
 
           it 'leaves the app with a generic staging failed reason' do
-            expect { stage }.to change { app.staging_failed_reason }.to('StagingError')
+            expect { stage }.to change { app.staging_failed_reason }.to('StagerError')
           end
         end
 
@@ -882,7 +882,7 @@ module VCAP::CloudController
             let(:reply_error_info) { nil }
 
             it 'sets a generic staging failed reason' do
-              expect { stage }.to change { app.staging_failed_reason }.to('StagingError')
+              expect { stage }.to change { app.staging_failed_reason }.to('StagerError')
             end
           end
         end
@@ -947,7 +947,7 @@ module VCAP::CloudController
     def ignore_staging_error
       yield
     rescue CloudController::Errors::ApiError => e
-      raise e unless e.name == 'StagingError' || e.name == 'NoAppDetectedError'
+      raise e unless e.name == 'StagingError' || e.name == 'NoAppDetectedError' || e.name == 'StagerError'
     end
   end
 end

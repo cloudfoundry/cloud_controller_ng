@@ -93,12 +93,11 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
         end
 
-        it 'propagates api errors from staging_response' do
-          expect_any_instance_of(Dea::Stager).to receive(:staging_complete).and_raise(CloudController::Errors::ApiError.new_from_details('JobTimeout'))
+        it 'returns a 200 when the response includes an error from the DEA' do
+          expect_any_instance_of(Dea::Stager).to receive(:staging_complete).and_raise(CloudController::Errors::ApiError.new_from_details('StagerError'))
 
           post url, MultiJson.dump(staging_response)
-          expect(last_response.status).to eq(524)
-          expect(last_response.body).to match /JobTimeout/
+          expect(last_response.status).to eq(200)
         end
 
         it 'raises a ServerError for non-api errors from staging_response' do

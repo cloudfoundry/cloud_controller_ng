@@ -152,11 +152,11 @@ module VCAP::CloudController
 
       def error_type(response)
         if response.is_a?(String) || response.nil?
-          'StagingError'
+          'StagerError'
         elsif response['error_info']
           response['error_info']['type']
         elsif response['error']
-          'StagingError'
+          'StagerError'
         end
       end
 
