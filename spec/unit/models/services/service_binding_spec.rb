@@ -15,6 +15,15 @@ module VCAP::CloudController
       it { is_expected.to validate_db_presence :credentials }
       it { is_expected.to validate_uniqueness [:app_id, :service_instance_id] }
 
+      it 'validates max length of volume_mounts' do
+        too_long = 'a' * (65_535 + 1)
+
+        binding = ServiceBinding.make
+        binding.volume_mounts = too_long
+
+        expect { binding.save }.to raise_error(Sequel::ValidationFailed, /volume_mounts max_length/)
+      end
+
       describe 'changing the binding after creation' do
         subject(:binding) { ServiceBinding.make }
 

@@ -26,6 +26,7 @@ module VCAP::CloudController
       validates_presence :app
       validates_presence :service_instance
       validates_unique [:app_id, :service_instance_id]
+      validates_max_length 65_535, :volume_mounts if !volume_mounts.nil?
 
       validate_app_and_service_instance(app, service_instance)
       validate_cannot_change_binding
