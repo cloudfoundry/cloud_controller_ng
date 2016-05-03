@@ -1,53 +1,54 @@
 module VCAP::CloudController
   class ProcessListFetcher
-    def fetch_all(message:)
-      pagination_options = message.pagination_options
+    def initialize(message)
+      @message = message
+    end
+
+    def fetch_all
       dataset = ProcessModel.select_all(:apps)
-      dataset = filter(dataset, message)
-      paginate(dataset, pagination_options)
+      dataset = filter(dataset)
+      paginate(dataset)
     end
 
-    def fetch_for_spaces(space_guids:, message:)
-      pagination_options = message.pagination_options
+    def fetch_for_spaces(space_guids:)
       dataset = join_spaces_if_necessary(ProcessModel.select_all(:apps), space_guids)
-      dataset = filter(dataset, message)
-      paginate(dataset, pagination_options)
+      dataset = filter(dataset)
+      paginate(dataset)
     end
 
-    def fetch_for_app(app_guid:, message:)
-      pagination_options = message.pagination_options
-      app = AppModel.where(guid: app_guid).eager(:space, :organization).all.first
+    def fetch_for_app
+      app = AppModel.where(guid: @message.app_guid).eager(:space, :organization).all.first
       return nil unless app
       dataset = app.processes_dataset
-      dataset = filter(dataset, message)
-      [app, paginate(dataset, pagination_options)]
+      dataset = filter(dataset)
+      [app, paginate(dataset)]
     end
 
     private
 
-    def paginate(dataset, pagination_options)
+    def paginate(dataset)
       dataset = dataset.eager(:space)
-      SequelPaginator.new.get_page(dataset, pagination_options)
+      SequelPaginator.new.get_page(dataset, @message.pagination_options)
     end
 
-    def filter(dataset, message)
-      dataset = dataset.where(type: message.types) if message.requested?(:types)
+    def filter(dataset)
+      dataset = dataset.where(type: @message.types) if @message.requested?(:types)
 
-      if message.requested?(:space_guids)
-        dataset = join_spaces_if_necessary(dataset, message.space_guids)
-        dataset = dataset.where(spaces__guid: message.space_guids)
+      if @message.requested?(:space_guids)
+        dataset = join_spaces_if_necessary(dataset, @message.space_guids)
+        dataset = dataset.where(spaces__guid: @message.space_guids)
       end
 
-      if message.requested?(:organization_guids)
-        dataset = dataset.where(space_id: Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:id))
+      if @message.requested?(:organization_guids)
+        dataset = dataset.where(space_id: Organization.where(guid: @message.organization_guids).map(&:spaces).flatten.map(&:id))
       end
 
-      if message.requested?(:app_guids)
-        dataset = dataset.where(app_guid: message.app_guids)
+      if @message.requested?(:app_guids)
+        dataset = dataset.where(app_guid: @message.app_guids)
       end
 
-      if message.requested?(:guids)
-        dataset = dataset.where(apps__guid: message.guids)
+      if @message.requested?(:guids)
+        dataset = dataset.where(apps__guid: @message.guids)
       end
 
       dataset

@@ -18,14 +18,16 @@ class ProcessesController < ApplicationController
     message = ProcessesListMessage.from_params(app_subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
+    list_fetcher = ProcessListFetcher.new(message)
+
     if app_nested?
-      app, paginated_result = list_fetcher.fetch_for_app(app_guid: params[:app_guid], message: message)
+      app, paginated_result = list_fetcher.fetch_for_app
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
       paginated_result = if roles.admin?
-                           list_fetcher.fetch_all(message: message)
+                           list_fetcher.fetch_all
                          else
-                           list_fetcher.fetch_for_spaces(message: message, space_guids: readable_space_guids)
+                           list_fetcher.fetch_for_spaces(space_guids: readable_space_guids)
                          end
     end
 
@@ -135,9 +137,5 @@ class ProcessesController < ApplicationController
 
   def instances_reporters
     CloudController::DependencyLocator.instance.instances_reporters
-  end
-
-  def list_fetcher
-    ProcessListFetcher.new
   end
 end

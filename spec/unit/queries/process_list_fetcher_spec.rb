@@ -3,7 +3,7 @@ require 'queries/process_list_fetcher'
 
 module VCAP::CloudController
   describe ProcessListFetcher do
-    let(:fetcher) { described_class.new }
+    let(:fetcher) { described_class.new(message) }
     let(:pagination_options) { PaginationOptions.new({}) }
     let(:message) { ProcessesListMessage.new(filters) }
     let(:filters) { {} }
@@ -14,12 +14,12 @@ module VCAP::CloudController
       let!(:worker) { App.make(type: 'worker') }
 
       it 'returns a PaginatedResult' do
-        results = fetcher.fetch_all(message: message)
+        results = fetcher.fetch_all
         expect(results).to be_a(PaginatedResult)
       end
 
       it 'returns all of the processes' do
-        results = fetcher.fetch_all(message: message).records
+        results = fetcher.fetch_all.records
         expect(results).to match_array([web, web2, worker])
       end
 
@@ -28,7 +28,7 @@ module VCAP::CloudController
           let(:filters) { { types: ['web'] } }
 
           it 'only returns matching processes' do
-            results = fetcher.fetch_all(message: message).records
+            results = fetcher.fetch_all.records
             expect(results).to match_array([web, web2])
           end
         end
@@ -37,7 +37,7 @@ module VCAP::CloudController
           let(:filters) { { space_guids: [web.space.guid] } }
 
           it 'only returns matching processes' do
-            results = fetcher.fetch_all(message: message).records
+            results = fetcher.fetch_all.records
             expect(results).to match_array([web])
           end
         end
@@ -46,7 +46,7 @@ module VCAP::CloudController
           let(:filters) { { organization_guids: [web.space.organization.guid] } }
 
           it 'only returns matching processes' do
-            results = fetcher.fetch_all(message: message).records
+            results = fetcher.fetch_all.records
             expect(results).to match_array([web])
           end
         end
@@ -57,7 +57,7 @@ module VCAP::CloudController
           let(:filters) { { app_guids: [desired_app.guid] } }
 
           it 'only returns matching processes' do
-            results = fetcher.fetch_all(message: message).records
+            results = fetcher.fetch_all.records
             expect(results).to match_array([desired_process])
           end
         end
@@ -66,7 +66,7 @@ module VCAP::CloudController
           let(:filters) { { guids: [web.guid, web2.guid] } }
 
           it 'returns the matching processes' do
-            results = fetcher.fetch_all(message: message).records
+            results = fetcher.fetch_all.records
             expect(results).to match_array([web, web2])
           end
         end
@@ -83,12 +83,12 @@ module VCAP::CloudController
       before { App.make }
 
       it 'returns a PaginatedResult' do
-        results = fetcher.fetch_for_spaces(message: message, space_guids: [])
+        results = fetcher.fetch_for_spaces(space_guids: [])
         expect(results).to be_a(PaginatedResult)
       end
 
       it 'returns only the processes in spaces requested' do
-        results = fetcher.fetch_for_spaces(message: message, space_guids: [space1.guid, space2.guid]).records
+        results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid]).records
         expect(results).to match_array([process_in_space1, process2_in_space1, process_in_space2])
       end
 
@@ -96,7 +96,7 @@ module VCAP::CloudController
         let(:filters) { { space_guids: [space1.guid] } }
 
         it 'only returns matching processes' do
-          results = fetcher.fetch_for_spaces(message: message, space_guids: [space1.guid, space2.guid]).records
+          results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid]).records
           expect(results).to match_array([process_in_space1, process2_in_space1])
         end
       end
@@ -104,9 +104,10 @@ module VCAP::CloudController
 
     describe '#fetch_for_app' do
       let(:app) { AppModel.make }
+      let(:filters) { { app_guid: app.guid } }
 
       it 'returns a PaginatedResult and the app' do
-        returned_app, results = fetcher.fetch_for_app(app_guid: app.guid, message: message)
+        returned_app, results = fetcher.fetch_for_app
         expect(returned_app.guid).to eq(app.guid)
         expect(results).to be_a(PaginatedResult)
       end
@@ -116,13 +117,15 @@ module VCAP::CloudController
         process2 = App.make(app: app)
         App.make
 
-        _app, results = fetcher.fetch_for_app(app_guid: app.guid, message: message)
+        _app, results = fetcher.fetch_for_app
         expect(results.records).to match_array([process1, process2])
       end
 
       context 'when the app does not exist' do
+        let(:filters) { { app_guid: 'made-up' } }
+
         it 'returns nil' do
-          returned_app, results = fetcher.fetch_for_app(app_guid: 'made-up', message: message)
+          returned_app, results = fetcher.fetch_for_app
           expect(returned_app).to be_nil
           expect(results).to be_nil
         end
