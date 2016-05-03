@@ -778,7 +778,6 @@ module VCAP::CloudController
     end
   end
   # rubocop:enable ClassLength
-
 end
 
 module VCAP::CloudController
