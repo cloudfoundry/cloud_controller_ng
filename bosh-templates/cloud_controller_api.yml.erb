@@ -121,6 +121,7 @@ nginx:
 index: <%= spec.index %>
 name: <%= name %>
 route_services_enabled: <%= !p("router.route_services_secret").empty? %>
+volume_services_enabled: <%= p("cc.volume_services_enabled") %>
 
 info:
   name: "<%= p("name") %>"
