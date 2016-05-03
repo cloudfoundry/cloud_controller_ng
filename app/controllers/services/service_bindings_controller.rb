@@ -27,7 +27,7 @@ module VCAP::CloudController
       arbitrary_parameters  = request_attrs['parameters']
 
       binding_manager = ServiceInstanceBindingManager.new(self, logger)
-      service_binding = binding_manager.create_app_service_instance_binding(service_instance_guid, app_guid, binding_attrs, arbitrary_parameters)
+      service_binding = binding_manager.create_app_service_instance_binding(service_instance_guid, app_guid, binding_attrs, arbitrary_parameters, volume_services_enabled?)
 
       [HTTP::CREATED,
        { 'Location' => "#{self.class.path}/#{service_binding.guid}" },
@@ -39,6 +39,8 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('UnbindableService')
     rescue ServiceInstanceBindingManager::AppNotFound
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', @request_attrs['app_guid'])
+    rescue ServiceInstanceBindingManager::VolumeMountServiceDisabled
+      raise CloudController::Errors::ApiError.new_from_details('VolumeMountServiceDisabled')
     end
 
     delete path_guid, :delete
@@ -70,5 +72,11 @@ module VCAP::CloudController
     end
 
     define_messages
+
+    private
+
+    def volume_services_enabled?
+      @config[:volume_services_enabled]
+    end
   end
 end

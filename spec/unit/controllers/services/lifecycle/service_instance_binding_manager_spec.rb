@@ -534,6 +534,7 @@ module VCAP::CloudController
         }
       end
       let(:arbitrary_parameters) { {} }
+      let(:volume_mount_services_enabled) { false }
 
       before do
         allow(access_validator).to receive(:validate_access).and_return(true)
@@ -542,7 +543,7 @@ module VCAP::CloudController
       end
 
       it 'creates a binding' do
-        manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters)
+        manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
 
         expect(ServiceBinding.count).to eq(1)
       end
@@ -550,7 +551,7 @@ module VCAP::CloudController
       it 'fails if the instance has another operation in progress' do
         service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
         expect {
-          manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters)
+          manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
         }.to raise_error do |e|
           expect(e).to be_a(CloudController::Errors::ApiError)
           expect(e.message).to include('in progress')
@@ -564,7 +565,7 @@ module VCAP::CloudController
 
         it 're-raises the error' do
           expect {
-            manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters)
+            manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
           }.to raise_error('blah')
         end
       end
@@ -576,7 +577,7 @@ module VCAP::CloudController
 
         it 'raises Sequel::ValidationFailed' do
           expect {
-            manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters)
+            manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
           }.to raise_error(Sequel::ValidationFailed)
         end
       end
@@ -589,7 +590,7 @@ module VCAP::CloudController
 
         it 'does not create a binding and raises an error for services that do not require syslog_drain' do
           expect {
-            manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters)
+            manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
           }.to raise_error do |e|
             expect(e).to be_a(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerInvalidSyslogDrainUrl)
             expect(e.message).to include('not registered as a logging service')
@@ -601,7 +602,7 @@ module VCAP::CloudController
           service_instance.service.requires = ['syslog_drain']
           service_instance.service.save
 
-          manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters)
+          manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
 
           expect(ServiceBinding.count).to eq(1)
         end
@@ -610,7 +611,7 @@ module VCAP::CloudController
       context 'when the app does not exist' do
         it 'raises AppNotFound' do
           expect {
-            manager.create_app_service_instance_binding(service_instance.guid, 'invalid', binding_attrs, arbitrary_parameters)
+            manager.create_app_service_instance_binding(service_instance.guid, 'invalid', binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
           }.to raise_error(ServiceInstanceBindingManager::AppNotFound)
         end
       end
@@ -618,7 +619,7 @@ module VCAP::CloudController
       context 'when the service instance does not exist' do
         it 'raises ServiceInstanceNotFound' do
           expect {
-            manager.create_app_service_instance_binding('invalid', app.guid, binding_attrs, arbitrary_parameters)
+            manager.create_app_service_instance_binding('invalid', app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
           }.to raise_error(ServiceInstanceBindingManager::ServiceInstanceNotFound)
         end
       end
@@ -631,7 +632,7 @@ module VCAP::CloudController
 
         it 'raises ServiceInstanceNotBindable' do
           expect {
-            manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters)
+            manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
           }.to raise_error(ServiceInstanceBindingManager::ServiceInstanceNotBindable)
         end
       end
@@ -644,7 +645,7 @@ module VCAP::CloudController
 
           it 'enqueues a DeleteOrphanedBinding job' do
             expect {
-              manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters)
+              manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
             }.to raise_error VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerInvalidSyslogDrainUrl
 
             expect(Delayed::Job.count).to eq 1
@@ -664,14 +665,14 @@ module VCAP::CloudController
 
           it 'does not create a binding' do
             expect {
-              manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters)
+              manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
             }.to raise_error VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse
             expect(ServiceBinding.count).to eq 0
           end
 
           it 'enqueues a DeleteOrphanedBinding job' do
             expect {
-              manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters)
+              manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
             }.to raise_error VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse
 
             expect(Delayed::Job.count).to eq 1
@@ -694,7 +695,7 @@ module VCAP::CloudController
             allow(logger).to receive(:info)
 
             expect {
-              manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters)
+              manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
             }.to raise_error('meow')
           end
 
@@ -719,6 +720,17 @@ module VCAP::CloudController
               expect(logger).to have_received(:error).with /Unable to delete orphaned service binding/
             end
           end
+        end
+      end
+
+      context 'when volume mount services are disabled and the service requires volume_mount' do
+        let(:volume_mount_services_enabled) { false }
+        let(:service_instance) { ManagedServiceInstance.make(:volume_mount, space: app.space) }
+
+        it 'raises a VolumeMountServiceDisabled error' do
+          expect {
+            manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
+          }.to raise_error ServiceInstanceBindingManager::VolumeMountServiceDisabled
         end
       end
     end

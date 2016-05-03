@@ -288,6 +288,11 @@
   http_code: 400
   message: "The app has routes mapped to multiple ports. Multiple ports are supported for Diego only. Please unmap routes from all but one app port. Multiple routes can be mapped to the same port if desired."
 
+60025:
+  name: VolumeMountServiceDisabled
+  http_code: 403
+  message: "Support for volume mount services is disabled"
+
 70001:
   name: RuntimeInvalid
   http_code: 400

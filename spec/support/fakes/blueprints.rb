@@ -173,6 +173,10 @@ module VCAP::CloudController
     service_plan { ServicePlan.make(:routing) }
   end
 
+  ManagedServiceInstance.blueprint(:volume_mount) do
+    service_plan { ServicePlan.make(:volume_mount) }
+  end
+
   UserProvidedServiceInstance.blueprint do
     name              { Sham.name }
     credentials       { Sham.service_credentials }
@@ -277,6 +281,10 @@ module VCAP::CloudController
 
   ServicePlan.blueprint(:routing) do
     service { Service.make(:routing) }
+  end
+
+  ServicePlan.blueprint(:volume_mount) do
+    service { Service.make(:volume_mount) }
   end
 
   ServicePlanVisibility.blueprint do

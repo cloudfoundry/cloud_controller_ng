@@ -388,6 +388,21 @@ module VCAP::CloudController
           end
         end
 
+        context 'when volume_mount is required and volume_services_enabled is disabled' do
+          before do
+            allow_any_instance_of(ServiceInstanceBindingManager).to receive(:create_app_service_instance_binding).
+              and_raise(ServiceInstanceBindingManager::VolumeMountServiceDisabled.new)
+          end
+
+          it 'returns CF-VolumeMountServiceDisabled' do
+            post '/v2/service_bindings', req.to_json
+
+            hash_body = JSON.parse(last_response.body)
+            expect(hash_body['error_code']).to eq('CF-VolumeMountServiceDisabled')
+            expect(last_response.status).to eq(403)
+          end
+        end
+
         describe 'locking the instance as a result of binding' do
           context 'when the instance has a previous operation' do
             before do
