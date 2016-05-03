@@ -796,7 +796,8 @@ describe 'Apps' do
       droplet = VCAP::CloudController::DropletModel.make(
         app:           app_model,
         process_types: { web: 'rackup' },
-        state:         VCAP::CloudController::DropletModel::STAGED_STATE
+        state:         VCAP::CloudController::DropletModel::STAGED_STATE,
+        package: VCAP::CloudController::PackageModel.make
       )
 
       request_body = { droplet_guid: droplet.guid }
@@ -804,31 +805,28 @@ describe 'Apps' do
       put "/v3/apps/#{app_model.guid}/droplets/current", request_body, user_header
 
       expected_response = {
-        'name'                    => 'my_app',
-        'guid'                    => app_model.guid,
-        'desired_state'           => 'STOPPED',
-        'total_desired_instances' => 1,
-        'environment_variables'   => {},
-        'created_at'              => iso8601,
-        'updated_at'              => iso8601,
-        'lifecycle'               => {
-          'type' => 'buildpack',
-          'data' => {
-            'buildpack' => 'http://example.com/git',
-            'stack'     => 'stack-name',
-          }
+        'guid'                  => droplet.guid,
+        'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
+        'error'                 => nil,
+        'lifecycle'             => {
+          'type' => 'docker',
+          'data' => {}
         },
-        'links' => {
-          'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
-          'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
-          'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
-          'droplet'                => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" },
-          'droplets'               => { 'href' => "/v3/apps/#{app_model.guid}/droplets" },
-          'tasks'                  => { 'href' => "/v3/apps/#{app_model.guid}/tasks" },
-          'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
-          'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
-          'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
+        'memory_limit'          => 123,
+        'disk_limit'            => nil,
+        'result'                => {
+          'image'                  => nil,
+          'execution_metadata'     => nil,
+          'process_types'          => { 'web' => 'rackup' }
+        },
+        'environment_variables' => {},
+        'created_at'            => iso8601,
+        'updated_at'            => nil,
+        'links'                 => {
+          'self'                   => { 'href' => "/v3/droplets/#{droplet.guid}" },
+          'package'                => { 'href' => "/v3/packages/#{droplet.package.guid}" },
+          'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
         }
       }
 

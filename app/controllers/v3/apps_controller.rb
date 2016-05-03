@@ -147,9 +147,9 @@ class AppsV3Controller < ApplicationController
 
     droplet_not_found! if droplet.nil?
 
-    app = SetCurrentDroplet.new(current_user, current_user_email).update_to(app, droplet)
+    SetCurrentDroplet.new(current_user, current_user_email).update_to(app, droplet)
 
-    render status: :ok, json: AppPresenter.new.present_json(app)
+    render status: :ok, json: DropletPresenter.new(droplet).to_json
   rescue SetCurrentDroplet::InvalidApp => e
     unprocessable!(e.message)
   end

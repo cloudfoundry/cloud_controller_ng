@@ -1190,7 +1190,7 @@ describe AppsV3Controller, type: :controller do
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:droplet) { VCAP::CloudController::DropletModel.make(process_types: { 'web' => 'start app' }, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:req_body) { { droplet_guid: droplet.guid } }
-    let(:droplet_link) { { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" } }
+    let(:droplet_link) { { 'href' => "/v3/droplets/#{droplet.guid}" } }
     let(:space) { app_model.space }
     let(:org) { space.organization }
     let(:user) { VCAP::CloudController::User.make }
@@ -1203,14 +1203,14 @@ describe AppsV3Controller, type: :controller do
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
-    it 'returns 200 and the app' do
+    it 'returns 200 and the droplet' do
       put :assign_current_droplet, guid: app_model.guid, body: req_body
 
       response_body = parsed_body
 
       expect(response.status).to eq(200)
-      expect(response_body['guid']).to eq(app_model.guid)
-      expect(response_body['links']['droplet']).to eq(droplet_link)
+      expect(response_body['guid']).to eq(droplet.guid)
+      expect(response_body['links']['self']).to eq(droplet_link)
     end
 
     context 'and the droplet is not associated with the application' do
