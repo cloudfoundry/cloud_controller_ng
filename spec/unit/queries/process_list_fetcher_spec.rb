@@ -61,6 +61,15 @@ module VCAP::CloudController
             expect(results).to match_array([desired_process])
           end
         end
+
+        context 'guids' do
+          let(:filters) { { guids: [web.guid, web2.guid] } }
+
+          it 'returns the matching processes' do
+            results = fetcher.fetch_all(message: message).records
+            expect(results).to match_array([web, web2])
+          end
+        end
       end
     end
 

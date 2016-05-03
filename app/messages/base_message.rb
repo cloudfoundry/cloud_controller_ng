@@ -40,7 +40,7 @@ module VCAP::CloudController
 
     def self.to_array!(params, key)
       if params[key]
-        params[key] = params[key].to_s.split(',').map { |val| CGI.unescape(val) unless val.nil? }
+        params[key] = params[key].to_s.split(/,\s*/).map { |val| CGI.unescape(val) unless val.nil? }
       end
     end
 
