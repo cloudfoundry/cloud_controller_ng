@@ -1893,6 +1893,25 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 <ul class="method-list-group">
   <li class="method-list-item">
     <h4 class="method-list-item-label">
+      states
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      Filter droplets by state. Valid values are &ldquo;PENDING&rdquo;, &ldquo;STAGING&rdquo;, &ldquo;STAGED&rdquo;, &ldquo;FAILED&rdquo;, or &ldquo;EXPIRED&rdquo;.
+    </p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guids
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Unique GUID for the droplet</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
       order_by
 
       <span class="method-list-item-type">optional</span>
@@ -1920,17 +1939,6 @@ they either use a specific droplet guid, or use the current droplet assigned to 
     </h4>
 
     <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      states
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">
-      Filter droplets by state. Valid values are &ldquo;PENDING&rdquo;, &ldquo;STAGING&rdquo;, &ldquo;STAGED&rdquo;, &ldquo;FAILED&rdquo;, or &ldquo;EXPIRED&rdquo;.
-    </p>
   </li>
 </ul>
 
@@ -2482,15 +2490,15 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 {
   "pagination": {
-    "total_results": 3,
+    "total_results": 2,
     "first": {
-      "href": "/v3/packages?page=1&amp;per_page=2"
+      "href": "/v3/packages?types=bits%2Cdocker&amp;page=1&amp;per_page=2"
     },
     "last": {
-      "href": "/v3/packages?page=2&amp;per_page=2"
+      "href": "/v3/packages?types=bits%2Cdocker&amp;page=2&amp;per_page=2"
     },
     "next": {
-      "href": "/v3/packages?page=2&amp;per_page=2"
+      "href": null
     },
     "previous": null
   },
@@ -2564,6 +2572,78 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <ul class="method-list-group">
   <li class="method-list-item">
     <h4 class="method-list-item-label">
+      states
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">State of package to filter by.</p>
+    </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      types
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Type of package to filter by.</p>
+    </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Guids of packages to filter by.</p>
+    </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      app_guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Guids of apps to filter by.</p>
+    </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      organization_guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Guids of organizations to filter by.</p>
+    </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      space_guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Guids of spaces to filter by.</p>
+    </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      Valid values are <code>created_at</code> or <code>updated_at</code>. Prepend the value with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo;
+      to specify ascending or descending order.
+    </p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
       page
 
       <span class="method-list-item-type">optional</span>
@@ -2601,10 +2681,10 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "pagination": {
     "total_results": 1,
     "first": {
-      "href": "/v3/apps/f2efe391-2b5b-4836-8518-ad93fa9ebf69/packages?page=1&amp;per_page=50"
+      "href": "/v3/apps/f2efe391-2b5b-4836-8518-ad93fa9ebf69/packages?states=READY&amp;page=1&amp;per_page=50"
     },
     "last": {
-      "href": "/v3/apps/f2efe391-2b5b-4836-8518-ad93fa9ebf69/packages?page=1&amp;per_page=50"
+      "href": "/v3/apps/f2efe391-2b5b-4836-8518-ad93fa9ebf69/packages?states=READY&amp;page=1&amp;per_page=50"
     },
     "next": null,
     "previous": null
@@ -2620,7 +2700,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
           "value": null
         }
       },
-      "state": "AWAITING_UPLOAD",
+      "state": "READY",
       "created_at": "2016-03-17T21:41:09Z",
       "updated_at": null,
       "links": {
@@ -2654,6 +2734,48 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <h3 id="query-parameters">Query Parameters</h3>
 
 <ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      states
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">State of package to filter by.</p>
+    </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      types
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Type of package to filter by.</p>
+    </li>
+  <li class="method-list-item">
+  <h4 class="method-list-item-label">
+      guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Guids of packages to filter by.</p>
+    </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      Valid values are <code>created_at</code> or <code>updated_at</code>. Prepend the value with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo;
+      to specify ascending or descending order.
+    </p>
+  </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       page
