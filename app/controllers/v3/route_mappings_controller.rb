@@ -2,6 +2,7 @@ require 'messages/route_mappings_create_message'
 require 'messages/route_mappings_list_message'
 require 'queries/route_mapping_list_fetcher'
 require 'queries/add_route_fetcher'
+require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/route_mapping_presenter'
 require 'actions/route_mapping_create'
 require 'actions/route_mapping_delete'
@@ -25,7 +26,7 @@ class RouteMappingsController < ApplicationController
                          end
     end
 
-    render :ok, json: RouteMappingPresenter.new.present_json_list(paginated_result, base_url(resource: 'route_mappings'))
+    render :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'route_mappings')).to_json
   end
 
   def create
@@ -50,13 +51,13 @@ class RouteMappingsController < ApplicationController
       unprocessable!(e.message)
     end
 
-    render status: :created, json: RouteMappingPresenter.new.present_json(route_mapping)
+    render status: :created, json: RouteMappingPresenter.new(route_mapping).to_json
   end
 
   def show
     route_mapping = RouteMappingModel.where(guid: params[:route_mapping_guid]).eager(:space, space: :organization).first
     route_mapping_not_found! unless route_mapping && can_read?(route_mapping.space.guid, route_mapping.space.organization.guid)
-    render status: :ok, json: RouteMappingPresenter.new.present_json(route_mapping)
+    render status: :ok, json: RouteMappingPresenter.new(route_mapping).to_json
   end
 
   def destroy

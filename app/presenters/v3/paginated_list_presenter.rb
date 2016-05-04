@@ -1,6 +1,7 @@
 require 'presenters/v3/droplet_presenter'
 require 'presenters/v3/package_presenter'
 require 'presenters/v3/process_presenter'
+require 'presenters/v3/route_mapping_presenter'
 
 module VCAP::CloudController
   class PaginatedListPresenter
@@ -8,6 +9,7 @@ module VCAP::CloudController
       'App' => VCAP::CloudController::ProcessPresenter,
       'DropletModel' => VCAP::CloudController::DropletPresenter,
       'PackageModel' => VCAP::CloudController::PackagePresenter,
+      'RouteMappingModel' => VCAP::CloudController::RouteMappingPresenter,
     }.freeze
 
     def initialize(dataset, base_url, filters=nil)
