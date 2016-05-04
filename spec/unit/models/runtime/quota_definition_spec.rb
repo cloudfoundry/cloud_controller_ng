@@ -52,7 +52,8 @@ module VCAP::CloudController
       end
 
       context 'total_reserved_route_ports' do
-        let(:err_msg) { 'Total reserved ports must be less than or equal to total routes.' }
+        let(:err_msg) { 'Total reserved ports must be -1, 0, or a positive integer, and must be less than or equal to total routes.' }
+
         it 'total routes must be greater than the total_reserved_route_ports' do
           quota_definition.total_routes = 2
           quota_definition.total_reserved_route_ports = 3
