@@ -68,19 +68,19 @@ resource 'Events', type: [:api, :legacy_api] do
 
   let(:guid) { VCAP::CloudController::Event.first.guid }
 
-  field :guid, 'The guid of the event.', required: false
-  field :type, 'The type of the event.', required: false, readonly: true, valid_values: DOCUMENTED_EVENT_TYPES, example_values: %w(app.crash audit.app.update)
-  field :type, 'The type of the event.', experimental: true, required: false, valid_values: EXPERIMENTAL_EVENT_TYPES, example_values: %w(audit.app.process.crash)
-  field :actor, 'The GUID of the actor.', required: false, readonly: true
-  field :actor_type, 'The actor type.', required: false, readonly: true, example_values: %w(user app)
-  field :actor_name, 'The name of the actor.', required: false, readonly: true
-  field :actee, 'The GUID of the actee.', required: false, readonly: true
-  field :actee_type, 'The actee type.', required: false, readonly: true, example_values: ['space', 'app', 'v3-app (experimental)', 'v3-service-binding (experimental)']
-  field :actee_name, 'The name of the actee.', required: false, readonly: true
-  field :timestamp, 'The event creation time.', required: false, readonly: true
-  field :metadata, 'The additional information about event.', required: false, readonly: true, default: {}
-  field :space_guid, 'The guid of the associated space.', required: false, readonly: true
-  field :organization_guid, 'The guid of the associated organization.', required: false, readonly: true
+  response_field :guid, 'The guid of the event.', required: false
+  response_field :type, 'The type of the event.', required: false, readonly: true, valid_values: DOCUMENTED_EVENT_TYPES, example_values: %w(app.crash audit.app.update)
+  response_field :type, 'The type of the event.', experimental: true, required: false, valid_values: EXPERIMENTAL_EVENT_TYPES, example_values: %w(audit.app.process.crash)
+  response_field :actor, 'The GUID of the actor.', required: false, readonly: true
+  response_field :actor_type, 'The actor type.', required: false, readonly: true, example_values: %w(user app)
+  response_field :actor_name, 'The name of the actor.', required: false, readonly: true
+  response_field :actee, 'The GUID of the actee.', required: false, readonly: true
+  response_field :actee_type, 'The actee type.', required: false, readonly: true, example_values: ['space', 'app', 'v3-app (experimental)', 'v3-service-binding (experimental)']
+  response_field :actee_name, 'The name of the actee.', required: false, readonly: true
+  response_field :timestamp, 'The event creation time.', required: false, readonly: true
+  response_field :metadata, 'The additional information about event.', required: false, readonly: true, default: {}
+  response_field :space_guid, 'The guid of the associated space.', required: false, readonly: true
+  response_field :organization_guid, 'The guid of the associated organization.', required: false, readonly: true
 
   standard_model_list(:event, VCAP::CloudController::EventsController)
   standard_model_get(:event)
@@ -820,7 +820,7 @@ resource 'Events', type: [:api, :legacy_api] do
                                }
     end
 
-    example 'List Service Instance Bind route Events' do
+    example 'List Service Instance Bind Route Events' do
       space = VCAP::CloudController::Space.make
       instance = VCAP::CloudController::ManagedServiceInstance.make(space: space)
       route = VCAP::CloudController::Route.make(space: space)
@@ -845,7 +845,7 @@ resource 'Events', type: [:api, :legacy_api] do
                                }
     end
 
-    example 'List Service Instance Unbind route Events' do
+    example 'List Service Instance Unbind Route Events' do
       space = VCAP::CloudController::Space.make
       instance = VCAP::CloudController::ManagedServiceInstance.make(space: space)
       route = VCAP::CloudController::Route.make(space: space)
