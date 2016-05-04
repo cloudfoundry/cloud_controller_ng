@@ -4,40 +4,14 @@ require 'cloud_controller/diego/protocol/open_process_ports'
 
 module VCAP::CloudController
   class ProcessPresenter
-    def initialize(pagination_presenter=PaginationPresenter.new)
-      @pagination_presenter = pagination_presenter
+    attr_reader :process, :base_url
+
+    def initialize(process, base_url)
+      @process = process
+      @base_url = base_url
     end
 
-    def present_json(process, base_url)
-      MultiJson.dump(process_hash(process, base_url), pretty: true)
-    end
-
-    def present_json_list(paginated_result, base_pagination_url, filters=nil)
-      processes      = paginated_result.records
-      process_hashes = processes.collect { |app| process_hash(app, nil) }
-
-      paginated_response = {
-        pagination: @pagination_presenter.present_pagination_hash(paginated_result, base_pagination_url, filters),
-        resources:  process_hashes
-      }
-
-      MultiJson.dump(paginated_response, pretty: true)
-    end
-
-    private
-
-    def build_links(process, base_url)
-      base_url ||= "/v3/processes/#{process.guid}"
-      {
-        self:  { href: "/v3/processes/#{process.guid}" },
-        scale: { href: "/v3/processes/#{process.guid}/scale", 'method' => 'PUT', },
-        app:   { href: "/v3/apps/#{process.app_guid}" },
-        space: { href: "/v2/spaces/#{process.space_guid}" },
-        stats: { href: "#{base_url}/stats" }
-      }
-    end
-
-    def process_hash(process, base_url)
+    def to_hash
       {
         guid:         process.guid,
         type:         process.type,
@@ -54,7 +28,24 @@ module VCAP::CloudController
         },
         created_at:   process.created_at,
         updated_at:   process.updated_at,
-        links:        build_links(process, base_url),
+        links:        build_links
+      }
+    end
+
+    def to_json
+      MultiJson.dump(to_hash, pretty: true)
+    end
+
+    private
+
+    def build_links
+      @base_url ||= "/v3/processes/#{process.guid}"
+      {
+        self:  { href: "/v3/processes/#{process.guid}" },
+        scale: { href: "/v3/processes/#{process.guid}/scale", method: 'PUT', },
+        app:   { href: "/v3/apps/#{process.app_guid}" },
+        space: { href: "/v2/spaces/#{process.space_guid}" },
+        stats: { href: "#{base_url}/stats" }
       }
     end
   end

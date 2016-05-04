@@ -1,3 +1,4 @@
+require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/process_presenter'
 require 'cloud_controller/paging/pagination_options'
 require 'actions/process_delete'
@@ -31,7 +32,7 @@ class ProcessesController < ApplicationController
                          end
     end
 
-    render status: :ok, json: process_presenter.present_json_list(paginated_result, base_url(resource: 'processes'), message)
+    render status: :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'processes'), message).to_json
   end
 
   def show
@@ -44,7 +45,7 @@ class ProcessesController < ApplicationController
       process_not_found! unless process && can_read?(space.guid, org.guid)
     end
 
-    render status: :ok, json: process_presenter.present_json(process, base_process_url)
+    render status: :ok, json: ProcessPresenter.new(process, base_process_url).to_json
   end
 
   def update
@@ -58,7 +59,7 @@ class ProcessesController < ApplicationController
 
     ProcessUpdate.new(current_user.guid, current_user_email).update(process, message)
 
-    render status: :ok, json: process_presenter.present_json(process, base_process_url)
+    render status: :ok, json: ProcessPresenter.new(process, base_process_url).to_json
   rescue ProcessUpdate::InvalidProcess => e
     unprocessable!(e.message)
   end
@@ -101,7 +102,7 @@ class ProcessesController < ApplicationController
 
     ProcessScale.new(current_user, current_user_email, process, message).scale
 
-    render status: :accepted, json: process_presenter.present_json(process, base_process_url)
+    render status: :accepted, json: ProcessPresenter.new(process, base_process_url).to_json
   rescue ProcessScale::InvalidProcess => e
     unprocessable!(e.message)
   end
@@ -125,10 +126,6 @@ class ProcessesController < ApplicationController
 
   def base_process_url
     app_nested? ? "/v3/apps/#{params[:app_guid]}/processes/#{params[:type]}" : "/v3/processes/#{params[:process_guid]}"
-  end
-
-  def process_presenter
-    ProcessPresenter.new
   end
 
   def process_not_found!
