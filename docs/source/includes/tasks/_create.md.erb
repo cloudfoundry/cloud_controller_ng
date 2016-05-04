@@ -18,8 +18,7 @@ curl "https://api.[your-domain.com]/v3/apps/[guid]/tasks" \
   -H "Authorization: bearer [token]" \
   -d '{
     "name": "migrate",
-    "command": "rake db:migrate",
-    "memory_in_mb": 512,
+    "command": "rake db:migrate"
   }'
 ```
 
@@ -76,5 +75,13 @@ These overwrite and are appended to the app's running environment variable group
     </h4>
 
     <p class="method-list-item-description">Maximum memory for the task in MB. Will default to operater-configurable 'default_app_memory' if not set.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      droplet_guid
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">The guid of the droplet that will be used to run the command.</p>
   </li>
 </ul>

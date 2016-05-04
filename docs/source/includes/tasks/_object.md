@@ -53,6 +53,14 @@
     <p class="method-list-item-description">State of the task. Possible states are PENDING, RUNNING, SUCCEEDED, CANCELING, and FAILED</p>
   </li>
   <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      droplet_guid
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">The guid of the droplet that will be used to run the command.</p>
+  </li>
+  <li class="method-list-item">
       <h4 class="method-list-item-label">
         result
         <span class="method-list-item-type">object</span>

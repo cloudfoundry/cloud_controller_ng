@@ -480,6 +480,36 @@ describe 'Tasks' do
       expect(parsed_response).to be_a_response_like(expected_response)
       expect(VCAP::CloudController::TaskModel.find(guid: guid)).to be_present
     end
+
+    context 'when requesting a specific droplet' do
+      let(:non_assigned_droplet) do
+        VCAP::CloudController::DropletModel.make(
+          app_guid:     app_model.guid,
+          state:        VCAP::CloudController::DropletModel::STAGED_STATE,
+          droplet_hash: 'some-droplet-hash'
+        )
+      end
+
+      it 'uses the requested droplet' do
+        body = {
+          name:                  'best task ever',
+          command:               'be rake && true',
+          environment_variables: { unicorn: 'magic' },
+          memory_in_mb:          1234,
+          droplet_guid:          non_assigned_droplet.guid
+        }
+
+        post "/v3/apps/#{app_model.guid}/tasks", body, developer_headers
+
+        parsed_response = MultiJson.load(last_response.body)
+        guid            = parsed_response['guid']
+
+        expect(last_response.status).to eq(202)
+        expect(parsed_response['droplet_guid']).to eq(non_assigned_droplet.guid)
+        expect(parsed_response['links']['droplet']['href']).to eq("/v3/droplets/#{non_assigned_droplet.guid}")
+        expect(VCAP::CloudController::TaskModel.find(guid: guid)).to be_present
+      end
+    end
   end
 
   describe 'GET /v3/apps/:guid/tasks/:guid' do
