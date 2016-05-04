@@ -28,9 +28,10 @@ describe 'Service Broker API integration' do
           service_id: 'service-guid-here'
         }
       end
+      let(:catalog) { default_catalog(requires: ['volume_mount']) }
 
       before do
-        setup_broker
+        setup_broker(catalog)
         provision_service
         create_app
       end

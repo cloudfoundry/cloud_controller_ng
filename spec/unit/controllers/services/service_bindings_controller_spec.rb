@@ -523,6 +523,26 @@ module VCAP::CloudController
               expect(orphan_mitigation_job).to be_a_fully_wrapped_job_of Jobs::Services::DeleteOrphanedBinding
             end
           end
+
+          context 'when the broker returns a volume_mounts and the service does not require one' do
+            let(:bind_body) { { 'volume_mounts' => [{ 'thing': 'other thing' }] } }
+
+            it 'returns CF-VolumeMountServiceDisabled' do
+              make_request
+              expect(last_response).to have_status_code 502
+              expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerInvalidVolumeMounts'
+              post '/v2/service_bindings', req.to_json
+            end
+
+            it 'triggers orphan mitigation' do
+              make_request
+              expect(last_response).to have_status_code 502
+
+              orphan_mitigation_job = Delayed::Job.first
+              expect(orphan_mitigation_job).not_to be_nil
+              expect(orphan_mitigation_job).to be_a_fully_wrapped_job_of Jobs::Services::DeleteOrphanedBinding
+            end
+          end
         end
       end
     end

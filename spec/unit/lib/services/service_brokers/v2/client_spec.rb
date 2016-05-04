@@ -923,6 +923,10 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'with volume mounts' do
+        before do
+          instance.service_plan.service.update_from_hash(requires: ['volume_mount'])
+        end
+
         let(:response_data) do
           {
             'volume_mounts' => [{ 'mount' => 'olympus' }, { 'mount' => 'everest' }]

@@ -27,7 +27,7 @@ module VCAP::CloudController::BrokerApiHelper
       body: catalog.to_json)
   end
 
-  def default_catalog(plan_updateable: false)
+  def default_catalog(plan_updateable: false, requires: [])
     {
       services: [
         {
@@ -35,6 +35,7 @@ module VCAP::CloudController::BrokerApiHelper
           name: service_name,
           description: 'A MySQL-compatible relational database',
           bindable: true,
+          requires: requires,
           plan_updateable: plan_updateable,
           plans: [
             {

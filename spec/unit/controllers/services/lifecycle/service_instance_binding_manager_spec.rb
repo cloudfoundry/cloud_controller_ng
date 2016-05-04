@@ -608,6 +608,34 @@ module VCAP::CloudController
         end
       end
 
+      context 'and the bind request returns a volume mount' do
+        let(:volume_mount_services_enabled) { true }
+
+        before do
+          stub_bind(service_instance, body: { volume_mounts: [{ "thing": 'other thing' }] }.to_json)
+          stub_unbind_for_instance(service_instance)
+        end
+
+        it 'does not create a binding and raises an error for services that do not require volume_mount' do
+          expect {
+            manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
+          }.to raise_error do |e|
+            expect(e).to be_a(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerInvalidVolumeMounts)
+            expect(e.message).to include('not registered as a volume mount service')
+          end
+          expect(ServiceBinding.count).to eq(0)
+        end
+
+        it 'creates a binding for services that require volume_mount' do
+          service_instance.service.requires = ['volume_mount']
+          service_instance.service.save
+
+          manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
+
+          expect(ServiceBinding.count).to eq(1)
+        end
+      end
+
       context 'when the app does not exist' do
         it 'raises AppNotFound' do
           expect {

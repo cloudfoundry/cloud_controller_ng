@@ -44,7 +44,7 @@ module VCAP::Services
               JsonObjectValidator.new(@logger,
                 SyslogDrainValidator.new(opts[:service_guid],
                   RouteServiceURLValidator.new(
-                    VolumeMountsValidator.new(
+                    VolumeMountsValidator.new(opts[:service_guid],
                       SuccessValidator.new(state: 'succeeded')))))
             when 202
               JsonObjectValidator.new(@logger,
@@ -207,23 +207,34 @@ module VCAP::Services
         end
 
         class VolumeMountsValidator
-          def initialize(validator)
+          def initialize(service_guid, validator)
             @validator = validator
+            @service_guid = service_guid
           end
 
           def validate(method:, uri:, code:, response:)
+            service = VCAP::CloudController::Service.first(guid: @service_guid)
             parsed_response = MultiJson.load(response.body)
+
+            if !parsed_response['volume_mounts'].nil? && !service.requires.include?('volume_mount')
+              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, not_required_error_description)
+            end
 
             if !parsed_response['volume_mounts'].nil? &&
               (!parsed_response['volume_mounts'].is_a?(Array) || parsed_response['volume_mounts'].any? { |mount_info| !mount_info.is_a?(Hash) })
-              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, error_description(response.body))
+              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, invalid_error_description(response.body))
             end
 
             @validator.validate(method: method, uri: uri, code: code, response: response)
           end
 
-          def error_description(body)
+          def invalid_error_description(body)
             "expected \"volume_mounts\" key to contain an array of JSON objects in body, broker returned '#{body}'"
+          end
+
+          def not_required_error_description
+            'The service is attempting to supply volume mounts from your application, but is not registered as a volume mount service. ' \
+            'Please contact the service provider.'
           end
         end
 
