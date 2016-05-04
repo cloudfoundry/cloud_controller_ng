@@ -8,6 +8,7 @@ module VCAP::CloudController
 
         metadata = {
           droplet_guid: droplet.guid,
+          package_guid: droplet.package.guid,
           request:      droplet_audit_hash(request_attrs)
         }
 

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe 'Droplets' do
   let(:space) { VCAP::CloudController::Space.make }
-  let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+  let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer) }
 
@@ -28,7 +28,7 @@ describe 'Droplets' do
       )
     end
 
-    let(:create_request_json) do
+    let(:create_request) do
       {
         environment_variables: { 'CUSTOMENV' => 'env value' },
         memory_limit:          1024,
@@ -40,7 +40,7 @@ describe 'Droplets' do
             buildpack: 'http://github.com/myorg/awesome-buildpack'
           }
         },
-      }.to_json
+      }
     end
 
     before do
@@ -54,7 +54,7 @@ describe 'Droplets' do
     end
 
     it 'creates a droplet' do
-      post "/v3/packages/#{package.guid}/droplets", create_request_json, json_headers(developer_headers)
+      post "/v3/packages/#{package.guid}/droplets", create_request.to_json, json_headers(developer_headers)
 
       created_droplet = VCAP::CloudController::DropletModel.last
 
@@ -102,6 +102,18 @@ describe 'Droplets' do
 
       expect(last_response.status).to eq(201)
       expect(parsed_response).to be_a_response_like(expected_response)
+
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include(
+        type:              'audit.app.droplet.create',
+        actee:             app_model.guid,
+        actee_type:        'v3-app',
+        actee_name:        'my-app',
+        actor:             developer.guid,
+        actor_type:        'user',
+        space_guid:        space.guid,
+        organization_guid: space.organization.guid,
+      )
     end
   end
 
