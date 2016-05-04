@@ -25,16 +25,8 @@ module VCAP::CloudController
 
       let(:net_info_2) {
         {
-          address: '1.2.3.4',
-          ports: [
-            {
-              host_port: 8888,
-              container_port: 5555
-            }, {
-              host_port: 3333,
-              container_port: 4567
-            }
-          ]
+          address: '',
+          ports: nil
         }
       }
 
@@ -50,17 +42,7 @@ module VCAP::CloudController
         ]
       }
 
-      let(:instance_ports_2) {
-        [
-          {
-            external: 8888,
-            internal: 5555
-          }, {
-            external: 3333,
-            internal: 4567
-          }
-        ]
-      }
+      let(:instance_ports_2) { [] }
 
       let(:stats_for_process) do
         {

@@ -56,14 +56,16 @@ module VCAP::CloudController
 
     def add_port_info(presented_stats, stats)
       if stats[:stats][:net_info]
-        presented_stats[:instance_ports] = net_info_to_instance_ports(stats[:stats][:net_info])
+        presented_stats[:instance_ports] = net_info_to_instance_ports(stats[:stats][:net_info][:ports])
       else
         presented_stats[:port] = stats[:stats][:port]
       end
     end
 
-    def net_info_to_instance_ports(net_info)
-      net_info[:ports].map do |ports|
+    def net_info_to_instance_ports(net_info_ports)
+      return [] if net_info_ports.nil?
+
+      net_info_ports.map do |ports|
         {
           external: ports[:host_port],
           internal: ports[:container_port],
