@@ -5,7 +5,7 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     it 'cannot create top level domains' do
-      expect { Domain.make name: 'com' }.to raise_error(Sequel::ValidationFailed, /name format/)
+      expect { Domain.make name: 'com' }.to raise_error(Sequel::ValidationFailed, /name.*alphanumeric characters and hyphens/)
     end
 
     it "can't be created if foo would become parent" do
