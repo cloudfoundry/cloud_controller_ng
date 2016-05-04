@@ -44,12 +44,17 @@ module VCAP::CloudController
         def stage(url, msg)
           raise ApiError.new_from_details('StagerError', 'Client not HTTP enabled') unless enabled?
 
+          status = 999
           begin
             response = @http_client.post("#{url}/v1/stage", header: { 'Content-Type' => 'application/json' }, body: MultiJson.dump(msg))
+            status = response.status
+            return true if status == 202
+            return false if status == 404
           rescue => e
             raise ApiError.new_from_details('StagerError', "url: #{url}/v1/stage, error: #{e.message}")
           end
-          raise ApiError.new_from_details('StagerError', "received #{response.status} from #{url}/v1/stage") unless response.status == 202
+
+          raise ApiError.new_from_details('StagerError', "received #{status} from #{url}/v1/stage")
         end
 
         def start(app, options={})

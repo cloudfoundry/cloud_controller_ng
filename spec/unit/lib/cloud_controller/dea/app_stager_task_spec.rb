@@ -61,6 +61,16 @@ module VCAP::CloudController
       }
     end
 
+    def stage(&blk)
+      stub_schedule_sync do
+        @before_staging_completion.call if @before_staging_completion
+        message_bus.respond_to_request("staging.#{stager_id}.start", first_reply_json)
+      end
+
+      response = staging_task.stage(&blk)
+      response
+    end
+
     before do
       expect(app.staged?).to be false
 
@@ -85,8 +95,19 @@ module VCAP::CloudController
           expect(app).to receive(:update).with({ package_state: 'PENDING', staging_task_id: staging_task.task_id })
           expect(message_bus).to receive(:publish).with('staging.stop', { app_id: app.guid })
           expect(dea_pool).to receive(:reserve_app_memory).with(stager_id, app.memory)
-          expect(Dea::Client).to receive(:stage).with(dea_advertisement.url, staging_message)
+          expect(Dea::Client).to receive(:stage).with(dea_advertisement.url, staging_message).and_return(true)
+          expect(message_bus).not_to receive(:publish).with('staging.my_stager.start', staging_task.staging_request)
           staging_task.stage
+        end
+
+        context 'when staging is not supported' do
+          it 'failsover to NATs' do
+            expect(message_bus).to receive(:publish).with('staging.stop', { app_id: app.guid })
+            expect(Dea::Client).to receive(:stage).with(dea_advertisement.url, staging_message).and_return(false)
+            expect(message_bus).to receive(:publish).with('staging.my_stager.start', staging_task.staging_request)
+
+            stage
+          end
         end
 
         context 'when an error occurs' do
@@ -437,16 +458,6 @@ module VCAP::CloudController
 
     describe 'staging' do
       describe 'receiving the first response from the stager (the staging setup completion message)' do
-        def stage(&blk)
-          stub_schedule_sync do
-            @before_staging_completion.call if @before_staging_completion
-            message_bus.respond_to_request("staging.#{stager_id}.start", first_reply_json)
-          end
-
-          response = staging_task.stage(&blk)
-          response
-        end
-
         context 'it sets up the app' do
           before do
             allow(app).to receive(:update).and_call_original
