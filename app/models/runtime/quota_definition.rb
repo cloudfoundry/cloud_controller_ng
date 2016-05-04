@@ -63,7 +63,7 @@ module VCAP::CloudController
 
     def validate_total_reserved_route_ports
       return unless total_reserved_route_ports
-      err_msg = 'Total reserved ports must be -1, 0, or a positive integer, and must be less than or equal to total routes.'
+      err_msg = Sequel.lit('Total reserved ports must be -1, 0, or a positive integer, and must be less than or equal to total routes.')
       if total_reserved_route_ports < UNLIMITED || (total_reserved_route_ports > total_routes && total_routes >= 0)
         errors.add(:total_reserved_route_ports, err_msg)
       end

@@ -58,12 +58,12 @@ module VCAP::CloudController
           quota_definition.total_routes = 2
           quota_definition.total_reserved_route_ports = 3
           expect(quota_definition).not_to be_valid
-          expect(quota_definition.errors.on(:total_reserved_route_ports)).to include(err_msg)
+          expect(quota_definition.errors.full_messages.first).to eq(err_msg)
 
           quota_definition.total_routes = 0
           quota_definition.total_reserved_route_ports = 1
           expect(quota_definition).not_to be_valid
-          expect(quota_definition.errors.on(:total_reserved_route_ports)).to include(err_msg)
+          expect(quota_definition.errors.full_messages.first).to eq(err_msg)
         end
 
         it 'total routes is equal to total_reserved_route_ports' do
