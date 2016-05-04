@@ -1,30 +1,12 @@
 module VCAP::CloudController
   class DropletPresenter
-    def initialize(pagination_presenter=PaginationPresenter.new)
-      @pagination_presenter = pagination_presenter
+    attr_reader :droplet
+
+    def initialize(droplet)
+      @droplet = droplet
     end
 
-    def present_json(droplet)
-      MultiJson.dump(droplet_hash(droplet), pretty: true)
-    end
-
-    def present_json_list(paginated_result, base_url, params)
-      droplets       = paginated_result.records
-      droplet_hashes = droplets.collect { |droplet| droplet_hash(droplet) }
-
-      paginated_response = {
-        pagination: @pagination_presenter.present_pagination_hash(paginated_result, base_url, params),
-        resources:  droplet_hashes
-      }
-
-      MultiJson.dump(paginated_response, pretty: true)
-    end
-
-    private
-
-    DEFAULT_HASHING_ALGORITHM = 'sha1'.freeze
-
-    def droplet_hash(droplet)
+    def to_hash
       {
         guid:                  droplet.guid,
         state:                 droplet.state,
@@ -35,15 +17,23 @@ module VCAP::CloudController
         },
         memory_limit:          droplet.memory_limit,
         disk_limit:            droplet.disk_limit,
-        result:                result_for_lifecycle(droplet),
+        result:                result_for_lifecycle,
         environment_variables: droplet.environment_variables || {},
         created_at:            droplet.created_at,
         updated_at:            droplet.updated_at,
-        links:                 build_links(droplet),
+        links:                 build_links,
       }
     end
 
-    def build_links(droplet)
+    def to_json
+      MultiJson.dump(to_hash, pretty: true)
+    end
+
+    private
+
+    DEFAULT_HASHING_ALGORITHM = 'sha1'.freeze
+
+    def build_links
       {
         self:                   { href: "/v3/droplets/#{droplet.guid}" },
         package:                nil,
@@ -51,11 +41,11 @@ module VCAP::CloudController
         assign_current_droplet: { href: "/v3/apps/#{droplet.app_guid}/droplets/current", method: 'PUT' },
       }.tap do |links|
         links[:package] = { href: "/v3/packages/#{droplet.package_guid}" } if droplet.package_guid.present?
-        links.merge!(links_for_lifecyle(droplet))
+        links.merge!(links_for_lifecyle)
       end
     end
 
-    def result_for_lifecycle(droplet)
+    def result_for_lifecycle
       return nil unless DropletModel::COMPLETED_STATES.include?(droplet.state)
 
       lifecycle_result = if droplet.lifecycle_type == Lifecycles::BUILDPACK
@@ -80,7 +70,7 @@ module VCAP::CloudController
       }.merge(lifecycle_result)
     end
 
-    def links_for_lifecyle(droplet)
+    def links_for_lifecyle
       links = {}
 
       if droplet.lifecycle_type == Lifecycles::BUILDPACK

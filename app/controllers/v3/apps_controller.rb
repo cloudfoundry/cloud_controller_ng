@@ -160,7 +160,7 @@ class AppsV3Controller < ApplicationController
     droplet = DropletModel.where(guid: app.droplet_guid).eager(:space, space: :organization).all.first
 
     droplet_not_found! unless droplet
-    render status: :ok, json: DropletPresenter.new.present_json(droplet)
+    render status: :ok, json: DropletPresenter.new(droplet).to_json
   end
 
   private

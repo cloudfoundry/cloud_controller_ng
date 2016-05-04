@@ -1,4 +1,5 @@
 require 'presenters/v3/droplet_presenter'
+require 'presenters/v3/paginated_list_presenter'
 require 'queries/droplet_delete_fetcher'
 require 'queries/droplet_list_fetcher'
 require 'actions/droplet_delete'
@@ -28,13 +29,13 @@ class DropletsController < ApplicationController
                          end
     end
 
-    render status: :ok, json: droplet_presenter.present_json_list(paginated_result, base_url(resource: 'droplets'), message)
+    render status: :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'droplets'), message).to_json
   end
 
   def show
     droplet = DropletModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
     droplet_not_found! unless droplet && can_read?(droplet.space.guid, droplet.space.organization.guid)
-    render status: :ok, json: droplet_presenter.present_json(droplet)
+    render status: :ok, json: DropletPresenter.new(droplet).to_json
   end
 
   def destroy
@@ -63,7 +64,7 @@ class DropletsController < ApplicationController
 
     droplet = DropletCopy.new(source_droplet).copy(destination_app, current_user.guid, current_user_email)
 
-    render status: :created, json: droplet_presenter.present_json(droplet)
+    render status: :created, json: DropletPresenter.new(droplet).to_json
   end
 
   def create
@@ -87,7 +88,7 @@ class DropletsController < ApplicationController
                                         actor_email: current_user_email)
     droplet = droplet_creator.create_and_stage(package, lifecycle, staging_message)
 
-    render status: :created, json: droplet_presenter.present_json(droplet)
+    render status: :created, json: DropletPresenter.new(droplet).to_json
   rescue DropletCreate::InvalidPackage => e
     invalid_request!(e.message)
   rescue DropletCreate::SpaceQuotaExceeded
@@ -114,10 +115,6 @@ class DropletsController < ApplicationController
 
   def unable_to_perform!(operation, message)
     raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation, message)
-  end
-
-  def droplet_presenter
-    @droplet_presenter ||= DropletPresenter.new
   end
 
   def list_fetcher

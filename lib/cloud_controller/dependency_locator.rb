@@ -168,10 +168,6 @@ module CloudController
       PackagePresenter.new
     end
 
-    def droplet_presenter
-      DropletPresenter.new
-    end
-
     def object_renderer
       eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
       serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new

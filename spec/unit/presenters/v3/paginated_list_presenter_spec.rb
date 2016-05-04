@@ -22,15 +22,13 @@ module VCAP::CloudController
     end
 
     class MonkeyPresenter
-      def initialize(monkey, base_url)
+      def initialize(monkey)
         @monkey = monkey
-        @base_url = base_url
       end
 
       def to_hash
         {
           name: @monkey.name,
-          base_url: @base_url
         }
       end
     end
@@ -48,8 +46,8 @@ module VCAP::CloudController
             previous: nil
           },
           resources: [
-            { name: 'bobo', base_url: nil },
-            { name: 'george', base_url: nil },
+            { name: 'bobo' },
+            { name: 'george' },
           ]
         })
       end
@@ -60,7 +58,7 @@ module VCAP::CloudController
 
         it 'uses the process presenter' do
           process_presenter = instance_double(ProcessPresenter, to_hash: { process: true })
-          expect(ProcessPresenter).to receive(:new).with(process, nil).and_return(process_presenter)
+          expect(ProcessPresenter).to receive(:new).with(process).and_return(process_presenter)
           expect(presenter.to_hash[:resources]).to eq([{ process: true }])
         end
       end

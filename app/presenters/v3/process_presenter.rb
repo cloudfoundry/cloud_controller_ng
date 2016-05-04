@@ -6,9 +6,9 @@ module VCAP::CloudController
   class ProcessPresenter
     attr_reader :process, :base_url
 
-    def initialize(process, base_url)
+    def initialize(process, base_url=nil)
       @process = process
-      @base_url = base_url
+      @base_url = base_url || "/v3/processes/#{process.guid}"
     end
 
     def to_hash
@@ -39,7 +39,6 @@ module VCAP::CloudController
     private
 
     def build_links
-      @base_url ||= "/v3/processes/#{process.guid}"
       {
         self:  { href: "/v3/processes/#{process.guid}" },
         scale: { href: "/v3/processes/#{process.guid}/scale", method: 'PUT', },

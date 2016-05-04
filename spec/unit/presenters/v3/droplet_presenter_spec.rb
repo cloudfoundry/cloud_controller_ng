@@ -17,7 +17,7 @@ module VCAP::CloudController
       )
     end
 
-    describe '#present_json' do
+    describe '#to_json' do
       context 'buildpack lifecycle' do
         before do
           droplet.lifecycle_data.buildpack = 'the-happiest-buildpack'
@@ -28,7 +28,7 @@ module VCAP::CloudController
         end
 
         it 'presents the droplet as json' do
-          json_result = DropletPresenter.new.present_json(droplet)
+          json_result = DropletPresenter.new(droplet).to_json
           result      = MultiJson.load(json_result)
 
           expect(result['guid']).to eq(droplet.guid)
@@ -61,7 +61,7 @@ module VCAP::CloudController
             end
 
             it 'returns the result' do
-              json_result = DropletPresenter.new.present_json(droplet)
+              json_result = DropletPresenter.new(droplet).to_json
               result      = MultiJson.load(json_result)
 
               expect(result['result']['process_types']).to eq({ 'web' => 'npm start', 'worker' => 'start worker' })
@@ -76,7 +76,7 @@ module VCAP::CloudController
             end
 
             it 'returns nil for the result' do
-              json_result = DropletPresenter.new.present_json(droplet)
+              json_result = DropletPresenter.new(droplet).to_json
               result      = MultiJson.load(json_result)
 
               expect(result['result']).to be_nil
@@ -84,7 +84,7 @@ module VCAP::CloudController
           end
 
           it 'has the correct result' do
-            json_result = DropletPresenter.new.present_json(droplet)
+            json_result = DropletPresenter.new(droplet).to_json
             result      = MultiJson.load(json_result)
 
             expect(result['result']['hash']).to eq({ 'type' => 'sha1', 'value' => nil })
@@ -97,7 +97,7 @@ module VCAP::CloudController
               let(:droplet) { DropletModel.make(:buildpack, buildpack_receipt_buildpack_guid: 'some-guid') }
 
               it 'links to the buildpack' do
-                json_result = DropletPresenter.new.present_json(droplet)
+                json_result = DropletPresenter.new(droplet).to_json
                 result      = MultiJson.load(json_result)
 
                 expect(result['links']['buildpack']['href']).to eq('/v2/buildpacks/some-guid')
@@ -108,7 +108,7 @@ module VCAP::CloudController
               let(:droplet) { DropletModel.make(:buildpack) }
 
               it 'links to nil' do
-                json_result = DropletPresenter.new.present_json(droplet)
+                json_result = DropletPresenter.new(droplet).to_json
                 result      = MultiJson.load(json_result)
 
                 expect(result['links']['buildpack']).to be_nil
@@ -119,7 +119,7 @@ module VCAP::CloudController
               let(:droplet) { DropletModel.make(:buildpack, package_guid: nil) }
 
               it 'links to nil' do
-                json_result = DropletPresenter.new.present_json(droplet)
+                json_result = DropletPresenter.new(droplet).to_json
                 result      = MultiJson.load(json_result)
 
                 expect(result['links']['package']).to be nil
@@ -143,53 +143,11 @@ module VCAP::CloudController
         end
 
         it 'has the correct result' do
-          json_result = DropletPresenter.new.present_json(droplet)
+          json_result = DropletPresenter.new(droplet).to_json
           result      = MultiJson.load(json_result)
 
           expect(result['result']['image']).to eq('test-image')
         end
-      end
-    end
-
-    describe '#present_json_list' do
-      let(:pagination_presenter) { instance_double(PaginationPresenter) }
-      let(:droplet1) { droplet }
-      let(:droplet2) { droplet }
-      let(:droplets) { [droplet1, droplet2] }
-      let(:presenter) { DropletPresenter.new(pagination_presenter) }
-      let(:page) { 1 }
-      let(:per_page) { 1 }
-      let(:options) { { page: page, per_page: per_page } }
-      let(:total_results) { 2 }
-      let(:paginated_result) { PaginatedResult.new(droplets, total_results, PaginationOptions.new(options)) }
-      let(:params) { { 'states' => ['foo'] } }
-      let(:base_url) { 'bazooka' }
-
-      before do
-        allow(pagination_presenter).to receive(:present_pagination_hash) do |_, url|
-          "pagination-#{url}"
-        end
-      end
-
-      it 'presents the droplets as a json array under resources' do
-        json_result = presenter.present_json_list(paginated_result, base_url, params)
-        result      = MultiJson.load(json_result)
-
-        guids = result['resources'].collect { |droplet_json| droplet_json['guid'] }
-        expect(guids).to eq([droplet1.guid, droplet2.guid])
-      end
-
-      it 'includes pagination section' do
-        json_result = presenter.present_json_list(paginated_result, base_url, params)
-        result      = MultiJson.load(json_result)
-
-        expect(result['pagination']).to eq('pagination-bazooka')
-      end
-
-      it 'passes the parameters to the pagination presenter' do
-        expect(pagination_presenter).to receive(:present_pagination_hash).with(paginated_result, base_url, params)
-
-        presenter.present_json_list(paginated_result, base_url, params)
       end
     end
   end
