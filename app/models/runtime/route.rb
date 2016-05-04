@@ -231,7 +231,7 @@ module VCAP::CloudController
       length_with_period_separator = host.length + 1
       host_label_length = host.length > 0 ? length_with_period_separator : 0
       total_domain_too_long = host_label_length + domain.name.length > Domain::MAXIMUM_FQDN_DOMAIN_LENGTH
-      errors.add(:host, "must be no more than #{Domain::MAXIMUM_FQDN_DOMAIN_LENGTH} characters when combined with domain name") if total_domain_too_long
+      errors.add(:host, "combined with domain name must be no more than #{Domain::MAXIMUM_FQDN_DOMAIN_LENGTH} characters") if total_domain_too_long
     end
 
     def validate_domain

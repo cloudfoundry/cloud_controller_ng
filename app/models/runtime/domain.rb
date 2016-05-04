@@ -83,8 +83,9 @@ module VCAP::CloudController
       validates_presence :name
       validates_unique :name, dataset: Domain.dataset
 
-      validates_format CloudController::DomainHelper::DOMAIN_REGEX, :name
-      validates_length_range 3..MAXIMUM_FQDN_DOMAIN_LENGTH, :name
+      validates_format CloudController::DomainHelper::DOMAIN_REGEX, :name,
+        message: 'can contain multiple subdomains, each having only alphanumeric characters and hyphens of up to 63 characters, see RFC 1035.'
+      validates_length_range 3..MAXIMUM_FQDN_DOMAIN_LENGTH, :name, message: "must be no more than #{MAXIMUM_FQDN_DOMAIN_LENGTH} characters"
 
       errors.add(:name, :overlapping_domain) if name_overlaps?
       errors.add(:name, :route_conflict) if routes_match?
