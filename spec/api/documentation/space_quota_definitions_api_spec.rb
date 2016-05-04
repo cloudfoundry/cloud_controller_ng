@@ -19,8 +19,8 @@ resource 'Space Quota Definitions', type: [:api, :legacy_api] do
 
     field :total_routes, 'How many routes a space can have. (-1 represents an unlimited amount)', required: opts[:required], example_values: [-1, 10, 23]
     field :total_reserved_route_ports,
-      'How many routes a space can have that use a reserved port. These routes count toward total_routes. (-1 represents an unlimited amount)',
-      default: 0,
+      'How many routes a space can have that use a reserved port. These routes count toward total_routes. (-1 represents an unlimited amount; subject to org quota)',
+      default: -1,
       example_values: [-1, 10, 20]
     field :memory_limit, 'How much memory in megabytes a space can have.', required: opts[:required], example_values: [5_120, 10_024]
 

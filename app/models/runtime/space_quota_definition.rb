@@ -1,6 +1,9 @@
 module VCAP::CloudController
   class SpaceQuotaDefinition < Sequel::Model
     UNLIMITED = -1
+    RESERVED_PORT_RANGE_ERROR = Sequel.lit('Total reserved ports must be -1, 0, or a positive integer, and must be less than or equal to total routes.')
+    RESERVED_PORT_ROUTES_ERROR = Sequel.lit('Total reserved ports must be less than or equal to total routes.')
+    RESERVED_PORT_ORG_ERROR = Sequel.lit('Total reserved ports must be less than or equal to the organization total reserved ports.')
 
     class OrganizationAlreadySet < RuntimeError; end
 
@@ -30,7 +33,7 @@ module VCAP::CloudController
       errors.add(:app_instance_limit, :invalid_app_instance_limit) if app_instance_limit && app_instance_limit < UNLIMITED
       errors.add(:app_task_limit, :invalid_app_task_limit) if app_task_limit && app_task_limit < UNLIMITED
       errors.add(:total_service_keys, :invalid_total_service_keys) if total_service_keys && total_service_keys < UNLIMITED
-      errors.add(:total_reserved_route_ports, :invalid_total_reserved_route_ports) unless valid_total_reserved_route_ports?
+      validate_total_reserved_ports
     end
 
     def validate_change_organization(new_org)
@@ -48,16 +51,23 @@ module VCAP::CloudController
 
     private
 
-    def valid_total_reserved_route_ports?
-      return true unless total_reserved_route_ports
-      return false if total_reserved_route_ports < UNLIMITED
-      return false if total_reserved_route_ports > total_routes
-      return false if total_reserved_route_ports_greater_than_orgs_ports?
-      true
+    def validate_total_reserved_ports
+      return unless total_reserved_route_ports
+      errors.add(:total_reserved_route_ports, RESERVED_PORT_RANGE_ERROR) if reserved_ports_outside_of_valid_range?
+      errors.add(:total_reserved_route_ports, RESERVED_PORT_ORG_ERROR) if total_reserved_route_ports_greater_than_orgs_ports?
+      errors.add(:total_reserved_route_ports, RESERVED_PORT_ROUTES_ERROR) if total_reserved_route_ports_greater_than_total_routes?
+    end
+
+    def reserved_ports_outside_of_valid_range?
+      total_reserved_route_ports < UNLIMITED
+    end
+
+    def total_reserved_route_ports_greater_than_total_routes?
+      total_reserved_route_ports > total_routes && total_routes != UNLIMITED
     end
 
     def total_reserved_route_ports_greater_than_orgs_ports?
-      total_reserved_route_ports > organization.quota_definition.total_reserved_route_ports && organization.quota_definition.total_reserved_route_ports != -1
+      total_reserved_route_ports > organization.quota_definition.total_reserved_route_ports && organization.quota_definition.total_reserved_route_ports != UNLIMITED
     end
   end
 end
