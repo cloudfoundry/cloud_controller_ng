@@ -4858,6 +4858,14 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
     <p class="method-list-item-description">State of the task. Possible states are PENDING, RUNNING, SUCCEEDED, CANCELING, and FAILED</p>
   </li>
   <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      droplet_guid
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">The guid of the droplet that will be used to run the command.</p>
+  </li>
+  <li class="method-list-item">
       <h4 class="method-list-item-label">
         result
         <span class="method-list-item-type">object</span>
@@ -4911,8 +4919,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "name": "migrate",
-    "command": "rake db:migrate",
-    "memory_in_mb": 512,
+    "command": "rake db:migrate"
   }'</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
@@ -4929,6 +4936,9 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "result": {
     "failure_reason": null
   },
+  "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
+  "created_at": "2016-05-04T17:00:41Z",
+  "updated_at": "2016-05-04T17:00:42Z",
   "links": {
     "self": {
       "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
@@ -4987,6 +4997,14 @@ These overwrite and are appended to the app&rsquo;s running environment variable
 
     <p class="method-list-item-description">Maximum memory for the task in MB. Will default to operater-configurable &lsquo;default_app_memory&rsquo; if not set.</p>
   </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      droplet_guid
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">The guid of the droplet that will be used to run the command.</p>
+  </li>
 </ul>
 
           <h2 id="get-a-task">Get a task</h2>
@@ -5014,6 +5032,9 @@ These overwrite and are appended to the app&rsquo;s running environment variable
   "result": {
     "failure_reason": null
   },
+  "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
+  "created_at": "2016-05-04T17:00:41Z",
+  "updated_at": "2016-05-04T17:00:42Z",
   "links": {
     "self": {
       "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
@@ -5048,8 +5069,7 @@ These overwrite and are appended to the app&rsquo;s running environment variable
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/tasks/[guid]/cancel"</span> <span class="se">\</span>
   -X PUT <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -d <span class="s1">'{}'</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
@@ -5065,6 +5085,9 @@ These overwrite and are appended to the app&rsquo;s running environment variable
   "result": {
     "failure_reason": null
   },
+  "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
+  "created_at": "2016-05-04T17:00:41Z",
+  "updated_at": "2016-05-04T17:00:42Z",
   "links": {
     "self": {
       "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
@@ -5135,6 +5158,9 @@ These overwrite and are appended to the app&rsquo;s running environment variable
       "result": {
         "failure_reason": null
       },
+      "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
+      "created_at": "2016-05-04T17:00:41Z",
+      "updated_at": "2016-05-04T17:00:42Z",
       "links": {
         "self": {
           "href": "/v3/tasks/da4b6d1ec-8803-2045-dfab-a66ca66ba77d"
@@ -5262,6 +5288,9 @@ These overwrite and are appended to the app&rsquo;s running environment variable
   "result": {
     "failure_reason": null
   },
+  "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
+  "created_at": "2016-05-04T17:00:41Z",
+  "updated_at": "2016-05-04T17:00:42Z",
   "links": {
     "self": {
       "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
@@ -5296,8 +5325,7 @@ These overwrite and are appended to the app&rsquo;s running environment variable
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/tasks/[guid]/cancel"</span> <span class="se">\</span>
   -X PUT <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -d <span class="s1">'{}'</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
@@ -5313,6 +5341,9 @@ These overwrite and are appended to the app&rsquo;s running environment variable
   "result": {
     "failure_reason": null
   },
+  "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
+  "created_at": "2016-05-04T17:00:41Z",
+  "updated_at": "2016-05-04T17:00:42Z",
   "links": {
     "self": {
       "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
@@ -5383,6 +5414,9 @@ These overwrite and are appended to the app&rsquo;s running environment variable
       "result": {
         "failure_reason": null
       },
+      "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
+      "created_at": "2016-05-04T17:00:41Z",
+      "updated_at": "2016-05-04T17:00:42Z",
       "links": {
         "self": {
           "href": "/v3/tasks/da4b6d1ec-8803-2045-dfab-a66ca66ba77d"
