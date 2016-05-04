@@ -114,7 +114,7 @@ module ServiceBrokerHelpers
   end
 
   def last_operation_state_url(service_instance)
-    "#{service_instance_url(service_instance)}/last_operation"
+    "#{service_instance_url(service_instance)}/last_operation?operation=#{service_instance.last_operation.type}"
   end
 
   def service_instance_url(service_instance, query=nil)

@@ -15,6 +15,7 @@ describe 'Service Broker API integration' do
 
       context 'update' do
         let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+        let(:operation) { 'update' }
 
         before do
           @service_instance_guid = service_instance.guid
@@ -22,7 +23,7 @@ describe 'Service Broker API integration' do
 
         it 'performs the async flow if broker initiates an async operation' do
           async_update_service
-          stub_async_last_operation
+          stub_async_last_operation(operation: operation)
 
           expect(
             a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))).to have_been_made
@@ -31,10 +32,10 @@ describe 'Service Broker API integration' do
 
           Delayed::Worker.new.work_off
 
-          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation")).to have_been_made
+          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation").with(query: { 'operation' => operation })).to have_been_made
 
           expect(service_instance.reload.last_operation.state).to eq 'succeeded'
-          expect(service_instance.reload.last_operation.type).to eq 'update'
+          expect(service_instance.reload.last_operation.type).to eq operation
         end
 
         it 'performs the synchronous flow if broker does not return async response code' do
@@ -46,12 +47,12 @@ describe 'Service Broker API integration' do
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
           expect(service_instance.reload.last_operation.state).to eq 'succeeded'
-          expect(service_instance.reload.last_operation.type).to eq 'update'
+          expect(service_instance.reload.last_operation.type).to eq operation
         end
 
         it 'marks the service instance as failed if the initial request succeeds, but the async provision fails' do
           async_update_service
-          stub_async_last_operation(state: 'failed')
+          stub_async_last_operation(state: 'failed', operation: operation)
 
           expect(
             a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))
@@ -60,15 +61,16 @@ describe 'Service Broker API integration' do
           Delayed::Worker.new.work_off
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation")).to have_been_made
+          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation").with(query: { 'operation' => operation })).to have_been_made
 
           expect(service_instance.reload.last_operation.state).to eq 'failed'
-          expect(service_instance.reload.last_operation.type).to eq 'update'
+          expect(service_instance.reload.last_operation.type).to eq operation
         end
       end
 
       context 'delete' do
         let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+        let(:operation) { 'delete' }
 
         before do
           @service_instance_guid = service_instance.guid
@@ -76,7 +78,7 @@ describe 'Service Broker API integration' do
 
         it 'performs the async flow if broker initiates an async operation' do
           async_delete_service
-          stub_async_last_operation
+          stub_async_last_operation(operation: operation)
 
           expect(
             a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))
@@ -84,7 +86,7 @@ describe 'Service Broker API integration' do
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
           Delayed::Worker.new.work_off
-          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation")).to have_been_made
+          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation").with(query: { 'operation' => operation })).to have_been_made
 
           expect { service_instance.reload }.to raise_error(Sequel::Error)
         end
@@ -103,7 +105,7 @@ describe 'Service Broker API integration' do
 
         it 'marks the service instance as failed if the initial request succeeds, but the async provision fails' do
           async_delete_service
-          stub_async_last_operation(state: 'failed')
+          stub_async_last_operation(state: 'failed', operation: operation)
 
           expect(
             a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))
@@ -111,17 +113,19 @@ describe 'Service Broker API integration' do
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
           Delayed::Worker.new.work_off
-          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation")).to have_been_made
+          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation").with(query: { 'operation' => operation })).to have_been_made
 
           expect(service_instance.reload.last_operation.state).to eq 'failed'
-          expect(service_instance.reload.last_operation.type).to eq 'delete'
+          expect(service_instance.reload.last_operation.type).to eq operation
         end
       end
 
       context 'provision' do
+        let(:operation) { 'create' }
+
         it 'performs the async flow if broker initiates an async operation' do
           async_provision_service
-          stub_async_last_operation
+          stub_async_last_operation(operation: operation)
 
           expect(
             a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
@@ -131,15 +135,15 @@ describe 'Service Broker API integration' do
 
           Delayed::Worker.new.work_off
 
-          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation")).to have_been_made
+          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation").with(query: { 'operation' => operation })).to have_been_made
 
           expect(service_instance.reload.last_operation.state).to eq 'succeeded'
-          expect(service_instance.reload.last_operation.type).to eq 'create'
+          expect(service_instance.reload.last_operation.type).to eq operation
         end
 
         it 'performs the synchronous flow if broker does not return async response code' do
           async_provision_service(status: 201)
-          stub_async_last_operation
+          stub_async_last_operation(operation: operation)
 
           expect(
             a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
@@ -147,12 +151,12 @@ describe 'Service Broker API integration' do
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
           expect(service_instance.reload.last_operation.state).to eq 'succeeded'
-          expect(service_instance.reload.last_operation.type).to eq 'create'
+          expect(service_instance.reload.last_operation.type).to eq operation
         end
 
         it 'marks the service instance as failed if the initial request succeeds, but the async provision fails' do
           async_provision_service
-          stub_async_last_operation(state: 'failed')
+          stub_async_last_operation(state: 'failed', operation: operation)
 
           expect(
             a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
@@ -161,10 +165,10 @@ describe 'Service Broker API integration' do
           Delayed::Worker.new.work_off
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation")).to have_been_made
+          expect(a_request(:get, "#{service_instance_url(service_instance)}/last_operation").with(query: { 'operation' => operation })).to have_been_made
 
           expect(service_instance.reload.last_operation.state).to eq 'failed'
-          expect(service_instance.reload.last_operation.type).to eq 'create'
+          expect(service_instance.reload.last_operation.type).to eq operation
         end
       end
     end

@@ -237,7 +237,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def service_instance_last_operation_path(instance)
-      "#{service_instance_resource_path(instance)}/last_operation"
+      "#{service_instance_resource_path(instance)}/last_operation?operation=#{instance.last_operation.type}"
     end
 
     def service_binding_resource_path(binding_guid, service_instance_guid)
