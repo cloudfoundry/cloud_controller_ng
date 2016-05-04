@@ -1,22 +1,16 @@
 require 'rails_helper'
 
 describe PackagesController, type: :controller do
-  let(:package_presenter) { instance_double(VCAP::CloudController::PackagePresenter) }
-
   describe '#upload' do
     let(:package) { VCAP::CloudController::PackageModel.make }
     let(:space) { package.space }
     let(:org) { space.organization }
     let(:params) { { 'bits_path' => 'path/to/bits' } }
-    let(:expected_response) { 'response stuff' }
     let(:form_headers) { { 'CONTENT_TYPE' => 'application/x-www-form-urlencoded' } }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       @request.env.merge!(form_headers)
-      allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
-      allow(package_presenter).to receive(:present_json).and_return(expected_response)
-
       allow_user_read_access(user, space: space)
       allow_user_write_access(user, space: space)
     end
@@ -25,8 +19,7 @@ describe PackagesController, type: :controller do
       post :upload, params.merge(guid: package.guid)
 
       expect(response.status).to eq(200)
-      expect(response.body).to eq(expected_response)
-      expect(package_presenter).to have_received(:present_json).with(an_instance_of(VCAP::CloudController::PackageModel))
+      expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
       expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::PENDING_STATE)
     end
 
@@ -52,8 +45,7 @@ describe PackagesController, type: :controller do
           post :upload, params.merge(guid: package.guid)
 
           expect(response.status).to eq(200)
-          expect(response.body).to eq(expected_response)
-          expect(package_presenter).to have_received(:present_json).with(an_instance_of(VCAP::CloudController::PackageModel))
+          expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
           expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::PENDING_STATE)
         end
       end
@@ -172,9 +164,6 @@ describe PackagesController, type: :controller do
       blob = instance_double(CloudController::Blobstore::FogBlob, public_download_url: 'http://package.example.com')
       allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
       allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
-
-      allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
-
       allow_user_read_access(user, space: space)
     end
 
@@ -262,14 +251,10 @@ describe PackagesController, type: :controller do
 
   describe '#show' do
     let(:package) { VCAP::CloudController::PackageModel.make }
-    let(:expected_response) { 'im a response' }
     let(:space) { package.space }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
-      allow(package_presenter).to receive(:present_json).and_return(expected_response)
-
       allow_user_read_access(user, space: space)
     end
 
@@ -277,8 +262,7 @@ describe PackagesController, type: :controller do
       get :show, guid: package.guid
 
       expect(response.status).to eq(200)
-      expect(response.body).to eq(expected_response)
-      expect(package_presenter).to have_received(:present_json).with(package)
+      expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
     end
 
     context 'when the user does not have the read scope' do
@@ -323,7 +307,6 @@ describe PackagesController, type: :controller do
     let(:space) { package.space }
 
     before do
-      allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
       allow_user_read_access(user, space: space)
       allow_user_write_access(user, space: space)
     end

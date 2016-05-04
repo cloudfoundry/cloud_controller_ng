@@ -1,4 +1,5 @@
 require 'presenters/v3/package_presenter'
+require 'presenters/v3/paginated_list_presenter'
 require 'queries/package_list_fetcher'
 require 'actions/package_delete'
 require 'actions/package_upload'
@@ -29,7 +30,7 @@ class PackagesController < ApplicationController
                          end
     end
 
-    render status: :ok, json: package_presenter.present_json_list(paginated_result, base_url(resource: 'packages'), message)
+    render status: :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'packages'), message).to_json
   end
 
   def upload
@@ -51,7 +52,7 @@ class PackagesController < ApplicationController
       unprocessable!(e.message)
     end
 
-    render status: :ok, json: package_presenter.present_json(package)
+    render status: :ok, json: PackagePresenter.new(package).to_json
   end
 
   def download
@@ -74,7 +75,7 @@ class PackagesController < ApplicationController
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
     package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
 
-    render status: :ok, json: package_presenter.present_json(package)
+    render status: :ok, json: PackagePresenter.new(package).to_json
   end
 
   def destroy
@@ -105,7 +106,7 @@ class PackagesController < ApplicationController
 
     package = PackageCreate.new(current_user.guid, current_user_email).create(message)
 
-    render status: :created, json: PackagePresenter.new.present_json(package)
+    render status: :created, json: PackagePresenter.new(package).to_json
   rescue PackageCreate::InvalidPackage => e
     unprocessable!(e.message)
   end
@@ -121,7 +122,7 @@ class PackagesController < ApplicationController
 
     package = PackageCopy.new(current_user.guid, current_user_email).copy(params[:app_guid], source_package)
 
-    render status: :created, json: PackagePresenter.new.present_json(package)
+    render status: :created, json: PackagePresenter.new(package).to_json
   rescue PackageCopy::InvalidPackage => e
     unprocessable!(e.message)
   end
@@ -134,10 +135,6 @@ class PackagesController < ApplicationController
 
   def bits_already_uploaded!
     raise CloudController::Errors::ApiError.new_from_details('PackageBitsAlreadyUploaded')
-  end
-
-  def package_presenter
-    @package_presenter ||= PackagePresenter.new
   end
 
   def send_package_blob(package)
