@@ -63,7 +63,8 @@ module VCAP::CloudController
       private
 
       def stage_with_http(url, msg)
-        Dea::Client.stage(url, msg)
+        success = Dea::Client.stage(url, msg)
+        stage_with_nats(msg) unless success
       rescue => e
         @app.mark_as_failed_to_stage('StagingError')
         logger.error e.message
