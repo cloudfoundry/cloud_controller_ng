@@ -764,7 +764,7 @@ describe 'Apps' do
         },
         'environment_variables' => { 'cloud' => 'foundry' },
         'created_at'            => iso8601,
-        'updated_at'            => nil,
+        'updated_at'            => iso8601,
         'links'                 => {
           'self'                   => { 'href' => "/v3/droplets/#{guid}" },
           'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
@@ -793,7 +793,7 @@ describe 'Apps' do
     end
 
     it 'assigns the current droplet of the app' do
-      droplet = VCAP::CloudController::DropletModel.make(
+      droplet = VCAP::CloudController::DropletModel.make(:docker,
         app:           app_model,
         process_types: { web: 'rackup' },
         state:         VCAP::CloudController::DropletModel::STAGED_STATE,
@@ -821,7 +821,7 @@ describe 'Apps' do
         },
         'environment_variables' => {},
         'created_at'            => iso8601,
-        'updated_at'            => nil,
+        'updated_at'            => iso8601,
         'links'                 => {
           'self'                   => { 'href' => "/v3/droplets/#{droplet.guid}" },
           'package'                => { 'href' => "/v3/packages/#{droplet.package.guid}" },

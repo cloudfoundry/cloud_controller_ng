@@ -94,14 +94,16 @@ module VCAP::CloudController
         end
 
         context 'with an invalid staging guid' do
-          let(:task_id) { 'bogus-taskid' }
+          let(:staging_guid) { 'bogus-guid' }
 
           before do
             allow_any_instance_of(Diego::Runner).to receive(:start)
           end
 
-          it 'fails with a 400' do
+          it 'fails with a 404' do
             post url, MultiJson.dump(staging_response)
+
+            expect(last_response.status).to eq(404)
           end
         end
       end
@@ -229,17 +231,6 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(400)
             expect(last_response.body).to match /MessageParseError/
-          end
-        end
-
-        context 'with an invalid staging guid' do
-          let(:task_id) { 'bogus-taskid' }
-
-          it 'fails with a 400' do
-            post url, MultiJson.dump(staging_response)
-
-            expect(last_response.status).to eq(400)
-            expect(last_response.body).to match /InvalidRequest/
           end
         end
 

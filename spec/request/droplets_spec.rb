@@ -170,7 +170,7 @@ describe 'Droplets' do
         },
         'environment_variables' => { 'cloud' => 'foundry' },
         'created_at'            => iso8601,
-        'updated_at'            => nil,
+        'updated_at'            => iso8601,
         'links'                 => {
           'self'                   => { 'href' => "/v3/droplets/#{guid}" },
           'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
@@ -264,7 +264,7 @@ describe 'Droplets' do
             },
             'environment_variables' => {},
             'created_at'            => iso8601,
-            'updated_at'            => nil,
+            'updated_at'            => iso8601,
             'links'                 => {
               'self'                   => { 'href' => "/v3/droplets/#{droplet2.guid}" },
               'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
@@ -288,7 +288,7 @@ describe 'Droplets' do
             'result'                => nil,
             'environment_variables' => { 'yuu' => 'huuu' },
             'created_at'            => iso8601,
-            'updated_at'            => nil,
+            'updated_at'            => iso8601,
             'links'                 => {
               'self'                   => { 'href' => "/v3/droplets/#{droplet1.guid}" },
               'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
@@ -407,7 +407,7 @@ describe 'Droplets' do
             },
             'environment_variables' => {},
             'created_at'            => iso8601,
-            'updated_at'            => nil,
+            'updated_at'            => iso8601,
             'links'                 => {
               'self'                   => { 'href' => "/v3/droplets/#{droplet2.guid}" },
               'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
@@ -431,7 +431,7 @@ describe 'Droplets' do
             'result'                => nil,
             'environment_variables' => { 'yuu' => 'huuu' },
             'created_at'            => iso8601,
-            'updated_at'            => nil,
+            'updated_at'            => iso8601,
             'links'                 => {
               'self'                   => { 'href' => "/v3/droplets/#{droplet1.guid}" },
               'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },

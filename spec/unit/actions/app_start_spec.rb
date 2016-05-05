@@ -21,7 +21,7 @@ module VCAP::CloudController
 
       context 'when the app has a docker lifecycle' do
         let(:package) { PackageModel.make(:docker, package_hash: 'some-awesome-thing', state: PackageModel::READY_STATE) }
-        let(:droplet) { DropletModel.make(package_guid: package.guid, state: DropletModel::STAGED_STATE) }
+        let(:droplet) { DropletModel.make(:docker, package_guid: package.guid, state: DropletModel::STAGED_STATE, docker_receipt_image: package.docker_data.image) }
         let(:droplet_guid) { droplet.guid }
 
         before do

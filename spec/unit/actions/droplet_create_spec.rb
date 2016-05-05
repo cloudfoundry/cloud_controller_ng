@@ -79,17 +79,20 @@ module VCAP::CloudController
 
       context 'creating a droplet' do
         it 'creates a droplet' do
+          droplet = nil
+
           expect {
             droplet = action.create_and_stage(package, lifecycle, staging_message)
-            expect(droplet.state).to eq(DropletModel::PENDING_STATE)
-            expect(droplet.lifecycle_data.to_hash).to eq(lifecycle_data)
-            expect(droplet.package_guid).to eq(package.guid)
-            expect(droplet.app_guid).to eq(app.guid)
-            expect(droplet.memory_limit).to eq(calculated_mem_limit)
-            expect(droplet.disk_limit).to eq(calculated_disk_limit)
-            expect(droplet.environment_variables).to eq(environment_variables)
-            expect(droplet.lifecycle_data).to_not be_nil
           }.to change { DropletModel.count }.by(1)
+
+          expect(droplet.state).to eq(DropletModel::PENDING_STATE)
+          expect(droplet.lifecycle_data.to_hash).to eq(lifecycle_data)
+          expect(droplet.package_guid).to eq(package.guid)
+          expect(droplet.app_guid).to eq(app.guid)
+          expect(droplet.memory_limit).to eq(calculated_mem_limit)
+          expect(droplet.disk_limit).to eq(calculated_disk_limit)
+          expect(droplet.environment_variables).to eq(environment_variables)
+          expect(droplet.lifecycle_data).to_not be_nil
         end
       end
 
