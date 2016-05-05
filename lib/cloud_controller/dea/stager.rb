@@ -16,7 +16,9 @@ module VCAP::CloudController
       end
 
       def staging_complete(_, response)
-        stager_task.handle_http_response(response)
+        stager_task.handle_http_response(response) do |staging_result|
+          @runners.runner_for_app(@app).start(staging_result)
+        end
       end
 
       def stop_stage

@@ -215,15 +215,11 @@ module VCAP::CloudController
 
           context 'when callback is not nil' do
             before do
-              allow(Dea::Client).to receive(:enabled?).and_return(true)
               @callback_options = nil
-              staging_task.stage { |options| @callback_options = options }
-
-              expect(@callback_options).to be_nil
             end
 
             it 'calls provided callback' do
-              staging_task.handle_http_response(response)
+              staging_task.handle_http_response(response) { |options| @callback_options = options }
               expect(@callback_options[:started_instances]).to equal(1)
             end
           end
