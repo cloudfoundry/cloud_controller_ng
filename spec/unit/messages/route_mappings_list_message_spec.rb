@@ -6,10 +6,11 @@ module VCAP::CloudController
     describe '.from_params' do
       let(:params) do
         {
-          'page'      => 1,
-          'per_page'  => 5,
-          'app_guid'  => 'app-guid',
-          'app_guids' => 'guid1,guid2',
+          'page'        => 1,
+          'per_page'    => 5,
+          'order_by'    => 'phone',
+          'app_guid'    => 'app-guid',
+          'app_guids'   => 'guid1,guid2',
           'route_guids' => 'guid3,guid4'
         }
       end
@@ -20,6 +21,7 @@ module VCAP::CloudController
         expect(message).to be_a(RouteMappingsListMessage)
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
+        expect(message.order_by).to eq('phone')
         expect(message.app_guid).to eq('app-guid')
         expect(message.app_guids).to match_array(['guid1', 'guid2'])
         expect(message.route_guids).to match_array(['guid3', 'guid4'])
@@ -37,13 +39,11 @@ module VCAP::CloudController
     describe '#to_params_hash' do
       let(:opts) do
         {
-          page: 1,
-          per_page: 5,
-          app_guid: 'some-guid',
+          app_guid: 'yodawg',
         }
       end
 
-      it 'excludes the pagination keys and app_guid' do
+      it 'app_guid' do
         expected_params = []
         expect(RouteMappingsListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
       end
@@ -52,10 +52,11 @@ module VCAP::CloudController
     describe 'fields' do
       it 'accepts a set of fields' do
         message = RouteMappingsListMessage.new({
-          page:      1,
-          per_page:  5,
-          app_guid:  'app-guid',
-          app_guids: 'some-guid,other-guid',
+          page:        1,
+          per_page:    5,
+          order_by:    'created_at',
+          app_guid:    'app-guid',
+          app_guids:   'some-guid,other-guid',
           route_guids: 'guid-a,guid-b'
         })
         expect(message).to be_valid
