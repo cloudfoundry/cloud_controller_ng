@@ -33,7 +33,7 @@ message_bus_servers:
 <% end %>
 
 external_protocol: <%= p("cc.external_protocol") %>
-external_domain: <%= p("cc.external_host") %>.<%= p("domain") %>
+external_domain: <%= p("cc.external_host") %>.<%= p("system_domain") %>
 
 system_domain_organization: <%= p("system_domain_organization") %>
 system_domain: <%= p("system_domain") %>
@@ -154,14 +154,14 @@ db: &db
   log_level: <%= p("cc.db_logging_level") %>
 
 <% scheme = p("login.protocol")
-   domain = p("domain") %>
+   system_domain = p("system_domain") %>
 
 <% if p("login.enabled") %>
 login:
-  url: <%= p("login.url", "#{scheme}://login.#{domain}") %>
+  url: <%= p("login.url", "#{scheme}://login.#{system_domain}") %>
 <% end %>
 uaa:
-  url: <%= p("uaa.url", "#{scheme}://uaa.#{domain}") %>
+  url: <%= p("uaa.url", "#{scheme}://uaa.#{system_domain}") %>
   resource_id: <%= p("cc.uaa_resource_id") %>
   <% if_p("uaa.cc.token_secret") do |token_secret| %>
   symmetric_secret: "<%= token_secret %>"
@@ -169,7 +169,7 @@ uaa:
   verification_key: <%= p("uaa.jwt.verification_key") ? ("|\n      " + p("uaa.jwt.verification_key").gsub("\n", "\n      ")) : '~' %>
 
 hm9000:
-  url: <%= p("hm9000.url", "https://hm9000.#{domain}") %>
+  url: <%= p("hm9000.url", "https://hm9000.#{system_domain}") %>
 
 # App staging parameters
 staging:
