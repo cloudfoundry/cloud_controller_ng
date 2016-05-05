@@ -28,20 +28,20 @@ module VCAP::CloudController
     results = nil
 
     describe '#fetch_all' do
-      it 'returns a PaginatedResult' do
+      it 'returns a Sequel::Dataset' do
         results = fetcher.fetch_all(message: message)
-        expect(results).to be_a(PaginatedResult)
+        expect(results).to be_a(Sequel::Dataset)
       end
 
       it 'returns all of the tasks' do
-        results = fetcher.fetch_all(message: message).records
+        results = fetcher.fetch_all(message: message).all
 
         expect(results).to match_array([task_in_space1, task_for_app2, task2_in_space1, task_in_space2, failed_task_in_space2, task_in_org2])
       end
 
       describe 'filtering on message' do
         before do
-          results = fetcher.fetch_all(message: message).records
+          results = fetcher.fetch_all(message: message).all
         end
 
         context 'when task names are provided' do
@@ -95,13 +95,13 @@ module VCAP::CloudController
     end
 
     describe '#fetch_for_spaces' do
-      it 'returns a PaginatedResult' do
+      it 'returns a Sequel::Dataset' do
         results = fetcher.fetch_for_spaces(message: message, space_guids: [])
-        expect(results).to be_a(PaginatedResult)
+        expect(results).to be_a(Sequel::Dataset)
       end
 
       it 'only returns tasks in those spaces' do
-        results = fetcher.fetch_for_spaces(message: message, space_guids: [space1.guid, space2.guid]).records
+        results = fetcher.fetch_for_spaces(message: message, space_guids: [space1.guid, space2.guid]).all
 
         expect(results).to match_array([
           task_in_space1,
@@ -114,7 +114,7 @@ module VCAP::CloudController
 
       describe 'filtering on message' do
         before do
-          results = fetcher.fetch_for_spaces(message: message, space_guids: [space2.guid]).records
+          results = fetcher.fetch_for_spaces(message: message, space_guids: [space2.guid]).all
         end
 
         context 'when task names are provided' do
@@ -170,14 +170,14 @@ module VCAP::CloudController
     describe '#fetch_for_app' do
       let(:filters) { { app_guid: app_in_space1.guid } }
 
-      it 'returns a PaginatedResult' do
+      it 'returns a Sequel::Dataset' do
         _app, results = fetcher.fetch_for_app(message: message)
-        expect(results).to be_a(PaginatedResult)
+        expect(results).to be_a(Sequel::Dataset)
       end
 
       it 'only returns tasks for that app' do
         _app, results = fetcher.fetch_for_app(message: message)
-        expect(results.records).to match_array([task_in_space1, task2_in_space1])
+        expect(results.all).to match_array([task_in_space1, task2_in_space1])
       end
 
       it 'returns the app' do
@@ -204,7 +204,7 @@ module VCAP::CloudController
           let(:filters) { { names: [task_in_space1.name, task_in_space2.name], app_guid: app_in_space1.guid } }
 
           it 'returns the correct set of tasks' do
-            expect(results.records).to match_array([task_in_space1])
+            expect(results.all).to match_array([task_in_space1])
           end
         end
 
@@ -212,7 +212,7 @@ module VCAP::CloudController
           let(:filters) { { states: ['FAILED'], app_guid: app_in_space1.guid } }
 
           it 'returns the correct set of tasks' do
-            expect(results.records).to match_array([])
+            expect(results.all).to match_array([])
           end
         end
 
@@ -220,7 +220,7 @@ module VCAP::CloudController
           let(:filters) { { guids: [task_in_space1.guid, task_in_space2.guid], app_guid: app_in_space1.guid } }
 
           it 'returns the correct set of tasks' do
-            expect(results.records).to match_array([task_in_space1])
+            expect(results.all).to match_array([task_in_space1])
           end
         end
 
@@ -228,7 +228,7 @@ module VCAP::CloudController
           let(:filters) { { space_guids: [space2.guid], app_guid: app_in_space1.guid } }
 
           it 'returns the correct set of tasks' do
-            expect(results.records).to match_array([])
+            expect(results.all).to match_array([])
           end
         end
 
@@ -236,7 +236,7 @@ module VCAP::CloudController
           let(:filters) { { organization_guids: [org2.guid], app_guid: app_in_space1.guid } }
 
           it 'returns the correct set of tasks' do
-            expect(results.records).to match_array([])
+            expect(results.all).to match_array([])
           end
         end
       end

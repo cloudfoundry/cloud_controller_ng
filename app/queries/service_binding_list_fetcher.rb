@@ -8,19 +8,15 @@ module VCAP::CloudController
       dataset = ServiceBindingModel.select_all(:v3_service_bindings).
                 join(:service_instances, id: :service_instance_id).
                 join(:spaces, id: :space_id, guid: space_guids)
-      paginate(filter(dataset))
+      filter(dataset)
     end
 
     def fetch_all
       dataset = ServiceBindingModel.dataset
-      paginate(filter(dataset))
+      filter(dataset)
     end
 
     private
-
-    def paginate(dataset)
-      SequelPaginator.new.get_page(dataset, @message.pagination_options)
-    end
 
     def filter(dataset)
       if @message.requested?(:app_guids)

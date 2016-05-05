@@ -13,7 +13,7 @@ module VCAP::CloudController
     end
 
     def to_param_hash
-      super(exclude: [:page, :per_page, :order_by])
+      {}
     end
 
     def self.from_params(params)

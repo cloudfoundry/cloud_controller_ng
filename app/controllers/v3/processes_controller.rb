@@ -19,20 +19,18 @@ class ProcessesController < ApplicationController
     message = ProcessesListMessage.from_params(app_subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    list_fetcher = ProcessListFetcher.new(message)
-
     if app_nested?
-      app, paginated_result = list_fetcher.fetch_for_app
+      app, dataset = ProcessListFetcher.new(message).fetch_for_app
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
-      paginated_result = if roles.admin?
-                           list_fetcher.fetch_all
-                         else
-                           list_fetcher.fetch_for_spaces(space_guids: readable_space_guids)
-                         end
+      dataset = if roles.admin?
+                  ProcessListFetcher.new(message).fetch_all
+                else
+                  ProcessListFetcher.new(message).fetch_for_spaces(space_guids: readable_space_guids)
+                end
     end
 
-    render status: :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'processes'), message)
+    render status: :ok, json: PaginatedListPresenter.new(dataset, base_url(resource: 'processes'), message)
   end
 
   def show

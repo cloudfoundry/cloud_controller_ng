@@ -13,13 +13,13 @@ module VCAP::CloudController
       let!(:web2) { App.make(type: 'web') }
       let!(:worker) { App.make(type: 'worker') }
 
-      it 'returns a PaginatedResult' do
+      it 'returns a Sequel::Dataset' do
         results = fetcher.fetch_all
-        expect(results).to be_a(PaginatedResult)
+        expect(results).to be_a(Sequel::Dataset)
       end
 
       it 'returns all of the processes' do
-        results = fetcher.fetch_all.records
+        results = fetcher.fetch_all.all
         expect(results).to match_array([web, web2, worker])
       end
 
@@ -28,7 +28,7 @@ module VCAP::CloudController
           let(:filters) { { types: ['web'] } }
 
           it 'only returns matching processes' do
-            results = fetcher.fetch_all.records
+            results = fetcher.fetch_all.all
             expect(results).to match_array([web, web2])
           end
         end
@@ -37,7 +37,7 @@ module VCAP::CloudController
           let(:filters) { { space_guids: [web.space.guid] } }
 
           it 'only returns matching processes' do
-            results = fetcher.fetch_all.records
+            results = fetcher.fetch_all.all
             expect(results).to match_array([web])
           end
         end
@@ -46,7 +46,7 @@ module VCAP::CloudController
           let(:filters) { { organization_guids: [web.space.organization.guid] } }
 
           it 'only returns matching processes' do
-            results = fetcher.fetch_all.records
+            results = fetcher.fetch_all.all
             expect(results).to match_array([web])
           end
         end
@@ -57,7 +57,7 @@ module VCAP::CloudController
           let(:filters) { { app_guids: [desired_app.guid] } }
 
           it 'only returns matching processes' do
-            results = fetcher.fetch_all.records
+            results = fetcher.fetch_all.all
             expect(results).to match_array([desired_process])
           end
         end
@@ -66,7 +66,7 @@ module VCAP::CloudController
           let(:filters) { { guids: [web.guid, web2.guid] } }
 
           it 'returns the matching processes' do
-            results = fetcher.fetch_all.records
+            results = fetcher.fetch_all.all
             expect(results).to match_array([web, web2])
           end
         end
@@ -82,13 +82,13 @@ module VCAP::CloudController
 
       before { App.make }
 
-      it 'returns a PaginatedResult' do
+      it 'returns a Sequel::Dataset' do
         results = fetcher.fetch_for_spaces(space_guids: [])
-        expect(results).to be_a(PaginatedResult)
+        expect(results).to be_a(Sequel::Dataset)
       end
 
       it 'returns only the processes in spaces requested' do
-        results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid]).records
+        results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid]).all
         expect(results).to match_array([process_in_space1, process2_in_space1, process_in_space2])
       end
 
@@ -96,7 +96,7 @@ module VCAP::CloudController
         let(:filters) { { space_guids: [space1.guid] } }
 
         it 'only returns matching processes' do
-          results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid]).records
+          results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid]).all
           expect(results).to match_array([process_in_space1, process2_in_space1])
         end
       end
@@ -106,10 +106,10 @@ module VCAP::CloudController
       let(:app) { AppModel.make }
       let(:filters) { { app_guid: app.guid } }
 
-      it 'returns a PaginatedResult and the app' do
+      it 'returns a Sequel::Dataset and the app' do
         returned_app, results = fetcher.fetch_for_app
         expect(returned_app.guid).to eq(app.guid)
-        expect(results).to be_a(PaginatedResult)
+        expect(results).to be_a(Sequel::Dataset)
       end
 
       it 'returns the processes for the app' do
@@ -118,7 +118,7 @@ module VCAP::CloudController
         App.make
 
         _app, results = fetcher.fetch_for_app
-        expect(results.records).to match_array([process1, process2])
+        expect(results.all).to match_array([process1, process2])
       end
 
       context 'when the app does not exist' do

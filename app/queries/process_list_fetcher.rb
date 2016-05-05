@@ -6,30 +6,22 @@ module VCAP::CloudController
 
     def fetch_all
       dataset = ProcessModel.select_all(:apps)
-      dataset = filter(dataset)
-      paginate(dataset)
+      filter(dataset)
     end
 
     def fetch_for_spaces(space_guids:)
       dataset = join_spaces_if_necessary(ProcessModel.select_all(:apps), space_guids)
-      dataset = filter(dataset)
-      paginate(dataset)
+      filter(dataset)
     end
 
     def fetch_for_app
       app = AppModel.where(guid: @message.app_guid).eager(:space, :organization).all.first
       return nil unless app
       dataset = app.processes_dataset
-      dataset = filter(dataset)
-      [app, paginate(dataset)]
+      [app, filter(dataset)]
     end
 
     private
-
-    def paginate(dataset)
-      dataset = dataset.eager(:space)
-      SequelPaginator.new.get_page(dataset, @message.pagination_options)
-    end
 
     def filter(dataset)
       dataset = dataset.where(type: @message.types) if @message.requested?(:types)
@@ -51,7 +43,7 @@ module VCAP::CloudController
         dataset = dataset.where(apps__guid: @message.guids)
       end
 
-      dataset
+      dataset.eager(:space)
     end
 
     def join_spaces_if_necessary(dataset, space_guids)

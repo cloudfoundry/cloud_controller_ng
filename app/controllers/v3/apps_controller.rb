@@ -21,17 +21,15 @@ class AppsV3Controller < ApplicationController
   def index
     message = AppsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
+    invalid_param!(message.pagination_options.errors.full_messages) unless message.pagination_options.valid?
 
-    pagination_options = PaginationOptions.from_params(query_params)
-    invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
+    dataset = if roles.admin?
+                AppListFetcher.new.fetch_all(message)
+              else
+                AppListFetcher.new.fetch(message, readable_space_guids)
+              end
 
-    paginated_result = if roles.admin?
-                         AppListFetcher.new.fetch_all(pagination_options, message)
-                       else
-                         AppListFetcher.new.fetch(pagination_options, message, readable_space_guids)
-                       end
-
-    render status: :ok, json: PaginatedListPresenter.new(paginated_result, '/v3/apps', message)
+    render status: :ok, json: PaginatedListPresenter.new(dataset, '/v3/apps', message)
   end
 
   def show

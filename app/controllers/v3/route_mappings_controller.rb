@@ -16,17 +16,17 @@ class RouteMappingsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
-      app, paginated_result = list_fetcher.fetch_for_app(app_guid: params[:app_guid], message: message)
+      app, dataset = RouteMappingListFetcher.new.fetch_for_app(app_guid: params[:app_guid])
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
-      paginated_result = if roles.admin?
-                           list_fetcher.fetch_all(message: message)
-                         else
-                           list_fetcher.fetch_for_spaces(message: message, space_guids: readable_space_guids)
-                         end
+      dataset = if roles.admin?
+                  RouteMappingListFetcher.new.fetch_all
+                else
+                  RouteMappingListFetcher.new.fetch_for_spaces(space_guids: readable_space_guids)
+                end
     end
 
-    render :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'route_mappings'))
+    render :ok, json: PaginatedListPresenter.new(dataset, base_url(resource: 'route_mappings'), message)
   end
 
   def create
@@ -76,9 +76,5 @@ class RouteMappingsController < ApplicationController
 
   def route_not_found!
     resource_not_found!(:route)
-  end
-
-  def list_fetcher
-    RouteMappingListFetcher.new
   end
 end

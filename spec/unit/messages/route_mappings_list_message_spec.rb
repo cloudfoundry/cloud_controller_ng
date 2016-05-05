@@ -32,14 +32,15 @@ module VCAP::CloudController
     describe '#to_params_hash' do
       let(:opts) do
         {
-          page:      1,
-          per_page:  5,
+          page: 1,
+          per_page: 5,
+          app_guid: 'some-guid',
+          spiders: 200
         }
       end
 
-      it 'excludes the pagination keys' do
-        expected_params = []
-        expect(RouteMappingsListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
+      it 'is an empty hash' do
+        expect(RouteMappingsListMessage.new(opts).to_param_hash).to eq({})
       end
     end
 
@@ -59,7 +60,7 @@ module VCAP::CloudController
       end
 
       it 'does not accept a field not in this set' do
-        message = RouteMappingsListMessage.new({ foobar: 'pants' })
+        message = RouteMappingsListMessage.new(foobar: 'pants')
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")

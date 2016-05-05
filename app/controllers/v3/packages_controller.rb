@@ -20,17 +20,17 @@ class PackagesController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
-      app, paginated_result = list_fetcher.fetch_for_app(message: message)
+      app, dataset = PackageListFetcher.new.fetch_for_app(message: message)
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
-      paginated_result = if roles.admin?
-                           list_fetcher.fetch_all(message: message)
-                         else
-                           list_fetcher.fetch_for_spaces(message: message, space_guids: readable_space_guids)
-                         end
+      dataset = if roles.admin?
+                  PackageListFetcher.new.fetch_all(message: message)
+                else
+                  PackageListFetcher.new.fetch_for_spaces(message: message, space_guids: readable_space_guids)
+                end
     end
 
-    render status: :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'packages'), message)
+    render status: :ok, json: PaginatedListPresenter.new(dataset, base_url(resource: 'packages'), message)
   end
 
   def upload
@@ -140,9 +140,5 @@ class PackagesController < ApplicationController
   def send_package_blob(package)
     package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
     BlobDispatcher.new(blobstore: package_blobstore, controller: self).send_or_redirect(guid: package.guid)
-  end
-
-  def list_fetcher
-    PackageListFetcher.new
   end
 end

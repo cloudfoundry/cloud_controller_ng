@@ -17,17 +17,17 @@ class TasksController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
-      app, paginated_result = list_fetcher.fetch_for_app(message: message)
+      app, dataset = TaskListFetcher.new.fetch_for_app(message: message)
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
-      paginated_result = if roles.admin?
-                           list_fetcher.fetch_all(message: message)
-                         else
-                           list_fetcher.fetch_for_spaces(message: message, space_guids: readable_space_guids)
-                         end
+      dataset = if roles.admin?
+                  TaskListFetcher.new.fetch_all(message: message)
+                else
+                  TaskListFetcher.new.fetch_for_spaces(message: message, space_guids: readable_space_guids)
+                end
     end
 
-    render :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'tasks'), message)
+    render :ok, json: PaginatedListPresenter.new(dataset, base_url(resource: 'tasks'), message)
   end
 
   def create
@@ -89,9 +89,5 @@ class TasksController < ApplicationController
 
   def droplet_not_found!
     resource_not_found!(:droplet)
-  end
-
-  def list_fetcher
-    @list_fetcher ||= TaskListFetcher.new
   end
 end

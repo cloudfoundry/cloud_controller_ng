@@ -2,13 +2,13 @@ module VCAP::CloudController
   class PackageListFetcher
     def fetch_all(message:)
       app_dataset = AppModel.select(:id)
-      filtered_paginator(message, app_dataset)
+      filter(message, app_dataset)
     end
 
     def fetch_for_spaces(message:, space_guids:)
       app_dataset = AppModel.select(:id).where(space_guid: space_guids)
 
-      filtered_paginator(message, app_dataset)
+      filter(message, app_dataset)
     end
 
     def fetch_for_app(message:)
@@ -16,15 +16,14 @@ module VCAP::CloudController
       app = app_dataset.first
       return nil unless app
 
-      [app, filtered_paginator(message, app_dataset)]
+      [app, filter(message, app_dataset)]
     end
 
     private
 
-    def filtered_paginator(message, dataset)
+    def filter(message, dataset)
       package_dataset = PackageModel.dataset.eager(:docker_data)
-      filtered_dataset = filter_package_dataset(message, package_dataset).where(app: filter_app_dataset(message, dataset))
-      SequelPaginator.new.get_page(filtered_dataset, message.pagination_options)
+      filter_package_dataset(message, package_dataset).where(app: filter_app_dataset(message, dataset))
     end
 
     def filter_package_dataset(message, package_dataset)

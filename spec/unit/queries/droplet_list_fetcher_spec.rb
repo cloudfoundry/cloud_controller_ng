@@ -17,13 +17,13 @@ module VCAP::CloudController
       let(:app2) { AppModel.make }
       let!(:pending_droplet_for_app2) { DropletModel.make(app_guid: app2.guid, state: DropletModel::PENDING_STATE) }
 
-      it 'returns a PaginatedResult' do
+      it 'returns a Sequel::Dataset' do
         results = fetcher.fetch_all(message: message)
-        expect(results).to be_a(PaginatedResult)
+        expect(results).to be_a(Sequel::Dataset)
       end
 
       it 'returns all of the droplets' do
-        results = fetcher.fetch_all(message: message).records
+        results = fetcher.fetch_all(message: message).all
         expect(results).to match_array([staged_droplet_for_app1, failed_droplet_for_app1, pending_droplet_for_app2])
       end
 
@@ -31,7 +31,7 @@ module VCAP::CloudController
         let(:filters) { { app_guids: [app1.guid] } }
 
         it 'returns all of the droplets with the requested app guids' do
-          results = fetcher.fetch_all(message: message).records
+          results = fetcher.fetch_all(message: message).all
           expect(results).to match_array([staged_droplet_for_app1, failed_droplet_for_app1])
         end
       end
@@ -41,7 +41,7 @@ module VCAP::CloudController
         let!(:pending_droplet_for_other_app) { DropletModel.make(state: DropletModel::PENDING_STATE) }
 
         it 'returns all of the droplets with the requested states' do
-          results = fetcher.fetch_all(message: message).records
+          results = fetcher.fetch_all(message: message).all
           expect(results).to match_array([staged_droplet_for_app1, pending_droplet_for_app2, pending_droplet_for_other_app])
         end
       end
@@ -63,13 +63,13 @@ module VCAP::CloudController
 
       let(:space_guids) { [space1.guid, space2.guid] }
 
-      it 'returns a PaginatedResult' do
+      it 'returns a Sequel::Dataset' do
         results = fetcher.fetch_for_spaces(space_guids: space_guids, message: message)
-        expect(results).to be_a(PaginatedResult)
+        expect(results).to be_a(Sequel::Dataset)
       end
 
       it 'returns all of the desired droplets in the requested spaces' do
-        results = fetcher.fetch_for_spaces(space_guids: space_guids, message: message).records
+        results = fetcher.fetch_for_spaces(space_guids: space_guids, message: message).all
         expect(results).to match_array([staged_droplet_for_app1, failed_droplet_for_app1, pending_droplet_for_app2])
       end
 
@@ -78,7 +78,7 @@ module VCAP::CloudController
         let(:space_guids) { [space1.guid, space2.guid, space3.guid] }
 
         it 'returns all of the desired droplets for the requested app guids' do
-          results = fetcher.fetch_for_spaces(space_guids: space_guids, message: message).records
+          results = fetcher.fetch_for_spaces(space_guids: space_guids, message: message).all
           expect(results).to match_array([pending_droplet_for_app2, pending_droplet_for_app3])
         end
       end
@@ -88,7 +88,7 @@ module VCAP::CloudController
         let(:space_guids) { [space1.guid, space2.guid, space3.guid] }
 
         it 'returns all of the desired droplets with the requested droplet states' do
-          results = fetcher.fetch_for_spaces(space_guids: space_guids, message: message).records
+          results = fetcher.fetch_for_spaces(space_guids: space_guids, message: message).all
           expect(results).to match_array([failed_droplet_for_app1, pending_droplet_for_app2, pending_droplet_for_app3])
         end
       end
@@ -100,9 +100,9 @@ module VCAP::CloudController
       let!(:failed_droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::FAILED_STATE) }
       let(:filters) { { app_guid: app.guid } }
 
-      it 'returns a PaginatedResult' do
+      it 'returns a Sequel::Dataset' do
         _app, results = fetcher.fetch_for_app(message: message)
-        expect(results).to be_a(PaginatedResult)
+        expect(results).to be_a(Sequel::Dataset)
       end
 
       it 'returns the app' do
@@ -112,7 +112,7 @@ module VCAP::CloudController
 
       it 'returns all of the desired droplets for the requested app' do
         _app, results = fetcher.fetch_for_app(message: message)
-        expect(results.records).to match_array([staged_droplet, failed_droplet])
+        expect(results.all).to match_array([staged_droplet, failed_droplet])
       end
 
       context 'when app does not exist' do
@@ -130,7 +130,7 @@ module VCAP::CloudController
 
         it 'returns all of the desired droplets with the requested droplet states' do
           _app, results = fetcher.fetch_for_app(message: message)
-          expect(results.records).to match_array([failed_droplet])
+          expect(results.all).to match_array([failed_droplet])
         end
       end
     end
