@@ -53,7 +53,7 @@ module VCAP::CloudController
       def handle_http_response(response)
         check_staging_failed!
         check_staging_error!(response)
-        process_response(response)
+        process_http_response(response)
       rescue => e
         Loggregator.emit_error(@app.guid, "Encountered error: #{e.message}")
         logger.error "Encountered error on stager with id #{@stager_id}: #{e}\n#{e.backtrace.join("\n")}"
@@ -111,21 +111,36 @@ module VCAP::CloudController
         ensure_staging_is_current!
         check_staging_failed!
         check_staging_error!(response)
-        process_response(response)
+        process_nats_response(response)
       rescue => e
         Loggregator.emit_error(@app.guid, "encountered error: #{e.message}")
         logger.error "Encountered error on stager with id #{@stager_id}: #{e}\n#{e.backtrace.join("\n")}"
       end
 
-      def process_response(response)
+      def process_nats_response(response)
         # Defer potentially expensive operation
         # to avoid executing on reactor thread
         EM.defer do
           begin
-            staging_completion(StagingResponse.new(response))
+            staging_nats_completion(StagingResponse.new(response))
           rescue => e
             Loggregator.emit_error(@app.guid, "Encountered error: #{e.message}")
             logger.error "Encountered error on stager with id #{@stager_id}: #{e}\n#{e.backtrace.join("\n")}"
+          end
+        end
+      end
+
+      def process_http_response(response)
+        # Defer potentially expensive operation
+        # to avoid executing on reactor thread
+        EM.defer do
+          staging_response = StagingResponse.new(response)
+
+          begin
+            staging_http_completion(staging_response)
+          rescue => e
+            Loggregator.emit_error(@app.guid, "Encountered error: #{e.message}")
+            logger.error "Encountered error on stager with id #{staging_response.dea_id}: #{e}\n#{e.backtrace.join("\n")}"
           end
         end
       end
@@ -187,16 +202,29 @@ module VCAP::CloudController
       end
 
       def staging_completion(stager_response)
-        instance_was_started_by_dea = !!stager_response.droplet_hash
         @app.db.transaction do
           @app.lock!
           @app.mark_as_staged
           @app.update_detected_buildpack(stager_response.detected_buildpack, stager_response.buildpack_key)
           @app.current_droplet.update_detected_start_command(stager_response.detected_start_command) if @app.current_droplet
         end
+      end
+
+      def staging_nats_completion(stager_response)
+        instance_was_started_by_dea = !!stager_response.droplet_hash
+
+        staging_completion(stager_response)
 
         @dea_pool.mark_app_started(dea_id: @stager_id, app_id: @app.guid) if instance_was_started_by_dea
+        @completion_callback.call(started_instances: instance_was_started_by_dea ? 1 : 0) if @completion_callback
+      end
 
+      def staging_http_completion(stager_response)
+        instance_was_started_by_dea = !!stager_response.droplet_hash
+
+        staging_completion(stager_response)
+
+        @dea_pool.mark_app_started(dea_id: stager_response.dea_id, app_id: @app.guid) if instance_was_started_by_dea
         @completion_callback.call(started_instances: instance_was_started_by_dea ? 1 : 0) if @completion_callback
       end
 

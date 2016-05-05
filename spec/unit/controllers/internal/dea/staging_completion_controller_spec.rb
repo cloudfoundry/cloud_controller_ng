@@ -12,6 +12,7 @@ module VCAP::CloudController
       let(:start_command) { '/usr/bin/letsparty' }
       let(:procfile) { '/path/to/procfile' }
       let(:staging_error) { nil }
+      let(:dea_id) { 'dea_id' }
 
       let(:staging_response) do
         {
@@ -21,10 +22,11 @@ module VCAP::CloudController
           'droplet_sha1' => droplet_sha1,
           'detected_start_command' => start_command,
           'procfile' => procfile,
-          'error' => staging_error
+          'error' => staging_error,
+          'dea_id' => dea_id,
         }
       end
-      #
+
       def make_dea_app(package_state, app_state)
         AppFactory.make.tap do |app|
           app.package_state = package_state
@@ -33,7 +35,7 @@ module VCAP::CloudController
           app.save
         end
       end
-      #
+
       let(:v2_app) { make_dea_app('PENDING', 'STOPPED') }
       let(:app_guid) { v2_app.guid }
       let(:task_id) { v2_app.staging_task_id }

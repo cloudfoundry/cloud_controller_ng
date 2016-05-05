@@ -118,7 +118,7 @@ module VCAP::CloudController
     end
 
     describe '#handle_http_response' do
-      let(:response) { reply_json }
+      let(:response) { reply_json.merge({ 'dea_id' => dea_advertisement.dea_id }) }
 
       before do
         allow(Dea::Client).to receive(:enabled?).and_return(true)
@@ -209,7 +209,7 @@ module VCAP::CloudController
           end
 
           it 'marks app started in dea pool' do
-            expect(dea_pool).to receive(:mark_app_started).with({ dea_id: stager_id, app_id: app.guid })
+            expect(dea_pool).to receive(:mark_app_started).with({ dea_id: dea_advertisement.dea_id, app_id: app.guid })
             staging_task.handle_http_response(response)
           end
 
