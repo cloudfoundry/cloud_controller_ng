@@ -129,11 +129,11 @@ module VCAP::CloudController
       end
     end
 
-    describe '#to_json' do
+    describe '#to_hash' do
       let(:stats_for_process) { {} }
       it 'maps the content of #present_stats_hash to :resources' do
         allow(presenter).to receive(:present_stats_hash).and_return({ a: 1, b: 2 })
-        expect(MultiJson.load(presenter.to_json)).to eq({ 'resources' => { 'a' => 1, 'b' => 2 } })
+        expect(presenter.to_hash).to eq(resources: { a: 1, b: 2 })
       end
     end
   end

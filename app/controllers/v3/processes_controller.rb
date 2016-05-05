@@ -32,7 +32,7 @@ class ProcessesController < ApplicationController
                          end
     end
 
-    render status: :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'processes'), message).to_json
+    render status: :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'processes'), message)
   end
 
   def show
@@ -45,7 +45,7 @@ class ProcessesController < ApplicationController
       process_not_found! unless process && can_read?(space.guid, org.guid)
     end
 
-    render status: :ok, json: ProcessPresenter.new(process, base_process_url).to_json
+    render status: :ok, json: ProcessPresenter.new(process, base_process_url)
   end
 
   def update
@@ -59,7 +59,7 @@ class ProcessesController < ApplicationController
 
     ProcessUpdate.new(current_user.guid, current_user_email).update(process, message)
 
-    render status: :ok, json: ProcessPresenter.new(process, base_process_url).to_json
+    render status: :ok, json: ProcessPresenter.new(process, base_process_url)
   rescue ProcessUpdate::InvalidProcess => e
     unprocessable!(e.message)
   end
@@ -102,7 +102,7 @@ class ProcessesController < ApplicationController
 
     ProcessScale.new(current_user, current_user_email, process, message).scale
 
-    render status: :accepted, json: ProcessPresenter.new(process, base_process_url).to_json
+    render status: :accepted, json: ProcessPresenter.new(process, base_process_url)
   rescue ProcessScale::InvalidProcess => e
     unprocessable!(e.message)
   end
@@ -119,7 +119,7 @@ class ProcessesController < ApplicationController
 
     process_stats = instances_reporters.stats_for_app(process)
 
-    render status: :ok, json: ProcessStatsPresenter.new(process.type, process_stats).to_json
+    render status: :ok, json: ProcessStatsPresenter.new(process.type, process_stats)
   end
 
   private

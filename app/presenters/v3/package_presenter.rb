@@ -18,10 +18,6 @@ module VCAP::CloudController
       }
     end
 
-    def to_json
-      MultiJson.dump(to_hash, pretty: true)
-    end
-
     private
 
     DEFAULT_HASHING_ALGORITHM = 'sha1'.freeze

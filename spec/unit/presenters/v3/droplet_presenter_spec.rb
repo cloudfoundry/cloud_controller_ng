@@ -18,6 +18,8 @@ module VCAP::CloudController
     end
 
     describe '#to_json' do
+      let(:result) { DropletPresenter.new(droplet).to_hash }
+
       context 'buildpack lifecycle' do
         before do
           droplet.lifecycle_data.buildpack = 'the-happiest-buildpack'
@@ -27,30 +29,27 @@ module VCAP::CloudController
           droplet.save
         end
 
-        it 'presents the droplet as json' do
-          json_result = DropletPresenter.new(droplet).to_json
-          result      = MultiJson.load(json_result)
+        it 'presents the droplet as a hash' do
+          expect(result[:guid]).to eq(droplet.guid)
+          expect(result[:state]).to eq(droplet.state)
+          expect(result[:error]).to eq(droplet.error)
 
-          expect(result['guid']).to eq(droplet.guid)
-          expect(result['state']).to eq(droplet.state)
-          expect(result['error']).to eq(droplet.error)
+          expect(result[:lifecycle][:type]).to eq('buildpack')
+          expect(result[:lifecycle][:data]['stack']).to eq('the-happiest-stack')
+          expect(result[:lifecycle][:data]['buildpack']).to eq('the-happiest-buildpack')
+          expect(result[:environment_variables]).to eq(droplet.environment_variables)
+          expect(result[:memory_limit]).to eq(234)
+          expect(result[:disk_limit]).to eq(934)
 
-          expect(result['lifecycle']['type']).to eq('buildpack')
-          expect(result['lifecycle']['data']['stack']).to eq('the-happiest-stack')
-          expect(result['lifecycle']['data']['buildpack']).to eq('the-happiest-buildpack')
-          expect(result['environment_variables']).to eq(droplet.environment_variables)
-          expect(result['memory_limit']).to eq(234)
-          expect(result['disk_limit']).to eq(934)
-
-          expect(result['created_at']).to match(iso8601)
-          expect(result['updated_at']).to match(iso8601)
-          expect(result['links']).to include('self')
-          expect(result['links']['self']['href']).to eq("/v3/droplets/#{droplet.guid}")
-          expect(result['links']).to include('package')
-          expect(result['links']['package']['href']).to eq("/v3/packages/#{droplet.package_guid}")
-          expect(result['links']['app']['href']).to eq("/v3/apps/#{droplet.app_guid}")
-          expect(result['links']['assign_current_droplet']['href']).to eq("/v3/apps/#{droplet.app_guid}/droplets/current")
-          expect(result['links']['assign_current_droplet']['method']).to eq('PUT')
+          expect(result[:created_at]).to be_a(Time)
+          expect(result[:updated_at]).to be_a(Time)
+          expect(result[:links]).to include(:self)
+          expect(result[:links][:self][:href]).to eq("/v3/droplets/#{droplet.guid}")
+          expect(result[:links]).to include(:package)
+          expect(result[:links][:package][:href]).to eq("/v3/packages/#{droplet.package_guid}")
+          expect(result[:links][:app][:href]).to eq("/v3/apps/#{droplet.app_guid}")
+          expect(result[:links][:assign_current_droplet][:href]).to eq("/v3/apps/#{droplet.app_guid}/droplets/current")
+          expect(result[:links][:assign_current_droplet][:method]).to eq('PUT')
         end
 
         describe 'result' do
@@ -61,11 +60,8 @@ module VCAP::CloudController
             end
 
             it 'returns the result' do
-              json_result = DropletPresenter.new(droplet).to_json
-              result      = MultiJson.load(json_result)
-
-              expect(result['result']['process_types']).to eq({ 'web' => 'npm start', 'worker' => 'start worker' })
-              expect(result['result']['execution_metadata']).to eq('black-box-string')
+              expect(result[:result][:process_types]).to eq({ 'web' => 'npm start', 'worker' => 'start worker' })
+              expect(result[:result][:execution_metadata]).to eq('black-box-string')
             end
           end
 
@@ -76,20 +72,14 @@ module VCAP::CloudController
             end
 
             it 'returns nil for the result' do
-              json_result = DropletPresenter.new(droplet).to_json
-              result      = MultiJson.load(json_result)
-
-              expect(result['result']).to be_nil
+              expect(result[:result]).to be_nil
             end
           end
 
           it 'has the correct result' do
-            json_result = DropletPresenter.new(droplet).to_json
-            result      = MultiJson.load(json_result)
-
-            expect(result['result']['hash']).to eq({ 'type' => 'sha1', 'value' => nil })
-            expect(result['result']['buildpack']).to eq('the-happiest-buildpack')
-            expect(result['result']['stack']).to eq('the-happiest-stack')
+            expect(result[:result][:hash]).to eq(type: 'sha1', value: nil)
+            expect(result[:result][:buildpack]).to eq('the-happiest-buildpack')
+            expect(result[:result][:stack]).to eq('the-happiest-stack')
           end
 
           describe 'links' do
@@ -97,10 +87,7 @@ module VCAP::CloudController
               let(:droplet) { DropletModel.make(:buildpack, buildpack_receipt_buildpack_guid: 'some-guid') }
 
               it 'links to the buildpack' do
-                json_result = DropletPresenter.new(droplet).to_json
-                result      = MultiJson.load(json_result)
-
-                expect(result['links']['buildpack']['href']).to eq('/v2/buildpacks/some-guid')
+                expect(result[:links][:buildpack][:href]).to eq('/v2/buildpacks/some-guid')
               end
             end
 
@@ -108,10 +95,7 @@ module VCAP::CloudController
               let(:droplet) { DropletModel.make(:buildpack) }
 
               it 'links to nil' do
-                json_result = DropletPresenter.new(droplet).to_json
-                result      = MultiJson.load(json_result)
-
-                expect(result['links']['buildpack']).to be_nil
+                expect(result[:links][:buildpack]).to be_nil
               end
             end
 
@@ -119,10 +103,7 @@ module VCAP::CloudController
               let(:droplet) { DropletModel.make(:buildpack, package_guid: nil) }
 
               it 'links to nil' do
-                json_result = DropletPresenter.new(droplet).to_json
-                result      = MultiJson.load(json_result)
-
-                expect(result['links']['package']).to be nil
+                expect(result[:links][:package]).to be nil
               end
             end
           end
@@ -143,10 +124,7 @@ module VCAP::CloudController
         end
 
         it 'has the correct result' do
-          json_result = DropletPresenter.new(droplet).to_json
-          result      = MultiJson.load(json_result)
-
-          expect(result['result']['image']).to eq('test-image')
+          expect(result[:result][:image]).to eq('test-image')
         end
       end
     end

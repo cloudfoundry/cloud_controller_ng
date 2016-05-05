@@ -149,7 +149,7 @@ class AppsV3Controller < ApplicationController
 
     SetCurrentDroplet.new(current_user, current_user_email).update_to(app, droplet)
 
-    render status: :ok, json: DropletPresenter.new(droplet).to_json
+    render status: :ok, json: DropletPresenter.new(droplet)
   rescue SetCurrentDroplet::InvalidApp => e
     unprocessable!(e.message)
   end
@@ -160,7 +160,7 @@ class AppsV3Controller < ApplicationController
     droplet = DropletModel.where(guid: app.droplet_guid).eager(:space, space: :organization).all.first
 
     droplet_not_found! unless droplet
-    render status: :ok, json: DropletPresenter.new(droplet).to_json
+    render status: :ok, json: DropletPresenter.new(droplet)
   end
 
   private

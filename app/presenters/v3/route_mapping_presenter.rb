@@ -17,10 +17,6 @@ module VCAP::CloudController
       }
     end
 
-    def to_json
-      MultiJson.dump(to_hash, pretty: true)
-    end
-
     private
 
     def build_links

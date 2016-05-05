@@ -2,6 +2,7 @@ require 'presenters/v3/droplet_presenter'
 require 'presenters/v3/package_presenter'
 require 'presenters/v3/process_presenter'
 require 'presenters/v3/route_mapping_presenter'
+require 'presenters/v3/task_presenter'
 
 module VCAP::CloudController
   class PaginatedListPresenter
@@ -10,6 +11,7 @@ module VCAP::CloudController
       'DropletModel' => VCAP::CloudController::DropletPresenter,
       'PackageModel' => VCAP::CloudController::PackagePresenter,
       'RouteMappingModel' => VCAP::CloudController::RouteMappingPresenter,
+      'TaskModel' => VCAP::CloudController::TaskPresenter,
     }.freeze
 
     def initialize(dataset, base_url, filters=nil)
@@ -23,10 +25,6 @@ module VCAP::CloudController
         pagination: PaginationPresenter.new.present_pagination_hash(@dataset, @base_url, @filters),
         resources: presented_resources
       }
-    end
-
-    def to_json
-      MultiJson.dump(to_hash, pretty: true)
     end
 
     private

@@ -29,13 +29,13 @@ class DropletsController < ApplicationController
                          end
     end
 
-    render status: :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'droplets'), message).to_json
+    render status: :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'droplets'), message)
   end
 
   def show
     droplet = DropletModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
     droplet_not_found! unless droplet && can_read?(droplet.space.guid, droplet.space.organization.guid)
-    render status: :ok, json: DropletPresenter.new(droplet).to_json
+    render status: :ok, json: DropletPresenter.new(droplet)
   end
 
   def destroy
@@ -64,7 +64,7 @@ class DropletsController < ApplicationController
 
     droplet = DropletCopy.new(source_droplet).copy(destination_app, current_user.guid, current_user_email)
 
-    render status: :created, json: DropletPresenter.new(droplet).to_json
+    render status: :created, json: DropletPresenter.new(droplet)
   end
 
   def create
@@ -88,7 +88,7 @@ class DropletsController < ApplicationController
                                         actor_email: current_user_email)
     droplet = droplet_creator.create_and_stage(package, lifecycle, staging_message)
 
-    render status: :created, json: DropletPresenter.new(droplet).to_json
+    render status: :created, json: DropletPresenter.new(droplet)
   rescue DropletCreate::InvalidPackage => e
     invalid_request!(e.message)
   rescue DropletCreate::SpaceQuotaExceeded

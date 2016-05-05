@@ -1,28 +1,12 @@
 module VCAP::CloudController
   class TaskPresenter
-    def initialize(pagination_presenter=PaginationPresenter.new)
-      @pagination_presenter = pagination_presenter
+    attr_reader :task
+
+    def initialize(task)
+      @task = task
     end
 
-    def present_json(task)
-      MultiJson.dump(task_hash(task), pretty: true)
-    end
-
-    def present_json_list(paginated_result, base_url, params)
-      tasks       = paginated_result.records
-      task_hashes = tasks.collect { |task| task_hash(task) }
-
-      paginated_response = {
-        pagination: @pagination_presenter.present_pagination_hash(paginated_result, base_url, params),
-        resources:  task_hashes
-      }
-
-      MultiJson.dump(paginated_response, pretty: true)
-    end
-
-    private
-
-    def task_hash(task)
+    def to_hash
       {
         guid:    task.guid,
         name:    task.name,
@@ -34,11 +18,13 @@ module VCAP::CloudController
         created_at: task.created_at,
         updated_at: task.updated_at,
         droplet_guid: task.droplet.guid,
-        links: build_links(task)
+        links: build_links
       }
     end
 
-    def build_links(task)
+    private
+
+    def build_links
       {
         self:    { href: "/v3/tasks/#{task.guid}" },
         app:     { href: "/v3/apps/#{task.app.guid}" },

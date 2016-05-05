@@ -27,7 +27,7 @@ class TasksController < ApplicationController
                          end
     end
 
-    render :ok, json: TaskPresenter.new.present_json_list(paginated_result, base_url(resource: 'tasks'), message)
+    render :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'tasks'), message)
   end
 
   def create
@@ -44,7 +44,7 @@ class TasksController < ApplicationController
 
     task = TaskCreate.new(configuration).create(app, message, current_user.guid, current_user_email, droplet: droplet)
 
-    render status: :accepted, json: TaskPresenter.new.present_json(task)
+    render status: :accepted, json: TaskPresenter.new(task)
   rescue TaskCreate::InvalidTask, TaskCreate::TaskCreateError => e
     unprocessable!(e)
   end
@@ -63,7 +63,7 @@ class TasksController < ApplicationController
 
     TaskCancel.new.cancel(task: task, user: current_user, email: current_user_email)
 
-    render status: :accepted, json: TaskPresenter.new.present_json(task.reload)
+    render status: :accepted, json: TaskPresenter.new(task.reload)
   rescue TaskCancel::InvalidCancel => e
     unprocessable!(e)
   end
@@ -78,7 +78,7 @@ class TasksController < ApplicationController
       task_not_found! unless task && can_read?(space.guid, org.guid)
     end
 
-    render status: :ok, json: TaskPresenter.new.present_json(task)
+    render status: :ok, json: TaskPresenter.new(task)
   end
 
   private

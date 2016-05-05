@@ -5,14 +5,16 @@ module VCAP::CloudController
       @process_stats = process_stats
     end
 
+    def to_hash
+      {
+        resources: present_stats_hash
+      }
+    end
+
     def present_stats_hash
       @process_stats.map do |index, instance_stats|
         instance_stats_hash(index, instance_stats)
       end.sort_by { |s| s[:index] }
-    end
-
-    def to_json
-      MultiJson.dump({ resources: present_stats_hash }, pretty: true)
     end
 
     private
