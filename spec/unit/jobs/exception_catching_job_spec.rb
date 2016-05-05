@@ -23,7 +23,7 @@ module VCAP::CloudController
 
       context '#error(job, exception)' do
         let(:job) { double('Job').as_null_object }
-        let(:error_presenter) { instance_double(ErrorPresenter, error_hash: 'sanitized exception hash').as_null_object }
+        let(:error_presenter) { instance_double(ErrorPresenter, to_hash: 'sanitized exception hash').as_null_object }
         let(:background_logger) { instance_double(Steno::Logger).as_null_object }
 
         before do

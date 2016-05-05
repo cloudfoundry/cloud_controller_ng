@@ -125,7 +125,7 @@ class ApplicationController < ActionController::Base
   def handle_api_error(error)
     presenter = ErrorPresenter.new(error, Rails.env.test?)
     logger.info(presenter.log_message)
-    render status: presenter.response_code, json: MultiJson.dump(presenter.error_hash, pretty: true)
+    render status: presenter.response_code, json: presenter
   end
 
   def null_coalesce_body

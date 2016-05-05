@@ -37,7 +37,7 @@ module Sinatra
           error = ::CloudController::Errors::ApiError.new_from_details('NotFound')
           presenter = ErrorPresenter.new(error, in_test_mode?)
 
-          body MultiJson.dump(presenter.error_hash, pretty: true)
+          body MultiJson.dump(presenter.to_hash, pretty: true)
         end
       end
 
@@ -54,12 +54,12 @@ module Sinatra
         end
 
         ::VCAP::Component.varz.synchronize do
-          varz[:recent_errors] << presenter.error_hash
+          varz[:recent_errors] << presenter.to_hash
         end
 
         request.env['vcap_exception_body_set'] = true
 
-        payload = MultiJson.dump(presenter.error_hash, pretty: true)
+        payload = MultiJson.dump(presenter.to_hash, pretty: true)
         body payload.concat("\n")
       end
     end

@@ -19,7 +19,7 @@ class ErrorPresenter
     @error.respond_to?(:response_code) ? @error.response_code : 500
   end
 
-  def error_hash
+  def to_hash
     if @test_mode
       raise @error if !api_error? && errors_to_raise.include?(@error.class)
       @error_hasher.unsanitized_hash
