@@ -122,6 +122,33 @@ describe 'Route Mappings' do
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
+
+    context 'faceted list' do
+      context 'by app_guids' do
+        let(:app_model2) { VCAP::CloudController::AppModel.make(space: space) }
+        let!(:route_mapping5) { VCAP::CloudController::RouteMappingModel.make(app: app_model2, route: route, process_type: 'other') }
+
+        it 'returns only the matching route mappings' do
+          get "/v3/route_mappings?app_guids=#{app_model.guid},#{app_model2.guid}", nil, developer_headers
+
+          expected_pagination = {
+            'total_results' => 4,
+            'first'         => { 'href' => "/v3/route_mappings?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
+            'last'          => { 'href' => "/v3/route_mappings?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
+            'next'          => nil,
+            'previous'      => nil
+          }
+          expected_guids = [route_mapping1.guid, route_mapping2.guid, route_mapping3.guid, route_mapping5.guid]
+
+          parsed_response = MultiJson.load(last_response.body)
+          returned_guids  = parsed_response['resources'].map { |i| i['guid'] }
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
+          expect(returned_guids).to match_array(expected_guids)
+        end
+      end
+    end
   end
 
   describe 'GET /v3/route_mappings/:route_mapping_guid' do

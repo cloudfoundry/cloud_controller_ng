@@ -16,13 +16,13 @@ class RouteMappingsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
-      app, dataset = RouteMappingListFetcher.new.fetch_for_app(app_guid: params[:app_guid])
+      app, dataset = RouteMappingListFetcher.new.fetch_for_app(message: message, app_guid: params[:app_guid])
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
       dataset = if roles.admin?
-                  RouteMappingListFetcher.new.fetch_all
+                  RouteMappingListFetcher.new.fetch_all(message: message)
                 else
-                  RouteMappingListFetcher.new.fetch_for_spaces(space_guids: readable_space_guids)
+                  RouteMappingListFetcher.new.fetch_for_spaces(message: message, space_guids: readable_space_guids)
                 end
     end
 

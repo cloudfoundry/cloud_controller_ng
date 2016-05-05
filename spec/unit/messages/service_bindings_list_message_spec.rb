@@ -14,7 +14,7 @@ module VCAP::CloudController
         }
       end
 
-      it 'returns the correct AppCreateMessage' do
+      it 'returns the correct ServiceBindingsListMessage' do
         message = ServiceBindingsListMessage.from_params(params)
 
         expect(message).to be_a(ServiceBindingsListMessage)
@@ -22,6 +22,7 @@ module VCAP::CloudController
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
         expect(message.app_guids).to eq(['app-guid-1', 'app-guid-2', 'app-guid-3'])
+        expect(message.service_instance_guids).to match_array(['service-instance-1', 'service-instance-2', 'service-instance-3'])
       end
 
       it 'converts requested keys to symbols' do
@@ -32,13 +33,6 @@ module VCAP::CloudController
         expect(message.requested?(:order_by)).to be_truthy
         expect(message.requested?(:app_guids)).to be_truthy
         expect(message.requested?(:service_instance_guids)).to be_truthy
-      end
-
-      it 'converts comma delimited params into arrays' do
-        message = ServiceBindingsListMessage.from_params(params)
-
-        expect(message.app_guids).to match_array(['app-guid-1', 'app-guid-2', 'app-guid-3'])
-        expect(message.service_instance_guids).to match_array(['service-instance-1', 'service-instance-2', 'service-instance-3'])
       end
     end
 
