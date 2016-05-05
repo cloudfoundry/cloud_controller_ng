@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     describe '#fetch_all' do
       it 'returns a dataset' do
-        results = fetcher.fetch_all
+        results = fetcher.fetch_all(message: message)
         expect(results).to be_a(Sequel::Dataset)
       end
 
@@ -18,7 +18,7 @@ module VCAP::CloudController
         route_mapping2 = RouteMappingModel.make
         route_mapping3 = RouteMappingModel.make
 
-        expect(fetcher.fetch_all.all).to match_array([route_mapping1, route_mapping2, route_mapping3])
+        expect(fetcher.fetch_all(message: message).all).to match_array([route_mapping1, route_mapping2, route_mapping3])
       end
 
       context 'filter' do
@@ -28,7 +28,7 @@ module VCAP::CloudController
           let(:filters) { { app_guids: [route_mapping1.app.guid] } }
 
           it 'only returns matching route mappings' do
-            results = fetcher.fetch_all(message: message).records
+            results = fetcher.fetch_all(message: message).all
             expect(results).to match_array([route_mapping1])
             expect(results).not_to include(route_mapping2)
           end
@@ -40,7 +40,7 @@ module VCAP::CloudController
           let(:filters) { { route_guids: [route_mapping1.route.guid] } }
 
           it 'only returns matching route mappings' do
-            results = fetcher.fetch_all(message: message).records
+            results = fetcher.fetch_all(message: message).all
             expect(results).to match_array([route_mapping1])
             expect(results).not_to include(route_mapping2)
           end
@@ -50,7 +50,7 @@ module VCAP::CloudController
 
     describe '#fetch_for_spaces' do
       it 'returns a Sequel::Dataset' do
-        results = fetcher.fetch_for_spaces(space_guids: [])
+        results = fetcher.fetch_for_spaces(space_guids: [], message: message)
         expect(results).to be_a(Sequel::Dataset)
       end
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
         RouteMappingModel.make
 
-        results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid]).all
+        results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid], message: message).all
         expect(results).to match_array([route_mapping1_in_space1, route_mapping2_in_space1, route_mapping1_in_space2])
       end
 
@@ -78,7 +78,7 @@ module VCAP::CloudController
           let(:filters) { { app_guids: [route_mapping1.app.guid] } }
 
           it 'only returns matching route mappings' do
-            results = fetcher.fetch_for_spaces(message: message, space_guids: [space.guid]).records
+            results = fetcher.fetch_for_spaces(message: message, space_guids: [space.guid]).all
             expect(results).to match_array([route_mapping1])
             expect(results).not_to include(route_mapping2)
           end
@@ -91,7 +91,7 @@ module VCAP::CloudController
           let(:filters) { { route_guids: [route_mapping1.route.guid] } }
 
           it 'only returns matching route mappings' do
-            results = fetcher.fetch_for_spaces(message: message, space_guids: [space.guid]).records
+            results = fetcher.fetch_for_spaces(message: message, space_guids: [space.guid]).all
             expect(results).to match_array([route_mapping1])
             expect(results).not_to include(route_mapping2)
           end
@@ -103,7 +103,7 @@ module VCAP::CloudController
       let(:app) { AppModel.make }
 
       it 'returns a Sequel::Dataset' do
-        returned_app, results = fetcher.fetch_for_app(app_guid: app.guid)
+        returned_app, results = fetcher.fetch_for_app(app_guid: app.guid, message: message)
         expect(results).to be_a(Sequel::Dataset)
         expect(returned_app.guid).to eq(app.guid)
       end
@@ -113,7 +113,7 @@ module VCAP::CloudController
         route_mapping_2 = RouteMappingModel.make(app: app)
         RouteMappingModel.make
 
-        _app, results = fetcher.fetch_for_app(app_guid: app.guid)
+        _app, results = fetcher.fetch_for_app(app_guid: app.guid, message: message)
 
         expect(results.all).to match_array([route_mapping_1, route_mapping_2])
       end
@@ -127,8 +127,8 @@ module VCAP::CloudController
 
           it 'only returns matching route mappings' do
             _returned_app, results = fetcher.fetch_for_app(message: message, app_guid: route_mapping1.app.guid)
-            expect(results.records).to match_array([route_mapping1])
-            expect(results.records).not_to include(route_mapping2)
+            expect(results.all).to match_array([route_mapping1])
+            expect(results.all).not_to include(route_mapping2)
           end
         end
 
@@ -140,8 +140,8 @@ module VCAP::CloudController
 
           it 'only returns matching route mappings' do
             _returned_app, results = fetcher.fetch_for_app(message: message, app_guid: route_mapping1.app.guid)
-            expect(results.records).to match_array([route_mapping1])
-            expect(results.records).not_to include(route_mapping2)
+            expect(results.all).to match_array([route_mapping1])
+            expect(results.all).not_to include(route_mapping2)
           end
         end
       end
