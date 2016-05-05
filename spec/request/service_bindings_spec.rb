@@ -259,23 +259,24 @@ describe 'v3 service bindings' do
     let(:service_instance1) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
     let(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
     let(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let!(:service_binding1) { VCAP::CloudController::ServiceBindingModel.make(
+      service_instance: service_instance1,
+      app:              app_model,
+      credentials:      { 'binding1' => 'shtuff' },
+      syslog_drain_url: 'syslog://binding1.example.com',
+    )
+    }
+    let!(:service_binding2) { VCAP::CloudController::ServiceBindingModel.make(
+      service_instance: service_instance2,
+      app:              app_model,
+      credentials:      { 'binding2' => 'things' },
+      syslog_drain_url: 'syslog://binding2.example.com',
+    )
+    }
+
+    before { VCAP::CloudController::ServiceBindingModel.make(service_instance: service_instance3, app: app_model) }
 
     it 'returns a paginated list of service_bindings' do
-      service_binding1 = VCAP::CloudController::ServiceBindingModel.make(
-        service_instance: service_instance1,
-        app:              app_model,
-        credentials:      { 'binding1' => 'shtuff' },
-        syslog_drain_url: 'syslog://binding1.example.com',
-      )
-      service_binding2 = VCAP::CloudController::ServiceBindingModel.make(
-        service_instance: service_instance2,
-        app:              app_model,
-        credentials:      { 'binding2' => 'things' },
-        syslog_drain_url: 'syslog://binding2.example.com',
-      )
-      VCAP::CloudController::ServiceBindingModel.make(service_instance: service_instance3, app: app_model)
-      VCAP::CloudController::ServiceBindingModel.make
-
       get '/v3/service_bindings?per_page=2', nil, user_headers
 
       expected_response = {
@@ -340,6 +341,161 @@ describe 'v3 service bindings' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    context 'faceted list' do
+      context 'by app_guids' do
+        let(:app_model2) { VCAP::CloudController::AppModel.make(space: space) }
+        let!(:another_apps_service_binding) do
+          VCAP::CloudController::ServiceBindingModel.make(service_instance: service_instance1,
+                                                          app: app_model2,
+                                                          credentials: { 'utako' => 'secret' },
+                                                          syslog_drain_url: 'syslog://example.com')
+        end
+        let(:app_model3) { VCAP::CloudController::AppModel.make(space: space) }
+        let!(:another_apps_service_binding2) do
+          VCAP::CloudController::ServiceBindingModel.make(service_instance: service_instance1,
+                                                          app: app_model3,
+                                                          credentials: { 'amelia' => 'apples' },
+                                                          syslog_drain_url: 'www.neopets.com')
+        end
+
+        it 'returns only the matching service bindings' do
+          get "/v3/service_bindings?per_page=2&app_guids=#{app_model2.guid},#{app_model3.guid}", nil, user_headers
+
+          expected_response = {
+            'pagination' => {
+              'total_results' => 2,
+              'first'         => { 'href' => "/v3/service_bindings?app_guids=#{app_model2.guid}%2C#{app_model3.guid}&page=1&per_page=2" },
+              'last'          => { 'href' => "/v3/service_bindings?app_guids=#{app_model2.guid}%2C#{app_model3.guid}&page=1&per_page=2" },
+              'next'          => nil,
+              'previous'      => nil,
+            },
+            'resources' => [
+              {
+                'guid'       => another_apps_service_binding.guid,
+                'type'       => 'app',
+                'data'       => {
+                  'credentials' => {
+                    'utako' => 'secret'
+                  },
+                  'syslog_drain_url' => 'syslog://example.com'
+                },
+                'created_at' => iso8601,
+                'updated_at' => nil,
+                'links'      => {
+                  'self'             => {
+                    'href' => "/v3/service_bindings/#{another_apps_service_binding.guid}"
+                  },
+                  'service_instance' => {
+                    'href' => "/v2/service_instances/#{service_instance1.guid}"
+                  },
+                  'app' => {
+                    'href' => "/v3/apps/#{app_model2.guid}"
+                  }
+                }
+              },
+              {
+                'guid'       => another_apps_service_binding2.guid,
+                'type'       => 'app',
+                'data'       => {
+                  'credentials' => {
+                    'amelia' => 'apples'
+                  },
+                  'syslog_drain_url' => 'www.neopets.com'
+                },
+                'created_at' => iso8601,
+                'updated_at' => nil,
+                'links'      => {
+                  'self'             => {
+                    'href' => "/v3/service_bindings/#{another_apps_service_binding2.guid}"
+                  },
+                  'service_instance' => {
+                    'href' => "/v2/service_instances/#{service_instance1.guid}"
+                  },
+                  'app' => {
+                    'href' => "/v3/apps/#{app_model3.guid}"
+                  }
+                }
+              }
+            ]
+          }
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response).to be_a_response_like(expected_response)
+        end
+      end
+
+      context 'by service instance guids' do
+        it 'returns only the matching service bindings' do
+          get "/v3/service_bindings?per_page=2&service_instance_guids=#{service_instance1.guid},#{service_instance2.guid}", nil, user_headers
+
+          expected_response = {
+            'pagination' => {
+              'total_results' => 2,
+              'first'         => { 'href' => "/v3/service_bindings?page=1&per_page=2&service_instance_guids=#{service_instance1.guid}%2C#{service_instance2.guid}" },
+              'last'          => { 'href' => "/v3/service_bindings?page=1&per_page=2&service_instance_guids=#{service_instance1.guid}%2C#{service_instance2.guid}" },
+              'next'          => nil,
+              'previous'      => nil,
+            },
+            'resources' => [
+              {
+                'guid'       => service_binding1.guid,
+                'type'       => 'app',
+                'data'       => {
+                  'credentials' => {
+                    'binding1' => 'shtuff'
+                  },
+                  'syslog_drain_url' => 'syslog://binding1.example.com'
+                },
+                'created_at' => iso8601,
+                'updated_at' => nil,
+                'links'      => {
+                  'self'             => {
+                    'href' => "/v3/service_bindings/#{service_binding1.guid}"
+                  },
+                  'service_instance' => {
+                    'href' => "/v2/service_instances/#{service_instance1.guid}"
+                  },
+                  'app' => {
+                    'href' => "/v3/apps/#{app_model.guid}"
+                  }
+                }
+              },
+              {
+                'guid'       => service_binding2.guid,
+                'type'       => 'app',
+                'data'       => {
+                  'credentials' => {
+                    'binding2' => 'things'
+                  },
+                  'syslog_drain_url' => 'syslog://binding2.example.com'
+                },
+                'created_at' => iso8601,
+                'updated_at' => nil,
+                'links'      => {
+                  'self'             => {
+                    'href' => "/v3/service_bindings/#{service_binding2.guid}"
+                  },
+                  'service_instance' => {
+                    'href' => "/v2/service_instances/#{service_instance2.guid}"
+                  },
+                  'app' => {
+                    'href' => "/v3/apps/#{app_model.guid}"
+                  }
+                }
+              }
+            ]
+          }
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response).to be_a_response_like(expected_response)
+        end
+      end
     end
   end
 end
