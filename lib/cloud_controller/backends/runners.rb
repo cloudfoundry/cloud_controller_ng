@@ -114,7 +114,7 @@ module VCAP::CloudController
     end
 
     def dea_runner(app)
-      Dea::Runner.new(app, @config, @message_bus, @dea_pool)
+      Dea::Runner.new(app, @config[:cc_partition], dependency_locator.blobstore_url_generator, @message_bus, @dea_pool)
     end
 
     def dependency_locator
