@@ -8,6 +8,9 @@ module VCAP::CloudController
     encrypt :credentials, salt: :salt
     serializes_via_json :credentials
 
+    encrypt :volume_mounts, salt: :volume_mounts_salt
+    serializes_via_json :volume_mounts
+
     delegate :client, :service, :service_plan,
       to: :service_instance
 
@@ -20,6 +23,8 @@ module VCAP::CloudController
       validates_unique [:service_instance, :app]
       validate_space_match
       validate_cannot_change_binding
+
+      validates_max_length 65_535, :volume_mounts if !volume_mounts.nil?
     end
 
     def required_parameters

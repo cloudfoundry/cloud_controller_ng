@@ -3,12 +3,19 @@ require 'spec_helper'
 module VCAP::CloudController
   describe ServiceBindingModel do
     let(:credentials) { { 'secret' => 'password' }.to_json }
+    let(:volume_mounts) { [{ 'array' => 'hashes' }].to_json }
     let(:last_row) { ServiceBindingModel.dataset.naked.order_by(:id).last }
-    let!(:service_binding) { ServiceBindingModel.make(credentials: credentials) }
+    let!(:service_binding) { ServiceBindingModel.make(credentials: credentials, volume_mounts: volume_mounts) }
 
     context 'credentials' do
       it 'encrypts the credentials' do
         expect(last_row[:credentials]).not_to eq MultiJson.dump(credentials).to_s
+      end
+    end
+
+    context 'volume_mounts' do
+      it 'encrypts the volume_mounts' do
+        expect(last_row[:volume_mounts]).not_to eq MultiJson.dump(volume_mounts).to_s
       end
     end
 
@@ -50,6 +57,15 @@ module VCAP::CloudController
       it 'must have a type' do
         expect { ServiceBindingModel.make(type: nil, service_instance: service_instance, app: app_model)
         }.to raise_error(Sequel::ValidationFailed, /type presence/)
+      end
+
+      it 'validates max length of volume_mounts' do
+        too_long = 'a' * (65_535 + 1)
+
+        binding = ServiceBindingModel.make
+        binding.volume_mounts = too_long
+
+        expect { binding.save }.to raise_error(Sequel::ValidationFailed, /volume_mounts max_length/)
       end
 
       describe 'changing the binding after creation' do
