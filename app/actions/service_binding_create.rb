@@ -7,6 +7,7 @@ module VCAP::CloudController
     class ServiceInstanceNotBindable < StandardError; end
     class ServiceBrokerInvalidSyslogDrainUrl < StandardError; end
     class InvalidServiceBinding < StandardError; end
+    class VolumeMountServiceDisabled < StandardError; end
 
     include VCAP::CloudController::LockCheck
 
@@ -15,13 +16,14 @@ module VCAP::CloudController
       @user_email = user_email
     end
 
-    def create(app_model, service_instance, message)
+    def create(app_model, service_instance, message, volume_mount_services_enabled)
       raise ServiceInstanceNotBindable unless service_instance.bindable?
       service_binding = ServiceBindingModel.new(service_instance: service_instance,
                                                 app: app_model,
                                                 credentials: {},
                                                 type: message.type)
       raise InvalidServiceBinding unless service_binding.valid?
+      raise VolumeMountServiceDisabled if service_instance.volume_service? && !volume_mount_services_enabled
 
       raise_if_locked(service_binding.service_instance)
 

@@ -7,6 +7,7 @@ module VCAP::CloudController
       subject(:service_binding_create) { ServiceBindingCreate.new(user_guid, user_email) }
       let(:user_guid) { 'some-guid' }
       let(:user_email) { 'are@youreddy.com' }
+      let(:volume_mount_services_enabled) { true }
 
       let(:app_model) { AppModel.make }
       let(:service_instance) { ManagedServiceInstance.make(space_guid: app_model.space.guid) }
@@ -40,7 +41,7 @@ module VCAP::CloudController
       end
 
       it 'creates a v3 Service Binding' do
-        service_binding = service_binding_create.create(app_model, service_instance, message)
+        service_binding = service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
 
         expect(ServiceBindingModel.count).to eq(1)
         expect(service_binding.app_guid).to eq(app_model.guid)
@@ -49,7 +50,7 @@ module VCAP::CloudController
       end
 
       it 'creates an audit.service_binding.create event' do
-        service_binding = service_binding_create.create(app_model, service_instance, message)
+        service_binding = service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
 
         event = Event.last
         expect(event.type).to eq('audit.service_binding.create')
@@ -62,7 +63,7 @@ module VCAP::CloudController
           ServiceInstanceOperation.make(service_instance_id: service_instance.id, state: 'in progress')
 
           expect {
-            service_binding_create.create(app_model, service_instance, message)
+            service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
           }.to raise_error do |e|
             expect(e).to be_a(CloudController::Errors::ApiError)
             expect(e.message).to include('in progress')
@@ -78,7 +79,7 @@ module VCAP::CloudController
 
         it 'raises ServiceInstanceNotBindable' do
           expect {
-            service_binding_create.create(app_model, service_instance, message)
+            service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
           }.to raise_error(ServiceBindingCreate::ServiceInstanceNotBindable)
         end
       end
@@ -90,8 +91,19 @@ module VCAP::CloudController
 
         it 'raises InvalidServiceBinding' do
           expect {
-            service_binding_create.create(app_model, service_instance, message)
+            service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
           }.to raise_error(ServiceBindingCreate::InvalidServiceBinding)
+        end
+      end
+
+      context 'when volume mount services are disabled and the service requires volume_mount' do
+        let(:volume_mount_services_enabled) { false }
+        let(:service_instance) { ManagedServiceInstance.make(:volume_mount, space_guid: app_model.space.guid) }
+
+        it 'raises a VolumeMountServiceDisabled error' do
+          expect {
+            service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
+          }.to raise_error ServiceBindingCreate::VolumeMountServiceDisabled
         end
       end
 
@@ -103,7 +115,7 @@ module VCAP::CloudController
 
           it 'does not create a binding' do
             expect {
-              service_binding_create.create(app_model, service_instance, message)
+              service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
             }.to raise_error VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse
 
             expect(ServiceBindingModel.count).to eq 0
@@ -121,7 +133,7 @@ module VCAP::CloudController
             allow(logger).to receive(:info)
 
             expect {
-              service_binding_create.create(app_model, service_instance, message)
+              service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
             }.to raise_error('meow')
           end
 
