@@ -10,7 +10,9 @@ require 'messages/apps_list_message'
 require 'messages/app_update_message'
 require 'messages/app_create_message'
 require 'presenters/v3/app_presenter'
+require 'presenters/v3/app_env_presenter'
 require 'presenters/v3/app_stats_presenter'
+require 'presenters/v3/paginated_list_presenter'
 require 'queries/app_list_fetcher'
 require 'queries/app_fetcher'
 require 'queries/app_delete_fetcher'
@@ -30,7 +32,7 @@ class AppsV3Controller < ApplicationController
                          AppListFetcher.new.fetch(pagination_options, message, readable_space_guids)
                        end
 
-    render status: :ok, json: AppPresenter.new.present_json_list(paginated_result, message)
+    render status: :ok, json: PaginatedListPresenter.new(paginated_result, '/v3/apps', message)
   end
 
   def show
@@ -38,7 +40,7 @@ class AppsV3Controller < ApplicationController
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
 
-    render status: :ok, json: AppPresenter.new.present_json(app)
+    render status: :ok, json: AppPresenter.new(app)
   end
 
   def create
@@ -59,7 +61,7 @@ class AppsV3Controller < ApplicationController
 
     app = AppCreate.new(current_user, current_user_email).create(message, lifecycle)
 
-    render status: :created, json: AppPresenter.new.present_json(app)
+    render status: :created, json: AppPresenter.new(app)
   rescue AppCreate::InvalidApp => e
     unprocessable!(e.message)
   end
@@ -78,7 +80,7 @@ class AppsV3Controller < ApplicationController
 
     app = AppUpdate.new(current_user, current_user_email).update(app, message, lifecycle)
 
-    render status: :ok, json: AppPresenter.new.present_json(app)
+    render status: :ok, json: AppPresenter.new(app)
   rescue AppUpdate::DropletNotFound
     droplet_not_found!
   rescue AppUpdate::InvalidApp => e
@@ -109,7 +111,7 @@ class AppsV3Controller < ApplicationController
 
     AppStart.new(current_user, current_user_email).start(app)
 
-    render status: :ok, json: AppPresenter.new.present_json(app)
+    render status: :ok, json: AppPresenter.new(app)
   rescue AppStart::InvalidApp => e
     unprocessable!(e.message)
   end
@@ -121,7 +123,7 @@ class AppsV3Controller < ApplicationController
 
     AppStop.new(current_user, current_user_email).stop(app)
 
-    render status: :ok, json: AppPresenter.new.present_json(app)
+    render status: :ok, json: AppPresenter.new(app)
   rescue AppStop::InvalidApp => e
     unprocessable!(e.message)
   end
@@ -133,7 +135,7 @@ class AppsV3Controller < ApplicationController
 
     FeatureFlag.raise_unless_enabled!('space_developer_env_var_visibility') unless roles.admin?
 
-    render status: :ok, json: AppPresenter.new.present_json_env(app)
+    render status: :ok, json: AppEnvPresenter.new(app)
   end
 
   def assign_current_droplet

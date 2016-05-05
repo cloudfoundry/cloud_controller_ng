@@ -42,8 +42,7 @@ module VCAP::CloudController
     def read_env(guid)
       app = find_guid_and_validate_access(:read_env, guid, App)
 
-      vars_builder = VCAP::VarsBuilder.new(app)
-      vcap_application = vars_builder.vcap_application
+      vcap_application = VCAP::VarsBuilder.new(app).to_hash
 
       FeatureFlag.raise_unless_enabled!('space_developer_env_var_visibility') unless roles.admin?
       [

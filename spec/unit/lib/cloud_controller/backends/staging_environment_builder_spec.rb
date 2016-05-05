@@ -29,30 +29,30 @@ module VCAP::CloudController
       it 'records the environment variables used for staging' do
         environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit)
 
-        expect(environment_variables['VCAP_SERVICES'][service.label][0]).to have_key(:credentials)
+        expect(environment_variables['VCAP_SERVICES'][service.label.to_sym][0]).to have_key(:credentials)
         expect(environment_variables).to match({
-              'another'          => 'override',
-              'APP_VAR'          => 'is here',
-              'STAGING_ENV'      => 'staging_value',
-              'CF_STACK'         => stack,
-              'MEMORY_LIMIT'     => "#{memory_limit}m",
-              'VCAP_SERVICES'    => be_an_instance_of(Hash),
+              'another' => 'override',
+              'APP_VAR' => 'is here',
+              'STAGING_ENV' => 'staging_value',
+              'CF_STACK' => stack,
+              'MEMORY_LIMIT' => "#{memory_limit}m",
+              'VCAP_SERVICES' => be_an_instance_of(Hash),
               'VCAP_APPLICATION' => {
-                'limits' => {
-                  'mem'  => memory_limit,
-                  'disk' => disk_limit,
-                  'fds'  => 16384
+                limits: {
+                  mem: memory_limit,
+                  disk: disk_limit,
+                  fds: 16384
                 },
-                'application_id'      => app.guid,
-                'application_name'    => app.name,
-                'name'                => app.name,
-                'application_uris'    => [],
-                'uris'                => [],
-                'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-                'version'             => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-                'space_name'          => space.name,
-                'space_id'            => space.guid,
-                'users'               => nil
+                application_id: app.guid,
+                application_name: app.name,
+                name: app.name,
+                application_uris: [],
+                uris: [],
+                application_version: /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+                version: /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+                space_name: space.name,
+                space_id: space.guid,
+                users: nil
               }
             })
       end
@@ -65,15 +65,15 @@ module VCAP::CloudController
           RouteMappingModel.make(app: app, route: route2)
 
           environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit)
-          expect(environment_variables['VCAP_APPLICATION']['uris']).to match_array([route1.fqdn, route2.fqdn])
-          expect(environment_variables['VCAP_APPLICATION']['application_uris']).to match_array([route1.fqdn, route2.fqdn])
+          expect(environment_variables['VCAP_APPLICATION'][:uris]).to match_array([route1.fqdn, route2.fqdn])
+          expect(environment_variables['VCAP_APPLICATION'][:application_uris]).to match_array([route1.fqdn, route2.fqdn])
         end
       end
 
       describe 'file descriptor limits' do
         it 'defaults to 16384' do
           environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit)
-          expect(environment_variables['VCAP_APPLICATION']['limits']['fds']).to eq(16384)
+          expect(environment_variables['VCAP_APPLICATION'][:limits][:fds]).to eq(16384)
         end
 
         context 'when the file descriptor limit is configured' do
@@ -83,7 +83,7 @@ module VCAP::CloudController
 
           it 'uses the configured value' do
             environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit)
-            expect(environment_variables['VCAP_APPLICATION']['limits']['fds']).to eq(100)
+            expect(environment_variables['VCAP_APPLICATION'][:limits][:fds]).to eq(100)
           end
         end
       end

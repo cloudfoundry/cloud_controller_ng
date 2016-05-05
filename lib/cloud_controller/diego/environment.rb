@@ -28,11 +28,9 @@ module VCAP::CloudController
       attr_reader :app
 
       def vcap_application
-        vars_builder = VCAP::VarsBuilder.new(app)
-        env = vars_builder.vcap_application
-
-        EXCLUDE.each { |k| env.delete(k) }
-        env
+        VCAP::VarsBuilder.new(app).to_hash.reject do |k, _v|
+          EXCLUDE.include? k
+        end
       end
     end
   end

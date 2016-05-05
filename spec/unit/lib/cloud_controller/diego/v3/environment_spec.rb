@@ -16,21 +16,21 @@ module VCAP::CloudController::Diego
 
       let(:expected_vcap_application) do
         {
-          'limits' => {
-            'mem'  => task.memory_in_mb,
-            'disk' => disk_limit,
-            'fds'  => TestConfig.config[:instance_file_descriptor_limit] || 16384,
+          limits: {
+            mem: task.memory_in_mb,
+            disk: disk_limit,
+            fds: TestConfig.config[:instance_file_descriptor_limit] || 16384,
           },
-          'application_id' => app.guid,
-          'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-          'application_name' => app.name,
-          'application_uris' => [],
-          'version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-          'name'             => app.name,
-          'space_name'       => space.name,
-          'space_id'         => space.guid,
-          'uris' => [],
-          'users' => nil
+          application_id: app.guid,
+          application_version: /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+          application_name: app.name,
+          application_uris: [],
+          version: /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+          name: app.name,
+          space_name: space.name,
+          space_id: space.guid,
+          uris: [],
+          users: nil
         }
       end
 
@@ -43,7 +43,7 @@ module VCAP::CloudController::Diego
         it "returns the app's service binding environment variables" do
           constructed_envs = V3::Environment.new(app, task, space).build
 
-          expect(constructed_envs['VCAP_SERVICES'][service.label][0]).to have_key(:credentials)
+          expect(constructed_envs['VCAP_SERVICES'][service.label.to_sym][0]).to have_key(:credentials)
         end
 
         it 'returns the correct environment hash for a v3 app' do
@@ -104,21 +104,21 @@ module VCAP::CloudController::Diego
         context 'when the app has a route associated with it' do
           let(:expected_vcap_application) do
             {
-              'limits' => {
-                'mem'  => task.memory_in_mb,
-                'disk' => disk_limit,
-                'fds'  => TestConfig.config[:instance_file_descriptor_limit] || 16384,
+              limits: {
+                mem: task.memory_in_mb,
+                disk: disk_limit,
+                fds: TestConfig.config[:instance_file_descriptor_limit] || 16384,
               },
-              'application_id' => app.guid,
-              'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-              'application_name'    => app.name,
-              'application_uris'    => match_array([route1.fqdn, route2.fqdn]),
-              'version'             => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-              'uris'                => match_array([route1.fqdn, route2.fqdn]),
-              'name'                => app.name,
-              'space_name'          => space.name,
-              'space_id'            => space.guid,
-              'users'               => nil
+              application_id: app.guid,
+              application_version: /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+              application_name: app.name,
+              application_uris: match_array([route1.fqdn, route2.fqdn]),
+              version: /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+              uris: match_array([route1.fqdn, route2.fqdn]),
+              name: app.name,
+              space_name: space.name,
+              space_id: space.guid,
+              users: nil
             }
           end
           let(:route1) { VCAP::CloudController::Route.make(space: space) }

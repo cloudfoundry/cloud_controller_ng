@@ -42,9 +42,7 @@ module VCAP::CloudController
         expect(res[:egress_network_rules]).to eq([])
         expect(res[:stack]).to eq(app.stack.name)
 
-        vars_builder = VCAP::VarsBuilder.new(app)
-        vcap_application = vars_builder.vcap_application
-        expect(res[:vcap_application]).to eql(vcap_application)
+        expect(res[:vcap_application]).to eql(VCAP::VarsBuilder.new(app).to_hash)
 
         expect(res[:index]).to eq(1)
       end

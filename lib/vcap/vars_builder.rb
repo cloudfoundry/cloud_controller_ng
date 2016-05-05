@@ -15,7 +15,7 @@ module VCAP
       @version = version
     end
 
-    def vcap_application
+    def to_hash
       if @app.class == VCAP::CloudController::AppModel
         app_name = @app.name
         uris = @app.routes.map(&:fqdn)
@@ -31,51 +31,51 @@ module VCAP
       @space = @app.space if @space.nil?
 
       env_hash = {
-        'limits' => {
+        limits: {
         },
-        'application_name' => app_name,
-        'application_uris' => uris,
-        'name' => @app.name,
-        'space_name' => @space.name,
-        'space_id' => @space.guid,
-        'uris' => uris,
-        'users' => nil
+        application_name: app_name,
+        application_uris: uris,
+        name: @app.name,
+        space_name: @space.name,
+        space_id: @space.guid,
+        uris: uris,
+        users: nil
       }
 
-      if !@file_descriptors.nil?
+      unless @file_descriptors.nil?
         env_hash.deep_merge!({
-          'limits' => {
-            'fds' => @file_descriptors
+          limits: {
+            fds: @file_descriptors
           }
         })
       end
 
-      if !@memory_limit.nil?
+      unless @memory_limit.nil?
         env_hash.deep_merge!({
-          'limits' => {
-            'mem' => @memory_limit
+          limits: {
+            mem: @memory_limit
           }
         })
       end
 
-      if !@disk_limit.nil?
+      unless @disk_limit.nil?
         env_hash.deep_merge!({
-          'limits' => {
-            'disk' => @disk_limit
+          limits: {
+            disk: @disk_limit
           }
         })
       end
 
-      if !@version.nil?
+      unless @version.nil?
         env_hash.deep_merge!({
-          'version' => @version,
-          'application_version' => @version
+          version: @version,
+          application_version: @version
         })
       end
 
-      if !@app.guid.nil?
+      unless @app.guid.nil?
         env_hash.deep_merge!({
-          'application_id' => @app.guid,
+          application_id: @app.guid,
         })
       end
 

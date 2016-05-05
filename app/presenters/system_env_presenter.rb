@@ -15,8 +15,8 @@ class SystemEnvPresenter
     services_hash = {}
     service_bindings.each do |service_binding|
       service_name = service_binding_label(service_binding)
-      services_hash[service_name] ||= []
-      services_hash[service_name] << service_binding_env_values(service_binding)
+      services_hash[service_name.to_sym] ||= []
+      services_hash[service_name.to_sym] << service_binding_env_values(service_binding)
     end
     services_hash
   end

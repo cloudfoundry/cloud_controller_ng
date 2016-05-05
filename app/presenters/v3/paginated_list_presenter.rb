@@ -8,6 +8,7 @@ module VCAP::CloudController
   class PaginatedListPresenter
     PRESENTERS = {
       'App' => VCAP::CloudController::ProcessPresenter,
+      'AppModel' => VCAP::CloudController::AppPresenter,
       'DropletModel' => VCAP::CloudController::DropletPresenter,
       'PackageModel' => VCAP::CloudController::PackagePresenter,
       'RouteMappingModel' => VCAP::CloudController::RouteMappingPresenter,

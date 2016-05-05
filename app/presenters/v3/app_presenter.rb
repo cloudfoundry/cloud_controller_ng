@@ -2,33 +2,13 @@ require 'presenters/v3/pagination_presenter'
 
 module VCAP::CloudController
   class AppPresenter
-    def initialize(pagination_presenter=PaginationPresenter.new)
-      @pagination_presenter = pagination_presenter
+    attr_reader :app
+
+    def initialize(app)
+      @app = app
     end
 
-    def present_json(app)
-      MultiJson.dump(app_hash(app), pretty: true)
-    end
-
-    def present_json_env(app)
-      MultiJson.dump(env_hash(app), pretty: true)
-    end
-
-    def present_json_list(paginated_result, facets={})
-      apps       = paginated_result.records
-      app_hashes = apps.collect { |app| app_hash(app) }
-
-      paginated_response = {
-        pagination: @pagination_presenter.present_pagination_hash(paginated_result, '/v3/apps', facets),
-        resources:  app_hashes
-      }
-
-      MultiJson.dump(paginated_response, pretty: true)
-    end
-
-    private
-
-    def app_hash(app)
+    def to_hash
       {
         guid:                    app.guid,
         name:                    app.name,
@@ -41,30 +21,13 @@ module VCAP::CloudController
           data: app.lifecycle_data.to_hash
         },
         environment_variables:   app.environment_variables || {},
-        links:                   build_links(app)
+        links:                   build_links
       }
     end
 
-    def env_hash(app)
-      vars_builder = VCAP::VarsBuilder.new(
-        app,
-        file_descriptors: Config.config[:instance_file_descriptor_limit] || 16384
-      )
+    private
 
-      vcap_application = {
-        'VCAP_APPLICATION' => vars_builder.vcap_application
-      }
-
-      {
-        'environment_variables' => app.environment_variables,
-        'staging_env_json' => EnvironmentVariableGroup.staging.environment_json,
-        'running_env_json' => EnvironmentVariableGroup.running.environment_json,
-        'system_env_json' => SystemEnvPresenter.new(app.service_bindings).system_env,
-        'application_env_json' => vcap_application
-      }
-    end
-
-    def build_links(app)
+    def build_links
       links = {
         self:                   { href: "/v3/apps/#{app.guid}" },
         space:                  { href: "/v2/spaces/#{app.space_guid}" },

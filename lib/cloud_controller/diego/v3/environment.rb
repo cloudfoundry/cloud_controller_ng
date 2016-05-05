@@ -21,7 +21,7 @@ module VCAP::CloudController
             file_descriptors: Config.config[:instance_file_descriptor_limit] || 16384,
             version: SecureRandom.uuid
           )
-          vcap_application = vars_builder.vcap_application
+          vcap_application = vars_builder.to_hash
 
           @initial_env.
             merge(app_env).
