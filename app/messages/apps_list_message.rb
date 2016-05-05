@@ -23,7 +23,7 @@ module VCAP::CloudController
 
     def self.from_params(params)
       opts = params.dup
-      ['names', 'guids', 'organization_guids', 'space_guids'].each do |attribute|
+      %w(names guids organization_guids space_guids).each do |attribute|
         to_array! opts, attribute
       end
       new(opts.symbolize_keys)

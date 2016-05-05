@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 describe AppsV3Controller, type: :controller do
-  describe '#list' do
+  describe '#index' do
     let(:app_model_1) { VCAP::CloudController::AppModel.make }
     let!(:app_model_2) { VCAP::CloudController::AppModel.make }
     let!(:space_1) { app_model_1.space }

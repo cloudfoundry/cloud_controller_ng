@@ -2,7 +2,7 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class ProcessesListMessage < ListMessage
-    ALLOWED_KEYS = [:page, :per_page, :app_guid, :types, :space_guids, :organization_guids, :app_guids, :guids].freeze
+    ALLOWED_KEYS = [:page, :per_page, :app_guid, :types, :space_guids, :organization_guids, :app_guids, :guids, :order_by].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 
@@ -17,14 +17,14 @@ module VCAP::CloudController
 
     def self.from_params(params)
       opts = params.dup
-      ['types', 'space_guids', 'organization_guids', 'app_guids', 'guids'].each do |param|
+      %w(types space_guids organization_guids app_guids guids).each do |param|
         to_array!(opts, param)
       end
       new(opts.symbolize_keys)
     end
 
     def to_param_hash
-      super(exclude: [:page, :per_page, :app_guid])
+      super(exclude: [:page, :per_page, :app_guid, :order_by])
     end
 
     private

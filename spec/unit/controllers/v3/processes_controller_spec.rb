@@ -105,6 +105,16 @@ describe ProcessesController, type: :controller do
         end
       end
 
+      context 'because of order_by' do
+        it 'returns 400' do
+          get :index, order_by: '^=%'
+
+          expect(response.status).to eq 400
+          expect(response.body).to include 'BadQueryParameter'
+          expect(response.body).to include("Order by can only be 'created_at' or 'updated_at'")
+        end
+      end
+
       context 'because there are invalid values in parameters' do
         let(:params) { { 'per_page' => 10000 } }
 
