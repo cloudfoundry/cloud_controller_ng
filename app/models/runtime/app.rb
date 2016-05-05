@@ -649,7 +649,8 @@ module VCAP::CloudController
 
     def docker_ports
       exposed_ports = []
-      if !self.needs_staging? && !self.current_saved_droplet.nil? && self.execution_metadata.present?
+      droplet = is_v3? ? app.droplet : current_saved_droplet
+      if !self.needs_staging? && !droplet.nil? && self.execution_metadata.present?
         begin
           metadata = JSON.parse(self.execution_metadata)
           unless metadata['ports'].nil?

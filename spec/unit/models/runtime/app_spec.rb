@@ -950,7 +950,7 @@ module VCAP::CloudController
 
         context 'when the app does not have a current droplet' do
           it 'returns nil' do
-            expect(v2_app.current_droplet).to be_nil
+            expect(v2_app.app.droplet).to be_nil
             expect(v2_app.execution_metadata).to be_nil
           end
         end
@@ -2806,19 +2806,39 @@ module VCAP::CloudController
       end
 
       context 'when tcp ports are saved in the droplet metadata' do
-        let(:app) {
-          app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
-          app.add_droplet(Droplet.new(
-                            app:                app,
-                            droplet_hash:       'the-droplet-hash',
-                            execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
-          ))
-          app.droplet_hash = 'the-droplet-hash'
-          app
-        }
+        context 'when the app is a v2 app' do
+          let(:app) {
+            app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
+            app.add_droplet(Droplet.new(
+                              app:                app,
+                              droplet_hash:       'the-droplet-hash',
+                              execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
+            ))
+            app.droplet_hash = 'the-droplet-hash'
+            app
+          }
 
-        it 'returns an array of the tcp ports' do
-          expect(app.docker_ports).to eq([1024, 1025])
+          it 'returns an array of the tcp ports' do
+            expect(app.docker_ports).to eq([1024, 1025])
+          end
+        end
+
+        context 'when the app is a v3 process' do
+          let(:v3_app) { AppModel.make }
+          let(:app) { App.make(app: v3_app, diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1) }
+
+          before do
+            droplet = DropletModel.make(
+              app: v3_app,
+              state: DropletModel::STAGED_STATE,
+              execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}'
+            )
+            v3_app.update(droplet_guid: droplet.guid)
+          end
+
+          it 'returns an array of the tcp ports' do
+            expect(app.docker_ports).to eq([1024, 1025])
+          end
         end
       end
     end
