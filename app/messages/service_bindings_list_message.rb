@@ -11,7 +11,7 @@ module VCAP::CloudController
     def self.from_params(params)
       opts = params.dup
 
-      ['app_guids', 'service_instance_guids'].each do |key|
+      %w(app_guids service_instance_guids).each do |key|
         to_array!(opts, key)
       end
 
