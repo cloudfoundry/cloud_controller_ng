@@ -235,6 +235,14 @@ EOF
 
       standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :service_instance
     end
+
+    describe 'Service Keys' do
+      before do
+        VCAP::CloudController::ServiceKey.make(name: 'a-service-key', service_instance: service_instance)
+      end
+
+      standard_model_list :service_key, VCAP::CloudController::ServiceInstancesController, outer_model: :service_instance
+    end
   end
 
   get '/v2/service_instances/:guid/permissions' do
@@ -243,26 +251,6 @@ EOF
       expect(status).to eq(200)
 
       expect(parsed_response).to eql({ 'manage' => true })
-    end
-  end
-
-  get '/v2/service_instances/:guid/service_keys' do
-    service_key = nil
-
-    before do
-      service_key = VCAP::CloudController::ServiceKey.make(name: 'a-service-key', service_instance: service_instance)
-    end
-
-    example 'Retrieving service keys associated with a service instance' do
-      client.get "/v2/service_instances/#{service_instance.guid}/service_keys", {}, headers
-
-      expect(status).to eq(200)
-      expect(parsed_response['total_results']).to eq(1)
-      expect(parsed_response['total_pages']).to eq(1)
-      expect(parsed_response['resources'][0]['metadata']['guid']).to eq(service_key.guid)
-      expect(parsed_response['resources'][0]['metadata']['url']).to eq("/v2/service_keys/#{service_key.guid}")
-      expect(parsed_response['resources'][0]['entity']['name']).to eq('a-service-key')
-      expect(parsed_response['resources'][0]['entity']['service_instance_guid']).to eq(service_instance.guid)
     end
   end
 end

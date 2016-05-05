@@ -366,8 +366,8 @@ module VCAP::CloudController
     end
 
     def association_not_empty!
-      asscociations = 'service_bindings, service_keys, and routes'
-      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', asscociations, :service_instances)
+      associations = 'service_bindings, service_keys, and routes'
+      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', associations, :service_instances)
     end
 
     def space_change_not_allowed!
