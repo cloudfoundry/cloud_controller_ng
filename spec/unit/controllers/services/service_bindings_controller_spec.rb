@@ -389,9 +389,10 @@ module VCAP::CloudController
         end
 
         context 'when volume_mount is required and volume_services_enabled is disabled' do
+          let(:instance) { ManagedServiceInstance.make(:volume_mount, space: space) }
+
           before do
-            allow_any_instance_of(ServiceInstanceBindingManager).to receive(:create_app_service_instance_binding).
-              and_raise(ServiceInstanceBindingManager::VolumeMountServiceDisabled.new)
+            TestConfig.config[:volume_services_enabled] = false
           end
 
           it 'returns CF-VolumeMountServiceDisabled' do
