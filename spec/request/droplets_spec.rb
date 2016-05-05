@@ -309,6 +309,62 @@ describe 'Droplets' do
         expect(parsed_response['resources']).not_to include(hash_including('guid' => droplet_without_lifecycle.guid))
       end
     end
+
+    context 'faceted list' do
+      let(:app_model2) { VCAP::CloudController::AppModel.make(space: space) }
+      let!(:droplet3) { VCAP::CloudController::DropletModel.make(app: app_model2, state: VCAP::CloudController::DropletModel::PENDING_STATE) }
+
+      it 'filters by states' do
+        get '/v3/droplets?states=STAGED,PENDING', nil, developer_headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['pagination']).to be_a_response_like(
+          {
+            'total_results' => 2,
+            'first'         => { 'href' => '/v3/droplets?page=1&per_page=50&states=STAGED%2CPENDING' },
+            'last'          => { 'href' => '/v3/droplets?page=1&per_page=50&states=STAGED%2CPENDING' },
+            'next'          => nil,
+            'previous'      => nil,
+          })
+
+        returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+        expect(returned_guids).to match_array([droplet2.guid, droplet3.guid])
+      end
+
+      it 'filters by app_guids' do
+        get "/v3/droplets?app_guids=#{app_model.guid}", nil, developer_headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['pagination']).to be_a_response_like(
+          {
+            'total_results' => 2,
+            'first'         => { 'href' => "/v3/droplets?app_guids=#{app_model.guid}&page=1&per_page=50" },
+            'last'          => { 'href' => "/v3/droplets?app_guids=#{app_model.guid}&page=1&per_page=50" },
+            'next'          => nil,
+            'previous'      => nil,
+          })
+
+        returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+        expect(returned_guids).to match_array([droplet1.guid, droplet2.guid])
+      end
+
+      it 'filters by guids' do
+        get "/v3/droplets?guids=#{droplet1.guid}%2C#{droplet3.guid}", nil, developer_headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['pagination']).to be_a_response_like(
+          {
+            'total_results' => 2,
+            'first'         => { 'href' => "/v3/droplets?guids=#{droplet1.guid}%2C#{droplet3.guid}&page=1&per_page=50" },
+            'last'          => { 'href' => "/v3/droplets?guids=#{droplet1.guid}%2C#{droplet3.guid}&page=1&per_page=50" },
+            'next'          => nil,
+            'previous'      => nil,
+          })
+
+        returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+        expect(returned_guids).to match_array([droplet1.guid, droplet3.guid])
+      end
+    end
   end
 
   describe 'DELETE /v3/droplets/:guid' do

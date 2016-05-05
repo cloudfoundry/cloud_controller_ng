@@ -10,11 +10,12 @@ module VCAP::CloudController
           'app_guids' => 'appguid1,appguid2',
           'page'      => 1,
           'per_page'  => 5,
-          'order_by'  => 'created_at'
+          'order_by'  => 'created_at',
+          'guids'     => 'guid1,guid2'
         }
       end
 
-      it 'returns the correct AppCreateMessage' do
+      it 'returns the correct DropletsListMessage' do
         message = DropletsListMessage.from_params(params)
 
         expect(message).to be_a(DropletsListMessage)
@@ -23,6 +24,7 @@ module VCAP::CloudController
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
+        expect(message.guids).to match_array(['guid1', 'guid2'])
       end
 
       it 'converts requested keys to symbols' do
@@ -36,33 +38,16 @@ module VCAP::CloudController
       end
     end
 
-    describe '#to_param_hash' do
-      let(:opts) do
-        {
-          states:    ['state1', 'state2'],
-          app_guids: ['appguid1', 'appguid2'],
-          page:      1,
-          per_page:  5,
-          order_by:  'created_at',
-          app_guid: '24234',
-        }
-      end
-
-      it 'excludes the pagination keys and app_guid' do
-        expected_params = [:states, :app_guids]
-        expect(DropletsListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
-      end
-    end
-
     describe 'fields' do
       it 'accepts a set of fields' do
         message = DropletsListMessage.new({
-            app_guids: [],
-            states: [],
-            page: 1,
-            per_page: 5,
-            order_by: 'created_at',
-          })
+          app_guids: [],
+          states:    [],
+          page:      1,
+          per_page:  5,
+          order_by:  'created_at',
+          guids:     ['guid1', 'guid2']
+        })
         expect(message).to be_valid
       end
 
@@ -100,6 +85,12 @@ module VCAP::CloudController
           expect(message).to be_invalid
           expect(message.errors[:states].length).to eq 1
         end
+      end
+    end
+
+    describe '#to_param_hash' do
+      it 'excludes app_guid' do
+        expect(DropletsListMessage.new({ app_guid: '24234' }).to_param_hash.keys).to match_array([])
       end
     end
   end

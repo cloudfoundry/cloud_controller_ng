@@ -27,6 +27,10 @@ module VCAP::CloudController
         dataset = dataset.where(state: message.states)
       end
 
+      if message.requested?(:guids)
+        dataset = dataset.where("#{DropletModel.table_name}__guid".to_sym => message.guids)
+      end
+
       dataset
     end
   end
