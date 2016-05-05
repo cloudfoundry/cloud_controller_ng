@@ -2,7 +2,7 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class RouteMappingsListMessage < ListMessage
-    ALLOWED_KEYS = [:page, :per_page, :app_guid, :app_guids].freeze
+    ALLOWED_KEYS = [:app_guid, :app_guids, :page, :per_page, :route_guids].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 
@@ -19,7 +19,7 @@ module VCAP::CloudController
     def self.from_params(params)
       opts = params.dup
 
-      ['app_guids'].each do |key|
+      ['app_guids', 'route_guids'].each do |key|
         to_array!(opts, key)
       end
 

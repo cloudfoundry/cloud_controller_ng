@@ -148,6 +148,31 @@ describe 'Route Mappings' do
           expect(returned_guids).to match_array(expected_guids)
         end
       end
+
+      context 'by route_guids' do
+        let(:route2) { VCAP::CloudController::Route.make(space: space) }
+        let!(:route_mapping5) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route2, process_type: 'other') }
+
+        it 'returns only the matching route mappings' do
+          get "/v3/route_mappings?route_guids=#{route.guid},#{route2.guid}", nil, developer_headers
+
+          expected_pagination = {
+            'total_results' => 4,
+            'first'         => { 'href' => "/v3/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
+            'last'          => { 'href' => "/v3/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
+            'next'          => nil,
+            'previous'      => nil
+          }
+          expected_guids = [route_mapping1.guid, route_mapping2.guid, route_mapping3.guid, route_mapping5.guid]
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(200)
+          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
+          expect(returned_guids).to match_array(expected_guids)
+        end
+      end
     end
   end
 
@@ -257,6 +282,34 @@ describe 'Route Mappings' do
       # verify response
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    context 'faceted list' do
+      context 'by route_guids' do
+        let(:route2) { VCAP::CloudController::Route.make(space: space) }
+        let!(:route_mapping4) { VCAP::CloudController::RouteMappingModel.make(app: app_model, process_type: 'other') }
+        let!(:route_mapping5) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route2, process_type: 'other') }
+
+        it 'returns only the matching route mappings' do
+          get "/v3/apps/#{app_model.guid}/route_mappings?route_guids=#{route.guid},#{route2.guid}", nil, developer_headers
+
+          expected_pagination = {
+            'total_results' => 4,
+            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
+            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
+            'next'          => nil,
+            'previous'      => nil
+          }
+          expected_guids = [route_mapping1.guid, route_mapping2.guid, route_mapping3.guid, route_mapping5.guid]
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(200)
+          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
+          expect(returned_guids).to match_array(expected_guids)
+        end
+      end
     end
   end
 end

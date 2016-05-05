@@ -33,6 +33,18 @@ module VCAP::CloudController
             expect(results).not_to include(route_mapping2)
           end
         end
+
+        context 'route_guids' do
+          let!(:route_mapping1) { RouteMappingModel.make }
+          let!(:route_mapping2) { RouteMappingModel.make }
+          let(:filters) { { route_guids: [route_mapping1.route.guid] } }
+
+          it 'only returns matching route mappings' do
+            results = fetcher.fetch_all(message: message).records
+            expect(results).to match_array([route_mapping1])
+            expect(results).not_to include(route_mapping2)
+          end
+        end
       end
     end
 
@@ -71,6 +83,19 @@ module VCAP::CloudController
             expect(results).not_to include(route_mapping2)
           end
         end
+
+        context 'route_guids' do
+          let(:space) { Space.make }
+          let!(:route_mapping1) { RouteMappingModel.make(app: AppModel.make(space: space)) }
+          let!(:route_mapping2) { RouteMappingModel.make(app: AppModel.make(space: space)) }
+          let(:filters) { { route_guids: [route_mapping1.route.guid] } }
+
+          it 'only returns matching route mappings' do
+            results = fetcher.fetch_for_spaces(message: message, space_guids: [space.guid]).records
+            expect(results).to match_array([route_mapping1])
+            expect(results).not_to include(route_mapping2)
+          end
+        end
       end
     end
 
@@ -99,6 +124,19 @@ module VCAP::CloudController
           let!(:route_mapping1) { RouteMappingModel.make(app: AppModel.make(space: space)) }
           let!(:route_mapping2) { RouteMappingModel.make(app: AppModel.make(space: space)) }
           let(:filters) { { app_guids: [route_mapping1.app.guid, route_mapping2.app.guid] } }
+
+          it 'only returns matching route mappings' do
+            _returned_app, results = fetcher.fetch_for_app(message: message, app_guid: route_mapping1.app.guid)
+            expect(results.records).to match_array([route_mapping1])
+            expect(results.records).not_to include(route_mapping2)
+          end
+        end
+
+        context 'route_guids' do
+          let(:space) { Space.make }
+          let!(:route_mapping1) { RouteMappingModel.make(app: AppModel.make(space: space)) }
+          let!(:route_mapping2) { RouteMappingModel.make(app: AppModel.make(space: space)) }
+          let(:filters) { { route_guids: [route_mapping1.route.guid, route_mapping2.route.guid] } }
 
           it 'only returns matching route mappings' do
             _returned_app, results = fetcher.fetch_for_app(message: message, app_guid: route_mapping1.app.guid)

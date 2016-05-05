@@ -9,7 +9,8 @@ module VCAP::CloudController
           'page'      => 1,
           'per_page'  => 5,
           'app_guid'  => 'app-guid',
-          'app_guids' => 'guid1,guid2'
+          'app_guids' => 'guid1,guid2',
+          'route_guids' => 'guid3,guid4'
         }
       end
 
@@ -21,6 +22,7 @@ module VCAP::CloudController
         expect(message.per_page).to eq(5)
         expect(message.app_guid).to eq('app-guid')
         expect(message.app_guids).to match_array(['guid1', 'guid2'])
+        expect(message.route_guids).to match_array(['guid3', 'guid4'])
       end
 
       it 'converts requested keys to symbols' do
@@ -53,7 +55,8 @@ module VCAP::CloudController
           page:      1,
           per_page:  5,
           app_guid:  'app-guid',
-          app_guids: 'some-guid,other-guid'
+          app_guids: 'some-guid,other-guid',
+          route_guids: 'guid-a,guid-b'
         })
         expect(message).to be_valid
       end

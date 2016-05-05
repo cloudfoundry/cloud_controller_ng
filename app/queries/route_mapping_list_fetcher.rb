@@ -28,6 +28,10 @@ module VCAP::CloudController
         dataset = dataset.where(app_guid: message.app_guids)
       end
 
+      if message.requested?(:route_guids)
+        dataset = dataset.where(route_guid: message.route_guids)
+      end
+
       dataset
     end
   end
