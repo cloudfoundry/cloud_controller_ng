@@ -3,6 +3,7 @@ require 'presenters/v3/package_presenter'
 require 'presenters/v3/process_presenter'
 require 'presenters/v3/route_mapping_presenter'
 require 'presenters/v3/task_presenter'
+require 'presenters/v3/app_presenter'
 
 module VCAP::CloudController
   class PaginatedListPresenter
