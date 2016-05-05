@@ -33,6 +33,15 @@ This endpoint retrieves the route mappings the user has access to.
 ### Query Parameters
 
 <ul class="method-list-group">
+   <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      route_guids
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Route guids to filter by. <br>Example: <code>route_guids=guid1,guid2</code></p>
+  </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       page
@@ -50,5 +59,17 @@ This endpoint retrieves the route mappings the user has access to.
     </h4>
 
     <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+    Value to sort by. Prepend with a url encoded "+" or "-" to change sort direction to ascending or descending, respectively.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+    </p>
   </li>
 </ul>
