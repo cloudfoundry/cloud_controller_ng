@@ -23,12 +23,14 @@ class ServiceBindingsController < ApplicationController
     unauthorized! unless can_write?(app.space.guid)
 
     begin
-      service_binding = ServiceBindingCreate.new(current_user.guid, current_user_email).create(app, service_instance, message, true)
+      service_binding = ServiceBindingCreate.new(current_user.guid, current_user_email).create(app, service_instance, message, volume_services_enabled?)
       render status: :created, json: ServiceBindingModelPresenter.new(service_binding)
     rescue ServiceBindingCreate::ServiceInstanceNotBindable
       raise CloudController::Errors::ApiError.new_from_details('UnbindableService')
     rescue ServiceBindingCreate::InvalidServiceBinding
       raise CloudController::Errors::ApiError.new_from_details('ServiceBindingAppServiceTaken', "#{app.guid} #{service_instance.guid}")
+    rescue ServiceBindingCreate::VolumeMountServiceDisabled
+      raise CloudController::Errors::ApiError.new_from_details('VolumeMountServiceDisabled')
     end
   end
 
@@ -74,5 +76,9 @@ class ServiceBindingsController < ApplicationController
 
   def service_binding_not_found!
     resource_not_found!(:service_binding)
+  end
+
+  def volume_services_enabled?
+    configuration[:volume_services_enabled]
   end
 end

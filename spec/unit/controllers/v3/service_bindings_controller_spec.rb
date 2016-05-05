@@ -286,6 +286,21 @@ describe ServiceBindingsController, type: :controller do
           expect(response.body).to include 'ServiceBindingAppServiceTaken'
         end
       end
+
+      context 'when volume_mount is required and volume_services_enabled is disabled' do
+        before do
+          TestConfig.config[:volume_services_enabled] = false
+          service_instance.service.requires = ['volume_mount']
+          service_instance.service.save
+        end
+
+        it 'returns CF-VolumeMountServiceDisabled' do
+          post :create, body: req_body
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include 'VolumeMountServiceDisabled'
+        end
+      end
     end
   end
 
