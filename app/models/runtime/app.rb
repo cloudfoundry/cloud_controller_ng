@@ -149,7 +149,7 @@ module VCAP::CloudController
     def validate_uniqueness_of_type_for_same_app_model
       if non_unique_process_types.present? && new?
         non_unique_process_types_message = non_unique_process_types.push(type).sort.join(', ')
-        errors.add(:type, "process type provided isn't unique for this app: [#{non_unique_process_types_message}]")
+        errors.add(:type, Sequel.lit("application process types must be case-insensitive and unique, received: [#{non_unique_process_types_message}]"))
       end
     end
 

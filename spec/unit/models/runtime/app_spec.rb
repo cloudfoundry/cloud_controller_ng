@@ -636,7 +636,7 @@ module VCAP::CloudController
           end
 
           it 'validates uniqueness of process types for the belonging app' do
-            msg = "type process type provided isn't unique for this app: [Web, web]"
+            msg = 'application process types must be case-insensitive and unique, received: [Web, web]'
             expect {
               App.make(app: app_model, type: 'Web')
             }.to raise_error(Sequel::ValidationFailed).with_message(msg)
