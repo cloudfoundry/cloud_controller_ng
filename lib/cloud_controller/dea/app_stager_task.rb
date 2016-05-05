@@ -50,7 +50,9 @@ module VCAP::CloudController
         StagingMessage.new(@config, @blobstore_url_generator).staging_request(@app, task_id)
       end
 
-      def handle_http_response(response)
+      def handle_http_response(response, &callback)
+        @completion_callback = callback
+
         check_staging_failed!
         check_staging_error!(response)
         process_http_response(response)

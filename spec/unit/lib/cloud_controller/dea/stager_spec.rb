@@ -22,7 +22,7 @@ module VCAP::CloudController
       let(:runner) { double(:Runner) }
 
       subject(:stager) do
-        Stager.new(thing_to_stage, config, message_bus, dea_pool, runners)
+        Stager.new(app, config, message_bus, dea_pool, runners)
       end
 
       let(:stager_task) do
@@ -54,17 +54,17 @@ module VCAP::CloudController
 
       let(:response) { reply_json }
 
-      let(:thing_to_stage) { AppFactory.make }
+      let(:app) { AppFactory.make }
 
       it_behaves_like 'a stager' do
-        let(:thing_to_stage) { nil }
+        let(:app) { nil }
       end
 
       describe '#stage' do
         before do
           allow(AppStagerTask).to receive(:new).and_return(stager_task)
           allow(stager_task).to receive(:stage).and_yield('fake-staging-result').and_return('fake-stager-response')
-          allow(runners).to receive(:runner_for_app).with(thing_to_stage).and_return(runner)
+          allow(runners).to receive(:runner_for_app).with(app).and_return(runner)
           allow(runner).to receive(:start).with('fake-staging-result')
         end
 
@@ -73,7 +73,7 @@ module VCAP::CloudController
           expect(stager_task).to have_received(:stage)
           expect(AppStagerTask).to have_received(:new).with(config,
                                                             message_bus,
-                                                            thing_to_stage,
+                                                            app,
                                                             dea_pool,
                                                             an_instance_of(CloudController::Blobstore::UrlGenerator))
         end
@@ -85,22 +85,31 @@ module VCAP::CloudController
 
         it 'records the stager response on the app' do
           stager.stage
-          expect(thing_to_stage.last_stager_response).to eq('fake-stager-response')
+          expect(app.last_stager_response).to eq('fake-stager-response')
         end
       end
 
       describe '#staging_complete' do
         before do
           allow(AppStagerTask).to receive(:new).and_return(stager_task)
-          allow(stager_task).to receive(:stage).and_yield('fake-staging-result').and_return('fake-stager-response')
-          allow(runners).to receive(:runner_for_app).with(thing_to_stage).and_return(runner)
-          allow(runner).to receive(:start).with('fake-staging-result')
-          stager.stage
         end
 
         it 'invokes AppStagerTask#handle_http_response for response handling' do
           expect(stager_task).to receive(:handle_http_response).with(response)
           stager.staging_complete(nil, response)
+        end
+
+        context 'when the callback is invoked' do
+          before do
+            allow(stager_task).to receive(:handle_http_response).and_yield('fake-staging-result').and_return('fake-stager-response')
+            allow(runners).to receive(:runner_for_app).with(app).and_return(runner)
+            allow(runner).to receive(:start).with('fake-staging-result')
+          end
+
+          it 'starts the app with the returned staging result' do
+            expect(runner).to receive(:start).with('fake-staging-result')
+            stager.staging_complete(nil, response)
+          end
         end
       end
     end
