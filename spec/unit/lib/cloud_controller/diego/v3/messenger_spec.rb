@@ -14,7 +14,11 @@ module VCAP::CloudController
         let(:package) { PackageModel.make }
         let(:droplet) { DropletModel.make(package_guid: package.guid) }
 
-        subject(:messenger) { Messenger.new(stager_client, protocol) }
+        subject(:messenger) { Messenger.new(protocol) }
+
+        before do
+          allow(CloudController::DependencyLocator.instance).to receive(:stager_client).and_return(stager_client)
+        end
 
         describe '#send_stage_request' do
           let(:staging_guid) { droplet.guid }

@@ -17,7 +17,12 @@ module VCAP::CloudController
         app
       end
 
-      subject(:messenger) { Messenger.new(stager_client, nsync_client, protocol) }
+      subject(:messenger) { Messenger.new(protocol) }
+
+      before do
+        allow(CloudController::DependencyLocator.instance).to receive(:stager_client).and_return(stager_client)
+        allow(CloudController::DependencyLocator.instance).to receive(:nsync_client).and_return(nsync_client)
+      end
 
       describe '#send_stage_request' do
         let(:staging_guid) { StagingGuid.from_app(app) }

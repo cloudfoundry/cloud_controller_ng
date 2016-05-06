@@ -108,11 +108,8 @@ module VCAP::CloudController
     private
 
     def diego_runner(app)
-      nsync_client = dependency_locator.nsync_client
-      stager_client = dependency_locator.stager_client
-
       protocol = Diego::Protocol.new(diego_lifecycle_protocol(app), Diego::EgressRules.new)
-      messenger = Diego::Messenger.new(stager_client, nsync_client, protocol)
+      messenger = Diego::Messenger.new(protocol)
       Diego::Runner.new(app, messenger, protocol, @config[:default_health_check_timeout])
     end
 

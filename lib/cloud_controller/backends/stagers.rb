@@ -44,7 +44,8 @@ module VCAP::CloudController
     def stager_for_package(package, lifecycle_type)
       protocol           = Diego::V3::Protocol::AppProtocol.new(diego_package_lifecycle_protocol(lifecycle_type), Diego::EgressRules.new)
       completion_handler = diego_package_completion_handler(lifecycle_type)
-      Diego::V3::Stager.new(package, v3_messenger_for_protocol(protocol), completion_handler, @config)
+      messenger = Diego::V3::Messenger.new(protocol)
+      Diego::V3::Stager.new(package, messenger, completion_handler, @config)
     end
 
     def stager_for_app(app)
@@ -60,22 +61,12 @@ module VCAP::CloudController
     def diego_stager(app)
       protocol           = Diego::Protocol.new(diego_lifecycle_protocol(app), Diego::EgressRules.new)
       completion_handler = diego_completion_handler(app)
-      Diego::Stager.new(app, v2_messenger_for_protocol(protocol), completion_handler, @config)
+      messenger = Diego::Messenger.new(protocol)
+      Diego::Stager.new(app, messenger, completion_handler, @config)
     end
 
     def dependency_locator
       CloudController::DependencyLocator.instance
-    end
-
-    def v2_messenger_for_protocol(protocol)
-      stager_client = dependency_locator.stager_client
-      nsync_client  = dependency_locator.nsync_client
-      Diego::Messenger.new(stager_client, nsync_client, protocol)
-    end
-
-    def v3_messenger_for_protocol(protocol)
-      stager_client = dependency_locator.stager_client
-      Diego::V3::Messenger.new(stager_client, protocol)
     end
 
     def diego_lifecycle_protocol(app)
