@@ -18,7 +18,6 @@ module VCAP::CloudController
     end
 
     def copy(destination_app, user_guid, user_email)
-      validate!
       new_droplet = DropletModel.new(state: DropletModel::PENDING_STATE, app_guid: destination_app.guid)
 
       # Needed to execute serializers and deserializers correctly on source and destination models
@@ -27,15 +26,12 @@ module VCAP::CloudController
       end
 
       DropletModel.db.transaction do
-        new_droplet.save
-
         if @source_droplet.buildpack?
-          BuildpackLifecycleDataModel.create(droplet_guid: new_droplet.guid,
-                                             stack: @source_droplet.buildpack_lifecycle_data.stack,
-                                             buildpack: @source_droplet.buildpack_lifecycle_data.buildpack)
-
-          copy_job = Jobs::V3::DropletBitsCopier.new(@source_droplet.guid, new_droplet.guid)
-          Jobs::Enqueuer.new(copy_job, queue: 'cc-generic').enqueue
+          new_droplet.save
+          copy_buildpack_droplet(new_droplet)
+        elsif @source_droplet.docker?
+          new_droplet.state = @source_droplet.state
+          new_droplet.save
         end
 
         Repositories::DropletEventRepository.record_create_by_copying(
@@ -52,10 +48,13 @@ module VCAP::CloudController
       new_droplet.reload
     end
 
-    def validate!
-      if @source_droplet.docker?
-        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'Copy droplet', 'Not supported for docker droplets')
-      end
+    def copy_buildpack_droplet(new_droplet)
+      BuildpackLifecycleDataModel.create(droplet_guid: new_droplet.guid,
+                                         stack:                                         @source_droplet.buildpack_lifecycle_data.stack,
+                                         buildpack:                                     @source_droplet.buildpack_lifecycle_data.buildpack)
+
+      copy_job = Jobs::V3::DropletBitsCopier.new(@source_droplet.guid, new_droplet.guid)
+      Jobs::Enqueuer.new(copy_job, queue: 'cc-generic').enqueue
     end
   end
 end

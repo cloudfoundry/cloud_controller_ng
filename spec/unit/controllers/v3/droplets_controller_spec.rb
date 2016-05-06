@@ -442,18 +442,6 @@ describe DropletsController, type: :controller do
       end
     end
 
-    context 'when the source droplet is docker' do
-      let!(:source_droplet) { VCAP::CloudController::DropletModel.make(:docker, state: state, app_guid: source_app_guid) }
-
-      it 'returns a 400' do
-        post :copy, guid: source_droplet_guid, body: req_body
-
-        expect(response.status).to eq(400)
-        expect(response.body).to include('UnableToPerform')
-        expect(response.body).to include('Copy droplet could not be completed: Not supported for docker droplets')
-      end
-    end
-
     describe 'permissions' do
       context 'when the user is not a member of the space where the source droplet exists' do
         before do

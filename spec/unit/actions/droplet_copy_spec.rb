@@ -12,7 +12,8 @@ module VCAP::CloudController
       app_guid: source_app.guid,
       droplet_hash: 'abcdef',
       process_types: { web: 'bundle exec rails s' },
-      environment_variables: { 'THING' => 'STUFF' })
+      environment_variables: { 'THING' => 'STUFF' },
+      state: VCAP::CloudController::DropletModel::STAGING_STATE)
     }
 
     describe '#copy' do
@@ -84,10 +85,21 @@ module VCAP::CloudController
       context 'when lifecycle is docker' do
         let(:lifecycle_type) { :docker }
 
-        it 'raises an ApiError' do
+        before do
+          source_droplet.update(docker_receipt_image: 'urvashi/reddy')
+        end
+
+        it 'copies a docker droplet' do
           expect {
             droplet_copy.copy(target_app, 'user-guid', 'user-email')
-          }.to raise_error(CloudController::Errors::ApiError)
+          }.to change { DropletModel.count }.by(1)
+
+          copied_droplet = DropletModel.last
+
+          expect(copied_droplet).to be_docker
+          expect(copied_droplet.guid).to_not eq(source_droplet.guid)
+          expect(copied_droplet.docker_receipt_image).to eq('urvashi/reddy')
+          expect(copied_droplet.state).to eq(VCAP::CloudController::DropletModel::STAGING_STATE)
         end
       end
     end
