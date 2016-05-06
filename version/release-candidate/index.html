@@ -602,53 +602,71 @@ It will include environment variables for Environment Variable Groups and Servic
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
 
 {
-  "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446",
-  "name": "my_app",
-  "desired_state": "STOPPED",
-  "total_desired_instances": 3,
-  "created_at": "2016-03-17T21:41:30Z",
-  "updated_at": "2016-03-18T11:32:30Z",
+  "guid": "585bc3c1-3743-497d-88b0-403ad6b56d16",
+  "state": "STAGED",
+  "error": null,
   "lifecycle": {
     "type": "buildpack",
     "data": {
-      "buildpack": "java_buildpack",
-      "stack": "cflinuxfs2"
+      "buildpack": null,
+      "stack": null
     }
   },
-  "environment_variables": {
-    "HTTP_PROXY": "http://proxy.example.com"
+  "memory_limit": 1024,
+  "disk_limit": 4096,
+  "result": {
+    "execution_metadata": "",
+    "process_types": {
+      "rake": "bundle exec rake",
+      "web": "bundle exec rackup config.ru -p $PORT"
+    },
+    "hash": {
+      "type": "sha1",
+      "value": "0cd90dd63dd9f42db25340445d203fba25c69cf6"
+    },
+    "buildpack": "ruby 1.6.14",
+    "stack": "cflinuxfs2"
   },
+  "environment_variables": {
+    "CF_STACK": "cflinuxfs2",
+    "VCAP_APPLICATION": {
+      "limits": {
+        "mem": 1024,
+        "disk": 4096,
+        "fds": 16384
+      },
+      "application_id": "7b34f1cf-7e73-428a-bb5a-8a17a8058396",
+      "application_version": "d5985d64-c455-44d0-99a5-285b6521f84c",
+      "application_name": "my_app",
+      "application_uris": [
+        "my_app.example.com"
+      ],
+      "version": "d5985d64-c455-44d0-99a5-285b6521f84c",
+      "name": "my_app",
+      "space_name": "my_space",
+      "space_id": "2f35885d-0c9d-4423-83ad-fd05066f8576",
+      "uris": [
+        "my_app.example.com"
+      ],
+      "users": null
+    },
+    "MEMORY_LIMIT": "1024m",
+    "VCAP_SERVICES": {}
+  },
+  "created_at": "2016-03-28T23:39:34Z",
+  "updated_at": "2016-03-28T23:39:47Z",
   "links": {
     "self": {
-      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
+      "href": "/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
     },
-    "space": {
-      "href": "/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+    "package": {
+      "href": "/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
     },
-    "processes": {
-      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
+    "app": {
+      "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
     },
-    "route_mappings": {
-      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
-    },
-    "packages": {
-      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
-    },
-    "droplet": {
-      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
-    },
-    "droplets": {
-      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
-    },
-    "tasks": {
-      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
-    },
-    "start": {
-      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
-      "method": "PUT"
-    },
-    "stop": {
-      "href": "/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
+    "assign_current_droplet": {
+      "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
       "method": "PUT"
     }
   }
@@ -1068,7 +1086,7 @@ It will include environment variables for Environment Variable Groups and Servic
       <span class="method-list-item-type">array of strings</span>
     </h4>
 
-<p class="method-list-item-description">Array of app names to filter by. <br>Example: <code>names=name1,name2</code></p>
+    <p class="method-list-item-description">Comma-delimited list of app names to filter by. <br>Example: <code>names=name1,name2</code></p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -1078,7 +1096,7 @@ It will include environment variables for Environment Variable Groups and Servic
       <span class="method-list-item-type">array of strings</span>
     </h4>
 
-    <p class="method-list-item-description">Array of space names to filter by. <br>Example: <code>space_guids=space_guid1,space_guid2</code></p>
+    <p class="method-list-item-description">Comma-delimited list of space names to filter by. <br>Example: <code>space_guids=space_guid1,space_guid2</code></p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -1088,7 +1106,7 @@ It will include environment variables for Environment Variable Groups and Servic
       <span class="method-list-item-type">array of strings</span>
     </h4>
 
-    <p class="method-list-item-description">Array of organization names to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code></p>
+    <p class="method-list-item-description">Comma-delimited list of organization names to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code></p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -1098,7 +1116,7 @@ It will include environment variables for Environment Variable Groups and Servic
       <span class="method-list-item-type">array of strings</span>
     </h4>
 
-    <p class="method-list-item-description">Array of app guids to filter by. <br>Example: <code>guids=guid1,guid2</code></p>
+    <p class="method-list-item-description">Comma-delimited list of app guids to filter by. <br>Example: <code>guids=guid1,guid2</code></p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -1899,7 +1917,9 @@ they either use a specific droplet guid, or use the current droplet assigned to 
     </h4>
 
     <p class="method-list-item-description">
-      Filter droplets by state. Valid values are &ldquo;PENDING&rdquo;, &ldquo;STAGING&rdquo;, &ldquo;STAGED&rdquo;, &ldquo;FAILED&rdquo;, or &ldquo;EXPIRED&rdquo;.
+      Comma-delimited list of droplet states to filter by. Valid values are &ldquo;PENDING&rdquo;, &ldquo;STAGING&rdquo;, &ldquo;STAGED&rdquo;, &ldquo;FAILED&rdquo;, or &ldquo;EXPIRED&rdquo;.
+      <br>
+      Example: <code>states=PENDING,STAGING</code>
     </p>
   </li>
   <li class="method-list-item">
@@ -1908,7 +1928,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Unique GUID for the droplet</p>
+    <p class="method-list-item-description">Comma-delimited list of droplet guids to filter by.</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -2578,8 +2598,8 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">State of package to filter by.</p>
-    </li>
+    <p class="method-list-item-description">Comma-delimited list of package states to filter by.</p>
+  </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       types
@@ -2588,8 +2608,8 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Type of package to filter by.</p>
-    </li>
+    <p class="method-list-item-description">Comma-delimited list of package types to filter by.</p>
+  </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       guids
@@ -2598,8 +2618,8 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Guids of packages to filter by.</p>
-    </li>
+    <p class="method-list-item-description">Comma-delimited list of package guids to filter by.</p>
+  </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       app_guids
@@ -2608,8 +2628,8 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Guids of apps to filter by.</p>
-    </li>
+    <p class="method-list-item-description">Comma-delimited list of app guids to filter by.</p>
+  </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       organization_guids
@@ -2618,7 +2638,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Guids of organizations to filter by.</p>
+    <p class="method-list-item-description">Comma-delimited list of organization guids to filter by.</p>
     </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -2628,8 +2648,8 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Guids of spaces to filter by.</p>
-    </li>
+    <p class="method-list-item-description">Comma-delimited list of space guids to filter by.</p>
+  </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       order_by
@@ -2742,7 +2762,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">State of package to filter by.</p>
+    <p class="method-list-item-description">Comma-delimited list of package states to filter by.</p>
     </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -2752,7 +2772,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Type of package to filter by.</p>
+    <p class="method-list-item-description">Comma-delimited list of package types to filter by.</p>
     </li>
   <li class="method-list-item">
   <h4 class="method-list-item-label">
@@ -2762,7 +2782,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Guids of packages to filter by.</p>
+    <p class="method-list-item-description">Comma-delimited list of package guids to filter by.</p>
     </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -3452,6 +3472,68 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <ul class="method-list-group">
   <li class="method-list-item">
     <h4 class="method-list-item-label">
+      app_guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of app guids to filter by.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of package guids to filter by.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      organization_guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of organization guids to filter by.</p>
+    </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      space_guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of space guids to filter by.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      types
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of package types to filter by.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+    Value to sort by. Prepend with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo; to change sort direction to ascending or descending, respectively.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+    </p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
       page
 
       <span class="method-list-item-type">optional</span>
@@ -4040,6 +4122,68 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <h3 id="query-parameters">Query Parameters</h3>
 
 <ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      app_guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of app guids to filter by.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of package guids to filter by.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      organization_guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of organization guids to filter by.</p>
+    </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      space_guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of space guids to filter by.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      types
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of package types to filter by.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+    Value to sort by. Prepend with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo; to change sort direction to ascending or descending, respectively.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+    </p>
+  </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       page
@@ -4777,6 +4921,24 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <h3 id="query-parameters">Query Parameters</h3>
 
 <ul class="method-list-group">
+ <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      app_guids
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of app guids to filter by. <br>Example: <code>app_guids=guid1,guid2</code></p>
+  </li>
+   <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      service_instance_guids
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of service instance guids to filter by. <br>Example: <code>service_instance_guids=guid1,guid2</code></p>
+  </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       page
@@ -4794,6 +4956,18 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
     </h4>
 
     <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+    Value to sort by. Prepend with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo; to change sort direction to ascending or descending, respectively.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+    </p>
   </li>
 </ul>
 
@@ -4995,7 +5169,7 @@ These overwrite and are appended to the app&rsquo;s running environment variable
       <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Maximum memory for the task in MB. Will default to operater-configurable &lsquo;default_app_memory&rsquo; if not set.</p>
+    <p class="method-list-item-description">Maximum memory for the task in MB. Defaults to operater-configurable &lsquo;default_app_memory&rsquo; when not specified.</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -5003,7 +5177,7 @@ These overwrite and are appended to the app&rsquo;s running environment variable
       <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">The guid of the droplet that will be used to run the command.</p>
+    <p class="method-list-item-description">The guid of the droplet that will be used to run the command. Defaults to the app&rsquo;s current droplet when not specified.</p>
   </li>
 </ul>
 
@@ -5191,7 +5365,7 @@ These overwrite and are appended to the app&rsquo;s running environment variable
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Names of tasks to filter by.</p>
+    <p class="method-list-item-description">Comma-delimited list of task names to filter by.</p>
     </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -5201,7 +5375,7 @@ These overwrite and are appended to the app&rsquo;s running environment variable
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">State of tasks to filter by.</p>
+    <p class="method-list-item-description">Comma-delimited list of task states to filter by.</p>
     </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -5211,7 +5385,7 @@ These overwrite and are appended to the app&rsquo;s running environment variable
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Guids of tasks to filter by.</p>
+    <p class="method-list-item-description">Comma-delimited list of task guids to filter by.</p>
     </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -5221,7 +5395,7 @@ These overwrite and are appended to the app&rsquo;s running environment variable
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Guids of apps to filter by.</p>
+    <p class="method-list-item-description">Comma-delimited list of app guids to filter by.</p>
     </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -5231,7 +5405,7 @@ These overwrite and are appended to the app&rsquo;s running environment variable
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Guids of organizations to filter by.</p>
+    <p class="method-list-item-description">Comma-delimited list of organization guids to filter by.</p>
     </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -5241,7 +5415,7 @@ These overwrite and are appended to the app&rsquo;s running environment variable
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Guids of spaces to filter by.</p>
+    <p class="method-list-item-description">Comma-delimited list of space guids to filter by.</p>
     </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -5447,7 +5621,7 @@ These overwrite and are appended to the app&rsquo;s running environment variable
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Names of tasks to filter by.</p>
+    <p class="method-list-item-description">Comma-delimited list of task names to filter by.</p>
     </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -5457,7 +5631,7 @@ These overwrite and are appended to the app&rsquo;s running environment variable
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">State of tasks to filter by.</p>
+    <p class="method-list-item-description">Comma delimited list of task states to filter by.</p>
     </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -5467,7 +5641,7 @@ These overwrite and are appended to the app&rsquo;s running environment variable
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Guids of tasks to filter by.</p>
+    <p class="method-list-item-description">Comma-delimited list of task guids to filter by.</p>
     </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
