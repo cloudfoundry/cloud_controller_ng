@@ -129,7 +129,7 @@ module VCAP::CloudController
         def change_running_instances(app, delta)
           if delta > 0
             range = (app.instances - delta...app.instances)
-            Dea::AppStarterTask.new(app, @blobstore_url_generator, config[:cc_partition]).start(specific_instances: range)
+            Dea::AppStarterTask.new(app, @blobstore_url_generator, config).start(specific_instances: range)
           elsif delta < 0
             range = (app.instances...app.instances - delta)
             stop_indices(app, range.to_a)

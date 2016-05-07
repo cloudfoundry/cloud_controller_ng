@@ -3,7 +3,7 @@ require 'presenters/message_bus/service_binding_presenter'
 module VCAP::CloudController
   module Dea
     class StartAppMessage < Hash
-      def initialize(app, index, partition, blobstore_url_generator)
+      def initialize(app, index, config, blobstore_url_generator)
         super()
 
         # Grab the v3 droplet if the app is a v3 process
@@ -41,7 +41,7 @@ module VCAP::CloudController
         env         = staging_env.merge(app_env).merge({ 'CF_PROCESS_TYPE' => app.type }).map { |k, v| "#{k}=#{v}" }
         self[:env]  = env
 
-        self[:cc_partition]         = partition
+        self[:cc_partition]         = config[:cc_partition]
         self[:console]              = app.console
         self[:debug]                = app.debug
         self[:start_command]        = app.command

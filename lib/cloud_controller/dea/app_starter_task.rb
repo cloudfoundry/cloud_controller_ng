@@ -1,10 +1,10 @@
 module VCAP::CloudController
   module Dea
     class AppStarterTask
-      def initialize(app, blobstore_url_generator, cc_partition=nil)
+      def initialize(app, blobstore_url_generator, config)
         @app = app
         @blobstore_url_generator = blobstore_url_generator
-        @cc_partition = cc_partition
+        @config = config
         @dea_pool = Dea::Client.dea_pool
       end
 
@@ -21,7 +21,7 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :dea_pool, :app, :blobstore_url_generator, :cc_partition
+      attr_reader :dea_pool, :app, :blobstore_url_generator, :config
 
       def start_instances(indices)
         indices = Array(indices)
@@ -50,7 +50,7 @@ module VCAP::CloudController
       end
 
       def start_instance_at_index(index)
-        start_message = Dea::StartAppMessage.new(app, index, @cc_partition, blobstore_url_generator)
+        start_message = Dea::StartAppMessage.new(app, index, config, blobstore_url_generator)
 
         unless start_message.has_app_package?
           logger.error 'dea-client.no-package-found', guid: app.guid

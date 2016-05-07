@@ -5,8 +5,6 @@ module VCAP::CloudController
     describe Runner do
       let(:config) { TestConfig.config }
 
-      let(:cc_partition) { 'blahblah' }
-
       let(:message_bus) do
         instance_double(CfMessageBus::MessageBus, publish: nil)
       end
@@ -37,11 +35,11 @@ module VCAP::CloudController
       let(:app_starter_task) { instance_double(AppStarterTask, start: nil) }
 
       subject(:runner) do
-        Runner.new(app, cc_partition, blobstore_url_generator, message_bus, dea_pool)
+        Runner.new(app, config, blobstore_url_generator, message_bus, dea_pool)
       end
 
       before do
-        allow(AppStarterTask).to receive(:new).and_return(app_starter_task)
+        allow(AppStarterTask).to receive(:new).with(app, blobstore_url_generator, config).and_return(app_starter_task)
       end
 
       describe '#scale' do

@@ -26,7 +26,9 @@ module VCAP::CloudController
       double('blobstore_url_generator', droplet_download_url: 'app_uri')
     end
 
-    let(:subject) { Dea::AppStarterTask.new(app, blobstore_url_generator) }
+    let(:config) { TestConfig.config }
+
+    let(:subject) { Dea::AppStarterTask.new(app, blobstore_url_generator, config) }
 
     def create_ad(id, url=nil)
       hash = { 'id' => id }
