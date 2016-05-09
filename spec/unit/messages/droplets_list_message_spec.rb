@@ -12,7 +12,8 @@ module VCAP::CloudController
           'per_page'  => 5,
           'order_by'  => 'created_at',
           'guids'     => 'guid1,guid2',
-          'space_guids' => 'guid3,guid4'
+          'space_guids' => 'guid3,guid4',
+          'organization_guids' => 'guid3,guid4'
         }
       end
 
@@ -27,6 +28,7 @@ module VCAP::CloudController
         expect(message.order_by).to eq('created_at')
         expect(message.guids).to match_array(['guid1', 'guid2'])
         expect(message.space_guids).to match_array(['guid3', 'guid4'])
+        expect(message.organization_guids).to match_array(['guid3', 'guid4'])
       end
 
       it 'converts requested keys to symbols' do
@@ -38,6 +40,7 @@ module VCAP::CloudController
         expect(message.requested?(:per_page)).to be_truthy
         expect(message.requested?(:order_by)).to be_truthy
         expect(message.requested?(:space_guids)).to be_truthy
+        expect(message.requested?(:organization_guids)).to be_truthy
       end
     end
 
@@ -50,7 +53,8 @@ module VCAP::CloudController
           per_page:  5,
           order_by:  'created_at',
           guids:     ['guid1', 'guid2'],
-          space_guids: ['guid3', 'guid4']
+          space_guids: ['guid3', 'guid4'],
+          organization_guids: ['guid3', 'guid4'],
         })
         expect(message).to be_valid
       end
@@ -76,6 +80,12 @@ module VCAP::CloudController
               expect(message.errors[:base]).to include("Unknown query parameter(s): 'app_guids'")
             end
           end
+        end
+
+        it 'validates organization_guids is an array' do
+          message = DropletsListMessage.new organization_guids: 'tricked you, not an array'
+          expect(message).to be_invalid
+          expect(message.errors[:organization_guids].length).to eq 1
         end
 
         it 'validates space_guids is an array' do

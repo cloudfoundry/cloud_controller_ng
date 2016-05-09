@@ -63,6 +63,15 @@ module VCAP::CloudController
           expect(results).to match_array([staged_droplet_for_app1, failed_droplet_for_app1])
         end
       end
+
+      context 'filtering organization_guids' do
+        let(:filters) { { organization_guids: [app2.organization.guid] } }
+
+        it 'returns all of the droplets with the requested guids' do
+          results = fetcher.fetch_all.all
+          expect(results).to match_array([pending_droplet_for_app2])
+        end
+      end
     end
 
     describe '#fetch_for_spaces' do

@@ -368,6 +368,26 @@ describe 'Droplets' do
         expect(returned_guids).to match_array([droplet1.guid, droplet3.guid])
       end
 
+      let(:organization1) { space.organization }
+      let(:organization2) { space2.organization }
+
+      it 'filters by organization guids' do
+        get "/v3/droplets?organization_guids=#{organization1.guid}", nil, developer_headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['pagination']).to be_a_response_like(
+          {
+            'total_results' => 3,
+            'first'         => { 'href' => "/v3/droplets?organization_guids=#{organization1.guid}&page=1&per_page=50" },
+            'last'          => { 'href' => "/v3/droplets?organization_guids=#{organization1.guid}&page=1&per_page=50" },
+            'next'          => nil,
+            'previous'      => nil,
+          })
+
+        returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+        expect(returned_guids).to match_array([droplet1.guid, droplet2.guid, droplet3.guid])
+      end
+
       it 'filters by space guids that the developer has access to' do
         get "/v3/droplets?space_guids=#{space.guid}%2C#{space2.guid}", nil, developer_headers
 
