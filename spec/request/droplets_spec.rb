@@ -438,7 +438,8 @@ describe 'Droplets' do
         buildpack_receipt_stack_name:     'stack-1',
         environment_variables:            { 'yuu' => 'huuu' },
         disk_limit:                       235,
-        error:                            'example-error'
+        error:                            'example-error',
+        state:                            VCAP::CloudController::DropletModel::PENDING_STATE,
       )
     end
     let!(:droplet2) do
@@ -464,6 +465,23 @@ describe 'Droplets' do
     before do
       droplet1.buildpack_lifecycle_data.update(buildpack: buildpack.name, stack: 'stack-1')
       droplet2.buildpack_lifecycle_data.update(buildpack: 'http://buildpack.git.url.com', stack: 'stack-2')
+    end
+
+    it 'filters by states' do
+      get "/v3/apps/#{app_model.guid}/droplets?states=STAGED", nil, developer_headers
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['pagination']).to be_a_response_like(
+        {
+          'total_results' => 1,
+          'first'         => { 'href' => "/v3/apps/#{app_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
+          'last'          => { 'href' => "/v3/apps/#{app_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
+          'next'          => nil,
+          'previous'      => nil,
+        })
+
+      returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+      expect(returned_guids).to match_array([droplet2.guid])
     end
 
     it 'list all droplets with a buildpack lifecycle' do
@@ -513,7 +531,7 @@ describe 'Droplets' do
           },
           {
             'guid'                  => droplet1.guid,
-            'state'                 => VCAP::CloudController::DropletModel::STAGING_STATE,
+            'state'                 => VCAP::CloudController::DropletModel::PENDING_STATE,
             'error'                 => 'example-error',
             'lifecycle'             => {
               'type' => 'buildpack',
