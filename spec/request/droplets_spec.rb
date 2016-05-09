@@ -139,7 +139,7 @@ describe 'Droplets' do
     let(:app_guid) { droplet_model.app_guid }
 
     before do
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet_model, buildpack: 'http://buildpack.git.url.com', stack: 'stack-name')
+      droplet_model.buildpack_lifecycle_data.update(buildpack: 'http://buildpack.git.url.com', stack: 'stack-name')
     end
 
     it 'gets a droplet' do
@@ -224,8 +224,8 @@ describe 'Droplets' do
     let(:order_by) { '-created_at' }
 
     before do
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet1, buildpack: buildpack.name, stack: 'stack-1')
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet2, buildpack: 'http://buildpack.git.url.com', stack: 'stack-2')
+      droplet1.buildpack_lifecycle_data.update(buildpack: buildpack.name, stack: 'stack-1')
+      droplet2.buildpack_lifecycle_data.update(buildpack: 'http://buildpack.git.url.com', stack: 'stack-2')
     end
 
     it 'list all droplets with a buildpack lifecycle' do
@@ -366,8 +366,8 @@ describe 'Droplets' do
     let(:order_by) { '-created_at' }
 
     before do
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet1, buildpack: buildpack.name, stack: 'stack-1')
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet2, buildpack: 'http://buildpack.git.url.com', stack: 'stack-2')
+      droplet1.buildpack_lifecycle_data.update(buildpack: buildpack.name, stack: 'stack-1')
+      droplet2.buildpack_lifecycle_data.update(buildpack: 'http://buildpack.git.url.com', stack: 'stack-2')
     end
 
     it 'list all droplets with a buildpack lifecycle' do
@@ -472,7 +472,7 @@ describe 'Droplets' do
       }.to_json
     end
     before do
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: og_droplet, buildpack: 'http://buildpack.git.url.com', stack: 'stack-name')
+      og_droplet.buildpack_lifecycle_data.update(buildpack: 'http://buildpack.git.url.com', stack: 'stack-name')
     end
 
     it 'copies a droplet' do

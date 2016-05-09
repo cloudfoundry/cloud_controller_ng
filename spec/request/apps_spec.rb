@@ -731,7 +731,7 @@ describe 'Apps' do
     let(:app_guid) { droplet_model.app_guid }
 
     before do
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet_model, buildpack: 'http://buildpack.git.url.com', stack: 'stack-name')
+      droplet_model.buildpack_lifecycle_data.update(buildpack: 'http://buildpack.git.url.com', stack: 'stack-name')
       app_model.droplet_guid = droplet_model.guid
       app_model.save
     end
