@@ -13,6 +13,7 @@ module VCAP::CloudController
         data: {
           credentials: service_binding.credentials,
           syslog_drain_url: service_binding.syslog_drain_url,
+          volume_mounts: censor_volume_mounts(service_binding.volume_mounts),
         },
         created_at: service_binding.created_at,
         updated_at: service_binding.updated_at,
@@ -34,6 +35,17 @@ module VCAP::CloudController
           href: "/v3/apps/#{service_binding.app.guid}"
         },
       }
+    end
+
+    def censor_volume_mounts(volume_mounts)
+      return [] unless volume_mounts.is_a?(Array)
+
+      volume_mounts.each do |mount_info|
+        mount_info.delete('private')
+        mount_info
+      end
+
+      volume_mounts
     end
   end
 end

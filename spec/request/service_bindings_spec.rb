@@ -15,6 +15,7 @@ describe 'v3 service bindings' do
           fb                  = FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
           fb.credentials      = { 'username' => 'managed_username' }
           fb.syslog_drain_url = 'syslog://mydrain.example.com'
+          fb.volume_mounts    = [{ 'stuff' => 'thing', 'private' => { 'secret-stuff' => 'secret-thing' } }]
           fb
         end
       end
@@ -41,12 +42,17 @@ describe 'v3 service bindings' do
             'credentials' => {
               'username' => 'managed_username'
             },
-            'syslog_drain_url' => 'syslog://mydrain.example.com'
+            'syslog_drain_url' => 'syslog://mydrain.example.com',
+            'volume_mounts' => [
+              {
+                'stuff' => 'thing'
+              }
+            ]
           },
           'created_at' => iso8601,
           'updated_at' => nil,
           'links'      => {
-            'self'             => {
+            'self' => {
               'href' => "/v3/service_bindings/#{guid}"
             },
             'service_instance' => {
@@ -122,12 +128,13 @@ describe 'v3 service bindings' do
             'credentials' => {
               'username' => 'user_provided_username'
             },
-            'syslog_drain_url' => 'syslog://drain.url.com'
+            'syslog_drain_url' => 'syslog://drain.url.com',
+            'volume_mounts' => []
           },
           'created_at' => iso8601,
           'updated_at' => nil,
           'links'      => {
-            'self'             => {
+            'self' => {
               'href' => "/v3/service_bindings/#{guid}"
             },
             'service_instance' => {
@@ -218,6 +225,7 @@ describe 'v3 service bindings' do
         app:              app_model,
         credentials:      { 'username' => 'managed_username' },
         syslog_drain_url: 'syslog://mydrain.example.com',
+        volume_mounts:    [{ 'stuff' => 'thing', 'private' => { 'secret-stuff' => 'secret-thing' } }],
       )
     end
 
@@ -233,12 +241,13 @@ describe 'v3 service bindings' do
           'credentials' => {
             'username' => 'managed_username'
           },
-          'syslog_drain_url' => 'syslog://mydrain.example.com'
+          'syslog_drain_url' => 'syslog://mydrain.example.com',
+          'volume_mounts' => [{ 'stuff' => 'thing' }]
         },
         'created_at' => iso8601,
         'updated_at' => nil,
         'links'      => {
-          'self'             => {
+          'self' => {
             'href' => "/v3/service_bindings/#{service_binding.guid}"
           },
           'service_instance' => {
@@ -264,6 +273,7 @@ describe 'v3 service bindings' do
       app:              app_model,
       credentials:      { 'binding1' => 'shtuff' },
       syslog_drain_url: 'syslog://binding1.example.com',
+      volume_mounts:    [{ 'stuff' => 'thing', 'private' => { 'secret-stuff' => 'secret-thing' } }],
     )
     }
     let!(:service_binding2) { VCAP::CloudController::ServiceBindingModel.make(
@@ -271,6 +281,7 @@ describe 'v3 service bindings' do
       app:              app_model,
       credentials:      { 'binding2' => 'things' },
       syslog_drain_url: 'syslog://binding2.example.com',
+      volume_mounts:    [{ 'stuff2' => 'thing2', 'private' => { 'secret-stuff' => 'secret-thing' } }],
     )
     }
 
@@ -295,12 +306,13 @@ describe 'v3 service bindings' do
               'credentials' => {
                 'binding1' => 'shtuff'
               },
-              'syslog_drain_url' => 'syslog://binding1.example.com'
+              'syslog_drain_url' => 'syslog://binding1.example.com',
+              'volume_mounts' => [{ 'stuff' => 'thing' }]
             },
             'created_at' => iso8601,
             'updated_at' => nil,
             'links'      => {
-              'self'             => {
+              'self' => {
                 'href' => "/v3/service_bindings/#{service_binding1.guid}"
               },
               'service_instance' => {
@@ -318,12 +330,13 @@ describe 'v3 service bindings' do
               'credentials' => {
                 'binding2' => 'things'
               },
-              'syslog_drain_url' => 'syslog://binding2.example.com'
+              'syslog_drain_url' => 'syslog://binding2.example.com',
+              'volume_mounts' => [{ 'stuff2' => 'thing2' }]
             },
             'created_at' => iso8601,
             'updated_at' => nil,
             'links'      => {
-              'self'             => {
+              'self' => {
                 'href' => "/v3/service_bindings/#{service_binding2.guid}"
               },
               'service_instance' => {
@@ -350,14 +363,18 @@ describe 'v3 service bindings' do
           VCAP::CloudController::ServiceBindingModel.make(service_instance: service_instance1,
                                                           app: app_model2,
                                                           credentials: { 'utako' => 'secret' },
-                                                          syslog_drain_url: 'syslog://example.com')
+                                                          syslog_drain_url: 'syslog://example.com',
+                                                          volume_mounts:    [{ 'stuff' => 'thing', 'private' => { 'secret-stuff' => 'secret-thing' } }],
+                                                         )
         end
         let(:app_model3) { VCAP::CloudController::AppModel.make(space: space) }
         let!(:another_apps_service_binding2) do
           VCAP::CloudController::ServiceBindingModel.make(service_instance: service_instance1,
                                                           app: app_model3,
                                                           credentials: { 'amelia' => 'apples' },
-                                                          syslog_drain_url: 'www.neopets.com')
+                                                          syslog_drain_url: 'www.neopets.com',
+                                                          volume_mounts:    [{ 'stuff2' => 'thing2', 'private' => { 'secret-stuff' => 'secret-thing' } }],
+                                                         )
         end
 
         it 'returns only the matching service bindings' do
@@ -379,12 +396,13 @@ describe 'v3 service bindings' do
                   'credentials' => {
                     'utako' => 'secret'
                   },
-                  'syslog_drain_url' => 'syslog://example.com'
+                  'syslog_drain_url' => 'syslog://example.com',
+                  'volume_mounts' => [{ 'stuff' => 'thing' }]
                 },
                 'created_at' => iso8601,
                 'updated_at' => nil,
                 'links'      => {
-                  'self'             => {
+                  'self' => {
                     'href' => "/v3/service_bindings/#{another_apps_service_binding.guid}"
                   },
                   'service_instance' => {
@@ -402,12 +420,13 @@ describe 'v3 service bindings' do
                   'credentials' => {
                     'amelia' => 'apples'
                   },
-                  'syslog_drain_url' => 'www.neopets.com'
+                  'syslog_drain_url' => 'www.neopets.com',
+                  'volume_mounts' => [{ 'stuff2' => 'thing2' }]
                 },
                 'created_at' => iso8601,
                 'updated_at' => nil,
                 'links'      => {
-                  'self'             => {
+                  'self' => {
                     'href' => "/v3/service_bindings/#{another_apps_service_binding2.guid}"
                   },
                   'service_instance' => {
@@ -448,12 +467,13 @@ describe 'v3 service bindings' do
                   'credentials' => {
                     'binding1' => 'shtuff'
                   },
-                  'syslog_drain_url' => 'syslog://binding1.example.com'
+                  'syslog_drain_url' => 'syslog://binding1.example.com',
+                  'volume_mounts' => [{ 'stuff' => 'thing' }]
                 },
                 'created_at' => iso8601,
                 'updated_at' => nil,
                 'links'      => {
-                  'self'             => {
+                  'self' => {
                     'href' => "/v3/service_bindings/#{service_binding1.guid}"
                   },
                   'service_instance' => {
@@ -471,12 +491,13 @@ describe 'v3 service bindings' do
                   'credentials' => {
                     'binding2' => 'things'
                   },
-                  'syslog_drain_url' => 'syslog://binding2.example.com'
+                  'syslog_drain_url' => 'syslog://binding2.example.com',
+                  'volume_mounts' => [{ 'stuff2' => 'thing2' }]
                 },
                 'created_at' => iso8601,
                 'updated_at' => nil,
                 'links'      => {
-                  'self'             => {
+                  'self' => {
                     'href' => "/v3/service_bindings/#{service_binding2.guid}"
                   },
                   'service_instance' => {

@@ -1,10 +1,12 @@
 class FakeServiceBrokerV2Client
   attr_accessor :credentials
   attr_accessor :syslog_drain_url
+  attr_accessor :volume_mounts
 
   def initialize(_attrs)
     @credentials = { 'username' => 'cool_user' }
     @syslog_drain_url = 'syslog://drain.example.com'
+    @volume_mounts = []
   end
 
   def catalog
@@ -41,6 +43,7 @@ class FakeServiceBrokerV2Client
     {
       credentials: credentials,
       syslog_drain_url: syslog_drain_url,
+      volume_mounts: volume_mounts,
     }
   end
 
