@@ -32,9 +32,11 @@ module VCAP::CloudController
     private
 
     def app_nested_request
-      invalid_guids = []
-      invalid_guids << :app_guids if app_guids
-      errors.add(:base, "Unknown query parameter(s): '#{invalid_guids.join("', '")}'") if invalid_guids.present?
+      invalid_attributes = []
+      invalid_attributes << :app_guids if app_guids
+      invalid_attributes << :organization_guids if organization_guids
+      invalid_attributes << :space_guids if space_guids
+      errors.add(:base, "Unknown query parameter(s): '#{invalid_attributes.join("', '")}'") if invalid_attributes.present?
     end
 
     def allowed_keys
