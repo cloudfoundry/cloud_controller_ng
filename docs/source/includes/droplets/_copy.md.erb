@@ -1,0 +1,55 @@
+## Copy a droplet
+
+```
+Definition
+```
+
+```http
+POST /v3/droplets/:guid/copy HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/droplets/[guid]/copy" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -d '{
+    "relationships": {
+      "app": {
+        "guid": "[app-guid]"
+      }
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+
+<%= yield_content :single_copied_pending_buildpack_droplet %>
+```
+
+This endpoint copies a droplet to a different app. The copied droplet excludes the
+environment variables listed on the source droplet.
+
+### Query Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guid
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      Source guid of the droplet to be copied
+    </p>
+  </li>
+</ul>

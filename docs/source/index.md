@@ -29,6 +29,7 @@ includes:
   - droplets/object
   - droplets/lifecycle_object
   - droplets/create
+  - droplets/copy
   - droplets/get
   - droplets/delete
   - droplets/list
