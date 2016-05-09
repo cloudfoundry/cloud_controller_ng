@@ -25,7 +25,7 @@
       <span class="method-list-item-type">object</span>
     </h4>
 
-    <p class="method-list-item-description">Data returned from the service broker for the service instance. Currently possible values are "credentials" and "syslog_drain_url".</p>
+    <p class="method-list-item-description">Data returned from the service broker for the service instance. Currently possible values are "credentials", "syslog_drain_url" and (experimental) "volume_mounts".</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
