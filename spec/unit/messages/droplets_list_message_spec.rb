@@ -73,7 +73,7 @@ module VCAP::CloudController
 
       describe 'validations' do
         describe 'validating app nested query' do
-          context "when the app_guid is present" do
+          context 'when the app_guid is present' do
             context 'when the request contains organization_guids' do
               it 'is invalid' do
                 message = DropletsListMessage.new({ app_guid: 'blah', organization_guids: ['app1', 'app2'] })
@@ -132,5 +132,4 @@ module VCAP::CloudController
       end
     end
   end
-
 end
