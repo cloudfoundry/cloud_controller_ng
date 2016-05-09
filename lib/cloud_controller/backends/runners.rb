@@ -108,9 +108,8 @@ module VCAP::CloudController
     private
 
     def diego_runner(app)
-      protocol = Diego::Protocol.new(diego_lifecycle_protocol(app), Diego::EgressRules.new)
-      messenger = Diego::Messenger.new(protocol)
-      Diego::Runner.new(app, messenger, protocol, @config[:default_health_check_timeout])
+      messenger = Diego::Messenger.new(app)
+      Diego::Runner.new(app, messenger, @config[:default_health_check_timeout])
     end
 
     def dea_runner(app)
@@ -119,14 +118,6 @@ module VCAP::CloudController
 
     def dependency_locator
       CloudController::DependencyLocator.instance
-    end
-
-    def diego_lifecycle_protocol(app)
-      if app.docker_image.present?
-        Diego::Docker::LifecycleProtocol.new
-      else
-        Diego::Buildpack::LifecycleProtocol.new(dependency_locator.blobstore_url_generator)
-      end
     end
 
     def staging_timeout

@@ -9,16 +9,18 @@ require 'cloud_controller/diego/protocol/container_network_info'
 module VCAP::CloudController
   module Diego
     class Protocol
-      def initialize(lifecycle_protocol, egress_rules)
-        @lifecycle_protocol = lifecycle_protocol
-        @egress_rules       = egress_rules
+      attr_reader :app
+
+      def initialize(app)
+        @app = app
+        @egress_rules = Diego::EgressRules.new
       end
 
-      def stage_app_request(app, config)
+      def stage_app_request(config)
         env = Environment.new(app, EnvironmentVariableGroup.staging.environment_json).as_json
         logger.debug2("staging environment: #{env.map { |e| e['name'] }}")
 
-        lifecycle_type, lifecycle_data = @lifecycle_protocol.lifecycle_data(app)
+        lifecycle_type, lifecycle_data = lifecycle_protocol.lifecycle_data(app)
 
         staging_request                     = StagingRequest.new
         staging_request.app_id              = app.guid
@@ -31,16 +33,16 @@ module VCAP::CloudController
         staging_request.timeout             = config[:staging][:timeout_in_seconds]
         staging_request.lifecycle           = lifecycle_type
         staging_request.lifecycle_data      = lifecycle_data
-        staging_request.completion_callback = completion_callback(app, config)
+        staging_request.completion_callback = completion_callback(config)
 
         staging_request.message
       end
 
-      def desire_app_request(app, default_health_check_timeout)
-        desire_app_message(app, default_health_check_timeout).to_json
+      def desire_app_request(default_health_check_timeout)
+        desire_app_message(default_health_check_timeout).to_json
       end
 
-      def desire_app_message(app, default_health_check_timeout)
+      def desire_app_message(default_health_check_timeout)
         env = Environment.new(app, EnvironmentVariableGroup.running.environment_json).as_json
         logger.debug2("running environment: #{env.map { |e| e['name'] }}")
         log_guid = app.is_v3? ? app.app.guid : app.guid
@@ -67,12 +69,20 @@ module VCAP::CloudController
           'ports'                           => OpenProcessPorts.new(app).to_a,
           'network'                         => ContainerNetworkInfo.new(app).to_h,
           'volume_mounts'                   => AppVolumeMounts.new(app)
-        }.merge(@lifecycle_protocol.desired_app_message(app))
+        }.merge(lifecycle_protocol.desired_app_message(app))
+      end
+
+      def lifecycle_protocol
+        if @app.docker?
+          Diego::Docker::LifecycleProtocol.new
+        else
+          Diego::Buildpack::LifecycleProtocol.new(::CloudController::DependencyLocator.instance.blobstore_url_generator)
+        end
       end
 
       private
 
-      def completion_callback(app, config)
+      def completion_callback(config)
         auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"
         host_port = "#{config[:internal_service_hostname]}:#{config[:external_port]}"
         path      = "/internal/staging/#{StagingGuid.from_app(app)}/completed"

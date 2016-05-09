@@ -10,7 +10,7 @@ module VCAP::CloudController
 
       def stage
         if @app.pending? && @app.staging_task_id
-          @messenger.send_stop_staging_request(@app)
+          @messenger.send_stop_staging_request
         end
 
         @app.mark_for_restaging
@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       def stop_stage
-        @messenger.send_stop_staging_request(@app)
+        @messenger.send_stop_staging_request
       end
 
       private
@@ -39,7 +39,7 @@ module VCAP::CloudController
       end
 
       def send_stage_app_request
-        @messenger.send_stage_request(@app, @config)
+        @messenger.send_stage_request(@config)
       rescue CloudController::Errors::ApiError => e
         raise e
       rescue => e

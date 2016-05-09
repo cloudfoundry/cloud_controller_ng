@@ -3,37 +3,36 @@ module VCAP::CloudController
     class Runner
       class CannotCommunicateWithDiegoError < StandardError; end
 
-      def initialize(app, messenger, protocol, default_health_check_timeout)
+      def initialize(app, messenger, default_health_check_timeout)
         @app = app
         @messenger = messenger
-        @protocol = protocol
         @default_health_check_timeout = default_health_check_timeout
       end
 
       def scale
         raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @app.started?
-        with_logging('scale') { @messenger.send_desire_request(@app, @default_health_check_timeout) }
+        with_logging('scale') { @messenger.send_desire_request(@default_health_check_timeout) }
       end
 
       def start(_={})
-        with_logging('start') { @messenger.send_desire_request(@app, @default_health_check_timeout) }
+        with_logging('start') { @messenger.send_desire_request(@default_health_check_timeout) }
       end
 
       def update_routes
         raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @app.started?
-        with_logging('update_route') { @messenger.send_desire_request(@app, @default_health_check_timeout) unless @app.staging? }
+        with_logging('update_route') { @messenger.send_desire_request(@default_health_check_timeout) unless @app.staging? }
       end
 
       def desire_app_message
-        @protocol.desire_app_message(@app, @default_health_check_timeout)
+        Diego::Protocol.new(@app).desire_app_message(@default_health_check_timeout)
       end
 
       def stop
-        with_logging('stop_app') { @messenger.send_stop_app_request(@app) }
+        with_logging('stop_app') { @messenger.send_stop_app_request }
       end
 
       def stop_index(index)
-        with_logging('stop_index') { @messenger.send_stop_index_request(@app, index) }
+        with_logging('stop_index') { @messenger.send_stop_index_request(index) }
       end
 
       def with_logging(action=nil)

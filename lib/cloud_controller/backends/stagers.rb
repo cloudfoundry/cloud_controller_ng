@@ -59,22 +59,13 @@ module VCAP::CloudController
     end
 
     def diego_stager(app)
-      protocol           = Diego::Protocol.new(diego_lifecycle_protocol(app), Diego::EgressRules.new)
       completion_handler = diego_completion_handler(app)
-      messenger = Diego::Messenger.new(protocol)
+      messenger = Diego::Messenger.new(app)
       Diego::Stager.new(app, messenger, completion_handler, @config)
     end
 
     def dependency_locator
       CloudController::DependencyLocator.instance
-    end
-
-    def diego_lifecycle_protocol(app)
-      if app.docker_image.present?
-        Diego::Docker::LifecycleProtocol.new
-      else
-        Diego::Buildpack::LifecycleProtocol.new(dependency_locator.blobstore_url_generator)
-      end
     end
 
     def diego_package_lifecycle_protocol(lifecycle_type)

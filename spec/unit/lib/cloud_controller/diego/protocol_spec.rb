@@ -45,13 +45,12 @@ module VCAP::CloudController
         )
       end
 
-      let(:lifecycle_protocol) { FakeLifecycleProtocol.new }
+      let(:fake_lifecycle_protocol) { FakeLifecycleProtocol.new }
 
-      subject(:protocol) do
-        Protocol.new(lifecycle_protocol, egress_rules)
-      end
+      subject(:protocol) { Protocol.new(app) }
 
       before do
+        allow(EgressRules).to receive(:new).and_return(egress_rules)
         allow(egress_rules).to receive(:staging).and_return(['staging_egress_rule'])
         allow(egress_rules).to receive(:running).with(app).and_return(['running_egress_rule'])
       end
@@ -80,6 +79,7 @@ module VCAP::CloudController
           group = EnvironmentVariableGroup.staging
           group.environment_json = staging_env
           group.save
+          allow(protocol).to receive(:lifecycle_protocol).and_return(fake_lifecycle_protocol)
         end
 
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
@@ -88,7 +88,7 @@ module VCAP::CloudController
         let(:user) { 'user' }
         let(:password) { 'password' }
 
-        let(:message) { protocol.stage_app_request(app, config) }
+        let(:message) { protocol.stage_app_request(config) }
         let(:app) { AppFactory.make(staging_task_id: 'fake-staging-task-id', diego: true) }
 
         it 'contains the correct payload for staging a buildpack app' do
@@ -101,8 +101,8 @@ module VCAP::CloudController
             environment: Environment.new(app, staging_env).as_json,
             egress_rules: ['staging_egress_rule'],
             timeout: 90,
-            lifecycle: lifecycle_protocol.lifecycle_data(double(:app))[0],
-            lifecycle_data: lifecycle_protocol.lifecycle_data(double(:app))[1],
+            lifecycle: fake_lifecycle_protocol.lifecycle_data(double(:app))[0],
+            lifecycle_data: fake_lifecycle_protocol.lifecycle_data(double(:app))[1],
             completion_callback: "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/staging/#{staging_guid}/completed"
           })
         end
@@ -111,7 +111,7 @@ module VCAP::CloudController
           let(:app) { AppFactory.make(memory: 127, diego: true) }
 
           subject(:message) do
-            protocol.stage_app_request(app, config)
+            protocol.stage_app_request(config)
           end
 
           it 'uses the minimum staging memory' do
@@ -123,7 +123,7 @@ module VCAP::CloudController
           let(:app) { AppFactory.make(disk_quota: 127, diego: true) }
 
           subject(:message) do
-            protocol.stage_app_request(app, config)
+            protocol.stage_app_request(config)
           end
 
           it 'includes the fields needed to stage a Docker app' do
@@ -135,7 +135,7 @@ module VCAP::CloudController
           let(:app) { AppFactory.make(file_descriptors: 127, diego: true) }
 
           subject(:message) do
-            protocol.stage_app_request(app, config)
+            protocol.stage_app_request(config)
           end
 
           it 'includes the fields needed to stage a Docker app' do
@@ -145,15 +145,19 @@ module VCAP::CloudController
       end
 
       describe '#desire_app_request' do
-        let(:request) { protocol.desire_app_request(app, default_health_check_timeout) }
+        let(:request) { protocol.desire_app_request(default_health_check_timeout) }
+
+        before do
+          allow(protocol).to receive(:lifecycle_protocol).and_return(fake_lifecycle_protocol)
+        end
 
         it 'returns the message' do
-          expect(request).to match_json(protocol.desire_app_message(app, default_health_check_timeout).as_json)
+          expect(request).to match_json(protocol.desire_app_message(default_health_check_timeout).as_json)
         end
       end
 
       describe '#desire_app_message' do
-        let(:message) { protocol.desire_app_message(app, default_health_check_timeout) }
+        let(:message) { protocol.desire_app_message(default_health_check_timeout) }
 
         let(:running_env) { { 'KEY' => 'running_value' } }
 
@@ -173,6 +177,8 @@ module VCAP::CloudController
           app.add_route(route_without_service)
           app.add_route(route_with_service)
           app.current_droplet.execution_metadata = 'foobar'
+
+          allow(protocol).to receive(:lifecycle_protocol).and_return(fake_lifecycle_protocol)
         end
 
         it 'is a message with the information nsync needs to desire the app' do
@@ -217,7 +223,7 @@ module VCAP::CloudController
               }
             },
             'volume_mounts' => an_instance_of(Array)
-          }.merge(lifecycle_protocol.desired_app_message(double(:app))))
+          }.merge(fake_lifecycle_protocol.desired_app_message(double(:app))))
         end
 
         context 'when app does not have ports defined' do
@@ -303,6 +309,28 @@ module VCAP::CloudController
             it 'includes the process type' do
               expect(message).to match(hash_including('log_source' => 'APP/PROC/POTATO'))
             end
+          end
+        end
+      end
+
+      describe '#lifecycle_protocol' do
+        context 'docker app' do
+          before do
+            allow(app).to receive(:docker?).and_return(true)
+          end
+
+          it 'is a docker lifecycle protocol' do
+            expect(protocol.lifecycle_protocol).to be_a(Diego::Docker::LifecycleProtocol)
+          end
+        end
+
+        context 'buildpack app' do
+          before do
+            allow(app).to receive(:docker?).and_return(false)
+          end
+
+          it 'is a buildpack lifecycle protocol' do
+            expect(protocol.lifecycle_protocol).to be_a(Diego::Buildpack::LifecycleProtocol)
           end
         end
       end

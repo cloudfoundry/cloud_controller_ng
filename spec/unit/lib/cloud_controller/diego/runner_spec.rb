@@ -8,7 +8,7 @@ module VCAP::CloudController
       let(:protocol) { instance_double(Diego::Protocol, desire_app_message: {}) }
       let(:default_health_check_timeout) { 9999 }
 
-      subject(:runner) { Runner.new(app, messenger, protocol, default_health_check_timeout) }
+      subject(:runner) { Runner.new(app, messenger, default_health_check_timeout) }
 
       before do
         allow(messenger).to receive(:send_desire_request)
@@ -17,7 +17,7 @@ module VCAP::CloudController
       describe '#scale' do
         context 'when the app is started' do
           it 'desires an app, relying on its state to convey the change' do
-            expect(messenger).to receive(:send_desire_request).with(app, default_health_check_timeout)
+            expect(messenger).to receive(:send_desire_request).with(default_health_check_timeout)
             runner.scale
           end
         end
@@ -38,7 +38,7 @@ module VCAP::CloudController
         end
 
         it 'desires an app, relying on its state to convey the change' do
-          expect(messenger).to have_received(:send_desire_request).with(app, default_health_check_timeout)
+          expect(messenger).to have_received(:send_desire_request).with(default_health_check_timeout)
         end
       end
 
@@ -49,7 +49,7 @@ module VCAP::CloudController
 
         it 'sends a stop app request' do
           runner.stop
-          expect(messenger).to have_received(:send_stop_app_request).with(app)
+          expect(messenger).to have_received(:send_stop_app_request)
         end
       end
 
@@ -62,14 +62,14 @@ module VCAP::CloudController
         end
 
         it 'stops the application instance with the specified index' do
-          expect(messenger).to have_received(:send_stop_index_request).with(app, index)
+          expect(messenger).to have_received(:send_stop_index_request).with(index)
         end
       end
 
       describe '#update_routes' do
         context 'when the app is started' do
           it 'desires an app, relying on its state to convey the change' do
-            expect(messenger).to receive(:send_desire_request).with(app, default_health_check_timeout)
+            expect(messenger).to receive(:send_desire_request).with(default_health_check_timeout)
             runner.update_routes
           end
         end
@@ -97,9 +97,13 @@ module VCAP::CloudController
       end
 
       describe '#desire_app_message' do
+        before do
+          expect(Protocol).to receive(:new).with(app).and_return(protocol)
+        end
+
         it "gets the procotol's desire_app_message" do
           expect(runner.desire_app_message).to eq({})
-          expect(protocol).to have_received(:desire_app_message).with(app, default_health_check_timeout)
+          expect(protocol).to have_received(:desire_app_message).with(default_health_check_timeout)
         end
       end
 
