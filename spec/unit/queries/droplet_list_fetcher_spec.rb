@@ -27,6 +27,15 @@ module VCAP::CloudController
         expect(results).to match_array([staged_droplet_for_app1, failed_droplet_for_app1, pending_droplet_for_app2])
       end
 
+      context 'filtering space guids' do
+        let(:filters) { { space_guids: [app1.space.guid] } }
+
+        it 'returns all of the droplets with the requested app guids' do
+          results = fetcher.fetch_all(message: message).all
+          expect(results.map(&:guid)).to match_array([staged_droplet_for_app1.guid, failed_droplet_for_app1.guid])
+        end
+      end
+
       context 'filtering app guids' do
         let(:filters) { { app_guids: [app1.guid] } }
 
@@ -79,7 +88,7 @@ module VCAP::CloudController
 
       it 'returns all of the desired droplets in the requested spaces' do
         results = fetcher.fetch_for_spaces(space_guids: space_guids, message: message).all
-        expect(results).to match_array([staged_droplet_for_app1, failed_droplet_for_app1, pending_droplet_for_app2])
+        expect(results.map(&:guid)).to match_array([staged_droplet_for_app1.guid, failed_droplet_for_app1.guid, pending_droplet_for_app2.guid])
       end
 
       context 'filtering app guids' do
@@ -101,6 +110,25 @@ module VCAP::CloudController
           expect(results).to match_array([failed_droplet_for_app1, pending_droplet_for_app2, pending_droplet_for_app3])
         end
       end
+
+      context 'filtering guids' do
+        let(:filters) { { guids: [failed_droplet_for_app1.guid, pending_droplet_for_app2.guid] } }
+
+        it 'returns all of the desired droplets with the requested droplet guids' do
+          results = fetcher.fetch_for_spaces(space_guids: space_guids, message: message).all
+          expect(results).to match_array([failed_droplet_for_app1, pending_droplet_for_app2])
+        end
+      end
+
+      context 'filtering space guids' do
+        let(:filters) { { space_guids: [failed_droplet_for_app1.space.guid] } }
+
+        it 'returns all of the desired droplets with the requested space guids' do
+          results = fetcher.fetch_for_spaces(space_guids: space_guids, message: message).all
+          expect(results.map(&:guid)).to match_array([failed_droplet_for_app1.guid, staged_droplet_for_app1.guid])
+        end
+      end
+
     end
 
     describe '#fetch_for_app' do

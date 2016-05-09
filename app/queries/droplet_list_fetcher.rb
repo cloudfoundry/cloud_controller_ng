@@ -6,8 +6,8 @@ module VCAP::CloudController
     end
 
     def fetch_for_spaces(space_guids:, message:)
-      dataset = DropletModel.select_all(:v3_droplets).join(:apps_v3, guid: :app_guid, space_guid: space_guids)
-      filter(message, dataset)
+      dataset = DropletModel.dataset
+      filter(message, dataset, space_guids: space_guids)
     end
 
     def fetch_for_app(message:)
@@ -18,7 +18,7 @@ module VCAP::CloudController
 
     private
 
-    def filter(message, dataset)
+    def filter(message, dataset, space_guids: nil)
       if message.requested?(:app_guids)
         dataset = dataset.where(app_guid: message.app_guids)
       end
@@ -31,7 +31,18 @@ module VCAP::CloudController
         dataset = dataset.where("#{DropletModel.table_name}__guid".to_sym => message.guids)
       end
 
+      if scoped_space_guids(space_guids, message.space_guids).present?
+        dataset = dataset.select_all(:v3_droplets).join(:apps_v3, guid: :app_guid, space_guid: scoped_space_guids(space_guids, message.space_guids))
+      end
+
       dataset
+    end
+
+    def scoped_space_guids(permitted_space_guids, filtered_space_guids)
+      return nil unless permitted_space_guids || filtered_space_guids
+      return filtered_space_guids & permitted_space_guids if filtered_space_guids && permitted_space_guids
+      return permitted_space_guids if permitted_space_guids
+      return filtered_space_guids if filtered_space_guids
     end
   end
 end

@@ -311,8 +311,11 @@ describe 'Droplets' do
     end
 
     context 'faceted list' do
+      let(:space2) {VCAP::CloudController::Space.make }
       let(:app_model2) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app_model3) { VCAP::CloudController::AppModel.make(space: space2) }
       let!(:droplet3) { VCAP::CloudController::DropletModel.make(app: app_model2, state: VCAP::CloudController::DropletModel::PENDING_STATE) }
+      let!(:droplet4) { VCAP::CloudController::DropletModel.make(app: app_model3, state: VCAP::CloudController::DropletModel::PENDING_STATE) }
 
       it 'filters by states' do
         get '/v3/droplets?states=STAGED,PENDING', nil, developer_headers
@@ -363,6 +366,23 @@ describe 'Droplets' do
 
         returned_guids = parsed_response['resources'].map { |i| i['guid'] }
         expect(returned_guids).to match_array([droplet1.guid, droplet3.guid])
+      end
+
+      it 'filters by space guids that the developer has access to' do
+        get "/v3/droplets?space_guids=#{space.guid}%2C#{space2.guid}", nil, developer_headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['pagination']).to be_a_response_like(
+          {
+            'total_results' => 3,
+            'first'         => { 'href' => "/v3/droplets?page=1&per_page=50&space_guids=#{space.guid}%2C#{space2.guid}" },
+            'last'          => { 'href' => "/v3/droplets?page=1&per_page=50&space_guids=#{space.guid}%2C#{space2.guid}" },
+            'next'          => nil,
+            'previous'      => nil,
+          })
+
+        returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+        expect(returned_guids).to match_array([droplet1.guid, droplet2.guid, droplet3.guid])
       end
     end
   end
