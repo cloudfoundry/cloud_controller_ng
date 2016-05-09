@@ -38,7 +38,8 @@ module VCAP::CloudController
           stagers.stager_for_app(app).staging_complete(nil, staging_response)
         rescue CloudController::Errors::ApiError => api_err
           logger.error('dea.staging.completion-controller-error', error: api_err)
-          raise api_err
+          raise CloudController::Errors::ApiError.new_from_details('ServerError', name: api_err.name, message: api_err.message) if api_err.name.eql? 'StagingError'
+          return [200, '{}']
         rescue => e
           logger.error('dea.staging.completion-controller-error', error: e)
           raise CloudController::Errors::ApiError.new_from_details('ServerError')
