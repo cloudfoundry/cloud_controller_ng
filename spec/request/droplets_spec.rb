@@ -311,7 +311,7 @@ describe 'Droplets' do
     end
 
     context 'faceted list' do
-      let(:space2) {VCAP::CloudController::Space.make }
+      let(:space2) { VCAP::CloudController::Space.make }
       let(:app_model2) { VCAP::CloudController::AppModel.make(space: space) }
       let(:app_model3) { VCAP::CloudController::AppModel.make(space: space2) }
       let!(:droplet3) { VCAP::CloudController::DropletModel.make(app: app_model2, state: VCAP::CloudController::DropletModel::PENDING_STATE) }

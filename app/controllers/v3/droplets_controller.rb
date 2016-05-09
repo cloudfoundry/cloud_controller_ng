@@ -19,13 +19,13 @@ class DropletsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
-      app, dataset = DropletListFetcher.new.fetch_for_app(message: message)
+      app, dataset = DropletListFetcher.new(message: message).fetch_for_app
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
       dataset = if roles.admin?
-                  DropletListFetcher.new.fetch_all(message: message)
+                  DropletListFetcher.new(message: message).fetch_all
                 else
-                  DropletListFetcher.new.fetch_for_spaces(space_guids: readable_space_guids, message: message)
+                  DropletListFetcher.new(message: message).fetch_for_spaces(space_guids: readable_space_guids)
                 end
     end
 
