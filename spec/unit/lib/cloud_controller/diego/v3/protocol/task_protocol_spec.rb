@@ -58,7 +58,7 @@ module VCAP::CloudController
               it 'contains the correct payload for creating a task' do
                 result = protocol.task_request(task, config)
 
-                expect(JSON.parse(result)).to eq({
+                expect(JSON.parse(result)).to match({
                   'task_guid' => task.guid,
                   'rootfs' => app.lifecycle_data.stack,
                   'log_guid' => app.guid,
@@ -70,7 +70,8 @@ module VCAP::CloudController
                   'lifecycle' => Lifecycles::BUILDPACK,
                   'command' => 'be rake my panda',
                   'completion_callback' => "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed",
-                  'log_source' => 'APP/TASK/' + task.name
+                  'log_source' => 'APP/TASK/' + task.name,
+                  'volume_mounts' => an_instance_of(Array)
                 })
               end
             end
@@ -82,7 +83,7 @@ module VCAP::CloudController
               it 'contains the correct payload for creating a task' do
                 result = protocol.task_request(task, config)
 
-                expect(JSON.parse(result)).to eq({
+                expect(JSON.parse(result)).to match({
                   'task_guid' => task.guid,
                   'log_guid' => app.guid,
                   'environment' => expected_envs,
@@ -93,7 +94,8 @@ module VCAP::CloudController
                   'lifecycle' => Lifecycles::DOCKER,
                   'command' => 'be rake my panda',
                   'completion_callback' => "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed",
-                  'log_source' => 'APP/TASK/' + task.name
+                  'log_source' => 'APP/TASK/' + task.name,
+                  'volume_mounts' => an_instance_of(Array)
                 })
               end
             end
