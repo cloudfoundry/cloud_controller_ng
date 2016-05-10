@@ -293,6 +293,7 @@ describe 'v3 service bindings' do
       expected_response = {
         'pagination' => {
           'total_results' => 3,
+          'total_pages'   => 2,
           'first'         => { 'href' => '/v3/service_bindings?page=1&per_page=2' },
           'last'          => { 'href' => '/v3/service_bindings?page=2&per_page=2' },
           'next'          => { 'href' => '/v3/service_bindings?page=2&per_page=2' },
@@ -383,6 +384,7 @@ describe 'v3 service bindings' do
           expected_response = {
             'pagination' => {
               'total_results' => 2,
+              'total_pages'   => 1,
               'first'         => { 'href' => "/v3/service_bindings?app_guids=#{app_model2.guid}%2C#{app_model3.guid}&page=1&per_page=2" },
               'last'          => { 'href' => "/v3/service_bindings?app_guids=#{app_model2.guid}%2C#{app_model3.guid}&page=1&per_page=2" },
               'next'          => nil,
@@ -454,6 +456,7 @@ describe 'v3 service bindings' do
           expected_response = {
             'pagination' => {
               'total_results' => 2,
+              'total_pages'   => 1,
               'first'         => { 'href' => "/v3/service_bindings?page=1&per_page=2&service_instance_guids=#{service_instance1.guid}%2C#{service_instance2.guid}" },
               'last'          => { 'href' => "/v3/service_bindings?page=1&per_page=2&service_instance_guids=#{service_instance1.guid}%2C#{service_instance2.guid}" },
               'next'          => nil,

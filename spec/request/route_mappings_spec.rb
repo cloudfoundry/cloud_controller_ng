@@ -83,6 +83,7 @@ describe 'Route Mappings' do
       expected_response = {
         'pagination' => {
           'total_results' => 3,
+          'total_pages'   => 2,
           'first'         => { 'href' => '/v3/route_mappings?page=1&per_page=2' },
           'last'          => { 'href' => '/v3/route_mappings?page=2&per_page=2' },
           'next'          => { 'href' => '/v3/route_mappings?page=2&per_page=2' },
@@ -133,6 +134,7 @@ describe 'Route Mappings' do
 
           expected_pagination = {
             'total_results' => 4,
+            'total_pages'   => 1,
             'first'         => { 'href' => "/v3/route_mappings?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
             'last'          => { 'href' => "/v3/route_mappings?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
             'next'          => nil,
@@ -158,6 +160,7 @@ describe 'Route Mappings' do
 
           expected_pagination = {
             'total_results' => 4,
+            'total_pages'   => 1,
             'first'         => { 'href' => "/v3/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
             'last'          => { 'href' => "/v3/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
             'next'          => nil,
@@ -244,6 +247,7 @@ describe 'Route Mappings' do
       expected_response = {
         'pagination' => {
           'total_results' => 3,
+          'total_pages'   => 2,
           'first'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings?page=1&per_page=2" },
           'last'          => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings?page=2&per_page=2" },
           'next'          => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings?page=2&per_page=2" },
@@ -295,6 +299,7 @@ describe 'Route Mappings' do
 
           expected_pagination = {
             'total_results' => 4,
+            'total_pages'   => 1,
             'first'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
             'last'          => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
             'next'          => nil,

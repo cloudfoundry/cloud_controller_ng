@@ -40,6 +40,7 @@ describe 'Processes' do
       expected_response = {
         'pagination' => {
           'total_results' => 3,
+          'total_pages'   => 2,
           'first'         => { 'href' => '/v3/processes?page=1&per_page=2' },
           'last'          => { 'href' => '/v3/processes?page=2&per_page=2' },
           'next'          => { 'href' => '/v3/processes?page=2&per_page=2' },
@@ -111,6 +112,7 @@ describe 'Processes' do
           expected_response = {
             'pagination' => {
               'total_results' => 1,
+              'total_pages'   => 1,
               'first'         => { 'href' => '/v3/processes?page=1&per_page=2&types=worker%2Cdoesnotexist' },
               'last'          => { 'href' => '/v3/processes?page=1&per_page=2&types=worker%2Cdoesnotexist' },
               'next'          => nil,
@@ -177,6 +179,7 @@ describe 'Processes' do
           expected_response = {
             'pagination' => {
               'total_results' => 1,
+              'total_pages'   => 1,
               'first'         => { 'href' => "/v3/processes?page=1&per_page=2&space_guids=#{other_space.guid}" },
               'last'          => { 'href' => "/v3/processes?page=1&per_page=2&space_guids=#{other_space.guid}" },
               'next'          => nil,
@@ -241,6 +244,7 @@ describe 'Processes' do
           expected_response = {
             'pagination' => {
               'total_results' => 1,
+              'total_pages'   => 1,
               'first'         => { 'href' => "/v3/processes?organization_guids=#{other_org.guid}&page=1&per_page=2" },
               'last'          => { 'href' => "/v3/processes?organization_guids=#{other_org.guid}&page=1&per_page=2" },
               'next'          => nil,
@@ -300,6 +304,7 @@ describe 'Processes' do
           expected_response = {
             'pagination' => {
               'total_results' => 1,
+              'total_pages'   => 1,
               'first'         => { 'href' => "/v3/processes?app_guids=#{desired_app.guid}&page=1&per_page=2" },
               'last'          => { 'href' => "/v3/processes?app_guids=#{desired_app.guid}&page=1&per_page=2" },
               'next'          => nil,
@@ -347,6 +352,7 @@ describe 'Processes' do
           expected_response = {
             'pagination' => {
               'total_results' => 2,
+              'total_pages'   => 1,
               'first'         => { 'href' => "/v3/processes?guids=#{web_process.guid}%2C#{worker_process.guid}&page=1&per_page=2" },
               'last'          => { 'href' => "/v3/processes?guids=#{web_process.guid}%2C#{worker_process.guid}&page=1&per_page=2" },
               'next'          => nil,
@@ -796,6 +802,7 @@ describe 'Processes' do
       expected_response = {
         'pagination' => {
           'total_results' => 3,
+          'total_pages'   => 2,
           'first'         => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=1&per_page=2" },
           'last'          => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=2&per_page=2" },
           'next'          => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=2&per_page=2" },
@@ -867,6 +874,7 @@ describe 'Processes' do
           expected_response = {
             'pagination' => {
               'total_results' => 1,
+              'total_pages'   => 1,
               'first'         => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=1&per_page=2&types=worker" },
               'last'          => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=1&per_page=2&types=worker" },
               'next'          => nil,
@@ -914,6 +922,7 @@ describe 'Processes' do
           expected_response = {
             'pagination' => {
               'total_results' => 2,
+              'total_pages'   => 1,
               'first'         => { 'href' => "/v3/apps/#{app_model.guid}/processes?guids=#{process1.guid}%2C#{process2.guid}&page=1&per_page=2" },
               'last'          => { 'href' => "/v3/apps/#{app_model.guid}/processes?guids=#{process1.guid}%2C#{process2.guid}&page=1&per_page=2" },
               'next'          => nil,

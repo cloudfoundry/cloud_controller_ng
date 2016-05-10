@@ -236,6 +236,7 @@ describe 'Droplets' do
       expect(parsed_response).to be_a_response_like({
         'pagination' => {
           'total_results' => 2,
+          'total_pages'   => 1,
           'first'         => { 'href' => "/v3/droplets?order_by=#{order_by}&page=1&per_page=2" },
           'last'          => { 'href' => "/v3/droplets?order_by=#{order_by}&page=1&per_page=2" },
           'next'          => nil,
@@ -324,6 +325,7 @@ describe 'Droplets' do
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 2,
+            'total_pages'   => 1,
             'first'         => { 'href' => '/v3/droplets?page=1&per_page=50&states=STAGED%2CPENDING' },
             'last'          => { 'href' => '/v3/droplets?page=1&per_page=50&states=STAGED%2CPENDING' },
             'next'          => nil,
@@ -341,6 +343,7 @@ describe 'Droplets' do
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 2,
+            'total_pages'   => 1,
             'first'         => { 'href' => "/v3/droplets?app_guids=#{app_model.guid}&page=1&per_page=50" },
             'last'          => { 'href' => "/v3/droplets?app_guids=#{app_model.guid}&page=1&per_page=50" },
             'next'          => nil,
@@ -358,6 +361,7 @@ describe 'Droplets' do
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 2,
+            'total_pages'   => 1,
             'first'         => { 'href' => "/v3/droplets?guids=#{droplet1.guid}%2C#{droplet3.guid}&page=1&per_page=50" },
             'last'          => { 'href' => "/v3/droplets?guids=#{droplet1.guid}%2C#{droplet3.guid}&page=1&per_page=50" },
             'next'          => nil,
@@ -378,6 +382,7 @@ describe 'Droplets' do
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 3,
+            'total_pages'   => 1,
             'first'         => { 'href' => "/v3/droplets?organization_guids=#{organization1.guid}&page=1&per_page=50" },
             'last'          => { 'href' => "/v3/droplets?organization_guids=#{organization1.guid}&page=1&per_page=50" },
             'next'          => nil,
@@ -395,6 +400,7 @@ describe 'Droplets' do
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 3,
+            'total_pages'   => 1,
             'first'         => { 'href' => "/v3/droplets?page=1&per_page=50&space_guids=#{space.guid}%2C#{space2.guid}" },
             'last'          => { 'href' => "/v3/droplets?page=1&per_page=50&space_guids=#{space.guid}%2C#{space2.guid}" },
             'next'          => nil,
@@ -474,6 +480,7 @@ describe 'Droplets' do
       expect(parsed_response['pagination']).to be_a_response_like(
         {
           'total_results' => 1,
+          'total_pages'   => 1,
           'first'         => { 'href' => "/v3/apps/#{app_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
           'last'          => { 'href' => "/v3/apps/#{app_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
           'next'          => nil,
@@ -493,6 +500,7 @@ describe 'Droplets' do
       expect(parsed_response).to be_a_response_like({
         'pagination' => {
           'total_results' => 2,
+          'total_pages'   => 1,
           'first'         => { 'href' => "/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
           'last'          => { 'href' => "/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
           'next'          => nil,

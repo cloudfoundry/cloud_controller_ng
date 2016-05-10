@@ -43,6 +43,7 @@ module VCAP::CloudController
         expect(presenter.to_hash).to eq({
           pagination: {
             total_results: 2,
+            total_pages: 1,
             first: { href: '/some/path?order_by=%2Bmonkeys&page=1&per_page=50' },
             last: { href: '/some/path?order_by=%2Bmonkeys&page=1&per_page=50' },
             next: nil,

@@ -156,6 +156,7 @@ describe 'Packages' do
       expected_response = {
         'pagination' => {
           'total_results' => 2,
+          'total_pages'   => 1,
           'first'         => { 'href' => "/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
           'last'          => { 'href' => "/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
           'next'          => nil,
@@ -220,6 +221,7 @@ describe 'Packages' do
 
         expected_pagination = {
           'total_results' => 3,
+          'total_pages'   => 1,
           'first'         => { 'href' => '/v3/packages?page=1&per_page=50&types=bits' },
           'last'          => { 'href' => '/v3/packages?page=1&per_page=50&types=bits' },
           'next'          => nil,
@@ -244,6 +246,7 @@ describe 'Packages' do
 
         expected_pagination = {
           'total_results' => 2,
+          'total_pages'   => 1,
           'first'         => { 'href' => "/v3/apps/#{app_model.guid}/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
           'last'          => { 'href' => "/v3/apps/#{app_model.guid}/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
           'next'          => nil,
@@ -267,6 +270,7 @@ describe 'Packages' do
 
         expected_pagination = {
           'total_results' => 2,
+          'total_pages'   => 1,
           'first'         => { 'href' => "/v3/apps/#{app_model.guid}/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
           'last'          => { 'href' => "/v3/apps/#{app_model.guid}/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
           'next'          => nil,
@@ -308,6 +312,7 @@ describe 'Packages' do
         {
         'pagination' => {
               'total_results' => 3,
+              'total_pages'   => 2,
               'first'         => { 'href' => '/v3/packages?page=1&per_page=2' },
               'last'          => { 'href' => '/v3/packages?page=2&per_page=2' },
               'next'          => { 'href' => '/v3/packages?page=2&per_page=2' },
@@ -370,6 +375,7 @@ describe 'Packages' do
 
         expected_pagination = {
           'total_results' => 3,
+          'total_pages'   => 1,
           'first'         => { 'href' => '/v3/packages?page=1&per_page=50&types=bits' },
           'last'          => { 'href' => '/v3/packages?page=1&per_page=50&types=bits' },
           'next'          => nil,
@@ -396,6 +402,7 @@ describe 'Packages' do
 
         expected_pagination = {
           'total_results' => 3,
+          'total_pages'   => 1,
           'first'         => { 'href' => '/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD' },
           'last'          => { 'href' => '/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD' },
           'next'          => nil,
@@ -420,6 +427,7 @@ describe 'Packages' do
 
         expected_pagination = {
           'total_results' => 2,
+          'total_pages'   => 1,
           'first'         => { 'href' => "/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
           'last'          => { 'href' => "/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
           'next'          => nil,
@@ -443,6 +451,7 @@ describe 'Packages' do
 
         expected_pagination = {
           'total_results' => 2,
+          'total_pages'   => 1,
           'first'         => { 'href' => "/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
           'last'          => { 'href' => "/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
           'next'          => nil,
@@ -473,6 +482,7 @@ describe 'Packages' do
 
         expected_pagination = {
           'total_results' => 2,
+          'total_pages'   => 1,
           'first'         => { 'href' => "/v3/packages?page=1&per_page=50&space_guids=#{space2.guid}%2C#{space_guid}" },
           'last'          => { 'href' => "/v3/packages?page=1&per_page=50&space_guids=#{space2.guid}%2C#{space_guid}" },
           'next'          => nil,
@@ -510,6 +520,7 @@ describe 'Packages' do
 
         expected_pagination = {
           'total_results' => 2,
+          'total_pages'   => 1,
           'first'         => { 'href' => "/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
           'last'          => { 'href' => "/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
           'next'          => nil,

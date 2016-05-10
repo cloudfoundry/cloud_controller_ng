@@ -170,6 +170,7 @@ describe 'Apps' do
       expected_response = {
         'pagination' => {
           'total_results' => 3,
+          'total_pages'   => 2,
           'first'         => { 'href' => '/v3/apps?page=1&per_page=2' },
           'last'          => { 'href' => '/v3/apps?page=2&per_page=2' },
           'next'          => { 'href' => '/v3/apps?page=2&per_page=2' },
@@ -250,6 +251,7 @@ describe 'Apps' do
 
         expected_pagination = {
           'total_results' => 2,
+          'total_pages'   => 1,
           'first'         => { 'href' => "/v3/apps?guids=#{app_model1.guid}%2C#{app_model3.guid}&page=1&per_page=50" },
           'last'          => { 'href' => "/v3/apps?guids=#{app_model1.guid}%2C#{app_model3.guid}&page=1&per_page=50" },
           'next'          => nil,
@@ -272,6 +274,7 @@ describe 'Apps' do
 
         expected_pagination = {
           'total_results' => 2,
+          'total_pages'   => 1,
           'first'         => { 'href' => '/v3/apps?names=name1%2Cname2&page=1&per_page=50' },
           'last'          => { 'href' => '/v3/apps?names=name1%2Cname2&page=1&per_page=50' },
           'next'          => nil,
@@ -294,6 +297,7 @@ describe 'Apps' do
 
         expected_pagination = {
           'total_results' => 2,
+          'total_pages'   => 1,
           'first'         => { 'href' => "/v3/apps?organization_guids=#{app_model1.organization.guid}%2C#{app_model3.organization.guid}&page=1&per_page=50" },
           'last'          => { 'href' => "/v3/apps?organization_guids=#{app_model1.organization.guid}%2C#{app_model3.organization.guid}&page=1&per_page=50" },
           'next'          => nil,
@@ -316,6 +320,7 @@ describe 'Apps' do
 
         expected_pagination = {
           'total_results' => 2,
+          'total_pages'   => 1,
           'first'         => { 'href' => "/v3/apps?page=1&per_page=50&space_guids=#{app_model1.space.guid}%2C#{app_model3.space.guid}" },
           'last'          => { 'href' => "/v3/apps?page=1&per_page=50&space_guids=#{app_model1.space.guid}%2C#{app_model3.space.guid}" },
           'next'          => nil,

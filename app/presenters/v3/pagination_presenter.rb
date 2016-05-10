@@ -21,6 +21,7 @@ module VCAP::CloudController
 
       {
         total_results: paginated_result.total,
+        total_pages:   last_page,
 
         first:         { href: first_uri },
         last:          { href: last_uri },
@@ -32,6 +33,7 @@ module VCAP::CloudController
     def present_unpagination_hash(result, base_url)
       {
         total_results: result.length,
+        total_pages: 1,
 
         first: { href: base_url },
         last: { href: base_url },

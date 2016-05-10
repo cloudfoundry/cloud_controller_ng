@@ -53,6 +53,7 @@ describe 'Tasks' do
         {
           'pagination' => {
             'total_results' => 3,
+            'total_pages'   => 2,
             'first'         => { 'href' => '/v3/tasks?page=1&per_page=2' },
             'last'          => { 'href' => '/v3/tasks?page=2&per_page=2' },
             'next'          => { 'href' => '/v3/tasks?page=2&per_page=2' },
@@ -157,6 +158,7 @@ describe 'Tasks' do
           {
             'pagination' => {
               'total_results' => 1,
+              'total_pages'   => 1,
               'first'         => { 'href' => "/v3/tasks?#{expected_query}" },
               'last'          => { 'href' => "/v3/tasks?#{expected_query}" },
               'next'          => nil,
@@ -294,6 +296,7 @@ describe 'Tasks' do
         {
           'pagination' => {
             'total_results' => 3,
+            'total_pages'   => 2,
             'first'         => { 'href' => "/v3/apps/#{app_model.guid}/tasks?page=1&per_page=2" },
             'last'          => { 'href' => "/v3/apps/#{app_model.guid}/tasks?page=2&per_page=2" },
             'next'          => { 'href' => "/v3/apps/#{app_model.guid}/tasks?page=2&per_page=2" },
@@ -394,6 +397,7 @@ describe 'Tasks' do
           {
             'pagination' => {
               'total_results' => 1,
+              'total_pages'   => 1,
               'first'         => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
               'last'          => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
               'next'          => nil,

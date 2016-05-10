@@ -17,6 +17,7 @@ module VCAP::CloudController
       let(:page) { 1 }
       let(:per_page) { 1 }
       let(:total_results) { 2 }
+      let(:total_pages) { 2 }
       let(:options) { { page: page, per_page: per_page } }
       let(:paginated_result) { PaginatedResult.new(double(:results), total_results, PaginationOptions.new(options)) }
       let(:base_url) { '/v3/cloudfoundry/is-great' }
@@ -26,6 +27,13 @@ module VCAP::CloudController
 
         tr = result[:total_results]
         expect(tr).to eq(total_results)
+      end
+
+      it 'includes total_pages' do
+        result = presenter.present_pagination_hash(paginated_result, base_url)
+
+        tr = result[:total_pages]
+        expect(tr).to eq(total_pages)
       end
 
       it 'includes first_url' do
