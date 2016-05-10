@@ -235,6 +235,18 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the requested route is a system hostname with a system domain' do
+        let(:domain) { Domain.find(name: TestConfig.config[:system_domain]) }
+        let(:space) { Space.make(organization: domain.owning_organization) }
+        let(:host) { 'loggregator' }
+        let(:route) { Route.new(domain: domain, space: space, host: host) }
+
+        it 'is invalid' do
+          expect(route).not_to be_valid
+          expect(route.errors.on(:host)).to include :system_hostname_conflict
+        end
+      end
+
       context 'when a route with the same hostname and domain already exists' do
         let(:domain) { SharedDomain.make }
         let(:space) { Space.make }

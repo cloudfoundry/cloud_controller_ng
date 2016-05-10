@@ -14,6 +14,13 @@ system_domain: vcap.me
 app_domains:
   - customer-app-domain1.com
   - customer-app-domain2.com
+system_hostnames:
+  - api
+  - uaa
+  - login
+  - doppler
+  - loggregator
+  - hm9000
 
 jobs:
   global:

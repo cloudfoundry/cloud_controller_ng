@@ -79,9 +79,9 @@ module VCAP::CloudController
             let(:member_b) { @org_b_manager }
 
             include_examples 'permission enumeration', 'OrgManager',
-                             name: 'route',
-                             path: '/v2/routes',
-                             enumerate: 1
+              name: 'route',
+              path: '/v2/routes',
+              enumerate: 1
           end
 
           describe 'OrgUser' do
@@ -89,9 +89,9 @@ module VCAP::CloudController
             let(:member_b) { @org_b_member }
 
             include_examples 'permission enumeration', 'OrgUser',
-                             name: 'route',
-                             path: '/v2/routes',
-                             enumerate: 0
+              name: 'route',
+              path: '/v2/routes',
+              enumerate: 0
           end
 
           describe 'BillingManager' do
@@ -99,9 +99,9 @@ module VCAP::CloudController
             let(:member_b) { @org_b_billing_manager }
 
             include_examples 'permission enumeration', 'BillingManager',
-                             name: 'route',
-                             path: '/v2/routes',
-                             enumerate: 0
+              name: 'route',
+              path: '/v2/routes',
+              enumerate: 0
           end
 
           describe 'Auditor' do
@@ -109,9 +109,9 @@ module VCAP::CloudController
             let(:member_b) { @org_b_auditor }
 
             include_examples 'permission enumeration', 'Auditor',
-                             name: 'route',
-                             path: '/v2/routes',
-                             enumerate: 1
+              name: 'route',
+              path: '/v2/routes',
+              enumerate: 1
           end
         end
 
@@ -121,9 +121,9 @@ module VCAP::CloudController
             let(:member_b) { @space_b_manager }
 
             include_examples 'permission enumeration', 'SpaceManager',
-                             name: 'route',
-                             path: '/v2/routes',
-                             enumerate: 1
+              name: 'route',
+              path: '/v2/routes',
+              enumerate: 1
           end
 
           describe 'Developer' do
@@ -131,9 +131,9 @@ module VCAP::CloudController
             let(:member_b) { @space_b_developer }
 
             include_examples 'permission enumeration', 'Developer',
-                             name: 'route',
-                             path: '/v2/routes',
-                             enumerate: 1
+              name: 'route',
+              path: '/v2/routes',
+              enumerate: 1
           end
 
           describe 'SpaceAuditor' do
@@ -141,9 +141,9 @@ module VCAP::CloudController
             let(:member_b) { @space_b_auditor }
 
             include_examples 'permission enumeration', 'SpaceAuditor',
-                             name: 'route',
-                             path: '/v2/routes',
-                             enumerate: 1
+              name: 'route',
+              path: '/v2/routes',
+              enumerate: 1
           end
         end
       end
@@ -161,10 +161,10 @@ module VCAP::CloudController
       let(:routing_api_client) { double('routing_api_client', enabled?: true) }
       let(:router_group) {
         RoutingApi::RouterGroup.new({
-                                        'guid' => 'tcp-guid',
-                                        'type' => 'tcp',
-                                        'reservable_ports' => '1024-65535'
-                                    })
+          'guid' => 'tcp-guid',
+          'type' => 'tcp',
+          'reservable_ports' => '1024-65535'
+        })
       }
 
       before do
@@ -448,15 +448,16 @@ module VCAP::CloudController
                                organization: space_quota_definition.organization)
       }
       let(:user) { User.make }
-      let(:domain_guid) { SharedDomain.make.guid }
+      let(:shared_domain) { SharedDomain.make }
+      let(:domain_guid) { shared_domain.guid }
       let(:host) { 'example' }
       let(:port) { 1050 }
       let(:req) { {
-          domain_guid: domain_guid,
-          space_guid: space.guid,
-          host: host,
-          port: port,
-          path: ''
+        domain_guid: domain_guid,
+        space_guid: space.guid,
+        host: host,
+        port: port,
+        path: ''
       } }
 
       before do
@@ -464,6 +465,29 @@ module VCAP::CloudController
         space.organization.add_user(user)
         space.add_developer(user)
         set_current_user(user)
+      end
+
+      context 'when the route has a system hostname and a system domain' do
+        let(:space) { Space.make(organization: system_domain.owning_organization) }
+        let(:system_domain) { Domain.find(name: TestConfig.config[:system_domain]) }
+        let(:host) { 'api' }
+        let(:req) do
+          { domain_guid: system_domain.guid,
+            space_guid: space.guid,
+            host: host,
+            port: nil,
+            path: '/foo' }
+        end
+
+        before { TestConfig.override(system_hostnames: [host]) }
+
+        it 'fails with an RouteHostTaken' do
+          post '/v2/routes', MultiJson.dump(req)
+
+          expect(last_response).to have_status_code(400)
+          expect(decoded_response['code']).to eq(210003)
+          expect(decoded_response['description']).to eq('The host is taken: api is a system domain')
+        end
       end
 
       context 'when the domain does not exist' do
@@ -480,7 +504,6 @@ module VCAP::CloudController
       context 'when the domain is a HTTP Domain' do
         context 'when the domain is a shared domain' do
           let(:shared_domain) { SharedDomain.make }
-          let(:domain_guid) { shared_domain.guid }
 
           context 'and a route already exists with the same host' do
             before do
@@ -783,7 +806,7 @@ module VCAP::CloudController
         context 'when updating a route with a new port value that is not null' do
           let(:new_port) { 20000 }
           let(:req) { {
-              port: new_port,
+            port: new_port,
           } }
 
           context 'with a domain with a router_group_guid and type tcp' do

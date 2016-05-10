@@ -84,6 +84,7 @@ module VCAP::CloudController
       validate_uniqueness_on_host_domain_and_path if port.nil?
 
       validate_host_and_domain_in_different_space
+      validate_host_and_domain
       validate_host
       validate_fqdn
       validate_path
@@ -100,6 +101,15 @@ module VCAP::CloudController
       errors.add(:routing_api, :routing_api_unavailable)
     rescue RoutingApi::RoutingApiDisabled
       errors.add(:routing_api, :routing_api_disabled)
+    end
+
+    def validate_host_and_domain
+      return unless domain
+
+      domain_is_system_domain = domain.name == Config.config[:system_domain]
+      host_is_system_hostname = Config.config[:system_hostnames].include? host
+
+      errors.add(:host, :system_hostname_conflict) if domain_is_system_domain && host_is_system_hostname
     end
 
     def validate_ports
@@ -223,7 +233,9 @@ module VCAP::CloudController
     end
 
     def validate_host
-      errors.add(:host, "must be no more than #{Domain::MAXIMUM_DOMAIN_LABEL_LENGTH} characters") if host && host.length > Domain::MAXIMUM_DOMAIN_LABEL_LENGTH
+      if host && host.length > Domain::MAXIMUM_DOMAIN_LABEL_LENGTH
+        errors.add(:host, "must be no more than #{Domain::MAXIMUM_DOMAIN_LABEL_LENGTH} characters")
+      end
     end
 
     def validate_fqdn

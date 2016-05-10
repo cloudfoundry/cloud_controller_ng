@@ -77,6 +77,11 @@ module VCAP::CloudController
         return CloudController::Errors::ApiError.new_from_details('RouteHostTaken', attributes['host'])
       end
 
+      if e.errors.on(:host) == [:system_hostname_conflict]
+        return CloudController::Errors::ApiError.new_from_details('RouteHostTaken',
+                                                                  "#{attributes['host']} is a system domain")
+      end
+
       path_errors = e.errors.on([:host, :domain_id, :path])
       if path_errors && path_errors.include?(:unique)
         return CloudController::Errors::ApiError.new_from_details('RoutePathTaken', attributes['path'])
