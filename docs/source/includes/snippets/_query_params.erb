@@ -47,6 +47,12 @@
   <% end %>
 <% end %>
 
+<% content_for :types_query_param do |resource_type| %>
+  <% query_param('types', ['optional', 'string']) do %>
+    Comma-delimited list of <%= resource_type %> types to filter by.
+  <% end %>
+<% end %>
+
 <% content_for :query_param do |name, types, description| %>
   <li class="method-list-item">
     <h4 class="method-list-item-label">

@@ -35,7 +35,7 @@ This endpoint retrieves all the packages the user has access to.
 <ul class="method-list-group">
 <%= yield_content :app_guids_query_param %>
 
-<%= yield_content :guids_query_param, 'packages'%>
+<%= yield_content :guids_query_param, 'package'%>
 
 <%= yield_content :organization_guids_query_param %>
 
@@ -52,16 +52,7 @@ This endpoint retrieves all the packages the user has access to.
     <p class="method-list-item-description">Comma-delimited list of package states to filter by.</p>
   </li>
 
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      types
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of package types to filter by.</p>
-  </li>
+<%= yield_content :types_query_param, 'package' %>
 
 <%= yield_content :page_query_param %>
 

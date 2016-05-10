@@ -46,16 +46,7 @@ This endpoint retrieves the packages that associates with the given app guid.
     <p class="method-list-item-description">Comma-delimited list of package states to filter by.</p>
   </li>
 
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      types
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of package types to filter by.</p>
-  </li>
+<%= yield_content :types_query_param, 'package' %>
 
 <%= yield_content :page_query_param %>
 

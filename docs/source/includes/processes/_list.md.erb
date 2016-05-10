@@ -41,16 +41,7 @@ This endpoint retrieves the processes the user has access to.
 
 <%= yield_content :space_guids_query_param %>
 
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      types
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of package types to filter by.</p>
-  </li>
+<%= yield_content :types_query_param, 'process' %>
 
 <%= yield_content :page_query_param %>
 
