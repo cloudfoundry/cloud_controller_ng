@@ -53,6 +53,12 @@
   <% end %>
 <% end %>
 
+<% content_for :service_instance_guids_query_param do %>
+  <% query_param('service_instance_guids', ['optional', 'string']) do %>
+    Comma-delimited list of service_instance_guids types to filter by. Example: <code>service_instance_guids=guid1,guid2</code></p>
+  <% end %>
+<% end %>
+
 <% content_for :query_param do |name, types, description| %>
   <li class="method-list-item">
     <h4 class="method-list-item-label">

@@ -35,15 +35,7 @@ This endpoint retrieves the service bindings the user has access to.
 <ul class="method-list-group">
 <%= yield_content :app_guids_query_param %>
 
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      service_instance_guids
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of service instance guids to filter by. <br>Example: <code>service_instance_guids=guid1,guid2</code></p>
-  </li>
+<%= yield_content :service_instance_guids_query_param %>
 
 <%= yield_content :page_query_param %>
 
