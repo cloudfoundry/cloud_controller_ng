@@ -33,14 +33,7 @@ This endpoint retrieves a list of droplets belonging to an app.
 ### Body Parameters
 
 <ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      guids
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of droplet guids to filter by.</p>
-  </li>
+<%= yield_content :guids_query_param, 'droplet' %>
 
 <%= yield_content :page_query_param %>
 

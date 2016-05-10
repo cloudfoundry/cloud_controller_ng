@@ -33,16 +33,8 @@ This endpoint retrieves all the apps the user has access to.
 ### Query Parameters
 
 <ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      guids
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">array of strings</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of app guids to filter by. <br>Example: <code>guids=guid1,guid2</code></p>
-  </li>
+<%= yield_content :guids_query_param, 'app'%>
 
   <li class="method-list-item">
     <h4 class="method-list-item-label">
