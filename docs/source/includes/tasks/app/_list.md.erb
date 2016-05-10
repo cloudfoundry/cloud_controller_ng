@@ -42,7 +42,8 @@ This endpoint retrieves the tasks the user has access to.
     </h4>
 
     <p class="method-list-item-description">Comma-delimited list of task names to filter by.</p>
-    </li>
+  </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       states
@@ -52,7 +53,8 @@ This endpoint retrieves the tasks the user has access to.
     </h4>
 
     <p class="method-list-item-description">Comma delimited list of task states to filter by.</p>
-    </li>
+  </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       guids
@@ -62,7 +64,8 @@ This endpoint retrieves the tasks the user has access to.
     </h4>
 
     <p class="method-list-item-description">Comma-delimited list of task guids to filter by.</p>
-    </li>
+  </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       page
@@ -72,6 +75,7 @@ This endpoint retrieves the tasks the user has access to.
 
     <p class="method-list-item-description">Page to display. Possible values are all integers >= 1.</p>
   </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       per_page
@@ -81,6 +85,7 @@ This endpoint retrieves the tasks the user has access to.
 
     <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
   </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       order_by
@@ -89,8 +94,8 @@ This endpoint retrieves the tasks the user has access to.
     </h4>
 
     <p class="method-list-item-description">
-    Value to sort by. Prepend with a url encoded "+" or "-" to change sort direction to ascending or descending, respectively.
-    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+      Value to sort by. Defaults to ascending, or prepend with "-" to sort descending.
+      <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
     </p>
   </li>
 </ul>

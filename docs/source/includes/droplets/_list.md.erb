@@ -53,6 +53,7 @@ This endpoint retrieves the droplets the user has access to.
 
     <p class="method-list-item-description">Comma-delimited list of droplet guids to filter by.</p>
   </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
      space_guids
@@ -64,7 +65,6 @@ This endpoint retrieves the droplets the user has access to.
     <p class="method-list-item-description">Comma-delimited list of space_guids to filter by.</p>
   </li>
 
-
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       states
@@ -75,6 +75,7 @@ This endpoint retrieves the droplets the user has access to.
 
     <p class="method-list-item-description">Comma-delimited list of droplet states to filter by.</p>
   </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
      organization_guids
@@ -88,18 +89,6 @@ This endpoint retrieves the droplets the user has access to.
 
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      order_by
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">
-      Valid values are <code>created_at</code> or <code>updated_at</code>. Prepend the value with a url encoded "+" or "-"
-      to specify ascending or descending order.
-    </p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
       page
 
       <span class="method-list-item-type">optional</span>
@@ -107,6 +96,7 @@ This endpoint retrieves the droplets the user has access to.
 
     <p class="method-list-item-description">Page to display. Possible values are all integers >= 1.</p>
   </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       per_page
@@ -115,5 +105,18 @@ This endpoint retrieves the droplets the user has access to.
     </h4>
 
     <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+  </li>
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      Value to sort by. Defaults to ascending, or prepend with "-" to sort descending.
+      <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+    </p>
   </li>
 </ul>
