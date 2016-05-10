@@ -94,8 +94,20 @@ module VCAP::CloudController
       describe 'environment_variables' do
         it 'validates them' do
           expect {
-            AppModel.make(environment_variables: '')
+            TaskModel.make(environment_variables: '')
           }.to raise_error(Sequel::ValidationFailed, /must be a hash/)
+        end
+
+        context 'maximum length allow' do
+          before do
+            stub_const('VCAP::CloudController::TaskModel::ENV_VAR_MAX_LENGTH', 5)
+          end
+
+          it 'limits the length' do
+            expect {
+              TaskModel.make(environment_variables: { 123 => 123 }).save
+            }.to raise_error(Sequel::ValidationFailed, /exceeded the maximum length allowed of 5 characters as json/)
+          end
         end
       end
 

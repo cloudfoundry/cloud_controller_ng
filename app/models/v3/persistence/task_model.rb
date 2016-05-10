@@ -10,6 +10,7 @@ module VCAP::CloudController
       CANCELING_STATE = 'CANCELING'.freeze
     ].map(&:freeze).freeze
     COMMAND_MAX_LENGTH = 4096
+    ENV_VAR_MAX_LENGTH = 4096
 
     many_to_one :app, class: 'VCAP::CloudController::AppModel'
     many_to_one :droplet, class: 'VCAP::CloudController::DropletModel'
@@ -50,6 +51,9 @@ module VCAP::CloudController
 
     def validate_environment_variables
       return unless environment_variables
+      if environment_variables.to_json.length > ENV_VAR_MAX_LENGTH
+        errors.add(:environment_variables, "exceeded the maximum length allowed of #{ENV_VAR_MAX_LENGTH} characters as json")
+      end
       validator = VCAP::CloudController::Validators::EnvironmentVariablesValidator.new({ attributes: [:environment_variables] })
       validator.validate_each(self, :environment_variables, environment_variables)
     end
