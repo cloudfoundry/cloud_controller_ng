@@ -43,6 +43,7 @@ This endpoint retrieves all the apps the user has access to.
 
     <p class="method-list-item-description">Comma-delimited list of app names to filter by. <br>Example: <code>names=name1,name2</code></p>
   </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       space_guids
@@ -53,6 +54,7 @@ This endpoint retrieves all the apps the user has access to.
 
     <p class="method-list-item-description">Comma-delimited list of space names to filter by. <br>Example: <code>space_guids=space_guid1,space_guid2</code></p>
   </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       organization_guids
@@ -63,6 +65,7 @@ This endpoint retrieves all the apps the user has access to.
 
     <p class="method-list-item-description">Comma-delimited list of organization names to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code></p>
   </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       guids
@@ -73,34 +76,10 @@ This endpoint retrieves all the apps the user has access to.
 
     <p class="method-list-item-description">Comma-delimited list of app guids to filter by. <br>Example: <code>guids=guid1,guid2</code></p>
   </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      page
 
-      <span class="method-list-item-type">optional</span>
-    </h4>
+<%= yield_content :page_query_param %>
 
-    <p class="method-list-item-description">Page to display. <br>Possible values are all integers >= 1.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      per_page
+<%= yield_content :per_page_query_param %>
 
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Number of results per page. <br>Possible values are 1 through 5000.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      order_by
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">
-    Value to sort by. Defaults to ascending, or prepend with "-" to sort descending.
-    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
-    </p>
-  </li>
+<%= yield_content :order_by_query_param %>
 </ul>

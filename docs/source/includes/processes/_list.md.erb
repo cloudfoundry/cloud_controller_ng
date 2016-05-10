@@ -43,6 +43,7 @@ This endpoint retrieves the processes the user has access to.
 
     <p class="method-list-item-description">Comma-delimited list of app guids to filter by.</p>
   </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       guids
@@ -53,6 +54,7 @@ This endpoint retrieves the processes the user has access to.
 
     <p class="method-list-item-description">Comma-delimited list of package guids to filter by.</p>
   </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       organization_guids
@@ -62,7 +64,8 @@ This endpoint retrieves the processes the user has access to.
     </h4>
 
     <p class="method-list-item-description">Comma-delimited list of organization guids to filter by.</p>
-    </li>
+  </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       space_guids
@@ -73,6 +76,7 @@ This endpoint retrieves the processes the user has access to.
 
     <p class="method-list-item-description">Comma-delimited list of space guids to filter by.</p>
   </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       types
@@ -84,36 +88,9 @@ This endpoint retrieves the processes the user has access to.
     <p class="method-list-item-description">Comma-delimited list of package types to filter by.</p>
   </li>
 
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      page
+<%= yield_content :page_query_param %>
 
-      <span class="method-list-item-type">optional</span>
-    </h4>
+<%= yield_content :per_page_query_param %>
 
-    <p class="method-list-item-description">Page to display. Possible values are all integers >= 1.</p>
-  </li>
-
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      per_page
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
-  </li>
-
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      order_by
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">
-      Value to sort by. Defaults to ascending, or prepend with "-" to sort descending.
-      <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
-    </p>
-  </li>
+<%= yield_content :order_by_query_param %>
 </ul>
