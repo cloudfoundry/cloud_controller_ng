@@ -17,6 +17,24 @@
   <% end %>
 <% end %>
 
+<% content_for :app_guids_query_param do %>
+  <% query_param('app_guids', ['optional', 'string']) do %>
+    Comma-delimited list of app names to filter by. <br>Example: <code>app_guids=app_guid1,app_guid2</code>
+  <% end %>
+<% end %>
+
+<% content_for :organization_guids_query_param do %>
+  <% query_param('organization_guids', ['optional', 'string']) do %>
+    Comma-delimited list of organization names to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code>
+  <% end %>
+<% end %>
+
+<% content_for :space_guids_query_param do %>
+  <% query_param('space_guids', ['optional', 'string']) do %>
+    Comma-delimited list of space names to filter by. <br>Example: <code>space_guids=space_guid1,space_guid2</code>
+  <% end %>
+<% end %>
+
 <% content_for :query_param do |name, types, description| %>
   <li class="method-list-item">
     <h4 class="method-list-item-label">

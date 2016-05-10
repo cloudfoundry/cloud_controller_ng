@@ -35,6 +35,17 @@ This endpoint retrieves a list of droplets belonging to an app.
 <ul class="method-list-group">
   <li class="method-list-item">
     <h4 class="method-list-item-label">
+      guids
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of droplet guids to filter by.</p>
+  </li>
+
+<%= yield_content :page_query_param %>
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
       states
 
       <span class="method-list-item-type">optional</span>
@@ -46,17 +57,6 @@ This endpoint retrieves a list of droplets belonging to an app.
       Example: <code>states=PENDING,STAGING</code>
     </p>
   </li>
-
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      guids
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of droplet guids to filter by.</p>
-  </li>
-
-<%= yield_content :page_query_param %>
 
 <%= yield_content :per_page_query_param %>
 
