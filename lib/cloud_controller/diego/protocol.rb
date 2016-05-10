@@ -2,6 +2,7 @@ require 'cloud_controller/diego/environment'
 require 'cloud_controller/diego/process_guid'
 require 'cloud_controller/diego/staging_request'
 require 'cloud_controller/diego/protocol/open_process_ports'
+require 'cloud_controller/diego/protocol/app_volume_mounts'
 require 'cloud_controller/diego/protocol/routing_info'
 require 'cloud_controller/diego/protocol/container_network_info'
 
@@ -65,6 +66,7 @@ module VCAP::CloudController
           'allow_ssh'                       => app.enable_ssh,
           'ports'                           => OpenProcessPorts.new(app).to_a,
           'network'                         => ContainerNetworkInfo.new(app).to_h,
+          'volume_mounts'                   => AppVolumeMounts.new(app)
         }.merge(@lifecycle_protocol.desired_app_message(app))
       end
 

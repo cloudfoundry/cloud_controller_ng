@@ -130,7 +130,7 @@ module VCAP::CloudController
             last_response_app = decoded_response['apps'].last
             last_app = app_table_entry(6)
 
-            expect(last_response_app).to eq(runners.runner_for_app(last_app).desire_app_message)
+            expect(last_response_app).to eq(runners.runner_for_app(last_app).desire_app_message.as_json)
           end
         end
 
@@ -358,7 +358,7 @@ module VCAP::CloudController
               expect(decoded_response.length).to eq(5)
 
               diego_apps.each do |app|
-                expect(decoded_response).to include(runners.runner_for_app(app).desire_app_message)
+                expect(decoded_response).to include(runners.runner_for_app(app).desire_app_message.as_json)
               end
             end
 

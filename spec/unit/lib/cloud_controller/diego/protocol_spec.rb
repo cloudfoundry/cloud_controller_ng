@@ -148,7 +148,7 @@ module VCAP::CloudController
         let(:request) { protocol.desire_app_request(app, default_health_check_timeout) }
 
         it 'returns the message' do
-          expect(request).to match_json(protocol.desire_app_message(app, default_health_check_timeout))
+          expect(request).to match_json(protocol.desire_app_message(app, default_health_check_timeout).as_json)
         end
       end
 
@@ -176,7 +176,8 @@ module VCAP::CloudController
         end
 
         it 'is a message with the information nsync needs to desire the app' do
-          expect(message).to eq({
+          # TODO: The test shouldn't be a copy/paste of the implementation
+          expect(message.as_json).to match({
             'disk_mb' => app.disk_quota,
             'environment' => Environment.new(app, running_env).as_json,
             'file_descriptors' => app.file_descriptors,
@@ -214,7 +215,8 @@ module VCAP::CloudController
                 'space_id' => app.space.guid,
                 'org_id' => app.organization.guid,
               }
-            }
+            },
+            'volume_mounts' => an_instance_of(Array)
           }.merge(lifecycle_protocol.desired_app_message(double(:app))))
         end
 
