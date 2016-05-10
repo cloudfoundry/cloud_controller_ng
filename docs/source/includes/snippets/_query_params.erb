@@ -1,0 +1,36 @@
+<% content_for :page_query_param do %>
+  <% query_param('page', ['optional']) do %>
+    Page to display. Possible values are all integers >= 1.
+  <% end %>
+<% end %>
+
+<% content_for :per_page_query_param do %>
+  <% query_param('per_page', ['optional']) do %>
+    Number of results per page. Possible values are 1 through 5000.
+  <% end %>
+<% end %>
+
+<% content_for :order_by_query_param do %>
+  <% query_param('order_by', ['optional']) do %>
+    Value to sort by. Defaults to ascending, or prepend with "-" to sort descending.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+  <% end %>
+<% end %>
+
+<% content_for :query_param do |name, types, description| %>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      <%= name %>
+
+      <% types.each do |type| %>
+        <span class="method-list-item-type"><%= type %></span>
+      <% end %>
+    </h4>
+
+    <p class="method-list-item-description"><%= description %></p>
+  </li>
+<% end %>
+
+<% def query_param(name, types, &block) %>
+  <%= yield_content(:query_param, name, types, capture(&block)) %>
+<% end %>

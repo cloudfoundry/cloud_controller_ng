@@ -5,7 +5,7 @@ language_tabs:
   - shell: curl
 
 includes:
-  - snippets/common_query_params
+  - snippets/query_params
   - api_resources/apps
   - api_resources/droplets
   - api_resources/packages
