@@ -224,14 +224,14 @@ module VCAP::CloudController
 
       it 'sends a stage message to the dea' do
         stub_request(:post, post_url).with(body: /#{staging_msg}/, headers: { 'Content-Type' => 'application/json' }).to_return(status: [202, 'Accepted'])
-        expect(Dea::Client.stage(stager_url, staging_msg)).to be_truthy
+        expect(Dea::Client.stage(stager_url, staging_msg)).to be true
       end
 
       context 'when an error occurs' do
         context 'when we get a status of 404' do
           it 'returns false' do
             stub_request(:post, post_url).with(body: /#{staging_msg}/, headers: { 'Content-Type' => 'application/json' }).to_return(status: [404, 'Not Found'])
-            expect(Dea::Client.stage(stager_url, staging_msg)).to be_falsey
+            expect(Dea::Client.stage(stager_url, staging_msg)).to be false
           end
         end
 
