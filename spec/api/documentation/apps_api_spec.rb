@@ -30,7 +30,6 @@ resource 'Apps', type: [:api, :legacy_api] do
       { name: :space_guid, description: 'The guid of the associated space.', custom_params: { required: required, example_values: [Sham.guid] } },
       { name: :stack_guid, description: 'The guid of the associated stack.', custom_params: { default: 'Uses the default system stack.', example_values: [Sham.guid] } },
       { name: :state, description: 'The current desired state of the app. One of STOPPED or STARTED.', custom_params: { default: 'STOPPED', valid_values: %w(STOPPED STARTED) } },
-      { name: :detected_start_command, description: 'The command detected by the buildpack during staging.', custom_params: { read_only: true } },
       { name: :command, description: "The command to start an app after it is staged, maximum length: 4096 (e.g. 'rails s -p $PORT' or 'java com.org.Server $PORT')." },
 
       {
