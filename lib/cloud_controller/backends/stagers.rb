@@ -60,8 +60,7 @@ module VCAP::CloudController
 
     def diego_stager(app)
       completion_handler = diego_completion_handler(app)
-      messenger = Diego::Messenger.new(app)
-      Diego::Stager.new(app, messenger, completion_handler, @config)
+      Diego::Stager.new(app, completion_handler, @config)
     end
 
     def dependency_locator

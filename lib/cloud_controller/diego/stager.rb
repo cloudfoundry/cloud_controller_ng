@@ -1,9 +1,10 @@
 module VCAP::CloudController
   module Diego
     class Stager
-      def initialize(app, messenger, completion_handler, config)
+      attr_writer :messenger
+
+      def initialize(app, completion_handler, config)
         @app = app
-        @messenger = messenger
         @completion_handler = completion_handler
         @config = config
       end
@@ -30,6 +31,10 @@ module VCAP::CloudController
 
       def stop_stage
         @messenger.send_stop_staging_request
+      end
+
+      def messenger
+        @messenger ||= Diego::Messenger.new(@app)
       end
 
       private

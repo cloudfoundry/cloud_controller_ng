@@ -11,8 +11,10 @@ module VCAP::CloudController
         instance_double(Diego::Buildpack::StagingCompletionHandler, staging_complete: nil)
       end
 
-      subject(:stager) do
-        Stager.new(app, messenger, completion_handler, config)
+      subject(:stager) { Stager.new(app, completion_handler, config) }
+
+      before do
+        stager.messenger = messenger
       end
 
       it_behaves_like 'a stager'
@@ -92,6 +94,15 @@ module VCAP::CloudController
         it 'tells diego to stop staging the application' do
           expect(messenger).to receive(:send_stop_staging_request)
           stager.stop_stage
+        end
+      end
+
+      describe '#messenger' do
+        it 'creates a Diego::Messenger if not set' do
+          stager.messenger = nil
+          expected_messenger = double
+          allow(Diego::Messenger).to receive(:new).with(app).and_return(expected_messenger)
+          expect(stager.messenger).to eq(expected_messenger)
         end
       end
     end

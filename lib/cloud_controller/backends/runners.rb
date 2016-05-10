@@ -108,8 +108,7 @@ module VCAP::CloudController
     private
 
     def diego_runner(app)
-      messenger = Diego::Messenger.new(app)
-      Diego::Runner.new(app, messenger, @config[:default_health_check_timeout])
+      Diego::Runner.new(app, @config[:default_health_check_timeout])
     end
 
     def dea_runner(app)

@@ -8,9 +8,10 @@ module VCAP::CloudController
       let(:protocol) { instance_double(Diego::Protocol, desire_app_message: {}) }
       let(:default_health_check_timeout) { 9999 }
 
-      subject(:runner) { Runner.new(app, messenger, default_health_check_timeout) }
+      subject(:runner) { Runner.new(app, default_health_check_timeout) }
 
       before do
+        runner.messenger = messenger
         allow(messenger).to receive(:send_desire_request)
       end
 
@@ -118,6 +119,15 @@ module VCAP::CloudController
           expect do
             runner.with_logging { raise ArgumentError.new('Other Error') }
           end.to raise_error(ArgumentError)
+        end
+      end
+
+      describe '#messenger' do
+        it 'creates a Diego::Messenger if not set' do
+          runner.messenger = nil
+          expected_messenger = double
+          allow(Diego::Messenger).to receive(:new).with(app).and_return(expected_messenger)
+          expect(runner.messenger).to eq(expected_messenger)
         end
       end
     end
