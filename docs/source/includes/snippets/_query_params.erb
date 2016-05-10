@@ -41,6 +41,12 @@
   <% end %>
 <% end %>
 
+<% content_for :route_guids_query_param do %>
+  <% query_param('route_guids', ['optional', 'string']) do %>
+    Comma-delimited list of route guids to filter by. <br>Example: <code>route_guids=route_guid1,route_guid2</code>
+  <% end %>
+<% end %>
+
 <% content_for :query_param do |name, types, description| %>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
