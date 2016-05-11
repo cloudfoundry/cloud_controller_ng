@@ -131,7 +131,7 @@ module VCAP::CloudController
     def validate
       validates_presence :name
       validates_presence :space
-      validates_unique [:space_id, :name]
+      validates_name_unique_per_space(message: is_v2?)
       validates_format APP_NAME_REGEX, :name
 
       copy_buildpack_errors
@@ -671,6 +671,11 @@ module VCAP::CloudController
     end
 
     private
+
+    def validates_name_unique_per_space(message: true)
+      message_text = Sequel.lit('Name must be unique in space') if message
+      validates_unique [:space_id, :name], message: (message_text || Sequel.lit(''))
+    end
 
     def non_unique_process_types
       @non_unique_process_types ||= app.processes_dataset.select_map(:type).select do |process_type|

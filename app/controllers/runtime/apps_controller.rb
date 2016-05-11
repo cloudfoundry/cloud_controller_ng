@@ -67,7 +67,7 @@ module VCAP::CloudController
       docker_errors          = e.errors.on(:docker)
       diego_to_dea_errors    = e.errors.on(:diego_to_dea)
 
-      if space_and_name_errors && space_and_name_errors.include?(:unique)
+      if space_and_name_errors
         CloudController::Errors::ApiError.new_from_details('AppNameTaken', attributes['name'])
       elsif memory_errors
         translate_memory_validation_exception(memory_errors)

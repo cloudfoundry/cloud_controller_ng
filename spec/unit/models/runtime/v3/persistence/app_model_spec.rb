@@ -79,7 +79,7 @@ module VCAP::CloudController
 
           expect {
             AppModel.make(name: 'lowerCase', space_guid: space_guid)
-          }.to raise_error(Sequel::ValidationFailed, /space_guid and name/)
+          }.to raise_error(Sequel::ValidationFailed, '')
         end
 
         it 'should allow standard ascii characters' do
@@ -140,7 +140,7 @@ module VCAP::CloudController
 
           expect {
             AppModel.make(name: name, space_guid: space.guid)
-          }.to raise_error(Sequel::ValidationFailed, /space_guid and name/)
+          }.to raise_error(Sequel::ValidationFailed, '')
         end
       end
 

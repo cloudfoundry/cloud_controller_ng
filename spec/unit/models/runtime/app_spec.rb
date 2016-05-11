@@ -194,7 +194,6 @@ module VCAP::CloudController
 
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_presence :space }
-      it { is_expected.to validate_uniqueness [:space_id, :name] }
       it { is_expected.to strip_whitespace :name }
 
       it 'includes validator policies' do
@@ -380,7 +379,7 @@ module VCAP::CloudController
 
           expect {
             AppFactory.make(name: 'lowerCase', space: space)
-          }.to raise_error(Sequel::ValidationFailed, /space_id and name/)
+          }.to raise_error(Sequel::ValidationFailed, /Name must be unique in space/)
         end
 
         it 'should allow standard ascii characters' do
