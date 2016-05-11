@@ -69,14 +69,8 @@ class TasksController < ApplicationController
   end
 
   def show
-    if app_nested?
-      task, app, space, org = TaskFetcher.new.fetch_for_app(task_guid: params[:task_guid], app_guid: params[:app_guid])
-      app_not_found! unless app && can_read?(space.guid, org.guid)
-      task_not_found! unless task
-    else
-      task, space, org = TaskFetcher.new.fetch(task_guid: params[:task_guid])
-      task_not_found! unless task && can_read?(space.guid, org.guid)
-    end
+    task, space, org = TaskFetcher.new.fetch(task_guid: params[:task_guid])
+    task_not_found! unless task && can_read?(space.guid, org.guid)
 
     render status: :ok, json: TaskPresenter.new(task)
   end

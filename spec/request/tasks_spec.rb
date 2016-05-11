@@ -516,53 +516,6 @@ describe 'Tasks' do
     end
   end
 
-  describe 'GET /v3/apps/:guid/tasks/:guid' do
-    it 'returns a json representation of the task with the requested guid' do
-      task = VCAP::CloudController::TaskModel.make(
-        name:                  'task',
-        command:               'echo task',
-        app:                   app_model,
-        droplet:               app_model.droplet,
-        environment_variables: { unicorn: 'magic' },
-        memory_in_mb:          5,
-      )
-      guid = task.guid
-
-      get "/v3/apps/#{app_model.guid}/tasks/#{guid}", nil, developer_headers
-
-      expected_response = {
-        'guid'                  => guid,
-        'name'                  => 'task',
-        'command'               => 'echo task',
-        'state'                 => 'RUNNING',
-        'memory_in_mb'          => 5,
-        'environment_variables' => { 'unicorn' => 'magic' },
-        'result'                => {
-          'failure_reason' => nil
-        },
-        'droplet_guid'          => task.droplet.guid,
-        'created_at'            => iso8601,
-        'updated_at'            => nil,
-        'links'                 => {
-          'self' => {
-            'href' => "/v3/tasks/#{guid}"
-          },
-          'app' => {
-            'href' => "/v3/apps/#{app_model.guid}"
-          },
-          'droplet' => {
-            'href' => "/v3/droplets/#{app_model.droplet.guid}"
-          }
-        }
-      }
-
-      parsed_response = MultiJson.load(last_response.body)
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like(expected_response)
-    end
-  end
-
   describe 'PUT /v3/apps/:guid/tasks/:guid/cancel' do
     it 'returns a json representation of the task with the requested guid' do
       app_guid  = app_model.guid

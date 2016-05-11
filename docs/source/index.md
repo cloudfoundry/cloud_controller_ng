@@ -84,7 +84,6 @@ includes:
   - tasks/get
   - tasks/cancel
   - tasks/list
-  - tasks/app/get
   - tasks/app/cancel
   - tasks/app/list
 

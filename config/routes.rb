@@ -56,7 +56,6 @@ Rails.application.routes.draw do
 
   post '/apps/:app_guid/tasks', to: 'tasks#create'
   get '/apps/:app_guid/tasks', to: 'tasks#index'
-  get '/apps/:app_guid/tasks/:task_guid', to: 'tasks#show'
   put '/apps/:app_guid/tasks/:task_guid/cancel', to: 'tasks#cancel'
 
   # service_bindings

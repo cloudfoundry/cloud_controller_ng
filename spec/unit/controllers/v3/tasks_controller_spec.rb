@@ -264,51 +264,6 @@ describe TasksController, type: :controller do
       expect(parsed_body['memory_in_mb']).to eq(2048)
     end
 
-    context 'accessed as an app sub resource' do
-      it 'returns a 200 and the task' do
-        get :show, task_guid: task.guid, app_guid: app_model.guid
-
-        expect(response.status).to eq 200
-        expect(parsed_body).to include('name' => 'mytask')
-      end
-
-      context 'when the requested task does not belong to the provided app guid' do
-        it 'returns a 404' do
-          other_app = VCAP::CloudController::AppModel.make space_guid: space.guid
-          other_task = VCAP::CloudController::TaskModel.make name: 'other_task', app_guid: other_app.guid
-          get :show, task_guid: other_task.guid, app_guid: app_model.guid
-
-          expect(response.status).to eq 404
-          expect(response.body).to include 'ResourceNotFound'
-          expect(response.body).to include 'Task not found'
-        end
-      end
-
-      context 'when the app does not exist' do
-        it 'returns a 404' do
-          get :show, task_guid: task.guid, app_guid: 'foobar'
-
-          expect(response.status).to eq 404
-          expect(response.body).to include 'ResourceNotFound'
-          expect(response.body).to include 'App not found'
-        end
-      end
-
-      context 'when the user cannot read the app' do
-        before do
-          disallow_user_read_access(user, space: space)
-        end
-
-        it 'returns a 404' do
-          get :show, task_guid: task.guid, app_guid: app_model.guid
-
-          expect(response.status).to eq 404
-          expect(response.body).to include 'ResourceNotFound'
-          expect(response.body).to include 'App not found'
-        end
-      end
-    end
-
     describe 'access permissions' do
       context 'when the user does not have read scope' do
         before do
