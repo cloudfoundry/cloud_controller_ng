@@ -6,6 +6,8 @@ module VCAP::CloudController
       class Client
         class UseDeprecatedNATSClient < StandardError; end
 
+        MAX_RETRIES = 3
+
         def initialize(legacy_client, config)
           @legacy_client = legacy_client
           @config = config
@@ -56,25 +58,26 @@ module VCAP::CloudController
 
         private
 
-        def post_bulk_app_state(body)
-          uri              = URI(@config[:hm9000][:url])
-          username         = @config[:internal_api][:auth_user]
-          password         = @config[:internal_api][:auth_password]
-          skip_cert_verify = @config[:skip_cert_verify]
-          use_ssl          = uri.scheme.to_s.downcase == 'https'
-
+        def post_bulk_app_state(body, use_internal_address=true)
+          uri = use_internal_address ? URI(@config[:hm9000][:internal_url]) : URI(@config[:hm9000][:url])
           uri.path = '/bulk_app_state'
+          http_client.post(uri, body)
+        end
 
-          client = HTTPClient.new
-          client.ssl_config.set_default_paths
-          if username && password
-            client.set_auth(nil, username, password)
-          end
-          if use_ssl
-            client.ssl_config.verify_mode = skip_cert_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
-          end
+        def http_client
+          if !@http_client
+            @http_client = HTTPClient.new
+            username         = @config[:internal_api][:auth_user]
+            password         = @config[:internal_api][:auth_password]
+            skip_cert_verify = @config[:skip_cert_verify]
 
-          client.post(uri, body)
+            if username && password
+              @http_client.set_auth(nil, username, password)
+            end
+            @http_client.ssl_config.verify_mode = skip_cert_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
+            @http_client.ssl_config.set_default_paths
+          end
+          @http_client
         end
 
         def app_message(app)
@@ -94,9 +97,18 @@ module VCAP::CloudController
         def make_request(message)
           logger.info('requesting bulk_app_state', message: message)
 
-          response = post_bulk_app_state(message.to_json)
-          raise UseDeprecatedNATSClient if response.status == 404
+          response = nil
 
+          (1..MAX_RETRIES).each do |i|
+            response = post_bulk_app_state(message.to_json, true)
+            if response.ok?
+              break
+            end
+          end
+
+          response = post_bulk_app_state(message.to_json, false) if !response.ok?
+
+          raise UseDeprecatedNATSClient if response.status == 404
           return {} unless response.ok?
 
           responses = JSON.parse(response.body)

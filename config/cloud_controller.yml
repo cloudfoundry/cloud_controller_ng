@@ -87,6 +87,7 @@ uaa:
 
 hm9000:
   url: "http://localhost:5155"
+  internal_url: "https://localhost:5155/internal"
 
 routing_api:
   url: "http://localhost:3000"

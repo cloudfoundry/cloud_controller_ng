@@ -44,6 +44,7 @@ maximum_app_disk_in_mb: 2048
 
 hm9000:
   url: "http://localhost:5155"
+  internal_url: "http://localhost:5155/internal"
 
 uaa:
   url: "http://localhost:8080/uaa"
