@@ -71,7 +71,20 @@
           
 
 
+
+
+
+
+
+
+
+
+
           
+
+
+          
+
 
 
           
@@ -1078,6 +1091,21 @@ It will include environment variables for Environment Variable Groups and Servic
 <h3 id="query-parameters">Query Parameters</h3>
 
 <ul class="method-list-group">
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of app guids to filter by. <br>Example: <code>guids=guid1,guid2</code>
+</p>
+  </li>
+
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       names
@@ -1088,66 +1116,74 @@ It will include environment variables for Environment Variable Groups and Servic
 
     <p class="method-list-item-description">Comma-delimited list of app names to filter by. <br>Example: <code>names=name1,name2</code></p>
   </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      space_guids
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">array of strings</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of space names to filter by. <br>Example: <code>space_guids=space_guid1,space_guid2</code></p>
-  </li>
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       organization_guids
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">array of strings</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of organization names to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code></p>
+    <p class="method-list-item-description">    Comma-delimited list of organization guids to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code>
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
-      guids
+      space_guids
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">array of strings</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of app guids to filter by. <br>Example: <code>guids=guid1,guid2</code></p>
+    <p class="method-list-item-description">    Comma-delimited list of space guids to filter by. <br>Example: <code>space_guids=space_guid1,space_guid2</code>
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Page to display. <br>Possible values are all integers >= 1.</p>
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       per_page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Number of results per page. <br>Possible values are 1 through 5000.</p>
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       order_by
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">
-    Value to sort by. Prepend with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo; to change sort direction to ascending or descending, respectively.
+    <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
     <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
-    </p>
+</p>
   </li>
+
+
 </ul>
 
           <h1 id="droplets">Droplets</h1>
@@ -1477,6 +1513,83 @@ they either use a specific droplet guid, or use the current droplet assigned to 
   </li>
 </ul>
 
+          <h2 id="copy-a-droplet">Copy a droplet</h2>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/droplets/:guid/copy</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/droplets/[guid]/copy"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "relationships": {
+      "app": {
+        "guid": "[app-guid]"
+      }
+    }
+  }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
+
+{
+  "guid": "585bc3c1-3743-497d-88b0-403ad6b56d16",
+  "state": "PENDING",
+  "error": null,
+  "lifecycle": {
+    "type": "buildpack",
+    "data": {
+      "buildpack": null,
+      "stack": null
+    }
+  },
+  "memory_limit": 1024,
+  "disk_limit": 4096,
+  "result": null,
+  "environment_variables": {},
+  "created_at": "2016-03-28T23:39:34Z",
+  "updated_at": null,
+  "links": {
+    "self": {
+      "href": "/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
+    },
+    "package": {
+      "href": "/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
+    },
+    "app": {
+      "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+    },
+    "assign_current_droplet": {
+      "href": "/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
+      "method": "PUT"
+    }
+  }
+}
+
+</code></pre>
+
+<p>This endpoint copies a droplet to a different app. The copied droplet excludes the
+environment variables listed on the source droplet.</p>
+
+<h3 id="query-parameters">Query Parameters</h3>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guid
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      Source guid of the droplet to be copied
+    </p>
+  </li>
+</ul>
+
           <h2 id="get-a-droplet">Get a droplet</h2>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
@@ -1739,36 +1852,112 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 <h3 id="query-parameters">Query Parameters</h3>
 
 <ul class="method-list-group">
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
-      order_by
+      app_guids
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">
-      Valid values are <code>created_at</code> or <code>updated_at</code>. Prepend the value with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo;
-      to specify ascending or descending order.
-    </p>
+    <p class="method-list-item-description">    Comma-delimited list of app guids to filter by. <br>Example: <code>app_guids=app_guid1,app_guid2</code>
+</p>
   </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of droplet guids to filter by. <br>Example: <code>guids=guid1,guid2</code>
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      organization_guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of organization guids to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code>
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      space_guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of space guids to filter by. <br>Example: <code>space_guids=space_guid1,space_guid2</code>
+</p>
+  </li>
+
+
+
   <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      states
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of droplet states to filter by.</p>
+  </li>
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Page to display. Possible values are all integers >= 1.</p>
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       per_page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
   </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+</p>
+  </li>
+
+
 </ul>
 
           <h2 id="list-droplets-for-an-app">List droplets for an app</h2>
@@ -1909,6 +2098,33 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 <h3 id="body-parameters">Body Parameters</h3>
 
 <ul class="method-list-group">
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of droplet guids to filter by. <br>Example: <code>guids=guid1,guid2</code>
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      page
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
+  </li>
+
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       states
@@ -1922,44 +2138,33 @@ they either use a specific droplet guid, or use the current droplet assigned to 
       Example: <code>states=PENDING,STAGING</code>
     </p>
   </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      guids
-      <span class="method-list-item-type">string</span>
-    </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of droplet guids to filter by.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      order_by
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">
-      Valid values are <code>created_at</code> or <code>updated_at</code>. Prepend the value with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo;
-      to specify ascending or descending order.
-    </p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      page
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Page to display. Possible values are all integers >= 1.</p>
-  </li>
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       per_page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
   </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+</p>
+  </li>
+
+
 </ul>
 
           <h1 id="packages">Packages</h1>
@@ -2590,6 +2795,62 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <h3 id="query-parameters">Query Parameters</h3>
 
 <ul class="method-list-group">
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      app_guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of app guids to filter by. <br>Example: <code>app_guids=app_guid1,app_guid2</code>
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of package guids to filter by. <br>Example: <code>guids=guid1,guid2</code>
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      organization_guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of organization guids to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code>
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      space_guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of space guids to filter by. <br>Example: <code>space_guids=space_guid1,space_guid2</code>
+</p>
+  </li>
+
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       states
@@ -2600,86 +2861,60 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
     <p class="method-list-item-description">Comma-delimited list of package states to filter by.</p>
   </li>
-  <li class="method-list-item">
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       types
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of package types to filter by.</p>
+    <p class="method-list-item-description">    Comma-delimited list of package types to filter by.
+</p>
   </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      guids
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of package guids to filter by.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      app_guids
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of app guids to filter by.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      organization_guids
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of organization guids to filter by.</p>
-    </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      space_guids
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of space guids to filter by.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      order_by
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">
-      Valid values are <code>created_at</code> or <code>updated_at</code>. Prepend the value with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo;
-      to specify ascending or descending order.
-    </p>
-  </li>
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Page to display. Possible values are all integers >= 1.</p>
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       per_page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
   </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+</p>
+  </li>
+
+
 </ul>
 
           <h2 id="list-packages-for-an-app">List packages for an app</h2>
@@ -2754,6 +2989,20 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <h3 id="query-parameters">Query Parameters</h3>
 
 <ul class="method-list-group">
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of package guids to filter by. <br>Example: <code>guids=guid1,guid2</code>
+</p>
+  </li>
+
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       states
@@ -2763,57 +3012,61 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
     </h4>
 
     <p class="method-list-item-description">Comma-delimited list of package states to filter by.</p>
-    </li>
-  <li class="method-list-item">
+  </li>
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       types
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of package types to filter by.</p>
-    </li>
-  <li class="method-list-item">
-  <h4 class="method-list-item-label">
-      guids
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of package guids to filter by.</p>
-    </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      order_by
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">
-      Valid values are <code>created_at</code> or <code>updated_at</code>. Prepend the value with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo;
-      to specify ascending or descending order.
-    </p>
+    <p class="method-list-item-description">    Comma-delimited list of package types to filter by.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Page to display. Possible values are all integers >= 1.</p>
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       per_page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
   </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+</p>
+  </li>
+
+
 </ul>
 
           <h1 id="processes-by-guid">Processes By Guid</h1>
@@ -3470,86 +3723,115 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <h3 id="query-parameters">Query Parameters</h3>
 
 <ul class="method-list-group">
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       app_guids
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of app guids to filter by.</p>
+    <p class="method-list-item-description">    Comma-delimited list of app guids to filter by. <br>Example: <code>app_guids=app_guid1,app_guid2</code>
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       guids
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of package guids to filter by.</p>
+    <p class="method-list-item-description">    Comma-delimited list of process guids to filter by. <br>Example: <code>guids=guid1,guid2</code>
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       organization_guids
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of organization guids to filter by.</p>
-    </li>
-  <li class="method-list-item">
+    <p class="method-list-item-description">    Comma-delimited list of organization guids to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code>
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       space_guids
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of space guids to filter by.</p>
+    <p class="method-list-item-description">    Comma-delimited list of space guids to filter by. <br>Example: <code>space_guids=space_guid1,space_guid2</code>
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       types
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of package types to filter by.</p>
+    <p class="method-list-item-description">    Comma-delimited list of process types to filter by.
+</p>
   </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      order_by
 
-      <span class="method-list-item-type">optional</span>
-    </h4>
 
-    <p class="method-list-item-description">
-    Value to sort by. Prepend with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo; to change sort direction to ascending or descending, respectively.
-    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
-    </p>
-  </li>
-  <li class="method-list-item">
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Page to display. Possible values are all integers >= 1.</p>
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       per_page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
   </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+</p>
+  </li>
+
+
 </ul>
 
           <h1 id="processes-by-app-and-type">Processes By App and Type</h1>
@@ -4122,86 +4404,115 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <h3 id="query-parameters">Query Parameters</h3>
 
 <ul class="method-list-group">
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       app_guids
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of app guids to filter by.</p>
+    <p class="method-list-item-description">    Comma-delimited list of app guids to filter by. <br>Example: <code>app_guids=app_guid1,app_guid2</code>
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       guids
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of package guids to filter by.</p>
+    <p class="method-list-item-description">    Comma-delimited list of process guids to filter by. <br>Example: <code>guids=guid1,guid2</code>
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       organization_guids
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of organization guids to filter by.</p>
-    </li>
-  <li class="method-list-item">
+    <p class="method-list-item-description">    Comma-delimited list of organization guids to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code>
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       space_guids
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of space guids to filter by.</p>
+    <p class="method-list-item-description">    Comma-delimited list of space guids to filter by. <br>Example: <code>space_guids=space_guid1,space_guid2</code>
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       types
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of package types to filter by.</p>
+    <p class="method-list-item-description">    Comma-delimited list of process types to filter by.
+</p>
   </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      order_by
 
-      <span class="method-list-item-type">optional</span>
-    </h4>
 
-    <p class="method-list-item-description">
-    Value to sort by. Prepend with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo; to change sort direction to ascending or descending, respectively.
-    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
-    </p>
-  </li>
-  <li class="method-list-item">
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Page to display. Possible values are all integers >= 1.</p>
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       per_page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
   </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+</p>
+  </li>
+
+
 </ul>
 
           <h1 id="route-mappings">Route Mappings</h1>
@@ -4479,54 +4790,73 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <h3 id="query-parameters">Query Parameters</h3>
 
 <ul class="method-list-group">
- <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       app_guids
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">App guids to filter by. <br>Example: <code>app_guids=guid1,guid2</code></p>
- </li>
- <li class="method-list-item">
+    <p class="method-list-item-description">    Comma-delimited list of app guids to filter by. <br>Example: <code>app_guids=app_guid1,app_guid2</code>
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       route_guids
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Route guids to filter by. <br>Example: <code>route_guids=guid1,guid2</code></p>
+    <p class="method-list-item-description">    Comma-delimited list of route guids to filter by. <br>Example: <code>route_guids=route_guid1,route_guid2</code>
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Page to display. Possible values are all integers >= 1.</p>
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       per_page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       order_by
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">
-    Value to sort by. Prepend with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo; to change sort direction to ascending or descending, respectively.
+    <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
     <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
-    </p>
+</p>
   </li>
+
+
 </ul>
 
           <h2 id="list-route-mappings-for-an-app">List route mappings for an app</h2>
@@ -4606,47 +4936,53 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <h3 id="query-parameters">Query Parameters</h3>
 
-<ul class="method-list-group">
-   <li class="method-list-item">
+<p><li class="method-list-item">
     <h4 class="method-list-item-label">
-      route_guids
+      route_guids</p>
 
-      <span class="method-list-item-type">optional</span>
-    </h4>
+<p><span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4></p>
 
-    <p class="method-list-item-description">Route guids to filter by. <br>Example: <code>route_guids=guid1,guid2</code></p>
-  </li>
-  <li class="method-list-item">
+<p><p class="method-list-item-description">    Comma-delimited list of route guids to filter by. <br>Example: <code>route_guids=route_guid1,route_guid2</code>
+</p>
+  </li></p>
+
+<p><li class="method-list-item">
     <h4 class="method-list-item-label">
-      page
+      page</p>
 
-      <span class="method-list-item-type">optional</span>
-    </h4>
+<p><span class="method-list-item-type">optional</span>
+    </h4></p>
 
-    <p class="method-list-item-description">Page to display. Possible values are all integers >= 1.</p>
-  </li>
-  <li class="method-list-item">
+<p><p class="method-list-item-description">    Page to display. Possible values are all integers &gt;= 1.
+</p>
+  </li></p>
+
+<p><li class="method-list-item">
     <h4 class="method-list-item-label">
-      per_page
+      per_page</p>
 
-      <span class="method-list-item-type">optional</span>
-    </h4>
+<p><span class="method-list-item-type">optional</span>
+    </h4></p>
 
-    <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
-  </li>
-  <li class="method-list-item">
+<p><p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
+  </li></p>
+
+<p><li class="method-list-item">
     <h4 class="method-list-item-label">
-      order_by
+      order_by</p>
 
-      <span class="method-list-item-type">optional</span>
-    </h4>
+<p><span class="method-list-item-type">optional</span>
+    </h4></p>
 
-    <p class="method-list-item-description">
-    Value to sort by. Prepend with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo; to change sort direction to ascending or descending, respectively.
+<p><p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
     <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
-    </p>
-  </li>
-</ul>
+</p>
+  </li></p>
+
+<p></ul></p>
 
           <h1 id="service-bindings">Service Bindings</h1>
 
@@ -4681,7 +5017,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       <span class="method-list-item-type">object</span>
     </h4>
 
-    <p class="method-list-item-description">Data returned from the service broker for the service instance. Currently possible values are &ldquo;credentials&rdquo; and &ldquo;syslog_drain_url&rdquo;.</p>
+    <p class="method-list-item-description">Data returned from the service broker for the service instance. Currently possible values are &ldquo;credentials&rdquo;, &ldquo;syslog_drain_url&rdquo; and (experimental) &ldquo;volume_mounts&rdquo;.</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -4747,7 +5083,8 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
     "credentials": {
       "super-secret": "password"
     },
-    "syslog_drain_url": "syslog://drain.url.com"
+    "syslog_drain_url": "syslog://drain.url.com",
+    "volume_mounts": []
   },
   "created_at": "2015-11-13T17:02:56Z",
   "updated_at": null,
@@ -4831,7 +5168,8 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
     "credentials": {
       "super-secret": "password"
     },
-    "syslog_drain_url": "syslog://drain.url.com"
+    "syslog_drain_url": "syslog://drain.url.com",
+    "volume_mounts": []
   },
   "created_at": "2015-11-13T17:02:56Z",
   "updated_at": null,
@@ -4923,7 +5261,8 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
         "credentials": {
           "super-secret": "password"
         },
-        "syslog_drain_url": "syslog://drain.url.com"
+        "syslog_drain_url": "syslog://drain.url.com",
+        "volume_mounts": []
       },
       "created_at": "2015-11-13T17:02:56Z",
       "updated_at": null,
@@ -4946,7 +5285,8 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
         "credentials": {
           "super-secret": "password"
         },
-        "syslog_drain_url": "syslog://drain.url.com"
+        "syslog_drain_url": "syslog://drain.url.com",
+        "volume_mounts": []
       },
       "created_at": "2015-11-13T17:02:56Z",
       "updated_at": null,
@@ -4972,54 +5312,73 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <h3 id="query-parameters">Query Parameters</h3>
 
 <ul class="method-list-group">
- <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       app_guids
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of app guids to filter by. <br>Example: <code>app_guids=guid1,guid2</code></p>
+    <p class="method-list-item-description">    Comma-delimited list of app guids to filter by. <br>Example: <code>app_guids=app_guid1,app_guid2</code>
+</p>
   </li>
-   <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       service_instance_guids
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of service instance guids to filter by. <br>Example: <code>service_instance_guids=guid1,guid2</code></p>
+    <p class="method-list-item-description">    Comma-delimited list of service_instance_guids types to filter by. Example: <code>service_instance_guids=guid1,guid2</code></p>
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Page to display. Possible values are all integers >= 1.</p>
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       per_page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       order_by
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">
-    Value to sort by. Prepend with a url encoded &ldquo;+&rdquo; or &ldquo;-&rdquo; to change sort direction to ascending or descending, respectively.
+    <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
     <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
-    </p>
+</p>
   </li>
+
+
 </ul>
 
           <h1 id="tasks">Tasks</h1>
@@ -5408,6 +5767,20 @@ These overwrite and are appended to the app&rsquo;s running environment variable
 <h3 id="query-parameters">Query Parameters</h3>
 
 <ul class="method-list-group">
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      app_guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of app guids to filter by. <br>Example: <code>app_guids=app_guid1,app_guid2</code>
+</p>
+  </li>
+
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       names
@@ -5417,17 +5790,8 @@ These overwrite and are appended to the app&rsquo;s running environment variable
     </h4>
 
     <p class="method-list-item-description">Comma-delimited list of task names to filter by.</p>
-    </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      states
+  </li>
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of task states to filter by.</p>
-    </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       guids
@@ -5437,55 +5801,86 @@ These overwrite and are appended to the app&rsquo;s running environment variable
     </h4>
 
     <p class="method-list-item-description">Comma-delimited list of task guids to filter by.</p>
-    </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      app_guids
+  </li>
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of app guids to filter by.</p>
-    </li>
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       organization_guids
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of organization guids to filter by.</p>
-    </li>
-  <li class="method-list-item">
+    <p class="method-list-item-description">    Comma-delimited list of organization guids to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code>
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       space_guids
 
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of space guids to filter by. <br>Example: <code>space_guids=space_guid1,space_guid2</code>
+</p>
+  </li>
+
+
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      states
+
       <span class="method-list-item-type">optional</span>
       <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Comma-delimited list of space guids to filter by.</p>
-    </li>
-  <li class="method-list-item">
+    <p class="method-list-item-description">Comma-delimited list of task states to filter by.</p>
+  </li>
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Page to display. Possible values are all integers >= 1.</p>
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       per_page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
   </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+</p>
+  </li>
+
+
 </ul>
 
           <h2 id="get-a-task-for-an-app">Get a task for an app</h2>
@@ -5666,6 +6061,17 @@ These overwrite and are appended to the app&rsquo;s running environment variable
 <ul class="method-list-group">
   <li class="method-list-item">
     <h4 class="method-list-item-label">
+      guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of task guids to filter by.</p>
+  </li>
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
       names
 
       <span class="method-list-item-type">optional</span>
@@ -5673,7 +6079,8 @@ These overwrite and are appended to the app&rsquo;s running environment variable
     </h4>
 
     <p class="method-list-item-description">Comma-delimited list of task names to filter by.</p>
-    </li>
+  </li>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       states
@@ -5683,35 +6090,47 @@ These overwrite and are appended to the app&rsquo;s running environment variable
     </h4>
 
     <p class="method-list-item-description">Comma delimited list of task states to filter by.</p>
-    </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      guids
+  </li>
 
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of task guids to filter by.</p>
-    </li>
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Page to display. Possible values are all integers >= 1.</p>
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       per_page
 
-      <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Number of results per page. Possible values are 1 through 5000.</p>
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
   </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+</p>
+  </li>
+
+
 </ul>
 
       </div>
