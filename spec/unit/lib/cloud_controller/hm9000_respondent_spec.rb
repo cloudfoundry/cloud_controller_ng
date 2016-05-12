@@ -8,9 +8,14 @@ module VCAP::CloudController
 
     subject { Dea::HM9000::Respondent.new(dea_client, message_bus) }
 
+    let(:app_starter_task) { instance_double(Dea::AppStarterTask, start: nil) }
+    let(:config) { TestConfig.config }
+
     before do
+      allow(Dea::AppStarterTask).to receive(:new).and_return(app_starter_task)
       allow(dea_client).to receive(:stop_instances)
       allow(dea_client).to receive(:start_instances)
+      allow(dea_client).to receive(:config).and_return(config)
     end
 
     describe '#handle_requests' do
@@ -100,10 +105,7 @@ module VCAP::CloudController
 
               context 'and the diego flag is not set' do
                 it 'should send the start message' do
-                  expect(dea_client).to receive(:start_instances) do |app_to_start, index_to_start|
-                    expect(app_to_start).to eq(app)
-                    expect(index_to_start).to eq(1)
-                  end
+                  expect(app_starter_task).to receive(:start).with(specific_instances: 1)
 
                   subject.process_hm9000_start(hm9000_start_message)
                 end
