@@ -86,46 +86,6 @@ describe PackagesController, type: :controller do
       end
     end
 
-    context 'when the user does not have write scope' do
-      before do
-        set_current_user(user, scopes: ['cloud_controller.read'])
-      end
-
-      it 'returns an Unauthorized error' do
-        post :upload, params.merge(guid: package.guid)
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
-
-    context 'when the user cannot read the package' do
-      before do
-        disallow_user_read_access(user, space: space)
-      end
-
-      it 'returns a 404' do
-        post :upload, params.merge(guid: package.guid)
-
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
-      end
-    end
-
-    context 'when the user can read but not write to the space' do
-      before do
-        allow_user_read_access(user, space: space)
-        disallow_user_write_access(user, space: space)
-      end
-
-      it 'returns a 403' do
-        post :upload, params.merge(guid: package.guid)
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
-
     context 'when the bits have already been uploaded' do
       before do
         package.state = VCAP::CloudController::PackageModel::READY_STATE
@@ -150,6 +110,48 @@ describe PackagesController, type: :controller do
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
+      end
+    end
+
+    context 'permissions' do
+      context 'when the user does not have write scope' do
+        before do
+          set_current_user(user, scopes: ['cloud_controller.read'])
+        end
+
+        it 'returns an Unauthorized error' do
+          post :upload, params.merge(guid: package.guid)
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
+      end
+
+      context 'when the user cannot read the package' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
+
+        it 'returns a 404' do
+          post :upload, params.merge(guid: package.guid)
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
+      end
+
+      context 'when the user can read but not write to the space' do
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
+
+        it 'returns a 403' do
+          post :upload, params.merge(guid: package.guid)
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
     end
   end
@@ -222,29 +224,31 @@ describe PackagesController, type: :controller do
       end
     end
 
-    context 'user does not have read scope' do
-      before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+    context 'permissions' do
+      context 'user does not have read scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+        end
+
+        it 'returns an Unauthorized error' do
+          get :download, guid: package.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
 
-      it 'returns an Unauthorized error' do
-        get :download, guid: package.guid
+      context 'user does not have package read permissions' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
 
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
+        it 'returns 404' do
+          get :download, guid: package.guid
 
-    context 'user does not have package read permissions' do
-      before do
-        disallow_user_read_access(user, space: space)
-      end
-
-      it 'returns 404' do
-        get :download, guid: package.guid
-
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
       end
     end
   end
@@ -265,19 +269,6 @@ describe PackagesController, type: :controller do
       expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
     end
 
-    context 'when the user does not have the read scope' do
-      before do
-        set_current_user(user, scopes: ['cloud_controller.write'])
-      end
-
-      it 'returns a 403 NotAuthorized error' do
-        get :show, guid: package.guid
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
-
     context 'when the package does not exist' do
       it 'returns a 404 Not Found' do
         get :show, guid: 'made-up-guid'
@@ -287,16 +278,31 @@ describe PackagesController, type: :controller do
       end
     end
 
-    context 'when the user can not read from the space' do
-      before do
-        disallow_user_read_access(user, space: space)
+    context 'permissions' do
+      context 'when the user does not have the read scope' do
+        before do
+          set_current_user(user, scopes: ['cloud_controller.write'])
+        end
+
+        it 'returns a 403 NotAuthorized error' do
+          get :show, guid: package.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
 
-      it 'returns a 404 not found' do
-        get :show, guid: package.guid
+      context 'when the user can not read from the space' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
 
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
+        it 'returns a 404 not found' do
+          get :show, guid: package.guid
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
       end
     end
   end
@@ -328,49 +334,51 @@ describe PackagesController, type: :controller do
       end
     end
 
-    context 'when the user does not have write scope' do
-      before do
-        set_current_user(user, scopes: ['cloud_controller.read'])
+    context 'permissions' do
+      context 'when the user does not have write scope' do
+        before do
+          set_current_user(user, scopes: ['cloud_controller.read'])
+        end
+
+        it 'returns an Unauthorized error' do
+          delete :destroy, guid: package.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
 
-      it 'returns an Unauthorized error' do
-        delete :destroy, guid: package.guid
+      context 'when the user cannot read the package' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
 
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
+        it 'returns a 404 ResourceNotFound error' do
+          delete :destroy, guid: package.guid
 
-    context 'when the user cannot read the package' do
-      before do
-        disallow_user_read_access(user, space: space)
-      end
-
-      it 'returns a 404 ResourceNotFound error' do
-        delete :destroy, guid: package.guid
-
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
-      end
-    end
-
-    context 'when the user can read but cannot write to the package' do
-      before do
-        allow_user_read_access(user, space: space)
-        disallow_user_write_access(user, space: space)
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
       end
 
-      it 'raises ApiError NotAuthorized' do
-        delete :destroy, guid: package.guid
+      context 'when the user can read but cannot write to the package' do
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
 
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
+        it 'raises ApiError NotAuthorized' do
+          delete :destroy, guid: package.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
     end
   end
 
   describe '#index' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }
     let!(:user_package_1) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
@@ -378,11 +386,8 @@ describe PackagesController, type: :controller do
     let!(:admin_package) { VCAP::CloudController::PackageModel.make }
 
     before do
-      set_current_user(user)
-      space.organization.add_user(user)
-      space.organization.save
-      space.add_developer(user)
-      space.save
+      allow_user_read_access(user, space: space)
+      stub_readable_space_guids_for(user, space)
     end
 
     it 'returns 200' do
@@ -432,7 +437,7 @@ describe PackagesController, type: :controller do
 
       context 'when the user does not have permissions to read the app' do
         before do
-          space.remove_developer(user)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 Resource Not Found error' do
@@ -472,19 +477,6 @@ describe PackagesController, type: :controller do
       end
     end
 
-    context 'when the user does not have the read scope' do
-      before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
-      end
-
-      it 'returns a 403 NotAuthorized error' do
-        get :index
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
-
     context 'when parameters are invalid' do
       context 'because there are unknown parameters' do
         let(:params) { { 'invalid' => 'thing', 'bad' => 'stuff' } }
@@ -511,17 +503,24 @@ describe PackagesController, type: :controller do
       end
     end
 
-    describe 'permissions' do
+    context 'permissions' do
       context 'when the user can read but not write to the space' do
-        before do
-          allow_user_read_access(user, space: space)
-          disallow_user_write_access(user, space: space)
-          stub_readable_space_guids_for(user, space)
-        end
-
         it 'returns a 200 OK' do
           get :index
           expect(response.status).to eq(200)
+        end
+      end
+
+      context 'when the user does not have the read scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: [])
+        end
+
+        it 'returns a 403 NotAuthorized error' do
+          get :index
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
         end
       end
     end
@@ -575,45 +574,6 @@ describe PackagesController, type: :controller do
           end
         end
 
-        context 'when the user does not have write scope' do
-          before do
-            set_current_user(user, scopes: ['cloud_controller.read'])
-          end
-
-          it 'returns a 403 NotAuthorized error' do
-            post :create, app_guid: app_model.guid, body: req_body
-
-            expect(response.status).to eq 403
-            expect(response.body).to include 'NotAuthorized'
-          end
-        end
-
-        context 'when the user cannot read the app' do
-          before do
-            disallow_user_read_access(user, space: space)
-          end
-
-          it 'returns a 404 ResourceNotFound error' do
-            post :create, app_guid: app_model.guid, body: req_body
-
-            expect(response.status).to eq 404
-            expect(response.body).to include 'ResourceNotFound'
-          end
-        end
-
-        context 'when the user can read but not write to the space' do
-          before do
-            disallow_user_write_access(user, space: space)
-          end
-
-          it 'returns a 403 NotAuthorized error' do
-            post :create, app_guid: app_model.guid, body: req_body
-
-            expect(response.status).to eq 403
-            expect(response.body).to include 'NotAuthorized'
-          end
-        end
-
         context 'when the package is invalid' do
           before do
             allow_any_instance_of(VCAP::CloudController::PackageCreate).to receive(:create).and_raise(VCAP::CloudController::PackageCreate::InvalidPackage.new('err'))
@@ -624,6 +584,47 @@ describe PackagesController, type: :controller do
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
+          end
+        end
+
+        context 'permissions' do
+          context 'when the user does not have write scope' do
+            before do
+              set_current_user(user, scopes: ['cloud_controller.read'])
+            end
+
+            it 'returns a 403 NotAuthorized error' do
+              post :create, app_guid: app_model.guid, body: req_body
+
+              expect(response.status).to eq 403
+              expect(response.body).to include 'NotAuthorized'
+            end
+          end
+
+          context 'when the user cannot read the app' do
+            before do
+              disallow_user_read_access(user, space: space)
+            end
+
+            it 'returns a 404 ResourceNotFound error' do
+              post :create, app_guid: app_model.guid, body: req_body
+
+              expect(response.status).to eq 404
+              expect(response.body).to include 'ResourceNotFound'
+            end
+          end
+
+          context 'when the user can read but not write to the space' do
+            before do
+              disallow_user_write_access(user, space: space)
+            end
+
+            it 'returns a 403 NotAuthorized error' do
+              post :create, app_guid: app_model.guid, body: req_body
+
+              expect(response.status).to eq 403
+              expect(response.body).to include 'NotAuthorized'
+            end
           end
         end
       end

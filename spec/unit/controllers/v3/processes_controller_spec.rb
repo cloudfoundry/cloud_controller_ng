@@ -194,17 +194,6 @@ describe ProcessesController, type: :controller do
       end
     end
 
-    context 'when the user does not have read permissions' do
-      before { set_current_user(user, scopes: ['cloud_controller.write']) }
-
-      it 'raises an ApiError with a 403 code' do
-        get :show, { process_guid: process_type.guid }
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
-
     context 'when the process does not exist' do
       it 'raises an ApiError with a 404 code' do
         get :show, { process_guid: 'ABC123' }
@@ -215,17 +204,30 @@ describe ProcessesController, type: :controller do
       end
     end
 
-    context 'when the user cannot read the process due to roles' do
-      before do
-        disallow_user_read_access(user, space: space)
+    context 'permissions' do
+      context 'when the user does not have read scope' do
+        before { set_current_user(user, scopes: []) }
+
+        it 'raises an ApiError with a 403 code' do
+          get :show, { process_guid: process_type.guid }
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
 
-      it 'raises 404' do
-        get :show, { process_guid: process_type.guid }
+      context 'when the user cannot read the process' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
 
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
-        expect(response.body).to include('Process not found')
+        it 'raises 404' do
+          get :show, { process_guid: process_type.guid }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+          expect(response.body).to include('Process not found')
+        end
       end
     end
   end
@@ -273,17 +275,6 @@ describe ProcessesController, type: :controller do
       end
     end
 
-    context 'when the user does not have write permissions' do
-      before { set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']) }
-
-      it 'raises an ApiError with a 403 code' do
-        patch :update, req_body.to_json, { process_guid: process_type.guid }
-
-        expect(response.body).to include('NotAuthorized')
-        expect(response.status).to eq(403)
-      end
-    end
-
     context 'when the process is invalid' do
       before do
         allow_any_instance_of(VCAP::CloudController::ProcessUpdate).to receive(:update).and_raise(VCAP::CloudController::ProcessUpdate::InvalidProcess.new('errorz'))
@@ -310,30 +301,43 @@ describe ProcessesController, type: :controller do
       end
     end
 
-    context 'when the user cannot read the process' do
-      before do
-        disallow_user_read_access(user, space: space)
+    context 'permissions' do
+      context 'when the user cannot read the process' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
+
+        it 'raises 404' do
+          patch :update, req_body.to_json, { process_guid: process_type.guid }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
       end
 
-      it 'raises 404' do
-        patch :update, req_body.to_json, { process_guid: process_type.guid }
+      context 'when the user can read but not write to the process due to membership' do
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
 
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
+        it 'raises an ApiError with a 403 code' do
+          patch :update, req_body.to_json, { process_guid: process_type.guid }
+
+          expect(response.status).to eq 403
+          expect(response.body).to include('NotAuthorized')
+        end
       end
-    end
 
-    context 'when the user can read but not write to the process due to membership' do
-      before do
-        allow_user_read_access(user, space: space)
-        disallow_user_write_access(user, space: space)
-      end
+      context 'when the user does not have write permissions' do
+        before { set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']) }
 
-      it 'raises an ApiError with a 403 code' do
-        patch :update, req_body.to_json, { process_guid: process_type.guid }
+        it 'raises an ApiError with a 403 code' do
+          patch :update, req_body.to_json, { process_guid: process_type.guid }
 
-        expect(response.status).to eq 403
-        expect(response.body).to include('NotAuthorized')
+          expect(response.body).to include('NotAuthorized')
+          expect(response.status).to eq(403)
+        end
       end
     end
   end
@@ -418,41 +422,43 @@ describe ProcessesController, type: :controller do
       expect(response.body).to include('Instance not found')
     end
 
-    context 'when the user does not have write permissions' do
-      before { set_current_user(user, scopes: ['cloud_controller.read']) }
+    context 'permissions' do
+      context 'when the user does not have write permissions' do
+        before { set_current_user(user, scopes: ['cloud_controller.read']) }
 
-      it 'raises an ApiError with a 403 code' do
-        delete :terminate, { process_guid: process_type.guid, index: 0 }
+        it 'raises an ApiError with a 403 code' do
+          delete :terminate, { process_guid: process_type.guid, index: 0 }
 
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
-
-    context 'when the user cannot read the process' do
-      before do
-        disallow_user_read_access(user, space: space)
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
 
-      it 'raises 404' do
-        delete :terminate, { process_guid: process_type.guid, index: 0 }
+      context 'when the user cannot read the process' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
 
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
+        it 'raises 404' do
+          delete :terminate, { process_guid: process_type.guid, index: 0 }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
       end
-    end
 
-    context 'when the user can read but not write to the process due to membership' do
-      before do
-        allow_user_read_access(user, space: space)
-        disallow_user_write_access(user, space: space)
-      end
+      context 'when the user can read but not write to the process due to membership' do
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
 
-      it 'raises an ApiError with a 403 code' do
-        delete :terminate, { process_guid: process_type.guid, index: 0 }
+        it 'raises an ApiError with a 403 code' do
+          delete :terminate, { process_guid: process_type.guid, index: 0 }
 
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
     end
   end
@@ -609,30 +615,43 @@ describe ProcessesController, type: :controller do
       end
     end
 
-    context 'when the user cannot read the process' do
-      before do
-        disallow_user_read_access(user, space: space)
+    context 'permissions' do
+      context 'when the user cannot read the process' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
+
+        it 'raises 404' do
+          put :scale, { process_guid: process_type.guid, body: req_body }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
       end
 
-      it 'raises 404' do
-        put :scale, { process_guid: process_type.guid, body: req_body }
+      context 'when the user can read but cannot write to the process' do
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
 
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
+        it 'raises an ApiError with a 403 code' do
+          put :scale, { process_guid: process_type.guid, body: req_body }
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
-    end
 
-    context 'when the user can read but cannot write to the process' do
-      before do
-        allow_user_read_access(user, space: space)
-        disallow_user_write_access(user, space: space)
-      end
+      context 'when the user does not have write permissions' do
+        before { set_current_user(user, scopes: ['cloud_controller.read']) }
 
-      it 'raises an ApiError with a 403 code' do
-        put :scale, { process_guid: process_type.guid, body: req_body }
+        it 'raises an ApiError with a 403 code' do
+          put :scale, { process_guid: process_type.guid, body: req_body }
 
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
+          expect(response.status).to eq 403
+          expect(response.body).to include('NotAuthorized')
+        end
       end
     end
   end
@@ -700,17 +719,6 @@ describe ProcessesController, type: :controller do
       end
     end
 
-    context 'when the user does not have read scope' do
-      before { set_current_user(user, scopes: ['cloud_controller.write']) }
-
-      it 'raises an ApiError with a 403 code' do
-        put :stats, { process_guid: process_type.guid }
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
-
     context 'when the process does not exist' do
       it 'raises 404' do
         get :stats, { process_guid: 'fake-guid' }
@@ -720,16 +728,29 @@ describe ProcessesController, type: :controller do
       end
     end
 
-    context 'when the user cannot read the process' do
-      before do
-        disallow_user_read_access(user, space: space)
+    context 'permissions' do
+      context 'when the user does not have read scope' do
+        before { set_current_user(user, scopes: ['cloud_controller.write']) }
+
+        it 'raises an ApiError with a 403 code' do
+          put :stats, { process_guid: process_type.guid }
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
 
-      it 'raises 404' do
-        put :stats, { process_guid: process_type.guid }
+      context 'when the user cannot read the process' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
 
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
+        it 'raises 404' do
+          put :stats, { process_guid: process_type.guid }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
       end
     end
   end

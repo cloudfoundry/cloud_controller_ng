@@ -58,52 +58,6 @@ describe DropletsController, type: :controller do
       end
     end
 
-    context 'when the user does not have the write scope' do
-      before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
-      end
-
-      it 'returns an ApiError with a 403 code' do
-        post :create, package_guid: package.guid
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
-
-    context 'when the user cannot read the package due to roles' do
-      let(:space) { app_model.space }
-      let(:org) { space.organization }
-
-      before do
-        disallow_user_read_access(user, space: space)
-      end
-
-      it 'returns a 404 ResourceNotFound error' do
-        post :create, package_guid: package.guid
-
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
-      end
-    end
-
-    context 'when the user can read but cannot write to the package due to roles' do
-      let(:space) { app_model.space }
-      let(:org) { space.organization }
-
-      before do
-        allow_user_read_access(user, space: space)
-        disallow_user_write_access(user, space: space)
-      end
-
-      it 'raises ApiError NotAuthorized' do
-        post :create, package_guid: package.guid
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
-
     describe 'buildpack lifecycle' do
       describe 'buildpack request' do
         let(:req_body) { { lifecycle: { type: 'buildpack', data: { buildpack: buildpack_request } } } }
@@ -398,6 +352,49 @@ describe DropletsController, type: :controller do
         end
       end
     end
+
+    context 'permissions' do
+      context 'when the user does not have the write scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+        end
+
+        it 'returns an ApiError with a 403 code' do
+          post :create, package_guid: package.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
+      end
+
+      context 'when the user cannot read the package due to roles' do
+        before do
+          disallow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          post :create, package_guid: package.guid
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
+      end
+
+      context 'when the user can read but cannot write to the package due to roles' do
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
+
+        it 'raises ApiError NotAuthorized' do
+          post :create, package_guid: package.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
+      end
+    end
   end
 
   describe '#copy' do
@@ -548,32 +545,34 @@ describe DropletsController, type: :controller do
       end
     end
 
-    context 'when the user does not have the read scope' do
-      before do
-        set_current_user(user, scopes: ['cloud_controller.write'])
+    context 'permissions' do
+      context 'when the user does not have the read scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: [])
+        end
+
+        it 'returns a 403 NotAuthorized error' do
+          get :show, guid: droplet.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
 
-      it 'returns a 403 NotAuthorized error' do
-        get :show, guid: droplet.guid
+      context 'when the user can not read from the space' do
+        let(:space) { droplet.space }
+        let(:org) { space.organization }
 
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
+        before do
+          disallow_user_read_access(user, space: space)
+        end
 
-    context 'when the user can not read from the space' do
-      let(:space) { droplet.space }
-      let(:org) { space.organization }
+        it 'returns a 404 not found' do
+          get :show, guid: droplet.guid
 
-      before do
-        disallow_user_read_access(user, space: space)
-      end
-
-      it 'returns a 404 not found' do
-        get :show, guid: droplet.guid
-
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
       end
     end
   end
@@ -605,43 +604,45 @@ describe DropletsController, type: :controller do
       end
     end
 
-    context 'when the user does not have write scope' do
-      before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+    context 'permissions' do
+      context 'when the user does not have write scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+        end
+
+        it 'returns 403' do
+          delete :destroy, guid: droplet.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
 
-      it 'returns 403' do
-        delete :destroy, guid: droplet.guid
+      context 'when the user cannot read the droplet due to roles' do
+        before do
+          disallow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
 
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
+        it 'returns a 404 ResourceNotFound error' do
+          delete :destroy, guid: droplet.guid
 
-    context 'when the user cannot read the droplet due to roles' do
-      before do
-        disallow_user_read_access(user, space: space)
-      end
-
-      it 'returns a 404 ResourceNotFound error' do
-        delete :destroy, guid: droplet.guid
-
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
-      end
-    end
-
-    context 'when the user can read but cannot write to the space' do
-      before do
-        allow_user_read_access(user, space: space)
-        disallow_user_write_access(user, space: space)
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
       end
 
-      it 'returns 403 NotAuthorized' do
-        delete :destroy, guid: droplet.guid
+      context 'when the user can read but cannot write to the space' do
+        before do
+          disallow_user_write_access(user, space: space)
+        end
 
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
+        it 'returns 403 NotAuthorized' do
+          delete :destroy, guid: droplet.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
     end
   end
@@ -649,16 +650,14 @@ describe DropletsController, type: :controller do
   describe '#index' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:app) { VCAP::CloudController::AppModel.make }
-    let(:space) { app.space }
+    let!(:space) { app.space }
     let!(:user_droplet_1) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
     let!(:user_droplet_2) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
     let!(:admin_droplet) { VCAP::CloudController::DropletModel.make }
 
     before do
-      space.organization.add_user(user)
-      space.organization.save
-      space.add_developer(user)
-      space.save
+      allow_user_read_access(user, space: space)
+      stub_readable_space_guids_for(user, space)
     end
 
     it 'returns 200' do
@@ -715,7 +714,7 @@ describe DropletsController, type: :controller do
 
       context 'when the user cannot read the app' do
         before do
-          space.remove_developer(user)
+          disallow_user_read_access(user, space: space)
         end
 
         it 'returns a 404 Resource Not Found error' do
@@ -778,7 +777,7 @@ describe DropletsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have read scope' do
         before do
-          set_current_user(user, scopes: ['cloud_controller.write'])
+          set_current_user(VCAP::CloudController::User.make, scopes: [])
         end
 
         it 'returns a 403 Not Authorized error' do
@@ -806,7 +805,6 @@ describe DropletsController, type: :controller do
         before do
           allow_user_read_access(user, space: space)
           disallow_user_write_access(user, space: space)
-          allow(permissions_double(user)).to receive(:readable_space_guids).and_return([])
         end
 
         it 'returns 200' do

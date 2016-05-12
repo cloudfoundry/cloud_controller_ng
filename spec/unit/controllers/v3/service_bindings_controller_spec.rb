@@ -339,7 +339,7 @@ describe ServiceBindingsController, type: :controller do
 
       context 'when the user does not have read scope' do
         before do
-          set_current_user(user, scopes: ['cloud_controller.write'])
+          set_current_user(user, scopes: [''])
         end
 
         it 'returns a 403 NotAuthorized error' do
@@ -432,7 +432,7 @@ describe ServiceBindingsController, type: :controller do
 
     context 'when the user does not have the read scope' do
       before do
-        set_current_user(user, scopes: ['cloud_controller.write'])
+        set_current_user(user, scopes: [])
       end
 
       it 'returns a 403 NotAuthorized error' do

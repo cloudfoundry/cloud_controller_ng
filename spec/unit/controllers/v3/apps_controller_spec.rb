@@ -98,12 +98,11 @@ describe AppsV3Controller, type: :controller do
 
     before do
       set_current_user(user)
+      allow_user_read_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns a 200 and the app' do
-      allow_user_read_access(user, space: space)
-
       get :show, guid: app_model.guid
 
       expect(response.status).to eq 200
@@ -119,32 +118,34 @@ describe AppsV3Controller, type: :controller do
       end
     end
 
-    context 'when the user does not have cc read scope' do
-      before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+    context 'permissions' do
+      context 'when the user does not have cc read scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: [])
+        end
+
+        it 'raises an ApiError with a 403 code' do
+          get :show, guid: app_model.guid
+
+          expect(response.body).to include 'NotAuthorized'
+          expect(response.status).to eq 403
+        end
       end
 
-      it 'raises an ApiError with a 403 code' do
-        get :show, guid: app_model.guid
+      context 'when the user cannot read the app' do
+        let(:space) { app_model.space }
+        let(:org) { space.organization }
 
-        expect(response.body).to include 'NotAuthorized'
-        expect(response.status).to eq 403
-      end
-    end
+        before do
+          disallow_user_read_access(user, space: space)
+        end
 
-    context 'when the user cannot read the app' do
-      let(:space) { app_model.space }
-      let(:org) { space.organization }
+        it 'returns a 404 ResourceNotFound error' do
+          get :show, guid: app_model.guid
 
-      before do
-        disallow_user_read_access(user, space: space)
-      end
-
-      it 'returns a 404 ResourceNotFound error' do
-        get :show, guid: app_model.guid
-
-        expect(response.status).to eq 404
-        expect(response.body).to include 'ResourceNotFound'
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+        end
       end
     end
   end
@@ -174,19 +175,6 @@ describe AppsV3Controller, type: :controller do
       expect(parsed_body['guid']).to eq(app_model.guid)
     end
 
-    context 'when the user does not have write scope' do
-      before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
-      end
-
-      it 'raises an ApiError with a 403 code' do
-        post :create, body: req_body
-
-        expect(response.status).to eq 403
-        expect(response.body).to include 'NotAuthorized'
-      end
-    end
-
     context 'when the request has invalid data' do
       let(:req_body) { { name: 'missing-all-other-required-fields' } }
 
@@ -211,34 +199,6 @@ describe AppsV3Controller, type: :controller do
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'ya done goofed'
-      end
-    end
-
-    context 'when the user is not a member of the requested space' do
-      before do
-        disallow_user_read_access(user, space: space)
-      end
-
-      it 'returns an NotFound error' do
-        post :create, body: req_body
-
-        expect(response.status).to eq(404)
-        expect(response.body).to include 'ResourceNotFound'
-        expect(response.body).to include 'Space not found'
-      end
-    end
-
-    context 'when the user is a space manager/org manager and thus can see the space but not create apps' do
-      before do
-        allow_user_read_access(user, space: space)
-        disallow_user_write_access(user, space: space)
-      end
-
-      it 'returns an Unauthorized error' do
-        post :create, body: req_body
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include 'NotAuthorized'
       end
     end
 
@@ -410,6 +370,49 @@ describe AppsV3Controller, type: :controller do
           expect(response.status).to eq(403)
           expect(response.body).to include('FeatureDisabled')
           expect(response.body).to include('diego_docker')
+        end
+      end
+    end
+
+    context 'permissions' do
+      context 'when the user is not a member of the requested space' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
+
+        it 'returns an NotFound error' do
+          post :create, body: req_body
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'Space not found'
+        end
+      end
+
+      context 'when the user does not have write scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+        end
+
+        it 'raises an ApiError with a 403 code' do
+          post :create, body: req_body
+
+          expect(response.status).to eq 403
+          expect(response.body).to include 'NotAuthorized'
+        end
+      end
+
+      context 'when the user is a space manager/org manager and thus can see the space but not create apps' do
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
+
+        it 'returns an Unauthorized error' do
+          post :create, body: req_body
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include 'NotAuthorized'
         end
       end
     end
@@ -783,7 +786,7 @@ describe AppsV3Controller, type: :controller do
     end
 
     context 'permissions' do
-      context 'because they do not have the write scope' do
+      context 'when the user does not have the write scope' do
         before do
           set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
         end
@@ -899,6 +902,7 @@ describe AppsV3Controller, type: :controller do
           expect(response.status).to eq 404
         end
       end
+
       context 'when the user can read but cannot write to the app' do
         before do
           disallow_user_write_access(user, space: space)
@@ -1288,7 +1292,7 @@ describe AppsV3Controller, type: :controller do
         end
       end
 
-      context 'when the user can not read the applicaiton' do
+      context 'when the user can not read the application' do
         before do
           disallow_user_read_access(user, space: space)
         end
@@ -1358,48 +1362,50 @@ describe AppsV3Controller, type: :controller do
       end
     end
 
-    context 'when the user does not have the read scope' do
-      before do
-        set_current_user(VCAP::CloudController::User.make, scopes: [])
+    context 'permissions' do
+      context 'when the user does not have the read scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: [])
+        end
+
+        it 'returns a 403 NotAuthorized error' do
+          get :current_droplet, guid: app_model.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
 
-      it 'returns a 403 NotAuthorized error' do
-        get :current_droplet, guid: app_model.guid
+      context 'when the user can not read the space' do
+        let(:space) { droplet.space }
+        let(:org) { space.organization }
 
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
+        before do
+          disallow_user_read_access(user, space: space)
+        end
 
-    context 'when the user can not read the space' do
-      let(:space) { droplet.space }
-      let(:org) { space.organization }
+        it 'returns a 404 not found' do
+          get :current_droplet, guid: app_model.guid
 
-      before do
-        disallow_user_read_access(user, space: space)
-      end
-
-      it 'returns a 404 not found' do
-        get :current_droplet, guid: app_model.guid
-
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
-      end
-    end
-
-    context 'when the user can read but not update the application' do
-      let(:space) { droplet.space }
-      let(:org) { space.organization }
-
-      before do
-        allow_user_read_access(user, space: space)
-        disallow_user_write_access(user, space: space)
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
       end
 
-      it 'returns a 200 OK' do
-        get :current_droplet, guid: app_model.guid
+      context 'when the user can read but not update the application' do
+        let(:space) { droplet.space }
+        let(:org) { space.organization }
 
-        expect(response.status).to eq(200)
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
+
+        it 'returns a 200 OK' do
+          get :current_droplet, guid: app_model.guid
+
+          expect(response.status).to eq(200)
+        end
       end
     end
   end

@@ -70,7 +70,7 @@ describe TasksController, type: :controller do
       expect(task_create).to have_received(:create).with(anything, anything, user.guid, 'user-email', droplet: nil)
     end
 
-    describe 'access permissions' do
+    context 'permissions' do
       context 'when the task_creation feature flag is disabled' do
         let(:tasks_enabled) { false }
 
@@ -264,7 +264,7 @@ describe TasksController, type: :controller do
       expect(parsed_body['memory_in_mb']).to eq(2048)
     end
 
-    describe 'access permissions' do
+    context 'permissions' do
       context 'when the user does not have read scope' do
         before do
           set_current_user(user, scopes: [])
@@ -323,7 +323,7 @@ describe TasksController, type: :controller do
       stub_readable_space_guids_for(user, space)
     end
 
-    it 'returns tasks the user has roles to see' do
+    it 'returns tasks the user has read access' do
       task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
       task_2 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
       VCAP::CloudController::TaskModel.make
@@ -497,31 +497,33 @@ describe TasksController, type: :controller do
       end
     end
 
-    context 'when the user does not have read permissions on the app space' do
-      before do
-        disallow_user_read_access(user, space: space)
+    context 'permissions' do
+      context 'when the user does not have read permissions on the app space' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
+
+        it 'returns a 404 ResourceNotFound' do
+          put :cancel, task_guid: task.guid
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'Task not found'
+        end
       end
 
-      it 'returns a 404 ResourceNotFound' do
-        put :cancel, task_guid: task.guid
+      context 'when the user has read, but not write permissions on the app space' do
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
 
-        expect(response.status).to eq 404
-        expect(response.body).to include 'ResourceNotFound'
-        expect(response.body).to include 'Task not found'
-      end
-    end
+        it 'returns a 403 NotAuthorized' do
+          put :cancel, task_guid: task.guid
 
-    context 'when the user has read, but not write permissions on the app space' do
-      before do
-        allow_user_read_access(user, space: space)
-        disallow_user_write_access(user, space: space)
-      end
-
-      it 'returns a 403 NotAuthorized' do
-        put :cancel, task_guid: task.guid
-
-        expect(response.status).to eq 403
-        expect(response.body).to include('NotAuthorized')
+          expect(response.status).to eq 403
+          expect(response.body).to include('NotAuthorized')
+        end
       end
     end
   end

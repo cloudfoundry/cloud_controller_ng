@@ -118,46 +118,6 @@ describe RouteMappingsController, type: :controller do
       end
     end
 
-    context 'when the user does not have write scope' do
-      before do
-        set_current_user(user, scopes: ['cloud_controller.read'])
-      end
-
-      it 'raises an ApiError with a 403 code' do
-        post :create, body: req_body
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
-
-    context 'when the user does not have read access to the space' do
-      before do
-        disallow_user_read_access(user, space: space)
-      end
-
-      it 'returns a 404 ResourceNotFound error' do
-        post :create, body: req_body
-
-        expect(response.status).to eq 404
-        expect(response.body).to include 'ResourceNotFound'
-      end
-    end
-
-    context 'when the user can read but cannot write to the space' do
-      before do
-        allow_user_read_access(user, space: space)
-        disallow_user_write_access(user, space: space)
-      end
-
-      it 'raises ApiError NotAuthorized' do
-        post :create, body: req_body
-
-        expect(response.status).to eq 403
-        expect(response.body).to include 'NotAuthorized'
-      end
-    end
-
     context 'when the mapping is invalid' do
       before do
         add_route_to_app = instance_double(VCAP::CloudController::RouteMappingCreate)
@@ -192,6 +152,48 @@ describe RouteMappingsController, type: :controller do
         expect(response.body).to include 'belong to the same space'
       end
     end
+
+    context 'permissions' do
+      context 'when the user does not have write scope' do
+        before do
+          set_current_user(user, scopes: ['cloud_controller.read'])
+        end
+
+        it 'raises an ApiError with a 403 code' do
+          post :create, body: req_body
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
+      end
+
+      context 'when the user does not have read access to the space' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          post :create, body: req_body
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+        end
+      end
+
+      context 'when the user can read but cannot write to the space' do
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
+
+        it 'raises ApiError NotAuthorized' do
+          post :create, body: req_body
+
+          expect(response.status).to eq 403
+          expect(response.body).to include 'NotAuthorized'
+        end
+      end
+    end
   end
 
   describe '#show' do
@@ -217,7 +219,7 @@ describe RouteMappingsController, type: :controller do
       expect(response.body).to include 'Route mapping not found'
     end
 
-    describe 'access permissions' do
+    context 'permissions' do
       context 'when the user does not have read scope' do
         before do
           set_current_user(user, scopes: [])
@@ -364,7 +366,7 @@ describe RouteMappingsController, type: :controller do
 
       context 'when the user does not have read scope' do
         before do
-          set_current_user(user, scopes: ['cloud_controller.write'])
+          set_current_user(user, scopes: [])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -404,30 +406,32 @@ describe RouteMappingsController, type: :controller do
       end
     end
 
-    context 'when the user can read, but not write to the space' do
-      before do
-        allow_user_read_access(user, space: space)
-        disallow_user_write_access(user, space: space)
+    context 'permissions' do
+      context 'when the user can read, but not write to the space' do
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
+
+        it 'raises an API 403 error' do
+          delete :destroy, app_guid: app.guid, route_mapping_guid: route_mapping.guid
+
+          expect(response.status).to eq 403
+          expect(response.body).to include 'NotAuthorized'
+        end
       end
 
-      it 'raises an API 403 error' do
-        delete :destroy, app_guid: app.guid, route_mapping_guid: route_mapping.guid
+      context 'when the user does not have write scope' do
+        before do
+          set_current_user(user, scopes: ['cloud_controller.read'])
+        end
 
-        expect(response.status).to eq 403
-        expect(response.body).to include 'NotAuthorized'
-      end
-    end
+        it 'raises an ApiError with a 403 code' do
+          delete :destroy, app_guid: app.guid, route_mapping_guid: route_mapping.guid
 
-    context 'when the user does not have write scope' do
-      before do
-        set_current_user(user, scopes: ['cloud_controller.read'])
-      end
-
-      it 'raises an ApiError with a 403 code' do
-        delete :destroy, app_guid: app.guid, route_mapping_guid: route_mapping.guid
-
-        expect(response.status).to eq 403
-        expect(response.body).to include 'NotAuthorized'
+          expect(response.status).to eq 403
+          expect(response.body).to include 'NotAuthorized'
+        end
       end
     end
   end
