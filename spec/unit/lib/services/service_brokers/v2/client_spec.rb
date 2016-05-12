@@ -328,9 +328,10 @@ module VCAP::Services::ServiceBrokers::V2
       let(:response_body) { response_data.to_json }
       let(:code) { '200' }
       let(:message) { 'OK' }
+      let(:operation_type) { 'some_operation' }
 
       before do
-        instance.save_with_new_operation({}, { type: 'create' })
+        instance.save_with_new_operation({}, { type: operation_type })
         allow(http_client).to receive(:get).and_return(response)
       end
 
@@ -338,7 +339,7 @@ module VCAP::Services::ServiceBrokers::V2
         client.fetch_service_instance_state(instance)
 
         expect(http_client).to have_received(:get).
-          with("/v2/service_instances/#{instance.guid}/last_operation")
+          with("/v2/service_instances/#{instance.guid}/last_operation?operation=#{operation_type}")
       end
 
       it 'returns the attributes to update the service instance model' do

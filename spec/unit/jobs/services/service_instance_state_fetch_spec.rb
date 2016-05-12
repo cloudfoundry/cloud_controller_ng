@@ -94,14 +94,19 @@ module VCAP::CloudController
         end
 
         describe '#perform' do
+          let(:uri) {
+            u = URI(broker.broker_url)
+            u.user = broker.auth_username
+            u.password = broker.auth_password
+            u
+          }
+
           before do
-            uri = URI(broker.broker_url)
-            uri.user = broker.auth_username
-            uri.password = broker.auth_password
-            stub_request(:get, "#{uri}/v2/service_instances/#{service_instance.guid}/last_operation").to_return(
-              status: status,
-              body: response.to_json
-            )
+            stub_request(:get, "#{uri}/v2/service_instances/#{service_instance.guid}/last_operation?operation=create").
+              to_return(
+                status: status,
+                body: response.to_json
+              )
           end
 
           describe 'updating the service instance description' do
@@ -138,6 +143,10 @@ module VCAP::CloudController
             context 'when the last operation type is `delete`' do
               before do
                 service_instance.save_with_new_operation({}, { type: 'delete' })
+                stub_request(:get, "#{uri}/v2/service_instances/#{service_instance.guid}/last_operation?operation=delete").to_return(
+                  status: status,
+                  body: response.to_json
+                )
               end
 
               it 'should delete the service instance' do
@@ -158,6 +167,10 @@ module VCAP::CloudController
               before do
                 service_instance.last_operation.type = 'update'
                 service_instance.last_operation.save
+                stub_request(:get, "#{uri}/v2/service_instances/#{service_instance.guid}/last_operation?operation=update").to_return(
+                  status: status,
+                  body: response.to_json
+                )
               end
 
               it 'should create an update event' do
@@ -305,7 +318,8 @@ module VCAP::CloudController
                 uri = URI(broker.broker_url)
                 uri.user = broker.auth_username
                 uri.password = broker.auth_password
-                stub_request(:get, "#{uri}/v2/service_instances/#{service_instance.guid}/last_operation").to_raise(HTTPClient::TimeoutError.new)
+                stub_request(:get, "#{uri}/v2/service_instances/#{service_instance.guid}/last_operation?operation=#{service_instance.last_operation.type}").
+                  to_raise(HTTPClient::TimeoutError.new)
               end
 
               it 'should enqueue another fetch job' do

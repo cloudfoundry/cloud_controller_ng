@@ -126,7 +126,7 @@ module VCAP::CloudController::BrokerApiHelper
     @service_instance_guid = response['metadata']['guid']
   end
 
-  def stub_async_last_operation(state: 'succeeded')
+  def stub_async_last_operation(state: 'succeeded', operation:)
     fetch_body = {
       state: state
 
@@ -134,6 +134,7 @@ module VCAP::CloudController::BrokerApiHelper
 
     stub_request(:get,
       "http://#{stubbed_broker_username}:#{stubbed_broker_password}@#{stubbed_broker_host}/v2/service_instances/#{@service_instance_guid}/last_operation").
+      with(query: { 'operation': operation }).
       to_return(
         status: 200,
         body: fetch_body.to_json)
