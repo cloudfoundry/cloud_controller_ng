@@ -69,11 +69,15 @@ module VCAP::CloudController
       end
 
       describe 'total_reserved_route_ports' do
+        let(:err_msg) do
+          'Total reserved ports must be -1, 0, or a positive integer, must ' \
+            'be less than or equal to total routes, and must be less than or ' \
+            'equal to total reserved ports for the organization quota.'
+        end
         it 'cannot be less than -1' do
-          reserved_port_range_error = 'Total reserved ports must be -1, 0, or a positive integer, and must be less than or equal to total routes.'
           space_quota_definition.total_reserved_route_ports = -2
           expect(space_quota_definition).not_to be_valid
-          expect(space_quota_definition.errors.on(:total_reserved_route_ports).first).to eq(reserved_port_range_error)
+          expect(space_quota_definition.errors.on(:total_reserved_route_ports).first).to eq(err_msg)
 
           space_quota_definition.total_reserved_route_ports = -1
           expect(space_quota_definition).to be_valid
@@ -83,8 +87,6 @@ module VCAP::CloudController
           org_quota_definition = space_quota_definition.organization.quota_definition
           org_quota_definition.total_reserved_route_ports = 10
           org_quota_definition.save
-
-          err_msg = 'Total reserved ports must be less than or equal to the organization total reserved ports.'
 
           space_quota_definition.total_reserved_route_ports = 11
           expect(space_quota_definition).not_to be_valid
@@ -120,7 +122,7 @@ module VCAP::CloudController
 
           space_quota_definition.total_reserved_route_ports = 6
           expect(space_quota_definition).to_not be_valid
-          expect(space_quota_definition.errors.on(:total_reserved_route_ports)).to include('Total reserved ports must be less than or equal to total routes.')
+          expect(space_quota_definition.errors.on(:total_reserved_route_ports)).to include(err_msg)
         end
 
         it 'can take any value if space quota for total_routes is set to -1' do

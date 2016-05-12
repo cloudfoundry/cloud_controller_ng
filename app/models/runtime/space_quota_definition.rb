@@ -1,9 +1,10 @@
 module VCAP::CloudController
   class SpaceQuotaDefinition < Sequel::Model
     UNLIMITED = -1
-    RESERVED_PORT_RANGE_ERROR = Sequel.lit('Total reserved ports must be -1, 0, or a positive integer, and must be less than or equal to total routes.')
-    RESERVED_PORT_ROUTES_ERROR = Sequel.lit('Total reserved ports must be less than or equal to total routes.')
-    RESERVED_PORT_ORG_ERROR = Sequel.lit('Total reserved ports must be less than or equal to the organization total reserved ports.')
+    RESERVED_PORT_ERROR = Sequel.lit('Total reserved ports must be -1, 0, or a ' \
+                                     'positive integer, must be less than or ' \
+                                     'equal to total routes, and must be less ' \
+                                     'than or equal to total reserved ports for the organization quota.')
 
     class OrganizationAlreadySet < RuntimeError; end
 
@@ -53,9 +54,9 @@ module VCAP::CloudController
 
     def validate_total_reserved_ports
       return unless total_reserved_route_ports
-      errors.add(:total_reserved_route_ports, RESERVED_PORT_RANGE_ERROR) if reserved_ports_outside_of_valid_range?
-      errors.add(:total_reserved_route_ports, RESERVED_PORT_ORG_ERROR) if total_reserved_route_ports_greater_than_orgs_ports?
-      errors.add(:total_reserved_route_ports, RESERVED_PORT_ROUTES_ERROR) if total_reserved_route_ports_greater_than_total_routes?
+      errors.add(:total_reserved_route_ports, RESERVED_PORT_ERROR) if reserved_ports_outside_of_valid_range?
+      errors.add(:total_reserved_route_ports, RESERVED_PORT_ERROR) if total_reserved_route_ports_greater_than_orgs_ports?
+      errors.add(:total_reserved_route_ports, RESERVED_PORT_ERROR) if total_reserved_route_ports_greater_than_total_routes?
     end
 
     def reserved_ports_outside_of_valid_range?
