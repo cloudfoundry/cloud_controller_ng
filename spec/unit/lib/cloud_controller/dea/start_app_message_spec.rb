@@ -41,6 +41,7 @@ module VCAP::CloudController
         expect(res[:egress_network_rules]).to be_kind_of(Array)
         expect(res[:egress_network_rules]).to eq([])
         expect(res[:stack]).to eq(app.stack.name)
+        expect(res[:cc_partition]).to be_kind_of(String)
 
         expect(res[:vcap_application]).to eql(VCAP::VarsBuilder.new(app).to_hash)
 

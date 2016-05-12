@@ -19,9 +19,11 @@ module VCAP::CloudController
     end
 
     let(:dea_id) { 'dea_123' }
+    let(:dea_http_id) { 'def' }
+    let(:dea_http_uri) { 'https://host:1234' }
     let(:dea_ad) { create_ad(dea_id) }
     let(:abc_ad) { create_ad('abc') }
-    let(:def_ad) { create_ad('def', 'https://host:1234') }
+    let(:def_ad) { create_ad(dea_http_id, dea_http_uri) }
 
     let(:blobstore_url_generator) do
       double('blobstore_url_generator', droplet_download_url: 'app_uri')
@@ -44,9 +46,11 @@ module VCAP::CloudController
       Dea::NatsMessages::DeaAdvertisement.new(hash, nil)
     end
 
-    before do
-      TestConfig.override(overrides)
+    let(:http_client) { HTTPClient.new }
 
+    before do
+      allow(HTTPClient).to receive(:new).and_return(http_client)
+      TestConfig.override(overrides)
       Dea::Client.configure(TestConfig.config, message_bus, dea_pool, blobstore_url_generator)
     end
 
@@ -89,130 +93,6 @@ module VCAP::CloudController
           )
         )
         Dea::Client.update_uris(app)
-      end
-    end
-
-    describe 'start_instances' do
-      it 'should send start messages' do
-        app.instances = 3
-
-        expect(dea_pool).to receive(:find_dea).twice.and_return(dea_ad)
-        expect(dea_pool).to receive(:mark_app_started).twice.with(dea_id: dea_id, app_id: app.guid)
-        expect(dea_pool).to receive(:reserve_app_memory).twice.with(dea_id, app.memory)
-        expect(message_bus).to receive(:publish).with(
-          'dea.dea_123.start',
-          hash_including(
-            index: 1,
-          )
-        ).ordered
-
-        expect(message_bus).to receive(:publish).with(
-          'dea.dea_123.start',
-          hash_including(
-            index: 2,
-          )
-        ).ordered
-
-        Dea::Client.start_instances(app, [1, 2])
-      end
-
-      context 'when the DEAs have insufficient capacity to start all the indices' do
-        it 'attempts to find DEAs for all indices and raises an InsufficientRunningResourcesAvailable error' do
-          app.instances = 4
-          expect(dea_pool).to receive(:find_dea).and_return(nil, nil, dea_ad)
-          expect(dea_pool).to receive(:mark_app_started).once.with(dea_id: dea_id, app_id: app.guid)
-          expect(dea_pool).to receive(:reserve_app_memory).once.with(dea_id, app.memory)
-
-          expect(message_bus).to receive(:publish).once.with(
-            'dea.dea_123.start',
-            hash_including(
-              index: 3,
-            )
-          )
-
-          expect {
-            Dea::Client.start_instances(app, [1, 2, 3])
-          }.to raise_error CloudController::Errors::ApiError, 'One or more instances could not be started because of insufficient running resources.'
-        end
-      end
-
-      context 'when droplet is missing' do
-        let(:blobstore_url_generator) do
-          double('blobstore_url_generator', droplet_download_url: nil)
-        end
-
-        it 'should raise an error if the droplet is missing' do
-          expect {
-            Dea::Client.start_instances(app, 1)
-          }.to raise_error CloudController::Errors::ApiError, "The app package could not be found: #{app.guid}"
-        end
-      end
-
-      context 'when no DEA is available' do
-        it 'raises a InsufficientRunningResourcesAvailable error and logs without passwords' do
-          logger = double(Steno)
-          allow(Dea::Client).to receive(:logger).and_return(logger)
-
-          expect(dea_pool).to receive(:find_dea).once.and_return(nil)
-          expect(logger).to receive(:error) { |msg, data|
-            expect(data[:message]).not_to include(:services, :env, :executableUri)
-          }.once
-
-          expect {
-            Dea::Client.start_instances(app, 1)
-          }.to raise_error CloudController::Errors::ApiError, 'One or more instances could not be started because of insufficient running resources.'
-        end
-      end
-
-      context 'callbacks' do
-        it 'skips nil callbacks' do
-          app.instances = 1
-
-          expect(Dea::Client).to receive(:start_instance_at_index).with(app, 1).and_return(nil)
-
-          expect { Dea::Client.start_instances(app, 1) }.to_not raise_error
-        end
-
-        it 'calls the callback' do
-          app.instances = 2
-
-          count = 0
-          cb = lambda { count += 1 }
-          expect(Dea::Client).to receive(:start_instance_at_index).and_return(cb).twice
-
-          expect { Dea::Client.start_instances(app, [1, 2]) }.to_not raise_error
-          expect(count).to eq(2)
-        end
-
-        context 'when an error is raised' do
-          it 'calls all callbacks' do
-            app.instances = 2
-
-            count = 0
-            cb = lambda { count += 1 }
-            expect(Dea::Client).to receive(:start_instance_at_index).and_return(cb)
-            expect(Dea::Client).to receive(:start_instance_at_index).and_raise('bogus')
-
-            expect { Dea::Client.start_instances(app, [1, 2]) }.to raise_error 'bogus'
-            expect(count).to eq(1)
-          end
-        end
-
-        context 'when starting more than 5 instances' do
-          it 'should start 5 at a time' do
-            app.instances = 9
-
-            count = 0
-            cb5 = lambda { expect(count).to eq 5 }
-            cb9 = lambda { expect(count).to eq 9 }
-            allow(Dea::Client).to receive(:start_instance_at_index) do
-              count += 1
-              count <= 5 ? cb5 : cb9
-            end
-
-            Dea::Client.start_instances(app, 1..9)
-          end
-        end
       end
     end
 
@@ -264,96 +144,37 @@ module VCAP::CloudController
       end
     end
 
-    describe 'start' do
-      it 'should send start messages to deas' do
-        app.instances = 2
-        expect(dea_pool).to receive(:find_dea).and_return(abc_ad, def_ad)
-        expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'abc', app_id: app.guid)
-        expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'def', app_id: app.guid)
-        expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        expect(dea_pool).to receive(:reserve_app_memory).with('def', app.memory)
-        expect(message_bus).to receive(:publish).with('dea.abc.start', kind_of(Hash))
-        expect(message_bus).to receive(:publish).with('dea.def.start', kind_of(Hash))
+    describe 'send_start' do
+      let(:message) { instance_double(Dea::StartAppMessage) }
 
-        Dea::Client.start(app)
-      end
-
-      it 'should start the specified number of instances' do
-        app.instances = 2
-        allow(dea_pool).to receive(:find_dea).and_return(abc_ad, def_ad)
-
-        expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'abc', app_id: app.guid)
-        expect(dea_pool).not_to receive(:mark_app_started).with(dea_id: 'def', app_id: app.guid)
-        expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        expect(dea_pool).not_to receive(:reserve_app_memory).with('def', app.memory)
-
-        Dea::Client.start(app, instances_to_start: 1)
-      end
-
-      context 'with a cc_partition' do
-        let(:overrides) { { cc_partition: 'ngFTW' } }
-
-        it 'sends a dea start message that includes cc_partition' do
-          app.instances = 1
-          expect(dea_pool).to receive(:find_dea).and_return(abc_ad)
-          expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'abc', app_id: app.guid)
-          expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-          expect(message_bus).to receive(:publish).with('dea.abc.start', hash_including(cc_partition: 'ngFTW'))
-
-          Dea::Client.start(app)
-        end
-      end
-
-      it 'includes memory in find_dea request' do
-        app.instances = 1
-        app.memory = 512
-        expect(dea_pool).to receive(:find_dea).with(include(mem: 512)).and_return(abc_ad)
-        expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'abc', app_id: app.guid)
-        expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        Dea::Client.start(app)
-      end
-
-      it 'includes disk in find_dea request' do
-        app.instances = 1
-        app.disk_quota = 13
-        expect(dea_pool).to receive(:find_dea).with(include(disk: 13)).and_return(abc_ad)
-        expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'abc', app_id: app.guid)
-        expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        Dea::Client.start(app)
-      end
-
-      context 'when http is enabled' do
+      context 'when CC is configured to use http' do
         let(:overrides) { http_overrides }
 
-        it 'should send start messages to deas' do
-          app.instances = 2
-          expect(dea_pool).to receive(:find_dea).and_return(abc_ad, def_ad)
-          expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'abc', app_id: app.guid)
-          expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'def', app_id: app.guid)
-          expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-          expect(dea_pool).to receive(:reserve_app_memory).with('def', app.memory)
-          expect(message_bus).to receive(:publish).with('dea.abc.start', kind_of(Hash))
-          expect(message_bus).to_not receive(:publish).with('dea.def.start', kind_of(Hash))
-          stub_request(:post, 'https://host:1234/v1/apps').with(body: /\{.*\}/, headers: { 'Content-Type' => 'application/json' })
+        context 'when DEA accepts http' do
+          let(:to_uri) { "#{dea_http_uri}/v1/apps" }
 
-          Dea::Client.start(app)
+          it 'sends the message to the correct uri' do
+            expect(http_client).to receive(:post_async).with(to_uri, kind_of(Hash))
+            expect(message_bus).to_not receive(:publish).with("dea.#{dea_http_id}.start", kind_of(Hash))
+            stub_request(:post, to_uri).with(body: /\{.*\}/, headers: { 'Content-Type' => 'application/json' })
+            Dea::Client.send_start(def_ad, message)
+          end
         end
 
-        context 'when an error occurs over http' do
-          it 'is ignored' do
-            logger = double(Steno::Logger, debug: nil)
-            allow(Dea::Client).to receive(:logger).and_return(logger)
-            expect(logger).to receive(:warn).with('start failed', include(:dea_id, :url, :error))
-
-            app.instances = 1
-            expect(dea_pool).to receive(:find_dea).and_return(def_ad)
-            expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'def', app_id: app.guid)
-            expect(dea_pool).to receive(:reserve_app_memory).with('def', app.memory)
-            expect(message_bus).to_not receive(:publish).with('dea.def.start', kind_of(Hash))
-            stub_request(:post, 'https://host:1234/v1/apps').to_raise(::HTTPClient::TimeoutError)
-
-            expect { Dea::Client.start(app) }.to_not raise_error
+        context 'when DEA does not accept http' do
+          it 'sends using NATS' do
+            expect(http_client).to_not receive(:post_async)
+            expect(message_bus).to receive(:publish).with("dea.#{dea_id}.start", message)
+            Dea::Client.send_start(dea_ad, message)
           end
+        end
+      end
+
+      context 'when CC is not configured to use http' do
+        it 'sends using NATS' do
+          expect(http_client).to_not receive(:post_async)
+          expect(message_bus).to receive(:publish).with("dea.#{dea_http_id}.start", message)
+          Dea::Client.send_start(def_ad, message)
         end
       end
     end

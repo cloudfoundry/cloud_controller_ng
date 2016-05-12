@@ -1,12 +1,13 @@
 module VCAP::CloudController
   module Dea
     class Runner
-      def initialize(app, config, message_bus, dea_pool)
+      def initialize(app, config, blobstore_url_generator, message_bus, dea_pool)
         @logger ||= Steno.logger('cc.dea.backend')
         @app = app
         @config = config
         @message_bus = message_bus
         @dea_pool = dea_pool
+        @blobstore_url_generator = blobstore_url_generator
       end
 
       def scale
@@ -18,7 +19,7 @@ module VCAP::CloudController
 
       def start(staging_result={})
         started_instances = staging_result[:started_instances] || 0
-        Client.start(@app, instances_to_start: @app.instances - started_instances)
+        AppStarterTask.new(@app, @blobstore_url_generator, @config).start(instances_to_start: @app.instances - started_instances)
       end
 
       def stop

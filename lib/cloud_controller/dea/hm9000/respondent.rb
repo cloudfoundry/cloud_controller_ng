@@ -66,7 +66,7 @@ module VCAP::CloudController
           app = App[guid: app_id]
           should_start, reason = instance_needs_to_start?(app, version, instance_index)
           if should_start
-            dea_client.start_instances(app, instance_index)
+            AppStarterTask.new(app, CloudController::DependencyLocator.instance.blobstore_url_generator, dea_client.config).start(specific_instances: instance_index)
             logger.info 'cloudcontroller.hm9000.will-start',
                         reason: reason, payload: message
           else
