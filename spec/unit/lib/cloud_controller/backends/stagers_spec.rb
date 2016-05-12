@@ -6,7 +6,6 @@ module VCAP::CloudController
 
     let(:message_bus) { instance_double(CfMessageBus::MessageBus) }
     let(:dea_pool) { instance_double(Dea::Pool) }
-    let(:runners) { Runners.new(config, message_bus, dea_pool) }
     let(:package_hash) { 'fake-package-hash' }
     let(:buildpack) { instance_double(AutoDetectionBuildpack, custom?: false) }
     let(:docker_image) { nil }
@@ -23,7 +22,7 @@ module VCAP::CloudController
     end
 
     subject(:stagers) do
-      Stagers.new(config, message_bus, dea_pool, runners)
+      Stagers.new(config, message_bus, dea_pool)
     end
 
     describe '#validate_app' do

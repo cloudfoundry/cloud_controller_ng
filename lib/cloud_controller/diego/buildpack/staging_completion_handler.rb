@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     module Buildpack
       class StagingCompletionHandler < VCAP::CloudController::Diego::StagingCompletionHandlerBase
-        def initialize(runners)
+        def initialize(runners=CloudController::DependencyLocator.instance.runners)
           super(runners, Steno.logger('cc.stager'), 'diego.staging.')
         end
 

@@ -327,8 +327,7 @@ module VCAP::CloudController
         expect(VCAP::CloudController::Stagers).to receive(:new).with(
           @test_config,
           message_bus,
-          instance_of(Dea::Pool),
-          instance_of(Runners))
+          instance_of(Dea::Pool))
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)
       end

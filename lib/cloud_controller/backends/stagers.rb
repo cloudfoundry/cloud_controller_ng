@@ -16,11 +16,10 @@ require 'cloud_controller/diego/v3/protocol/app_protocol'
 
 module VCAP::CloudController
   class Stagers
-    def initialize(config, message_bus, dea_pool, runners)
+    def initialize(config, message_bus, dea_pool)
       @config      = config
       @message_bus = message_bus
       @dea_pool    = dea_pool
-      @runners     = runners
     end
 
     def validate_app(app)
@@ -55,7 +54,7 @@ module VCAP::CloudController
     private
 
     def dea_stager(app)
-      Dea::Stager.new(app, @config, @message_bus, @dea_pool, @runners)
+      Dea::Stager.new(app, @config, @message_bus, @dea_pool)
     end
 
     def diego_stager(app)
@@ -77,9 +76,9 @@ module VCAP::CloudController
 
     def diego_completion_handler(app)
       if app.docker_image.present?
-        Diego::Docker::StagingCompletionHandler.new(@runners)
+        Diego::Docker::StagingCompletionHandler.new
       else
-        Diego::Buildpack::StagingCompletionHandler.new(@runners)
+        Diego::Buildpack::StagingCompletionHandler.new
       end
     end
 

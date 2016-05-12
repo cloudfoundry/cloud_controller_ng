@@ -302,11 +302,13 @@ module VCAP::CloudController
 
         blobstore_url_generator = dependency_locator.blobstore_url_generator
         dea_pool = Dea::Pool.new(@config, message_bus)
-        runners = Runners.new(@config, message_bus, dea_pool)
-        stagers = Stagers.new(@config, message_bus, dea_pool, runners)
 
-        dependency_locator.register(:stagers, stagers)
+        runners = Runners.new(@config, message_bus, dea_pool)
         dependency_locator.register(:runners, runners)
+
+        stagers = Stagers.new(@config, message_bus, dea_pool)
+        dependency_locator.register(:stagers, stagers)
+
         dependency_locator.register(:instances_reporters, InstancesReporters.new(tps_client, hm_client))
         dependency_locator.register(:index_stopper, IndexStopper.new(runners))
 

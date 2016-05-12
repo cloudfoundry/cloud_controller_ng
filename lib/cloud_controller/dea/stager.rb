@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Dea
     class Stager
-      def initialize(app, config, message_bus, dea_pool, runners)
+      def initialize(app, config, message_bus, dea_pool, runners=CloudController::DependencyLocator.instance.runners)
         @app         = app
         @config      = config
         @message_bus = message_bus

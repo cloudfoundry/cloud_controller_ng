@@ -23,7 +23,11 @@ class BackgroundJobEnvironment
         no_op_dea_pool = Object.new
 
         runners = VCAP::CloudController::Runners.new(@config, message_bus, no_op_dea_pool)
-        stagers = VCAP::CloudController::Stagers.new(@config, message_bus, no_op_dea_pool, runners)
+        CloudController::DependencyLocator.instance.register(:runners, runners)
+
+        stagers = VCAP::CloudController::Stagers.new(@config, message_bus, no_op_dea_pool)
+        CloudController::DependencyLocator.instance.register(:stagers, stagers)
+
         VCAP::CloudController::AppObserver.configure(stagers, runners)
 
         blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
