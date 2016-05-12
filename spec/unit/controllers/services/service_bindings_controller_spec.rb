@@ -176,36 +176,11 @@ module VCAP::CloudController
           }
         end
 
-        it 'creates a service binding with the provided binding options' do
-          binding_options = Sham.binding_options
-          body = params.merge('binding_options' => binding_options).to_json
-          post '/v2/service_bindings', body
-
-          expect(last_response).to have_status_code(201)
-          expect(ServiceBinding.last.binding_options).to eq(binding_options)
-        end
-
         context 'when the client passes arbitrary params' do
           it 'does not use the arbitrary params' do
             body = params.merge(parameters: { 'key' => 'value' })
             post '/v2/service_bindings', body.to_json
             expect(last_response).to have_status_code 201
-          end
-        end
-
-        context 'when the service instance has a syslog_drain_url' do
-          before do
-            service_instance.syslog_drain_url = 'syslog.com/drain'
-            service_instance.save
-          end
-
-          it 'creates a service binding with the provided binding options' do
-            binding_options = Sham.binding_options
-            body = params.merge('binding_options' => binding_options).to_json
-            post '/v2/service_bindings', body
-
-            expect(last_response).to have_status_code(201)
-            expect(ServiceBinding.last.binding_options).to eq(binding_options)
           end
         end
       end

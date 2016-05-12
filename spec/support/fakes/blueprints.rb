@@ -16,7 +16,6 @@ Sham.define do
   long_description    { |index| "long description-#{index} over 255 characters #{'-' * 255}" }
   version             { |index| "version-#{index}" }
   service_credentials { |index| { "creds-key-#{index}" => "creds-val-#{index}" } }
-  binding_options     { |index| { "binding-options-#{index}" => "value-#{index}" } }
   uaa_id              { |index| "uaa-id-#{index}" }
   domain              { |index| "domain-#{index}.example.com" }
   host                { |index| "host-#{index}" }

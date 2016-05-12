@@ -50,7 +50,7 @@ module VCAP::CloudController
       end
 
       def service_binding_to_staging_request(service_binding)
-        ServiceBindingPresenter.new(service_binding).to_hash
+        ServiceBindingPresenter.new(service_binding, include_instance: true).to_hash
       end
 
       def staging_egress_rules

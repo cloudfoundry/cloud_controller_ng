@@ -320,7 +320,7 @@ module VCAP::CloudController
           }
         ]
 
-        expect(binding.filter_volume_mounts).to match_array(
+        expect(binding.censor_volume_mounts).to match_array(
           [
             { 'hash1' => 'val1' },
             { 'hash2' => 'val2' }
@@ -331,14 +331,14 @@ module VCAP::CloudController
         binding = described_class.new
         binding.volume_mounts = nil
 
-        expect(binding.filter_volume_mounts).to eq([])
+        expect(binding.censor_volume_mounts).to eq([])
       end
 
       it 'handles empty string volume_mounts' do
         binding = described_class.new
         binding.volume_mounts = ''
 
-        expect(binding.filter_volume_mounts).to eq([])
+        expect(binding.censor_volume_mounts).to eq([])
       end
     end
   end

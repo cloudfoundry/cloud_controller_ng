@@ -29,7 +29,7 @@ module VCAP::CloudController
       it 'records the environment variables used for staging' do
         environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit)
 
-        expect(environment_variables['VCAP_SERVICES'][service.label.to_sym][0]).to have_key(:credentials)
+        expect(environment_variables['VCAP_SERVICES'][service.label.to_sym][0].to_hash).to have_key(:credentials)
         expect(environment_variables).to match({
               'another' => 'override',
               'APP_VAR' => 'is here',

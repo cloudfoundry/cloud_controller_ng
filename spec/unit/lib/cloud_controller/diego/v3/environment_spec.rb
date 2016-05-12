@@ -40,12 +40,6 @@ module VCAP::CloudController::Diego
           TestConfig.config[:default_app_disk_in_mb] = disk_limit
         end
 
-        it "returns the app's service binding environment variables" do
-          constructed_envs = V3::Environment.new(app, task, space).build
-
-          expect(constructed_envs['VCAP_SERVICES'][service.label.to_sym][0]).to have_key(:credentials)
-        end
-
         it 'returns the correct environment hash for a v3 app' do
           constructed_envs = V3::Environment.new(app, task, space).build
 

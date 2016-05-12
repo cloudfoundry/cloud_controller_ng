@@ -53,7 +53,6 @@ module VCAP::CloudController
         expect(request[:properties][:services].count).to eq(3)
         request[:properties][:services].each do |service|
           expect(service[:credentials]).to be_kind_of(Hash)
-          expect(service[:options]).to be_kind_of(Hash)
         end
       end
 

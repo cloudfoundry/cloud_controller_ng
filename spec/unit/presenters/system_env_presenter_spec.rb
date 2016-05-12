@@ -31,31 +31,45 @@ module VCAP::CloudController
           expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym]).to have(1).services
         end
 
-        it 'includes service binding information' do
+        it 'includes service binding and instance information' do
           expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym]).to have(1).items
-          expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym].first).to eq(
-            credentials: service_binding.credentials,
-            syslog_drain_url: 'logs.go-here.com',
-            label: 'elephantsql-n/a',
-            provider: 'cool-provider',
-            plan: service_plan.name,
-            name: 'elephantsql-vip-uat',
-            tags: ['excellent']
-            )
+          binding = system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym].first.to_hash
+
+          expect(binding[:credentials]).to eq(service_binding.credentials)
+          expect(binding[:name]).to eq('elephantsql-vip-uat')
+        end
+
+        describe 'volume mounts' do
+          context 'when the service binding has volume mounts' do
+            let!(:service_binding) do
+              ServiceBinding.make(
+                app: app,
+                service_instance: service_instance,
+                syslog_drain_url: 'logs.go-here.com',
+                volume_mounts: [{ foo: 'bar', private: { stuff: 'stays private' } }]
+              )
+            end
+
+            it 'includes only the public volume information' do
+              expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym][0].to_hash[:volume_mounts]).to eq(['foo' => 'bar'])
+            end
+          end
+
+          context 'when the service binding has no volume mounts' do
+            it 'is an empty array' do
+              expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym][0].to_hash[:volume_mounts]).to eq([])
+            end
+          end
         end
 
         context 'when the service is user-provided' do
           let(:service_instance) { UserProvidedServiceInstance.make(space: space, name: 'elephantsql-vip-uat') }
 
-          it 'includes service binding information' do
+          it 'includes service binding and instance information' do
             expect(system_env_presenter.system_env[:VCAP_SERVICES][:'user-provided']).to have(1).items
-            expect(system_env_presenter.system_env[:VCAP_SERVICES][:'user-provided'].first).to eq(
-              credentials: service_binding.credentials,
-              syslog_drain_url: 'logs.go-here.com',
-              label: 'user-provided',
-              name: 'elephantsql-vip-uat',
-              tags: []
-              )
+            binding = system_env_presenter.system_env[:VCAP_SERVICES][:'user-provided'].first.to_hash
+            expect(binding[:credentials]).to eq(service_binding.credentials)
+            expect(binding[:name]).to eq('elephantsql-vip-uat')
           end
         end
 
@@ -78,17 +92,10 @@ module VCAP::CloudController
             expect(system_env_presenter.system_env[:VCAP_SERVICES]).to have_key(service.label.to_sym)
           end
 
-          it 'includes service binding information' do
-            binding_information = system_env_presenter.system_env[:VCAP_SERVICES][:rabbit].first
-            expect(binding_information).to eq(
-              credentials: service_binding.credentials,
-              syslog_drain_url: service_binding.syslog_drain_url,
-              label: service.label,
-              provider: service.provider,
-              plan: service_plan.name,
-              name: service_instance.name,
-              tags: service_instance.merged_tags
-              )
+          it 'includes service binding and instance information' do
+            binding_information = system_env_presenter.system_env[:VCAP_SERVICES][:rabbit].first.to_hash
+            expect(binding_information[:credentials]).to eq(service_binding.credentials)
+            expect(binding_information[:name]).to eq('rabbit-instance')
           end
         end
 

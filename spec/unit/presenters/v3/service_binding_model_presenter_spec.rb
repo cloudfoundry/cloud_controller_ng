@@ -21,9 +21,9 @@ module VCAP::CloudController
       it 'presents the model as a hash' do
         expect(result[:guid]).to eq(service_binding.guid)
         expect(result[:type]).to eq(service_binding.type)
-        expect(result[:data][:credentials]).to eq(credentials)
-        expect(result[:data][:syslog_drain_url]).to eq(service_binding.syslog_drain_url)
-        expect(result[:data][:volume_mounts]).to eq(censored_volume_mounts)
+        expect(result[:data].to_hash[:credentials]).to eq(credentials)
+        expect(result[:data].to_hash[:syslog_drain_url]).to eq(service_binding.syslog_drain_url)
+        expect(result[:data].to_hash[:volume_mounts]).to eq(censored_volume_mounts)
         expect(result[:created_at]).to eq('1970-01-01T00:00:01Z')
         expect(result[:updated_at]).to eq('1970-01-01T00:00:02Z')
         expect(result[:links]).to include(:self)

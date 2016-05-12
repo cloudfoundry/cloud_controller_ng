@@ -27,7 +27,7 @@ module VCAP::CloudController
         self[:version]        = app.version
 
         self[:services] = app.service_bindings.map do |sb|
-          ServiceBindingPresenter.new(sb).to_hash
+          ServiceBindingPresenter.new(sb, include_instance: true).to_hash
         end
 
         self[:limits] = {

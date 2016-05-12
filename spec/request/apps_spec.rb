@@ -441,7 +441,8 @@ describe 'Apps' do
                 'plan'             => service_instance.service_plan.name,
                 'credentials'      => { 'password' => 'top-secret' },
                 'syslog_drain_url' => 'https://syslog.example.com/drain',
-                'provider'         => nil
+                'provider'         => nil,
+                'volume_mounts'    => []
               }
             ]
           }

@@ -22,10 +22,7 @@ class SystemEnvPresenter
   end
 
   def service_binding_env_values(service_binding)
-    {
-      credentials: service_binding.credentials,
-      syslog_drain_url: service_binding.syslog_drain_url
-    }.merge(ServiceInstancePresenter.new(service_binding.service_instance))
+    ServiceBindingPresenter.new(service_binding, include_instance: true)
   end
 
   def service_binding_label(service_binding)

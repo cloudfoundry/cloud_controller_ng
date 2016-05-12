@@ -25,7 +25,7 @@ describe ServiceBindingPresenter do
       end
 
       describe '#to_hash' do
-        subject { ServiceBindingPresenter.new(service_binding).to_hash }
+        subject { ServiceBindingPresenter.new(service_binding, include_instance: true).to_hash }
 
         specify do
           expect(subject.fetch(:syslog_drain_url)).to eq('syslog://example.com:514')
@@ -33,35 +33,19 @@ describe ServiceBindingPresenter do
       end
     end
 
-    context 'with binding options' do
-      let(:binding_options) { Sham.binding_options }
+    describe '#to_hash' do
+      subject { ServiceBindingPresenter.new(service_binding, include_instance: true).to_hash }
 
-      describe '#to_hash' do
-        subject { ServiceBindingPresenter.new(service_binding).to_hash }
+      it { is_expected.to be_instance_of(Hash) }
+      it { is_expected.to have_key(:label) }
+      it { is_expected.to have_key(:name) }
+      it { is_expected.to have_key(:credentials) }
+      it { is_expected.to have_key(:plan) }
+      it { is_expected.to have_key(:provider) }
+      it { is_expected.to have_key(:tags) }
 
-        it { is_expected.to be_instance_of(Hash) }
-        it { is_expected.to have_key(:label) }
-        it { is_expected.to have_key(:name) }
-        it { is_expected.to have_key(:credentials) }
-        it { is_expected.to have_key(:options) }
-        it { is_expected.to have_key(:plan) }
-        it { is_expected.to have_key(:provider) }
-        it { is_expected.to have_key(:tags) }
-
-        specify do
-          expect(subject.fetch(:credentials)).to eq(service_binding.credentials)
-          expect(subject.fetch(:options)).to eq(service_binding.binding_options)
-        end
-      end
-    end
-
-    context 'without binding options' do
-      describe '#to_hash' do
-        subject { ServiceBindingPresenter.new(service_binding).to_hash }
-
-        specify do
-          expect(subject.fetch(:options)).to eq({})
-        end
+      specify do
+        expect(subject.fetch(:credentials)).to eq(service_binding.credentials)
       end
     end
   end
@@ -76,12 +60,11 @@ describe ServiceBindingPresenter do
     end
 
     describe '#to_hash' do
-      subject { ServiceBindingPresenter.new(service_binding).to_hash }
+      subject { ServiceBindingPresenter.new(service_binding, include_instance: true).to_hash }
 
       it { is_expected.to be_instance_of(Hash) }
       it { is_expected.to have_key(:label) }
       it { is_expected.to have_key(:credentials) }
-      it { is_expected.to have_key(:options) }
       it { is_expected.to have_key(:tags) }
     end
   end
