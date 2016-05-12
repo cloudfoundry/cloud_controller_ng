@@ -132,8 +132,12 @@ module VCAP::CloudController::BrokerApiHelper
 
     }
 
+    url = "http://#{stubbed_broker_username}:#{stubbed_broker_password}@"\
+    "#{stubbed_broker_host}/v2/service_instances/#{@service_instance_guid}/"\
+    'last_operation?plan_id=plan1-guid-here&service_id=service-guid-here'
+
     stub_request(:get,
-      "http://#{stubbed_broker_username}:#{stubbed_broker_password}@#{stubbed_broker_host}/v2/service_instances/#{@service_instance_guid}/last_operation?plan_id=plan1-guid-here&service_id=service-guid-here").
+      url).
       to_return(
         status: 200,
         body: fetch_body.to_json)
