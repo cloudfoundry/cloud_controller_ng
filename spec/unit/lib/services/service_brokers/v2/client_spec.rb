@@ -338,7 +338,7 @@ module VCAP::Services::ServiceBrokers::V2
         client.fetch_service_instance_state(instance)
 
         expect(http_client).to have_received(:get).
-          with("/v2/service_instances/#{instance.guid}/last_operation")
+          with("/v2/service_instances/#{instance.guid}/last_operation?plan_id=#{plan.broker_provided_id}&service_id=#{instance.service.broker_provided_id}")
       end
 
       it 'returns the attributes to update the service instance model' do
@@ -1073,6 +1073,7 @@ module VCAP::Services::ServiceBrokers::V2
           }.to raise_error(Errors::ServiceBrokerBadResponse)
         end
       end
+
       context 'when the broker returns an error' do
         let(:code) { '204' }
         let(:response_data) do
