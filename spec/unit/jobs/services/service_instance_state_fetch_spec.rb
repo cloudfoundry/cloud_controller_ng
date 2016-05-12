@@ -98,7 +98,7 @@ module VCAP::CloudController
             uri = URI(broker.broker_url)
             uri.user = broker.auth_username
             uri.password = broker.auth_password
-            stub_request(:get, "#{uri}/v2/service_instances/#{service_instance.guid}/last_operation").to_return(
+            stub_request(:get, %r{#{uri}/v2/service_instances/#{service_instance.guid}/last_operation}).to_return(
               status: status,
               body: response.to_json
             )
@@ -305,7 +305,7 @@ module VCAP::CloudController
                 uri = URI(broker.broker_url)
                 uri.user = broker.auth_username
                 uri.password = broker.auth_password
-                stub_request(:get, "#{uri}/v2/service_instances/#{service_instance.guid}/last_operation").to_raise(HTTPClient::TimeoutError.new)
+                stub_request(:get, %r{#{uri}/v2/service_instances/#{service_instance.guid}/last_operation}).to_raise(HTTPClient::TimeoutError.new)
               end
 
               it 'should enqueue another fetch job' do
