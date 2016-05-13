@@ -64,12 +64,52 @@ module VCAP::CloudController
         end
       end
 
-      context 'filtering organization_guids' do
-        let(:filters) { { organization_guids: [app2.organization.guid] } }
+      context 'filtering organization_guids and space guids' do
+        context 'when the organization_guids and space_guids are valid' do
+          let(:filters) { { organization_guids: [app2.organization.guid], space_guids: [app2.space.guid] } }
 
-        it 'returns all of the droplets with the requested guids' do
-          results = fetcher.fetch_all.all
-          expect(results).to match_array([pending_droplet_for_app2])
+          it 'returns all of the droplets with the requested guids' do
+            results = fetcher.fetch_all.all
+            expect(results).to match_array([pending_droplet_for_app2])
+          end
+        end
+
+        context 'when the organization_guids are invalid' do
+          let(:filters) { { organization_guids: ['hi-riz'], space_guids: [app2.space.guid] } }
+
+          it 'returns no droplets ' do
+            results = fetcher.fetch_all.all
+            expect(results).to match_array([])
+          end
+        end
+
+        context 'when the space_guids are invalid' do
+          let(:filters) { { organization_guids: [app2.organization.guid], space_guids: ['hi-riz'] } }
+
+          it 'returns no droplets ' do
+            results = fetcher.fetch_all.all
+            expect(results).to match_array([])
+          end
+        end
+      end
+
+      context 'filtering organization_guids' do
+        context 'when the organization_guids are valid' do
+          let(:filters) { { organization_guids: [app2.organization.guid] } }
+
+          it 'returns all of the droplets with the requested guids' do
+            results = fetcher.fetch_all.all
+            expect(results).to match_array([pending_droplet_for_app2])
+          end
+        end
+
+        context 'when the organization_guids are invalid' do
+          let(:filters) { { organization_guids: ['hi-riz'] } }
+
+          it 'returns no droplets ' do
+            results = fetcher.fetch_all.all
+            expect(results).to match_array([])
+          end
         end
       end
     end
