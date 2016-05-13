@@ -379,7 +379,7 @@ module VCAP::CloudController
 
           expect {
             AppFactory.make(name: 'lowerCase', space: space)
-          }.to raise_error(Sequel::ValidationFailed, /Name must be unique in space/)
+          }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
         end
 
         it 'should allow standard ascii characters' do
@@ -635,7 +635,7 @@ module VCAP::CloudController
           end
 
           it 'validates uniqueness of process types for the belonging app' do
-            msg = 'application process types must be case-insensitive and unique, received: [Web, web]'
+            msg = 'application process types must be unique (case-insensitive), received: [Web, web]'
             expect {
               App.make(app: app_model, type: 'Web')
             }.to raise_error(Sequel::ValidationFailed).with_message(msg)

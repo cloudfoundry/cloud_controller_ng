@@ -31,7 +31,7 @@ module VCAP::CloudController
       validate_environment_variables
       validate_droplet_is_staged
 
-      validates_name_unique_per_space(message: false)
+      validates_unique [:space_guid, :name], message: Sequel.lit('name must be unique in space')
     end
 
     def lifecycle_type
@@ -75,11 +75,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def validates_name_unique_per_space(message: true)
-      message_text = 'name must be unique in space' if message
-      validates_unique [:space_guid, :name], message: (message_text || Sequel.lit(''))
-    end
 
     def validate_environment_variables
       return unless environment_variables

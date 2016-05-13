@@ -131,7 +131,8 @@ module VCAP::CloudController
     def validate
       validates_presence :name
       validates_presence :space
-      validates_name_unique_per_space(message: is_v2?)
+      validates_unique [:space_id, :name] if is_v2?
+      validate_uniqueness_of_type_for_same_app_model if is_v3?
       validates_format APP_NAME_REGEX, :name
 
       copy_buildpack_errors
@@ -142,14 +143,13 @@ module VCAP::CloudController
       validates_includes HEALTH_CHECK_TYPES, :health_check_type, allow_missing: true, message: 'must be one of ' + HEALTH_CHECK_TYPES.join(', ')
 
       validate_health_check_type_and_port_presence_are_in_agreement
-      validate_uniqueness_of_type_for_same_app_model if is_v3?
       validation_policies.map(&:validate)
     end
 
     def validate_uniqueness_of_type_for_same_app_model
       if non_unique_process_types.present? && new?
         non_unique_process_types_message = non_unique_process_types.push(type).sort.join(', ')
-        errors.add(:type, Sequel.lit("application process types must be case-insensitive and unique, received: [#{non_unique_process_types_message}]"))
+        errors.add(:type, Sequel.lit("application process types must be unique (case-insensitive), received: [#{non_unique_process_types_message}]"))
       end
     end
 
@@ -671,11 +671,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def validates_name_unique_per_space(message: true)
-      message_text = Sequel.lit('Name must be unique in space') if message
-      validates_unique [:space_id, :name], message: (message_text || Sequel.lit(''))
-    end
 
     def non_unique_process_types
       @non_unique_process_types ||= app.processes_dataset.select_map(:type).select do |process_type|
