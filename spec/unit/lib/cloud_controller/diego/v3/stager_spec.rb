@@ -8,14 +8,21 @@ module VCAP::CloudController
     module V3
       describe Stager do
         let(:messenger) { instance_double(Diego::V3::Messenger) }
+        let(:protocol) { instance_double(Diego::V3::Protocol::AppProtocol) }
         let(:package) { PackageModel.make }
         let(:config) { TestConfig.config }
+        let(:lifecycle_type) { 'blah' }
         let(:completion_handler) do
           instance_double(Diego::Buildpack::V3::StagingCompletionHandler)
         end
 
         subject(:stager) do
-          Stager.new(package, messenger, completion_handler, config)
+          Stager.new(package, lifecycle_type, completion_handler, config)
+        end
+
+        before do
+          allow(Diego::V3::Protocol::AppProtocol).to receive(:new).with(lifecycle_type).and_return(protocol)
+          allow(Diego::V3::Messenger).to receive(:new).with(protocol).and_return(messenger)
         end
 
         describe '#stage' do

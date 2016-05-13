@@ -41,10 +41,8 @@ module VCAP::CloudController
     end
 
     def stager_for_package(package, lifecycle_type)
-      protocol           = Diego::V3::Protocol::AppProtocol.new(lifecycle_type)
       completion_handler = diego_package_completion_handler(lifecycle_type)
-      messenger = Diego::V3::Messenger.new(protocol)
-      Diego::V3::Stager.new(package, messenger, completion_handler, @config)
+      Diego::V3::Stager.new(package, lifecycle_type, completion_handler, @config)
     end
 
     def stager_for_app(app)
