@@ -51,16 +51,12 @@
 
     <p class="method-list-item-description">Provides the list of custom environment variables available to the application.</p>
   </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      created_at
-      <span class="method-list-item-type">datetime</span>
-    </h4>
 
-    <p class="method-list-item-description">The time with zone when the app was created.</p>
-  </li>
+<%= yield_content :created_at %>
 
-  <%= content_for :updated_at %>
+<%= yield_content :updated_at %>
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       links

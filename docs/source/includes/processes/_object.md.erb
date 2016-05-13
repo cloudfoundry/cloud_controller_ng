@@ -67,22 +67,11 @@
 
     <p class="method-list-item-description">The health check to perform on the process. See <%= link_to 'health_check', '#the-health_check-object' %> for more information.</p>
   </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      created_at
-      <span class="method-list-item-type">datetime</span>
-    </h4>
 
-    <p class="method-list-item-description">The time with zone when the process was created.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      updated_at
-      <span class="method-list-item-type">datetime</span>
-    </h4>
+<%= yield_content :created_at %>
 
-    <p class="method-list-item-description">The time with zone with the process was last updated.</p>
-  </li>
+<%= yield_content :updated_at %>
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       links
