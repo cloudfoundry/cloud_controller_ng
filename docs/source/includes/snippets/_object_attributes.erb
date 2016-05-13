@@ -9,3 +9,9 @@
     The time with zone when the app was created.
   <% end %>
 <% end %>
+
+<% content_for :links do %>
+  <% query_param('links', ['object']) do %>
+    Links to related resources.
+  <% end %>
+<% end %>
