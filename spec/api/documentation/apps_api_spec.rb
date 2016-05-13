@@ -52,6 +52,11 @@ resource 'Apps', type: [:api, :legacy_api] do
         description: 'Enable SSHing into the app. Supported for Diego only.',
         custom_params: { default: 'false if SSH is disabled globally or on the space, true if enabled for both', valid_values: [true, false] }
       },
+      {
+        name: :detected_start_command,
+        description: 'The command detected by the buildpack during staging.',
+        custom_params: { default: '', example_values: ['rails s'] }
+      },
 
       {
         name: :docker_image,
