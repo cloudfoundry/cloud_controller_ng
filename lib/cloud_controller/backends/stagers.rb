@@ -41,7 +41,7 @@ module VCAP::CloudController
     end
 
     def stager_for_package(package, lifecycle_type)
-      protocol           = Diego::V3::Protocol::AppProtocol.new(diego_package_lifecycle_protocol(lifecycle_type), Diego::EgressRules.new)
+      protocol           = Diego::V3::Protocol::AppProtocol.new(lifecycle_type)
       completion_handler = diego_package_completion_handler(lifecycle_type)
       messenger = Diego::V3::Messenger.new(protocol)
       Diego::V3::Stager.new(package, messenger, completion_handler, @config)
@@ -64,14 +64,6 @@ module VCAP::CloudController
 
     def dependency_locator
       CloudController::DependencyLocator.instance
-    end
-
-    def diego_package_lifecycle_protocol(lifecycle_type)
-      if lifecycle_type == Lifecycles::BUILDPACK
-        Diego::Buildpack::V3::LifecycleProtocol.new(dependency_locator.blobstore_url_generator)
-      elsif lifecycle_type == Lifecycles::DOCKER
-        Diego::Docker::V3::LifecycleProtocol.new
-      end
     end
 
     def diego_completion_handler(app)

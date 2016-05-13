@@ -4,7 +4,7 @@ module VCAP
       module Buildpack
         module V3
           class LifecycleProtocol
-            def initialize(blobstore_url_generator)
+            def initialize(blobstore_url_generator=::CloudController::DependencyLocator.instance.blobstore_url_generator)
               @blobstore_url_generator   = blobstore_url_generator
               @buildpack_entry_generator = BuildpackEntryGenerator.new(@blobstore_url_generator)
             end

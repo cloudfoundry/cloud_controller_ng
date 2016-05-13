@@ -178,46 +178,6 @@ module VCAP::CloudController
         stager = stagers.stager_for_package(package, lifecycle_type)
         expect(stager).to be_a(Diego::V3::Stager)
       end
-
-      context 'buildpack lifecycle' do
-        let(:lifecycle_type) { 'buildpack' }
-
-        it 'uses the v3 buildpack lifecycle protocol' do
-          allow(Diego::Buildpack::V3::LifecycleProtocol).to receive(:new).and_call_original
-
-          stagers.stager_for_package(package, lifecycle_type)
-
-          expect(Diego::Buildpack::V3::LifecycleProtocol).to have_received(:new)
-        end
-
-        it 'uses the v3 buildpack staging completion handler' do
-          allow(Diego::Buildpack::V3::StagingCompletionHandler).to receive(:new).and_call_original
-
-          stagers.stager_for_package(package, lifecycle_type)
-
-          expect(Diego::Buildpack::V3::StagingCompletionHandler).to have_received(:new)
-        end
-      end
-
-      context 'docker lifecycle' do
-        let(:lifecycle_type) { 'docker' }
-
-        it 'uses the v3 docker lifecycle protocol' do
-          allow(Diego::Docker::V3::LifecycleProtocol).to receive(:new).and_call_original
-
-          stagers.stager_for_package(package, lifecycle_type)
-
-          expect(Diego::Docker::V3::LifecycleProtocol).to have_received(:new)
-        end
-
-        it 'uses the v3 buildpack staging completion handler' do
-          allow(Diego::Docker::V3::StagingCompletionHandler).to receive(:new).and_call_original
-
-          stagers.stager_for_package(package, lifecycle_type)
-
-          expect(Diego::Docker::V3::StagingCompletionHandler).to have_received(:new)
-        end
-      end
     end
   end
 end

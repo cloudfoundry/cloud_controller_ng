@@ -21,12 +21,13 @@ module VCAP::CloudController
         describe AppProtocol do
           let(:default_health_check_timeout) { 99 }
           let(:egress_rules) { double(:egress_rules) }
+          let(:lifecycle_type) { 'dev/null' }
 
-          subject(:protocol) do
-            AppProtocol.new(FakeLifecycleProtocol.new, egress_rules)
-          end
+          subject(:protocol) { AppProtocol.new(lifecycle_type, egress_rules) }
 
           before do
+            allow(Diego::V3::LifecycleProtocol).to receive(:protocol_for_type).
+              with(lifecycle_type).and_return(FakeLifecycleProtocol.new)
             allow(egress_rules).to receive(:staging).and_return(['staging_egress_rule'])
             allow(egress_rules).to receive(:running).with(app).and_return(['running_egress_rule'])
           end

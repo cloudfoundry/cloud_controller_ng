@@ -2,22 +2,23 @@ require 'cloud_controller/diego/buildpack/v3/buildpack_entry_generator'
 require 'cloud_controller/diego/normal_env_hash_to_diego_env_array_philosopher'
 require 'cloud_controller/diego/staging_request'
 require 'cloud_controller/diego/buildpack/lifecycle_data'
+require 'cloud_controller/diego/v3/lifecycle_protocol'
 
 module VCAP::CloudController
   module Diego
     module V3
       module Protocol
         class AppProtocol
-          def initialize(lifecycle_protocol, egress_rules)
-            @lifecycle_protocol = lifecycle_protocol
-            @egress_rules       = egress_rules
+          def initialize(lifecycle_type, egress_rules=Diego::EgressRules.new)
+            @lifecycle_type = lifecycle_type
+            @egress_rules   = egress_rules
           end
 
           def stage_package_request(package, config, staging_details)
             env = VCAP::CloudController::Diego::NormalEnvHashToDiegoEnvArrayPhilosopher.muse(staging_details.environment_variables)
             logger.debug2("staging environment: #{env.map { |e| e['name'] }}")
 
-            lifecycle_type, lifecycle_data = @lifecycle_protocol.lifecycle_data(package, staging_details)
+            lifecycle_type, lifecycle_data = lifecycle_protocol.lifecycle_data(package, staging_details)
 
             staging_request                     = StagingRequest.new
             staging_request.app_id              = staging_details.droplet.guid
@@ -46,6 +47,10 @@ module VCAP::CloudController
 
           def logger
             @logger ||= Steno.logger('cc.diego.tr')
+          end
+
+          def lifecycle_protocol
+            Diego::V3::LifecycleProtocol.protocol_for_type(@lifecycle_type)
           end
         end
       end
