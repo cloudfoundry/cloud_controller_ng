@@ -82,6 +82,8 @@
 
           
 
+          
+
 
           
 
@@ -199,14 +201,8 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
     <p class="method-list-item-description">The time with zone when the app was created.</p>
   </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      updated_at
-      <span class="method-list-item-type">datetime</span>
-    </h4>
 
-    <p class="method-list-item-description">The time with zone with the app was last updated.</p>
-  </li>
+  <%= content_for :updated_at %>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       links
@@ -1285,22 +1281,33 @@ they either use a specific droplet guid, or use the current droplet assigned to 
       and <code>VCAP_</code> scopes will be populated by the system. 
     </p>
   </li>
-  <li class="method-list-item">
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       created_at
-      <span class="method-list-item-type">datetime</span>
+
+        <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">The time with zone when the package was created.</p>
+    <p class="method-list-item-description">    The time with zone when the app was created.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       updated_at
-      <span class="method-list-item-type">datetime</span>
+
+        <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">The time with zone with the package was last updated.</p>
+    <p class="method-list-item-description">    The time with zone with the package was last updated.
+</p>
   </li>
+
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       links
@@ -2213,22 +2220,33 @@ environment variables listed on the source droplet.</p>
 
     <p class="method-list-item-description">State of the package. Possible states are &ldquo;PROCESSING_UPLOAD&rdquo;, &ldquo;READY&rdquo;, &ldquo;FAILED&rdquo;, &ldquo;AWAITING_UPLOAD&rdquo;, &ldquo;COPYING&rdquo;, and &ldquo;EXPIRED&rdquo;.</p>
   </li>
-  <li class="method-list-item">
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       created_at
-      <span class="method-list-item-type">datetime</span>
+
+        <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">The time with zone when the package was created.</p>
+    <p class="method-list-item-description">    The time with zone when the app was created.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       updated_at
-      <span class="method-list-item-type">datetime</span>
+
+        <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">The time with zone with the package was last updated.</p>
+    <p class="method-list-item-description">    The time with zone with the package was last updated.
+</p>
   </li>
+
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       links
@@ -3149,22 +3167,33 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
     <p class="method-list-item-description">The health check to perform on the process. See <a href="#the-health_check-object">health_check</a> for more information.</p>
   </li>
-  <li class="method-list-item">
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       created_at
-      <span class="method-list-item-type">datetime</span>
+
+        <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">The time with zone when the process was created.</p>
+    <p class="method-list-item-description">    The time with zone when the app was created.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       updated_at
-      <span class="method-list-item-type">datetime</span>
+
+        <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">The time with zone with the process was last updated.</p>
+    <p class="method-list-item-description">    The time with zone with the package was last updated.
+</p>
   </li>
+
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       links
@@ -3915,22 +3944,33 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
     <p class="method-list-item-description">The health check to perform on the process. See <a href="#the-health_check-object">health_check</a> for more information.</p>
   </li>
-  <li class="method-list-item">
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       created_at
-      <span class="method-list-item-type">datetime</span>
+
+        <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">The time with zone when the process was created.</p>
+    <p class="method-list-item-description">    The time with zone when the app was created.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       updated_at
-      <span class="method-list-item-type">datetime</span>
+
+        <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">The time with zone with the process was last updated.</p>
+    <p class="method-list-item-description">    The time with zone with the package was last updated.
+</p>
   </li>
+
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       links
@@ -4539,22 +4579,33 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
     <p class="method-list-item-description">Unique GUID for route mapping</p>
   </li>
-  <li class="method-list-item">
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       created_at
-      <span class="method-list-item-type">datetime</span>
+
+        <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">The time with zone when the route mapping was created.</p>
+    <p class="method-list-item-description">    The time with zone when the app was created.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       updated_at
-      <span class="method-list-item-type">datetime</span>
+
+        <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">The time with zone when the route mapping was last updated.</p>
+    <p class="method-list-item-description">    The time with zone with the package was last updated.
+</p>
   </li>
+
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       links
@@ -5028,22 +5079,33 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
     <p class="method-list-item-description">Data returned from the service broker for the service instance. Currently possible values are &ldquo;credentials&rdquo;, &ldquo;syslog_drain_url&rdquo; and (experimental) &ldquo;volume_mounts&rdquo;.</p>
   </li>
-  <li class="method-list-item">
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       created_at
-      <span class="method-list-item-type">datetime</span>
+
+        <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">The time with zone when the service binding was created.</p>
+    <p class="method-list-item-description">    The time with zone when the app was created.
+</p>
   </li>
-  <li class="method-list-item">
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       updated_at
-      <span class="method-list-item-type">datetime</span>
+
+        <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">The time with zone when the service binding was last updated.</p>
+    <p class="method-list-item-description">    The time with zone with the package was last updated.
+</p>
   </li>
+
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       links
