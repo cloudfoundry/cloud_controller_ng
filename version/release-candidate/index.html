@@ -82,6 +82,8 @@
 
           
 
+
+
           
 
 
@@ -145,14 +147,18 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <h2 id="the-app-object">The app object</h2>
 
 <ul class="method-list-group">
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       guid
-      <span class="method-list-item-type">string</span>
+
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Unique GUID for the app.</p>
+    <p class="method-list-item-description">    Unique GUID for the app.
+</p>
   </li>
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       name
@@ -193,24 +199,45 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
     <p class="method-list-item-description">Provides the list of custom environment variables available to the application.</p>
   </li>
-  <li class="method-list-item">
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       created_at
-      <span class="method-list-item-type">datetime</span>
+
+        <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">The time with zone when the app was created.</p>
+    <p class="method-list-item-description">    The time with zone when the app was created.
+</p>
   </li>
 
-  <%= content_for :updated_at %>
-  <li class="method-list-item">
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      updated_at
+
+        <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">    The time with zone with the package was last updated.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       links
-      <span class="method-list-item-type">object</span>
+
+        <span class="method-list-item-type">object</span>
     </h4>
 
-    <p class="method-list-item-description">Links to related resources.</p>
+    <p class="method-list-item-description">    Links to related resources.
+</p>
   </li>
+
+
 </ul>
 
           <h2 id="create-an-app">Create an app</h2>
@@ -1201,14 +1228,18 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 <h2 id="the-droplet-object">The droplet object</h2>
 
 <ul class="method-list-group">
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       guid
-      <span class="method-list-item-type">string</span>
+
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Unique GUID for the droplet.</p>
+    <p class="method-list-item-description">    Unique GUID for the droplet.
+</p>
   </li>
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       state
@@ -1308,14 +1339,18 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 
 
 
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       links
-      <span class="method-list-item-type">object</span>
+
+        <span class="method-list-item-type">object</span>
     </h4>
 
-    <p class="method-list-item-description">Links to related resources.</p>
+    <p class="method-list-item-description">    Links to related resources.
+</p>
   </li>
+
+
 </ul>
 
           <div class='no-margin'></div>
@@ -2188,14 +2223,18 @@ environment variables listed on the source droplet.</p>
 <h2 id="the-package-object">The package object</h2>
 
 <ul class="method-list-group">
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       guid
-      <span class="method-list-item-type">string</span>
+
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Unique GUID for the package</p>
+    <p class="method-list-item-description">    Unique GUID for the package.
+</p>
   </li>
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       type
@@ -2247,14 +2286,18 @@ environment variables listed on the source droplet.</p>
 
 
 
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       links
-      <span class="method-list-item-type">object</span>
+
+        <span class="method-list-item-type">object</span>
     </h4>
 
-    <p class="method-list-item-description">Links to related resources.</p>
+    <p class="method-list-item-description">    Links to related resources.
+</p>
   </li>
+
+
 </ul>
 
           <h2 id="create-a-package">Create a package</h2>
@@ -3103,14 +3146,18 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <h2 id="the-process-object">The process object</h2>
 
 <ul class="method-list-group">
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       guid
-      <span class="method-list-item-type">string</span>
+
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Unique GUID for the process</p>
+    <p class="method-list-item-description">    Unique GUID for the process.
+</p>
   </li>
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       type
@@ -3194,14 +3241,18 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 
 
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       links
-      <span class="method-list-item-type">object</span>
+
+        <span class="method-list-item-type">object</span>
     </h4>
 
-    <p class="method-list-item-description">Links to related resources.</p>
+    <p class="method-list-item-description">    Links to related resources.
+</p>
   </li>
+
+
 </ul>
 
           <div class='no-margin'></div>
@@ -3880,14 +3931,18 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <h2 id="the-process-object">The process object</h2>
 
 <ul class="method-list-group">
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       guid
-      <span class="method-list-item-type">string</span>
+
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Unique GUID for the process</p>
+    <p class="method-list-item-description">    Unique GUID for the process.
+</p>
   </li>
+
+
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       type
@@ -3971,14 +4026,18 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 
 
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       links
-      <span class="method-list-item-type">object</span>
+
+        <span class="method-list-item-type">object</span>
     </h4>
 
-    <p class="method-list-item-description">Links to related resources.</p>
+    <p class="method-list-item-description">    Links to related resources.
+</p>
   </li>
+
+
 </ul>
 
           <div class='no-margin'></div>
@@ -4571,14 +4630,18 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <h2 id="the-route_mapping-object">The route_mapping object</h2>
 
 <ul class="method-list-group">
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       guid
-      <span class="method-list-item-type">string</span>
+
+        <span class="method-list-item-type">string</span>
     </h4>
 
-    <p class="method-list-item-description">Unique GUID for route mapping</p>
+    <p class="method-list-item-description">    Unique GUID for the route mapping.
+</p>
   </li>
+
+
 
     <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -4606,14 +4669,18 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 
 
-  <li class="method-list-item">
+    <li class="method-list-item">
     <h4 class="method-list-item-label">
       links
-      <span class="method-list-item-type">object</span>
+
+        <span class="method-list-item-type">object</span>
     </h4>
 
-    <p class="method-list-item-description">Links to related resources.</p>
+    <p class="method-list-item-description">    Links to related resources.
+</p>
   </li>
+
+
 </ul>
 
           <h2 id="create-a-route-mapping">Create a route mapping</h2>
