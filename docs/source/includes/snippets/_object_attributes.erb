@@ -15,3 +15,9 @@
     Links to related resources.
   <% end %>
 <% end %>
+
+<% content_for :guid do |resource| %>
+  <% query_param('guid', ['string']) do %>
+    Unique GUID for the <%= resource %>.
+  <% end %>
+<% end %>
