@@ -22,6 +22,11 @@ describe ApplicationController, type: :controller do
       head 200
     end
 
+    def secret_access
+      can_see_secrets?(params[:space_guid], params[:org_guid])
+      head 200
+    end
+
     def write_access
       can_write?(params[:space_guid])
       head 200
@@ -197,6 +202,21 @@ describe ApplicationController, type: :controller do
       get :read_access, space_guid: 'space-guid', org_guid: 'org-guid'
 
       expect(permissions).to have_received(:can_read_from_space?).with('space-guid', 'org-guid')
+    end
+  end
+
+  describe '#can_see_secrets?' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'asks for #can_see_secrets_in_space? on behalf of the current user' do
+      routes.draw { get 'secret_access' => 'anonymous#secret_access' }
+
+      permissions = instance_double(VCAP::CloudController::Permissions, can_see_secrets_in_space?: true)
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      get :secret_access, space_guid: 'space-guid', org_guid: 'org-guid'
+
+      expect(permissions).to have_received(:can_see_secrets_in_space?).with('space-guid', 'org-guid')
     end
   end
 

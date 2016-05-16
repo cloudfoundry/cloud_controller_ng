@@ -6,6 +6,12 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::ORG_MANAGER
   ].freeze
 
+  ROLES_FOR_SECRETS ||= [
+    VCAP::CloudController::Membership::SPACE_DEVELOPER,
+    VCAP::CloudController::Membership::SPACE_MANAGER,
+    VCAP::CloudController::Membership::ORG_MANAGER
+  ].freeze
+
   ROLES_FOR_WRITING ||= [
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
   ].freeze
@@ -17,6 +23,11 @@ class VCAP::CloudController::Permissions
   def can_read_from_space?(space_guid, org_guid)
     roles.admin? ||
       membership.has_any_roles?(ROLES_FOR_READING, space_guid, org_guid)
+  end
+
+  def can_see_secrets_in_space?(space_guid, org_guid)
+    roles.admin? ||
+      membership.has_any_roles?(ROLES_FOR_SECRETS, space_guid, org_guid)
   end
 
   def can_write_to_space?(space_guid)
