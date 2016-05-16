@@ -23,7 +23,7 @@ module VCAP::CloudController
     end
 
     def validate_app(app)
-      if app.docker_image.present? && FeatureFlag.disabled?('diego_docker')
+      if app.docker? && FeatureFlag.disabled?('diego_docker')
         raise CloudController::Errors::ApiError.new_from_details('DockerDisabled')
       end
 
@@ -65,7 +65,7 @@ module VCAP::CloudController
     end
 
     def diego_completion_handler(app)
-      if app.docker_image.present?
+      if app.docker?
         Diego::Docker::StagingCompletionHandler.new
       else
         Diego::Buildpack::StagingCompletionHandler.new

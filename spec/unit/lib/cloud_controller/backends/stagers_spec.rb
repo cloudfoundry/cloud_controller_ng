@@ -8,12 +8,12 @@ module VCAP::CloudController
     let(:dea_pool) { instance_double(Dea::Pool) }
     let(:package_hash) { 'fake-package-hash' }
     let(:buildpack) { instance_double(AutoDetectionBuildpack, custom?: false) }
-    let(:docker_image) { nil }
+    let(:docker) { false }
     let(:custom_buildpacks_enabled?) { true }
 
     let(:app) do
       instance_double(App,
-        docker_image:               docker_image,
+        docker?:                    docker,
         package_hash:               package_hash,
         buildpack:                  buildpack,
         custom_buildpacks_enabled?: custom_buildpacks_enabled?,
@@ -81,9 +81,7 @@ module VCAP::CloudController
 
       context 'with a docker app' do
         let(:buildpack) { instance_double(AutoDetectionBuildpack, custom?: true) }
-        let(:docker_image) do
-          'fake-docker-image'
-        end
+        let(:docker) { true }
 
         context 'and Docker disabled' do
           before do
@@ -148,8 +146,8 @@ module VCAP::CloudController
           expect(stager).to be_a(Diego::Stager)
         end
 
-        context 'when the app has a docker image' do
-          let(:docker_image) { 'foobar' }
+        context 'when the app is docker' do
+          let(:docker) { true }
 
           it 'finds a diego stager' do
             expect(stagers).to receive(:diego_stager).with(app).and_call_original

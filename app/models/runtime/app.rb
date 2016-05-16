@@ -462,7 +462,7 @@ module VCAP::CloudController
     end
 
     def active?
-      if diego? && docker_image.present?
+      if diego? && docker?
         return false unless FeatureFlag.enabled?('diego_docker')
       end
       true
