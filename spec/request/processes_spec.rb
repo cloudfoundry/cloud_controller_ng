@@ -50,7 +50,7 @@ describe 'Processes' do
           {
             'guid'         => web_process.guid,
             'type'         => 'web',
-            'command'      => 'rackup',
+            'command'      => '[PRIVATE DATA HIDDEN]',
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
@@ -74,7 +74,7 @@ describe 'Processes' do
           {
             'guid'         => worker_process.guid,
             'type'         => 'worker',
-            'command'      => 'start worker',
+            'command'      => '[PRIVATE DATA HIDDEN]',
             'instances'    => 1,
             'memory_in_mb' => 100,
             'disk_in_mb'   => 200,
@@ -109,47 +109,22 @@ describe 'Processes' do
         it 'returns only the matching processes' do
           get '/v3/processes?per_page=2&types=worker,doesnotexist', nil, developer_headers
 
-          expected_response = {
-            'pagination' => {
-              'total_results' => 1,
-              'total_pages'   => 1,
-              'first'         => { 'href' => '/v3/processes?page=1&per_page=2&types=worker%2Cdoesnotexist' },
-              'last'          => { 'href' => '/v3/processes?page=1&per_page=2&types=worker%2Cdoesnotexist' },
-              'next'          => nil,
-              'previous'      => nil,
-            },
-            'resources' => [
-              {
-                'guid'         => worker_process.guid,
-                'type'         => 'worker',
-                'command'      => 'start worker',
-                'instances'    => 1,
-                'memory_in_mb' => 100,
-                'disk_in_mb'   => 200,
-                'ports'        => [],
-                'health_check' => {
-                  'type' => 'port',
-                  'data' => {
-                    'timeout' => nil
-                  }
-                },
-                'created_at'   => iso8601,
-                'updated_at'   => nil,
-                'links'        => {
-                  'self'  => { 'href' => "/v3/processes/#{worker_process.guid}" },
-                  'scale' => { 'href' => "/v3/processes/#{worker_process.guid}/scale", 'method' => 'PUT' },
-                  'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
-                  'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-                  'stats' => { 'href' => "/v3/processes/#{worker_process.guid}/stats" },
-                },
-              },
-            ]
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages'   => 1,
+            'first'         => { 'href' => '/v3/processes?page=1&per_page=2&types=worker%2Cdoesnotexist' },
+            'last'          => { 'href' => '/v3/processes?page=1&per_page=2&types=worker%2Cdoesnotexist' },
+            'next'          => nil,
+            'previous'      => nil,
           }
+
+          expect(last_response.status).to eq(200)
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
-          expect(parsed_response).to be_a_response_like(expected_response)
+          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          expect(returned_guids).to match_array([worker_process.guid])
+          expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
       end
 
@@ -176,47 +151,22 @@ describe 'Processes' do
         it 'returns only the matching processes' do
           get "/v3/processes?per_page=2&space_guids=#{other_space.guid}", nil, developer_headers
 
-          expected_response = {
-            'pagination' => {
-              'total_results' => 1,
-              'total_pages'   => 1,
-              'first'         => { 'href' => "/v3/processes?page=1&per_page=2&space_guids=#{other_space.guid}" },
-              'last'          => { 'href' => "/v3/processes?page=1&per_page=2&space_guids=#{other_space.guid}" },
-              'next'          => nil,
-              'previous'      => nil,
-            },
-            'resources' => [
-              {
-                'guid'         => other_space_process.guid,
-                'type'         => 'web',
-                'command'      => 'rackup',
-                'instances'    => 2,
-                'memory_in_mb' => 1024,
-                'disk_in_mb'   => 1024,
-                'ports'        => [8080],
-                'health_check' => {
-                  'type' => 'port',
-                  'data' => {
-                    'timeout' => nil
-                  }
-                },
-                'created_at'   => iso8601,
-                'updated_at'   => nil,
-                'links'        => {
-                  'self'  => { 'href' => "/v3/processes/#{other_space_process.guid}" },
-                  'scale' => { 'href' => "/v3/processes/#{other_space_process.guid}/scale", 'method' => 'PUT' },
-                  'app'   => { 'href' => "/v3/apps/#{other_app_model.guid}" },
-                  'space' => { 'href' => "/v2/spaces/#{other_space.guid}" },
-                  'stats' => { 'href' => "/v3/processes/#{other_space_process.guid}/stats" },
-                },
-              },
-            ]
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "/v3/processes?page=1&per_page=2&space_guids=#{other_space.guid}" },
+            'last'          => { 'href' => "/v3/processes?page=1&per_page=2&space_guids=#{other_space.guid}" },
+            'next'          => nil,
+            'previous'      => nil,
           }
+
+          expect(last_response.status).to eq(200)
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
-          expect(parsed_response).to be_a_response_like(expected_response)
+          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          expect(returned_guids).to match_array([other_space_process.guid])
+          expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
       end
 
@@ -241,107 +191,57 @@ describe 'Processes' do
         it 'returns only the matching processes' do
           get "/v3/processes?per_page=2&organization_guids=#{other_org.guid}", nil, developer_headers
 
-          expected_response = {
-            'pagination' => {
-              'total_results' => 1,
-              'total_pages'   => 1,
-              'first'         => { 'href' => "/v3/processes?organization_guids=#{other_org.guid}&page=1&per_page=2" },
-              'last'          => { 'href' => "/v3/processes?organization_guids=#{other_org.guid}&page=1&per_page=2" },
-              'next'          => nil,
-              'previous'      => nil,
-            },
-            'resources' => [
-              {
-                'guid'         => other_space_process.guid,
-                'type'         => 'web',
-                'command'      => 'rackup',
-                'instances'    => 2,
-                'memory_in_mb' => 1024,
-                'disk_in_mb'   => 1024,
-                'ports'        => [8080],
-                'health_check' => {
-                  'type' => 'port',
-                  'data' => {
-                    'timeout' => nil
-                  }
-                },
-                'created_at'   => iso8601,
-                'updated_at'   => nil,
-                'links'        => {
-                  'self'  => { 'href' => "/v3/processes/#{other_space_process.guid}" },
-                  'scale' => { 'href' => "/v3/processes/#{other_space_process.guid}/scale", 'method' => 'PUT' },
-                  'app'   => { 'href' => "/v3/apps/#{other_app_model.guid}" },
-                  'space' => { 'href' => "/v2/spaces/#{other_space.guid}" },
-                  'stats' => { 'href' => "/v3/processes/#{other_space_process.guid}/stats" },
-                },
-              },
-            ]
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "/v3/processes?organization_guids=#{other_org.guid}&page=1&per_page=2" },
+            'last'          => { 'href' => "/v3/processes?organization_guids=#{other_org.guid}&page=1&per_page=2" },
+            'next'          => nil,
+            'previous'      => nil,
           }
+
+          expect(last_response.status).to eq(200)
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
-          expect(parsed_response).to be_a_response_like(expected_response)
+          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          expect(returned_guids).to match_array([other_space_process.guid])
+          expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
       end
 
       context 'by app guids' do
         let!(:desired_process) do
           VCAP::CloudController::ProcessModel.make(:process,
-                                                   space: space,
-                                                   type: 'persnickety',
-                                                   instances: 3,
-                                                   memory: 2048,
-                                                   disk_quota: 2048,
-                                                   command: 'at ease'
-                                                  )
+            space:      space,
+            type:       'persnickety',
+            instances:  3,
+            memory:     2048,
+            disk_quota: 2048,
+            command:    'at ease'
+          )
         end
         let(:desired_app) { desired_process.app }
 
         it 'returns only the matching processes' do
           get "/v3/processes?per_page=2&app_guids=#{desired_app.guid}", nil, developer_headers
 
-          expected_response = {
-            'pagination' => {
-              'total_results' => 1,
-              'total_pages'   => 1,
-              'first'         => { 'href' => "/v3/processes?app_guids=#{desired_app.guid}&page=1&per_page=2" },
-              'last'          => { 'href' => "/v3/processes?app_guids=#{desired_app.guid}&page=1&per_page=2" },
-              'next'          => nil,
-              'previous'      => nil,
-            },
-            'resources' => [
-              {
-                'guid'         => desired_process.guid,
-                'type'         => 'persnickety',
-                'command'      => 'at ease',
-                'instances'    => 3,
-                'memory_in_mb' => 2048,
-                'disk_in_mb'   => 2048,
-                'ports'        => [],
-                'health_check' => {
-                  'type' => 'port',
-                  'data' => {
-                    'timeout' => nil
-                  }
-                },
-                'created_at'   => iso8601,
-                'updated_at'   => nil,
-                'links'        => {
-                  'self'  => { 'href' => "/v3/processes/#{desired_process.guid}" },
-                  'scale' => { 'href' => "/v3/processes/#{desired_process.guid}/scale", 'method' => 'PUT' },
-                  'app'   => { 'href' => "/v3/apps/#{desired_app.guid}" },
-                  'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-                  'stats' => { 'href' => "/v3/processes/#{desired_process.guid}/stats" },
-                },
-              },
-            ]
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "/v3/processes?app_guids=#{desired_app.guid}&page=1&per_page=2" },
+            'last'          => { 'href' => "/v3/processes?app_guids=#{desired_app.guid}&page=1&per_page=2" },
+            'next'          => nil,
+            'previous'      => nil,
           }
+
+          expect(last_response.status).to eq(200)
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
-          expect(parsed_response).to be_a_response_like(expected_response)
+          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          expect(returned_guids).to match_array([desired_process.guid])
+          expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
       end
 
@@ -349,71 +249,22 @@ describe 'Processes' do
         it 'returns only the matching processes' do
           get "/v3/processes?per_page=2&guids=#{web_process.guid},#{worker_process.guid}", nil, developer_headers
 
-          expected_response = {
-            'pagination' => {
-              'total_results' => 2,
-              'total_pages'   => 1,
-              'first'         => { 'href' => "/v3/processes?guids=#{web_process.guid}%2C#{worker_process.guid}&page=1&per_page=2" },
-              'last'          => { 'href' => "/v3/processes?guids=#{web_process.guid}%2C#{worker_process.guid}&page=1&per_page=2" },
-              'next'          => nil,
-              'previous'      => nil,
-            },
-            'resources' => [
-              {
-                'guid'         => web_process.guid,
-                'type'         => 'web',
-                'command'      => 'rackup',
-                'instances'    => 2,
-                'memory_in_mb' => 1024,
-                'disk_in_mb'   => 1024,
-                'ports'        => [8080],
-                'health_check' => {
-                  'type' => 'port',
-                  'data' => {
-                    'timeout' => nil
-                  }
-                },
-                'created_at'   => iso8601,
-                'updated_at'   => nil,
-                'links'        => {
-                  'self'  => { 'href' => "/v3/processes/#{web_process.guid}" },
-                  'scale' => { 'href' => "/v3/processes/#{web_process.guid}/scale", 'method' => 'PUT' },
-                  'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
-                  'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-                  'stats' => { 'href' => "/v3/processes/#{web_process.guid}/stats" },
-                },
-              },
-              {
-                'guid'         => worker_process.guid,
-                'type'         => 'worker',
-                'command'      => 'start worker',
-                'instances'    => 1,
-                'memory_in_mb' => 100,
-                'disk_in_mb'   => 200,
-                'ports'        => [],
-                'health_check' => {
-                  'type' => 'port',
-                  'data' => {
-                    'timeout' => nil
-                  }
-                },
-                'created_at'   => iso8601,
-                'updated_at'   => nil,
-                'links'        => {
-                  'self'  => { 'href' => "/v3/processes/#{worker_process.guid}" },
-                  'scale' => { 'href' => "/v3/processes/#{worker_process.guid}/scale", 'method' => 'PUT' },
-                  'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
-                  'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-                  'stats' => { 'href' => "/v3/processes/#{worker_process.guid}/stats" },
-                },
-              },
-            ]
+          expected_pagination = {
+            'total_results' => 2,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "/v3/processes?guids=#{web_process.guid}%2C#{worker_process.guid}&page=1&per_page=2" },
+            'last'          => { 'href' => "/v3/processes?guids=#{web_process.guid}%2C#{worker_process.guid}&page=1&per_page=2" },
+            'next'          => nil,
+            'previous'      => nil,
           }
+
+          expect(last_response.status).to eq(200)
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
-          expect(parsed_response).to be_a_response_like(expected_response)
+          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          expect(returned_guids).to match_array([web_process.guid, worker_process.guid])
+          expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
       end
     end
@@ -464,13 +315,28 @@ describe 'Processes' do
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
+
+    it 'redacts information for auditors' do
+      process = VCAP::CloudController::ProcessModel.make(:process, space: space, command: 'rackup')
+
+      auditor = VCAP::CloudController::User.make
+      space.organization.add_user(auditor)
+      space.add_auditor(auditor)
+
+      get "/v3/processes/#{process.guid}", nil, headers_for(auditor)
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['command']).to eq('[PRIVATE DATA HIDDEN]')
+    end
   end
 
   describe 'GET /v3/processes/:guid/stats' do
     it 'succeeds when TPS is an older version without net_info' do
       process = VCAP::CloudController::ProcessModel.make(:process, type: 'worker', app: app_model, space: space, diego: true)
 
-      usage_time = Time.now.utc.to_s
+      usage_time   = Time.now.utc.to_s
       tps_response = [{
         process_guid:  process.guid,
         instance_guid: 'instance-A',
@@ -498,7 +364,7 @@ describe 'Processes' do
     it 'retrieves the stats for a process' do
       process = VCAP::CloudController::ProcessModel.make(:process, type: 'worker', space: space, diego: true)
 
-      usage_time = Time.now.utc.to_s
+      usage_time   = Time.now.utc.to_s
       tps_response = [{
         process_guid:  process.guid,
         instance_guid: 'instance-A',
@@ -508,9 +374,9 @@ describe 'Processes' do
         uptime:        1,
         since:         101,
         host:          'toast',
-        net_info: {
+        net_info:      {
           address: 'host',
-          ports: [
+          ports:   [
             { container_port: 7890, host_port: 5432 },
             { container_port: 8080, host_port: 1234 }
           ]
@@ -525,16 +391,16 @@ describe 'Processes' do
 
       expected_response = {
         'resources' => [{
-          'type'       => 'worker',
-          'index'      => 0,
-          'state'      => 'RUNNING',
-          'usage'      => {
+          'type'           => 'worker',
+          'index'          => 0,
+          'state'          => 'RUNNING',
+          'usage'          => {
             'time' => usage_time,
             'cpu'  => 80,
             'mem'  => 128,
             'disk' => 1024,
           },
-          'host' => 'toast',
+          'host'           => 'toast',
           'instance_ports' => [
             {
               'external' => 5432,
@@ -545,10 +411,10 @@ describe 'Processes' do
               'internal' => 8080
             }
           ],
-          'uptime'     => 1,
-          'mem_quota'  => 1073741824,
-          'disk_quota' => 1073741824,
-          'fds_quota'  => 16384
+          'uptime'         => 1,
+          'mem_quota'      => 1073741824,
+          'disk_quota'     => 1073741824,
+          'fds_quota'      => 16384
         }]
       }
 
@@ -563,22 +429,22 @@ describe 'Processes' do
     it 'updates the process' do
       process = VCAP::CloudController::ProcessModel.make(
         :process,
-        diego:      true,
-        app:        app_model,
-        space:      space,
-        type:       'web',
-        instances:  2,
-        memory:     1024,
-        disk_quota: 1024,
-        command:    'rackup',
-        ports:      [4444, 5555],
-        health_check_type: 'port',
+        diego:                true,
+        app:                  app_model,
+        space:                space,
+        type:                 'web',
+        instances:            2,
+        memory:               1024,
+        disk_quota:           1024,
+        command:              'rackup',
+        ports:                [4444, 5555],
+        health_check_type:    'port',
         health_check_timeout: 10
       )
 
       update_request = {
-        command: 'new command',
-        ports: [1234, 5678],
+        command:      'new command',
+        ports:        [1234, 5678],
         health_check: {
           type: 'process',
           data: {
@@ -640,8 +506,8 @@ describe 'Processes' do
         'process_guid' => process.guid,
         'process_type' => 'web',
         'request'      => {
-          'command' => 'PRIVATE DATA HIDDEN',
-          'ports' => [1234, 5678],
+          'command'      => 'PRIVATE DATA HIDDEN',
+          'ports'        => [1234, 5678],
           'health_check' => {
             'type' => 'process',
             'data' => {
@@ -726,9 +592,9 @@ describe 'Processes' do
         'process_guid' => process.guid,
         'process_type' => 'web',
         'request'      => {
-          'instances' => '5',
+          'instances'    => '5',
           'memory_in_mb' => '10',
-          'disk_in_mb' => '20'
+          'disk_in_mb'   => '20'
         }
       })
     end
@@ -745,7 +611,7 @@ describe 'Processes' do
 
       expect(last_response.status).to eq(204)
 
-      events = VCAP::CloudController::Event.where(actor: developer.guid).all
+      events        = VCAP::CloudController::Event.where(actor: developer.guid).all
       process_event = events.find { |e| e.type == 'audit.app.process.terminate_instance' }
       expect(process_event.values).to include({
         type:              'audit.app.process.terminate_instance',
@@ -758,8 +624,8 @@ describe 'Processes' do
         organization_guid: space.organization.guid
       })
       expect(process_event.metadata).to eq({
-        'process_guid' => process.guid,
-        'process_type' => 'web',
+        'process_guid'  => process.guid,
+        'process_type'  => 'web',
         'process_index' => 0
       })
     end
@@ -812,7 +678,7 @@ describe 'Processes' do
           {
             'guid'         => process1.guid,
             'type'         => 'web',
-            'command'      => 'rackup',
+            'command'      => '[PRIVATE DATA HIDDEN]',
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
@@ -836,7 +702,7 @@ describe 'Processes' do
           {
             'guid'         => process2.guid,
             'type'         => 'worker',
-            'command'      => 'start worker',
+            'command'      => '[PRIVATE DATA HIDDEN]',
             'instances'    => 1,
             'memory_in_mb' => 100,
             'disk_in_mb'   => 200,
@@ -871,47 +737,22 @@ describe 'Processes' do
         it 'returns only the matching processes' do
           get "/v3/apps/#{app_model.guid}/processes?per_page=2&types=worker", nil, developer_headers
 
-          expected_response = {
-            'pagination' => {
-              'total_results' => 1,
-              'total_pages'   => 1,
-              'first'         => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=1&per_page=2&types=worker" },
-              'last'          => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=1&per_page=2&types=worker" },
-              'next'          => nil,
-              'previous'      => nil,
-            },
-            'resources' => [
-              {
-                'guid'         => process2.guid,
-                'type'         => 'worker',
-                'command'      => 'start worker',
-                'instances'    => 1,
-                'memory_in_mb' => 100,
-                'disk_in_mb'   => 200,
-                'ports'        => [],
-                'health_check' => {
-                  'type' => 'port',
-                  'data' => {
-                    'timeout' => nil
-                  }
-                },
-                'created_at'   => iso8601,
-                'updated_at'   => nil,
-                'links'        => {
-                  'self'  => { 'href' => "/v3/processes/#{process2.guid}" },
-                  'scale' => { 'href' => "/v3/processes/#{process2.guid}/scale", 'method' => 'PUT' },
-                  'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
-                  'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-                  'stats' => { 'href' => "/v3/processes/#{process2.guid}/stats" },
-                },
-              }
-            ]
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=1&per_page=2&types=worker" },
+            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=1&per_page=2&types=worker" },
+            'next'          => nil,
+            'previous'      => nil,
           }
+
+          expect(last_response.status).to eq(200)
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
-          expect(parsed_response).to be_a_response_like(expected_response)
+          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          expect(returned_guids).to match_array([process2.guid])
+          expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
       end
 
@@ -919,71 +760,22 @@ describe 'Processes' do
         it 'returns only the matching processes' do
           get "/v3/apps/#{app_model.guid}/processes?per_page=2&guids=#{process1.guid},#{process2.guid}", nil, developer_headers
 
-          expected_response = {
-            'pagination' => {
-              'total_results' => 2,
-              'total_pages'   => 1,
-              'first'         => { 'href' => "/v3/apps/#{app_model.guid}/processes?guids=#{process1.guid}%2C#{process2.guid}&page=1&per_page=2" },
-              'last'          => { 'href' => "/v3/apps/#{app_model.guid}/processes?guids=#{process1.guid}%2C#{process2.guid}&page=1&per_page=2" },
-              'next'          => nil,
-              'previous'      => nil,
-            },
-            'resources' => [
-              {
-                'guid'         => process1.guid,
-                'type'         => 'web',
-                'command'      => 'rackup',
-                'instances'    => 2,
-                'memory_in_mb' => 1024,
-                'disk_in_mb'   => 1024,
-                'ports'        => [8080],
-                'health_check' => {
-                  'type' => 'port',
-                  'data' => {
-                    'timeout' => nil
-                  }
-                },
-                'created_at'   => iso8601,
-                'updated_at'   => nil,
-                'links'        => {
-                  'self'  => { 'href' => "/v3/processes/#{process1.guid}" },
-                  'scale' => { 'href' => "/v3/processes/#{process1.guid}/scale", 'method' => 'PUT' },
-                  'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
-                  'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-                  'stats' => { 'href' => "/v3/processes/#{process1.guid}/stats" },
-                },
-              },
-              {
-                'guid'         => process2.guid,
-                'type'         => 'worker',
-                'command'      => 'start worker',
-                'instances'    => 1,
-                'memory_in_mb' => 100,
-                'disk_in_mb'   => 200,
-                'ports'        => [],
-                'health_check' => {
-                  'type' => 'port',
-                  'data' => {
-                    'timeout' => nil
-                  }
-                },
-                'created_at'   => iso8601,
-                'updated_at'   => nil,
-                'links'        => {
-                  'self'  => { 'href' => "/v3/processes/#{process2.guid}" },
-                  'scale' => { 'href' => "/v3/processes/#{process2.guid}/scale", 'method' => 'PUT' },
-                  'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
-                  'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-                  'stats' => { 'href' => "/v3/processes/#{process2.guid}/stats" },
-                },
-              },
-            ]
+          expected_pagination = {
+            'total_results' => 2,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/processes?guids=#{process1.guid}%2C#{process2.guid}&page=1&per_page=2" },
+            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/processes?guids=#{process1.guid}%2C#{process2.guid}&page=1&per_page=2" },
+            'next'          => nil,
+            'previous'      => nil,
           }
+
+          expect(last_response.status).to eq(200)
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
-          expect(parsed_response).to be_a_response_like(expected_response)
+          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          expect(returned_guids).to match_array([process1.guid, process2.guid])
+          expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
       end
     end
@@ -1034,13 +826,28 @@ describe 'Processes' do
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
+
+    it 'redacts information for auditors' do
+      VCAP::CloudController::ProcessModel.make(:process, app: app_model, type: 'web', space: space, command: 'rackup')
+
+      auditor = VCAP::CloudController::User.make
+      space.organization.add_user(auditor)
+      space.add_auditor(auditor)
+
+      get "/v3/apps/#{app_model.guid}/processes/web", nil, headers_for(auditor)
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['command']).to eq('[PRIVATE DATA HIDDEN]')
+    end
   end
 
   describe 'GET /v3/apps/:guid/processes/:type/stats' do
     it 'succeeds when TPS is an older version without net_info' do
       process = VCAP::CloudController::ProcessModel.make(:process, type: 'worker', app: app_model, space: space, diego: true)
 
-      usage_time = Time.now.utc.to_s
+      usage_time   = Time.now.utc.to_s
       tps_response = [{
         process_guid:  process.guid,
         instance_guid: 'instance-A',
@@ -1068,7 +875,7 @@ describe 'Processes' do
     it 'retrieves the stats for a process belonging to an app' do
       process = VCAP::CloudController::ProcessModel.make(:process, type: 'worker', app: app_model, space: space, diego: true)
 
-      usage_time = Time.now.utc.to_s
+      usage_time   = Time.now.utc.to_s
       tps_response = [{
         process_guid:  process.guid,
         instance_guid: 'instance-A',
@@ -1078,9 +885,9 @@ describe 'Processes' do
         uptime:        1,
         since:         101,
         host:          'toast',
-        net_info: {
+        net_info:      {
           address: 'host',
-          ports: [
+          ports:   [
             { container_port: 7890, host_port: 5432 },
             { container_port: 8080, host_port: 1234 }
           ]
@@ -1095,16 +902,16 @@ describe 'Processes' do
 
       expected_response = {
         'resources' => [{
-          'type'       => 'worker',
-          'index'      => 0,
-          'state'      => 'RUNNING',
-          'usage'      => {
+          'type'           => 'worker',
+          'index'          => 0,
+          'state'          => 'RUNNING',
+          'usage'          => {
             'time' => usage_time,
             'cpu'  => 80,
             'mem'  => 128,
             'disk' => 1024,
           },
-          'host' => 'toast',
+          'host'           => 'toast',
           'instance_ports' => [
             {
               'external' => 5432,
@@ -1115,10 +922,10 @@ describe 'Processes' do
               'internal' => 8080
             }
           ],
-          'uptime'     => 1,
-          'mem_quota'  => 1073741824,
-          'disk_quota' => 1073741824,
-          'fds_quota'  => 16384
+          'uptime'         => 1,
+          'mem_quota'      => 1073741824,
+          'disk_quota'     => 1073741824,
+          'fds_quota'      => 16384
         }]
       }
 
@@ -1202,9 +1009,9 @@ describe 'Processes' do
         'process_guid' => process.guid,
         'process_type' => 'web',
         'request'      => {
-          'instances' => '5',
+          'instances'    => '5',
           'memory_in_mb' => '10',
-          'disk_in_mb' => '20'
+          'disk_in_mb'   => '20'
         }
       })
     end
@@ -1221,7 +1028,7 @@ describe 'Processes' do
 
       expect(last_response.status).to eq(204)
 
-      events = VCAP::CloudController::Event.where(actor: developer.guid).all
+      events        = VCAP::CloudController::Event.where(actor: developer.guid).all
       process_event = events.find { |e| e.type == 'audit.app.process.terminate_instance' }
       expect(process_event.values).to include({
         type:              'audit.app.process.terminate_instance',
@@ -1234,8 +1041,8 @@ describe 'Processes' do
         organization_guid: space.organization.guid
       })
       expect(process_event.metadata).to eq({
-        'process_guid' => process.guid,
-        'process_type' => 'web',
+        'process_guid'  => process.guid,
+        'process_type'  => 'web',
         'process_index' => 0
       })
     end

@@ -1,9 +1,14 @@
+require 'presenters/v3/mixins/redactor'
+
 module VCAP::CloudController
   class DropletPresenter
+    include CloudController::Redactor
+
     attr_reader :droplet
 
-    def initialize(droplet)
+    def initialize(droplet, show_secrets: true)
       @droplet = droplet
+      @show_secrets = show_secrets
     end
 
     def to_hash
@@ -18,7 +23,7 @@ module VCAP::CloudController
         staging_memory_in_mb:  droplet.staging_memory_in_mb,
         disk_limit:            droplet.disk_limit,
         result:                result_for_lifecycle,
-        environment_variables: droplet.environment_variables || {},
+        environment_variables: redact_hash(droplet.environment_variables || {}, @show_secrets),
         created_at:            droplet.created_at,
         updated_at:            droplet.updated_at,
         links:                 build_links,
@@ -61,8 +66,8 @@ module VCAP::CloudController
                          end
 
       {
-        execution_metadata: droplet.execution_metadata,
-        process_types:      droplet.process_types
+        execution_metadata: redact(droplet.execution_metadata, @show_secrets),
+        process_types:      redact_hash(droplet.process_types, @show_secrets)
       }.merge(lifecycle_result)
     end
 

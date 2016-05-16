@@ -30,6 +30,14 @@ module VCAP::CloudController
         expect(result[:links]).to include(:service_instance)
         expect(result[:links]).to include(:app)
       end
+
+      context 'when show_secrets is false' do
+        let(:result) { ServiceBindingModelPresenter.new(service_binding, show_secrets: false).to_hash }
+
+        it 'redacts credentials' do
+          expect(result[:data].to_hash[:credentials]).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+        end
+      end
     end
   end
 end

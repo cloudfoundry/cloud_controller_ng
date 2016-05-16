@@ -25,7 +25,7 @@ module VCAP::CloudController
     end
 
     class MonkeyPresenter
-      def initialize(monkey)
+      def initialize(monkey, show_secrets: true)
         @monkey = monkey
       end
 
@@ -43,28 +43,23 @@ module VCAP::CloudController
         expect(presenter.to_hash).to eq({
           pagination: {
             total_results: 2,
-            total_pages: 1,
-            first: { href: '/some/path?order_by=%2Bmonkeys&page=1&per_page=50' },
-            last: { href: '/some/path?order_by=%2Bmonkeys&page=1&per_page=50' },
-            next: nil,
-            previous: nil
+            total_pages:   1,
+            first:         { href: '/some/path?order_by=%2Bmonkeys&page=1&per_page=50' },
+            last:          { href: '/some/path?order_by=%2Bmonkeys&page=1&per_page=50' },
+            next:          nil,
+            previous:      nil
           },
-          resources: [
+          resources:  [
             { name: 'bobo' },
             { name: 'george' },
           ]
         })
       end
 
-      context 'with processes' do
-        let(:process) { App.make }
-        let(:set) { [process] }
-
-        it 'uses the process presenter' do
-          process_presenter = instance_double(ProcessPresenter, to_hash: { process: true })
-          expect(ProcessPresenter).to receive(:new).with(process).and_return(process_presenter)
-          expect(presenter.to_hash[:resources]).to eq([{ process: true }])
-        end
+      it 'sends false for show_secrets' do
+        allow(MonkeyPresenter).to receive(:new).and_call_original
+        presenter.to_hash
+        expect(MonkeyPresenter).to have_received(:new).with(anything, show_secrets: false).exactly(set.count).times
       end
     end
   end

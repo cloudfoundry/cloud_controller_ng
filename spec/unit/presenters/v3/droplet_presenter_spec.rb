@@ -17,13 +17,13 @@ module VCAP::CloudController
       )
     end
 
-    describe '#to_json' do
+    describe '#to_hash' do
       let(:result) { DropletPresenter.new(droplet).to_hash }
 
       context 'buildpack lifecycle' do
         before do
-          droplet.lifecycle_data.buildpack = 'the-happiest-buildpack'
-          droplet.lifecycle_data.stack     = 'the-happiest-stack'
+          droplet.lifecycle_data.buildpack     = 'the-happiest-buildpack'
+          droplet.lifecycle_data.stack         = 'the-happiest-stack'
           droplet.buildpack_receipt_buildpack  = 'the-happiest-buildpack'
           droplet.buildpack_receipt_stack_name = 'the-happiest-stack'
           droplet.save
@@ -50,6 +50,16 @@ module VCAP::CloudController
           expect(result[:links][:app][:href]).to eq("/v3/apps/#{droplet.app_guid}")
           expect(result[:links][:assign_current_droplet][:href]).to eq("/v3/apps/#{droplet.app_guid}/droplets/current")
           expect(result[:links][:assign_current_droplet][:method]).to eq('PUT')
+        end
+
+        context 'when show_secrets is false' do
+          let(:result) { DropletPresenter.new(droplet, show_secrets: false).to_hash }
+
+          it 'redacts the environment_variables, process_types, and execution_metadata' do
+            expect(result[:environment_variables]).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+            expect(result[:result][:process_types]).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+            expect(result[:result][:execution_metadata]).to eq('[PRIVATE DATA HIDDEN]')
+          end
         end
 
         describe 'result' do
@@ -125,6 +135,16 @@ module VCAP::CloudController
 
         it 'has the correct result' do
           expect(result[:result][:image]).to eq('test-image')
+        end
+
+        context 'when show_secrets is false' do
+          let(:result) { DropletPresenter.new(droplet, show_secrets: false).to_hash }
+
+          it 'redacts the environment_variables, process_types, and execution_metadata' do
+            expect(result[:environment_variables]).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+            expect(result[:result][:process_types]).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+            expect(result[:result][:execution_metadata]).to eq('[PRIVATE DATA HIDDEN]')
+          end
         end
       end
     end

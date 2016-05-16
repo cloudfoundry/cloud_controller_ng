@@ -2,15 +2,16 @@ module VCAP::CloudController
   class ServiceBindingModelPresenter
     attr_reader :service_binding
 
-    def initialize(service_binding)
+    def initialize(service_binding, show_secrets: true)
       @service_binding = service_binding
+      @show_secrets = show_secrets
     end
 
     def to_hash
       {
         guid: service_binding.guid,
         type: service_binding.type,
-        data: present_service_binding(service_binding),
+        data: present_service_binding,
         created_at: service_binding.created_at,
         updated_at: service_binding.updated_at,
         links: build_links
@@ -19,8 +20,8 @@ module VCAP::CloudController
 
     private
 
-    def present_service_binding(service_binding)
-      ServiceBindingPresenter.new(service_binding)
+    def present_service_binding
+      ServiceBindingPresenter.new(service_binding, show_secrets: @show_secrets)
     end
 
     def build_links

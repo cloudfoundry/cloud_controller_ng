@@ -74,8 +74,8 @@ class ApplicationController < ActionController::Base
     VCAP::CloudController::Permissions.new(current_user).can_read_from_space?(space_guid, org_guid)
   end
 
-  def can_see_secrets?(space_guid, org_guid)
-    VCAP::CloudController::Permissions.new(current_user).can_see_secrets_in_space?(space_guid, org_guid)
+  def can_see_secrets?(space)
+    VCAP::CloudController::Permissions.new(current_user).can_see_secrets_in_space?(space.guid, space.organization.guid)
   end
 
   def can_write?(space_guid)

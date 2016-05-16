@@ -262,6 +262,19 @@ describe 'v3 service bindings' do
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
+
+    it 'redacts credentials for space auditors' do
+      auditor = VCAP::CloudController::User.make
+      space.organization.add_user(auditor)
+      space.add_auditor(auditor)
+
+      get "/v3/service_bindings/#{service_binding.guid}", nil, headers_for(auditor)
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['data']['credentials']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+    end
   end
 
   describe 'GET /v3/service_bindings' do
@@ -305,7 +318,7 @@ describe 'v3 service bindings' do
             'type'       => 'app',
             'data'       => {
               'credentials' => {
-                'binding1' => 'shtuff'
+                'redacted_message' => '[PRIVATE DATA HIDDEN]'
               },
               'syslog_drain_url' => 'syslog://binding1.example.com',
               'volume_mounts' => [{ 'stuff' => 'thing' }]
@@ -329,7 +342,7 @@ describe 'v3 service bindings' do
             'type'       => 'app',
             'data'       => {
               'credentials' => {
-                'binding2' => 'things'
+                'redacted_message' => '[PRIVATE DATA HIDDEN]'
               },
               'syslog_drain_url' => 'syslog://binding2.example.com',
               'volume_mounts' => [{ 'stuff2' => 'thing2' }]
@@ -381,71 +394,20 @@ describe 'v3 service bindings' do
         it 'returns only the matching service bindings' do
           get "/v3/service_bindings?per_page=2&app_guids=#{app_model2.guid},#{app_model3.guid}", nil, user_headers
 
-          expected_response = {
-            'pagination' => {
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to eq([another_apps_service_binding.guid, another_apps_service_binding2.guid])
+          expect(parsed_response['pagination']).to be_a_response_like(
+            {
               'total_results' => 2,
               'total_pages'   => 1,
               'first'         => { 'href' => "/v3/service_bindings?app_guids=#{app_model2.guid}%2C#{app_model3.guid}&page=1&per_page=2" },
               'last'          => { 'href' => "/v3/service_bindings?app_guids=#{app_model2.guid}%2C#{app_model3.guid}&page=1&per_page=2" },
               'next'          => nil,
               'previous'      => nil,
-            },
-            'resources' => [
-              {
-                'guid'       => another_apps_service_binding.guid,
-                'type'       => 'app',
-                'data'       => {
-                  'credentials' => {
-                    'utako' => 'secret'
-                  },
-                  'syslog_drain_url' => 'syslog://example.com',
-                  'volume_mounts' => [{ 'stuff' => 'thing' }]
-                },
-                'created_at' => iso8601,
-                'updated_at' => nil,
-                'links'      => {
-                  'self' => {
-                    'href' => "/v3/service_bindings/#{another_apps_service_binding.guid}"
-                  },
-                  'service_instance' => {
-                    'href' => "/v2/service_instances/#{service_instance1.guid}"
-                  },
-                  'app' => {
-                    'href' => "/v3/apps/#{app_model2.guid}"
-                  }
-                }
-              },
-              {
-                'guid'       => another_apps_service_binding2.guid,
-                'type'       => 'app',
-                'data'       => {
-                  'credentials' => {
-                    'amelia' => 'apples'
-                  },
-                  'syslog_drain_url' => 'www.neopets.com',
-                  'volume_mounts' => [{ 'stuff2' => 'thing2' }]
-                },
-                'created_at' => iso8601,
-                'updated_at' => nil,
-                'links'      => {
-                  'self' => {
-                    'href' => "/v3/service_bindings/#{another_apps_service_binding2.guid}"
-                  },
-                  'service_instance' => {
-                    'href' => "/v2/service_instances/#{service_instance1.guid}"
-                  },
-                  'app' => {
-                    'href' => "/v3/apps/#{app_model3.guid}"
-                  }
-                }
-              }
-            ]
-          }
-
-          parsed_response = MultiJson.load(last_response.body)
-
-          expect(last_response.status).to eq(200)
-          expect(parsed_response).to be_a_response_like(expected_response)
+            }
+          )
         end
       end
 
@@ -453,71 +415,20 @@ describe 'v3 service bindings' do
         it 'returns only the matching service bindings' do
           get "/v3/service_bindings?per_page=2&service_instance_guids=#{service_instance1.guid},#{service_instance2.guid}", nil, user_headers
 
-          expected_response = {
-            'pagination' => {
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to eq([service_binding1.guid, service_binding2.guid])
+          expect(parsed_response['pagination']).to be_a_response_like(
+            {
               'total_results' => 2,
               'total_pages'   => 1,
               'first'         => { 'href' => "/v3/service_bindings?page=1&per_page=2&service_instance_guids=#{service_instance1.guid}%2C#{service_instance2.guid}" },
               'last'          => { 'href' => "/v3/service_bindings?page=1&per_page=2&service_instance_guids=#{service_instance1.guid}%2C#{service_instance2.guid}" },
               'next'          => nil,
               'previous'      => nil,
-            },
-            'resources' => [
-              {
-                'guid'       => service_binding1.guid,
-                'type'       => 'app',
-                'data'       => {
-                  'credentials' => {
-                    'binding1' => 'shtuff'
-                  },
-                  'syslog_drain_url' => 'syslog://binding1.example.com',
-                  'volume_mounts' => [{ 'stuff' => 'thing' }]
-                },
-                'created_at' => iso8601,
-                'updated_at' => nil,
-                'links'      => {
-                  'self' => {
-                    'href' => "/v3/service_bindings/#{service_binding1.guid}"
-                  },
-                  'service_instance' => {
-                    'href' => "/v2/service_instances/#{service_instance1.guid}"
-                  },
-                  'app' => {
-                    'href' => "/v3/apps/#{app_model.guid}"
-                  }
-                }
-              },
-              {
-                'guid'       => service_binding2.guid,
-                'type'       => 'app',
-                'data'       => {
-                  'credentials' => {
-                    'binding2' => 'things'
-                  },
-                  'syslog_drain_url' => 'syslog://binding2.example.com',
-                  'volume_mounts' => [{ 'stuff2' => 'thing2' }]
-                },
-                'created_at' => iso8601,
-                'updated_at' => nil,
-                'links'      => {
-                  'self' => {
-                    'href' => "/v3/service_bindings/#{service_binding2.guid}"
-                  },
-                  'service_instance' => {
-                    'href' => "/v2/service_instances/#{service_instance2.guid}"
-                  },
-                  'app' => {
-                    'href' => "/v3/apps/#{app_model.guid}"
-                  }
-                }
-              }
-            ]
-          }
-
-          parsed_response = MultiJson.load(last_response.body)
-
-          expect(last_response.status).to eq(200)
-          expect(parsed_response).to be_a_response_like(expected_response)
+            }
+          )
         end
       end
     end

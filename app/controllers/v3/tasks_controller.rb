@@ -66,7 +66,7 @@ class TasksController < ApplicationController
     task, space, org = TaskFetcher.new.fetch(task_guid: params[:task_guid])
     task_not_found! unless task && can_read?(space.guid, org.guid)
 
-    render status: :ok, json: TaskPresenter.new(task)
+    render status: :ok, json: TaskPresenter.new(task, show_secrets: can_see_secrets?(space))
   end
 
   private

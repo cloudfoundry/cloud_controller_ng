@@ -179,6 +179,21 @@ describe 'Droplets' do
         }
       })
     end
+
+    it 'redacts information for auditors' do
+      auditor = VCAP::CloudController::User.make
+      space.organization.add_user(auditor)
+      space.add_auditor(auditor)
+
+      get "/v3/droplets/#{droplet_model.guid}", nil, headers_for(auditor)
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['environment_variables']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+      expect(parsed_response['result']['process_types']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+      expect(parsed_response['result']['execution_metadata']).to eq('[PRIVATE DATA HIDDEN]')
+    end
   end
 
   describe 'GET /v3/droplets' do
@@ -260,10 +275,10 @@ describe 'Droplets' do
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
               'buildpack'              => 'http://buildpack.git.url.com',
               'stack'                  => 'stack-2',
-              'execution_metadata'     => 'black-box-secrets',
-              'process_types'          => { 'web' => 'started' }
+              'execution_metadata'     => '[PRIVATE DATA HIDDEN]',
+              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' }
             },
-            'environment_variables' => {},
+            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
@@ -287,7 +302,7 @@ describe 'Droplets' do
             'staging_memory_in_mb'  => 123,
             'disk_limit'            => 235,
             'result'                => nil,
-            'environment_variables' => { 'yuu' => 'huuu' },
+            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
@@ -524,10 +539,10 @@ describe 'Droplets' do
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
               'buildpack'              => 'http://buildpack.git.url.com',
               'stack'                  => 'stack-2',
-              'execution_metadata'     => 'black-box-secrets',
-              'process_types'          => { 'web' => 'started' }
+              'execution_metadata'     => '[PRIVATE DATA HIDDEN]',
+              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' }
             },
-            'environment_variables' => {},
+            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
@@ -551,7 +566,7 @@ describe 'Droplets' do
             'staging_memory_in_mb'  => 123,
             'disk_limit'            => 235,
             'result'                => nil,
-            'environment_variables' => { 'yuu' => 'huuu' },
+            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
@@ -566,6 +581,7 @@ describe 'Droplets' do
       })
     end
   end
+
   describe 'GET /v3/packages/:guid/droplets' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
     let(:package_model) do
@@ -666,10 +682,10 @@ describe 'Droplets' do
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
               'buildpack'              => 'http://buildpack.git.url.com',
               'stack'                  => 'stack-2',
-              'execution_metadata'     => 'black-box-secrets',
-              'process_types'          => { 'web' => 'started' }
+              'execution_metadata'     => '[PRIVATE DATA HIDDEN]',
+              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' }
             },
-            'environment_variables' => {},
+            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
@@ -693,7 +709,7 @@ describe 'Droplets' do
             'staging_memory_in_mb'  => 123,
             'disk_limit'            => 235,
             'result'                => nil,
-            'environment_variables' => { 'yuu' => 'huuu' },
+            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {

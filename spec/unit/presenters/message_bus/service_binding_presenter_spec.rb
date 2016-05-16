@@ -34,18 +34,29 @@ describe ServiceBindingPresenter do
     end
 
     describe '#to_hash' do
-      subject { ServiceBindingPresenter.new(service_binding, include_instance: true).to_hash }
+      let(:result) { ServiceBindingPresenter.new(service_binding, include_instance: true).to_hash }
 
-      it { is_expected.to be_instance_of(Hash) }
-      it { is_expected.to have_key(:label) }
-      it { is_expected.to have_key(:name) }
-      it { is_expected.to have_key(:credentials) }
-      it { is_expected.to have_key(:plan) }
-      it { is_expected.to have_key(:provider) }
-      it { is_expected.to have_key(:tags) }
+      it 'presents the service binding as a hash' do
+        expect(result).to be_instance_of(Hash)
+
+        expect(result).to have_key(:label)
+        expect(result).to have_key(:name)
+        expect(result).to have_key(:credentials)
+        expect(result).to have_key(:plan)
+        expect(result).to have_key(:provider)
+        expect(result).to have_key(:tags)
+      end
 
       specify do
-        expect(subject.fetch(:credentials)).to eq(service_binding.credentials)
+        expect(result.fetch(:credentials)).to eq(service_binding.credentials)
+      end
+
+      context 'when show_secrets is false' do
+        let(:result) { ServiceBindingPresenter.new(service_binding, show_secrets: false, include_instance: true).to_hash }
+
+        it 'redacts the environment_variables' do
+          expect(result[:credentials]).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+        end
       end
     end
   end

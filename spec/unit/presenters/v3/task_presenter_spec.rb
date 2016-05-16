@@ -7,10 +7,10 @@ module VCAP::CloudController
     let(:task) {
       TaskModel.make(
         environment_variables: { 'some' => 'stuff' },
-        failure_reason: 'sup dawg',
-        memory_in_mb: 2048,
-        updated_at: Time.at(2),
-        created_at: Time.at(1),
+        failure_reason:        'sup dawg',
+        memory_in_mb:          2048,
+        updated_at:            Time.at(2),
+        created_at:            Time.at(1),
       )
     }
 
@@ -19,8 +19,8 @@ module VCAP::CloudController
 
       it 'presents the task as a hash' do
         links = {
-          self: { href: "/v3/tasks/#{task.guid}" },
-          app: { href: "/v3/apps/#{task.app.guid}" },
+          self:    { href: "/v3/tasks/#{task.guid}" },
+          app:     { href: "/v3/apps/#{task.app.guid}" },
           droplet: { href: "/v3/droplets/#{task.droplet.guid}" },
         }
 
@@ -34,6 +34,15 @@ module VCAP::CloudController
         expect(result[:created_at]).to eq(task.created_at.iso8601)
         expect(result[:updated_at]).to eq(task.updated_at.iso8601)
         expect(result[:links]).to eq(links)
+      end
+
+      context 'when show_secrets is false' do
+        let(:presenter) { TaskPresenter.new(task, show_secrets: false) }
+
+        it 'redacts command and environment_variables' do
+          expect(result[:command]).to eq('[PRIVATE DATA HIDDEN]')
+          expect(result[:environment_variables]).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+        end
       end
     end
   end

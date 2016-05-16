@@ -4,7 +4,7 @@ module VCAP::CloudController
   class RouteMappingPresenter
     attr_reader :route_mapping
 
-    def initialize(route_mapping)
+    def initialize(route_mapping, show_secrets: true)
       @route_mapping = route_mapping
     end
 

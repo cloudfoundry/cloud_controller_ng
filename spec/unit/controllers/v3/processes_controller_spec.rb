@@ -135,6 +135,7 @@ describe ProcessesController, type: :controller do
 
     before do
       allow_user_read_access(user, space: space)
+      allow_user_secret_access(user, space: space)
     end
 
     it 'returns 200 OK with process' do

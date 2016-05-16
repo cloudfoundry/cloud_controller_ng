@@ -2,7 +2,7 @@ module VCAP::CloudController
   class PackagePresenter
     attr_reader :package
 
-    def initialize(package)
+    def initialize(package, show_secrets: true)
       @package = package
     end
 

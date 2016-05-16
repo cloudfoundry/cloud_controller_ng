@@ -63,10 +63,10 @@ describe 'Tasks' do
             {
               'guid'                  => task1.guid,
               'name'                  => 'task one',
-              'command'               => 'echo task',
+              'command'               => '[PRIVATE DATA HIDDEN]',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 5,
-              'environment_variables' => { 'unicorn' => 'magic' },
+              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
               'result'                => {
                 'failure_reason' => nil
               },
@@ -88,10 +88,10 @@ describe 'Tasks' do
             {
               'guid'                  => task2.guid,
               'name'                  => 'task two',
-              'command'               => 'echo task',
+              'command'               => '[PRIVATE DATA HIDDEN]',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 100,
-              'environment_variables' => {},
+              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
               'result'                => {
                 'failure_reason' => nil
               },
@@ -152,51 +152,23 @@ describe 'Tasks' do
 
         get "/v3/tasks?#{query.to_query}", nil, developer_headers
 
-        expected_query    = "app_guids=#{app_model.guid}&names=task+one&organization_guids=#{app_model.organization.guid}" \
+        expected_query = "app_guids=#{app_model.guid}&names=task+one&organization_guids=#{app_model.organization.guid}" \
                             "&page=1&per_page=50&space_guids=#{app_model.space.guid}&states=SUCCEEDED"
-        expected_response =
-          {
-            'pagination' => {
-              'total_results' => 1,
-              'total_pages'   => 1,
-              'first'         => { 'href' => "/v3/tasks?#{expected_query}" },
-              'last'          => { 'href' => "/v3/tasks?#{expected_query}" },
-              'next'          => nil,
-              'previous'      => nil,
-            },
-            'resources' => [
-              {
-                'guid'                  => task1.guid,
-                'name'                  => 'task one',
-                'command'               => 'echo task',
-                'state'                 => 'SUCCEEDED',
-                'memory_in_mb'          => 5,
-                'environment_variables' => { 'unicorn' => 'magic' },
-                'result'                => {
-                  'failure_reason' => nil
-                },
-                'droplet_guid'          => task1.droplet.guid,
-                'created_at'            => iso8601,
-                'updated_at'            => nil,
-                'links'                 => {
-                  'self' => {
-                    'href' => "/v3/tasks/#{task1.guid}"
-                  },
-                  'app' => {
-                    'href' => "/v3/apps/#{app_model.guid}"
-                  },
-                  'droplet' => {
-                    'href' => "/v3/droplets/#{app_model.droplet.guid}"
-                  }
-                }
-              }
-            ]
-          }
 
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response).to be_a_response_like(expected_response)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to eq([task1.guid])
+        expect(parsed_response['pagination']).to be_a_response_like(
+          {
+            'total_results' => 1,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "/v3/tasks?#{expected_query}" },
+            'last'          => { 'href' => "/v3/tasks?#{expected_query}" },
+            'next'          => nil,
+            'previous'      => nil,
+          }
+        )
       end
     end
   end
@@ -245,6 +217,30 @@ describe 'Tasks' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    it 'redacts information for auditors' do
+      task = VCAP::CloudController::TaskModel.make(
+        name:                  'task',
+        command:               'echo task',
+        app_guid:              app_model.guid,
+        droplet:               app_model.droplet,
+        environment_variables: { unicorn: 'magic' },
+        memory_in_mb:          5,
+      )
+      task_guid = task.guid
+
+      auditor = VCAP::CloudController::User.make
+      space.organization.add_user(auditor)
+      space.add_auditor(auditor)
+
+      get "/v3/tasks/#{task_guid}", nil, headers_for(auditor)
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['command']).to eq('[PRIVATE DATA HIDDEN]')
+      expect(parsed_response['environment_variables']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
     end
   end
 
@@ -306,10 +302,10 @@ describe 'Tasks' do
             {
               'guid'                  => task1.guid,
               'name'                  => 'task one',
-              'command'               => 'echo task',
+              'command'               => '[PRIVATE DATA HIDDEN]',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 5,
-              'environment_variables' => { 'unicorn' => 'magic' },
+              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
               'result'                => {
                 'failure_reason' => nil
               },
@@ -331,10 +327,10 @@ describe 'Tasks' do
             {
               'guid'                  => task2.guid,
               'name'                  => 'task two',
-              'command'               => 'echo task',
+              'command'               => '[PRIVATE DATA HIDDEN]',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 100,
-              'environment_variables' => {},
+              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
               'result'                => {
                 'failure_reason' => nil
               },
@@ -386,56 +382,28 @@ describe 'Tasks' do
         )
 
         query = {
-          names:              'task one',
-          states:             'SUCCEEDED'
+          names:  'task one',
+          states: 'SUCCEEDED'
         }
 
         get "/v3/apps/#{app_model.guid}/tasks?#{query.to_query}", nil, developer_headers
 
-        expected_query    = 'names=task+one&page=1&per_page=50&states=SUCCEEDED'
-        expected_response =
-          {
-            'pagination' => {
-              'total_results' => 1,
-              'total_pages'   => 1,
-              'first'         => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
-              'last'          => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
-              'next'          => nil,
-              'previous'      => nil,
-            },
-            'resources' => [
-              {
-                'guid'                  => task1.guid,
-                'name'                  => 'task one',
-                'command'               => 'echo task',
-                'state'                 => 'SUCCEEDED',
-                'memory_in_mb'          => 5,
-                'environment_variables' => { 'unicorn' => 'magic' },
-                'result'                => {
-                  'failure_reason' => nil
-                },
-                'droplet_guid'          => task1.droplet.guid,
-                'created_at'            => iso8601,
-                'updated_at'            => nil,
-                'links'                 => {
-                  'self' => {
-                    'href' => "/v3/tasks/#{task1.guid}"
-                  },
-                  'app' => {
-                    'href' => "/v3/apps/#{app_model.guid}"
-                  },
-                  'droplet' => {
-                    'href' => "/v3/droplets/#{app_model.droplet.guid}"
-                  }
-                }
-              }
-            ]
-          }
+        expected_query = 'names=task+one&page=1&per_page=50&states=SUCCEEDED'
 
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response).to be_a_response_like(expected_response)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to eq([task1.guid])
+        expect(parsed_response['pagination']).to be_a_response_like(
+          {
+            'total_results' => 1,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'next'          => nil,
+            'previous'      => nil,
+          }
+        )
       end
     end
   end

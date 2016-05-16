@@ -99,6 +99,7 @@ describe AppsV3Controller, type: :controller do
     before do
       set_current_user(user)
       allow_user_read_access(user, space: space)
+      allow_user_secret_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
@@ -134,7 +135,6 @@ describe AppsV3Controller, type: :controller do
 
       context 'when the user cannot read the app' do
         let(:space) { app_model.space }
-        let(:org) { space.organization }
 
         before do
           disallow_user_read_access(user, space: space)

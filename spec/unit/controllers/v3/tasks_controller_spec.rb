@@ -254,6 +254,7 @@ describe TasksController, type: :controller do
 
     before do
       allow_user_read_access(user, space: space)
+      allow_user_secret_access(user, space: space)
     end
 
     it 'returns a 200 and the task' do

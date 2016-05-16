@@ -1,5 +1,6 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/process_presenter'
+require 'presenters/v3/process_stats_presenter'
 require 'cloud_controller/paging/pagination_options'
 require 'actions/process_delete'
 require 'queries/process_list_fetcher'
@@ -43,7 +44,7 @@ class ProcessesController < ApplicationController
       process_not_found! unless process && can_read?(space.guid, org.guid)
     end
 
-    render status: :ok, json: ProcessPresenter.new(process, base_process_url)
+    render status: :ok, json: ProcessPresenter.new(process, base_process_url, show_secrets: can_see_secrets?(space))
   end
 
   def update

@@ -311,6 +311,7 @@ describe ServiceBindingsController, type: :controller do
 
     before do
       allow_user_read_access(user, space: space)
+      allow_user_secret_access(user, space: space)
     end
 
     it 'returns a 200 OK and the service binding' do
@@ -327,6 +328,7 @@ describe ServiceBindingsController, type: :controller do
       context 'when the user has read-only permissions' do
         before do
           allow_user_read_access(user, space: space)
+          allow_user_secret_access(user, space: space)
           disallow_user_write_access(user, space: space)
         end
 

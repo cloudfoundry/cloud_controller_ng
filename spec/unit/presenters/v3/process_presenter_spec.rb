@@ -20,14 +20,14 @@ module VCAP::CloudController
           created_at:           Time.at(1)
         )
       }
-      subject(:result) { ProcessPresenter.new(process, base_url).to_hash }
+      let(:result) { ProcessPresenter.new(process, base_url).to_hash }
       let(:base_url) { nil }
 
       before do
         process.updated_at = Time.at(2)
       end
 
-      it 'presents the process as json' do
+      it 'presents the process as a hash' do
         links = {
           self: { href: "/v3/processes/#{process.guid}" },
           scale: { href: "/v3/processes/#{process.guid}/scale", method: 'PUT' },
@@ -47,6 +47,14 @@ module VCAP::CloudController
         expect(result[:created_at]).to eq('1970-01-01T00:00:01Z')
         expect(result[:updated_at]).to eq('1970-01-01T00:00:02Z')
         expect(result[:links]).to eq(links)
+      end
+
+      context 'when show_secrets is false' do
+        let(:result) { ProcessPresenter.new(process, show_secrets: false).to_hash }
+
+        it 'redacts command' do
+          expect(result[:command]).to eq('[PRIVATE DATA HIDDEN]')
+        end
       end
 
       context 'when diego thinks that a different port should be used' do

@@ -23,7 +23,7 @@ describe ApplicationController, type: :controller do
     end
 
     def secret_access
-      can_see_secrets?(params[:space_guid], params[:org_guid])
+      can_see_secrets?(VCAP::CloudController::Space.find(guid: params[:space_guid]))
       head 200
     end
 
@@ -211,12 +211,13 @@ describe ApplicationController, type: :controller do
     it 'asks for #can_see_secrets_in_space? on behalf of the current user' do
       routes.draw { get 'secret_access' => 'anonymous#secret_access' }
 
+      space = VCAP::CloudController::Space.make
       permissions = instance_double(VCAP::CloudController::Permissions, can_see_secrets_in_space?: true)
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
 
-      get :secret_access, space_guid: 'space-guid', org_guid: 'org-guid'
+      get :secret_access, space_guid: space.guid
 
-      expect(permissions).to have_received(:can_see_secrets_in_space?).with('space-guid', 'org-guid')
+      expect(permissions).to have_received(:can_see_secrets_in_space?).with(space.guid, space.organization_guid)
     end
   end
 

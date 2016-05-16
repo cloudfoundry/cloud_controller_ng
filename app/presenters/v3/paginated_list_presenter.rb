@@ -32,7 +32,7 @@ module VCAP::CloudController
     private
 
     def presented_resources
-      paginator.records.map { |resource| presenter.new(resource).to_hash }
+      paginator.records.map { |resource| presenter.new(resource, show_secrets: false).to_hash }
     end
 
     def presenter
