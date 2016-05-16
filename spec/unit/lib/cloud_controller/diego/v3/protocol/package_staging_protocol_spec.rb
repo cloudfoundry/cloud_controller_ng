@@ -1,6 +1,6 @@
 require 'spec_helper'
 require_relative '../../lifecycle_protocol_shared'
-require_relative '../../../../../../../lib/cloud_controller/diego/v3/protocol/app_protocol'
+require 'cloud_controller/diego/v3/protocol/package_staging_protocol'
 
 module VCAP::CloudController
   module Diego
@@ -18,12 +18,12 @@ module VCAP::CloudController
           it_behaves_like 'a v3 lifecycle protocol'
         end
 
-        describe AppProtocol do
+        describe PackageStagingProtocol do
           let(:default_health_check_timeout) { 99 }
           let(:egress_rules) { double(:egress_rules) }
           let(:lifecycle_type) { 'dev/null' }
 
-          subject(:protocol) { AppProtocol.new(lifecycle_type, egress_rules) }
+          subject(:protocol) { PackageStagingProtocol.new(lifecycle_type, egress_rules) }
 
           before do
             allow(Diego::V3::LifecycleProtocol).to receive(:protocol_for_type).

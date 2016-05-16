@@ -12,7 +12,7 @@ require 'cloud_controller/diego/docker/staging_completion_handler'
 require 'cloud_controller/diego/egress_rules'
 require 'cloud_controller/diego/v3/stager'
 require 'cloud_controller/diego/v3/messenger'
-require 'cloud_controller/diego/v3/protocol/app_protocol'
+require 'cloud_controller/diego/v3/protocol/package_staging_protocol'
 
 module VCAP::CloudController
   class Stagers

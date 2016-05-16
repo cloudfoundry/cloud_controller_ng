@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         def protocol
-          Diego::V3::Protocol::AppProtocol.new(@lifecycle_type)
+          Diego::V3::Protocol::PackageStagingProtocol.new(@lifecycle_type)
         end
       end
     end

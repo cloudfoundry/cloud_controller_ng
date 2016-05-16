@@ -8,7 +8,7 @@ module VCAP::CloudController
   module Diego
     module V3
       module Protocol
-        class AppProtocol
+        class PackageStagingProtocol
           def initialize(lifecycle_type, egress_rules=Diego::EgressRules.new)
             @lifecycle_type = lifecycle_type
             @egress_rules   = egress_rules
