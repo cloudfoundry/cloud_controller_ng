@@ -237,6 +237,7 @@ module VCAP::CloudController
 
         optional(:dea_advertisement_timeout_in_seconds) => Integer,
         optional(:placement_top_stager_percentage) => Integer,
+        optional(:minimum_candidate_stagers) => Integer,
 
         optional(:diego_stager_url) => String,
         optional(:diego_tps_url) => String,
