@@ -51,7 +51,7 @@ module CloudController
           size = file.size
           next unless within_limits?(size)
 
-          begin
+          with_retries(retries, 'blobstore.cp', destination_key: destination_key) do
             mime_type = MIME::Types.of(source_path).first.try(:content_type)
 
             files.create(
@@ -60,17 +60,6 @@ module CloudController
               content_type: mime_type || 'application/zip',
               public: local?,
             )
-          # work around https://github.com/fog/fog/issues/3137
-          # and Fog raising an EOFError SocketError intermittently
-          rescue SystemCallError, Excon::Errors::SocketError, Excon::Errors::BadRequest => e
-            logger.debug('blobstore.cp-retry',
-                         error: e.message,
-                         destination_key: destination_key,
-                         remaining_retries: retries
-                        )
-            retries -= 1
-            retry unless retries < 0
-            raise e
           end
 
           log_entry = 'blobstore.cp-finish'
@@ -187,6 +176,24 @@ module CloudController
         options = @connection_config
         options = options.merge(endpoint: '') if local?
         @connection ||= Fog::Storage.new(options)
+      end
+
+      def with_retries(retries, log_prefix, log_data)
+        yield
+
+      # work around https://github.com/fog/fog/issues/3137
+      # and Fog raising an EOFError SocketError intermittently
+      rescue SystemCallError, Excon::Errors::SocketError, Excon::Errors::BadRequest => e
+        logger.debug("#{log_prefix}-retry",
+                     {
+          error:             e.message,
+          remaining_retries: retries
+        }.merge(log_data)
+                    )
+
+        retries -= 1
+        retry unless retries < 0
+        raise e
       end
 
       def logger
