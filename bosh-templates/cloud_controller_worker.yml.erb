@@ -170,6 +170,7 @@ uaa:
 
 hm9000:
   url: <%= p("hm9000.url", "https://hm9000.#{system_domain}") %>
+  internal_url: <%= "http://hm9000.service.cf.internal:#{p('hm9000.port')}" %>
 
 # App staging parameters
 staging:

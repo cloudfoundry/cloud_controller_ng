@@ -43,6 +43,7 @@ broker_client_max_async_poll_duration_minutes: 10080
 
 hm9000:
   url: "http://localhost:5155"
+  internal_url: "http://localhost:5155/internal"
 
 uaa:
   url: "http://localhost:8080/uaa"

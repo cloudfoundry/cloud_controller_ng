@@ -59,7 +59,8 @@ module VCAP::CloudController
         },
 
         :hm9000 => {
-          url: String
+          url: String,
+          internal_url: String
         },
 
         optional(:dea_client) => {
