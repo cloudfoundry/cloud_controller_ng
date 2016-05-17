@@ -44,7 +44,16 @@ resource 'Events', type: [:api, :legacy_api] do
     audit.route.create
     audit.route.update
     audit.route.delete-request
-  ).freeze
+    audit.app.droplet_mapped
+    audit.app.map-route
+    audit.app.unmap-route
+    audit.app.restage
+    audit.app.copy-bits
+    audit.app.package.create
+    audit.app.package.upload
+    audit.app.package.delete
+    audit.app.package.download
+  ).sort.freeze
 
   EXPERIMENTAL_EVENT_TYPES = %w(
     audit.app.droplet.create
@@ -55,7 +64,34 @@ resource 'Events', type: [:api, :legacy_api] do
     audit.app.process.scale
     audit.app.process.terminate_instance
     audit.app.process.update
-  ).freeze
+    audit.app.droplet.download
+    audit.app.task.create
+    audit.app.task.cancel
+  ).sort.freeze
+
+  ACTEE_TYPES = [
+    'v3-app (experimental)',
+    'app',
+    'route',
+    'v3-service-binding (experimental)',
+    'service_plan_visibility',
+    'service_broker',
+    'service',
+    'service_plan',
+    'service_dashboard_client',
+    'service_instance',
+    'user_provided_service_instance',
+    'service_binding',
+    'service_key',
+    'space'
+  ].sort.freeze
+
+  ACTOR_TYPES = %w(
+    v3-process
+    user
+    system
+    service_broker
+  ).sort.freeze
 
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   authenticated_request
@@ -72,10 +108,10 @@ resource 'Events', type: [:api, :legacy_api] do
   response_field :type, 'The type of the event.', required: false, readonly: true, valid_values: DOCUMENTED_EVENT_TYPES, example_values: %w(app.crash audit.app.update)
   response_field :type, 'The type of the event.', experimental: true, required: false, valid_values: EXPERIMENTAL_EVENT_TYPES, example_values: %w(audit.app.process.crash)
   response_field :actor, 'The GUID of the actor.', required: false, readonly: true
-  response_field :actor_type, 'The actor type.', required: false, readonly: true, example_values: %w(user app)
+  response_field :actor_type, 'The actor type.', required: false, readonly: true, example_values: ACTOR_TYPES
   response_field :actor_name, 'The name of the actor.', required: false, readonly: true
   response_field :actee, 'The GUID of the actee.', required: false, readonly: true
-  response_field :actee_type, 'The actee type.', required: false, readonly: true, example_values: ['space', 'app', 'v3-app (experimental)', 'v3-service-binding (experimental)']
+  response_field :actee_type, 'The actee type.', required: false, readonly: true, example_values: ACTEE_TYPES
   response_field :actee_name, 'The name of the actee.', required: false, readonly: true
   response_field :timestamp, 'The event creation time.', required: false, readonly: true
   response_field :metadata, 'The additional information about event.', required: false, readonly: true, default: {}
