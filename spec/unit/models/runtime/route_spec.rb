@@ -771,7 +771,6 @@ module VCAP::CloudController
                   expect(subject.errors.on(:space)).to include :total_reserved_route_ports_exceeded
                 end
               end
-
             end
           end
 
