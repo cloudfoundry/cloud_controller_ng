@@ -745,14 +745,33 @@ module VCAP::CloudController
             context 'when creating another tcp route' do
               subject(:another_route) { Route.new(space: space, domain: tcp_domain, host: '', port: 4444) }
 
-              before do
-                tcp_route.save
+              context 'when exceeding total_reserved_route_ports in org quota' do
+                before do
+                  tcp_route.save
+                end
+                it 'is invalid' do
+                  expect(subject).to_not be_valid
+                  expect(subject.errors.on(:organization)).to include :total_reserved_route_ports_exceeded
+                end
               end
 
-              it 'is invalid' do
-                expect(subject).to_not be_valid
-                expect(subject.errors.on(:organization)).to include :total_reserved_route_ports_exceeded
+              context 'when exceeding total_reserved_route_ports in space quota' do
+                before do
+                  org_quota.total_routes = 10
+                  org_quota.total_reserved_route_ports = 2
+                  org_quota.save
+                  space_quota.total_reserved_route_ports = 1
+                  space_quota.save
+
+                  tcp_route.save
+                end
+
+                it 'is invalid' do
+                  expect(subject).to_not be_valid
+                  expect(subject.errors.on(:space)).to include :total_reserved_route_ports_exceeded
+                end
               end
+
             end
           end
 
