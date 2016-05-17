@@ -76,29 +76,10 @@
 
       <p class="method-list-item-description">Null if the task succeeds, contains the error message if it fails.</p>
   </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      created_at
-      <span class="method-list-item-type">datetime</span>
-    </h4>
+<%= yield_content :created_at %>
 
-    <p class="method-list-item-description">The time with zone when the task was created.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      updated_at
-      <span class="method-list-item-type">datetime</span>
-    </h4>
+<%= yield_content :updated_at %>
 
-    <p class="method-list-item-description">The time with zone when the task was last updated.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      links
-      <span class="method-list-item-type">object</span>
-    </h4>
-
-    <p class="method-list-item-description">Links to related resources.</p>
-  </li>
+<%= yield_content :links %>
 </ul>
 
