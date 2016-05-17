@@ -248,7 +248,7 @@ module VCAP::CloudController::RestController
 
     def redact_attributes(op, request_attributes)
       request_attributes.dup.tap do |changes|
-        changes.keys.each do |key|
+        changes.each_key do |key|
           attrib = self.class.attributes[key.to_sym]
           changes[key] = CENSORED_MESSAGE if attrib && attrib.redact_in?(op)
         end

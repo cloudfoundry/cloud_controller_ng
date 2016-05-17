@@ -12,7 +12,7 @@ class AppEnvironmentPolicy
       @errors.add(:environment_json, :invalid_environment)
       return
     end
-    @environment_json.keys.each do |k|
+    @environment_json.each_key do |k|
       @errors.add(:environment_json, RESERVED_ENV_VAR_ERROR_MSG % k) if k =~ /^(vcap|vmc)_/i
     end
   rescue MultiJson::ParseError
