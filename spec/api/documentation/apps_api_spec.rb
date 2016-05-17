@@ -14,6 +14,10 @@ resource 'Apps', type: [:api, :legacy_api] do
     parameter :guid, 'The guid of the App'
   end
 
+  def self.request_fields(required)
+    fields_info(required).reject { |f| [:detected_start_command].include?(f[:name]) }
+  end
+
   # rubocop:disable Metrics/MethodLength
   def self.fields_info(required)
     [
@@ -108,7 +112,7 @@ resource 'Apps', type: [:api, :legacy_api] do
   end
 
   shared_context 'fields' do |opts|
-    fields_info(opts[:required]).each do |f|
+    request_fields(opts[:required]).each do |f|
       field f[:name], f[:description], f[:custom_params] || {}
     end
   end
