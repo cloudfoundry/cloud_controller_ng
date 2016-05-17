@@ -109,6 +109,7 @@ uaa:
 
 hm9000:
   url: https://hm9000.bosh-lite.com
+  internal_url: "http://10.244.0.142:5155"
 
 # App staging parameters
 staging:
