@@ -9,7 +9,7 @@ module VCAP::CloudController
         @message_bus = message_bus
         @percentage_of_top_stagers = (config[:placement_top_stager_percentage] || 0) / 100.0
         @dea_advertisements = {}
-        @min_candidate_stagers = (config[:minimum_candidate_stagers] ? config[:minimum_candidate_stagers] : 5)
+        @min_candidate_stagers = config[:minimum_candidate_stagers]
       end
 
       def register_subscriptions

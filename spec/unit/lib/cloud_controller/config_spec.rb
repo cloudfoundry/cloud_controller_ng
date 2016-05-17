@@ -90,6 +90,10 @@ module VCAP::CloudController
         it ' sets a default value for num_of_staged_droplets_per_app_to_store' do
           expect(config[:droplets][:max_staged_droplets_stored]).to eq(5)
         end
+
+        it 'sets a default value for the minimum number of candidate stagers' do
+          expect(config[:minimum_candidate_stagers]).to eq(5)
+        end
       end
 
       context 'when config values are provided' do
