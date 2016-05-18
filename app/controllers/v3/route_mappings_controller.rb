@@ -6,13 +6,13 @@ require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/route_mapping_presenter'
 require 'actions/route_mapping_create'
 require 'actions/route_mapping_delete'
-require 'controllers/v3/mixins/app_subresource'
+require 'controllers/v3/mixins/sub_resource'
 
 class RouteMappingsController < ApplicationController
-  include AppSubresource
+  include SubResource
 
   def index
-    message = RouteMappingsListMessage.from_params(app_subresource_query_params)
+    message = RouteMappingsListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     fetcher = RouteMappingListFetcher.new(message: message)

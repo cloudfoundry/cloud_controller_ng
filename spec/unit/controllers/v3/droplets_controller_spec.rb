@@ -735,6 +735,47 @@ describe DropletsController, type: :controller do
       end
     end
 
+    context 'accessed as a package subresource' do
+      let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app.guid) }
+      let!(:droplet_1) { VCAP::CloudController::DropletModel.make(package_guid: package.guid) }
+
+      it 'returns droplets for the package' do
+        get :index, package_guid: package.guid
+
+        expect(response.status).to eq(200)
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response_guids).to match_array([droplet_1].map(&:guid))
+      end
+
+      it 'provides the correct base url in the pagination links' do
+        get :index, package_guid: package.guid
+
+        expect(parsed_body['pagination']['first']['href']).to include("/v3/packages/#{package.guid}/droplets")
+      end
+
+      context 'when the user cannot read the package' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
+
+        it 'returns a 404 Resource Not Found error' do
+          get :index, package_guid: package.guid
+
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.status).to eq 404
+        end
+      end
+
+      context 'when the package does not exist' do
+        it 'returns a 404 Resource Not Found error' do
+          get :index, package_guid: 'made-up'
+
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.status).to eq 404
+        end
+      end
+    end
+
     context 'query params' do
       context 'invalid param format' do
         let(:params) { { 'order_by' => '^%' } }

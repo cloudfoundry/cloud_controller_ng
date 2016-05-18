@@ -41,6 +41,7 @@ Rails.application.routes.draw do
   get '/droplets/:guid', to: 'droplets#show'
   delete '/droplets/:guid', to: 'droplets#destroy'
   get '/apps/:app_guid/droplets', to: 'droplets#index'
+  get '/packages/:package_guid/droplets', to: 'droplets#index'
 
   # route_mappings
   post '/route_mappings', to: 'route_mappings#create'

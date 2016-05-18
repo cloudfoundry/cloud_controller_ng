@@ -6,6 +6,8 @@ module VCAP::CloudController
     describe '.from_params' do
       let(:params) do
         {
+          'app_guid' => 'app-guid',
+          'package_guid' => 'package-guid',
           'states'    => 'state1,state2',
           'app_guids' => 'appguid1,appguid2',
           'page'      => 1,
@@ -21,6 +23,8 @@ module VCAP::CloudController
         message = DropletsListMessage.from_params(params)
 
         expect(message).to be_a(DropletsListMessage)
+        expect(message.app_guid).to eq('app-guid')
+        expect(message.package_guid).to eq('package-guid')
         expect(message.states).to eq(['state1', 'state2'])
         expect(message.app_guids).to eq(['appguid1', 'appguid2'])
         expect(message.page).to eq(1)
@@ -34,13 +38,15 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = DropletsListMessage.from_params(params)
 
-        expect(message.requested?(:states)).to be_truthy
-        expect(message.requested?(:app_guids)).to be_truthy
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
-        expect(message.requested?(:order_by)).to be_truthy
-        expect(message.requested?(:space_guids)).to be_truthy
-        expect(message.requested?(:organization_guids)).to be_truthy
+        expect(message.requested?(:app_guid)).to be true
+        expect(message.requested?(:package_guid)).to be true
+        expect(message.requested?(:states)).to be true
+        expect(message.requested?(:app_guids)).to be true
+        expect(message.requested?(:page)).to be true
+        expect(message.requested?(:per_page)).to be true
+        expect(message.requested?(:order_by)).to be true
+        expect(message.requested?(:space_guids)).to be true
+        expect(message.requested?(:organization_guids)).to be true
       end
     end
 
@@ -129,6 +135,10 @@ module VCAP::CloudController
     describe '#to_param_hash' do
       it 'excludes app_guid' do
         expect(DropletsListMessage.new({ app_guid: '24234' }).to_param_hash.keys).to match_array([])
+      end
+
+      it 'excludes package_guid' do
+        expect(DropletsListMessage.new({ package_guid: '24234' }).to_param_hash.keys).to match_array([])
       end
     end
   end

@@ -10,13 +10,13 @@ require 'actions/process_terminate'
 require 'actions/process_update'
 require 'messages/process_update_message'
 require 'messages/processes_list_message'
-require 'controllers/v3/mixins/app_subresource'
+require 'controllers/v3/mixins/sub_resource'
 
 class ProcessesController < ApplicationController
-  include AppSubresource
+  include SubResource
 
   def index
-    message = ProcessesListMessage.from_params(app_subresource_query_params)
+    message = ProcessesListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?

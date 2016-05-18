@@ -7,13 +7,13 @@ require 'actions/task_cancel'
 require 'messages/task_create_message'
 require 'messages/tasks_list_message'
 require 'presenters/v3/task_presenter'
-require 'controllers/v3/mixins/app_subresource'
+require 'controllers/v3/mixins/sub_resource'
 
 class TasksController < ApplicationController
-  include AppSubresource
+  include SubResource
 
   def index
-    message = TasksListMessage.from_params(app_subresource_query_params)
+    message = TasksListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?

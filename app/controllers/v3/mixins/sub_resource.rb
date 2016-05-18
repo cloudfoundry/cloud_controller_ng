@@ -1,7 +1,4 @@
-require 'cloud_controller/membership'
-require 'queries/app_fetcher'
-
-module AppSubresource
+module SubResource
   private
 
   def app_not_found!
@@ -11,6 +8,8 @@ module AppSubresource
   def base_url(resource:)
     if app_nested?
       "/v3/apps/#{params[:app_guid]}/#{resource}"
+    elsif package_nested?
+      "/v3/packages/#{params[:package_guid]}/#{resource}"
     else
       "/v3/#{resource}"
     end
@@ -20,9 +19,15 @@ module AppSubresource
     params[:app_guid].present?
   end
 
-  def app_subresource_query_params
+  def package_nested?
+    params[:package_guid].present?
+  end
+
+  def subresource_query_params
     if app_nested?
       query_params.merge(app_guid: params[:app_guid])
+    elsif package_nested?
+      query_params.merge(package_guid: params[:package_guid])
     else
       query_params
     end

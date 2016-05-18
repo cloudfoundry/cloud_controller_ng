@@ -219,5 +219,46 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#fetch_for_package' do
+      let(:package) { PackageModel.make }
+      let!(:staged_droplet) { DropletModel.make(package_guid: package.guid, state: DropletModel::STAGED_STATE) }
+      let!(:failed_droplet) { DropletModel.make(package_guid: package.guid, state: DropletModel::FAILED_STATE) }
+      let(:filters) { { package_guid: package.guid } }
+
+      it 'returns a Sequel::Dataset' do
+        _package, results = fetcher.fetch_for_package
+        expect(results).to be_a(Sequel::Dataset)
+      end
+
+      it 'returns the package' do
+        returned_package, _results = fetcher.fetch_for_package
+        expect(returned_package.guid).to eq(package.guid)
+      end
+
+      it 'returns all of the desired droplets for the requested package' do
+        _package, results = fetcher.fetch_for_package
+        expect(results.all).to match_array([staged_droplet, failed_droplet])
+      end
+
+      context 'when package does not exist' do
+        let(:filters) { { package_guid: 'made up guid lol' } }
+        it 'returns nil' do
+          returned_package, results = fetcher.fetch_for_package
+          expect(returned_package).to be_nil
+          expect(results).to be_nil
+        end
+      end
+
+      context 'filtering states' do
+        let(:filters) { { states: [DropletModel::FAILED_STATE], package_guid: package.guid } }
+        let!(:failed_droplet_not_on_package) { DropletModel.make(state: DropletModel::FAILED_STATE) }
+
+        it 'returns all of the desired droplets with the requested droplet states' do
+          _package, results = fetcher.fetch_for_package
+          expect(results.all).to match_array([failed_droplet])
+        end
+      end
+    end
   end
 end

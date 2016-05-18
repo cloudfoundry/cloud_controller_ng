@@ -21,6 +21,12 @@ module VCAP::CloudController
       [app, filter(app.droplets_dataset)]
     end
 
+    def fetch_for_package
+      package = PackageModel.where(guid: @message.package_guid).eager(:space, space: :organization).all.first
+      return nil unless package
+      [package, filter(package.droplets_dataset)]
+    end
+
     private
 
     def filter(dataset)

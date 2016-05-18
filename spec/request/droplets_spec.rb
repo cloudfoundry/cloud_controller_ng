@@ -566,6 +566,148 @@ describe 'Droplets' do
       })
     end
   end
+  describe 'GET /v3/packages/:guid/droplets' do
+    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:package_model) do
+      VCAP::CloudController::PackageModel.make(
+        app_guid: app_model.guid,
+        type:     VCAP::CloudController::PackageModel::BITS_TYPE
+      )
+    end
+
+    let!(:droplet1) do
+      VCAP::CloudController::DropletModel.make(
+        app_guid:                         app_model.guid,
+        created_at:                       Time.at(1),
+        package_guid:                     package_model.guid,
+        buildpack_receipt_buildpack:      buildpack.name,
+        buildpack_receipt_buildpack_guid: buildpack.guid,
+        buildpack_receipt_stack_name:     'stack-1',
+        environment_variables:            { 'yuu' => 'huuu' },
+        disk_limit:                       235,
+        error:                            'example-error',
+        state:                            VCAP::CloudController::DropletModel::PENDING_STATE,
+      )
+    end
+
+    let!(:droplet2) do
+      VCAP::CloudController::DropletModel.make(
+        app_guid:                     app_model.guid,
+        created_at:                   Time.at(2),
+        package_guid:                 package_model.guid,
+        droplet_hash:                 'my-hash',
+        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
+        buildpack_receipt_stack_name: 'stack-2',
+        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
+        process_types:                { 'web' => 'started' },
+        memory_limit:                 123,
+        disk_limit:                   456,
+        execution_metadata:           'black-box-secrets',
+        error:                        'example-error'
+      )
+    end
+
+    let(:per_page) { 2 }
+    let(:order_by) { '-created_at' }
+
+    before do
+      droplet1.buildpack_lifecycle_data.update(buildpack: buildpack.name, stack: 'stack-1')
+      droplet2.buildpack_lifecycle_data.update(buildpack: 'http://buildpack.git.url.com', stack: 'stack-2')
+    end
+
+    it 'filters by states' do
+      get "/v3/packages/#{package_model.guid}/droplets?states=STAGED", nil, developer_headers
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['pagination']).to be_a_response_like(
+        {
+          'total_results' => 1,
+          'total_pages'   => 1,
+          'first'         => { 'href' => "/v3/packages/#{package_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
+          'last'          => { 'href' => "/v3/packages/#{package_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
+          'next'          => nil,
+          'previous'      => nil,
+        })
+
+      returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+      expect(returned_guids).to match_array([droplet2.guid])
+    end
+
+    it 'list all droplets with a buildpack lifecycle' do
+      get "/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&per_page=#{per_page}", nil, developer_headers
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['resources']).to include(hash_including('guid' => droplet1.guid))
+      expect(parsed_response['resources']).to include(hash_including('guid' => droplet2.guid))
+      expect(parsed_response).to be_a_response_like({
+        'pagination' => {
+          'total_results' => 2,
+          'total_pages'   => 1,
+          'first'         => { 'href' => "/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
+          'last'          => { 'href' => "/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
+          'next'          => nil,
+          'previous'      => nil,
+        },
+        'resources' => [
+          {
+            'guid'                  => droplet2.guid,
+            'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
+            'error'                 => 'example-error',
+            'lifecycle'             => {
+              'type' => 'buildpack',
+              'data' => {
+                'buildpack' => 'http://buildpack.git.url.com',
+                'stack'     => 'stack-2'
+              }
+            },
+            'memory_limit'          => 123,
+            'disk_limit'            => 456,
+            'result'                => {
+              'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
+              'buildpack'              => 'http://buildpack.git.url.com',
+              'stack'                  => 'stack-2',
+              'execution_metadata'     => 'black-box-secrets',
+              'process_types'          => { 'web' => 'started' }
+            },
+            'environment_variables' => {},
+            'created_at'            => iso8601,
+            'updated_at'            => iso8601,
+            'links'                 => {
+              'self'                   => { 'href' => "/v3/droplets/#{droplet2.guid}" },
+              'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
+              'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
+              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+            }
+          },
+          {
+            'guid'                  => droplet1.guid,
+            'state'                 => VCAP::CloudController::DropletModel::PENDING_STATE,
+            'error'                 => 'example-error',
+            'lifecycle'             => {
+              'type' => 'buildpack',
+              'data' => {
+                'buildpack' => buildpack.name,
+                'stack'     => 'stack-1'
+              }
+            },
+            'memory_limit'          => 123,
+            'disk_limit'            => 235,
+            'result'                => nil,
+            'environment_variables' => { 'yuu' => 'huuu' },
+            'created_at'            => iso8601,
+            'updated_at'            => iso8601,
+            'links'                 => {
+              'self'                   => { 'href' => "/v3/droplets/#{droplet1.guid}" },
+              'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
+              'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
+              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+              'buildpack'              => { 'href' => "/v2/buildpacks/#{buildpack.guid}" }
+            }
+          }
+        ]
+      })
+    end
+  end
 
   describe 'POST /v3/droplets/:guid/copy' do
     let(:new_app) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }

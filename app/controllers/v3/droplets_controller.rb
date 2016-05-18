@@ -9,18 +9,21 @@ require 'messages/droplet_create_message'
 require 'messages/droplets_list_message'
 require 'messages/droplet_copy_message'
 require 'cloud_controller/membership'
-require 'controllers/v3/mixins/app_subresource'
+require 'controllers/v3/mixins/sub_resource'
 
 class DropletsController < ApplicationController
-  include AppSubresource
+  include SubResource
 
   def index
-    message = DropletsListMessage.from_params(app_subresource_query_params)
+    message = DropletsListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
       app, dataset = DropletListFetcher.new(message: message).fetch_for_app
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
+    elsif package_nested?
+      package, dataset = DropletListFetcher.new(message: message).fetch_for_package
+      package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
     else
       dataset = if roles.admin?
                   DropletListFetcher.new(message: message).fetch_all
