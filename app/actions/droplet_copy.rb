@@ -8,7 +8,7 @@ module VCAP::CloudController
       :buildpack_receipt_buildpack,
       :buildpack_receipt_stack_name,
       :execution_metadata,
-      :memory_limit,
+      :staging_memory_in_mb,
       :disk_limit,
       :docker_receipt_image
     ].freeze

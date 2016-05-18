@@ -730,7 +730,7 @@ describe 'Apps' do
         execution_metadata: 'some-data',
         droplet_hash: 'shalalala',
         process_types: { 'web' => 'start-command' },
-        memory_limit: 100,
+        staging_memory_in_mb: 100,
         disk_limit: 200,
       )
     end
@@ -759,7 +759,7 @@ describe 'Apps' do
             'stack'     => 'stack-name'
           }
         },
-        'memory_limit'          => 100,
+        'staging_memory_in_mb' => 100,
         'disk_limit'            => 200,
         'result'                => {
           'hash'                   => { 'type' => 'sha1', 'value' => 'shalalala' },
@@ -818,7 +818,7 @@ describe 'Apps' do
           'type' => 'docker',
           'data' => {}
         },
-        'memory_limit'          => 123,
+        'staging_memory_in_mb' => 123,
         'disk_limit'            => nil,
         'result'                => {
           'image'                  => nil,

@@ -66,7 +66,7 @@ module VCAP::CloudController
         select(:"#{DropletModel.table_name}__guid",
         :"#{DropletModel.table_name}__id",
         :"#{DropletModel.table_name}__state",
-        :"#{DropletModel.table_name}__memory_limit",
+        :"#{DropletModel.table_name}__staging_memory_in_mb",
         :"#{DropletModel.table_name}__app_guid",
         :"#{DropletModel.table_name}__package_guid",
         :"#{DropletModel.table_name}__droplet_hash").all

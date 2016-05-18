@@ -10,7 +10,7 @@ module VCAP::CloudController
         error:                 'example error',
         process_types:         { 'web' => 'npm start', 'worker' => 'start worker' },
         environment_variables: { 'elastic' => 'runtime' },
-        memory_limit:          234,
+        staging_memory_in_mb:          234,
         disk_limit:            934,
         execution_metadata:    'black-box-string',
         package_guid:          'abcdefabcdef12345'
@@ -38,7 +38,7 @@ module VCAP::CloudController
           expect(result[:lifecycle][:data]['stack']).to eq('the-happiest-stack')
           expect(result[:lifecycle][:data]['buildpack']).to eq('the-happiest-buildpack')
           expect(result[:environment_variables]).to eq(droplet.environment_variables)
-          expect(result[:memory_limit]).to eq(234)
+          expect(result[:staging_memory_in_mb]).to eq(234)
           expect(result[:disk_limit]).to eq(934)
 
           expect(result[:created_at]).to be_a(Time)

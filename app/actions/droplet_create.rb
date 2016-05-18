@@ -35,7 +35,7 @@ module VCAP::CloudController
         package_guid:          package.guid,
         state:                 DropletModel::PENDING_STATE,
         environment_variables: staging_details.environment_variables,
-        memory_limit:          staging_details.memory_limit,
+        staging_memory_in_mb:  staging_details.staging_memory_in_mb,
         disk_limit:            staging_details.disk_limit
       }.merge(lifecycle.pre_known_receipt_information))
 
@@ -78,7 +78,7 @@ module VCAP::CloudController
       space = package.space
       org   = space.organization
 
-      memory_limit          = get_memory_limit(staging_message.memory_limit, space, org)
+      memory_limit          = get_memory_limit(staging_message.staging_memory_in_mb, space, org)
       disk_limit            = get_disk_limit(staging_message.disk_limit)
       environment_variables = @environment_builder.build(app,
         space,
@@ -88,7 +88,7 @@ module VCAP::CloudController
         staging_message.environment_variables)
 
       staging_details                       = VCAP::CloudController::Diego::V3::StagingDetails.new
-      staging_details.memory_limit          = memory_limit
+      staging_details.staging_memory_in_mb  = memory_limit
       staging_details.disk_limit            = disk_limit
       staging_details.environment_variables = environment_variables
       staging_details.lifecycle             = lifecycle
