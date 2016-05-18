@@ -238,6 +238,7 @@ module VCAP::CloudController
 
         optional(:dea_advertisement_timeout_in_seconds) => Integer,
         optional(:placement_top_stager_percentage) => Integer,
+        optional(:minimum_candidate_stagers) => Integer,
 
         optional(:diego_stager_url) => String,
         optional(:diego_tps_url) => String,
@@ -377,6 +378,7 @@ module VCAP::CloudController
         config[:broker_client_default_async_poll_interval_seconds] ||= 60
         config[:packages][:max_valid_packages_stored] ||= 5
         config[:droplets][:max_staged_droplets_stored] ||= 5
+        config[:minimum_candidate_stagers] ||= 5
 
         unless config.key?(:users_can_select_backend)
           config[:users_can_select_backend] = true

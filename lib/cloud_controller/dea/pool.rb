@@ -9,6 +9,7 @@ module VCAP::CloudController
         @message_bus = message_bus
         @percentage_of_top_stagers = (config[:placement_top_stager_percentage] || 0) / 100.0
         @dea_advertisements = {}
+        @min_candidate_stagers = config[:minimum_candidate_stagers]
       end
 
       def register_subscriptions
@@ -98,7 +99,7 @@ module VCAP::CloudController
           ad.meets_needs?(memory, stack) && ad.has_sufficient_disk?(disk)
         }.sort_by { |id, ad|
           ad.available_memory
-        }.last([5, @percentage_of_top_stagers * @dea_advertisements.size].max.to_i)
+        }.last([@min_candidate_stagers, @percentage_of_top_stagers * @dea_advertisements.size].max.to_i)
       end
     end
   end
