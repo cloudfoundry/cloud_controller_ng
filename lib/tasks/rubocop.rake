@@ -11,6 +11,7 @@ begin
       require 'rubocop'
       changelist = `git diff --name-only`.chomp.split("\n")
       changelist += `git diff --cached --name-only`.chomp.split("\n")
+      changelist -= `git diff --cached --name-only --diff-filter=D`.chomp.split("\n")
       cli = RuboCop::CLI.new
       exit_code = cli.run(changelist.uniq.grep(/.*\.rb$/).unshift('--auto-correct'))
       exit(exit_code) if exit_code != 0
@@ -20,6 +21,7 @@ begin
     task :local do
       require 'rubocop'
       changelist = `git diff --name-only origin`.chomp.split("\n")
+      changelist -= `git diff --cached --name-only --diff-filter=D`.chomp.split("\n")
       cli = RuboCop::CLI.new
       exit_code = cli.run(changelist.uniq.grep(/.*\.rb$/).unshift('--auto-correct'))
       exit(exit_code) if exit_code != 0
