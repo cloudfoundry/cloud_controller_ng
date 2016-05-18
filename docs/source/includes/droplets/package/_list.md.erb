@@ -1,0 +1,57 @@
+## List droplets for a package
+
+```
+Definition
+```
+
+```http
+GET /v3/packages/:guid/droplets HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.[your-domain.com]/v3/packages/[guid]/droplets" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :paginated_list_of_droplets, '/v3/packages/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets' %>
+```
+
+This endpoint retrieves a list of droplets belonging to a package.
+
+### Body Parameters
+
+<ul class="method-list-group">
+<%= yield_content :guids_query_param, 'droplet' %>
+
+<%= yield_content :page_query_param %>
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      states
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      Comma-delimited list of droplet states to filter by. Valid values are "PENDING", "STAGING", "STAGED", "FAILED", or "EXPIRED".
+      <br>
+      Example: <code>states=PENDING,STAGING</code>
+    </p>
+  </li>
+
+<%= yield_content :per_page_query_param %>
+
+<%= yield_content :order_by_query_param %>
+</ul>
