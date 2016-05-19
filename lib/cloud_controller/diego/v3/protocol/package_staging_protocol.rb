@@ -1,4 +1,4 @@
-require 'cloud_controller/diego/buildpack/v3/buildpack_entry_generator'
+require 'cloud_controller/diego/v3/buildpack/buildpack_entry_generator'
 require 'cloud_controller/diego/normal_env_hash_to_diego_env_array_philosopher'
 require 'cloud_controller/diego/staging_request'
 require 'cloud_controller/diego/buildpack/lifecycle_data'

@@ -3,10 +3,10 @@ require 'cloud_controller/diego/stager'
 require 'cloud_controller/diego/protocol'
 require 'cloud_controller/diego/buildpack/staging_completion_handler'
 require 'cloud_controller/diego/buildpack/lifecycle_protocol'
-require 'cloud_controller/diego/buildpack/v3/lifecycle_protocol'
-require 'cloud_controller/diego/buildpack/v3/staging_completion_handler'
-require 'cloud_controller/diego/docker/v3/lifecycle_protocol'
-require 'cloud_controller/diego/docker/v3/staging_completion_handler'
+require 'cloud_controller/diego/v3/buildpack/lifecycle_protocol'
+require 'cloud_controller/diego/v3/buildpack/staging_completion_handler'
+require 'cloud_controller/diego/v3/docker/lifecycle_protocol'
+require 'cloud_controller/diego/v3/docker/staging_completion_handler'
 require 'cloud_controller/diego/docker/lifecycle_protocol'
 require 'cloud_controller/diego/docker/staging_completion_handler'
 require 'cloud_controller/diego/egress_rules'
@@ -74,9 +74,9 @@ module VCAP::CloudController
 
     def diego_package_completion_handler(lifecycle_type)
       if lifecycle_type == Lifecycles::BUILDPACK
-        Diego::Buildpack::V3::StagingCompletionHandler.new
+        Diego::V3::Buildpack::StagingCompletionHandler.new
       elsif lifecycle_type == Lifecycles::DOCKER
-        Diego::Docker::V3::StagingCompletionHandler.new
+        Diego::V3::Docker::StagingCompletionHandler.new
       end
     end
   end

@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'cloud_controller/diego/buildpack/v3/staging_completion_handler'
+require 'cloud_controller/diego/v3/buildpack/staging_completion_handler'
 
 module VCAP::CloudController
   module Diego
-    module Buildpack
-      module V3
+    module V3
+      module Buildpack
         describe StagingCompletionHandler do
           let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
           let(:buildpack) { VCAP::CloudController::Buildpack.make(name: 'INTERCAL') }

@@ -1,11 +1,11 @@
 require 'spec_helper'
 require 'cloud_controller/diego/staging_guid'
-require 'cloud_controller/diego/docker/v3/staging_completion_handler'
+require 'cloud_controller/diego/v3/docker/staging_completion_handler'
 
 module VCAP::CloudController
   module Diego
-    module Docker
-      module V3
+    module V3
+      module Docker
         describe StagingCompletionHandler do
           let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
           let(:droplet) { DropletModel.make }

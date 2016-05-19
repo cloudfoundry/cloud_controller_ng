@@ -1,12 +1,12 @@
 require 'spec_helper'
-require 'cloud_controller/diego/docker/v3/lifecycle_protocol'
+require 'cloud_controller/diego/v3/docker/lifecycle_protocol'
 require_relative '../../lifecycle_protocol_shared'
 
 module VCAP
   module CloudController
     module Diego
-      module Docker
-        module V3
+      module V3
+        module Docker
           describe LifecycleProtocol do
             subject(:lifecycle_protocol) { LifecycleProtocol.new }
 

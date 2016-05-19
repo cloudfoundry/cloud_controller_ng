@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'cloud_controller/diego/v3/stager'
 require 'cloud_controller/diego/v3/messenger'
-require 'cloud_controller/diego/buildpack/v3/staging_completion_handler'
+require 'cloud_controller/diego/v3/buildpack/staging_completion_handler'
 
 module VCAP::CloudController
   module Diego
@@ -13,7 +13,7 @@ module VCAP::CloudController
         let(:config) { TestConfig.config }
         let(:lifecycle_type) { 'blah' }
         let(:completion_handler) do
-          instance_double(Diego::Buildpack::V3::StagingCompletionHandler)
+          instance_double(Diego::V3::Buildpack::StagingCompletionHandler)
         end
 
         subject(:stager) do

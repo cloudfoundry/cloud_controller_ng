@@ -1,13 +1,13 @@
 require 'spec_helper'
 require 'cloud_controller/blobstore/url_generator'
-require 'cloud_controller/diego/buildpack/v3/lifecycle_protocol'
+require 'cloud_controller/diego/v3/buildpack/lifecycle_protocol'
 require_relative '../../lifecycle_protocol_shared'
 
 module VCAP
   module CloudController
     module Diego
-      module Buildpack
-        module V3
+      module V3
+        module Buildpack
           describe LifecycleProtocol do
             let(:app) { AppModel.make }
             let(:package) { PackageModel.make(app_guid: app.guid) }

@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'cloud_controller/diego/buildpack/v3/buildpack_entry_generator'
+require 'cloud_controller/diego/v3/buildpack/buildpack_entry_generator'
 
 module VCAP::CloudController
   module Diego
-    module Buildpack
-      module V3
+    module V3
+      module Buildpack
         describe BuildpackEntryGenerator do
           subject(:buildpack_entry_generator) { BuildpackEntryGenerator.new(blobstore_url_generator) }
 

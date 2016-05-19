@@ -11,7 +11,7 @@ module VCAP::CloudController::Diego
           let(:type) { VCAP::CloudController::Lifecycles::BUILDPACK }
 
           it 'returns a buildpack lifecycle protocol' do
-            expect(protocol).to be_a(VCAP::CloudController::Diego::Buildpack::V3::LifecycleProtocol)
+            expect(protocol).to be_a(VCAP::CloudController::Diego::V3::Buildpack::LifecycleProtocol)
           end
         end
 
@@ -19,7 +19,7 @@ module VCAP::CloudController::Diego
           let(:type) { VCAP::CloudController::Lifecycles::DOCKER }
 
           it 'returns a buildpack lifecycle protocol' do
-            expect(protocol).to be_a(VCAP::CloudController::Diego::Docker::V3::LifecycleProtocol)
+            expect(protocol).to be_a(VCAP::CloudController::Diego::V3::Docker::LifecycleProtocol)
           end
         end
       end

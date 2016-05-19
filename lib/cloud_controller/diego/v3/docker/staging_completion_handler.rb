@@ -3,8 +3,8 @@ require 'cloud_controller/diego/staging_completion_handler_base'
 
 module VCAP::CloudController
   module Diego
-    module Docker
-      module V3
+    module V3
+      module Docker
         class StagingCompletionHandler < VCAP::CloudController::Diego::StagingCompletionHandlerBase
           def initialize
             super(nil, Steno.logger('cc.docker.stager'), 'diego.docker.staging.v3.')
