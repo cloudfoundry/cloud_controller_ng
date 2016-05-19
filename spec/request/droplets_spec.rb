@@ -600,7 +600,7 @@ describe 'Droplets' do
         buildpack_receipt_stack_name: 'stack-2',
         state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
         process_types:                { 'web' => 'started' },
-        memory_limit:                 123,
+        staging_memory_in_mb:         123,
         disk_limit:                   456,
         execution_metadata:           'black-box-secrets',
         error:                        'example-error'
@@ -660,7 +660,7 @@ describe 'Droplets' do
                 'stack'     => 'stack-2'
               }
             },
-            'memory_limit'          => 123,
+            'staging_memory_in_mb'  => 123,
             'disk_limit'            => 456,
             'result'                => {
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
@@ -690,7 +690,7 @@ describe 'Droplets' do
                 'stack'     => 'stack-1'
               }
             },
-            'memory_limit'          => 123,
+            'staging_memory_in_mb'  => 123,
             'disk_limit'            => 235,
             'result'                => nil,
             'environment_variables' => { 'yuu' => 'huuu' },
