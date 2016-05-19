@@ -26,7 +26,7 @@ module VCAP::CloudController
         end
 
         describe '#stage' do
-          let(:memory_limit) { 1024 }
+          let(:staging_memory_in_mb) { 1024 }
           let(:disk_limit) { 1024 }
           let(:droplet) { DropletModel.make(environment_variables: environment_variables, package_guid: package.guid) }
           let(:environment_variables) { { 'nightshade_vegetable' => 'potato' } }
@@ -34,7 +34,7 @@ module VCAP::CloudController
             details                       = VCAP::CloudController::Diego::V3::StagingDetails.new
             details.droplet               = droplet
             details.environment_variables = environment_variables
-            details.memory_limit          = memory_limit
+            details.staging_memory_in_mb  = staging_memory_in_mb
             details.disk_limit            = disk_limit
             details
           end

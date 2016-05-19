@@ -63,7 +63,7 @@ module VCAP::CloudController
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
     app { AppModel.make }
-    memory_limit { 123 }
+    staging_memory_in_mb { 123 }
     buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(droplet: object.save) }
   end
 
@@ -71,7 +71,7 @@ module VCAP::CloudController
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
     app { AppModel.make(droplet_guid: guid) }
-    memory_limit { 123 }
+    staging_memory_in_mb { 123 }
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
   end
 
