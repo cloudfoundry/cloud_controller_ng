@@ -1,1 +1,9 @@
 build/
+.bundle/
+doc/
+docs/.bundle/
+docs/node_modules/
+log/
+spec/
+test.err
+test.out
