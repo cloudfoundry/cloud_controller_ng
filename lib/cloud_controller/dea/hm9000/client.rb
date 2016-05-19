@@ -99,14 +99,21 @@ module VCAP::CloudController
 
           response = nil
 
+          internal_address_errored = false
+
           (1..MAX_RETRIES).each do |i|
-            response = post_bulk_app_state(message.to_json, true)
-            if response.ok?
+            begin
+              response = post_bulk_app_state(message.to_json, true)
+              if response.ok?
+                break
+              end
+            rescue SocketError
+              internal_address_errored = true
               break
             end
           end
 
-          response = post_bulk_app_state(message.to_json, false) if !response.ok?
+          response = post_bulk_app_state(message.to_json, false) if internal_address_errored || !response.ok?
 
           raise UseDeprecatedNATSClient if response.status == 404
           return {} unless response.ok?
