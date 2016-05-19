@@ -109,14 +109,22 @@ module VCAP::CloudController
               end
             rescue SocketError
               internal_address_errored = true
+              logger.error('failed to connect to hm9000 via consul')
               break
+            end
+
+            if i == MAX_RETRIES
+              internal_address_errored = true
             end
           end
 
-          response = post_bulk_app_state(message.to_json, false) if internal_address_errored || !response.ok?
-
+          response = post_bulk_app_state(message.to_json, false) if internal_address_errored
           raise UseDeprecatedNATSClient if response.status == 404
-          return {} unless response.ok?
+
+          if !response.ok?
+            logger.info('received bulk_app_state failed', { message: message })
+            return {}
+          end
 
           responses = JSON.parse(response.body)
 
