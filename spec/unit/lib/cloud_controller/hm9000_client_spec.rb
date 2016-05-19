@@ -109,6 +109,26 @@ shared_examples 'post_bulk_app_state request' do |method, args_array|
       expect(actual_return_value).to eq(legacy_return_value)
     end
   end
+
+  context 'when a post to the internal address raises a socket error' do
+    before do
+      stub_request(:post, "#{hm9000_url}/bulk_app_state").to_raise(SocketError)
+      stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 500)
+      subject.send(method, @args)
+    end
+
+    it 'does not retry' do
+      assert_requested(:post, "#{hm9000_url}/bulk_app_state") do |req|
+        req.body = { droplet: app0.guid, version: app0.version }
+      end
+    end
+
+    it 'tries the external address' do
+      assert_requested(:post, "#{hm9000_external_url}/bulk_app_state") do |req|
+        req.body = { droplet: app0.guid, version: app0.version }
+      end
+    end
+  end
 end
 
 module VCAP::CloudController
