@@ -4,7 +4,7 @@ require 'messages/lifecycles/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
   class DropletCreateMessage < BaseMessage
-    ALLOWED_KEYS = [:staging_memory_in_mb, :disk_limit, :environment_variables, :lifecycle].freeze
+    ALLOWED_KEYS = [:memory_limit, :disk_limit, :environment_variables, :lifecycle].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 
@@ -15,7 +15,7 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator
     validates_with LifecycleValidator, if: lifecycle_requested?
 
-    validates :staging_memory_in_mb, numericality: { only_integer: true }, allow_nil: true
+    validates :memory_limit, numericality: { only_integer: true }, allow_nil: true
     validates :disk_limit, numericality: { only_integer: true }, allow_nil: true
     validates :environment_variables, environment_variables: true, allow_nil: true
 

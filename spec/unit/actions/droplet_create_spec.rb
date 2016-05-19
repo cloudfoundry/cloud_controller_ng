@@ -35,11 +35,11 @@ module VCAP::CloudController
             type: 'buildpack',
             data: lifecycle_data
           },
-          staging_memory_in_mb: staging_memory_in_mb,
+          memory_limit: memory_limit,
           disk_limit:   disk_limit
         }.deep_stringify_keys
       end
-      let(:staging_memory_in_mb) { 12340 }
+      let(:memory_limit) { 12340 }
       let(:disk_limit) { 32100 }
       let(:buildpack_git_url) { 'http://example.com/repo.git' }
       let(:stack) { Stack.default }
@@ -58,7 +58,7 @@ module VCAP::CloudController
         allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
         allow(stagers).to receive(:stager_for_package).and_return(stager)
         allow(stager).to receive(:stage)
-        allow(memory_limit_calculator).to receive(:get_limit).with(staging_memory_in_mb, space, org).and_return(calculated_mem_limit)
+        allow(memory_limit_calculator).to receive(:get_limit).with(memory_limit, space, org).and_return(calculated_mem_limit)
         allow(disk_limit_calculator).to receive(:get_limit).with(disk_limit).and_return(calculated_disk_limit)
         allow(environment_builder).to receive(:build).and_return(environment_variables)
       end
@@ -89,7 +89,7 @@ module VCAP::CloudController
           expect(droplet.lifecycle_data.to_hash).to eq(lifecycle_data)
           expect(droplet.package_guid).to eq(package.guid)
           expect(droplet.app_guid).to eq(app.guid)
-          expect(droplet.staging_memory_in_mb).to eq(calculated_mem_limit)
+          expect(droplet.memory_limit).to eq(calculated_mem_limit)
           expect(droplet.disk_limit).to eq(calculated_disk_limit)
           expect(droplet.environment_variables).to eq(environment_variables)
           expect(droplet.lifecycle_data).to_not be_nil
@@ -101,7 +101,7 @@ module VCAP::CloudController
           droplet = action.create_and_stage(package, lifecycle, staging_message)
           expect(stager).to have_received(:stage) do |staging_details|
             expect(staging_details.droplet).to eq(droplet)
-            expect(staging_details.staging_memory_in_mb).to eq(calculated_mem_limit)
+            expect(staging_details.memory_limit).to eq(calculated_mem_limit)
             expect(staging_details.disk_limit).to eq(calculated_disk_limit)
             expect(staging_details.environment_variables).to eq(environment_variables)
             expect(staging_details.lifecycle).to eq(lifecycle)
@@ -133,10 +133,10 @@ module VCAP::CloudController
           end
         end
 
-        describe 'staging_memory_in_mb' do
+        describe 'memory_limit' do
           context 'when memory_limit_calculator raises MemoryLimitCalculator::SpaceQuotaExceeded' do
             before do
-              allow(memory_limit_calculator).to receive(:get_limit).with(staging_memory_in_mb, space, org).and_raise(StagingMemoryCalculator::SpaceQuotaExceeded)
+              allow(memory_limit_calculator).to receive(:get_limit).with(memory_limit, space, org).and_raise(StagingMemoryCalculator::SpaceQuotaExceeded)
             end
 
             it 'raises DropletCreate::SpaceQuotaExceeded' do
@@ -148,7 +148,7 @@ module VCAP::CloudController
 
           context 'when memory_limit_calculator raises MemoryLimitCalculator::OrgQuotaExceeded' do
             before do
-              allow(memory_limit_calculator).to receive(:get_limit).with(staging_memory_in_mb, space, org).and_raise(StagingMemoryCalculator::OrgQuotaExceeded)
+              allow(memory_limit_calculator).to receive(:get_limit).with(memory_limit, space, org).and_raise(StagingMemoryCalculator::OrgQuotaExceeded)
             end
 
             it 'raises DropletCreate::OrgQuotaExceeded' do

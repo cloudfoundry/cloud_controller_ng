@@ -31,7 +31,7 @@ describe 'Droplets' do
     let(:create_request) do
       {
         environment_variables: { 'CUSTOMENV' => 'env value' },
-        staging_memory_in_mb:  1024,
+        memory_limit:          1024,
         disk_limit:            4096,
         lifecycle:             {
           type: 'buildpack',
@@ -87,7 +87,7 @@ describe 'Droplets' do
             'users'               => nil
           }
         },
-        'staging_memory_in_mb'  => 1024,
+        'memory_limit'          => 1024,
         'disk_limit'            => 4096,
         'result'                => nil,
         'created_at'            => iso8601,
@@ -132,7 +132,7 @@ describe 'Droplets' do
         execution_metadata: 'some-data',
         droplet_hash: 'shalalala',
         process_types: { 'web' => 'start-command' },
-        staging_memory_in_mb: 100,
+        memory_limit: 100,
         disk_limit: 200,
       )
     end
@@ -159,7 +159,7 @@ describe 'Droplets' do
             'stack'     => 'stack-name'
           }
         },
-        'staging_memory_in_mb'  => 100,
+        'memory_limit'          => 100,
         'disk_limit'            => 200,
         'result'                => {
           'hash'                   => { 'type' => 'sha1', 'value' => 'shalalala' },
@@ -213,7 +213,7 @@ describe 'Droplets' do
         buildpack_receipt_stack_name: 'stack-2',
         state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
         process_types:                { 'web' => 'started' },
-        staging_memory_in_mb:         123,
+        memory_limit:                 123,
         disk_limit:                   456,
         execution_metadata:           'black-box-secrets',
         error:                        'example-error'
@@ -254,7 +254,7 @@ describe 'Droplets' do
                 'stack'     => 'stack-2'
               }
             },
-            'staging_memory_in_mb'  => 123,
+            'memory_limit'          => 123,
             'disk_limit'            => 456,
             'result'                => {
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
@@ -284,7 +284,7 @@ describe 'Droplets' do
                 'stack'     => 'stack-1'
               }
             },
-            'staging_memory_in_mb'  => 123,
+            'memory_limit'          => 123,
             'disk_limit'            => 235,
             'result'                => nil,
             'environment_variables' => { 'yuu' => 'huuu' },
@@ -458,7 +458,7 @@ describe 'Droplets' do
         buildpack_receipt_stack_name: 'stack-2',
         state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
         process_types:                { 'web' => 'started' },
-        staging_memory_in_mb:         123,
+        memory_limit:                 123,
         disk_limit:                   456,
         execution_metadata:           'black-box-secrets',
         error:                        'example-error'
@@ -518,7 +518,7 @@ describe 'Droplets' do
                 'stack'     => 'stack-2'
               }
             },
-            'staging_memory_in_mb'  => 123,
+            'memory_limit'          => 123,
             'disk_limit'            => 456,
             'result'                => {
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
@@ -548,7 +548,7 @@ describe 'Droplets' do
                 'stack'     => 'stack-1'
               }
             },
-            'staging_memory_in_mb'  => 123,
+            'memory_limit'          => 123,
             'disk_limit'            => 235,
             'result'                => nil,
             'environment_variables' => { 'yuu' => 'huuu' },
@@ -724,7 +724,7 @@ describe 'Droplets' do
         execution_metadata: 'some-data',
         droplet_hash: 'shalalala',
         process_types: { 'web' => 'start-command' },
-        staging_memory_in_mb: 100,
+        memory_limit: 100,
         disk_limit: 200,
       )
     end
@@ -757,7 +757,7 @@ describe 'Droplets' do
             'stack'     => 'stack-name'
           }
         },
-        'staging_memory_in_mb'  => 100,
+        'memory_limit'          => 100,
         'disk_limit'            => 200,
         'result'                => nil,
         'environment_variables' => {},

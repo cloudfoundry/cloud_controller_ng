@@ -24,7 +24,7 @@ module VCAP::CloudController
             staging_request.app_id              = staging_details.droplet.guid
             staging_request.log_guid            = package.app_guid
             staging_request.environment         = env
-            staging_request.memory_mb           = staging_details.staging_memory_in_mb
+            staging_request.memory_mb           = staging_details.memory_limit
             staging_request.disk_mb             = staging_details.disk_limit
             staging_request.file_descriptors    = config[:staging][:minimum_staging_file_descriptor_limit]
             staging_request.egress_rules        = @egress_rules.staging

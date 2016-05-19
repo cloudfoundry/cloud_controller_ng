@@ -277,7 +277,7 @@ describe DropletsController, type: :controller do
     end
 
     context 'when the request body is not valid' do
-      let(:req_body) { { 'staging_memory_in_mb' => 'invalid' } }
+      let(:req_body) { { 'memory_limit' => 'invalid' } }
 
       it 'returns an UnprocessableEntity error' do
         post :create, package_guid: package.guid, body: req_body

@@ -15,7 +15,7 @@ module VCAP::CloudController
           type: droplet.lifecycle_type,
           data: droplet.lifecycle_data.as_json
         },
-        staging_memory_in_mb:  droplet.staging_memory_in_mb,
+        memory_limit:          droplet.memory_limit,
         disk_limit:            droplet.disk_limit,
         result:                result_for_lifecycle,
         environment_variables: droplet.environment_variables || {},

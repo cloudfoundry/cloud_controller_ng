@@ -4,19 +4,19 @@ require 'messages/droplet_create_message'
 module VCAP::CloudController
   describe DropletCreateMessage do
     describe '.create_from_http_request' do
-      let(:body) { { 'staging_memory_in_mb' => 10 } }
+      let(:body) { { 'memory_limit' => 10 } }
 
       it 'returns the correct DropletCreateMessage' do
         message = DropletCreateMessage.create_from_http_request(body)
 
         expect(message).to be_a(DropletCreateMessage)
-        expect(message.staging_memory_in_mb).to eq(10)
+        expect(message.memory_limit).to eq(10)
       end
 
       it 'converts requested keys to symbols' do
         message = DropletCreateMessage.create_from_http_request(body)
 
-        expect(message.requested?(:staging_memory_in_mb)).to be true
+        expect(message.requested?(:memory_limit)).to be_truthy
       end
     end
 
@@ -37,10 +37,10 @@ module VCAP::CloudController
         end
       end
 
-      context 'when staging_memory_in_mb is not an number' do
+      context 'when memory_limit is not an number' do
         let(:params) do
           {
-            staging_memory_in_mb: 'silly string thing',
+            memory_limit: 'silly string thing',
             lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } }
           }
         end
@@ -49,14 +49,14 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors[:staging_memory_in_mb]).to include('is not a number')
+          expect(message.errors[:memory_limit]).to include('is not a number')
         end
       end
 
-      context 'when staging_memory_in_mb is not an integer' do
+      context 'when memory_limit is not an integer' do
         let(:params) do
           {
-            staging_memory_in_mb: 3.5,
+            memory_limit: 3.5,
             lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } }
           }
         end
@@ -65,7 +65,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors[:staging_memory_in_mb]).to include('must be an integer')
+          expect(message.errors[:memory_limit]).to include('must be an integer')
         end
       end
 

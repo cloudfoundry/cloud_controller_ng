@@ -243,7 +243,7 @@ module VCAP::CloudController
 
             it 'records no usage event' do
               expect {
-                droplet.staging_memory_in_mb = 555
+                droplet.memory_limit = 555
                 droplet.save
               }.not_to change { AppUsageEvent.count }
             end
@@ -269,7 +269,7 @@ module VCAP::CloudController
 
             it 'records no usage event' do
               expect {
-                droplet.staging_memory_in_mb = 555
+                droplet.memory_limit = 555
                 droplet.save
               }.not_to change { AppUsageEvent.count }
             end

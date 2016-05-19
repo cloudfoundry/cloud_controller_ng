@@ -167,7 +167,7 @@ module VCAP::CloudController
                 :buildpack,
                 state: DropletModel::STAGED_STATE,
                 guid:         'droplet-1',
-                staging_memory_in_mb: 222,
+                memory_limit: 222,
                 app_guid:     v3_app.guid,
               )
             end
@@ -373,7 +373,7 @@ module VCAP::CloudController
         let(:app_model) { AppModel.make(guid: 'app-1', name: 'frank-app', space: space) }
         let(:package_state) { PackageModel::READY_STATE }
         let(:package) { PackageModel.make(guid: 'package-1', app_guid: app_model.guid, state: package_state) }
-        let!(:droplet) { DropletModel.make(guid: 'droplet-1', staging_memory_in_mb: 222, package: package, app_guid: app_model.guid) }
+        let!(:droplet) { DropletModel.make(guid: 'droplet-1', memory_limit: 222, package: package, app_guid: app_model.guid) }
 
         let(:state) { 'TEST_STATE' }
 
@@ -421,7 +421,7 @@ module VCAP::CloudController
             DropletModel.make(
               :buildpack,
               guid:                             'droplet-1',
-              staging_memory_in_mb:                     222,
+              memory_limit:                     222,
               package_guid:                     package.guid,
               app_guid:                         app_model.guid,
               buildpack_receipt_buildpack:      'a-buildpack',
@@ -442,7 +442,7 @@ module VCAP::CloudController
             DropletModel.make(
               :buildpack,
               guid:         'droplet-1',
-              staging_memory_in_mb: 222,
+              memory_limit: 222,
               package_guid: package.guid,
               app_guid:     app_model.guid,
             )
@@ -466,7 +466,7 @@ module VCAP::CloudController
             DropletModel.make(
               :buildpack,
               guid:                             'droplet-1',
-              staging_memory_in_mb:                     222,
+              memory_limit:                     222,
               package_guid:                     package.guid,
               app_guid:                         app_model.guid,
               buildpack_receipt_buildpack:      'a-buildpack',
@@ -490,17 +490,11 @@ module VCAP::CloudController
         context 'when the droplet exists' do
           let(:old_memory) { 265 }
           let(:old_droplet_state) { DropletModel::STAGED_STATE }
-          let(:existing_droplet) { DropletModel.make(
-            guid: 'existing-droplet',
-            state: old_droplet_state,
-            staging_memory_in_mb: old_memory,
-            package: package,
-            app_guid: app_model.guid)
-          }
+          let(:existing_droplet) { DropletModel.make(guid: 'existing-droplet', state: old_droplet_state, memory_limit: old_memory, package: package, app_guid: app_model.guid) }
 
           context 'when the same attribute values are set' do
             before do
-              existing_droplet.staging_memory_in_mb = old_memory
+              existing_droplet.memory_limit = old_memory
             end
 
             it 'creates event with previous attributes' do
@@ -520,7 +514,7 @@ module VCAP::CloudController
 
             before do
               existing_droplet.package.state = new_package_state
-              existing_droplet.staging_memory_in_mb = new_memory
+              existing_droplet.memory_limit = new_memory
             end
 
             it 'stores new values' do
@@ -543,11 +537,11 @@ module VCAP::CloudController
           end
 
           context 'when the droplet has no package' do
-            let(:existing_droplet) { DropletModel.make(guid: 'existing-droplet', state: old_droplet_state, staging_memory_in_mb: old_memory, app_guid: app_model.guid) }
+            let(:existing_droplet) { DropletModel.make(guid: 'existing-droplet', state: old_droplet_state, memory_limit: old_memory, app_guid: app_model.guid) }
 
             context 'when app attributes change' do
               before do
-                existing_droplet.staging_memory_in_mb = 1024
+                existing_droplet.memory_limit = 1024
               end
 
               it 'returns no previous package state' do
