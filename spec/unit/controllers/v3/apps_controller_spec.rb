@@ -1090,10 +1090,15 @@ describe AppsV3Controller, type: :controller do
     let(:user) { VCAP::CloudController::User.make }
 
     before do
+      allow(controller).to receive(:can_see_secrets?).and_return(false)
       set_current_user(user)
       allow_user_read_access(user, space: space)
       allow_user_write_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+    end
+
+    before do
+      allow(controller).to receive(:can_see_secrets?).and_return(true)
     end
 
     it 'returns 200 and the environment variables' do
@@ -1130,10 +1135,20 @@ describe AppsV3Controller, type: :controller do
         end
       end
 
-      context 'when the user can read but cannot write to the app' do
+      context 'when users have role to see secrets' do
         before do
-          allow_user_read_access(user, space: space)
-          disallow_user_write_access(user, space: space)
+          allow(controller).to receive(:can_see_secrets?).and_return(true)
+        end
+
+        it 'succeeds' do
+          get :show_environment, guid: app_model.guid
+          expect(response.status).to eq(200)
+        end
+      end
+
+      context 'when users does not have role to see secrets' do
+        before do
+          allow(controller).to receive(:can_see_secrets?).and_return(false)
         end
 
         it 'raises ApiError NotAuthorized' do
@@ -1164,10 +1179,9 @@ describe AppsV3Controller, type: :controller do
           expect(response.status).to eq(200)
         end
 
-        context 'when the user can read but cannot write to the app' do
+        context 'when user does not have role to read secret' do
           before do
-            allow_user_read_access(user, space: space)
-            disallow_user_write_access(user, space: space)
+            allow(controller).to receive(:can_see_secrets?).and_return(false)
           end
 
           it 'raises ApiError NotAuthorized as opposed to FeatureDisabled' do
