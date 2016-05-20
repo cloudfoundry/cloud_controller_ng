@@ -1,5 +1,4 @@
-# This used to be https, but that causes problems in the vagrant container used by warden-jenkins.
-source 'http://rubygems.org'
+source 'https://rubygems.org'
 
 gem 'addressable'
 gem 'railties', '~>4.2.5.2'
