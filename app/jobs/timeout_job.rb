@@ -17,7 +17,6 @@ module VCAP::CloudController
         job_config[:timeout_in_seconds]
       end
 
-      # TODO: fix bad tests that grab this
       def job
         @handler
       end

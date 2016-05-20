@@ -38,7 +38,7 @@ module VCAP::CloudController
       end
     end
 
-    # FIXME: Sad. Order matters for this buildpack_update_hash, because setting
+    # Order matters for this buildpack_update_hash, because setting
     # the package_hash on v2 App will reset the package_state to 'PENDING' to
     # mark for restaging, which is necessary for AppObserver behavior.
 

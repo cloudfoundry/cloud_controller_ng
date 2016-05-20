@@ -21,7 +21,6 @@ module VCAP::CloudController
         @handler.error(job, e) if @handler.respond_to?(:error)
       end
 
-      # TODO: fix bad tests that poke at this
       def handler
         @handler
       end
