@@ -74,10 +74,11 @@
     {
       "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
       "name": "hello",
-      "command": "echo \"hello world\"",
+      "command": "[PRIVATE DATA HIDDEN IN LISTS]",
       "state": "SUCCEEDED",
       "memory_in_mb": 512,
       "environment_variables": {
+        "redacted_message": "[PRIVATE DATA HIDDEN IN LISTS]"
       },
       "result": {
         "failure_reason": null
@@ -100,10 +101,12 @@
     {
       "guid": "63b4cd89-fd8b-4bf1-a311-7174fcc907d6",
       "name": "migrate",
-      "command": "rake db:migrate",
+      "command": "[PRIVATE DATA HIDDEN IN LISTS]",
       "state": "FAILED",
       "memory_in_mb": 512,
-      "environment_variables": {},
+      "environment_variables": {
+        "redacted_message": "[PRIVATE DATA HIDDEN IN LISTS]"
+      },
       "result": {
         "failure_reason": "Exited with status 1"
       },
@@ -113,51 +116,6 @@
       "links": {
         "self": {
           "href": "/v3/tasks/63b4cd89-fd8b-4bf1-a311-7174fcc907d6"
-        },
-        "app": {
-          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
-        },
-        "droplet": {
-          "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
-        }
-      }
-    },
-  ]
-}
-<% end %>
-
-<% content_for :filter_tasks do |base_url| %>
-{
-  "pagination": {
-    "total_results": 1,
-    "total_pages": 1,
-    "first": {
-      "href": "<%= base_url %>?names=mytask&states=SUCCEEDED&page=1&per_page=50"
-    },
-    "last": {
-      "href": "<%= base_url %>?names=mytask&states=SUCCEEDED&page=1&per_page=50"
-    },
-    "next": null
-    "previous": null
-  },
-  "resources": [
-    {
-      "guid": "a4b6d1ec-8803-2045-dfab-a66ca66ba77d",
-      "name": "mytask",
-      "command": "echo \"hello world\"",
-      "state": "SUCCEEDED",
-      "memory_in_mb": 512,
-      "environment_variables": {
-      },
-      "result": {
-        "failure_reason": null
-      },
-      "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
-      "created_at": "2016-05-04T17:00:41Z",
-      "updated_at": "2016-05-04T17:00:42Z",
-      "links": {
-        "self": {
-          "href": "/v3/tasks/da4b6d1ec-8803-2045-dfab-a66ca66ba77d"
         },
         "app": {
           "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"

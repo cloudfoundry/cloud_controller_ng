@@ -13,7 +13,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.[your-domain.com]/v3/tasks?names=mytask&states=SUCCEEDED" \
+curl "https://api.[your-domain.com]/v3/tasks" \
   -X GET \
   -H "Authorization: bearer [token]"
 ```
@@ -25,7 +25,7 @@ Example Response
 ```http
 HTTP/1.1 200 OK
 
-<%= yield_content :filter_tasks, '/v3/tasks' %>
+<%= yield_content :paginated_list_of_tasks, '/v3/tasks' %>
 ```
 
 This endpoint retrieves the tasks the user has access to.
