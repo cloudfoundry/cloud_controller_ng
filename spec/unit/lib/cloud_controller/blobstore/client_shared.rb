@@ -33,8 +33,7 @@ shared_examples_for 'a blobstore client' do
 
   it 'copies a file to the blobstore' do
     expect {
-      retry_count = 2
-      subject.cp_to_blobstore(tmpfile.path, 'destination_key', retry_count)
+      subject.cp_to_blobstore(tmpfile.path, 'destination_key')
     }.not_to raise_error
   end
 

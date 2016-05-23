@@ -81,7 +81,7 @@ module CloudController
         end
       end
 
-      def cp_to_blobstore(source_path, destination_key, retries=2)
+      def cp_to_blobstore(source_path, destination_key)
         start     = Time.now.utc
         log_entry = 'cp-skip'
         size      = -1
@@ -92,10 +92,10 @@ module CloudController
           size = file.size
           next unless within_limits?(size)
 
-          with_retries(retries, 'cp', destination_key: destination_key) do
-            response = with_error_handling { @client.put(url(destination_key), file, @headers) }
+          response = with_error_handling { @client.put(url(destination_key), file, @headers) }
 
-            raise BlobstoreError.new("Could not create object, #{response.status}/#{response.content}") if response.status != 201 && response.status != 204
+          if response.status != 201 && response.status != 204
+            raise BlobstoreError.new("Could not create object, #{response.status}/#{response.content}")
           end
 
           log_entry = 'cp-finish'
@@ -180,21 +180,6 @@ module CloudController
 
       def logger
         @logger ||= Steno.logger('cc.blobstore.dav_client')
-      end
-
-      def with_retries(retries, log_prefix, log_data)
-        yield
-      rescue StandardError => e
-        logger.debug("#{log_prefix}-retry",
-          {
-            error:             e,
-            remaining_retries: retries
-          }.merge(log_data)
-        )
-
-        retries -= 1
-        retry unless retries < 0
-        raise e
       end
 
       def with_error_handling

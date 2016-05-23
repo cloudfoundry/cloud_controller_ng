@@ -207,44 +207,6 @@ module CloudController
           expect { client.cp_to_blobstore(tmpfile.path, 'foobar') }.to raise_error BlobstoreError, /Could not create object/
         end
 
-        describe 'retries' do
-          context 'when retries is 0' do
-            let(:retries) { 0 }
-
-            it 'fails if the underlying operation fails' do
-              allow(response).to receive_messages(status: 500, content: nil)
-              allow(httpclient).to receive_messages(put: response)
-
-              expect { client.cp_to_blobstore(tmpfile.path, 'foobar', retries) }.to raise_error BlobstoreError, /Could not create object/
-            end
-          end
-
-          context 'when retries is greater than zero' do
-            let(:retries) { 1 }
-
-            context 'and the underlying blobstore eventually succeeds' do
-              let(:response_success) { double(HTTP::Message) }
-
-              it 'succeeds' do
-                allow(response).to receive_messages(status: 500, content: nil)
-                allow(response_success).to receive_messages(status: 201, content: '')
-                allow(httpclient).to receive(:put).and_return(response, response_success)
-
-                expect { client.cp_to_blobstore(tmpfile.path, 'foobar', retries) }.not_to raise_error
-              end
-            end
-
-            context 'and the underlying blobstore fails more than the requested number of retries' do
-              it 'fails' do
-                allow(response).to receive_messages(status: 500, content: nil)
-                allow(httpclient).to receive_messages(put: response)
-
-                expect { client.cp_to_blobstore(tmpfile.path, 'foobar', retries) }.to raise_error BlobstoreError, /Could not create object/
-              end
-            end
-          end
-        end
-
         describe 'file size limits' do
           let(:min_size) { 20 }
           let(:max_size) { 50 }

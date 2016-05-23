@@ -174,6 +174,7 @@ module CloudController
         end
 
         describe '#download_from_blobstore' do
+          let(:destination) { File.join(local_dir, 'some_directory_to_place_file', 'downloaded_file')}
           context 'when directly from the underlying storage' do
             before do
               upload_tmpfile(client, sha_of_content)
@@ -181,7 +182,6 @@ module CloudController
 
             it 'can download the file' do
               expect(client.exists?(sha_of_content)).to be true
-              destination = File.join(local_dir, 'some_directory_to_place_file', 'downloaded_file')
 
               expect { client.download_from_blobstore(sha_of_content, destination) }.to change {
                 File.exist?(destination)
@@ -301,102 +301,6 @@ module CloudController
               expect(client.exists?(key)).to be false
             end
           end
-
-          context 'handling failures' do
-            context 'and the error is a Excon::Errors::SocketError' do
-              it 'succeeds when the underlying call eventually succeds' do
-                called = 0
-                expect_any_instance_of(Fog::Storage::AWS::Files).to receive(:create).exactly(3).times do |_|
-                  called += 1
-                  raise Excon::Errors::SocketError.new(EOFError.new) if called <= 2
-                end
-
-                path = File.join(local_dir, 'some_file')
-                FileUtils.touch(path)
-                key = 'gonnafailnotgonnafail'
-
-                expect { client.cp_to_blobstore(path, key, 2) }.not_to raise_error
-              end
-
-              it 'fails when the max number of retries is hit' do
-                expect_any_instance_of(Fog::Storage::AWS::Files).to receive(:create).exactly(3).times.and_raise(Excon::Errors::SocketError.new(EOFError.new))
-
-                path = File.join(local_dir, 'some_file')
-                FileUtils.touch(path)
-                key = 'gonnafailnotgonnafail2'
-
-                expect { client.cp_to_blobstore(path, key, 2) }.to raise_error Excon::Errors::SocketError
-              end
-            end
-
-            context 'and the error is a Excon::Errors::BadRequest' do
-              it 'succeeds when the underlying call eventually succeeds' do
-                called = 0
-                expect_any_instance_of(Fog::Storage::AWS::Files).to receive(:create).exactly(3).times do |_|
-                  called += 1
-                  raise Excon::Errors::BadRequest.new('a bad request') if called <= 2
-                end
-
-                path = File.join(local_dir, 'some_file')
-                FileUtils.touch(path)
-                key = 'gonnafailnotgonnafail'
-
-                expect { client.cp_to_blobstore(path, key, 2) }.not_to raise_error
-              end
-
-              it 'fails when the max number of retries is hit' do
-                expect_any_instance_of(Fog::Storage::AWS::Files).to receive(:create).exactly(3).times.and_raise(Excon::Errors::BadRequest.new('a bad request'))
-
-                path = File.join(local_dir, 'some_file')
-                FileUtils.touch(path)
-                key = 'gonnafailnotgonnafail2'
-
-                expect { client.cp_to_blobstore(path, key, 2) }.to raise_error Excon::Errors::BadRequest
-              end
-            end
-
-            context 'when retries is 0' do
-              it 'fails if the underlying operation fails' do
-                expect_any_instance_of(Fog::Storage::AWS::Files).to receive(:create).once.and_raise(SystemCallError.new('o no'))
-
-                path = File.join(local_dir, 'some_file')
-                FileUtils.touch(path)
-                key = 'gonnafail'
-
-                expect { client.cp_to_blobstore(path, key, 0) }.to raise_error SystemCallError, /o no/
-              end
-            end
-
-            context 'when retries is greater than zero' do
-              context 'and the underlying blobstore eventually succeeds' do
-                it 'succeeds' do
-                  called = 0
-                  expect_any_instance_of(Fog::Storage::AWS::Files).to receive(:create).exactly(3).times do |_|
-                    called += 1
-                    raise SystemCallError.new('o no') if called <= 2
-                  end
-
-                  path = File.join(local_dir, 'some_file')
-                  FileUtils.touch(path)
-                  key = 'gonnafailnotgonnafail'
-
-                  expect { client.cp_to_blobstore(path, key, 2) }.not_to raise_error
-                end
-              end
-
-              context 'and the underlying blobstore fails more than the requested number of retries' do
-                it 'fails' do
-                  expect_any_instance_of(Fog::Storage::AWS::Files).to receive(:create).exactly(3).times.and_raise(SystemCallError.new('o no'))
-
-                  path = File.join(local_dir, 'some_file')
-                  FileUtils.touch(path)
-                  key = 'gonnafailnotgonnafail2'
-
-                  expect { client.cp_to_blobstore(path, key, 2) }.to raise_error SystemCallError, /o no/
-                end
-              end
-            end
-          end
         end
 
         describe '#cp_file_between_keys' do
@@ -452,7 +356,7 @@ module CloudController
           context 'when the source key has no file associated with it' do
             it 'does not attempt to copy over to the destination key' do
               expect {
-                client.cp_file_between_keys(src_key, dest_key)
+                client.cp_file_between_keys('bogus', dest_key)
               }.to raise_error(CloudController::Blobstore::FileNotFound)
 
               expect(directory.files).to have(0).items

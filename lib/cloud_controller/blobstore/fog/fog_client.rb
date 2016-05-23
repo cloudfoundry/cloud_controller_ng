@@ -41,7 +41,7 @@ module CloudController
         end
       end
 
-      def cp_to_blobstore(source_path, destination_key, retries=2)
+      def cp_to_blobstore(source_path, destination_key)
         start = Time.now.utc
         logger.info('blobstore.cp-start', destination_key: destination_key, source_path: source_path, bucket: @directory_key)
         size = -1
@@ -51,16 +51,14 @@ module CloudController
           size = file.size
           next unless within_limits?(size)
 
-          with_retries(retries, 'blobstore.cp', destination_key: destination_key) do
-            mime_type = MIME::Types.of(source_path).first.try(:content_type)
+          mime_type = MIME::Types.of(source_path).first.try(:content_type)
 
-            files.create(
-              key: partitioned_key(destination_key),
-              body: file,
-              content_type: mime_type || 'application/zip',
-              public: local?,
-            )
-          end
+          files.create(
+            key: partitioned_key(destination_key),
+            body: file,
+            content_type: mime_type || 'application/zip',
+            public: local?,
+          )
 
           log_entry = 'blobstore.cp-finish'
         end
@@ -76,6 +74,7 @@ module CloudController
       def cp_file_between_keys(source_key, destination_key)
         source_file = file(source_key)
         raise FileNotFound if source_file.nil?
+
         source_file.copy(@directory_key, partitioned_key(destination_key))
 
         dest_file = file(destination_key)
@@ -176,24 +175,6 @@ module CloudController
         options = @connection_config
         options = options.merge(endpoint: '') if local?
         @connection ||= Fog::Storage.new(options)
-      end
-
-      def with_retries(retries, log_prefix, log_data)
-        yield
-
-      # work around https://github.com/fog/fog/issues/3137
-      # and Fog raising an EOFError SocketError intermittently
-      rescue SystemCallError, Excon::Errors::SocketError, Excon::Errors::BadRequest => e
-        logger.debug("#{log_prefix}-retry",
-                     {
-          error:             e.message,
-          remaining_retries: retries
-        }.merge(log_data)
-                    )
-
-        retries -= 1
-        retry unless retries < 0
-        raise e
       end
 
       def logger

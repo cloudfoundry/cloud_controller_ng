@@ -1,4 +1,5 @@
 require 'cloud_controller/blobstore/client'
+require 'cloud_controller/blobstore/retryable_client'
 require 'cloud_controller/blobstore/fog/fog_client'
 require 'cloud_controller/blobstore/fog/error_handling_client'
 require 'cloud_controller/blobstore/webdav/dav_client'
@@ -31,7 +32,14 @@ module CloudController
             options[:maximum_size]
           )
 
-          Client.new(ErrorHandlingClient.new(SafeDeleteClient.new(client, root_dir)))
+          logger = Steno.logger('cc.blobstore')
+
+          # work around https://github.com/fog/fog/issues/3137
+          # and Fog raising an EOFError SocketError intermittently
+          errors = [Excon::Errors::BadRequest, Excon::Errors::SocketError, SystemCallError]
+          retryable_client = RetryableClient.new(client: client, errors: errors, logger: logger)
+
+          Client.new(ErrorHandlingClient.new(SafeDeleteClient.new(retryable_client, root_dir)))
         end
 
         def provide_webdav(options, directory_key, root_dir)
@@ -43,7 +51,11 @@ module CloudController
             options[:maximum_size]
           )
 
-          Client.new(SafeDeleteClient.new(client, root_dir))
+          logger = Steno.logger('cc.blobstore.dav_client')
+          errors = [StandardError]
+          retryable_client = RetryableClient.new(client: client, errors: errors, logger: logger)
+
+          Client.new(SafeDeleteClient.new(retryable_client, root_dir))
         end
       end
     end
