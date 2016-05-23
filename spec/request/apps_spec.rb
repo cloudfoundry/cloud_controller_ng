@@ -192,7 +192,7 @@ describe 'Apps' do
             'created_at'              => iso8601,
             'updated_at'              => iso8601,
             'environment_variables'   => {
-              'redacted_message' => '[PRIVATE DATA HIDDEN]'
+              'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
             },
             'links' => {
               'self'                   => { 'href' => "/v3/apps/#{app_model1.guid}" },
@@ -219,7 +219,7 @@ describe 'Apps' do
             'created_at'              => iso8601,
             'updated_at'              => nil,
             'environment_variables'   => {
-              'redacted_message' => '[PRIVATE DATA HIDDEN]'
+              'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
             },
             'links' => {
               'self'                   => { 'href' => "/v3/apps/#{app_model2.guid}" },

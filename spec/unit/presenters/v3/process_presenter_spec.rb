@@ -20,7 +20,7 @@ module VCAP::CloudController
           created_at:           Time.at(1)
         )
       }
-      let(:result) { ProcessPresenter.new(process, base_url).to_hash }
+      let(:result) { ProcessPresenter.new(process).to_hash }
       let(:base_url) { nil }
 
       before do
@@ -66,14 +66,6 @@ module VCAP::CloudController
 
         it 'uses those ports' do
           expect(result[:ports]).to match_array([5678])
-        end
-      end
-
-      context 'when base_url is set' do
-        let(:base_url) { '/v3/monkeys' }
-
-        it 'uses the base_url for stats' do
-          expect(result[:links][:stats][:href]).to eq('/v3/monkeys/stats')
         end
       end
     end

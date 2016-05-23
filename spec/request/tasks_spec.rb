@@ -63,10 +63,10 @@ describe 'Tasks' do
             {
               'guid'                  => task1.guid,
               'name'                  => 'task one',
-              'command'               => '[PRIVATE DATA HIDDEN]',
+              'command'               => '[PRIVATE DATA HIDDEN IN LISTS]',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 5,
-              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
+              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
               'result'                => {
                 'failure_reason' => nil
               },
@@ -88,10 +88,10 @@ describe 'Tasks' do
             {
               'guid'                  => task2.guid,
               'name'                  => 'task two',
-              'command'               => '[PRIVATE DATA HIDDEN]',
+              'command'               => '[PRIVATE DATA HIDDEN IN LISTS]',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 100,
-              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
+              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
               'result'                => {
                 'failure_reason' => nil
               },
@@ -302,10 +302,10 @@ describe 'Tasks' do
             {
               'guid'                  => task1.guid,
               'name'                  => 'task one',
-              'command'               => '[PRIVATE DATA HIDDEN]',
+              'command'               => '[PRIVATE DATA HIDDEN IN LISTS]',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 5,
-              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
+              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
               'result'                => {
                 'failure_reason' => nil
               },
@@ -327,10 +327,10 @@ describe 'Tasks' do
             {
               'guid'                  => task2.guid,
               'name'                  => 'task two',
-              'command'               => '[PRIVATE DATA HIDDEN]',
+              'command'               => '[PRIVATE DATA HIDDEN IN LISTS]',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 100,
-              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
+              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
               'result'                => {
                 'failure_reason' => nil
               },

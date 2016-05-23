@@ -4,6 +4,7 @@ require 'presenters/v3/package_presenter'
 require 'presenters/v3/process_presenter'
 require 'presenters/v3/route_mapping_presenter'
 require 'presenters/v3/task_presenter'
+require 'presenters/v3/pagination_presenter'
 
 module VCAP::CloudController
   class PaginatedListPresenter
@@ -32,7 +33,9 @@ module VCAP::CloudController
     private
 
     def presented_resources
-      paginator.records.map { |resource| presenter.new(resource, show_secrets: false).to_hash }
+      paginator.records.map do |resource|
+        presenter.new(resource, show_secrets: false, censored_message: BasePresenter::REDACTED_LIST_MESSAGE).to_hash
+      end
     end
 
     def presenter

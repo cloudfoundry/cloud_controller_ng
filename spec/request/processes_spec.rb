@@ -50,7 +50,7 @@ describe 'Processes' do
           {
             'guid'         => web_process.guid,
             'type'         => 'web',
-            'command'      => '[PRIVATE DATA HIDDEN]',
+            'command'      => '[PRIVATE DATA HIDDEN IN LISTS]',
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
@@ -74,7 +74,7 @@ describe 'Processes' do
           {
             'guid'         => worker_process.guid,
             'type'         => 'worker',
-            'command'      => '[PRIVATE DATA HIDDEN]',
+            'command'      => '[PRIVATE DATA HIDDEN IN LISTS]',
             'instances'    => 1,
             'memory_in_mb' => 100,
             'disk_in_mb'   => 200,
@@ -678,7 +678,7 @@ describe 'Processes' do
           {
             'guid'         => process1.guid,
             'type'         => 'web',
-            'command'      => '[PRIVATE DATA HIDDEN]',
+            'command'      => '[PRIVATE DATA HIDDEN IN LISTS]',
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
@@ -702,7 +702,7 @@ describe 'Processes' do
           {
             'guid'         => process2.guid,
             'type'         => 'worker',
-            'command'      => '[PRIVATE DATA HIDDEN]',
+            'command'      => '[PRIVATE DATA HIDDEN IN LISTS]',
             'instances'    => 1,
             'memory_in_mb' => 100,
             'disk_in_mb'   => 200,
@@ -817,7 +817,7 @@ describe 'Processes' do
           'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-          'stats' => { 'href' => "/v3/apps/#{app_model.guid}/processes/web/stats" },
+          'stats' => { 'href' => "/v3/processes/#{process.guid}/stats" },
         },
       }
 
@@ -978,7 +978,7 @@ describe 'Processes' do
           'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-          'stats' => { 'href' => "/v3/apps/#{app_model.guid}/processes/web/stats" },
+          'stats' => { 'href' => "/v3/processes/#{process.guid}/stats" },
         },
       }
 

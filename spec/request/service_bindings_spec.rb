@@ -318,7 +318,7 @@ describe 'v3 service bindings' do
             'type'       => 'app',
             'data'       => {
               'credentials' => {
-                'redacted_message' => '[PRIVATE DATA HIDDEN]'
+                'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
               },
               'syslog_drain_url' => 'syslog://binding1.example.com',
               'volume_mounts' => [{ 'stuff' => 'thing' }]
@@ -342,7 +342,7 @@ describe 'v3 service bindings' do
             'type'       => 'app',
             'data'       => {
               'credentials' => {
-                'redacted_message' => '[PRIVATE DATA HIDDEN]'
+                'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
               },
               'syslog_drain_url' => 'syslog://binding2.example.com',
               'volume_mounts' => [{ 'stuff2' => 'thing2' }]

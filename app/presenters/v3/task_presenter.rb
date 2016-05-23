@@ -1,24 +1,15 @@
-require 'presenters/v3/mixins/redactor'
+require 'presenters/v3/base_presenter'
 
 module VCAP::CloudController
-  class TaskPresenter
-    include CloudController::Redactor
-
-    attr_reader :task
-
-    def initialize(task, show_secrets: true)
-      @task = task
-      @show_secrets = show_secrets
-    end
-
+  class TaskPresenter < BasePresenter
     def to_hash
       {
         guid:                  task.guid,
         name:                  task.name,
-        command:               redact(task.command, @show_secrets),
+        command:               redact(task.command),
         state:                 task.state,
         memory_in_mb:          task.memory_in_mb,
-        environment_variables: redact_hash(task.environment_variables || {}, @show_secrets),
+        environment_variables: redact_hash(task.environment_variables || {}),
         result:                { failure_reason: task.failure_reason },
         created_at:            task.created_at,
         updated_at:            task.updated_at,
@@ -28,6 +19,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def task
+      @resource
+    end
 
     def build_links
       {

@@ -19,6 +19,12 @@ RSpec.describe 'be_a_response_like matcher' do
         expect({ 'a' => 1 }).to be_a_response_like({ 'a' => /\d+/ })
       }.to raise_expectation_not_met_with_keys(bad_keys: ['a'])
     end
+
+    it 'does not interpret strings as regex' do
+      expect {
+        expect({ 'a' => '[thing]' }).to be_a_response_like({ 'a' => '[th]' })
+      }.to raise_expectation_not_met_with_keys(bad_keys: ['a'])
+    end
   end
 
   it 'fails when values do not match in a top-level key' do

@@ -50,14 +50,6 @@ describe ServiceBindingPresenter do
       specify do
         expect(result.fetch(:credentials)).to eq(service_binding.credentials)
       end
-
-      context 'when show_secrets is false' do
-        let(:result) { ServiceBindingPresenter.new(service_binding, show_secrets: false, include_instance: true).to_hash }
-
-        it 'redacts the environment_variables' do
-          expect(result[:credentials]).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
-        end
-      end
     end
   end
 

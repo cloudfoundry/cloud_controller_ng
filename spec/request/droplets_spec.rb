@@ -275,10 +275,10 @@ describe 'Droplets' do
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
               'buildpack'              => 'http://buildpack.git.url.com',
               'stack'                  => 'stack-2',
-              'execution_metadata'     => '[PRIVATE DATA HIDDEN]',
-              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' }
+              'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
             },
-            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
+            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
@@ -302,7 +302,7 @@ describe 'Droplets' do
             'staging_memory_in_mb'  => 123,
             'disk_limit'            => 235,
             'result'                => nil,
-            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
+            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
@@ -539,10 +539,10 @@ describe 'Droplets' do
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
               'buildpack'              => 'http://buildpack.git.url.com',
               'stack'                  => 'stack-2',
-              'execution_metadata'     => '[PRIVATE DATA HIDDEN]',
-              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' }
+              'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
             },
-            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
+            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
@@ -566,7 +566,7 @@ describe 'Droplets' do
             'staging_memory_in_mb'  => 123,
             'disk_limit'            => 235,
             'result'                => nil,
-            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
+            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
@@ -682,10 +682,10 @@ describe 'Droplets' do
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
               'buildpack'              => 'http://buildpack.git.url.com',
               'stack'                  => 'stack-2',
-              'execution_metadata'     => '[PRIVATE DATA HIDDEN]',
-              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' }
+              'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
             },
-            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
+            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
@@ -709,7 +709,7 @@ describe 'Droplets' do
             'staging_memory_in_mb'  => 123,
             'disk_limit'            => 235,
             'result'                => nil,
-            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
+            'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {

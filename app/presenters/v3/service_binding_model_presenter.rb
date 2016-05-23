@@ -1,12 +1,7 @@
+require 'presenters/v3/base_presenter'
+
 module VCAP::CloudController
-  class ServiceBindingModelPresenter
-    attr_reader :service_binding
-
-    def initialize(service_binding, show_secrets: true)
-      @service_binding = service_binding
-      @show_secrets = show_secrets
-    end
-
+  class ServiceBindingModelPresenter < BasePresenter
     def to_hash
       {
         guid: service_binding.guid,
@@ -20,8 +15,14 @@ module VCAP::CloudController
 
     private
 
+    def service_binding
+      @resource
+    end
+
     def present_service_binding
-      ServiceBindingPresenter.new(service_binding, show_secrets: @show_secrets)
+      binding_hash = ServiceBindingPresenter.new(service_binding).to_hash
+      binding_hash[:credentials] = redact_hash(binding_hash[:credentials])
+      binding_hash
     end
 
     def build_links

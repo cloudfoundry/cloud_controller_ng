@@ -1,16 +1,7 @@
-require 'presenters/v3/mixins/redactor'
+require 'presenters/v3/base_presenter'
 
 module VCAP::CloudController
-  class AppPresenter
-    include CloudController::Redactor
-
-    attr_reader :app
-
-    def initialize(app, show_secrets: true)
-      @app = app
-      @show_secrets = show_secrets
-    end
-
+  class AppPresenter < BasePresenter
     def to_hash
       {
         guid:                    app.guid,
@@ -23,12 +14,16 @@ module VCAP::CloudController
           type: app.lifecycle_type,
           data: app.lifecycle_data.to_hash
         },
-        environment_variables:   redact_hash(app.environment_variables || {}, @show_secrets),
+        environment_variables:   redact_hash(app.environment_variables || {}),
         links:                   build_links
       }
     end
 
     private
+
+    def app
+      @resource
+    end
 
     def build_links
       links = {

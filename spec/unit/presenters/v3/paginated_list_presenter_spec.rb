@@ -24,14 +24,10 @@ module VCAP::CloudController
       end
     end
 
-    class MonkeyPresenter
-      def initialize(monkey, show_secrets: true)
-        @monkey = monkey
-      end
-
+    class MonkeyPresenter < BasePresenter
       def to_hash
         {
-          name: @monkey.name,
+          name: @resource.name,
         }
       end
     end
@@ -59,7 +55,8 @@ module VCAP::CloudController
       it 'sends false for show_secrets' do
         allow(MonkeyPresenter).to receive(:new).and_call_original
         presenter.to_hash
-        expect(MonkeyPresenter).to have_received(:new).with(anything, show_secrets: false).exactly(set.count).times
+        expect(MonkeyPresenter).to have_received(:new).
+          with(anything, show_secrets: false, censored_message: BasePresenter::REDACTED_LIST_MESSAGE).exactly(set.count).times
       end
     end
   end

@@ -1,5 +1,3 @@
-require 'presenters/v3/pagination_presenter'
-
 module VCAP::CloudController
   class AppEnvPresenter
     attr_reader :app
