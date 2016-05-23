@@ -167,6 +167,7 @@ describe PackagesController, type: :controller do
       allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
       allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
       allow_user_read_access(user, space: space)
+      allow_user_secret_access(user, space: space)
     end
 
     it 'returns 302 and the redirect' do
@@ -248,6 +249,19 @@ describe PackagesController, type: :controller do
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
+        end
+      end
+
+      context 'user does not have package secrets permissions' do
+        before do
+          disallow_user_secret_access(user, space: space)
+        end
+
+        it 'returns 403' do
+          get :download, guid: package.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
         end
       end
     end

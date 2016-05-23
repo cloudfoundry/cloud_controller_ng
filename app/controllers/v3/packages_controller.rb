@@ -58,6 +58,7 @@ class PackagesController < ApplicationController
   def download
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
     package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
+    unauthorized! unless can_see_secrets?(package.space)
 
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     unprocessable!('Package has no bits to download.') unless package.state == 'READY'
