@@ -83,32 +83,43 @@ module VCAP::CloudController
           expect(space_quota_definition).to be_valid
         end
 
-        it "should not exceed org's total_reserved_route_ports" do
-          org_quota_definition = space_quota_definition.organization.quota_definition
-          org_quota_definition.total_reserved_route_ports = 10
-          org_quota_definition.save
+        context 'with total_reserved_route_ports set on the org' do
+          before do
+            org_quota_definition = space_quota_definition.organization.quota_definition
+            org_quota_definition.total_reserved_route_ports = 10
+            org_quota_definition.save
+          end
 
-          space_quota_definition.total_reserved_route_ports = 11
-          expect(space_quota_definition).not_to be_valid
-          expect(space_quota_definition.errors.on(:total_reserved_route_ports)).to include(err_msg)
+          it "should not exceed space's total_routes" do
+            space_quota_definition.total_reserved_route_ports = 11
+            space_quota_definition.total_routes = 8
+            expect(space_quota_definition).not_to be_valid
+            expect(space_quota_definition.errors.on(:total_reserved_route_ports)).to contain_exactly(err_msg)
+          end
 
-          space_quota_definition.total_routes = -1
-          space_quota_definition.total_reserved_route_ports = 11
-          expect(space_quota_definition).not_to be_valid
-          expect(space_quota_definition.errors.on(:total_reserved_route_ports)).to include(err_msg)
+          it "should not exceed org's total_reserved_route_ports" do
+            space_quota_definition.total_reserved_route_ports = 11
+            expect(space_quota_definition).not_to be_valid
+            expect(space_quota_definition.errors.on(:total_reserved_route_ports)).to contain_exactly(err_msg)
 
-          space_quota_definition.total_reserved_route_ports = 10
-          expect(space_quota_definition).to be_valid
+            space_quota_definition.total_routes = -1
+            space_quota_definition.total_reserved_route_ports = 11
+            expect(space_quota_definition).not_to be_valid
+            expect(space_quota_definition.errors.on(:total_reserved_route_ports)).to contain_exactly(err_msg)
 
-          space_quota_definition.total_reserved_route_ports = 9
-          expect(space_quota_definition).to be_valid
+            space_quota_definition.total_reserved_route_ports = 10
+            expect(space_quota_definition).to be_valid
 
-          org_quota_definition = space_quota_definition.organization.quota_definition
-          org_quota_definition.total_reserved_route_ports = -1
-          org_quota_definition.save
+            space_quota_definition.total_reserved_route_ports = 9
+            expect(space_quota_definition).to be_valid
 
-          space_quota_definition.total_reserved_route_ports = 1_000
-          expect(space_quota_definition).to be_valid
+            org_quota_definition = space_quota_definition.organization.quota_definition
+            org_quota_definition.total_reserved_route_ports = -1
+            org_quota_definition.save
+
+            space_quota_definition.total_reserved_route_ports = 1_000
+            expect(space_quota_definition).to be_valid
+          end
         end
 
         it 'should not exceed total routes for the same space' do

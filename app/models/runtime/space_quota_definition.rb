@@ -54,9 +54,11 @@ module VCAP::CloudController
 
     def validate_total_reserved_ports
       return unless total_reserved_route_ports
-      errors.add(:total_reserved_route_ports, RESERVED_PORT_ERROR) if reserved_ports_outside_of_valid_range?
-      errors.add(:total_reserved_route_ports, RESERVED_PORT_ERROR) if total_reserved_route_ports_greater_than_orgs_ports?
-      errors.add(:total_reserved_route_ports, RESERVED_PORT_ERROR) if total_reserved_route_ports_greater_than_total_routes?
+      if reserved_ports_outside_of_valid_range? ||
+          total_reserved_route_ports_greater_than_orgs_ports? ||
+          total_reserved_route_ports_greater_than_total_routes?
+        errors.add(:total_reserved_route_ports, RESERVED_PORT_ERROR)
+      end
     end
 
     def reserved_ports_outside_of_valid_range?
