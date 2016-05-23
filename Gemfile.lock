@@ -44,7 +44,7 @@ GIT
       rspec (>= 3.0.0)
 
 GEM
-  remote: http://rubygems.org/
+  remote: https://rubygems.org/
   specs:
     CFPropertyList (2.3.2)
     actionpack (4.2.5.2)
@@ -461,4 +461,4 @@ DEPENDENCIES
   yajl-ruby
 
 BUNDLED WITH
-   1.12.1
+   1.12.4
