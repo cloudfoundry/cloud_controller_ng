@@ -129,12 +129,9 @@ module VCAP::CloudController::BrokerApiHelper
   def stub_async_last_operation(state: 'succeeded')
     fetch_body = {
       state: state
-
     }
 
-    url = "http://#{stubbed_broker_username}:#{stubbed_broker_password}@"\
-    "#{stubbed_broker_host}/v2/service_instances/#{@service_instance_guid}/"\
-    'last_operation?plan_id=plan1-guid-here&service_id=service-guid-here'
+    url = %r{http://#{stubbed_broker_username}:#{stubbed_broker_password}@#{stubbed_broker_host}/v2/service_instances/#{@service_instance_guid}/last_operation}
 
     stub_request(:get,
       url).
