@@ -137,6 +137,7 @@ default_quota_definition: default
 resource_pool:
   blobstore_type: webdav
   webdav_config:
+    blobstore_timeout: 5
     public_endpoint: http://blobstore.bosh-lite.com
     private_endpoint: https://blobstore.service.cf.internal
     username: blobstore-username
@@ -153,6 +154,7 @@ resource_pool:
 packages:
   blobstore_type: webdav
   webdav_config:
+    blobstore_timeout: 5
     public_endpoint: http://blobstore.bosh-lite.com
     private_endpoint: https://blobstore.service.cf.internal
     username: blobstore-username
@@ -169,6 +171,7 @@ packages:
 droplets:
   blobstore_type: webdav
   webdav_config:
+    blobstore_timeout: 5
     public_endpoint: http://blobstore.bosh-lite.com
     private_endpoint: https://blobstore.service.cf.internal
     username: blobstore-username
@@ -184,6 +187,7 @@ droplets:
 buildpacks:
   blobstore_type: webdav
   webdav_config:
+    blobstore_timeout: 5
     public_endpoint: http://blobstore.bosh-lite.com
     private_endpoint: https://blobstore.service.cf.internal
     username: blobstore-username

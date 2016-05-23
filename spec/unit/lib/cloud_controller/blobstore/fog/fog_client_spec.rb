@@ -174,7 +174,7 @@ module CloudController
         end
 
         describe '#download_from_blobstore' do
-          let(:destination) { File.join(local_dir, 'some_directory_to_place_file', 'downloaded_file')}
+          let(:destination) { File.join(local_dir, 'some_directory_to_place_file', 'downloaded_file') }
           context 'when directly from the underlying storage' do
             before do
               upload_tmpfile(client, sha_of_content)

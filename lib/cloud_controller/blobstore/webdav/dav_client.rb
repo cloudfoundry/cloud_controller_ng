@@ -37,7 +37,7 @@ module CloudController
       def self.build(options, directory_key, root_dir=nil, min_size=nil, max_size=nil)
         new(
           directory_key: directory_key,
-          httpclient:    HTTPClientProvider.provide(ca_cert_path: options[:ca_cert_path]),
+          httpclient:    HTTPClientProvider.provide(ca_cert_path: options[:ca_cert_path], connect_timeout: options[:blobstore_timeout]),
           signer:        NginxSecureLinkSigner.build(options: options, directory_key: directory_key),
           endpoint:      options[:private_endpoint],
           user:          options[:username],

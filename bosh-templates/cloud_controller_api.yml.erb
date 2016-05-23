@@ -233,6 +233,7 @@ default_quota_definition: <%= p("cc.default_quota_definition") %>
 resource_pool:
   blobstore_type: <%= p("cc.resource_pool.blobstore_type") %>
   webdav_config:
+    blobstore_timeout: <%= p("cc.resource_pool.webdav_config.blobstore_timeout") %>
     public_endpoint: <%= p("cc.resource_pool.webdav_config.public_endpoint") %>
     private_endpoint: <%= p("cc.resource_pool.webdav_config.private_endpoint") %>
     username: <%= p("cc.resource_pool.webdav_config.username") %>
@@ -254,6 +255,7 @@ resource_pool:
 packages:
   blobstore_type: <%= p("cc.packages.blobstore_type") %>
   webdav_config:
+    blobstore_timeout: <%= p("cc.packages.webdav_config.blobstore_timeout") %>
     public_endpoint: <%= p("cc.packages.webdav_config.public_endpoint") %>
     private_endpoint: <%= p("cc.packages.webdav_config.private_endpoint") %>
     username: <%= p("cc.packages.webdav_config.username") %>
@@ -275,6 +277,7 @@ packages:
 droplets:
   blobstore_type: <%= p("cc.droplets.blobstore_type") %>
   webdav_config:
+    blobstore_timeout: <%= p("cc.droplets.webdav_config.blobstore_timeout") %>
     public_endpoint: <%= p("cc.droplets.webdav_config.public_endpoint") %>
     private_endpoint: <%= p("cc.droplets.webdav_config.private_endpoint") %>
     username: <%= p("cc.droplets.webdav_config.username") %>
@@ -295,6 +298,7 @@ droplets:
 buildpacks:
   blobstore_type: <%= p("cc.buildpacks.blobstore_type") %>
   webdav_config:
+    blobstore_timeout: <%= p("cc.buildpacks.webdav_config.blobstore_timeout") %>
     public_endpoint: <%= p("cc.buildpacks.webdav_config.public_endpoint") %>
     private_endpoint: <%= p("cc.buildpacks.webdav_config.private_endpoint") %>
     username: <%= p("cc.buildpacks.webdav_config.username") %>
