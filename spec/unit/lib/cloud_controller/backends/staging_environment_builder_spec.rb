@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:space) { app.space }
       let(:stack) { 'my-stack' }
       let(:memory_limit) { 12340 }
-      let(:disk_limit) { 32100 }
+      let(:staging_disk_in_mb) { 32100 }
       let(:lifecycle) { instance_double(BuildpackLifecycle, staging_environment_variables: { 'CF_STACK' => stack }) }
       let(:service) { Service.make(label: 'elephantsql-n/a', provider: 'cool-provider') }
       let(:service_plan) { ServicePlan.make(service: service) }
@@ -27,7 +27,7 @@ module VCAP::CloudController
       end
 
       it 'records the environment variables used for staging' do
-        environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit)
+        environment_variables = builder.build(app, space, lifecycle, memory_limit, staging_disk_in_mb)
 
         expect(environment_variables['VCAP_SERVICES'][service.label.to_sym][0].to_hash).to have_key(:credentials)
         expect(environment_variables).to match({
@@ -40,7 +40,7 @@ module VCAP::CloudController
               'VCAP_APPLICATION' => {
                 limits: {
                   mem: memory_limit,
-                  disk: disk_limit,
+                  disk: staging_disk_in_mb,
                   fds: 16384
                 },
                 application_id: app.guid,
@@ -64,7 +64,7 @@ module VCAP::CloudController
           RouteMappingModel.make(app: app, route: route1)
           RouteMappingModel.make(app: app, route: route2)
 
-          environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit)
+          environment_variables = builder.build(app, space, lifecycle, memory_limit, staging_disk_in_mb)
           expect(environment_variables['VCAP_APPLICATION'][:uris]).to match_array([route1.fqdn, route2.fqdn])
           expect(environment_variables['VCAP_APPLICATION'][:application_uris]).to match_array([route1.fqdn, route2.fqdn])
         end
@@ -72,7 +72,7 @@ module VCAP::CloudController
 
       describe 'file descriptor limits' do
         it 'defaults to 16384' do
-          environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit)
+          environment_variables = builder.build(app, space, lifecycle, memory_limit, staging_disk_in_mb)
           expect(environment_variables['VCAP_APPLICATION'][:limits][:fds]).to eq(16384)
         end
 
@@ -82,7 +82,7 @@ module VCAP::CloudController
           end
 
           it 'uses the configured value' do
-            environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit)
+            environment_variables = builder.build(app, space, lifecycle, memory_limit, staging_disk_in_mb)
             expect(environment_variables['VCAP_APPLICATION'][:limits][:fds]).to eq(100)
           end
         end
@@ -91,7 +91,7 @@ module VCAP::CloudController
       it 'merges vars_from_message' do
         vars_from_message = { THEEKEEY: 'stuff', 'ZEEKEY' => 'yukyuk' }
 
-        environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit, vars_from_message)
+        environment_variables = builder.build(app, space, lifecycle, memory_limit, staging_disk_in_mb, vars_from_message)
 
         expect(environment_variables['THEEKEEY']).to eq('stuff')
         expect(environment_variables['ZEEKEY']).to eq('yukyuk')

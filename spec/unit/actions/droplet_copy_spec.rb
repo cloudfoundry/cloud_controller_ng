@@ -34,7 +34,7 @@ module VCAP::CloudController
         expect(copied_droplet.buildpack_receipt_stack_name).to eq source_droplet.buildpack_receipt_stack_name
         expect(copied_droplet.execution_metadata).to eq source_droplet.execution_metadata
         expect(copied_droplet.staging_memory_in_mb).to eq source_droplet.staging_memory_in_mb
-        expect(copied_droplet.disk_limit).to eq source_droplet.disk_limit
+        expect(copied_droplet.staging_disk_in_mb).to eq source_droplet.staging_disk_in_mb
         expect(copied_droplet.docker_receipt_image).to eq source_droplet.docker_receipt_image
 
         expect(target_app.droplets).to include(copied_droplet)

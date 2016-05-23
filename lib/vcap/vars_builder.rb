@@ -2,13 +2,13 @@ module VCAP
   class VarsBuilder
     def initialize(app,
                    memory_limit: nil,
-                   disk_limit: nil,
+                   staging_disk_in_mb: nil,
                    space: nil,
                    file_descriptors: nil,
                    version: nil
                   )
       @app = app
-      @disk_limit = disk_limit
+      @staging_disk_in_mb = staging_disk_in_mb
       @memory_limit = memory_limit
       @space = space
       @file_descriptors = file_descriptors
@@ -21,7 +21,7 @@ module VCAP
         uris = @app.routes.map(&:fqdn)
       else
         app_name = @app.app_guid.nil? ? @app.name : @app.app.name
-        @disk_limit = @app.disk_quota if @disk_limit.nil?
+        @staging_disk_in_mb = @app.disk_quota if @staging_disk_in_mb.nil?
         @memory_limit = @app.memory if @memory_limit.nil?
         @file_descriptors = @app.file_descriptors if @file_descriptors.nil?
         @version = @app.version
@@ -58,10 +58,10 @@ module VCAP
         })
       end
 
-      unless @disk_limit.nil?
+      unless @staging_disk_in_mb.nil?
         env_hash.deep_merge!({
           limits: {
-            disk: @disk_limit
+            disk: @staging_disk_in_mb
           }
         })
       end

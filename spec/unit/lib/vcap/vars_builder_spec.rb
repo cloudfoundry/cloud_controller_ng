@@ -63,8 +63,8 @@ module VCAP::CloudController
       end
 
       describe 'building has for a v3 AppModel' do
-        describe 'optional memory_limit, disk_limit, file_descriptors and version' do
-          context 'when memory_limit, disk_limit, file_descriptors and version are supplied' do
+        describe 'optional memory_limit, staging_disk_in_mb, file_descriptors and version' do
+          context 'when memory_limit, staging_disk_in_mb, file_descriptors and version are supplied' do
             it 'builds hash with suppplied value' do
               expected_hash = {
                 limits: {
@@ -87,7 +87,7 @@ module VCAP::CloudController
               vars_builder = VCAP::VarsBuilder.new(
                 v3_app_model,
                 memory_limit: 1234,
-                disk_limit: 5555,
+                staging_disk_in_mb: 5555,
                 file_descriptors: 8888,
                 version: 'some-version'
               )

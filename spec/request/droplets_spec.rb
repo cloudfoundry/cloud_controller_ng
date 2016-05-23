@@ -32,7 +32,7 @@ describe 'Droplets' do
       {
         environment_variables: { 'CUSTOMENV' => 'env value' },
         staging_memory_in_mb:  1024,
-        disk_limit:            4096,
+        staging_disk_in_mb:    4096,
         lifecycle:             {
           type: 'buildpack',
           data: {
@@ -88,7 +88,7 @@ describe 'Droplets' do
           }
         },
         'staging_memory_in_mb'  => 1024,
-        'disk_limit'            => 4096,
+        'staging_disk_in_mb'    => 4096,
         'result'                => nil,
         'created_at'            => iso8601,
         'updated_at'            => nil,
@@ -133,7 +133,7 @@ describe 'Droplets' do
         droplet_hash: 'shalalala',
         process_types: { 'web' => 'start-command' },
         staging_memory_in_mb: 100,
-        disk_limit: 200,
+        staging_disk_in_mb: 200,
       )
     end
     let(:app_guid) { droplet_model.app_guid }
@@ -160,7 +160,7 @@ describe 'Droplets' do
           }
         },
         'staging_memory_in_mb'  => 100,
-        'disk_limit'            => 200,
+        'staging_disk_in_mb'    => 200,
         'result'                => {
           'hash'                   => { 'type' => 'sha1', 'value' => 'shalalala' },
           'buildpack'              => 'http://buildpack.git.url.com',
@@ -214,7 +214,7 @@ describe 'Droplets' do
         buildpack_receipt_buildpack_guid: buildpack.guid,
         buildpack_receipt_stack_name:     'stack-1',
         environment_variables:            { 'yuu' => 'huuu' },
-        disk_limit:                       235,
+        staging_disk_in_mb:               235,
         error:                            'example-error'
       )
     end
@@ -229,7 +229,7 @@ describe 'Droplets' do
         state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
         process_types:                { 'web' => 'started' },
         staging_memory_in_mb:         123,
-        disk_limit:                   456,
+        staging_disk_in_mb:           456,
         execution_metadata:           'black-box-secrets',
         error:                        'example-error'
       )
@@ -270,7 +270,7 @@ describe 'Droplets' do
               }
             },
             'staging_memory_in_mb'  => 123,
-            'disk_limit'            => 456,
+            'staging_disk_in_mb'    => 456,
             'result'                => {
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
               'buildpack'              => 'http://buildpack.git.url.com',
@@ -300,7 +300,7 @@ describe 'Droplets' do
               }
             },
             'staging_memory_in_mb'  => 123,
-            'disk_limit'            => 235,
+            'staging_disk_in_mb'    => 235,
             'result'                => nil,
             'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
@@ -458,7 +458,7 @@ describe 'Droplets' do
         buildpack_receipt_buildpack_guid: buildpack.guid,
         buildpack_receipt_stack_name:     'stack-1',
         environment_variables:            { 'yuu' => 'huuu' },
-        disk_limit:                       235,
+        staging_disk_in_mb:               235,
         error:                            'example-error',
         state:                            VCAP::CloudController::DropletModel::PENDING_STATE,
       )
@@ -474,7 +474,7 @@ describe 'Droplets' do
         state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
         process_types:                { 'web' => 'started' },
         staging_memory_in_mb:         123,
-        disk_limit:                   456,
+        staging_disk_in_mb:           456,
         execution_metadata:           'black-box-secrets',
         error:                        'example-error'
       )
@@ -534,7 +534,7 @@ describe 'Droplets' do
               }
             },
             'staging_memory_in_mb'  => 123,
-            'disk_limit'            => 456,
+            'staging_disk_in_mb'    => 456,
             'result'                => {
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
               'buildpack'              => 'http://buildpack.git.url.com',
@@ -564,7 +564,7 @@ describe 'Droplets' do
               }
             },
             'staging_memory_in_mb'  => 123,
-            'disk_limit'            => 235,
+            'staging_disk_in_mb'    => 235,
             'result'                => nil,
             'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
@@ -600,7 +600,7 @@ describe 'Droplets' do
         buildpack_receipt_buildpack_guid: buildpack.guid,
         buildpack_receipt_stack_name:     'stack-1',
         environment_variables:            { 'yuu' => 'huuu' },
-        disk_limit:                       235,
+        staging_disk_in_mb:               235,
         error:                            'example-error',
         state:                            VCAP::CloudController::DropletModel::PENDING_STATE,
       )
@@ -617,7 +617,7 @@ describe 'Droplets' do
         state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
         process_types:                { 'web' => 'started' },
         staging_memory_in_mb:         123,
-        disk_limit:                   456,
+        staging_disk_in_mb:           456,
         execution_metadata:           'black-box-secrets',
         error:                        'example-error'
       )
@@ -677,7 +677,7 @@ describe 'Droplets' do
               }
             },
             'staging_memory_in_mb'  => 123,
-            'disk_limit'            => 456,
+            'staging_disk_in_mb'    => 456,
             'result'                => {
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
               'buildpack'              => 'http://buildpack.git.url.com',
@@ -707,7 +707,7 @@ describe 'Droplets' do
               }
             },
             'staging_memory_in_mb'  => 123,
-            'disk_limit'            => 235,
+            'staging_disk_in_mb'    => 235,
             'result'                => nil,
             'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
@@ -741,7 +741,7 @@ describe 'Droplets' do
         droplet_hash: 'shalalala',
         process_types: { 'web' => 'start-command' },
         staging_memory_in_mb: 100,
-        disk_limit: 200,
+        staging_disk_in_mb: 200,
       )
     end
     let(:app_guid) { droplet_model.app_guid }
@@ -774,7 +774,7 @@ describe 'Droplets' do
           }
         },
         'staging_memory_in_mb'  => 100,
-        'disk_limit'            => 200,
+        'staging_disk_in_mb'    => 200,
         'result'                => nil,
         'environment_variables' => {},
         'created_at'            => iso8601,

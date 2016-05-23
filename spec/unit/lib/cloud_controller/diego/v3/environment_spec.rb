@@ -8,7 +8,7 @@ module VCAP::CloudController::Diego
       let(:app) { VCAP::CloudController::AppModel.make(environment_variables: app_env_vars, name: 'utako') }
       let(:task) { VCAP::CloudController::TaskModel.make(name: 'my-task', command: 'echo foo', memory_in_mb: 1024) }
       let(:space) { app.space }
-      let(:disk_limit) { 512 }
+      let(:staging_disk_in_mb) { 512 }
       let(:service) { VCAP::CloudController::Service.make(label: 'elephantsql-n/a', provider: 'cool-provider') }
       let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-vip-uat', tags: ['excellent']) }
@@ -18,7 +18,7 @@ module VCAP::CloudController::Diego
         {
           limits: {
             mem: task.memory_in_mb,
-            disk: disk_limit,
+            disk: staging_disk_in_mb,
             fds: TestConfig.config[:instance_file_descriptor_limit] || 16384,
           },
           application_id: app.guid,
@@ -37,7 +37,7 @@ module VCAP::CloudController::Diego
       describe '#build' do
         before do
           TestConfig.config[:instance_file_descriptor_limit] = 100
-          TestConfig.config[:default_app_disk_in_mb] = disk_limit
+          TestConfig.config[:default_app_disk_in_mb] = staging_disk_in_mb
         end
 
         it 'returns the correct environment hash for a v3 app' do
@@ -100,7 +100,7 @@ module VCAP::CloudController::Diego
             {
               limits: {
                 mem: task.memory_in_mb,
-                disk: disk_limit,
+                disk: staging_disk_in_mb,
                 fds: TestConfig.config[:instance_file_descriptor_limit] || 16384,
               },
               application_id: app.guid,

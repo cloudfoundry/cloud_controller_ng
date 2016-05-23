@@ -69,10 +69,10 @@ module VCAP::CloudController
         end
       end
 
-      context 'when disk_limit is not an number' do
+      context 'when staging_disk_in_mb is not an number' do
         let(:params) do
           {
-            disk_limit: 'not-a-number',
+            staging_disk_in_mb: 'not-a-number',
             lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } }
           }
         end
@@ -81,14 +81,14 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors[:disk_limit]).to include('is not a number')
+          expect(message.errors[:staging_disk_in_mb]).to include('is not a number')
         end
       end
 
-      context 'when disk_limit is not an integer' do
+      context 'when staging_disk_in_mb is not an integer' do
         let(:params) do
           {
-            disk_limit: 3.5,
+            staging_disk_in_mb: 3.5,
             lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } }
           }
         end
@@ -97,7 +97,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors[:disk_limit]).to include('must be an integer')
+          expect(message.errors[:staging_disk_in_mb]).to include('must be an integer')
         end
       end
 

@@ -756,7 +756,7 @@ describe 'Apps' do
         droplet_hash: 'shalalala',
         process_types: { 'web' => 'start-command' },
         staging_memory_in_mb: 100,
-        disk_limit: 200,
+        staging_disk_in_mb: 200,
       )
     end
     let(:app_guid) { droplet_model.app_guid }
@@ -785,8 +785,8 @@ describe 'Apps' do
           }
         },
         'staging_memory_in_mb' => 100,
-        'disk_limit'            => 200,
-        'result'                => {
+        'staging_disk_in_mb' => 200,
+        'result' => {
           'hash'                   => { 'type' => 'sha1', 'value' => 'shalalala' },
           'buildpack'              => 'http://buildpack.git.url.com',
           'stack'                  => 'stack-name',
@@ -844,8 +844,8 @@ describe 'Apps' do
           'data' => {}
         },
         'staging_memory_in_mb' => 123,
-        'disk_limit'            => nil,
-        'result'                => {
+        'staging_disk_in_mb'   => nil,
+        'result' => {
           'image'                  => nil,
           'execution_metadata'     => nil,
           'process_types'          => { 'web' => 'rackup' }

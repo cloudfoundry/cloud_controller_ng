@@ -49,7 +49,7 @@ HTTP/1.1 201 Created
     }
   },
   "memory_limit": 1024,
-  "disk_limit": 4096,
+  "staging_disk_in_mb": 4096,
   "result": {
     "buildpack": null,
     "stack": "cflinuxfs2",
@@ -129,7 +129,7 @@ This endpoint stages a package. Staging a package creates a droplet.
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      disk_limit
+      staging_disk_in_mb
 
       <span class="method-list-item-type">optional</span>
     </h4>

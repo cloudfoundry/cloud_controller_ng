@@ -2,7 +2,7 @@ require_relative '../../vcap/vars_builder'
 
 module VCAP::CloudController
   class StagingEnvironmentBuilder
-    def build(app, space, lifecycle, memory_limit, disk_limit, vars_from_message=nil)
+    def build(app, space, lifecycle, memory_limit, staging_disk_in_mb, vars_from_message=nil)
       app_env = app.environment_variables || {}
       vars_from_message ||= {}
       staging_var_group = EnvironmentVariableGroup.staging.environment_json
@@ -10,7 +10,7 @@ module VCAP::CloudController
       vars_builder = VCAP::VarsBuilder.new(
         app,
         memory_limit: memory_limit,
-        disk_limit: disk_limit,
+        staging_disk_in_mb: staging_disk_in_mb,
         space: space,
         file_descriptors: Config.config[:instance_file_descriptor_limit] || 16384,
         version: SecureRandom.uuid
