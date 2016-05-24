@@ -350,7 +350,7 @@ describe 'Processes' do
         stats:         { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
       }].to_json
 
-      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(process)
+      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
       stub_request(:get, "http://tps.service.cf.internal:1518/v1/actual_lrps/#{process_guid}/stats").to_return(status: 200, body: tps_response)
 
       get "/v3/apps/#{app_model.guid}/processes/worker/stats", nil, developer_headers
@@ -384,7 +384,7 @@ describe 'Processes' do
         stats:         { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
       }].to_json
 
-      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(process)
+      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
       stub_request(:get, "http://tps.service.cf.internal:1518/v1/actual_lrps/#{process_guid}/stats").to_return(status: 200, body: tps_response)
 
       get "/v3/processes/#{process.guid}/stats", nil, developer_headers
@@ -604,7 +604,7 @@ describe 'Processes' do
     it 'terminates a single instance of a process' do
       process = VCAP::CloudController::ProcessModel.make(:process, space: space, type: 'web', app: app_model)
 
-      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(process)
+      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
       stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/apps/#{process_guid}/index/0").to_return(status: 202, body: '')
 
       delete "/v3/processes/#{process.guid}/instances/0", nil, developer_headers
@@ -861,7 +861,7 @@ describe 'Processes' do
         stats:         { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
       }].to_json
 
-      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(process)
+      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
       stub_request(:get, "http://tps.service.cf.internal:1518/v1/actual_lrps/#{process_guid}/stats").to_return(status: 200, body: tps_response)
 
       get "/v3/apps/#{app_model.guid}/processes/worker/stats", nil, developer_headers
@@ -895,7 +895,7 @@ describe 'Processes' do
         stats:         { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
       }].to_json
 
-      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(process)
+      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
       stub_request(:get, "http://tps.service.cf.internal:1518/v1/actual_lrps/#{process_guid}/stats").to_return(status: 200, body: tps_response)
 
       get "/v3/apps/#{app_model.guid}/processes/worker/stats", nil, developer_headers
@@ -1021,7 +1021,7 @@ describe 'Processes' do
     it 'terminates a single instance of a process belonging to an app' do
       process = VCAP::CloudController::ProcessModel.make(:process, type: 'web', app: app_model, space: space)
 
-      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(process)
+      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
       stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/apps/#{process_guid}/index/0").to_return(status: 202, body: '')
 
       delete "/v3/apps/#{app_model.guid}/processes/web/instances/0", nil, developer_headers

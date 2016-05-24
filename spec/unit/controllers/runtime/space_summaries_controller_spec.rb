@@ -17,7 +17,7 @@ module VCAP::CloudController
       ServiceBinding.make(app: app_obj, service_instance: second_service)
 
       allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
-      allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_apps).and_return(running_instances)
+      allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_processes).and_return(running_instances)
       allow_any_instance_of(SpaceSummariesController).to receive(:instances_reporters).and_return(instances_reporters)
       app_obj.reload
       set_current_user_as_admin
@@ -85,7 +85,7 @@ module VCAP::CloudController
 
       context 'when the instances reporter fails' do
         before do
-          allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_apps).and_raise(
+          allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_processes).and_raise(
             CloudController::Errors::InstancesUnavailable.new(RuntimeError.new('something went wrong.')))
         end
 

@@ -90,14 +90,14 @@ module VCAP::CloudController
         end
       end
 
-      describe '#number_of_starting_and_running_instances_for_app' do
+      describe '#number_of_starting_and_running_instances_for_process' do
         context 'when the app is not started' do
           before do
             app.state = 'STOPPED'
           end
 
           it 'returns 0' do
-            result = subject.number_of_starting_and_running_instances_for_app(app)
+            result = subject.number_of_starting_and_running_instances_for_process(app)
 
             expect(tps_client).not_to have_received(:lrp_instances)
             expect(result).to eq(0)
@@ -120,7 +120,7 @@ module VCAP::CloudController
             }
 
             it 'returns the number of desired indices that have an instance in the running/starting state ' do
-              result = subject.number_of_starting_and_running_instances_for_app(app)
+              result = subject.number_of_starting_and_running_instances_for_process(app)
 
               expect(tps_client).to have_received(:lrp_instances).with(app)
               expect(result).to eq(2)
@@ -138,7 +138,7 @@ module VCAP::CloudController
             }
 
             it 'returns the number of desired indices that have an instance in the running/starting state ' do
-              result = subject.number_of_starting_and_running_instances_for_app(app)
+              result = subject.number_of_starting_and_running_instances_for_process(app)
 
               expect(tps_client).to have_received(:lrp_instances).with(app)
               expect(result).to eq(3)
@@ -156,7 +156,7 @@ module VCAP::CloudController
             }
 
             it 'returns the number of desired indices that have an instance in the running/starting state ' do
-              result = subject.number_of_starting_and_running_instances_for_app(app)
+              result = subject.number_of_starting_and_running_instances_for_process(app)
 
               expect(tps_client).to have_received(:lrp_instances).with(app)
               expect(result).to eq(3)
@@ -174,7 +174,7 @@ module VCAP::CloudController
             }
 
             it 'returns the number of desired indices that have an instance in the running/starting state ' do
-              result = subject.number_of_starting_and_running_instances_for_app(app)
+              result = subject.number_of_starting_and_running_instances_for_process(app)
 
               expect(tps_client).to have_received(:lrp_instances).with(app)
               expect(result).to eq(2)
@@ -187,7 +187,7 @@ module VCAP::CloudController
             end
 
             it 'returns -1 indicating not fresh' do
-              expect(subject.number_of_starting_and_running_instances_for_app(app)).to eq(-1)
+              expect(subject.number_of_starting_and_running_instances_for_process(app)).to eq(-1)
             end
 
             context 'when its an InstancesUnavailable' do
@@ -197,14 +197,14 @@ module VCAP::CloudController
               end
 
               it 'returns -1 indicating not fresh' do
-                expect(subject.number_of_starting_and_running_instances_for_app(app)).to eq(-1)
+                expect(subject.number_of_starting_and_running_instances_for_process(app)).to eq(-1)
               end
             end
           end
         end
       end
 
-      describe '#number_of_starting_and_running_instances_for_apps' do
+      describe '#number_of_starting_and_running_instances_for_processes' do
         let(:app1) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED', state: 'STARTED', instances: 2) }
         let(:app2) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED', state: 'STARTED', instances: 5) }
         let(:instance_map) do
@@ -253,7 +253,7 @@ module VCAP::CloudController
         end
 
         it 'returns a hash of app => instance count' do
-          result = subject.number_of_starting_and_running_instances_for_apps([app1, app2])
+          result = subject.number_of_starting_and_running_instances_for_processes([app1, app2])
           expect(result).to eq({ app1.guid => 2, app2.guid => 3 })
         end
 
@@ -263,7 +263,7 @@ module VCAP::CloudController
           end
 
           it 'returns -1 indicating not fresh' do
-            expect(subject.number_of_starting_and_running_instances_for_apps([app1, app2])).to eq({ app1.guid => -1, app2.guid => -1 })
+            expect(subject.number_of_starting_and_running_instances_for_processes([app1, app2])).to eq({ app1.guid => -1, app2.guid => -1 })
           end
 
           context 'when its an InstancesUnavailable' do
@@ -273,7 +273,7 @@ module VCAP::CloudController
             end
 
             it 'returns -1 indicating not fresh' do
-              expect(subject.number_of_starting_and_running_instances_for_apps([app1, app2])).to eq({ app1.guid => -1, app2.guid => -1 })
+              expect(subject.number_of_starting_and_running_instances_for_processes([app1, app2])).to eq({ app1.guid => -1, app2.guid => -1 })
             end
           end
         end

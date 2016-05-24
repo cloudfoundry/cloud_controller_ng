@@ -2,10 +2,10 @@ module VCAP::CloudController
   module Diego
     class Protocol
       class RoutingInfo
-        attr_reader :app
+        attr_reader :process
 
-        def initialize(app)
-          @app = app
+        def initialize(process)
+          @process = process
         end
 
         def routing_info
@@ -13,7 +13,7 @@ module VCAP::CloudController
 
           http_info = []
           tcp_info = []
-          app.routes.each do |r|
+          process.routes.each do |r|
             route_app_port_map[r.id].each do |app_port|
               if r.domain.router_group_guid.nil?
                 info = { 'hostname' => r.uri }
@@ -37,12 +37,12 @@ module VCAP::CloudController
         private
 
         def route_id_app_ports_map
-          app.route_mappings(true).each_with_object({}) do |route_map, route_app_port_map|
+          process.route_mappings(true).each_with_object({}) do |route_map, route_app_port_map|
             route_app_port_map[route_map.route_id] = [] if route_app_port_map[route_map.route_id].nil?
             if route_map.app_port.present?
               route_app_port_map[route_map.route_id].push(route_map.app_port)
-            elsif app.docker? && app.docker_ports.present?
-              route_app_port_map[route_map.route_id].push(app.docker_ports.first)
+            elsif process.docker? && process.docker_ports.present?
+              route_app_port_map[route_map.route_id].push(process.docker_ports.first)
             else
               route_app_port_map[route_map.route_id].push(VCAP::CloudController::App::DEFAULT_HTTP_PORT)
             end

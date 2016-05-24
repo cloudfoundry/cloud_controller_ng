@@ -50,7 +50,7 @@ module VCAP::CloudController
 
       context 'when the instances reporter reports instances' do
         before do
-          allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_app).and_return(@app.instances)
+          allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_process).and_return(@app.instances)
 
           get "/v2/apps/#{@app.guid}/summary"
         end
@@ -151,7 +151,7 @@ module VCAP::CloudController
         end
 
         before do
-          allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_app).and_raise(
+          allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_process).and_raise(
             CloudController::Errors::InstancesUnavailable.new(SomeInstancesException.new))
 
           get "/v2/apps/#{@app.guid}/summary"

@@ -2713,7 +2713,7 @@ module VCAP::CloudController
         before do
           subject.diego = true
           allow(AppObserver).to receive(:routes_changed).with(subject)
-          process_guid = Diego::ProcessGuid.from_app(subject)
+          process_guid = Diego::ProcessGuid.from_process(subject)
           stub_request(:delete, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}").to_return(status: 202)
         end
 

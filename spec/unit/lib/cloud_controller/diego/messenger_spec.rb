@@ -26,7 +26,7 @@ module VCAP::CloudController
       end
 
       describe '#send_stage_request' do
-        let(:staging_guid) { StagingGuid.from_app(app) }
+        let(:staging_guid) { StagingGuid.from_process(app) }
         let(:message) { { staging: 'message' } }
 
         before do
@@ -43,7 +43,7 @@ module VCAP::CloudController
       end
 
       describe '#send_desire_request' do
-        let(:process_guid) { ProcessGuid.from_app(app) }
+        let(:process_guid) { ProcessGuid.from_process(app) }
         let(:message) { { desire: 'message' } }
 
         before do
@@ -60,7 +60,7 @@ module VCAP::CloudController
       end
 
       describe '#send_stop_staging_request' do
-        let(:staging_guid) { StagingGuid.from_app(app) }
+        let(:staging_guid) { StagingGuid.from_process(app) }
 
         before do
           allow(stager_client).to receive(:stop_staging)
@@ -74,7 +74,7 @@ module VCAP::CloudController
       end
 
       describe '#send_stop_index_request' do
-        let(:process_guid) { ProcessGuid.from_app(app) }
+        let(:process_guid) { ProcessGuid.from_process(app) }
         let(:index) { 3 }
 
         before do
@@ -89,7 +89,7 @@ module VCAP::CloudController
       end
 
       describe '#send_stop_app_request' do
-        let(:process_guid) { ProcessGuid.from_app(app) }
+        let(:process_guid) { ProcessGuid.from_process(app) }
 
         before do
           allow(nsync_client).to receive(:stop_app)

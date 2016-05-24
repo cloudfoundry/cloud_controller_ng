@@ -84,7 +84,7 @@ module VCAP::CloudController
 
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
         let(:external_port) { '7777' }
-        let(:staging_guid) { StagingGuid.from_app(app) }
+        let(:staging_guid) { StagingGuid.from_process(app) }
         let(:user) { 'user' }
         let(:password) { 'password' }
 
@@ -193,7 +193,7 @@ module VCAP::CloudController
             'log_source' => 'APP',
             'memory_mb' => app.memory,
             'num_instances' => app.desired_instances,
-            'process_guid' => ProcessGuid.from_app(app),
+            'process_guid' => ProcessGuid.from_process(app),
             'stack' => app.stack.name,
             'execution_metadata' => app.execution_metadata,
             'routes' => [

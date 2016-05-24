@@ -10,7 +10,7 @@ module VCAP::CloudController
         let(:runner) { instance_double(Diego::Runner, start: nil) }
         let(:runners) { instance_double(Runners, runner_for_app: runner) }
         let(:app) { AppFactory.make(staging_task_id: 'fake-staging-task-id') }
-        let(:staging_guid) { Diego::StagingGuid.from_app(app) }
+        let(:staging_guid) { Diego::StagingGuid.from_process(app) }
         let(:payload) { {} }
 
         subject(:handler) { StagingCompletionHandler.new(runners) }

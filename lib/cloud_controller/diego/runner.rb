@@ -5,13 +5,13 @@ module VCAP::CloudController
 
       attr_writer :messenger
 
-      def initialize(app, default_health_check_timeout)
-        @app = app
+      def initialize(process, default_health_check_timeout)
+        @process = process
         @default_health_check_timeout = default_health_check_timeout
       end
 
       def scale
-        raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @app.started?
+        raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @process.started?
         with_logging('scale') { messenger.send_desire_request(@default_health_check_timeout) }
       end
 
@@ -20,12 +20,12 @@ module VCAP::CloudController
       end
 
       def update_routes
-        raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @app.started?
-        with_logging('update_route') { messenger.send_desire_request(@default_health_check_timeout) unless @app.staging? }
+        raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @process.started?
+        with_logging('update_route') { messenger.send_desire_request(@default_health_check_timeout) unless @process.staging? }
       end
 
       def desire_app_message
-        Diego::Protocol.new(@app).desire_app_message(@default_health_check_timeout)
+        Diego::Protocol.new(@process).desire_app_message(@default_health_check_timeout)
       end
 
       def stop
@@ -45,7 +45,7 @@ module VCAP::CloudController
       end
 
       def messenger
-        @messenger ||= Diego::Messenger.new(@app)
+        @messenger ||= Diego::Messenger.new(@process)
       end
 
       private

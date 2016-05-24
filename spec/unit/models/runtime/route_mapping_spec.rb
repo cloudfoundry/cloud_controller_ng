@@ -308,7 +308,7 @@ module VCAP::CloudController
         let(:app) { AppFactory.make(space: route.space, diego: true, ports: [1111]) }
 
         before do
-          process_guid = Diego::ProcessGuid.from_app(app)
+          process_guid = Diego::ProcessGuid.from_process(app)
           stub_request(:delete, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}").to_return(status: 202)
         end
 

@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       record_ssh_authorized_event(app, index)
 
-      response_body = { 'process_guid' => VCAP::CloudController::Diego::ProcessGuid.from_app(app) }
+      response_body = { 'process_guid' => VCAP::CloudController::Diego::ProcessGuid.from_process(app) }
       [HTTP::OK, MultiJson.dump(response_body)]
     rescue => e
       app = App.find(guid: guid)

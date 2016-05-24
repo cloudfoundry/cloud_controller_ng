@@ -26,7 +26,7 @@ module VCAP::CloudController
         it 'returns a 200 and ProcessGuid' do
           get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}"
           expect(last_response.status).to eq(200)
-          expected_process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(app_model)
+          expected_process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(app_model)
           expect(decoded_response['process_guid']).to eq(expected_process_guid)
         end
 
@@ -154,7 +154,7 @@ module VCAP::CloudController
         it 'returns a 200 and ProcessGuid' do
           get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}"
           expect(last_response.status).to eq(200)
-          expected_process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(app_model)
+          expected_process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(app_model)
           expect(decoded_response['process_guid']).to eq(expected_process_guid)
         end
 

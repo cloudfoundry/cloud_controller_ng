@@ -15,7 +15,7 @@ module VCAP::CloudController
         'guid'              => app.guid,
         'name'              => app.name,
         'routes'            => app.routes.map(&:as_summary_json),
-        'running_instances' => instances_reporters.number_of_starting_and_running_instances_for_app(app),
+        'running_instances' => instances_reporters.number_of_starting_and_running_instances_for_process(app),
         'services'          => app.service_bindings.map { |service_binding| service_binding.service_instance.as_summary_json },
         'available_domains' => (app.space.organization.private_domains + SharedDomain.all).map(&:as_summary_json)
       }.merge(app.to_hash)

@@ -6,8 +6,8 @@ module VCAP::CloudController
         order_rules(staging_security_groups.map(&:rules).flatten)
       end
 
-      def running(app)
-        order_rules(app.space.security_groups.map(&:rules).flatten)
+      def running(process)
+        order_rules(process.space.security_groups.map(&:rules).flatten)
       end
 
       private

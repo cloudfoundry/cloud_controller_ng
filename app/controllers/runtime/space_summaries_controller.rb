@@ -36,7 +36,7 @@ module VCAP::CloudController
     end
 
     def app_summary(space)
-      instances = instances_reporters.number_of_starting_and_running_instances_for_apps(space.apps)
+      instances = instances_reporters.number_of_starting_and_running_instances_for_processes(space.apps)
       space.apps.collect do |app|
         {
           guid:              app.guid,

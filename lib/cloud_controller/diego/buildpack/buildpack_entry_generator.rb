@@ -6,8 +6,8 @@ module VCAP::CloudController
           @blobstore_url_generator = blobstore_url_generator
         end
 
-        def buildpack_entries(app)
-          buildpack = app.buildpack
+        def buildpack_entries(process)
+          buildpack = process.buildpack
 
           case buildpack
           when VCAP::CloudController::CustomBuildpack

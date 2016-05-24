@@ -8,8 +8,8 @@ module VCAP::CloudController
       @health_manager_client = health_manager_client
     end
 
-    def number_of_starting_and_running_instances_for_app(app)
-      reporter_for_app(app).number_of_starting_and_running_instances_for_app(app)
+    def number_of_starting_and_running_instances_for_process(app)
+      reporter_for_app(app).number_of_starting_and_running_instances_for_process(app)
     end
 
     def all_instances_for_app(app)
@@ -24,12 +24,12 @@ module VCAP::CloudController
       reporter_for_app(app).stats_for_app(app)
     end
 
-    def number_of_starting_and_running_instances_for_apps(apps)
+    def number_of_starting_and_running_instances_for_processes(apps)
       diego_apps = apps.select(&:diego?)
       dea_apps = apps - diego_apps
 
-      diego_instances = diego_reporter.number_of_starting_and_running_instances_for_apps(diego_apps)
-      legacy_instances = legacy_reporter.number_of_starting_and_running_instances_for_apps(dea_apps)
+      diego_instances = diego_reporter.number_of_starting_and_running_instances_for_processes(diego_apps)
+      legacy_instances = legacy_reporter.number_of_starting_and_running_instances_for_processes(dea_apps)
       legacy_instances.merge(diego_instances)
     end
 

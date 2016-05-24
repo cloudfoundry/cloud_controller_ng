@@ -158,7 +158,7 @@ module VCAP::CloudController
           context 'when the route has an app', isolation: :truncation do
             before do
               app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
-              process_guid = Diego::ProcessGuid.from_app(app)
+              process_guid = Diego::ProcessGuid.from_process(app)
               stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}").to_return(status: 202)
               app.add_route route
             end
@@ -350,7 +350,7 @@ module VCAP::CloudController
               allow(logger).to receive(:error)
 
               app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
-              @process_guid = Diego::ProcessGuid.from_app(app)
+              @process_guid = Diego::ProcessGuid.from_process(app)
               # required for add_route below
               stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 202)
               app.add_route route
@@ -395,7 +395,7 @@ module VCAP::CloudController
           allow(access_validator).to receive(:validate_access).with(:update, anything).and_return(true)
 
           app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
-          @process_guid = Diego::ProcessGuid.from_app(app)
+          @process_guid = Diego::ProcessGuid.from_process(app)
           # required for add_route below
           stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 202)
           app.add_route route

@@ -11,13 +11,13 @@ module VCAP::CloudController
         VCAP::CloudController::Dea::Client.find_all_instances(app)
       end
 
-      def number_of_starting_and_running_instances_for_app(app)
+      def number_of_starting_and_running_instances_for_process(app)
         return 0 unless app.started?
         return 0 if app.staging_failed?
         health_manager_client.healthy_instances(app)
       end
 
-      def number_of_starting_and_running_instances_for_apps(apps)
+      def number_of_starting_and_running_instances_for_processes(apps)
         apps_without_running_instances = apps.select { |app| !app.started? || app.staging_failed? || app.pending? }
         apps_without_running_instances.inject(
           healthy_instances_bulk(apps - apps_without_running_instances)

@@ -5,7 +5,7 @@ module VCAP::CloudController::Diego
   describe NsyncClient do
     let(:content_type_header) { { 'Content-Type' => 'application/json' } }
     let(:app) { VCAP::CloudController::AppFactory.make }
-    let(:process_guid) { ProcessGuid.from_app(app) }
+    let(:process_guid) { ProcessGuid.from_process(app) }
     let(:desire_message) { MultiJson.dump({ process_guid: process_guid }) }
     let(:config) { TestConfig.config }
 

@@ -45,7 +45,7 @@ module VCAP::CloudController
       let(:staged_app) { make_diego_app }
       let(:app_id) { staged_app.guid }
       let(:task_id) { staged_app.staging_task_id }
-      let(:staging_guid) { Diego::StagingGuid.from_app(staged_app) }
+      let(:staging_guid) { Diego::StagingGuid.from_process(staged_app) }
       let(:url) { "/internal/staging/#{staging_guid}/completed" }
 
       before do

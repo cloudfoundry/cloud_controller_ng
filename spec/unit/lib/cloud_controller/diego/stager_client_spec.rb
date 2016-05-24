@@ -4,7 +4,7 @@ module VCAP::CloudController::Diego
   describe StagerClient do
     let(:content_type_header) { { 'Content-Type' => 'application/json' } }
     let(:app) { VCAP::CloudController::AppFactory.make(staging_task_id: 'staging-task-id') }
-    let(:staging_guid) { StagingGuid.from_app(app) }
+    let(:staging_guid) { StagingGuid.from_process(app) }
     let(:staging_url) { "#{TestConfig.config[:diego_stager_url]}/v1/staging/#{staging_guid}" }
 
     subject(:client) { StagerClient.new(TestConfig.config) }

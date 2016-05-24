@@ -260,7 +260,7 @@ module VCAP::CloudController
         unstaged_app.package_state = 'PENDING'
         unstaged_app.save
 
-        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_app(unstaged_app))
+        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(unstaged_app))
 
         expect(batch).not_to include(unstaged_app)
       end
@@ -268,7 +268,7 @@ module VCAP::CloudController
       it 'does not return apps that are stopped' do
         stopped_app = make_diego_app(state: 'STOPPED')
 
-        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_app(stopped_app))
+        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(stopped_app))
 
         expect(batch).not_to include(stopped_app)
       end
@@ -276,7 +276,7 @@ module VCAP::CloudController
       it 'does not return deleted apps' do
         deleted_app = make_diego_app(state: 'STARTED', deleted_at: DateTime.now.utc)
 
-        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_app(deleted_app))
+        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(deleted_app))
 
         expect(batch).not_to include(deleted_app)
       end
@@ -286,14 +286,14 @@ module VCAP::CloudController
         non_diego_app.diego = false
         non_diego_app.save
 
-        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_app(non_diego_app))
+        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(non_diego_app))
 
         expect(batch).not_to include(non_diego_app)
       end
 
       it 'accepts a process guid or an array of process guids' do
         app = App.where(diego: true).order(:id).first
-        process_guid = Diego::ProcessGuid.from_app(app)
+        process_guid = Diego::ProcessGuid.from_process(app)
 
         expect(runners.diego_apps_from_process_guids(process_guid)).to eq([app])
         expect(runners.diego_apps_from_process_guids([process_guid])).to eq([app])
@@ -301,14 +301,14 @@ module VCAP::CloudController
 
       it 'returns diego apps for each requested process guid' do
         diego_apps = App.where(diego: true).all
-        diego_guids = diego_apps.map { |app| Diego::ProcessGuid.from_app(app) }
+        diego_guids = diego_apps.map { |app| Diego::ProcessGuid.from_process(app) }
 
         expect(runners.diego_apps_from_process_guids(diego_guids)).to match_array(diego_apps)
       end
 
       it 'loads all of the associations eagerly' do
         diego_apps = App.where(diego: true).all
-        diego_guids = diego_apps.map { |app| Diego::ProcessGuid.from_app(app) }
+        diego_guids = diego_apps.map { |app| Diego::ProcessGuid.from_process(app) }
 
         expect {
           runners.diego_apps_from_process_guids(diego_guids).each do |app|
@@ -333,7 +333,7 @@ module VCAP::CloudController
       context 'when the process guid is not found' do
         it 'does not return an app' do
           app = App.where(diego: true).order(:id).first
-          process_guid = Diego::ProcessGuid.from_app(app)
+          process_guid = Diego::ProcessGuid.from_process(app)
 
           expect {
             app.set_new_version

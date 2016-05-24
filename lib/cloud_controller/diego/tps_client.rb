@@ -7,20 +7,20 @@ module VCAP::CloudController
         @url = URI(config[:diego_tps_url]) if config[:diego_tps_url]
       end
 
-      def lrp_instances(app)
-        guid = ProcessGuid.from_app(app)
+      def lrp_instances(process)
+        guid = ProcessGuid.from_process(process)
         fetch_lrp_status(guid)
       end
 
-      def lrp_instances_stats(app)
-        guid = ProcessGuid.from_app(app)
+      def lrp_instances_stats(process)
+        guid = ProcessGuid.from_process(process)
         fetch_lrp_stats(guid)
       end
 
-      def bulk_lrp_instances(apps)
-        return {} unless apps && !apps.empty?
+      def bulk_lrp_instances(processes)
+        return {} unless processes && !processes.empty?
 
-        guids = apps.map { |a| ProcessGuid.from_app(a) }
+        guids = processes.map { |a| ProcessGuid.from_process(a) }
         path = "/v1/bulk_actual_lrp_status?guids=#{guids.join(',')}"
         Hash[fetch_from_tps(path, {}).map { |k, v| [ProcessGuid.app_guid(k), v] }]
       end

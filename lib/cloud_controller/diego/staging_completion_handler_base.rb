@@ -29,19 +29,19 @@ module VCAP::CloudController
           raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', payload)
         end
 
-        app = get_app(staging_guid)
-        return if app.nil?
+        process = get_process(staging_guid)
+        return if process.nil?
 
         error   = payload[:error]
         id      = error[:id] || 'StagingError'
         message = error[:message]
-        app.mark_as_failed_to_stage(id)
-        Loggregator.emit_error(app.guid, "Failed to stage application: #{message}")
+        process.mark_as_failed_to_stage(id)
+        Loggregator.emit_error(process.guid, "Failed to stage application: #{message}")
       end
 
       def handle_success(staging_guid, payload)
-        app = get_app(staging_guid)
-        return if app.nil?
+        process = get_process(staging_guid)
+        return if process.nil?
 
         begin
           if payload[:result]
@@ -51,39 +51,39 @@ module VCAP::CloudController
           self.class.success_parser.validate(payload)
         rescue Membrane::SchemaValidationError => e
           logger.error('diego.staging.success.invalid-message', staging_guid: staging_guid, payload: payload, error: e.to_s)
-          Loggregator.emit_error(app.guid, 'Malformed message from Diego stager')
+          Loggregator.emit_error(process.guid, 'Malformed message from Diego stager')
 
           raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', payload)
         end
 
         begin
-          save_staging_result(app, payload)
-          @runners.runner_for_app(app).start
+          save_staging_result(process, payload)
+          @runners.runner_for_app(process).start
         rescue => e
           logger.error(@logger_prefix + 'saving-staging-result-failed', staging_guid: staging_guid, response: payload, error: e.message)
         end
       end
 
-      def get_app(staging_guid)
+      def get_process(staging_guid)
         app_guid = StagingGuid.app_guid(staging_guid)
 
-        app = App.find(guid: app_guid)
-        if app.nil?
+        process = App.find(guid: app_guid)
+        if process.nil?
           logger.error(@logger_prefix + 'unknown-app', staging_guid: staging_guid)
           return
         end
 
-        return app if staging_is_current(app, staging_guid)
+        return process if staging_is_current(process, staging_guid)
         nil
       end
 
-      def staging_is_current(app, staging_guid)
+      def staging_is_current(process, staging_guid)
         staging_task_id = StagingGuid.staging_task_id(staging_guid)
-        if staging_task_id != app.staging_task_id
+        if staging_task_id != process.staging_task_id
           logger.warn(
             @logger_prefix + 'not-current',
             staging_guid: staging_guid,
-            current: app.staging_task_id)
+            current: process.staging_task_id)
           return false
         end
 

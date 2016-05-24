@@ -46,7 +46,7 @@ module VCAP::CloudController
         where(diego: true).
         order(:id).
         all.
-        select { |app| process_guids.include?(Diego::ProcessGuid.from_app(app)) }
+        select { |app| process_guids.include?(Diego::ProcessGuid.from_process(app)) }
     end
 
     def diego_apps_cache_data(batch_size, last_id)

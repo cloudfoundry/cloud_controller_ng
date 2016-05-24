@@ -1,13 +1,13 @@
 module VCAP
   class VarsBuilder
-    def initialize(app,
+    def initialize(process,
                    memory_limit: nil,
                    staging_disk_in_mb: nil,
                    space: nil,
                    file_descriptors: nil,
                    version: nil
                   )
-      @app = app
+      @process = process
       @staging_disk_in_mb = staging_disk_in_mb
       @memory_limit = memory_limit
       @space = space
@@ -16,67 +16,39 @@ module VCAP
     end
 
     def to_hash
-      if @app.class == VCAP::CloudController::AppModel
-        app_name = @app.name
-        uris = @app.routes.map(&:fqdn)
+      if @process.class == VCAP::CloudController::AppModel
+        app_name = @process.name
+        uris = @process.routes.map(&:fqdn)
       else
-        app_name = @app.app_guid.nil? ? @app.name : @app.app.name
-        @staging_disk_in_mb = @app.disk_quota if @staging_disk_in_mb.nil?
-        @memory_limit = @app.memory if @memory_limit.nil?
-        @file_descriptors = @app.file_descriptors if @file_descriptors.nil?
-        @version = @app.version
-        uris = @app.uris
+        app_name = @process.is_v3? ? @process.app.name : @process.name
+        @staging_disk_in_mb ||= @process.disk_quota
+        @memory_limit ||= @process.memory
+        @file_descriptors ||= @process.file_descriptors
+        @version = @process.version
+        uris = @process.uris
       end
 
-      @space = @app.space if @space.nil?
+      @space = @process.space if @space.nil?
 
       env_hash = {
-        limits: {
-        },
+        limits: {},
         application_name: app_name,
         application_uris: uris,
-        name: @app.name,
+        name: @process.name,
         space_name: @space.name,
         space_id: @space.guid,
         uris: uris,
         users: nil
       }
 
-      unless @file_descriptors.nil?
-        env_hash.deep_merge!({
-          limits: {
-            fds: @file_descriptors
-          }
-        })
-      end
-
-      unless @memory_limit.nil?
-        env_hash.deep_merge!({
-          limits: {
-            mem: @memory_limit
-          }
-        })
-      end
-
-      unless @staging_disk_in_mb.nil?
-        env_hash.deep_merge!({
-          limits: {
-            disk: @staging_disk_in_mb
-          }
-        })
-      end
+      env_hash[:limits][:fds] = @file_descriptors if @file_descriptors
+      env_hash[:limits][:mem] = @memory_limit if @memory_limit
+      env_hash[:limits][:disk] = @staging_disk_in_mb if @staging_disk_in_mb
+      env_hash[:application_id] = @process.guid if @process.guid
 
       unless @version.nil?
-        env_hash.deep_merge!({
-          version: @version,
-          application_version: @version
-        })
-      end
-
-      unless @app.guid.nil?
-        env_hash.deep_merge!({
-          application_id: @app.guid,
-        })
+        env_hash[:version] = @version
+        env_hash[:application_version] = @version
       end
 
       env_hash

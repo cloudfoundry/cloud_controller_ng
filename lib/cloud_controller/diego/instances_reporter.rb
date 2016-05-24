@@ -7,11 +7,11 @@ module VCAP::CloudController
         @tps_client = tps_client
       end
 
-      def all_instances_for_app(app)
+      def all_instances_for_app(process)
         result    = {}
-        instances = tps_client.lrp_instances(app)
+        instances = tps_client.lrp_instances(process)
 
-        for_each_desired_instance(instances, app) do |instance|
+        for_each_desired_instance(instances, process) do |instance|
           info = {
             state: instance[:state],
             uptime: instance[:uptime],
@@ -21,18 +21,18 @@ module VCAP::CloudController
           result[instance[:index]] = info
         end
 
-        fill_unreported_instances_with_down_instances(result, app)
+        fill_unreported_instances_with_down_instances(result, process)
       rescue CloudController::Errors::InstancesUnavailable => e
         raise e
       rescue => e
         raise CloudController::Errors::InstancesUnavailable.new(e)
       end
 
-      def number_of_starting_and_running_instances_for_apps(apps)
+      def number_of_starting_and_running_instances_for_processes(processes)
         result = {}
 
-        instances_map = tps_client.bulk_lrp_instances(apps)
-        apps.each do |application|
+        instances_map = tps_client.bulk_lrp_instances(processes)
+        processes.each do |application|
           running_indices = Set.new
 
           for_each_desired_instance(instances_map[application.guid] || [], application) do |instance|
@@ -45,21 +45,21 @@ module VCAP::CloudController
 
         result
       rescue CloudController::Errors::InstancesUnavailable
-        apps.each { |application| result[application.guid] = -1 }
+        processes.each { |process| result[process.guid] = -1 }
         result
       rescue => e
         logger.error('tps.error', error: e.to_s)
-        apps.each { |application| result[application.guid] = -1 }
+        processes.each { |process| result[process.guid] = -1 }
         result
       end
 
-      def number_of_starting_and_running_instances_for_app(app)
-        return 0 unless app.started?
-        instances = tps_client.lrp_instances(app)
+      def number_of_starting_and_running_instances_for_process(process)
+        return 0 unless process.started?
+        instances = tps_client.lrp_instances(process)
 
         running_indices = Set.new
 
-        for_each_desired_instance(instances, app) do |instance|
+        for_each_desired_instance(instances, process) do |instance|
           next unless instance[:state] == 'RUNNING' || instance[:state] == 'STARTING'
           running_indices.add(instance[:index])
         end
@@ -72,11 +72,11 @@ module VCAP::CloudController
         return -1
       end
 
-      def crashed_instances_for_app(app)
+      def crashed_instances_for_app(process)
         result    = []
-        instances = tps_client.lrp_instances(app)
+        instances = tps_client.lrp_instances(process)
 
-        for_each_desired_instance(instances, app) do |instance|
+        for_each_desired_instance(instances, process) do |instance|
           if instance[:state] == 'CRASHED'
             result << {
                 'instance' => instance[:instance_guid],
@@ -94,24 +94,24 @@ module VCAP::CloudController
         raise CloudController::Errors::InstancesUnavailable.new(e)
       end
 
-      def stats_for_app(app)
+      def stats_for_app(process)
         result    = {}
-        instances = tps_client.lrp_instances_stats(app)
+        instances = tps_client.lrp_instances_stats(process)
 
-        for_each_desired_instance(instances, app) do |instance|
+        for_each_desired_instance(instances, process) do |instance|
           usage = instance[:stats] || {}
           info = {
             state: instance[:state],
             stats: {
-              name: app.name,
-              uris: app.uris,
+              name: process.name,
+              uris: process.uris,
               host: instance[:host],
               port: instance[:port],
               net_info: instance[:net_info],
               uptime: instance[:uptime],
-              mem_quota:  app[:memory] * 1024 * 1024,
-              disk_quota: app[:disk_quota] * 1024 * 1024,
-              fds_quota: app.file_descriptors,
+              mem_quota:  process[:memory] * 1024 * 1024,
+              disk_quota: process[:disk_quota] * 1024 * 1024,
+              fds_quota: process.file_descriptors,
               usage: {
                   time: usage[:time] || Time.now.utc.to_s,
                   cpu:  usage[:cpu] || 0,
@@ -124,7 +124,7 @@ module VCAP::CloudController
           result[instance[:index]] = info
         end
 
-        fill_unreported_instances_with_down_instances(result, app)
+        fill_unreported_instances_with_down_instances(result, process)
       rescue CloudController::Errors::InstancesUnavailable => e
         raise e
       rescue => e
@@ -133,19 +133,19 @@ module VCAP::CloudController
 
       private
 
-      def for_each_desired_instance(instances, app)
+      def for_each_desired_instance(instances, process)
         instances.each do |instance|
-          next unless instance_is_desired?(instance, app)
+          next unless instance_is_desired?(instance, process)
           yield(instance)
         end
       end
 
-      def instance_is_desired?(instance, app)
-        instance[:index] < app.instances
+      def instance_is_desired?(instance, process)
+        instance[:index] < process.instances
       end
 
-      def fill_unreported_instances_with_down_instances(reported_instances, app)
-        app.instances.times do |i|
+      def fill_unreported_instances_with_down_instances(reported_instances, process)
+        process.instances.times do |i|
           unless reported_instances[i]
             reported_instances[i] = {
               state:  'DOWN',

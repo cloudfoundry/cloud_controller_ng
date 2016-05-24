@@ -28,14 +28,14 @@ module VCAP::CloudController
       end
     end
 
-    describe '#number_of_starting_and_running_instances_for_app' do
+    describe '#number_of_starting_and_running_instances_for_process' do
       context 'when the app is not started' do
         before do
           app.state = 'STOPPED'
         end
 
         it 'returns 0' do
-          result = subject.number_of_starting_and_running_instances_for_app(app)
+          result = subject.number_of_starting_and_running_instances_for_process(app)
 
           expect(result).to eq(0)
         end
@@ -48,7 +48,7 @@ module VCAP::CloudController
         end
 
         it 'asks the health manager for the number of healthy_instances and returns that' do
-          result = subject.number_of_starting_and_running_instances_for_app(app)
+          result = subject.number_of_starting_and_running_instances_for_process(app)
 
           expect(health_manager_client).to have_received(:healthy_instances).with(app)
           expect(result).to eq(5)
@@ -60,7 +60,7 @@ module VCAP::CloudController
           end
 
           it 'returns 0' do
-            result = subject.number_of_starting_and_running_instances_for_app(app)
+            result = subject.number_of_starting_and_running_instances_for_process(app)
 
             expect(result).to eq(0)
           end
@@ -68,7 +68,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#number_of_starting_and_running_instances_for_apps' do
+    describe '#number_of_starting_and_running_instances_for_processes' do
       let(:running_apps) do
         Array.new(3) do
           AppFactory.make(state: 'STARTED', package_state: 'STAGED', package_hash: 'abc')
@@ -100,11 +100,11 @@ module VCAP::CloudController
         end
 
         it 'should not ask the health manager about active instances for stopped apps' do
-          subject.number_of_starting_and_running_instances_for_apps(stopped_apps)
+          subject.number_of_starting_and_running_instances_for_processes(stopped_apps)
         end
 
         it 'should return 0 instances for apps that are stopped' do
-          result = subject.number_of_starting_and_running_instances_for_apps(stopped_apps)
+          result = subject.number_of_starting_and_running_instances_for_processes(stopped_apps)
           expect(result.length).to be(3)
           stopped_apps.each { |app| expect(result[app.guid]).to eq(0) }
         end
@@ -119,11 +119,11 @@ module VCAP::CloudController
         end
 
         it 'should not ask the health manager about active instances for failed apps' do
-          subject.number_of_starting_and_running_instances_for_apps(failed_apps)
+          subject.number_of_starting_and_running_instances_for_processes(failed_apps)
         end
 
         it 'should return 0 instances for apps that are failed' do
-          result = subject.number_of_starting_and_running_instances_for_apps(failed_apps)
+          result = subject.number_of_starting_and_running_instances_for_processes(failed_apps)
           expect(result.length).to be(1)
           failed_apps.each { |app| expect(result[app.guid]).to eq(0) }
         end
@@ -138,11 +138,11 @@ module VCAP::CloudController
         end
 
         it 'should not ask the health manager about active instances for pending apps' do
-          subject.number_of_starting_and_running_instances_for_apps(pending_apps)
+          subject.number_of_starting_and_running_instances_for_processes(pending_apps)
         end
 
         it 'should return 0 instances for apps that are pending' do
-          result = subject.number_of_starting_and_running_instances_for_apps(pending_apps)
+          result = subject.number_of_starting_and_running_instances_for_processes(pending_apps)
           expect(result.length).to be(1)
           pending_apps.each { |app| expect(result[app.guid]).to eq(0) }
         end
@@ -160,7 +160,7 @@ module VCAP::CloudController
         it 'should ask the health manager for active instances for running apps' do
           expect(health_manager_client).to receive(:healthy_instances_bulk).with(running_apps)
 
-          result = subject.number_of_starting_and_running_instances_for_apps(running_apps)
+          result = subject.number_of_starting_and_running_instances_for_processes(running_apps)
           expect(result.length).to be(3)
           running_apps.each { |app| expect(result[app.guid]).to eq(3) }
         end
@@ -178,7 +178,7 @@ module VCAP::CloudController
         it 'should return 0 instances for apps that failed to stage' do
           expect(health_manager_client).not_to receive(:healthy_instances_bulk)
 
-          result = subject.number_of_starting_and_running_instances_for_apps(staging_failed_apps)
+          result = subject.number_of_starting_and_running_instances_for_processes(staging_failed_apps)
           expect(result.length).to be(3)
           staging_failed_apps.each { |app| expect(result[app.guid]).to eq(0) }
         end
