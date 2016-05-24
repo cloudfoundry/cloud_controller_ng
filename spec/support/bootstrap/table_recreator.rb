@@ -8,6 +8,10 @@ class TableRecreator
   def recreate_tables
     prepare_database
 
+    db.views.each do |view|
+      db.drop_view(view)
+    end
+
     db.tables.each do |table|
       drop_table_unsafely(table)
     end
