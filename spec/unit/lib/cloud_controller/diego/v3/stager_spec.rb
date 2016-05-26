@@ -11,13 +11,10 @@ module VCAP::CloudController
         let(:protocol) { instance_double(Diego::V3::Protocol::PackageStagingProtocol) }
         let(:package) { PackageModel.make }
         let(:config) { TestConfig.config }
-        let(:lifecycle_type) { 'blah' }
-        let(:completion_handler) do
-          instance_double(Diego::V3::Buildpack::StagingCompletionHandler)
-        end
+        let(:lifecycle_type) { 'buildpack' }
 
         subject(:stager) do
-          Stager.new(package, lifecycle_type, completion_handler, config)
+          Stager.new(package, lifecycle_type, config)
         end
 
         before do
@@ -70,16 +67,35 @@ module VCAP::CloudController
 
         describe '#staging_complete' do
           let(:droplet) { instance_double(DropletModel) }
-          let(:staging_response) { 'some-response' }
+          let(:staging_response) { {} }
+          let(:buildpack_completion_handler) { instance_double(Diego::V3::Buildpack::StagingCompletionHandler) }
+          let(:docker_completion_handler) { instance_double(Diego::V3::Docker::StagingCompletionHandler) }
 
           before do
-            allow(completion_handler).to receive(:staging_complete)
-
-            stager.staging_complete(droplet, staging_response)
+            allow(Diego::V3::Buildpack::StagingCompletionHandler).to receive(:new).and_return(buildpack_completion_handler)
+            allow(Diego::V3::Docker::StagingCompletionHandler).to receive(:new).and_return(docker_completion_handler)
+            allow(buildpack_completion_handler).to receive(:staging_complete)
+            allow(docker_completion_handler).to receive(:staging_complete)
           end
 
-          it 'delegates to the staging completion handler' do
-            expect(completion_handler).to have_received(:staging_complete).with(droplet, staging_response)
+          context 'buildpack' do
+            let(:lifecycle_type) { 'buildpack' }
+
+            it 'delegates to a buildpack staging completion handler' do
+              stager.staging_complete(droplet, staging_response)
+              expect(buildpack_completion_handler).to have_received(:staging_complete).with(droplet, staging_response)
+              expect(docker_completion_handler).not_to have_received(:staging_complete).with(droplet, staging_response)
+            end
+          end
+
+          context 'docker' do
+            let(:lifecycle_type) { 'docker' }
+
+            it 'delegates to a docker staging completion handler' do
+              stager.staging_complete(droplet, staging_response)
+              expect(buildpack_completion_handler).not_to have_received(:staging_complete).with(droplet, staging_response)
+              expect(docker_completion_handler).to have_received(:staging_complete).with(droplet, staging_response)
+            end
           end
         end
       end

@@ -2,10 +2,9 @@ module VCAP::CloudController
   module Diego
     module V3
       class Stager
-        def initialize(package, lifecycle_type, completion_handler, config)
+        def initialize(package, lifecycle_type, config)
           @package            = package
           @lifecycle_type     = lifecycle_type
-          @completion_handler = completion_handler
           @config             = config
         end
 
@@ -19,7 +18,7 @@ module VCAP::CloudController
         end
 
         def staging_complete(droplet, staging_response)
-          @completion_handler.staging_complete(droplet, staging_response)
+          completion_handler.staging_complete(droplet, staging_response)
         end
 
         private
@@ -42,6 +41,16 @@ module VCAP::CloudController
 
         def protocol
           Diego::V3::Protocol::PackageStagingProtocol.new(@lifecycle_type)
+        end
+
+        def completion_handler
+          if @lifecycle_type == Lifecycles::BUILDPACK
+            Diego::V3::Buildpack::StagingCompletionHandler.new
+          elsif @lifecycle_type == Lifecycles::DOCKER
+            Diego::V3::Docker::StagingCompletionHandler.new
+          else
+            raise "Unprocessable lifecycle type for stager: #{@lifecycle_type}"
+          end
         end
       end
     end

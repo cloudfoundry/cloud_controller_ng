@@ -3,9 +3,8 @@ module VCAP::CloudController
     class Stager
       attr_writer :messenger
 
-      def initialize(process, completion_handler, config)
+      def initialize(process, config)
         @process = process
-        @completion_handler = completion_handler
         @config = config
       end
 
@@ -26,7 +25,7 @@ module VCAP::CloudController
       end
 
       def staging_complete(staging_guid, staging_response)
-        @completion_handler.staging_complete(staging_guid, staging_response)
+        completion_handler.staging_complete(staging_guid, staging_response)
       end
 
       def stop_stage
@@ -49,6 +48,14 @@ module VCAP::CloudController
         raise e
       rescue => e
         raise CloudController::Errors::ApiError.new_from_details('StagerError', e)
+      end
+
+      def completion_handler
+        if @process.docker?
+          Diego::Docker::StagingCompletionHandler.new
+        else
+          Diego::Buildpack::StagingCompletionHandler.new
+        end
       end
     end
   end

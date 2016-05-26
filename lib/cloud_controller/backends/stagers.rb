@@ -41,8 +41,7 @@ module VCAP::CloudController
     end
 
     def stager_for_package(package, lifecycle_type)
-      completion_handler = diego_package_completion_handler(lifecycle_type)
-      Diego::V3::Stager.new(package, lifecycle_type, completion_handler, @config)
+      Diego::V3::Stager.new(package, lifecycle_type, @config)
     end
 
     def stager_for_app(app)
@@ -56,28 +55,11 @@ module VCAP::CloudController
     end
 
     def diego_stager(app)
-      completion_handler = diego_completion_handler(app)
-      Diego::Stager.new(app, completion_handler, @config)
+      Diego::Stager.new(app, @config)
     end
 
     def dependency_locator
       CloudController::DependencyLocator.instance
-    end
-
-    def diego_completion_handler(app)
-      if app.docker?
-        Diego::Docker::StagingCompletionHandler.new
-      else
-        Diego::Buildpack::StagingCompletionHandler.new
-      end
-    end
-
-    def diego_package_completion_handler(lifecycle_type)
-      if lifecycle_type == Lifecycles::BUILDPACK
-        Diego::V3::Buildpack::StagingCompletionHandler.new
-      elsif lifecycle_type == Lifecycles::DOCKER
-        Diego::V3::Docker::StagingCompletionHandler.new
-      end
     end
   end
 end
