@@ -107,9 +107,9 @@ module VCAP::CloudController
               if response.ok?
                 break
               end
-            rescue SocketError
+            rescue SocketError => se
               internal_address_errored = true
-              logger.error('failed to connect to hm9000 via consul')
+              logger.error('failed to connect to hm9000 via consul', { error: se })
               break
             end
 
