@@ -72,8 +72,8 @@ module VCAP::CloudController
           let(:docker_completion_handler) { instance_double(Diego::V3::Docker::StagingCompletionHandler) }
 
           before do
-            allow(Diego::V3::Buildpack::StagingCompletionHandler).to receive(:new).and_return(buildpack_completion_handler)
-            allow(Diego::V3::Docker::StagingCompletionHandler).to receive(:new).and_return(docker_completion_handler)
+            allow(Diego::V3::Buildpack::StagingCompletionHandler).to receive(:new).with(droplet).and_return(buildpack_completion_handler)
+            allow(Diego::V3::Docker::StagingCompletionHandler).to receive(:new).with(droplet).and_return(docker_completion_handler)
             allow(buildpack_completion_handler).to receive(:staging_complete)
             allow(docker_completion_handler).to receive(:staging_complete)
           end
@@ -83,8 +83,8 @@ module VCAP::CloudController
 
             it 'delegates to a buildpack staging completion handler' do
               stager.staging_complete(droplet, staging_response)
-              expect(buildpack_completion_handler).to have_received(:staging_complete).with(droplet, staging_response)
-              expect(docker_completion_handler).not_to have_received(:staging_complete).with(droplet, staging_response)
+              expect(buildpack_completion_handler).to have_received(:staging_complete).with(staging_response)
+              expect(docker_completion_handler).not_to have_received(:staging_complete)
             end
           end
 
@@ -93,8 +93,8 @@ module VCAP::CloudController
 
             it 'delegates to a docker staging completion handler' do
               stager.staging_complete(droplet, staging_response)
-              expect(buildpack_completion_handler).not_to have_received(:staging_complete).with(droplet, staging_response)
-              expect(docker_completion_handler).to have_received(:staging_complete).with(droplet, staging_response)
+              expect(buildpack_completion_handler).not_to have_received(:staging_complete)
+              expect(docker_completion_handler).to have_received(:staging_complete).with(staging_response)
             end
           end
         end

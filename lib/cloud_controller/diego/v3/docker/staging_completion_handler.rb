@@ -6,8 +6,10 @@ module VCAP::CloudController
     module V3
       module Docker
         class StagingCompletionHandler < VCAP::CloudController::Diego::V3::StagingCompletionHandler
-          def initialize
-            super(nil, Steno.logger('cc.docker.stager'), 'diego.docker.staging.v3.')
+          def initialize(droplet)
+            @droplet = droplet
+            @logger = Steno.logger('cc.docker.stager')
+            @logger_prefix = 'diego.docker.staging.v3.'
           end
 
           def self.schema
@@ -27,7 +29,7 @@ module VCAP::CloudController
 
           private
 
-          def save_staging_result(droplet, payload)
+          def save_staging_result(payload)
             droplet.class.db.transaction do
               droplet.lock!
               droplet.process_types      = payload[:result][:process_types]

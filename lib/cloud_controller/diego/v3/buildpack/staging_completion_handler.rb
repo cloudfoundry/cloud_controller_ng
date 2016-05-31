@@ -5,10 +5,6 @@ module VCAP::CloudController
     module V3
       module Buildpack
         class StagingCompletionHandler < VCAP::CloudController::Diego::V3::StagingCompletionHandler
-          def initialize
-            super(nil, Steno.logger('cc.stager'), 'diego.staging.v3.')
-          end
-
           def self.schema
             ->(_dsl) {
               {
@@ -27,7 +23,7 @@ module VCAP::CloudController
 
           private
 
-          def save_staging_result(droplet, payload)
+          def save_staging_result(payload)
             lifecycle_data = payload[:result][:lifecycle_metadata]
             buildpack_key = lifecycle_data[:buildpack_key]
             buildpack = droplet.buildpack_lifecycle_data.buildpack if buildpack_key.blank?

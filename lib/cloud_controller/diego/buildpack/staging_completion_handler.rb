@@ -45,6 +45,31 @@ module VCAP::CloudController
             app.save_changes(raise_on_save_failure: true)
           end
         end
+
+        def handle_success(staging_guid, payload)
+          process = get_process(staging_guid)
+          return if process.nil?
+
+          begin
+            if payload[:result]
+              payload[:result][:process_types] ||= {}
+            end
+
+            self.class.success_parser.validate(payload)
+          rescue Membrane::SchemaValidationError => e
+            logger.error('diego.staging.success.invalid-message', staging_guid: staging_guid, payload: payload, error: e.to_s)
+            Loggregator.emit_error(process.guid, 'Malformed message from Diego stager')
+
+            raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', payload)
+          end
+
+          begin
+            save_staging_result(process, payload)
+            @runners.runner_for_app(process).start
+          rescue => e
+            logger.error(@logger_prefix + 'saving-staging-result-failed', staging_guid: staging_guid, response: payload, error: e.message)
+          end
+        end
       end
     end
   end
