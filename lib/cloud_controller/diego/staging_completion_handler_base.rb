@@ -65,7 +65,7 @@ module VCAP::CloudController
       end
 
       def get_process(staging_guid)
-        app_guid = StagingGuid.app_guid(staging_guid)
+        app_guid = StagingGuid.process_guid(staging_guid)
 
         process = App.find(guid: app_guid)
         if process.nil?

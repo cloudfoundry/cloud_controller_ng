@@ -11,7 +11,7 @@ module VCAP::CloudController
         from(process.guid, process.staging_task_id)
       end
 
-      def self.app_guid(staging_guid)
+      def self.process_guid(staging_guid)
         staging_guid[0..35]
       end
 

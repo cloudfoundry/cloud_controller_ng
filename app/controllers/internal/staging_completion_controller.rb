@@ -29,7 +29,7 @@ module VCAP::CloudController
     def completed(staging_guid)
       staging_response = read_body
 
-      app = App.find(guid: Diego::StagingGuid.app_guid(staging_guid))
+      app = App.find(guid: Diego::StagingGuid.process_guid(staging_guid))
       raise CloudController::Errors::ApiError.new_from_details('NotFound') unless app
       raise CloudController::Errors::ApiError.new_from_details('StagingBackendInvalid') unless app.diego?
 

@@ -21,7 +21,7 @@ module VCAP::CloudController::Diego
 
     describe 'app_guid' do
       it 'it returns the app guid from the versioned guid' do
-        expect(StagingGuid.app_guid(StagingGuid.from_process(app))).to eq(app.guid)
+        expect(StagingGuid.process_guid(StagingGuid.from_process(app))).to eq(app.guid)
       end
     end
 
