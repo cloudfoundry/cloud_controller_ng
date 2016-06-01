@@ -31,7 +31,7 @@ DESC
         { protocol: 'icmp', destination: '0.0.0.0/0', type: 0, code: 1 },
         { protocol: 'tcp', destination: '0.0.0.0/0', ports: '2048-3000', log: true },
         { protocol: 'udp', destination: '0.0.0.0/0', ports: '53, 5353' },
-        { protocol: 'all', destination: '0.0.0.0/0' },
+        { protocol: 'all', destination: '0.0.0.0/0', description: 'This rule allows access to all ips and protocols' },
       ])]
     field :space_guids, 'The list of associated spaces.', default: []
   end
