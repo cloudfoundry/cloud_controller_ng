@@ -11,8 +11,12 @@ module CloudController
     end
 
     def self.is_sub_domain?(domain:, test_domains:)
-      return false if test_domains.length == 1 && domain.downcase == test_domains.first.downcase
-      test_domains.any? { |test_domain| intermediate_domains(test_domain.downcase).include?(domain.downcase) }
+      return false if test_domains.length == 1 && domain == test_domains.first
+      test_domains.any? do |test_domain|
+        if test_domain != domain
+          intermediate_domains(test_domain).include?(domain)
+        end
+      end
     end
   end
 end

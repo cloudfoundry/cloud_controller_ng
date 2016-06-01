@@ -2,8 +2,8 @@
 
 require '/var/vcap/packages/cloud_controller_ng/cloud_controller_ng/lib/cloud_controller/domain_helper.rb'
 
-system_domain = ARGV[0]
-app_domains   = ARGV[1].split(',')
+system_domain = ARGV[0].downcase
+app_domains   = ARGV[1].split(',').map(&:downcase)
 
 is_sub_domain = CloudController::DomainHelper.is_sub_domain?(domain: system_domain, test_domains: app_domains)
 

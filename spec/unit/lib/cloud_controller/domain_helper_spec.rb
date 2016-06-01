@@ -41,8 +41,13 @@ module CloudController
       end
 
       it 'returns true when any test_domain is a subdomain of domain' do
-        expect(DomainHelper.is_sub_domain?(domain: 'bosh-lite.com', test_domains: ['other.com', 'apps.bosh-lite.com', 'example.com'])).
+        expect(DomainHelper.is_sub_domain?(domain: 'bosh-lite.com', test_domains: ['bosh-lite.com', 'apps.bosh-lite.com', 'example.com'])).
           to be_truthy
+      end
+
+      it 'returns false when domains contain system domain and another domain' do
+        expect(DomainHelper.is_sub_domain?(domain: 'bosh-lite.com', test_domains: ['apps.com', 'bosh-lite.com'])).
+          to be_falsey
       end
     end
   end
