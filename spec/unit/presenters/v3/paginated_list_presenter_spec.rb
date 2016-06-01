@@ -1,18 +1,18 @@
 require 'spec_helper'
 require 'presenters/v3/paginated_list_presenter'
 
-module VCAP::CloudController
+module VCAP::CloudController::Presenters::V3
   describe PaginatedListPresenter do
     subject(:presenter) { described_class.new(dataset, base_url, message) }
     let(:set) { [Monkey.new('bobo'), Monkey.new('george')] }
     let(:dataset) { double('sequel dataset') }
     let(:message) { double('message', pagination_options: pagination_options, to_param_hash: {}) }
     let(:pagination_options) { double('pagination', per_page: 50, page: 1, order_by: 'monkeys', order_direction: 'asc') }
-    let(:paginator) { instance_double(SequelPaginator) }
-    let(:paginated_result) { PaginatedResult.new(set, 2, pagination_options) }
+    let(:paginator) { instance_double(VCAP::CloudController::SequelPaginator) }
+    let(:paginated_result) { VCAP::CloudController::PaginatedResult.new(set, 2, pagination_options) }
 
     before do
-      allow(SequelPaginator).to receive(:new).and_return(paginator)
+      allow(VCAP::CloudController::SequelPaginator).to receive(:new).and_return(paginator)
       allow(paginator).to receive(:get_page).with(dataset, pagination_options).and_return(paginated_result)
     end
 

@@ -28,7 +28,7 @@ class RouteMappingsController < ApplicationController
                 end
     end
 
-    render :ok, json: PaginatedListPresenter.new(dataset, base_url(resource: 'route_mappings'), message)
+    render :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset, base_url(resource: 'route_mappings'), message)
   end
 
   def create
@@ -53,13 +53,13 @@ class RouteMappingsController < ApplicationController
       unprocessable!(e.message)
     end
 
-    render status: :created, json: RouteMappingPresenter.new(route_mapping)
+    render status: :created, json: Presenters::V3::RouteMappingPresenter.new(route_mapping)
   end
 
   def show
     route_mapping = RouteMappingModel.where(guid: params[:route_mapping_guid]).eager(:space, space: :organization).first
     route_mapping_not_found! unless route_mapping && can_read?(route_mapping.space.guid, route_mapping.space.organization.guid)
-    render status: :ok, json: RouteMappingPresenter.new(route_mapping)
+    render status: :ok, json: Presenters::V3::RouteMappingPresenter.new(route_mapping)
   end
 
   def destroy

@@ -1,12 +1,12 @@
 require 'spec_helper'
 require 'presenters/v3/pagination_presenter'
 
-module VCAP::CloudController
+module VCAP::CloudController::Presenters::V3
   describe PaginationPresenter do
     let(:presenter) { PaginationPresenter.new }
 
     it 'has consistent presentation' do
-      paginated_result = PaginatedResult.new(double(:results), 2, PaginationOptions.new(page: 1, per_page: 2))
+      paginated_result = VCAP::CloudController::PaginatedResult.new(double(:results), 2, VCAP::CloudController::PaginationOptions.new(page: 1, per_page: 2))
       presented_pagination = presenter.present_pagination_hash(paginated_result, '/v3/pizza')
       presented_unpagination = presenter.present_unpagination_hash([1, 2], '/v3/flan')
 
@@ -19,7 +19,8 @@ module VCAP::CloudController
       let(:total_results) { 2 }
       let(:total_pages) { 2 }
       let(:options) { { page: page, per_page: per_page } }
-      let(:paginated_result) { PaginatedResult.new(double(:results), total_results, PaginationOptions.new(options)) }
+      let(:pagination_options) { VCAP::CloudController::PaginationOptions.new(options) }
+      let(:paginated_result) { VCAP::CloudController::PaginatedResult.new(double(:results), total_results, pagination_options) }
       let(:base_url) { '/v3/cloudfoundry/is-great' }
 
       it 'includes total_results' do
@@ -51,7 +52,7 @@ module VCAP::CloudController
       end
 
       it 'sets first and last page to 1 if there is 1 page' do
-        paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(options))
+        paginated_result = VCAP::CloudController::PaginatedResult.new([], 0, pagination_options)
         result = presenter.present_pagination_hash(paginated_result, base_url)
 
         last_url  = result[:last][:href]
@@ -62,7 +63,7 @@ module VCAP::CloudController
 
       it 'includes the filters in the result urls' do
         filters = double('filters', to_param_hash: { facet1: 'value1' })
-        paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(options))
+        paginated_result = VCAP::CloudController::PaginatedResult.new([], 0, pagination_options)
         result = presenter.present_pagination_hash(paginated_result, base_url, filters)
 
         first_url = result[:first][:href]

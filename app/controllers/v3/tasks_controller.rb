@@ -27,7 +27,7 @@ class TasksController < ApplicationController
                 end
     end
 
-    render :ok, json: PaginatedListPresenter.new(dataset, base_url(resource: 'tasks'), message)
+    render :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset, base_url(resource: 'tasks'), message)
   end
 
   def create
@@ -44,7 +44,7 @@ class TasksController < ApplicationController
 
     task = TaskCreate.new(configuration).create(app, message, current_user.guid, current_user_email, droplet: droplet)
 
-    render status: :accepted, json: TaskPresenter.new(task)
+    render status: :accepted, json: Presenters::V3::TaskPresenter.new(task)
   rescue TaskCreate::InvalidTask, TaskCreate::TaskCreateError => e
     unprocessable!(e)
   end
@@ -57,7 +57,7 @@ class TasksController < ApplicationController
 
     TaskCancel.new.cancel(task: task, user: current_user, email: current_user_email)
 
-    render status: :accepted, json: TaskPresenter.new(task.reload)
+    render status: :accepted, json: Presenters::V3::TaskPresenter.new(task.reload)
   rescue TaskCancel::InvalidCancel => e
     unprocessable!(e)
   end
@@ -66,7 +66,7 @@ class TasksController < ApplicationController
     task, space, org = TaskFetcher.new.fetch(task_guid: params[:task_guid])
     task_not_found! unless task && can_read?(space.guid, org.guid)
 
-    render status: :ok, json: TaskPresenter.new(task, show_secrets: can_see_secrets?(space))
+    render status: :ok, json: Presenters::V3::TaskPresenter.new(task, show_secrets: can_see_secrets?(space))
   end
 
   private

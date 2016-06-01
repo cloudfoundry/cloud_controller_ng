@@ -1,11 +1,11 @@
 require 'spec_helper'
 require 'presenters/v3/package_presenter'
 
-module VCAP::CloudController
+module VCAP::CloudController::Presenters::V3
   describe PackagePresenter do
     describe '#to_hash' do
       let(:result) { PackagePresenter.new(package).to_hash }
-      let(:package) { PackageModel.make(type: 'package_type', created_at: Time.at(1), updated_at: Time.at(2)) }
+      let(:package) { VCAP::CloudController::PackageModel.make(type: 'package_type', created_at: Time.at(1), updated_at: Time.at(2)) }
 
       it 'presents the package as json' do
         expect(result[:guid]).to eq(package.guid)
@@ -20,7 +20,7 @@ module VCAP::CloudController
       end
 
       context 'when the package type is bits' do
-        let(:package) { PackageModel.make(type: 'bits', url: 'foobar') }
+        let(:package) { VCAP::CloudController::PackageModel.make(type: 'bits', url: 'foobar') }
 
         it 'includes links to upload and stage' do
           expect(result[:links][:upload][:href]).to eq("/v3/packages/#{package.guid}/upload")
@@ -33,11 +33,11 @@ module VCAP::CloudController
 
       context 'when the package type is docker' do
         let(:package) do
-          PackageModel.make(type: 'docker')
+          VCAP::CloudController::PackageModel.make(type: 'docker')
         end
 
         let!(:data_model) do
-          PackageDockerDataModel.create({
+          VCAP::CloudController::PackageDockerDataModel.create({
               image: 'registry/image:latest',
               package: package
             })
@@ -55,7 +55,7 @@ module VCAP::CloudController
       end
 
       context 'when the package type is not bits' do
-        let(:package) { PackageModel.make(type: 'docker', url: 'foobar') }
+        let(:package) { VCAP::CloudController::PackageModel.make(type: 'docker', url: 'foobar') }
 
         it 'does NOT include a link to upload' do
           expect(result[:links][:upload]).to be_nil

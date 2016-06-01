@@ -1,10 +1,10 @@
 require 'spec_helper'
 require 'presenters/v3/app_presenter'
 
-module VCAP::CloudController
+module VCAP::CloudController::Presenters::V3
   describe AppPresenter do
     let(:app) do
-      AppModel.make(
+      VCAP::CloudController::AppModel.make(
         created_at: Time.at(1),
         updated_at: Time.at(2),
         environment_variables: { 'some' => 'stuff' },
@@ -13,7 +13,7 @@ module VCAP::CloudController
     end
 
     before do
-      BuildpackLifecycleDataModel.create(
+      VCAP::CloudController::BuildpackLifecycleDataModel.create(
         buildpack: 'the-happiest-buildpack',
         stack: 'the-happiest-stack',
         app: app
@@ -24,7 +24,7 @@ module VCAP::CloudController
       let(:result) { AppPresenter.new(app).to_hash }
 
       it 'presents the app as json' do
-        process = App.make(space: app.space, instances: 4)
+        process = VCAP::CloudController::App.make(space: app.space, instances: 4)
         app.add_process(process)
 
         expect(result[:guid]).to eq(app.guid)
@@ -74,7 +74,7 @@ module VCAP::CloudController
 
         context 'droplets' do
           before do
-            app.droplet = DropletModel.make(guid: '123')
+            app.droplet = VCAP::CloudController::DropletModel.make(guid: '123')
           end
 
           it 'includes a link to the current droplet' do
@@ -82,7 +82,7 @@ module VCAP::CloudController
           end
 
           it 'includes a link to the droplets if present' do
-            DropletModel.make(app_guid: app.guid, state: 'PENDING')
+            VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: 'PENDING')
             expect(result[:links][:droplets][:href]).to eq("/v3/apps/#{app.guid}/droplets")
           end
         end

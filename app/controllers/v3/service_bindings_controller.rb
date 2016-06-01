@@ -24,7 +24,7 @@ class ServiceBindingsController < ApplicationController
 
     begin
       service_binding = ServiceBindingCreate.new(current_user.guid, current_user_email).create(app, service_instance, message, volume_services_enabled?)
-      render status: :created, json: ServiceBindingModelPresenter.new(service_binding)
+      render status: :created, json: Presenters::V3::ServiceBindingModelPresenter.new(service_binding)
     rescue ServiceBindingCreate::ServiceInstanceNotBindable
       raise CloudController::Errors::ApiError.new_from_details('UnbindableService')
     rescue ServiceBindingCreate::InvalidServiceBinding
@@ -38,7 +38,7 @@ class ServiceBindingsController < ApplicationController
     service_binding = VCAP::CloudController::ServiceBindingModel.find(guid: params[:guid])
 
     service_binding_not_found! unless service_binding && can_read?(service_binding.space.guid, service_binding.space.organization.guid)
-    render status: :ok, json: ServiceBindingModelPresenter.new(service_binding, show_secrets: can_see_secrets?(service_binding.space))
+    render status: :ok, json: Presenters::V3::ServiceBindingModelPresenter.new(service_binding, show_secrets: can_see_secrets?(service_binding.space))
   end
 
   def index
@@ -51,7 +51,7 @@ class ServiceBindingsController < ApplicationController
                 ServiceBindingListFetcher.new(message).fetch(space_guids: readable_space_guids)
               end
 
-    render status: :ok, json: PaginatedListPresenter.new(dataset, '/v3/service_bindings', message)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset, '/v3/service_bindings', message)
   end
 
   def destroy

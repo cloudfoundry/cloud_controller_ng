@@ -1,11 +1,11 @@
 require 'spec_helper'
 require 'presenters/v3/task_presenter'
 
-module VCAP::CloudController
+module VCAP::CloudController::Presenters::V3
   describe TaskPresenter do
     subject(:presenter) { TaskPresenter.new(task) }
     let(:task) {
-      TaskModel.make(
+      VCAP::CloudController::TaskModel.make(
         environment_variables: { 'some' => 'stuff' },
         failure_reason:        'sup dawg',
         memory_in_mb:          2048,

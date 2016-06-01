@@ -8,9 +8,9 @@ module VCAP::CloudController
       let(:local_dir) { Dir.mktmpdir }
       let!(:blobstore) { CloudController::Blobstore::FogClient.new({ provider: 'Local', local_root: local_dir }, 'directory_key') }
 
-      let(:path_1) { CacheKeyPresenter.cache_key(guid: app_guid, stack_name: 'stack1') }
-      let(:path_2) { CacheKeyPresenter.cache_key(guid: app_guid, stack_name: 'stack2') }
-      let(:path_3) { CacheKeyPresenter.cache_key(guid: 'other-guid', stack_name: 'stack3') }
+      let(:path_1) { Presenters::V3::CacheKeyPresenter.cache_key(guid: app_guid, stack_name: 'stack1') }
+      let(:path_2) { Presenters::V3::CacheKeyPresenter.cache_key(guid: app_guid, stack_name: 'stack2') }
+      let(:path_3) { Presenters::V3::CacheKeyPresenter.cache_key(guid: 'other-guid', stack_name: 'stack3') }
 
       before do
         Fog.unmock!

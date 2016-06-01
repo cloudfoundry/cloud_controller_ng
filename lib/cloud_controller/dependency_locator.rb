@@ -160,10 +160,6 @@ module CloudController
       AppRepository.new
     end
 
-    def app_presenter
-      AppPresenter.new
-    end
-
     def object_renderer
       eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
       serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new

@@ -533,7 +533,7 @@ module VCAP::CloudController
     end
 
     def buildpack_cache_key
-      CacheKeyPresenter.cache_key(guid: guid, stack_name: stack.name)
+      Presenters::V3::CacheKeyPresenter.cache_key(guid: guid, stack_name: stack.name)
     end
 
     def docker_image=(value)

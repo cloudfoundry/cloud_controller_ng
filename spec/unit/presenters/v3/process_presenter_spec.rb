@@ -1,12 +1,12 @@
 require 'spec_helper'
 require 'presenters/v3/process_presenter'
 
-module VCAP::CloudController
+module VCAP::CloudController::Presenters::V3
   describe ProcessPresenter do
     describe '#to_hash' do
-      let(:app_model) { AppModel.make }
+      let(:app_model) { VCAP::CloudController::AppModel.make }
       let(:process) {
-        App.make(
+        VCAP::CloudController::App.make(
           diego:                true,
           app_guid:             app_model.guid,
           instances:            3,

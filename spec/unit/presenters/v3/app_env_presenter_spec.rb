@@ -1,10 +1,10 @@
 require 'spec_helper'
 require 'presenters/v3/app_env_presenter'
 
-module VCAP::CloudController
+module VCAP::CloudController::Presenters::V3
   describe AppEnvPresenter do
     let(:app) do
-      AppModel.make(
+      VCAP::CloudController::AppModel.make(
         created_at: Time.at(1),
         updated_at: Time.at(2),
         environment_variables: { 'some' => 'stuff' },
@@ -13,7 +13,7 @@ module VCAP::CloudController
     end
 
     before do
-      BuildpackLifecycleDataModel.create(
+      VCAP::CloudController::BuildpackLifecycleDataModel.create(
         buildpack: 'the-happiest-buildpack',
         stack: 'the-happiest-stack',
         app: app
@@ -22,12 +22,12 @@ module VCAP::CloudController
     subject(:presenter) { AppEnvPresenter.new(app) }
 
     describe '#to_hash' do
-      let(:service) { Service.make(label: 'rabbit', tags: ['swell']) }
-      let(:service_plan) { ServicePlan.make(service: service) }
-      let(:service_instance) { ManagedServiceInstance.make(space: app.space, service_plan: service_plan, name: 'rabbit-instance') }
+      let(:service) { VCAP::CloudController::Service.make(label: 'rabbit', tags: ['swell']) }
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: app.space, service_plan: service_plan, name: 'rabbit-instance') }
       let!(:service_binding) do
-        ServiceBindingModel.create(app: app, service_instance: service_instance,
-                                   type: 'app', credentials: { 'url' => 'www.service.com/foo' }, syslog_drain_url: 'logs.go-here-2.com')
+        VCAP::CloudController::ServiceBindingModel.create(app: app, service_instance: service_instance,
+                                                          type: 'app', credentials: { 'url' => 'www.service.com/foo' }, syslog_drain_url: 'logs.go-here-2.com')
       end
       let(:result) { presenter.to_hash }
 
