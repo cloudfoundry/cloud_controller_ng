@@ -72,6 +72,7 @@ module VCAP::CloudController
           set_current_user_as_admin
           get "/v2/private_domains/#{private_domain.guid}?inline-relations-depth=1"
 
+          expect(last_response.status).to eq(200)
           expect(entity).to have_key('shared_organizations_url')
           expect(entity).to_not have_key('shared_organizations')
         end

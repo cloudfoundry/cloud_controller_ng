@@ -64,7 +64,7 @@ module VCAP::CloudController::RestController
         next_url = url(controller, path, paginated_dataset.next_page, page_size, order_direction, opts, request_params)
       end
 
-      opts[:max_inline] ||= PreloadedObjectSerializer::MAX_INLINE_DEFAULT
+      opts[:max_inline] ||= ::CloudController::Presenters::V2::RelationsPresenter::MAX_INLINE_DEFAULT
       orphans = opts[:orphan_relations] == 1 ? {} : nil
 
       resources = fetch_and_process_records(paginated_dataset, controller, inline_relations_depth, orphans, opts)

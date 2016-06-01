@@ -196,29 +196,6 @@ describe CloudController::DependencyLocator do
     end
   end
 
-  describe '#entity_only_paginated_collection_renderer' do
-    it 'returns paginated collection renderer configured via config' do
-      eager_loader = instance_of(VCAP::CloudController::RestController::SecureEagerLoader)
-      serializer = instance_of(VCAP::CloudController::RestController::EntityOnlyPreloadedObjectSerializer)
-      opts = {
-        max_results_per_page: 100_000,
-        default_results_per_page: 100_001,
-        max_inline_relations_depth: 100_002,
-        collection_transformer: nil
-      }
-
-      TestConfig.override(renderer: opts)
-
-      renderer = double('renderer')
-      expect(VCAP::CloudController::RestController::PaginatedCollectionRenderer).
-        to receive(:new).
-        with(eager_loader, serializer, opts).
-        and_return(renderer)
-
-      expect(locator.entity_only_paginated_collection_renderer).to eq(renderer)
-    end
-  end
-
   describe '#username_populating_collection_renderer' do
     it 'returns paginated collection renderer with a UsernamePopulator transformer' do
       renderer = locator.username_populating_collection_renderer

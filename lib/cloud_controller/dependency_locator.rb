@@ -177,10 +177,6 @@ module CloudController
       create_paginated_collection_renderer(max_results_per_page: LARGE_COLLECTION_SIZE)
     end
 
-    def entity_only_paginated_collection_renderer
-      create_paginated_collection_renderer(serializer: VCAP::CloudController::RestController::EntityOnlyPreloadedObjectSerializer.new)
-    end
-
     def username_populating_collection_renderer
       create_paginated_collection_renderer(collection_transformer: UsernamePopulator.new(username_lookup_uaa_client))
     end
