@@ -200,6 +200,7 @@ module VCAP::Services::ServiceBrokers::V2
           type: 'update',
           state: state,
           description: last_operation_hash['description'] || '',
+          broker_provided_operation: parsed_response['operation']
         },
       }
 
