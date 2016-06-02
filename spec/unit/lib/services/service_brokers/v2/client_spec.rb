@@ -1188,6 +1188,25 @@ module VCAP::Services::ServiceBrokers::V2
               }
             })
           end
+
+          context 'when the broker provides a operation' do
+            let(:response_data) do
+              { operation: 'a_broker_operation_identifier' }
+            end
+
+            it 'return immediately with the broker response' do
+              attributes, _ = client.deprovision(instance, accepts_incomplete: true)
+
+              expect(attributes).to eq({
+                last_operation: {
+                  type: 'delete',
+                  state: 'in progress',
+                  description: '',
+                  broker_provided_operation: 'a_broker_operation_identifier'
+                }
+              })
+            end
+          end
         end
 
         context 'when the broker returns a 200' do

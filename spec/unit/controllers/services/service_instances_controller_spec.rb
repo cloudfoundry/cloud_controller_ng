@@ -2215,6 +2215,20 @@ module VCAP::CloudController
               expect(decoded_response['entity']['last_operation']['state']).to eq('in progress')
             end
 
+            context 'when the service broker returns operation state' do
+              let(:body) do
+                { operation: '8edff4d8-2818-11e6-a53f-685b3585cc4e' }.to_json
+              end
+
+              it 'persists the operation state' do
+                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true"
+
+                expect(last_response).to have_status_code(202)
+                expect(ManagedServiceInstance.last.last_operation.state).to eq('in progress')
+                expect(ManagedServiceInstance.last.last_operation.broker_provided_operation).to eq('8edff4d8-2818-11e6-a53f-685b3585cc4e')
+              end
+            end
+
             it 'enqueues a polling job to fetch state from the broker' do
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true"
 
@@ -2229,6 +2243,28 @@ module VCAP::CloudController
               expect(last_response).to have_status_code 202
               Timecop.freeze Time.now + 30.minutes do
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+            end
+
+            context 'when the service broker is asked for last operation for delete, with broker operation' do
+              let(:body) do
+                { operation: '8edff4d8-2818-11e6-a53f-685b3585cc4e' }.to_json
+              end
+
+              it 'invokes last operation with the operation' do
+                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true"
+
+                stub_request(:get, last_operation_state_url(service_instance)).
+                  to_return(status: 200, body: {
+                  last_operation: {
+                    state: 'in progress'
+                  }
+                }.to_json)
+
+                Delayed::Job.last.invoke_job
+
+                expect(a_request(:get, service_instance_url(service_instance) + "/last_operation").
+                  with(query: hash_including({ 'operation' => '8edff4d8-2818-11e6-a53f-685b3585cc4e' }))).to have_been_made
               end
             end
 
