@@ -364,10 +364,16 @@ module VCAP::Services::ServiceBrokers::V2
         it 'makes a put request with correct path' do
           client.fetch_service_instance_state(instance)
 
-          expect(http_client).to have_received(:get).
-            with("/v2/service_instances/#{instance.guid}/last_operation?plan_id=#{plan.broker_provided_id}\
-&service_id=#{instance.service.broker_provided_id}\
-&operation=#{broker_provided_operation}")
+          expect(http_client).to have_received(:get) do |path|
+            uri = URI.parse(path)
+            expect(uri.host).to be nil
+            expect(uri.path).to eq("/v2/service_instances/#{instance.guid}/last_operation")
+
+            query_params = Rack::Utils.parse_nested_query(uri.query)
+            expect(query_params['plan_id']).to eq(plan.broker_provided_id)
+            expect(query_params['service_id']).to eq(instance.service.broker_provided_id)
+            expect(query_params['operation']).to eq(broker_provided_operation)
+          end
         end
       end
 

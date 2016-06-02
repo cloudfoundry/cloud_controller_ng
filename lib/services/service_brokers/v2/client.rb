@@ -240,9 +240,13 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def service_instance_last_operation_path(instance)
-      url = "#{service_instance_resource_path(instance)}/last_operation?plan_id=#{instance.service_plan.broker_provided_id}&service_id=#{instance.service.broker_provided_id}"
-      url += "&operation=#{instance.last_operation.broker_provided_operation}" if instance.last_operation.broker_provided_operation
-      url
+      query_params = {}.tap do |q|
+        q['plan_id'] = instance.service_plan.broker_provided_id
+        q['service_id'] = instance.service.broker_provided_id
+        q['operation'] = instance.last_operation.broker_provided_operation if instance.last_operation.broker_provided_operation
+      end
+
+      "#{service_instance_resource_path(instance)}/last_operation?#{query_params.to_query}"
     end
 
     def service_binding_resource_path(binding_guid, service_instance_guid)
