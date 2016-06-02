@@ -1654,6 +1654,14 @@ module VCAP::CloudController
             expect(service_instance.last_operation.state).to eq('in progress')
           end
 
+          context 'broker returns a operation state' do
+            let(:response_body) { { operation: '1e966f2a-28d3-11e6-ab45-685b3585cc4e' }.to_json }
+            it 'persists the operation state' do
+              put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body
+              expect(service_instance.last_operation.broker_provided_operation).to eq('1e966f2a-28d3-11e6-ab45-685b3585cc4e')
+            end
+          end
+
           it 'sets the Location header' do
             put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body
             expect(last_response.headers['Location']).to eq("/v2/service_instances/#{service_instance.guid}")
@@ -1713,6 +1721,17 @@ module VCAP::CloudController
 
               expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
               expect(a_request(:patch, /#{service_broker_url}/)).to have_been_made.times(1)
+            end
+
+            context 'broker responded with an operation field' do
+              let(:response_body) { { operation: '1e966f2a-28d3-11e6-ab45-685b3585cc4e' }.to_json }
+
+              it 'invokes last operation with the operation' do
+                Delayed::Job.last.invoke_job
+
+                expect(a_request(:get, service_instance_url(service_instance) + '/last_operation').
+                  with(query: hash_including({ 'operation' => '1e966f2a-28d3-11e6-ab45-685b3585cc4e' }))).to have_been_made
+              end
             end
 
             it 'creates an UPDATED service usage event' do
@@ -2263,7 +2282,7 @@ module VCAP::CloudController
 
                 Delayed::Job.last.invoke_job
 
-                expect(a_request(:get, service_instance_url(service_instance) + "/last_operation").
+                expect(a_request(:get, service_instance_url(service_instance) + '/last_operation').
                   with(query: hash_including({ 'operation' => '8edff4d8-2818-11e6-a53f-685b3585cc4e' }))).to have_been_made
               end
             end

@@ -571,6 +571,21 @@ module VCAP::Services::ServiceBrokers::V2
             expect(attributes[:last_operation][:description]).to eq('')
             expect(error).to be_nil
           end
+
+          context 'when the broker returns an operation' do
+            let(:response_data) do
+              { operation: 'a_broker_operation_identifier' }
+            end
+
+            it 'return immediately with the broker response' do
+              attributes, _, error = client.update(instance, new_plan, accepts_incomplete: true)
+
+              expect(attributes[:last_operation][:type]).to eq('update')
+              expect(attributes[:last_operation][:state]).to eq('in progress')
+              expect(attributes[:last_operation][:broker_provided_operation]).to eq('a_broker_operation_identifier')
+              expect(error).to be_nil
+            end
+          end
         end
       end
 
