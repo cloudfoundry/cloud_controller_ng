@@ -589,6 +589,20 @@ module VCAP::CloudController
             expect(service_instance.last_operation.state).to eq('in progress')
           end
 
+          context 'when the service broker returns operation state' do
+            let(:response_body) do
+              { operation: '8edff4d8-2818-11e6-a53f-685b3585cc4e' }.to_json
+            end
+
+            it 'persists the operation state' do
+              service_instance = create_managed_service_instance
+
+              expect(last_response).to have_status_code(202)
+              expect(service_instance.last_operation.state).to eq('in progress')
+              expect(service_instance.last_operation.broker_provided_operation).to eq('8edff4d8-2818-11e6-a53f-685b3585cc4e')
+            end
+          end
+
           it 'immediately enqueues a fetch job' do
             Timecop.freeze do
               create_managed_service_instance
@@ -610,6 +624,8 @@ module VCAP::CloudController
           end
 
           context 'and the worker processes the request successfully' do
+            let(:service_broker_last_operation_url) { "http://auth_username:auth_password@example.com/v2/service_instances/#{ServiceInstance.last.guid}/last_operation" }
+
             before do
               stub_request(:get, service_broker_url_regex).
                 with(headers: { 'Accept' => 'application/json' }).
@@ -626,6 +642,20 @@ module VCAP::CloudController
 
               expect(service_instance.last_operation.reload.state).to eq('succeeded')
               expect(service_instance.last_operation.reload.description).to eq('new description')
+            end
+
+            context 'broker supplied a operation field' do
+              let(:response_body) do
+                { operation: '8edff4d8-2818-11e6-a53f-685b3585cc4e' }.to_json
+              end
+
+              it 'invokes last operation with the broker provided operation' do
+                create_managed_service_instance(email: 'developer@example.com')
+
+                Delayed::Job.last.invoke_job
+
+                expect(a_request(:get, service_broker_last_operation_url).with(query: hash_including({ 'operation' => '8edff4d8-2818-11e6-a53f-685b3585cc4e' }))).to have_been_made
+              end
             end
 
             it 'creates an audit event' do
@@ -1624,6 +1654,14 @@ module VCAP::CloudController
             expect(service_instance.last_operation.state).to eq('in progress')
           end
 
+          context 'broker returns a operation state' do
+            let(:response_body) { { operation: '1e966f2a-28d3-11e6-ab45-685b3585cc4e' }.to_json }
+            it 'persists the operation state' do
+              put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body
+              expect(service_instance.last_operation.broker_provided_operation).to eq('1e966f2a-28d3-11e6-ab45-685b3585cc4e')
+            end
+          end
+
           it 'sets the Location header' do
             put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body
             expect(last_response.headers['Location']).to eq("/v2/service_instances/#{service_instance.guid}")
@@ -1683,6 +1721,17 @@ module VCAP::CloudController
 
               expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
               expect(a_request(:patch, /#{service_broker_url}/)).to have_been_made.times(1)
+            end
+
+            context 'broker responded with an operation field' do
+              let(:response_body) { { operation: '1e966f2a-28d3-11e6-ab45-685b3585cc4e' }.to_json }
+
+              it 'invokes last operation with the operation' do
+                Delayed::Job.last.invoke_job
+
+                expect(a_request(:get, service_instance_url(service_instance) + '/last_operation').
+                  with(query: hash_including({ 'operation' => '1e966f2a-28d3-11e6-ab45-685b3585cc4e' }))).to have_been_made
+              end
             end
 
             it 'creates an UPDATED service usage event' do
@@ -2185,6 +2234,20 @@ module VCAP::CloudController
               expect(decoded_response['entity']['last_operation']['state']).to eq('in progress')
             end
 
+            context 'when the service broker returns operation state' do
+              let(:body) do
+                { operation: '8edff4d8-2818-11e6-a53f-685b3585cc4e' }.to_json
+              end
+
+              it 'persists the operation state' do
+                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true"
+
+                expect(last_response).to have_status_code(202)
+                expect(ManagedServiceInstance.last.last_operation.state).to eq('in progress')
+                expect(ManagedServiceInstance.last.last_operation.broker_provided_operation).to eq('8edff4d8-2818-11e6-a53f-685b3585cc4e')
+              end
+            end
+
             it 'enqueues a polling job to fetch state from the broker' do
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true"
 
@@ -2199,6 +2262,28 @@ module VCAP::CloudController
               expect(last_response).to have_status_code 202
               Timecop.freeze Time.now + 30.minutes do
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+            end
+
+            context 'when the service broker is asked for last operation for delete, with broker operation' do
+              let(:body) do
+                { operation: '8edff4d8-2818-11e6-a53f-685b3585cc4e' }.to_json
+              end
+
+              it 'invokes last operation with the operation' do
+                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true"
+
+                stub_request(:get, last_operation_state_url(service_instance)).
+                  to_return(status: 200, body: {
+                  last_operation: {
+                    state: 'in progress'
+                  }
+                }.to_json)
+
+                Delayed::Job.last.invoke_job
+
+                expect(a_request(:get, service_instance_url(service_instance) + '/last_operation').
+                  with(query: hash_including({ 'operation' => '8edff4d8-2818-11e6-a53f-685b3585cc4e' }))).to have_been_made
               end
             end
 

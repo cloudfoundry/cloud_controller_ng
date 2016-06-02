@@ -42,6 +42,7 @@ module VCAP::Services::ServiceBrokers::V2
         last_operation: {
           type: 'create',
           description: last_operation_hash['description'] || '',
+          broker_provided_operation: parsed_response['operation']
         }
       }
 
@@ -169,8 +170,9 @@ module VCAP::Services::ServiceBrokers::V2
         last_operation: {
           type: 'delete',
           description: last_operation_hash['description'] || '',
-          state: state || 'succeeded'
-        }
+          state: state || 'succeeded',
+          broker_provided_operation: parsed_response['operation']
+        }.compact
       }
     rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict => e
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
@@ -198,6 +200,7 @@ module VCAP::Services::ServiceBrokers::V2
           type: 'update',
           state: state,
           description: last_operation_hash['description'] || '',
+          broker_provided_operation: parsed_response['operation']
         },
       }
 
@@ -237,7 +240,9 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def service_instance_last_operation_path(instance)
-      "#{service_instance_resource_path(instance)}/last_operation?plan_id=#{instance.service_plan.broker_provided_id}&service_id=#{instance.service.broker_provided_id}"
+      url = "#{service_instance_resource_path(instance)}/last_operation?plan_id=#{instance.service_plan.broker_provided_id}&service_id=#{instance.service.broker_provided_id}"
+      url += "&operation=#{instance.last_operation.broker_provided_operation}" if instance.last_operation.broker_provided_operation
+      url
     end
 
     def service_binding_resource_path(binding_guid, service_instance_guid)
