@@ -170,8 +170,9 @@ module VCAP::Services::ServiceBrokers::V2
         last_operation: {
           type: 'delete',
           description: last_operation_hash['description'] || '',
-          state: state || 'succeeded'
-        }
+          state: state || 'succeeded',
+          broker_provided_operation: parsed_response['operation']
+        }.compact
       }
     rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict => e
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
