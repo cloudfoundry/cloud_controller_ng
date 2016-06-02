@@ -193,6 +193,23 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
+      context 'when the broker returns a operation' do
+        let(:code) { 202 }
+        let(:message) { 'Accepted' }
+        let(:response_data) do
+          { operation: 'a_broker_operation_identifier' }
+        end
+
+        it 'return immediately with the broker response' do
+          client = Client.new(client_attrs)
+          attributes, _ = client.provision(instance, accepts_incomplete: true)
+
+          expect(attributes[:last_operation][:broker_provided_operation]).to eq('a_broker_operation_identifier')
+          expect(attributes[:last_operation][:type]).to eq('create')
+          expect(attributes[:last_operation][:state]).to eq('in progress')
+        end
+      end
+
       context 'when the broker returns a 202' do
         let(:code) { 202 }
         let(:message) { 'Accepted' }
@@ -204,6 +221,7 @@ module VCAP::Services::ServiceBrokers::V2
           client = Client.new(client_attrs)
           attributes, _ = client.provision(instance, accepts_incomplete: true)
 
+          expect(attributes[:instance][:broker_provided_operation]).to be_nil
           expect(attributes[:last_operation][:type]).to eq('create')
           expect(attributes[:last_operation][:state]).to eq('in progress')
         end
@@ -328,9 +346,10 @@ module VCAP::Services::ServiceBrokers::V2
       let(:response_body) { response_data.to_json }
       let(:code) { '200' }
       let(:message) { 'OK' }
+      let(:broker_provided_operation) { nil }
 
       before do
-        instance.save_with_new_operation({}, { type: 'create' })
+        instance.save_with_new_operation({}, { type: 'create', broker_provided_operation: broker_provided_operation })
         allow(http_client).to receive(:get).and_return(response)
       end
 
@@ -339,6 +358,17 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(http_client).to have_received(:get).
           with("/v2/service_instances/#{instance.guid}/last_operation?plan_id=#{plan.broker_provided_id}&service_id=#{instance.service.broker_provided_id}")
+      end
+      context 'when the broker operation id is specified' do
+        let(:broker_provided_operation) { 'a_broker_provided_operation' }
+        it 'makes a put request with correct path' do
+          client.fetch_service_instance_state(instance)
+
+          expect(http_client).to have_received(:get).
+            with("/v2/service_instances/#{instance.guid}/last_operation?plan_id=#{plan.broker_provided_id}\
+&service_id=#{instance.service.broker_provided_id}\
+&operation=#{broker_provided_operation}")
+        end
       end
 
       it 'returns the attributes to update the service instance model' do

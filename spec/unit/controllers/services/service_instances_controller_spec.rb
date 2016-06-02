@@ -589,6 +589,20 @@ module VCAP::CloudController
             expect(service_instance.last_operation.state).to eq('in progress')
           end
 
+          context 'when the service broker returns operation state' do
+            let(:response_body) do
+              { operation: '8edff4d8-2818-11e6-a53f-685b3585cc4e' }.to_json
+            end
+
+            it 'persists the operation state' do
+              service_instance = create_managed_service_instance
+
+              expect(last_response).to have_status_code(202)
+              expect(service_instance.last_operation.state).to eq('in progress')
+              expect(service_instance.last_operation.broker_provided_operation).to eq('8edff4d8-2818-11e6-a53f-685b3585cc4e')
+            end
+          end
+
           it 'immediately enqueues a fetch job' do
             Timecop.freeze do
               create_managed_service_instance
@@ -610,6 +624,8 @@ module VCAP::CloudController
           end
 
           context 'and the worker processes the request successfully' do
+            let(:service_broker_last_operation_url) { "http://auth_username:auth_password@example.com/v2/service_instances/#{ServiceInstance.last.guid}/last_operation" }
+
             before do
               stub_request(:get, service_broker_url_regex).
                 with(headers: { 'Accept' => 'application/json' }).
@@ -626,6 +642,20 @@ module VCAP::CloudController
 
               expect(service_instance.last_operation.reload.state).to eq('succeeded')
               expect(service_instance.last_operation.reload.description).to eq('new description')
+            end
+
+            context 'broker supplied a operation field' do
+              let(:response_body) do
+                { operation: '8edff4d8-2818-11e6-a53f-685b3585cc4e' }.to_json
+              end
+
+              it 'invokes last operation with the broker provided operation' do
+                create_managed_service_instance(email: 'developer@example.com')
+
+                Delayed::Job.last.invoke_job
+
+                expect(a_request(:get, service_broker_last_operation_url).with(query: hash_including({ 'operation' => '8edff4d8-2818-11e6-a53f-685b3585cc4e' }))).to have_been_made
+              end
             end
 
             it 'creates an audit event' do
