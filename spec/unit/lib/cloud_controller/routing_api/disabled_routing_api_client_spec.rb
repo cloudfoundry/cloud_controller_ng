@@ -25,5 +25,13 @@ module VCAP::CloudController::RoutingApi
         }.to raise_error(RoutingApiDisabled)
       end
     end
+
+    describe '.router_group_guid' do
+      it 'raises a routing api disabled error' do
+        expect {
+          client.router_group_guid('group name')
+        }.to raise_error(RoutingApiDisabled)
+      end
+    end
   end
 end

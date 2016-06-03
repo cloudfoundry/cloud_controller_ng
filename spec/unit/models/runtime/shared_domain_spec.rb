@@ -105,15 +105,44 @@ module VCAP::CloudController
     end
 
     describe '.find_or_create' do
-      it 're-raises original err types with an updated message' do
-        expected_error = StandardError.new('original message')
-        expected_error.set_backtrace(['original', 'backtrace'])
-        allow(SharedDomain).to receive(:new).and_raise(expected_error)
+      context 'when an invalid domain name is requested' do
+        it 're-raises original err types with an updated message' do
+          expected_error = StandardError.new('original message')
+          expected_error.set_backtrace(['original', 'backtrace'])
+          allow(SharedDomain).to receive(:new).and_raise(expected_error)
 
-        expect { SharedDomain.find_or_create('invalid_domain') }.to raise_error do |e|
-          expect(e).to be_a(StandardError)
-          expect(e.message).to eq('Error for shared domain name invalid_domain: original message')
-          expect(e.backtrace).to eq(['original', 'backtrace'])
+          expect { SharedDomain.find_or_create('invalid_domain') }.to raise_error do |e|
+            expect(e).to be_a(StandardError)
+            expect(e.message).to eq('Error for shared domain name invalid_domain: original message')
+            expect(e.backtrace).to eq(['original', 'backtrace'])
+          end
+        end
+      end
+
+      context 'when a router group guid is requested' do
+        context 'and it does not exist' do
+          before do
+            SharedDomain.dataset.destroy
+          end
+
+          it 'creates the domains' do
+            SharedDomain.find_or_create('some-domain.com', 'some-guid')
+            expect(SharedDomain.count).to eq(1)
+            expect(SharedDomain.last[:router_group_guid]).to eq('some-guid')
+            expect(SharedDomain.last[:name]).to eq('some-domain.com')
+          end
+        end
+
+        context 'and it already exists' do
+          before do
+            SharedDomain.make(router_group_guid: '123', name: 'wee.example.com')
+          end
+
+          it 'returns the found domain' do
+            domain = SharedDomain.find_or_create('wee.example.com')
+            expect(domain[:name]).to eq('wee.example.com')
+            expect(domain[:router_group_guid]).to eq('123')
+          end
         end
       end
     end

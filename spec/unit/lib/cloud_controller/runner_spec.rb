@@ -7,12 +7,14 @@ module VCAP::CloudController
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:diagnostics) { instance_double(VCAP::CloudController::Diagnostics) }
     let(:periodic_updater) { instance_double(VCAP::CloudController::Metrics::PeriodicUpdater) }
+    let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group_guid: '') }
 
     let(:argv) { [] }
 
     before do
       allow(Steno).to receive(:init)
       allow_any_instance_of(MessageBus::Configurer).to receive(:go).and_return(message_bus)
+      allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).and_return(routing_api_client)
       allow(VCAP::Component).to receive(:register)
       allow(EM).to receive(:run).and_yield
       allow(EM).to receive(:add_timer).and_yield
@@ -196,7 +198,7 @@ module VCAP::CloudController
           context 'when the app domains include the system domain' do
             let(:config_file) do
               config = YAML.load_file(valid_config_file_path)
-              config['app_domains'].push('the-system-domain.com')
+              config['app_domains'].push({ 'name' => 'the-system-domain.com' })
               file = Tempfile.new('config')
               file.write(YAML.dump(config))
               file.rewind
