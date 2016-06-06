@@ -1,46 +1,46 @@
 require 'spec_helper'
 
-def generate_hm_api_response(app, running_instances, crash_counts=[])
-  result = {
-    droplet: app.guid,
-    version: app.version,
-    desired: {
-      id: app.guid,
-      version: app.version,
-      instances: app.instances,
-      state: app.state,
-      package_state: app.package_state,
-    },
-    instance_heartbeats: [],
-    crash_counts: []
-  }
-
-  running_instances.each do |running_instance|
-    result[:instance_heartbeats].push({
-      droplet: app.guid,
-      version: app.version,
-      instance: running_instance[:instance_guid] || Sham.guid,
-      index: running_instance[:index],
-      state: running_instance[:state],
-      state_timestamp: 3.141
-    })
-  end
-
-  crash_counts.each do |crash_count|
-    result[:crash_counts].push({
-      droplet: app.guid,
-      version: app.version,
-      instance_index: crash_count[:instance_index],
-      crash_count: crash_count[:crash_count],
-      created_at: 1234567
-    })
-  end
-
-  JSON.parse(result.to_json)
-end
-
 shared_examples 'post_bulk_app_state request' do |method, args_array|
   let(:legacy_return_value) { double(:legacy_return_value) }
+
+  def generate_hm_api_response(app, running_instances, crash_counts=[])
+    result = {
+      droplet: app.guid,
+      version: app.version,
+      desired: {
+        id: app.guid,
+        version: app.version,
+        instances: app.instances,
+        state: app.state,
+        package_state: app.package_state,
+      },
+      instance_heartbeats: [],
+      crash_counts: []
+    }
+
+    running_instances.each do |running_instance|
+      result[:instance_heartbeats].push({
+        droplet: app.guid,
+        version: app.version,
+        instance: running_instance[:instance_guid] || Sham.guid,
+        index: running_instance[:index],
+        state: running_instance[:state],
+        state_timestamp: 3.141
+      })
+    end
+
+    crash_counts.each do |crash_count|
+      result[:crash_counts].push({
+        droplet: app.guid,
+        version: app.version,
+        instance_index: crash_count[:instance_index],
+        crash_count: crash_count[:crash_count],
+        created_at: 1234567
+      })
+    end
+
+    JSON.parse(result.to_json)
+  end
 
   before do
     @args = if args_array

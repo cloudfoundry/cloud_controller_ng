@@ -39,25 +39,25 @@ module VCAP::CloudController
         errors.add(:service_instance, :route_service_url_invalid)
       end
     end
+
+    private
+
+    def invalid_url?
+      begin
+        URI(route_service_url)
+      rescue
+        return true
+      end
+
+      false
+    end
+
+    def not_https?
+      !URI(route_service_url).is_a?(URI::HTTPS)
+    end
+
+    def not_valid_host?
+      (!URI(route_service_url).host || URI(route_service_url).host.to_s[0] == '.')
+    end
   end
-end
-
-private
-
-def invalid_url?
-  begin
-    URI(route_service_url)
-  rescue
-    return true
-  end
-
-  false
-end
-
-def not_https?
-  !URI(route_service_url).is_a?(URI::HTTPS)
-end
-
-def not_valid_host?
-  (!URI(route_service_url).host || URI(route_service_url).host.to_s[0] == '.')
 end
