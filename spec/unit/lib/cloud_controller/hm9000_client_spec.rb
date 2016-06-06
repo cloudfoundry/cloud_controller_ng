@@ -1,138 +1,138 @@
 require 'spec_helper'
 
-shared_examples 'post_bulk_app_state request' do |method, args_array|
-  let(:legacy_return_value) { double(:legacy_return_value) }
-
-  def generate_hm_api_response(app, running_instances, crash_counts=[])
-    result = {
-      droplet: app.guid,
-      version: app.version,
-      desired: {
-        id: app.guid,
-        version: app.version,
-        instances: app.instances,
-        state: app.state,
-        package_state: app.package_state,
-      },
-      instance_heartbeats: [],
-      crash_counts: []
-    }
-
-    running_instances.each do |running_instance|
-      result[:instance_heartbeats].push({
-        droplet: app.guid,
-        version: app.version,
-        instance: running_instance[:instance_guid] || Sham.guid,
-        index: running_instance[:index],
-        state: running_instance[:state],
-        state_timestamp: 3.141
-      })
-    end
-
-    crash_counts.each do |crash_count|
-      result[:crash_counts].push({
-        droplet: app.guid,
-        version: app.version,
-        instance_index: crash_count[:instance_index],
-        crash_count: crash_count[:crash_count],
-        created_at: 1234567
-      })
-    end
-
-    JSON.parse(result.to_json)
-  end
-
-  before do
-    @args = if args_array
-              [app0]
-            else
-              app0
-            end
-  end
-
-  context 'when the request status is not 2XX' do
-    before do
-      stub_request(:post, "#{hm9000_url}/bulk_app_state").
-        to_return(status: 500)
-      stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 500)
-    end
-
-    it 'retries 3 times' do
-      subject.send(method, @args)
-      assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 3) do |req|
-        req.body = { droplet: app0.guid, version: app0.version }
-      end
-    end
-
-    context 'after 3 retries' do
-      before do
-        subject.send(method, @args)
-      end
-
-      it 'tries the external address' do
-        assert_requested(:post, "#{hm9000_external_url}/bulk_app_state") do |req|
-          req.body = { droplet: app0.guid, version: app0.version }
-        end
-      end
-
-      it 'does try to use the internal address again on the next request' do
-        subject.send(method, @args)
-
-        # 3 times for the first call, 3 times for the next call
-        assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 6) do |req|
-          req.body = { droplet: app0.guid, version: app0.version }
-        end
-
-        # once for the first call and once for the second call
-        assert_requested(:post, "#{hm9000_external_url}/bulk_app_state", times: 2) do |req|
-          req.body = { droplet: app0.guid, version: app0.version }
-        end
-      end
-    end
-  end
-
-  context 'when the hm9000 http api is not present' do
-    before do
-      stub_request(:post, "#{hm9000_url}/bulk_app_state").to_return(status: 404)
-      stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 404)
-    end
-
-    it 'retries 3 times' do
-      subject.send(method, @args)
-      assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 3) do |req|
-        req.body = { droplet: app0.guid, version: app0.version }
-      end
-    end
-
-    it 'calls through the legacy nats client' do
-      actual_return_value = hm9000_client.send(method, @args)
-      expect(actual_return_value).to eq(legacy_return_value)
-    end
-  end
-
-  context 'when a post to the internal address raises a socket error' do
-    before do
-      stub_request(:post, "#{hm9000_url}/bulk_app_state").to_raise(SocketError)
-      stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 500)
-      subject.send(method, @args)
-    end
-
-    it 'does not retry' do
-      assert_requested(:post, "#{hm9000_url}/bulk_app_state") do |req|
-        req.body = { droplet: app0.guid, version: app0.version }
-      end
-    end
-
-    it 'tries the external address' do
-      assert_requested(:post, "#{hm9000_external_url}/bulk_app_state") do |req|
-        req.body = { droplet: app0.guid, version: app0.version }
-      end
-    end
-  end
-end
-
 module VCAP::CloudController
   describe VCAP::CloudController::Dea::HM9000::Client do
+    def generate_hm_api_response(app, running_instances, crash_counts=[])
+      result = {
+        droplet: app.guid,
+        version: app.version,
+        desired: {
+          id: app.guid,
+          version: app.version,
+          instances: app.instances,
+          state: app.state,
+          package_state: app.package_state,
+        },
+        instance_heartbeats: [],
+        crash_counts: []
+      }
+
+      running_instances.each do |running_instance|
+        result[:instance_heartbeats].push({
+          droplet: app.guid,
+          version: app.version,
+          instance: running_instance[:instance_guid] || Sham.guid,
+          index: running_instance[:index],
+          state: running_instance[:state],
+          state_timestamp: 3.141
+        })
+      end
+
+      crash_counts.each do |crash_count|
+        result[:crash_counts].push({
+          droplet: app.guid,
+          version: app.version,
+          instance_index: crash_count[:instance_index],
+          crash_count: crash_count[:crash_count],
+          created_at: 1234567
+        })
+      end
+
+      JSON.parse(result.to_json)
+    end
+
+    shared_examples 'post_bulk_app_state request' do |method, args_array|
+      let(:legacy_return_value) { double(:legacy_return_value) }
+
+      before do
+        @args = if args_array
+                  [app0]
+                else
+                  app0
+                end
+      end
+
+      context 'when the request status is not 2XX' do
+        before do
+          stub_request(:post, "#{hm9000_url}/bulk_app_state").
+            to_return(status: 500)
+          stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 500)
+        end
+
+        it 'retries 3 times' do
+          subject.send(method, @args)
+          assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 3) do |req|
+            req.body = { droplet: app0.guid, version: app0.version }
+          end
+        end
+
+        context 'after 3 retries' do
+          before do
+            subject.send(method, @args)
+          end
+
+          it 'tries the external address' do
+            assert_requested(:post, "#{hm9000_external_url}/bulk_app_state") do |req|
+              req.body = { droplet: app0.guid, version: app0.version }
+            end
+          end
+
+          it 'does try to use the internal address again on the next request' do
+            subject.send(method, @args)
+
+            # 3 times for the first call, 3 times for the next call
+            assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 6) do |req|
+              req.body = { droplet: app0.guid, version: app0.version }
+            end
+
+            # once for the first call and once for the second call
+            assert_requested(:post, "#{hm9000_external_url}/bulk_app_state", times: 2) do |req|
+              req.body = { droplet: app0.guid, version: app0.version }
+            end
+          end
+        end
+      end
+
+      context 'when the hm9000 http api is not present' do
+        before do
+          stub_request(:post, "#{hm9000_url}/bulk_app_state").to_return(status: 404)
+          stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 404)
+        end
+
+        it 'retries 3 times' do
+          subject.send(method, @args)
+          assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 3) do |req|
+            req.body = { droplet: app0.guid, version: app0.version }
+          end
+        end
+
+        it 'calls through the legacy nats client' do
+          actual_return_value = hm9000_client.send(method, @args)
+          expect(actual_return_value).to eq(legacy_return_value)
+        end
+      end
+
+      context 'when a post to the internal address raises a socket error' do
+        before do
+          stub_request(:post, "#{hm9000_url}/bulk_app_state").to_raise(SocketError)
+          stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 500)
+          subject.send(method, @args)
+        end
+
+        it 'does not retry' do
+          assert_requested(:post, "#{hm9000_url}/bulk_app_state") do |req|
+            req.body = { droplet: app0.guid, version: app0.version }
+          end
+        end
+
+        it 'tries the external address' do
+          assert_requested(:post, "#{hm9000_external_url}/bulk_app_state") do |req|
+            req.body = { droplet: app0.guid, version: app0.version }
+          end
+        end
+      end
+    end
+
     let(:app0instances) { 1 }
     let(:app0) { AppFactory.make(instances: app0instances) }
     let(:app1) { AppFactory.make(instances: 1) }
