@@ -1,0 +1,185 @@
+require 'spec_helper'
+
+describe 'Apps' do
+  let(:user) { VCAP::CloudController::User.make }
+  let(:space) { VCAP::CloudController::Space.make }
+
+  before do
+    space.organization.add_user(user)
+    space.add_developer(user)
+  end
+
+  describe 'GET /v2/apps' do
+    let!(:process) { VCAP::CloudController::AppFactory.make(
+      space: space,
+      environment_json: { 'RAILS_ENV' => 'staging' },
+      command: 'hello_world'
+    )
+    }
+
+    it 'lists all apps' do
+      get '/v2/apps', nil, headers_for(user)
+
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'total_results' => 1,
+          'total_pages'   => 1,
+          'prev_url'      => nil,
+          'next_url'      => nil,
+          'resources'     => [{
+            'metadata' => {
+              'guid'       => process.guid,
+              'url'        => "/v2/apps/#{process.guid}",
+              'created_at' => iso8601,
+              'updated_at' => iso8601
+            },
+            'entity' => {
+              'name'                       => process.name,
+              'production'                 => false,
+              'space_guid'                 => space.guid,
+              'stack_guid'                 => process.stack.guid,
+              'buildpack'                  => nil,
+              'detected_buildpack'         => nil,
+              'environment_json'           => { 'RAILS_ENV' => 'staging' },
+              'memory'                     => 1024,
+              'instances'                  => 1,
+              'disk_quota'                 => 1024,
+              'state'                      => 'STOPPED',
+              'version'                    => process.version,
+              'command'                    => 'hello_world',
+              'console'                    => false,
+              'debug'                      => nil,
+              'staging_task_id'            => nil,
+              'package_state'              => 'PENDING',
+              'health_check_type'          => 'port',
+              'health_check_timeout'       => nil,
+              'staging_failed_reason'      => nil,
+              'staging_failed_description' => nil,
+              'diego'                      => false,
+              'docker_image'               => nil,
+              'package_updated_at'         => iso8601,
+              'detected_start_command'     => '',
+              'enable_ssh'                 => true,
+              'docker_credentials_json'    => {
+                'redacted_message' => '[PRIVATE DATA HIDDEN]'
+              },
+              'ports'                      => nil,
+              'space_url'                  => "/v2/spaces/#{space.guid}",
+              'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
+              'routes_url'                 => "/v2/apps/#{process.guid}/routes",
+              'events_url'                 => "/v2/apps/#{process.guid}/events",
+              'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
+              'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+            }
+          }]
+        }
+      )
+    end
+
+    context 'with inline-relations-depth' do
+      it 'includes related records' do
+        get '/v2/apps?inline-relations-depth=1', nil, headers_for(user)
+
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(
+          {
+            'total_results' => 1,
+            'total_pages'   => 1,
+            'prev_url'      => nil,
+            'next_url'      => nil,
+            'resources'     => [{
+              'metadata' => {
+                'guid'       => process.guid,
+                'url'        => "/v2/apps/#{process.guid}",
+                'created_at' => iso8601,
+                'updated_at' => iso8601
+              },
+              'entity' => {
+                'name'                       => process.name,
+                'production'                 => false,
+                'space_guid'                 => space.guid,
+                'stack_guid'                 => process.stack.guid,
+                'buildpack'                  => nil,
+                'detected_buildpack'         => nil,
+                'environment_json'           => { 'RAILS_ENV' => 'staging' },
+                'memory'                     => 1024,
+                'instances'                  => 1,
+                'disk_quota'                 => 1024,
+                'state'                      => 'STOPPED',
+                'version'                    => process.version,
+                'command'                    => 'hello_world',
+                'console'                    => false,
+                'debug'                      => nil,
+                'staging_task_id'            => nil,
+                'package_state'              => 'PENDING',
+                'health_check_type'          => 'port',
+                'health_check_timeout'       => nil,
+                'staging_failed_reason'      => nil,
+                'staging_failed_description' => nil,
+                'diego'                      => false,
+                'docker_image'               => nil,
+                'package_updated_at'         => iso8601,
+                'detected_start_command'     => '',
+                'enable_ssh'                 => true,
+                'docker_credentials_json'    => {
+                  'redacted_message' => '[PRIVATE DATA HIDDEN]'
+                },
+                'ports'                      => nil,
+                'space_url'                  => "/v2/spaces/#{space.guid}",
+                'space'                      => {
+                  'metadata' => {
+                    'guid' => space.guid,
+                    'url' => "/v2/spaces/#{space.guid}",
+                    'created_at' => iso8601,
+                    'updated_at' => nil
+                  },
+                  'entity' => {
+                    'name' => 'name-1',
+                    'organization_guid' => space.organization_guid,
+                    'space_quota_definition_guid' => nil,
+                    'allow_ssh' => true,
+                    'organization_url' => "/v2/organizations/#{space.organization_guid}",
+                    'developers_url' => "/v2/spaces/#{space.guid}/developers",
+                    'managers_url' => "/v2/spaces/#{space.guid}/managers",
+                    'auditors_url' => "/v2/spaces/#{space.guid}/auditors",
+                    'apps_url' => "/v2/spaces/#{space.guid}/apps",
+                    'routes_url' => "/v2/spaces/#{space.guid}/routes",
+                    'domains_url' => "/v2/spaces/#{space.guid}/domains",
+                    'service_instances_url' => "/v2/spaces/#{space.guid}/service_instances",
+                    'app_events_url' => "/v2/spaces/#{space.guid}/app_events",
+                    'events_url' => "/v2/spaces/#{space.guid}/events",
+                    'security_groups_url' => "/v2/spaces/#{space.guid}/security_groups"
+                  }
+                },
+                'stack_url' => "/v2/stacks/#{process.stack.guid}",
+                'stack' => {
+                  'metadata' => {
+                    'guid' => process.stack.guid,
+                    'url' => "/v2/stacks/#{process.stack.guid}",
+                    'created_at' => iso8601,
+                    'updated_at' => nil
+                  },
+                  'entity' => {
+                    'name' => process.stack.name,
+                    'description' => process.stack.description
+                  }
+                },
+                'routes_url' => "/v2/apps/#{process.guid}/routes",
+                'routes' => [],
+                'events_url'                 => "/v2/apps/#{process.guid}/events",
+                'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
+                'service_bindings' => [],
+                'route_mappings_url' => "/v2/apps/#{process.guid}/route_mappings"
+              }
+            }]
+          }
+        )
+      end
+    end
+  end
+end
