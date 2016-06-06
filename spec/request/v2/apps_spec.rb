@@ -15,7 +15,7 @@ describe 'Apps' do
         space:            space,
         environment_json: { 'RAILS_ENV' => 'staging' },
         command:          'hello_world',
-        docker_credentials_json: {'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' }
+        docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' }
       )
     }
 
@@ -189,7 +189,7 @@ describe 'Apps' do
     let!(:process) {
       VCAP::CloudController::App.make(
         space: space,
-        docker_credentials_json: {'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' }
+        docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' }
       )
     }
 
@@ -255,7 +255,7 @@ describe 'Apps' do
         name:       'maria',
         space_guid: space.guid,
         detected_start_command: 'argh',
-        docker_credentials_json: {'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' }
+        docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' }
       })
 
       post '/v2/apps', post_params, headers_for(user)
@@ -322,7 +322,7 @@ describe 'Apps' do
         name: 'mario',
         environment_json: { 'RAILS_ENV' => 'staging' },
         command:          'hello_world',
-        docker_credentials_json: {'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' }
+        docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' }
       )
     }
 
