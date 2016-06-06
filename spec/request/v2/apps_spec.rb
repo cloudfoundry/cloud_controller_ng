@@ -9,6 +9,70 @@ describe 'Apps' do
     space.add_developer(user)
   end
 
+  describe 'POST /v2/apps' do
+    it 'creates an app' do
+      post_params = MultiJson.dump({
+        name: 'maria',
+        space_guid: space.guid
+      })
+
+      post '/v2/apps', post_params, headers_for(user)
+
+      process = VCAP::CloudController::App.last
+      expect(last_response.status).to eq(201)
+      expect(MultiJson.load(last_response.body)).to be_a_response_like(
+        {
+          'metadata' => {
+            'guid'       => process.guid,
+            'url'        => "/v2/apps/#{process.guid}",
+            'created_at' => iso8601,
+            'updated_at' => nil
+          },
+          'entity' => {
+            'name'                       => 'maria',
+            'production'                 => false,
+            'space_guid'                 => space.guid,
+            'stack_guid'                 => process.stack.guid,
+            'buildpack'                  => nil,
+            'detected_buildpack'         => nil,
+            'environment_json'           => {
+
+            },
+            'memory'                     => 1024,
+            'instances'                  => 1,
+            'disk_quota'                 => 1024,
+            'state'                      => 'STOPPED',
+            'version'                    => process.version,
+            'command'                    => nil,
+            'console'                    => false,
+            'debug'                      => nil,
+            'staging_task_id'            => nil,
+            'package_state'              => 'PENDING',
+            'health_check_type'          => 'port',
+            'health_check_timeout'       => nil,
+            'staging_failed_reason'      => nil,
+            'staging_failed_description' => nil,
+            'diego'                      => false,
+            'docker_image'               => nil,
+            'package_updated_at'         => nil,
+            'detected_start_command'     => '',
+            'enable_ssh'                 => true,
+            'docker_credentials_json'    => {
+              'redacted_message' => '[PRIVATE DATA HIDDEN]'
+            },
+            'ports'                      => nil,
+            'space_url'                  => "/v2/spaces/#{space.guid}",
+            'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
+            'routes_url'                 => "/v2/apps/#{process.guid}/routes",
+            'events_url'                 => "/v2/apps/#{process.guid}/events",
+            'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
+            'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+          }
+        }
+      )
+    end
+  end
+
   describe 'GET /v2/apps' do
     let!(:process) { VCAP::CloudController::AppFactory.make(
       space: space,
@@ -139,7 +203,7 @@ describe 'Apps' do
                     'updated_at' => nil
                   },
                   'entity' => {
-                    'name' => 'name-1',
+                    'name' => space.name,
                     'organization_guid' => space.organization_guid,
                     'space_quota_definition_guid' => nil,
                     'allow_ssh' => true,
