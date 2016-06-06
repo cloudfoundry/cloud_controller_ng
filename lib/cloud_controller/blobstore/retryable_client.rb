@@ -1,7 +1,7 @@
 module CloudController
   module Blobstore
     class RetryableClient
-      def initialize(client:, errors:, logger:, num_retries: 2)
+      def initialize(client:, errors:, logger:, num_retries: 3)
         @wrapped_client   = client
         @retryable_errors = errors
         @logger = logger
@@ -125,7 +125,7 @@ module CloudController
             remaining_retries: retries
           }.merge(log_data)
         )
-        retry unless retries < 0
+        retry unless retries == 0
         raise e
       end
     end

@@ -51,6 +51,7 @@ module TestConfig
       resource_pool: {
           resource_directory_key: 'spec-cc-resources',
           fog_connection: {
+              blobstore_timeout: 5,
               provider: 'AWS',
               aws_access_key_id: 'fake_aws_key_id',
               aws_secret_access_key: 'fake_secret_access_key',
@@ -59,6 +60,7 @@ module TestConfig
       packages: {
           app_package_directory_key: 'cc-packages',
           fog_connection: {
+              blobstore_timeout: 5,
               provider: 'AWS',
               aws_access_key_id: 'fake_aws_key_id',
               aws_secret_access_key: 'fake_secret_access_key',
@@ -67,6 +69,7 @@ module TestConfig
       droplets: {
           droplet_directory_key: 'cc-droplets',
           fog_connection: {
+              blobstore_timeout: 5,
               provider: 'AWS',
               aws_access_key_id: 'fake_aws_key_id',
               aws_secret_access_key: 'fake_secret_access_key',

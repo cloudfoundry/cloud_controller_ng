@@ -19,8 +19,7 @@ module CloudController
       let(:logger) { instance_double(Steno::Logger, debug: nil) }
       let(:log_prefix) { 'cc.retryable' }
       let(:log_data) { { some: 'error' } }
-      let(:num_retries) { 2 }
-      let(:total_tries) { num_retries + 1 }
+      let(:num_retries) { 3 }
 
       class RetryableError < StandardError
       end
@@ -45,7 +44,7 @@ module CloudController
               client.download_from_blobstore(source_key, destination_path)
             }.to raise_error RetryableError
 
-            expect(wrapped_client).to have_received(:download_from_blobstore).with(source_key, destination_path, mode: nil).exactly(total_tries).times
+            expect(wrapped_client).to have_received(:download_from_blobstore).with(source_key, destination_path, mode: nil).exactly(num_retries).times
           end
         end
 
@@ -60,7 +59,7 @@ module CloudController
               client.cp_to_blobstore(source_path, destination_key)
             }.to raise_error RetryableError
 
-            expect(wrapped_client).to have_received(:cp_to_blobstore).with(source_path, destination_key).exactly(total_tries).times
+            expect(wrapped_client).to have_received(:cp_to_blobstore).with(source_path, destination_key).exactly(num_retries).times
           end
         end
 
@@ -74,7 +73,7 @@ module CloudController
               client.cp_r_to_blobstore(source_dir)
             }.to raise_error RetryableError
 
-            expect(wrapped_client).to have_received(:cp_r_to_blobstore).with(source_dir).exactly(total_tries).times
+            expect(wrapped_client).to have_received(:cp_r_to_blobstore).with(source_dir).exactly(num_retries).times
           end
         end
 
@@ -89,7 +88,7 @@ module CloudController
               client.cp_file_between_keys(source_key, destination_key)
             }.to raise_error RetryableError
 
-            expect(wrapped_client).to have_received(:cp_file_between_keys).with(source_key, destination_key).exactly(total_tries).times
+            expect(wrapped_client).to have_received(:cp_file_between_keys).with(source_key, destination_key).exactly(num_retries).times
           end
         end
 
@@ -103,7 +102,7 @@ module CloudController
               client.delete_all(page_size)
             }.to raise_error RetryableError
 
-            expect(wrapped_client).to have_received(:delete_all).with(page_size).exactly(total_tries).times
+            expect(wrapped_client).to have_received(:delete_all).with(page_size).exactly(num_retries).times
           end
         end
 
@@ -117,7 +116,7 @@ module CloudController
               client.delete_all_in_path(path)
             }.to raise_error RetryableError
 
-            expect(wrapped_client).to have_received(:delete_all_in_path).with(path).exactly(total_tries).times
+            expect(wrapped_client).to have_received(:delete_all_in_path).with(path).exactly(num_retries).times
           end
         end
 
@@ -131,7 +130,7 @@ module CloudController
               client.delete(key)
             }.to raise_error RetryableError
 
-            expect(wrapped_client).to have_received(:delete).with(key).exactly(total_tries).times
+            expect(wrapped_client).to have_received(:delete).with(key).exactly(num_retries).times
           end
         end
 
@@ -145,7 +144,7 @@ module CloudController
               client.delete_blob(blob)
             }.to raise_error RetryableError
 
-            expect(wrapped_client).to have_received(:delete_blob).with(blob).exactly(total_tries).times
+            expect(wrapped_client).to have_received(:delete_blob).with(blob).exactly(num_retries).times
           end
         end
 
@@ -159,7 +158,7 @@ module CloudController
               client.blob(key)
             }.to raise_error RetryableError
 
-            expect(wrapped_client).to have_received(:blob).with(key).exactly(total_tries).times
+            expect(wrapped_client).to have_received(:blob).with(key).exactly(num_retries).times
           end
         end
       end
@@ -201,7 +200,7 @@ module CloudController
             client.send(:with_retries, log_prefix, log_data) { operation.call }
           }.to raise_error(RetryableError)
 
-          expect(operation).to have_received(:call).exactly(total_tries).times
+          expect(operation).to have_received(:call).exactly(num_retries).times
         end
 
         it 'logs the operation on retry' do
@@ -212,7 +211,7 @@ module CloudController
             client.send(:with_retries, log_prefix, log_data) { operation.call }
           }.to raise_error RetryableError
 
-          expect(logger).to have_received(:debug).exactly(total_tries).times
+          expect(logger).to have_received(:debug).exactly(num_retries).times
         end
       end
     end
