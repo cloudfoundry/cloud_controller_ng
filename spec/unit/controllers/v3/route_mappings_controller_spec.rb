@@ -4,13 +4,14 @@ describe RouteMappingsController, type: :controller do
   let(:app) { VCAP::CloudController::AppModel.make }
   let(:space) { app.space }
   let(:org) { space.organization }
-  let!(:app_process) { VCAP::CloudController::App.make(app_guid: app.guid, type: 'web', space_guid: space.guid) }
+  let!(:app_process) { VCAP::CloudController::App.make(:process, app_guid: app.guid, type: 'web', space_guid: space.guid, ports: [8888]) }
   let(:route) { VCAP::CloudController::Route.make(space: space) }
   let(:process_type) { 'web' }
 
   describe '#create' do
     let(:req_body) do
       {
+        app_port: 8888,
         relationships: {
           app:     { guid: app.guid },
           route:   { guid: route.guid },
@@ -42,44 +43,6 @@ describe RouteMappingsController, type: :controller do
       end
     end
 
-    context 'when process type is not provided in the request' do
-      let(:process_type) { nil }
-      let(:route_fetcher) { instance_double(VCAP::CloudController::AddRouteFetcher) }
-      before do
-        allow(VCAP::CloudController::AddRouteFetcher).to receive(:new).and_return(route_fetcher)
-        allow(route_fetcher).to receive(:fetch)
-      end
-
-      it 'defaults to "web"' do
-        post :create, body: req_body
-
-        expect(route_fetcher).to have_received(:fetch).with(app.guid, route.guid, 'web')
-      end
-    end
-
-    context 'when process type is provided in the request' do
-      let(:process_type) { 'worker' }
-      let(:route_fetcher) { instance_double(VCAP::CloudController::AddRouteFetcher) }
-      let(:route_mapping_create) { VCAP::CloudController::RouteMappingCreate.new('admin', 'admin@example.com') }
-      before do
-        allow(VCAP::CloudController::AddRouteFetcher).to receive(:new).and_return(route_fetcher)
-        allow(route_fetcher).to receive(:fetch).and_return [app, route, app_process, space, org]
-      end
-
-      it 'fetches the requested process type' do
-        post :create, body: req_body
-
-        expect(route_fetcher).to have_received(:fetch).with(app.guid, route.guid, 'worker')
-      end
-
-      it 'creates the specified process type' do
-        expect_any_instance_of(VCAP::CloudController::RouteMappingCreate).to receive(:add).with(app, route, app_process, 'worker').and_call_original
-        post :create, body: req_body
-
-        expect(VCAP::CloudController::RouteMappingModel.first.process_type).to eq 'worker'
-      end
-    end
-
     context 'when the requested route does not exist' do
       let(:req_body) do
         {
@@ -96,6 +59,44 @@ describe RouteMappingsController, type: :controller do
         expect(response.status).to eq 404
         expect(response.body).to include('ResourceNotFound')
         expect(response.body).to include('Route not found')
+      end
+    end
+
+    context 'when creating route mappings to the same process' do
+      let(:req_body_2) do
+        {
+          app_port: 1024,
+          relationships: {
+            app:     { guid: app.guid },
+            route:   { guid: route.guid },
+            process: { type: process_type }
+          }
+        }
+      end
+
+      before do
+        app_process.ports = [8888, 1024]
+        app_process.save
+
+        post :create, body: req_body
+        expect(response.status).to eq 201
+      end
+
+      context 'when the ports are unique' do
+        it 'succeeds' do
+          post :create, body: req_body_2
+          expect(response.status).to eq 201
+        end
+      end
+
+      context 'when the ports are not unique' do
+        it 'returns a 422 error' do
+          post :create, body: req_body
+
+          expect(response.status).to eq 422
+          expect(response.body).to include 'CF-UnprocessableEntity'
+          expect(response.body).to include 'The request is semantically invalid: a duplicate route mapping already exists'
+        end
       end
     end
 
@@ -118,6 +119,75 @@ describe RouteMappingsController, type: :controller do
       end
     end
 
+    context 'when ports are nil on the process' do
+      let!(:app_process) { VCAP::CloudController::App.make(:process, app_guid: app.guid, type: process_type, space_guid: space.guid, ports: nil) }
+
+      let(:req_body) do
+        {
+          relationships: {
+            route: { guid: route.guid },
+            app:   { guid: app.guid },
+            process: { type: process_type }
+          }
+        }
+      end
+
+      context 'when the process type is web' do
+        let(:process_type) { 'web' }
+
+        it 'defaults the route mapping port to 8080' do
+          post :create, body: req_body
+
+          expect(response.status).to eq 201
+          expect(VCAP::CloudController::RouteMappingModel.last.app_port).to eq(8080)
+        end
+      end
+    end
+
+    context 'when the requested port is not opened on the app' do
+      let(:req_body) do
+        {
+          app_port: 1234,
+          relationships: {
+            route: { guid: route.guid },
+            app:   { guid: app.guid }
+          }
+        }
+      end
+
+      it 'raises an API 400 error' do
+        post :create, body: req_body
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'Port 1234 is not available on the app'
+      end
+
+      context 'when no app_port is specified, but 8080 is not available on the app' do
+        let(:app) { VCAP::CloudController::AppModel.make }
+        let(:req_body) do
+          {
+            relationships: {
+              route: { guid: route.guid },
+              app:   { guid: app.guid }
+            }
+          }
+        end
+
+        before do
+          app_process.health_check_type = 'none'
+          app_process.ports = []
+          app_process.save
+        end
+
+        it 'raises an API 422 error' do
+          post :create, body: req_body
+
+          expect(response.status).to eq 422
+          expect(response.body).to include 'Port must be specified when app process does not have the default port 8080'
+        end
+      end
+    end
+
     context 'when the mapping is invalid' do
       before do
         add_route_to_app = instance_double(VCAP::CloudController::RouteMappingCreate)
@@ -130,26 +200,6 @@ describe RouteMappingsController, type: :controller do
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
-      end
-    end
-
-    context 'when route is not in the same space as the app' do
-      let(:route_in_other_space) { VCAP::CloudController::Route.make(space: VCAP::CloudController::Space.make) }
-      let(:req_body) do
-        {
-          relationships: {
-            app:     { guid: app.guid },
-            route:   { guid: route_in_other_space.guid },
-            process: { type: 'web' }
-          }
-        }
-      end
-
-      it 'raises UnprocessableRequest' do
-        post :create, body: req_body
-
-        expect(response.status).to eq 422
-        expect(response.body).to include 'belong to the same space'
       end
     end
 

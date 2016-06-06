@@ -71,6 +71,7 @@ module VCAP::CloudController
         actor_hash = actor_guid.nil? ? SYSTEM_ACTOR_HASH : { guid: actor_guid, name: actor_name, type: 'user' }
         metadata   = { route_guid: route.guid }
         if route_mapping
+          metadata[:app_port]           = route_mapping.app_port
           metadata[:route_mapping_guid] = route_mapping.guid
           metadata[:process_type]       = route_mapping.process_type
         end

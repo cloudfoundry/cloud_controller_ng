@@ -35,20 +35,14 @@ class RouteMappingsController < ApplicationController
     message = RouteMappingsCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    process_type = message.process_type || 'web'
-
-    app, route, process, space, org = AddRouteFetcher.new.fetch(
-      message.app_guid,
-      message.route_guid,
-      process_type
-    )
+    app, route, process, space, org = AddRouteFetcher.new.fetch(message)
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
     route_not_found! unless route
 
     begin
-      route_mapping = RouteMappingCreate.new(current_user, current_user_email).add(app, route, process, process_type)
+      route_mapping = RouteMappingCreate.new(current_user, current_user_email, app, route, process, message).add
     rescue RouteMappingCreate::InvalidRouteMapping => e
       unprocessable!(e.message)
     end

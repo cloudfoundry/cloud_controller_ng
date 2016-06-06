@@ -9,6 +9,7 @@ module VCAP::CloudController::Presenters::V3
     let(:route_mapping) do
       VCAP::CloudController::RouteMappingModel.make(
         app:          app,
+        app_port:     1234,
         route:        route,
         process_type: process.type,
         created_at:   Time.at(1),
@@ -26,6 +27,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:guid]).to eq(route_mapping.guid)
         expect(result[:created_at]).to eq('1970-01-01T00:00:01Z')
         expect(result[:updated_at]).to eq('1970-01-01T00:00:02Z')
+        expect(result[:app_port]).to eq(route_mapping.app_port)
         expect(result[:links]).to include(:self)
         expect(result[:links]).to include(:app)
         expect(result[:links]).to include(:route)
