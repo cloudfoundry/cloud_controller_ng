@@ -53,6 +53,43 @@ module VCAP::CloudController
       end
     end
 
+    context 'list' do
+      let(:user) { User.make }
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:organization) { space.organization }
+      let!(:private_domain) { PrivateDomain.make(owning_organization: organization) }
+
+      context 'for space manager' do
+        before do
+          space.organization.add_user(user)
+          space.add_manager(user)
+          set_current_user(user)
+        end
+
+        it 'shows private domains for space manager' do
+          get '/v2/private_domains', nil, headers_for(user)
+
+          expect(parsed_response['total_results']).to eq(1)
+          expect(parsed_response['resources'][0]['metadata']['guid']).to eq(private_domain.guid)
+        end
+      end
+
+      context 'for space auditor' do
+        before do
+          space.organization.add_user(user)
+          space.add_auditor(user)
+          set_current_user(user)
+        end
+
+        it 'shows private domains for space auditor' do
+          get '/v2/private_domains', nil, headers_for(user)
+
+          expect(parsed_response['total_results']).to eq(1)
+          expect(parsed_response['resources'][0]['metadata']['guid']).to eq(private_domain.guid)
+        end
+      end
+    end
+
     describe 'Associations' do
       it do
         expect(described_class).to have_nested_routes(

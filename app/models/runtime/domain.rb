@@ -120,6 +120,8 @@ module VCAP::CloudController
         Space.dataset.join_table(:inner, :spaces_developers, space_id: :spaces__id, user_id: user.id).select(:organization_id)
       ).union(
         Space.dataset.join_table(:inner, :spaces_auditors, space_id: :spaces__id, user_id: user.id).select(:organization_id)
+      ).union(
+        Space.dataset.join_table(:inner, :spaces_managers, space_id: :spaces__id, user_id: user.id).select(:organization_id)
       ).select(:organization_id)
 
       shared_private_domains_filter = dataset.db[:organizations_private_domains].where(organization_id: organizations_filter).select(:private_domain_id)
