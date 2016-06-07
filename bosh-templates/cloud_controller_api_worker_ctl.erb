@@ -36,16 +36,7 @@ case $1 in
   start)
     pid_guard $PIDFILE "Cloud controller jobs"
 
-    mkdir -p $RUN_DIR
-    mkdir -p $LOG_DIR
-    mkdir -p $TMPDIR
-
-    chown vcap:vcap $RUN_DIR
-    chown vcap:vcap $LOG_DIR
-    chown vcap:vcap $TMPDIR
-
     echo $$ > $PIDFILE
-    chown vcap:vcap $PIDFILE
 
     wait_for_blobstore
 
@@ -54,7 +45,7 @@ case $1 in
     # Run the buildpack install only on the first CC Worker launch
     <% if spec.index.to_i == 0 %>
     if [ $INDEX == 1 ]; then
-      chpst -u vcap:vcap bundle exec rake buildpacks:install
+      bundle exec rake buildpacks:install
 
       if [ $? != 0 ]; then
         echo "Buildpacks installation failed"
@@ -63,8 +54,7 @@ case $1 in
     fi
     <% end %>
 
-    <% task_name = "jobs:local"  %>
-    exec chpst -u vcap:vcap bundle exec rake <%= task_name %>[cc_api_worker.<%= spec.job.name %>.<%= spec.index %>.$INDEX]
+    bundle exec rake jobs:local[cc_api_worker.<%= spec.job.name %>.<%= spec.index %>.$INDEX]
   ;;
 
   stop)
