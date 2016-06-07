@@ -26,22 +26,16 @@ tee_output_to_sys_log "${LOG_DIR}"
 case $1 in
 
   start)
-    mkdir -p $RUN_DIR
-    mkdir -p $LOG_DIR
-
-    chown vcap:vcap $RUN_DIR
-    chown vcap:vcap $LOG_DIR
 
     pid_guard $PIDFILE "Cloud controller migration"
 
     echo "$$" > $PIDFILE
-    chown vcap:vcap $PIDFILE
 
     cd $CC_PACKAGE_DIR/cloud_controller_ng
 
     # Run the migrations only on the first CC launch
     <% if spec.index.to_i == 0 %>
-    chpst -u vcap:vcap bundle exec rake db:migrate
+    bundle exec rake db:migrate
 
     if [ $? != 0 ]; then
       echo "Migrations failed"
