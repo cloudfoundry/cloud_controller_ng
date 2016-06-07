@@ -45,6 +45,15 @@ This endpoint creates a new route mapping.
 <ul class="method-list-group">
   <li class="method-list-item">
     <h4 class="method-list-item-label">
+      app_port
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">The port that traffic will be routed to for the mapped process. Defaults to <code>8080</code></p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
       relationships['app']['guid']
 
       <span class="method-list-item-type method-list-item-type-required">required</span>
@@ -68,6 +77,6 @@ This endpoint creates a new route mapping.
       <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Type of the process on the app to which you would like to map the route. Defaults to 'web'</p>
+    <p class="method-list-item-description">Type of the process on the app to which you would like to map the route. Defaults to <code>web</code></p>
   </li>
 </ul>
