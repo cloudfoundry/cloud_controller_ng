@@ -2,8 +2,10 @@ module VCAP::CloudController
   class RouteMappingCreate
     class InvalidRouteMapping < StandardError; end
 
-    DUPLICATE_MESSAGE     = 'a duplicate route mapping already exists'.freeze
+    DUPLICATE_MESSAGE = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
     INVALID_SPACE_MESSAGE = 'the app and route must belong to the same space'.freeze
+    UNAVAILABLE_DEFAULT_PORT_MESSAGE = 'Port must be specified when app process does not have the default port 8080'.freeze
+    UNAVAILABLE_APP_PORT_MESSAGE_FORMAT = 'Port %s is not available on the app\'s process'.freeze
 
     def initialize(user, user_email, app, route, process, message)
       @user       = user
@@ -63,24 +65,27 @@ module VCAP::CloudController
 
     def validate_available_port!
       return if @process.blank?
-      validate_web_port! if @process.type == 'web'
+      validate_web_port!
+      validate_non_web_port!
+    end
 
-      if !@process.ports.nil? && !@process.ports.include?(@message.app_port.to_i)
-        raise InvalidRouteMapping.new("Port #{@message.app_port} is not available on the app")
-      end
-
-      if @process.ports.blank? && @process.type != 'web'
-        raise InvalidRouteMapping.new("Port #{@message.app_port} is not available on the app")
-      end
+    def validate_non_web_port!
+      return if @process.type == 'web'
+      raise_unvailable_port! if @process.ports.blank?
+      raise_unvailable_port! unless @process.ports.include?(@message.app_port.to_i)
     end
 
     def validate_web_port!
+      return unless @process.type == 'web'
+
       if !@message.requested?(:app_port) && !@process.ports.nil? && !@process.ports.include?(@message.app_port.to_i)
-        raise InvalidRouteMapping.new('Port must be specified when app process does not have the default port 8080')
+        raise InvalidRouteMapping.new(UNAVAILABLE_DEFAULT_PORT_MESSAGE)
       end
 
-      if @process.ports.nil? && @message.app_port.to_i != 8080
-        raise InvalidRouteMapping.new("Port #{@message.app_port} is not available on the app")
+      if @process.ports.nil?
+        raise_unvailable_port! unless @message.app_port.to_i == 8080
+      else
+        raise_unvailable_port! unless @process.ports.include?(@message.app_port.to_i)
       end
     end
 
@@ -90,6 +95,10 @@ module VCAP::CloudController
 
     def app_event_repository
       Repositories::AppEventRepository.new
+    end
+
+    def raise_unvailable_port!
+      raise InvalidRouteMapping.new(UNAVAILABLE_APP_PORT_MESSAGE_FORMAT % @message.app_port)
     end
   end
 end

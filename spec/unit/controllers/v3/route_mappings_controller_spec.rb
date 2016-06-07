@@ -62,44 +62,6 @@ describe RouteMappingsController, type: :controller do
       end
     end
 
-    context 'when creating route mappings to the same process' do
-      let(:req_body_2) do
-        {
-          app_port: 1024,
-          relationships: {
-            app:     { guid: app.guid },
-            route:   { guid: route.guid },
-            process: { type: process_type }
-          }
-        }
-      end
-
-      before do
-        app_process.ports = [8888, 1024]
-        app_process.save
-
-        post :create, body: req_body
-        expect(response.status).to eq 201
-      end
-
-      context 'when the ports are unique' do
-        it 'succeeds' do
-          post :create, body: req_body_2
-          expect(response.status).to eq 201
-        end
-      end
-
-      context 'when the ports are not unique' do
-        it 'returns a 422 error' do
-          post :create, body: req_body
-
-          expect(response.status).to eq 422
-          expect(response.body).to include 'CF-UnprocessableEntity'
-          expect(response.body).to include 'The request is semantically invalid: a duplicate route mapping already exists'
-        end
-      end
-    end
-
     context 'when the requested app does not exist' do
       let(:req_body) do
         {
@@ -116,75 +78,6 @@ describe RouteMappingsController, type: :controller do
         expect(response.status).to eq 404
         expect(response.body).to include 'ResourceNotFound'
         expect(response.body).to include 'App not found'
-      end
-    end
-
-    context 'when ports are nil on the process' do
-      let!(:app_process) { VCAP::CloudController::App.make(:process, app_guid: app.guid, type: process_type, space_guid: space.guid, ports: nil) }
-
-      let(:req_body) do
-        {
-          relationships: {
-            route: { guid: route.guid },
-            app:   { guid: app.guid },
-            process: { type: process_type }
-          }
-        }
-      end
-
-      context 'when the process type is web' do
-        let(:process_type) { 'web' }
-
-        it 'defaults the route mapping port to 8080' do
-          post :create, body: req_body
-
-          expect(response.status).to eq 201
-          expect(VCAP::CloudController::RouteMappingModel.last.app_port).to eq(8080)
-        end
-      end
-    end
-
-    context 'when the requested port is not opened on the app' do
-      let(:req_body) do
-        {
-          app_port: 1234,
-          relationships: {
-            route: { guid: route.guid },
-            app:   { guid: app.guid }
-          }
-        }
-      end
-
-      it 'raises an API 400 error' do
-        post :create, body: req_body
-
-        expect(response.status).to eq 422
-        expect(response.body).to include 'Port 1234 is not available on the app'
-      end
-
-      context 'when no app_port is specified, but 8080 is not available on the app' do
-        let(:app) { VCAP::CloudController::AppModel.make }
-        let(:req_body) do
-          {
-            relationships: {
-              route: { guid: route.guid },
-              app:   { guid: app.guid }
-            }
-          }
-        end
-
-        before do
-          app_process.health_check_type = 'none'
-          app_process.ports = []
-          app_process.save
-        end
-
-        it 'raises an API 422 error' do
-          post :create, body: req_body
-
-          expect(response.status).to eq 422
-          expect(response.body).to include 'Port must be specified when app process does not have the default port 8080'
-        end
       end
     end
 
