@@ -96,7 +96,7 @@ function push_docs() {
   git commit -m "Bump v3 API docs version ${VERSION}"
 
   git remote add origin-ssh git@github.com:cloudfoundry/cloud_controller_ng.git
-  #git push origin-ssh gh-pages
+  git push origin-ssh gh-pages
 }
 
 function add_new_docs() {
