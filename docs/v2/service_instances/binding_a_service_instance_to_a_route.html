@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Service Instances API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Service Instances API</h1>
+
+  <div class="article">
+    <h2>Binding a Service Instance to a Route</h2>
+    <h3>PUT /v2/service_instances/:service_instance_guid/routes/:route_guid</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">PUT /v2/service_instances/6da8d173-b409-4094-949f-3c1cc8a68503/routes/3d241cb0-e616-4855-a1ae-838edffded49</pre>
+
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">parameters</span>
+              </td>
+              <td>
+                <span class="description">Arbitrary parameters to pass along to the service broker. Must be a JSON object.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request body">{
+  "parameters": {
+    "the_service_broker": "wants this object"
+  }
+}</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE1NiIsImVtYWlsIjoiZW1haWwtMTExQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTB9.-nyGw-jDDMr-Z6KuBP4l6p02lGtLuWqb_WEGvEBD6Nk
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/service_instances/6da8d173-b409-4094-949f-3c1cc8a68503/routes/3d241cb0-e616-4855-a1ae-838edffded49&quot; -d &#39;{
+  &quot;parameters&quot;: {
+    &quot;the_service_broker&quot;: &quot;wants this object&quot;
+  }
+}&#39; -X PUT \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE1NiIsImVtYWlsIjoiZW1haWwtMTExQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTB9.-nyGw-jDDMr-Z6KuBP4l6p02lGtLuWqb_WEGvEBD6Nk&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "6da8d173-b409-4094-949f-3c1cc8a68503",
+    "url": "/v2/service_instances/6da8d173-b409-4094-949f-3c1cc8a68503",
+    "created_at": "2016-06-08T16:41:30Z",
+    "updated_at": null
+  },
+  "entity": {
+    "name": "name-1548",
+    "credentials": {
+      "creds-key-45": "creds-val-45"
+    },
+    "service_plan_guid": "4cfefd27-3eb7-4f55-806e-1db649038ad2",
+    "space_guid": "ff4aefaa-0c1f-4a0f-9f96-10448ba8f87e",
+    "gateway_data": null,
+    "dashboard_url": null,
+    "type": "managed_service_instance",
+    "last_operation": null,
+    "tags": [
+
+    ],
+    "space_url": "/v2/spaces/ff4aefaa-0c1f-4a0f-9f96-10448ba8f87e",
+    "service_plan_url": "/v2/service_plans/4cfefd27-3eb7-4f55-806e-1db649038ad2",
+    "service_bindings_url": "/v2/service_instances/6da8d173-b409-4094-949f-3c1cc8a68503/service_bindings",
+    "service_keys_url": "/v2/service_instances/6da8d173-b409-4094-949f-3c1cc8a68503/service_keys",
+    "routes_url": "/v2/service_instances/6da8d173-b409-4094-949f-3c1cc8a68503/routes"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: 4b4acee4-87c4-488e-b276-3d8654005dee
+Content-Length: 1030
+X-Content-Type-Options: nosniff</pre>
+
+      <h3>Audit Records Created By The Request</h3>
+      <h4>Audit Record: audit.service_instance.bind_route</h4>
+      <table class="table table-striped table-bordered table-condensed">
+        <thead>
+        <tr>
+          <th>Attribute Name</th>
+          <th>Value</th>
+        </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="name">id</span>
+            </td>
+            <td>
+                <span class="description">195</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">guid</span>
+            </td>
+            <td>
+                <span class="description">36289f96-60ee-466e-a8ae-8eaf66505eb2</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">created_at</span>
+            </td>
+            <td>
+                <span class="description">2016-06-08 16:41:30 UTC</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">updated_at</span>
+            </td>
+            <td>
+                <span class="description"></span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">timestamp</span>
+            </td>
+            <td>
+                <span class="description">2016-06-08 16:41:30 UTC</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">type</span>
+            </td>
+            <td>
+                <span class="description">audit.service_instance.bind_route</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actor</span>
+            </td>
+            <td>
+                <span class="description">uaa-id-156</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actor_type</span>
+            </td>
+            <td>
+                <span class="description">user</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actee</span>
+            </td>
+            <td>
+                <span class="description">6da8d173-b409-4094-949f-3c1cc8a68503</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actee_type</span>
+            </td>
+            <td>
+                <span class="description">service_instance</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">metadata</span>
+            </td>
+            <td>
+                <pre>{
+  &quot;request&quot;: {
+    &quot;route_guid&quot;: &quot;3d241cb0-e616-4855-a1ae-838edffded49&quot;,
+    &quot;parameters&quot;: &quot;[PRIVATE DATA HIDDEN]&quot;
+  }
+}</pre>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">space_id</span>
+            </td>
+            <td>
+                <span class="description"></span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">organization_guid</span>
+            </td>
+            <td>
+                <span class="description">39a1f5bb-a679-40ec-a100-f74cea0222ff</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">space_guid</span>
+            </td>
+            <td>
+                <span class="description">ff4aefaa-0c1f-4a0f-9f96-10448ba8f87e</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actor_name</span>
+            </td>
+            <td>
+                <span class="description">email-111@somedomain.com</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actee_name</span>
+            </td>
+            <td>
+                <span class="description">name-1548</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+  </div>
+</div>
+</body>
+</html>

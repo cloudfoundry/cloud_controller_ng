@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>App Usage Events API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>App Usage Events API</h1>
+
+  <div class="article">
+    <h2>Retrieve a Particular App Usage Event</h2>
+    <h3>GET /v2/app_usage_events/:guid</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/app_usage_events/20822a88-759b-4c64-8001-eb8a77db106b</pre>
+
+
+
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE4MyIsImVtYWlsIjoiZW1haWwtMTM4QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTN9.qtZmUWB_9uhlWaRm0MtDllmhckSwl6cpAtK7swN8VE8
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/app_usage_events/20822a88-759b-4c64-8001-eb8a77db106b&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE4MyIsImVtYWlsIjoiZW1haWwtMTM4QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTN9.qtZmUWB_9uhlWaRm0MtDllmhckSwl6cpAtK7swN8VE8&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "20822a88-759b-4c64-8001-eb8a77db106b",
+    "url": "/v2/app_usage_events/20822a88-759b-4c64-8001-eb8a77db106b",
+    "created_at": "2016-06-08T16:41:33Z"
+  },
+  "entity": {
+    "state": "STARTED",
+    "previous_state": null,
+    "memory_in_mb_per_instance": 564,
+    "previous_memory_in_mb_per_instance": null,
+    "instance_count": 1,
+    "previous_instance_count": null,
+    "app_guid": "guid-c1c81beb-bb7b-4785-be71-c28c3ed3cddc",
+    "app_name": "name-1651",
+    "space_guid": "guid-df51e218-3d43-4364-95c1-69ec8e5af1e4",
+    "space_name": "name-1652",
+    "org_guid": "guid-eb897843-1389-43ed-903a-97523cd7a0cb",
+    "buildpack_guid": "guid-b287bca2-c07c-44cf-aed5-4faa78b38023",
+    "buildpack_name": "name-1653",
+    "package_state": "STAGED",
+    "previous_package_state": null,
+    "parent_app_guid": null,
+    "parent_app_name": null,
+    "process_type": "web",
+    "task_name": null,
+    "task_guid": null
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: 805ef42c-1cdb-41ee-ab58-40addefb2c20
+Content-Length: 951
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

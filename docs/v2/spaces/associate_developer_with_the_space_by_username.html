@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Spaces API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Spaces API</h1>
+
+  <div class="article">
+    <h2>Associate Developer with the Space by Username</h2>
+    <h3>PUT v2/spaces/:guid/developers</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">PUT v2/spaces/41cf9a95-7d8c-4af8-8b29-af39ba825419/developers</pre>
+
+        <h4>Parameters</h4>
+        <table class="parameters table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">guid</span>
+              </td>
+              <td>
+                  <span class="description">The guid of the Space</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">username</span>
+              </td>
+              <td>
+                <span class="description">The user&#39;s name</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>user@example.com</li>
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request body">{
+  "username": "user@example.com"
+}</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQxMCIsImVtYWlsIjoiZW1haWwtMjc4QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDJ9.0gBe42MAK2jM9jy0EZz_2DoLAccCYokeULzaePgAhC4
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]v2/spaces/41cf9a95-7d8c-4af8-8b29-af39ba825419/developers&quot; -d &#39;{
+  &quot;username&quot;: &quot;user@example.com&quot;
+}&#39; -X PUT \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQxMCIsImVtYWlsIjoiZW1haWwtMjc4QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDJ9.0gBe42MAK2jM9jy0EZz_2DoLAccCYokeULzaePgAhC4&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "41cf9a95-7d8c-4af8-8b29-af39ba825419",
+    "url": "/v2/spaces/41cf9a95-7d8c-4af8-8b29-af39ba825419",
+    "created_at": "2016-06-08T16:41:42Z",
+    "updated_at": null
+  },
+  "entity": {
+    "name": "name-2142",
+    "organization_guid": "f88230a1-913c-417e-b0e2-d2a59bf0fa7d",
+    "space_quota_definition_guid": null,
+    "allow_ssh": true,
+    "organization_url": "/v2/organizations/f88230a1-913c-417e-b0e2-d2a59bf0fa7d",
+    "developers_url": "/v2/spaces/41cf9a95-7d8c-4af8-8b29-af39ba825419/developers",
+    "managers_url": "/v2/spaces/41cf9a95-7d8c-4af8-8b29-af39ba825419/managers",
+    "auditors_url": "/v2/spaces/41cf9a95-7d8c-4af8-8b29-af39ba825419/auditors",
+    "apps_url": "/v2/spaces/41cf9a95-7d8c-4af8-8b29-af39ba825419/apps",
+    "routes_url": "/v2/spaces/41cf9a95-7d8c-4af8-8b29-af39ba825419/routes",
+    "domains_url": "/v2/spaces/41cf9a95-7d8c-4af8-8b29-af39ba825419/domains",
+    "service_instances_url": "/v2/spaces/41cf9a95-7d8c-4af8-8b29-af39ba825419/service_instances",
+    "app_events_url": "/v2/spaces/41cf9a95-7d8c-4af8-8b29-af39ba825419/app_events",
+    "events_url": "/v2/spaces/41cf9a95-7d8c-4af8-8b29-af39ba825419/events",
+    "security_groups_url": "/v2/spaces/41cf9a95-7d8c-4af8-8b29-af39ba825419/security_groups"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: 1f91847d-77ea-48f5-b07c-78f19ca4d78f
+Content-Length: 1278
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

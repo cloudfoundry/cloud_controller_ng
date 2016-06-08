@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Spaces API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Spaces API</h1>
+
+  <div class="article">
+    <h2>Retrieving the roles of all Users in the Space</h2>
+    <h3>GET /v2/spaces/:guid/user_roles</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/spaces/9ccd6395-e083-4396-b4bf-99cbc8742827/user_roles?results-per-page=1&amp;page=1</pre>
+
+        <h4>Parameters</h4>
+        <table class="parameters table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">guid</span>
+              </td>
+              <td>
+                  <span class="description">The guid of the Space</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">page</span>
+              </td>
+              <td>
+                  <span class="description">Page of results to fetch</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">results-per-page</span>
+              </td>
+              <td>
+                  <span class="description">Number of results per page</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">order-direction</span>
+              </td>
+              <td>
+                  <span class="description">Order of the results: asc (default) or desc</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request query_parameters highlight">results-per-page: 1
+page: 1</pre>
+
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM2NCIsImVtYWlsIjoiZW1haWwtMjU3QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDB9.450Sg6BnnMV7PQSoewokjL7_Mnogffx_07cwnI7cMVk
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/spaces/9ccd6395-e083-4396-b4bf-99cbc8742827/user_roles?results-per-page=1&amp;page=1&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM2NCIsImVtYWlsIjoiZW1haWwtMjU3QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDB9.450Sg6BnnMV7PQSoewokjL7_Mnogffx_07cwnI7cMVk&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "total_results": 1,
+  "total_pages": 1,
+  "prev_url": null,
+  "next_url": null,
+  "resources": [
+    {
+      "metadata": {
+        "guid": "uaa-id-363",
+        "url": "/v2/users/uaa-id-363",
+        "created_at": "2016-06-08T16:41:40Z",
+        "updated_at": null
+      },
+      "entity": {
+        "admin": false,
+        "active": false,
+        "default_space_guid": null,
+        "username": "everything@example.com",
+        "space_roles": [
+          "space_developer",
+          "space_manager",
+          "space_auditor"
+        ],
+        "spaces_url": "/v2/users/uaa-id-363/spaces",
+        "organizations_url": "/v2/users/uaa-id-363/organizations",
+        "managed_organizations_url": "/v2/users/uaa-id-363/managed_organizations",
+        "billing_managed_organizations_url": "/v2/users/uaa-id-363/billing_managed_organizations",
+        "audited_organizations_url": "/v2/users/uaa-id-363/audited_organizations",
+        "managed_spaces_url": "/v2/users/uaa-id-363/managed_spaces",
+        "audited_spaces_url": "/v2/users/uaa-id-363/audited_spaces"
+      }
+    }
+  ]
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: 00ba9bcf-202d-4b51-8de9-40ee1a1e031a
+Content-Length: 1086
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

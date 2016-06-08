@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Service Bindings API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Service Bindings API</h1>
+
+  <div class="article">
+    <h2>List all Service Bindings</h2>
+    <h3>GET /v2/service_bindings</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/service_bindings</pre>
+
+        <h4>Parameters</h4>
+        <table class="parameters table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">q</span>
+              </td>
+              <td>
+                  <span class="description">Parameters used to filter the result set.<br/>Format queries as &lt;filter&gt;&lt;op&gt;&lt;value&gt;<br/> Valid ops: : &gt;= &lt;= &lt; &gt; IN<br/> Valid filters: app_guid, service_instance_guid</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                    <li>q=filter:value</li>
+                    <li>q=filter&gt;value</li>
+                    <li>q=filter IN a,b,c</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">page</span>
+              </td>
+              <td>
+                  <span class="description">Page of results to fetch</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">results-per-page</span>
+              </td>
+              <td>
+                  <span class="description">Number of results per page</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">order-direction</span>
+              </td>
+              <td>
+                  <span class="description">Order of the results: asc (default) or desc</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">inline-relations-depth</span>
+              </td>
+              <td>
+                  <span class="description">0 - don&#39;t inline any relations and return URLs.  Otherwise, inline to depth N.</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">orphan-relations</span>
+              </td>
+              <td>
+                  <span class="description">0 - de-duplicate object entries in response</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">exclude-relations</span>
+              </td>
+              <td>
+                  <span class="description">comma-delimited list of relations to drop from response</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">include-relations</span>
+              </td>
+              <td>
+                  <span class="description">comma-delimited list of the only relations to include in response</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQzMSIsImVtYWlsIjoiZW1haWwtMjkzQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDN9.RZ27ID-2q4VDelFO5FoZfesyVSfoCPh6KEK69qO2tbo
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/service_bindings&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQzMSIsImVtYWlsIjoiZW1haWwtMjkzQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDN9.RZ27ID-2q4VDelFO5FoZfesyVSfoCPh6KEK69qO2tbo&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "total_results": 1,
+  "total_pages": 1,
+  "prev_url": null,
+  "next_url": null,
+  "resources": [
+    {
+      "metadata": {
+        "guid": "aa599bb3-4811-405a-bbe3-a68c7c55afc8",
+        "url": "/v2/service_bindings/aa599bb3-4811-405a-bbe3-a68c7c55afc8",
+        "created_at": "2016-06-08T16:41:43Z",
+        "updated_at": null
+      },
+      "entity": {
+        "app_guid": "b26e7e98-f002-41a8-a663-1b60f808a92a",
+        "service_instance_guid": "bde206e0-1ee8-48ad-b794-44c857633d50",
+        "credentials": {
+          "creds-key-66": "creds-val-66"
+        },
+        "binding_options": {
+
+        },
+        "gateway_data": null,
+        "gateway_name": "",
+        "syslog_drain_url": null,
+        "volume_mounts": [
+
+        ],
+        "app_url": "/v2/apps/b26e7e98-f002-41a8-a663-1b60f808a92a",
+        "service_instance_url": "/v2/service_instances/bde206e0-1ee8-48ad-b794-44c857633d50"
+      }
+    }
+  ]
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: be542cbd-a5a8-4caf-9915-ecf20b02b8ad
+Content-Length: 921
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

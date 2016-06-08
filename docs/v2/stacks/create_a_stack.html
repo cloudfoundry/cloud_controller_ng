@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Stacks API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Stacks API</h1>
+
+  <div class="article">
+    <h2>Create a Stack</h2>
+    <h3>POST /v2/stacks</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">POST /v2/stacks</pre>
+
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">name</span>
+              </td>
+              <td>
+                <span class="description">The name for the stack.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">description</span>
+              </td>
+              <td>
+                <span class="description">The description for the stack</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request body">{"name":"example_stack","description":"Description for the example stack"}</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTMzIiwiZW1haWwiOiJlbWFpbC0yOUBzb21lZG9tYWluLmNvbSIsInNjb3BlIjpbImNsb3VkX2NvbnRyb2xsZXIuYWRtaW4iXSwiYXVkIjpbImNsb3VkX2NvbnRyb2xsZXIiXSwiZXhwIjoxNDY2MDA4ODgzfQ._IAWbA37CGfIiGHKP3_kwVgk7Llbr26bPgvggkoW9nw
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/stacks&quot; -d &#39;{&quot;name&quot;:&quot;example_stack&quot;,&quot;description&quot;:&quot;Description for the example stack&quot;}&#39; -X POST \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTMzIiwiZW1haWwiOiJlbWFpbC0yOUBzb21lZG9tYWluLmNvbSIsInNjb3BlIjpbImNsb3VkX2NvbnRyb2xsZXIuYWRtaW4iXSwiYXVkIjpbImNsb3VkX2NvbnRyb2xsZXIiXSwiZXhwIjoxNDY2MDA4ODgzfQ._IAWbA37CGfIiGHKP3_kwVgk7Llbr26bPgvggkoW9nw&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "c7d0b591-2572-4d23-bf7c-9dac95074a9e",
+    "url": "/v2/stacks/c7d0b591-2572-4d23-bf7c-9dac95074a9e",
+    "created_at": "2016-06-08T16:41:23Z",
+    "updated_at": null
+  },
+  "entity": {
+    "name": "example_stack",
+    "description": "Description for the example stack"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+Location: /v2/stacks/c7d0b591-2572-4d23-bf7c-9dac95074a9e
+X-VCAP-Request-ID: cb041733-bfee-46a7-9c36-7533e684a2a2
+Content-Length: 305
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

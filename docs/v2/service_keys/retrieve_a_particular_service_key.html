@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Service Keys API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Service Keys API</h1>
+
+  <div class="article">
+    <h2>Retrieve a Particular Service Key</h2>
+    <h3>GET /v2/service_keys/:guid</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/service_keys/6ad2cc9b-1996-49a3-9538-dfc0da3b1f32</pre>
+
+
+
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTIzIiwiZW1haWwiOiJlbWFpbC0yM0Bzb21lZG9tYWluLmNvbSIsInNjb3BlIjpbImNsb3VkX2NvbnRyb2xsZXIuYWRtaW4iXSwiYXVkIjpbImNsb3VkX2NvbnRyb2xsZXIiXSwiZXhwIjoxNDY2MDA4ODgzfQ.obiaVvQZ2N5n1HBqsxGhSgJXED4dS915yduH65E1wtI
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/service_keys/6ad2cc9b-1996-49a3-9538-dfc0da3b1f32&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTIzIiwiZW1haWwiOiJlbWFpbC0yM0Bzb21lZG9tYWluLmNvbSIsInNjb3BlIjpbImNsb3VkX2NvbnRyb2xsZXIuYWRtaW4iXSwiYXVkIjpbImNsb3VkX2NvbnRyb2xsZXIiXSwiZXhwIjoxNDY2MDA4ODgzfQ.obiaVvQZ2N5n1HBqsxGhSgJXED4dS915yduH65E1wtI&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "6ad2cc9b-1996-49a3-9538-dfc0da3b1f32",
+    "url": "/v2/service_keys/6ad2cc9b-1996-49a3-9538-dfc0da3b1f32",
+    "created_at": "2016-06-08T16:41:23Z",
+    "updated_at": null
+  },
+  "entity": {
+    "name": "name-140",
+    "service_instance_guid": "ca567b3d-e142-4139-94e3-1e0c010ba728",
+    "credentials": {
+      "creds-key-7": "creds-val-7"
+    },
+    "service_instance_url": "/v2/service_instances/ca567b3d-e142-4139-94e3-1e0c010ba728"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+Location: /v2/service_keys/6ad2cc9b-1996-49a3-9538-dfc0da3b1f32
+X-VCAP-Request-ID: 7789f79f-5565-4122-baa2-89a8de1a21c5
+Content-Length: 472
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

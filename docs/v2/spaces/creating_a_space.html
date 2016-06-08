@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Spaces API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Spaces API</h1>
+
+  <div class="article">
+    <h2>Creating a Space</h2>
+    <h3>POST /v2/spaces/</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">POST /v2/spaces</pre>
+
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">name</span>
+              </td>
+              <td>
+                <span class="description">The name of the space</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>development</li>
+                      <li>demo</li>
+                      <li>production</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">organization_guid</span>
+              </td>
+              <td>
+                <span class="description">The guid of the associated organization</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>guid-7ffcf1cb-b70d-48fc-9bf5-951b1287bed8</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">developer_guids</span>
+              </td>
+              <td>
+                <span class="description">The list of the associated developers</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">manager_guids</span>
+              </td>
+              <td>
+                <span class="description">The list of the associated managers</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">auditor_guids</span>
+              </td>
+              <td>
+                <span class="description">The list of the associated auditors</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">domain_guids</span>
+              </td>
+              <td>
+                <span class="description">The list of the associated domains</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">security_group_guids</span>
+              </td>
+              <td>
+                <span class="description">The list of the associated security groups</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">space_quota_definition_guid</span>
+              </td>
+              <td>
+                <span class="description">The guid of the associated space quota definition</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">allow_ssh</span>
+              </td>
+              <td>
+                <span class="description">Whether or not Space Developers can enable ssh on apps in the space</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request body">{
+  "name": "development",
+  "organization_guid": "28960823-1b68-4a2b-8f36-77cc573bccca"
+}</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM2MCIsImVtYWlsIjoiZW1haWwtMjU0QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDB9.KG16J1xFGi1sMmGJaHld3bHLRB6Tj9TxIHiImT0nbXE
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/spaces&quot; -d &#39;{
+  &quot;name&quot;: &quot;development&quot;,
+  &quot;organization_guid&quot;: &quot;28960823-1b68-4a2b-8f36-77cc573bccca&quot;
+}&#39; -X POST \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM2MCIsImVtYWlsIjoiZW1haWwtMjU0QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDB9.KG16J1xFGi1sMmGJaHld3bHLRB6Tj9TxIHiImT0nbXE&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "2a01cf80-9fbf-448f-a7a0-1e415e28771e",
+    "url": "/v2/spaces/2a01cf80-9fbf-448f-a7a0-1e415e28771e",
+    "created_at": "2016-06-08T16:41:40Z",
+    "updated_at": null
+  },
+  "entity": {
+    "name": "development",
+    "organization_guid": "28960823-1b68-4a2b-8f36-77cc573bccca",
+    "space_quota_definition_guid": null,
+    "allow_ssh": true,
+    "organization_url": "/v2/organizations/28960823-1b68-4a2b-8f36-77cc573bccca",
+    "developers_url": "/v2/spaces/2a01cf80-9fbf-448f-a7a0-1e415e28771e/developers",
+    "managers_url": "/v2/spaces/2a01cf80-9fbf-448f-a7a0-1e415e28771e/managers",
+    "auditors_url": "/v2/spaces/2a01cf80-9fbf-448f-a7a0-1e415e28771e/auditors",
+    "apps_url": "/v2/spaces/2a01cf80-9fbf-448f-a7a0-1e415e28771e/apps",
+    "routes_url": "/v2/spaces/2a01cf80-9fbf-448f-a7a0-1e415e28771e/routes",
+    "domains_url": "/v2/spaces/2a01cf80-9fbf-448f-a7a0-1e415e28771e/domains",
+    "service_instances_url": "/v2/spaces/2a01cf80-9fbf-448f-a7a0-1e415e28771e/service_instances",
+    "app_events_url": "/v2/spaces/2a01cf80-9fbf-448f-a7a0-1e415e28771e/app_events",
+    "events_url": "/v2/spaces/2a01cf80-9fbf-448f-a7a0-1e415e28771e/events",
+    "security_groups_url": "/v2/spaces/2a01cf80-9fbf-448f-a7a0-1e415e28771e/security_groups"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+Location: /v2/spaces/2a01cf80-9fbf-448f-a7a0-1e415e28771e
+X-VCAP-Request-ID: afea22e9-7613-47bd-915e-43de5923ba13
+Content-Length: 1280
+X-Content-Type-Options: nosniff</pre>
+
+      <h3>Audit Records Created By The Request</h3>
+      <h4>Audit Record: audit.space.create</h4>
+      <table class="table table-striped table-bordered table-condensed">
+        <thead>
+        <tr>
+          <th>Attribute Name</th>
+          <th>Value</th>
+        </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="name">id</span>
+            </td>
+            <td>
+                <span class="description">3</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">guid</span>
+            </td>
+            <td>
+                <span class="description">3ae5862c-fb43-49ed-935b-8feb7d0e19e8</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">created_at</span>
+            </td>
+            <td>
+                <span class="description">2016-06-08 16:41:40 UTC</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">updated_at</span>
+            </td>
+            <td>
+                <span class="description"></span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">timestamp</span>
+            </td>
+            <td>
+                <span class="description">2016-06-08 16:41:40 UTC</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">type</span>
+            </td>
+            <td>
+                <span class="description">audit.space.create</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actor</span>
+            </td>
+            <td>
+                <span class="description">uaa-id-360</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actor_type</span>
+            </td>
+            <td>
+                <span class="description">user</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actee</span>
+            </td>
+            <td>
+                <span class="description">2a01cf80-9fbf-448f-a7a0-1e415e28771e</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actee_type</span>
+            </td>
+            <td>
+                <span class="description">space</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">metadata</span>
+            </td>
+            <td>
+                <pre>{
+  &quot;request&quot;: {
+    &quot;name&quot;: &quot;development&quot;,
+    &quot;organization_guid&quot;: &quot;28960823-1b68-4a2b-8f36-77cc573bccca&quot;,
+    &quot;allow_ssh&quot;: true
+  }
+}</pre>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">space_id</span>
+            </td>
+            <td>
+                <span class="description"></span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">organization_guid</span>
+            </td>
+            <td>
+                <span class="description">28960823-1b68-4a2b-8f36-77cc573bccca</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">space_guid</span>
+            </td>
+            <td>
+                <span class="description">2a01cf80-9fbf-448f-a7a0-1e415e28771e</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actor_name</span>
+            </td>
+            <td>
+                <span class="description">email-254@somedomain.com</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actee_name</span>
+            </td>
+            <td>
+                <span class="description">development</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+  </div>
+</div>
+</body>
+</html>

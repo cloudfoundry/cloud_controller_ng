@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Apps API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Apps API</h1>
+
+  <div class="article">
+    <h2>Uploads the bits for an App</h2>
+    <h3>PUT /v2/apps/:guid/bits</h3>
+      <p class="explanation">
+                Defines and uploads the bits (artifacts and dependencies) that this application needs to run, using a multipart PUT request.
+        Bits that have already been uploaded can be referenced by their resource fingerprint(s).
+        Bits that have not already been uploaded to Cloud Foundry must be included as a zipped binary file named &quot;application&quot;.
+        File mode bits are only presevered for applications run on a Diego backend. If left blank, mode will default to 749, which
+        are also the default bits for a DEA backend. File mode bits are required to have at least the minimum permissions of 0600.
+
+      </p>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">PUT /v2/apps/961f5e5a-3f8b-4204-8d9e-d0c7d8223dbd/bits</pre>
+
+        <h4>Parameters</h4>
+        <table class="parameters table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">guid</span>
+              </td>
+              <td>
+                  <span class="description">The guid of the App</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">async</span>
+              </td>
+              <td>
+                  <span class="description">      If true, a new asynchronous job is submitted to persist the bits and the job id is included in the response.
+      The client will need to poll the job&#39;s status until persistence is completed successfully.
+      If false, the request will block until the bits are persisted synchronously.
+      Defaults to false.
+</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">resources</span>
+              </td>
+              <td>
+                <span class="description">      Fingerprints of the application bits that have previously been pushed to Cloud Foundry.
+      Each fingerprint must include the file path, sha1 hash, and file size in bytes.
+      Each fingerprint may include the file mode, which must be an octal string with at least read and write permissions for owners.
+      If a mode is not provided, the default mode of 0744 will be used.
+      Fingerprinted bits MUST exist in the Cloud Foundry resource cache or the request (or job, if async) will fail.
+</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>[{&quot;fn&quot;:&quot;path/to/content.txt&quot;,&quot;size&quot;:123,&quot;sha1&quot;:&quot;b907173290db6a155949ab4dc9b2d019dea0c901&quot;},{&quot;fn&quot;:&quot;path/to/code.jar&quot;,&quot;size&quot;:123,&quot;sha1&quot;:&quot;ff84f89760317996b9dd180ab996b079f418396f&quot;},{&quot;fn&quot;:&quot;path/to/code.jar&quot;,&quot;size&quot;:123,&quot;sha1&quot;:&quot;ff84f89760317996b9dd180ab996b079f418396f&quot;,&quot;mode&quot;:&quot;644&quot;}]</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">application</span>
+              </td>
+              <td>
+                <span class="description">A binary zip file containing the application bits.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request body">--AaB03x
+Content-Disposition: form-data; name="async"
+
+true
+--AaB03x
+Content-Disposition: form-data; name="resources"
+
+[{"fn":"path/to/content.txt","size":123,"sha1":"b907173290db6a155949ab4dc9b2d019dea0c901"},{"fn":"path/to/code.jar","size":123,"sha1":"ff84f89760317996b9dd180ab996b079f418396f"}]
+--AaB03x
+Content-Disposition: form-data; name="application"; filename="application.zip"
+Content-Type: application/zip
+Content-Length: 123
+Content-Transfer-Encoding: binary
+
+&lt;&lt;binary artifact bytes&gt;&gt;
+--AaB03x
+</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTYiLCJlbWFpbCI6ImVtYWlsLTZAc29tZWRvbWFpbi5jb20iLCJzY29wZSI6WyJjbG91ZF9jb250cm9sbGVyLmFkbWluIl0sImF1ZCI6WyJjbG91ZF9jb250cm9sbGVyIl0sImV4cCI6MTQ2NjAwODg4MX0.5_adJB37XVgCfmildrgy7efQwpOlsa_V1-61L_kT5DY
+Host: example.org
+Content-Type: multipart/form-data; boundary=----------XnJLe9ZIbbGUYtzPQJ16u1
+Cookie: </pre>
+
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "8d321cee-8633-42e9-a021-78876d0d389c",
+    "created_at": "2016-06-08T16:41:21Z",
+    "url": "/v2/jobs/8d321cee-8633-42e9-a021-78876d0d389c"
+  },
+  "entity": {
+    "guid": "8d321cee-8633-42e9-a021-78876d0d389c",
+    "status": "queued"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: b9c81f5b-6282-41b9-a2ea-70898e32b200
+Content-Length: 270
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

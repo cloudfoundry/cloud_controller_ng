@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Routes API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Routes API</h1>
+
+  <div class="article">
+    <h2>Retrieve a Particular Route</h2>
+    <h3>GET /v2/routes/:guid</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/routes/3682ced5-10d5-459a-bcd8-4765339eda8d</pre>
+
+
+
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTEzNiIsImVtYWlsIjoiZW1haWwtOTFAc29tZWRvbWFpbi5jb20iLCJzY29wZSI6WyJjbG91ZF9jb250cm9sbGVyLmFkbWluIl0sImF1ZCI6WyJjbG91ZF9jb250cm9sbGVyIl0sImV4cCI6MTQ2NjAwODg4OH0.8sPtNKRLGytY4UwPLTqWzSrQTe0DfSn-bT5b0cNS8pk
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/routes/3682ced5-10d5-459a-bcd8-4765339eda8d&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTEzNiIsImVtYWlsIjoiZW1haWwtOTFAc29tZWRvbWFpbi5jb20iLCJzY29wZSI6WyJjbG91ZF9jb250cm9sbGVyLmFkbWluIl0sImF1ZCI6WyJjbG91ZF9jb250cm9sbGVyIl0sImV4cCI6MTQ2NjAwODg4OH0.8sPtNKRLGytY4UwPLTqWzSrQTe0DfSn-bT5b0cNS8pk&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "3682ced5-10d5-459a-bcd8-4765339eda8d",
+    "url": "/v2/routes/3682ced5-10d5-459a-bcd8-4765339eda8d",
+    "created_at": "2016-06-08T16:41:28Z",
+    "updated_at": null
+  },
+  "entity": {
+    "host": "host-13",
+    "path": "",
+    "domain_guid": "e0424d83-b1c3-461c-872d-5baf63206c94",
+    "space_guid": "04e7458f-9cd5-4653-8b77-60d29b5b478d",
+    "service_instance_guid": "bcfb342f-58c0-4f91-8fee-94eb4d752aef",
+    "port": null,
+    "domain_url": "/v2/shared_domains/e0424d83-b1c3-461c-872d-5baf63206c94",
+    "space_url": "/v2/spaces/04e7458f-9cd5-4653-8b77-60d29b5b478d",
+    "service_instance_url": "/v2/service_instances/bcfb342f-58c0-4f91-8fee-94eb4d752aef",
+    "apps_url": "/v2/routes/3682ced5-10d5-459a-bcd8-4765339eda8d/apps",
+    "route_mappings_url": "/v2/routes/3682ced5-10d5-459a-bcd8-4765339eda8d/route_mappings"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: bddfeccc-ef96-46e0-907f-4c3d0c83deba
+Content-Length: 862
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

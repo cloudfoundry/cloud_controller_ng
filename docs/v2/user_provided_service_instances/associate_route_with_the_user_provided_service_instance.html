@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Provided Service Instances API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>User Provided Service Instances API</h1>
+
+  <div class="article">
+    <h2>Associate Route with the User Provided Service Instance</h2>
+    <h3>PUT /v2/user_provided_service_instances/:guid/routes/:route_guid</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">PUT /v2/user_provided_service_instances/5badd282-6e07-4fc6-a8c4-78be99040774/routes/237d9236-7997-4b1a-be8d-2aaf2d85421a</pre>
+
+
+
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE4NiIsImVtYWlsIjoiZW1haWwtMTQxQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTN9.uC0voTc60PaK884k-Q-0RDt97ZggLA2ledcNlN9L1ks
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/user_provided_service_instances/5badd282-6e07-4fc6-a8c4-78be99040774/routes/237d9236-7997-4b1a-be8d-2aaf2d85421a&quot; -d &#39;&#39; -X PUT \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE4NiIsImVtYWlsIjoiZW1haWwtMTQxQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTN9.uC0voTc60PaK884k-Q-0RDt97ZggLA2ledcNlN9L1ks&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "5badd282-6e07-4fc6-a8c4-78be99040774",
+    "url": "/v2/user_provided_service_instances/5badd282-6e07-4fc6-a8c4-78be99040774",
+    "created_at": "2016-06-08T16:41:33Z",
+    "updated_at": null
+  },
+  "entity": {
+    "name": "name-1676",
+    "credentials": {
+      "creds-key-52": "creds-val-52"
+    },
+    "space_guid": "91b53184-6430-4891-8d4b-fabbe96a84f6",
+    "type": "user_provided_service_instance",
+    "syslog_drain_url": "https://foo.com/url-93",
+    "route_service_url": "https://foo.com/url-92",
+    "space_url": "/v2/spaces/91b53184-6430-4891-8d4b-fabbe96a84f6",
+    "service_bindings_url": "/v2/user_provided_service_instances/5badd282-6e07-4fc6-a8c4-78be99040774/service_bindings",
+    "routes_url": "/v2/user_provided_service_instances/5badd282-6e07-4fc6-a8c4-78be99040774/routes"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: d6525643-c080-4940-b408-676d417314c4
+Content-Length: 830
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

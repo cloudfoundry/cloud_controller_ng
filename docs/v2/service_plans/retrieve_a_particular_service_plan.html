@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Service Plans API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Service Plans API</h1>
+
+  <div class="article">
+    <h2>Retrieve a Particular Service Plan</h2>
+    <h3>GET /v2/service_plans/:guid</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/service_plans/775d0046-7505-40a4-bfad-ca472485e332</pre>
+
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">guid</span>
+              </td>
+              <td>
+                <span class="description">The guid of the service plan</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">public</span>
+              </td>
+              <td>
+                <span class="description">A boolean describing that the plan is visible to the all users</span>
+              </td>
+              <td>
+                <span class="default">true</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE2MCIsImVtYWlsIjoiZW1haWwtMTE1QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTB9.LU_EyvYwa11qkiee2NjOjsJ8hnlmVPyWNw8k8yJoOOs
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/service_plans/775d0046-7505-40a4-bfad-ca472485e332&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE2MCIsImVtYWlsIjoiZW1haWwtMTE1QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTB9.LU_EyvYwa11qkiee2NjOjsJ8hnlmVPyWNw8k8yJoOOs&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "775d0046-7505-40a4-bfad-ca472485e332",
+    "url": "/v2/service_plans/775d0046-7505-40a4-bfad-ca472485e332",
+    "created_at": "2016-06-08T16:41:30Z",
+    "updated_at": null
+  },
+  "entity": {
+    "name": "name-1573",
+    "free": false,
+    "description": "desc-107",
+    "service_guid": "a00cacc0-0ca6-422e-91d3-6b22bcd33450",
+    "extra": null,
+    "unique_id": "35c56e06-f0c6-4abe-b158-b7c24c889905",
+    "public": true,
+    "active": true,
+    "service_url": "/v2/services/a00cacc0-0ca6-422e-91d3-6b22bcd33450",
+    "service_instances_url": "/v2/service_plans/775d0046-7505-40a4-bfad-ca472485e332/service_instances"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: b7365f93-69ac-459e-9fae-73ce56701efe
+Content-Length: 655
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

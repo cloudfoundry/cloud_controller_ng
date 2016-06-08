@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Routes API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Routes API</h1>
+
+  <div class="article">
+    <h2>Creating a Route</h2>
+    <h3>POST /v2/routes/</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">POST /v2/routes</pre>
+
+        <h4>Parameters</h4>
+        <table class="parameters table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">generate_port</span>
+              </td>
+              <td>
+                  <span class="description">Set to `true` to generate a random port. Defaults to `false`. Supported for domains for TCP router groups only. Takes precedence over manually specified port.
+</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                    <li>true</li>
+                    <li>false</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">domain_guid</span>
+              </td>
+              <td>
+                <span class="description">The guid of the associated domain</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>guid-f3ee2d74-af5b-440a-a91c-acf253eb1d02</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">space_guid</span>
+              </td>
+              <td>
+                <span class="description">The guid of the associated space</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>guid-0f3594a3-36cc-4e73-ba22-89131d6163c4</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">host</span>
+              </td>
+              <td>
+                <span class="description">The host portion of the route. Required for shared-domains.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">port</span>
+              </td>
+              <td>
+                <span class="description">The port of the route. Supported for domains of TCP router groups only.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                    <li>1024-65535</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>50000</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">path</span>
+              </td>
+              <td>
+                <span class="description">The path for a route as raw text. 1) Paths must be between 2 and 128 characters 2) Paths must start with a forward slash &quot;/&quot; 3) Paths must not contain a &quot;?&quot;</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>/apps/v1/path</li>
+                      <li>/apps/v2/path</li>
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request body">{
+  "domain_guid": "83c53281-a904-46c7-8eeb-8246d9955f0d",
+  "space_guid": "299cedc7-ca5d-4384-b78f-52bb8e6e1c04",
+  "port": 10000
+}</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTEzNSIsImVtYWlsIjoiZW1haWwtOTBAc29tZWRvbWFpbi5jb20iLCJzY29wZSI6WyJjbG91ZF9jb250cm9sbGVyLmFkbWluIl0sImF1ZCI6WyJjbG91ZF9jb250cm9sbGVyIl0sImV4cCI6MTQ2NjAwODg4OH0.RtMC1co7U_m2aeszr4I-Lz4N5KNvmxn5lukOFcJe9XA
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/routes&quot; -d &#39;{
+  &quot;domain_guid&quot;: &quot;83c53281-a904-46c7-8eeb-8246d9955f0d&quot;,
+  &quot;space_guid&quot;: &quot;299cedc7-ca5d-4384-b78f-52bb8e6e1c04&quot;,
+  &quot;port&quot;: 10000
+}&#39; -X POST \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTEzNSIsImVtYWlsIjoiZW1haWwtOTBAc29tZWRvbWFpbi5jb20iLCJzY29wZSI6WyJjbG91ZF9jb250cm9sbGVyLmFkbWluIl0sImF1ZCI6WyJjbG91ZF9jb250cm9sbGVyIl0sImV4cCI6MTQ2NjAwODg4OH0.RtMC1co7U_m2aeszr4I-Lz4N5KNvmxn5lukOFcJe9XA&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "32c16ec5-07c7-4e36-980b-3195af5c9abf",
+    "url": "/v2/routes/32c16ec5-07c7-4e36-980b-3195af5c9abf",
+    "created_at": "2016-06-08T16:41:28Z",
+    "updated_at": null
+  },
+  "entity": {
+    "host": "",
+    "path": "",
+    "domain_guid": "83c53281-a904-46c7-8eeb-8246d9955f0d",
+    "space_guid": "299cedc7-ca5d-4384-b78f-52bb8e6e1c04",
+    "service_instance_guid": null,
+    "port": 10000,
+    "domain_url": "/v2/shared_domains/83c53281-a904-46c7-8eeb-8246d9955f0d",
+    "space_url": "/v2/spaces/299cedc7-ca5d-4384-b78f-52bb8e6e1c04",
+    "apps_url": "/v2/routes/32c16ec5-07c7-4e36-980b-3195af5c9abf/apps",
+    "route_mappings_url": "/v2/routes/32c16ec5-07c7-4e36-980b-3195af5c9abf/route_mappings"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+Location: /v2/routes/32c16ec5-07c7-4e36-980b-3195af5c9abf
+X-VCAP-Request-ID: 4aabf425-9d4e-4e5d-93d3-83f949bcbe79
+Content-Length: 732
+X-Content-Type-Options: nosniff</pre>
+
+      <h3>Audit Records Created By The Request</h3>
+      <h4>Audit Record: audit.route.create</h4>
+      <table class="table table-striped table-bordered table-condensed">
+        <thead>
+        <tr>
+          <th>Attribute Name</th>
+          <th>Value</th>
+        </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="name">id</span>
+            </td>
+            <td>
+                <span class="description">192</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">guid</span>
+            </td>
+            <td>
+                <span class="description">b90f0c36-7012-4bc5-a496-193d70ca39e5</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">created_at</span>
+            </td>
+            <td>
+                <span class="description">2016-06-08 16:41:28 UTC</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">updated_at</span>
+            </td>
+            <td>
+                <span class="description"></span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">timestamp</span>
+            </td>
+            <td>
+                <span class="description">2016-06-08 16:41:28 UTC</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">type</span>
+            </td>
+            <td>
+                <span class="description">audit.route.create</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actor</span>
+            </td>
+            <td>
+                <span class="description">uaa-id-135</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actor_type</span>
+            </td>
+            <td>
+                <span class="description">user</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actee</span>
+            </td>
+            <td>
+                <span class="description">32c16ec5-07c7-4e36-980b-3195af5c9abf</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actee_type</span>
+            </td>
+            <td>
+                <span class="description">route</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">metadata</span>
+            </td>
+            <td>
+                <pre>{
+  &quot;request&quot;: {
+    &quot;domain_guid&quot;: &quot;83c53281-a904-46c7-8eeb-8246d9955f0d&quot;,
+    &quot;space_guid&quot;: &quot;299cedc7-ca5d-4384-b78f-52bb8e6e1c04&quot;,
+    &quot;port&quot;: 10000,
+    &quot;host&quot;: &quot;&quot;
+  }
+}</pre>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">space_id</span>
+            </td>
+            <td>
+                <span class="description"></span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">organization_guid</span>
+            </td>
+            <td>
+                <span class="description">3996f758-db13-4923-b3ac-a45f6ac11350</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">space_guid</span>
+            </td>
+            <td>
+                <span class="description">299cedc7-ca5d-4384-b78f-52bb8e6e1c04</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actor_name</span>
+            </td>
+            <td>
+                <span class="description">email-90@somedomain.com</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actee_name</span>
+            </td>
+            <td>
+                <span class="description"></span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+  </div>
+</div>
+</body>
+</html>

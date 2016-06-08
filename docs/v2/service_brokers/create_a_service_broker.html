@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Service Brokers API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Service Brokers API</h1>
+
+  <div class="article">
+    <h2>Create a Service Broker</h2>
+    <h3>POST /v2/service_brokers</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">POST /v2/service_brokers</pre>
+
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">name</span>
+              </td>
+              <td>
+                <span class="description">The name of the service broker.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>service-broker-name</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">broker_url</span>
+              </td>
+              <td>
+                <span class="description">The URL of the service broker.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>https://broker.example.com</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">auth_username</span>
+              </td>
+              <td>
+                <span class="description">The username with which to authenticate against the service broker.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>admin</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">auth_password</span>
+              </td>
+              <td>
+                <span class="description">The password with which to authenticate against the service broker.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>secretpassw0rd</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">space_guid</span>
+              </td>
+              <td>
+                <span class="description">Guid of a space the broker is scoped to. Space developers are able to create service brokers scoped to a space.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request body">{
+  "name": "service-broker-name",
+  "broker_url": "https://broker.example.com",
+  "auth_username": "admin",
+  "auth_password": "secretpassw0rd"
+}</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE5IiwiZW1haWwiOiJlbWFpbC0xOUBzb21lZG9tYWluLmNvbSIsInNjb3BlIjpbImNsb3VkX2NvbnRyb2xsZXIuYWRtaW4iXSwiYXVkIjpbImNsb3VkX2NvbnRyb2xsZXIiXSwiZXhwIjoxNDY2MDA4ODgyfQ.VGIbxLR2RnxwzI2ZJlMQ-qwFjJHgafBGz09oHK--tYk
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/service_brokers&quot; -d &#39;{
+  &quot;name&quot;: &quot;service-broker-name&quot;,
+  &quot;broker_url&quot;: &quot;https://broker.example.com&quot;,
+  &quot;auth_username&quot;: &quot;admin&quot;,
+  &quot;auth_password&quot;: &quot;secretpassw0rd&quot;
+}&#39; -X POST \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE5IiwiZW1haWwiOiJlbWFpbC0xOUBzb21lZG9tYWluLmNvbSIsInNjb3BlIjpbImNsb3VkX2NvbnRyb2xsZXIuYWRtaW4iXSwiYXVkIjpbImNsb3VkX2NvbnRyb2xsZXIiXSwiZXhwIjoxNDY2MDA4ODgyfQ.VGIbxLR2RnxwzI2ZJlMQ-qwFjJHgafBGz09oHK--tYk&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "36931aaf-62a7-4019-a708-0e9abf7e7a8f",
+    "created_at": "2016-06-08T16:41:22Z",
+    "updated_at": null,
+    "url": "/v2/service_brokers/36931aaf-62a7-4019-a708-0e9abf7e7a8f"
+  },
+  "entity": {
+    "name": "service-broker-name",
+    "broker_url": "https://broker.example.com",
+    "auth_username": "admin",
+    "space_guid": null
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+Location: /v2/service_brokers/36931aaf-62a7-4019-a708-0e9abf7e7a8f
+X-VCAP-Request-ID: eb750fea-1193-41fc-98c9-c68299df9e0c
+Content-Length: 366
+X-Content-Type-Options: nosniff
+X-Cf-Warnings: Warning%3A+Warning+message+may+go+here.</pre>
+
+  </div>
+</div>
+</body>
+</html>

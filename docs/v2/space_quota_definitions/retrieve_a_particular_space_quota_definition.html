@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Space Quota Definitions API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Space Quota Definitions API</h1>
+
+  <div class="article">
+    <h2>Retrieve a Particular Space Quota Definition</h2>
+    <h3>GET /v2/space_quota_definitions/:guid</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/space_quota_definitions/a9097bc8-c6cf-4a8f-bc47-623fa22e8019</pre>
+
+
+
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE0NyIsImVtYWlsIjoiZW1haWwtMTAyQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4ODl9.rIQPcpbK3tW9rhqDAa86RkEBHP7JqWWvlGKpznqTDVg
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/space_quota_definitions/a9097bc8-c6cf-4a8f-bc47-623fa22e8019&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE0NyIsImVtYWlsIjoiZW1haWwtMTAyQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4ODl9.rIQPcpbK3tW9rhqDAa86RkEBHP7JqWWvlGKpznqTDVg&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "a9097bc8-c6cf-4a8f-bc47-623fa22e8019",
+    "url": "/v2/space_quota_definitions/a9097bc8-c6cf-4a8f-bc47-623fa22e8019",
+    "created_at": "2016-06-08T16:41:29Z",
+    "updated_at": null
+  },
+  "entity": {
+    "name": "name-1491",
+    "organization_guid": "a065dfc7-3aed-4438-a6af-b1f42d9a4ed4",
+    "non_basic_services_allowed": true,
+    "total_services": 60,
+    "total_routes": 1000,
+    "memory_limit": 20480,
+    "instance_memory_limit": -1,
+    "app_instance_limit": -1,
+    "app_task_limit": 5,
+    "total_service_keys": 600,
+    "total_reserved_route_ports": -1,
+    "organization_url": "/v2/organizations/a065dfc7-3aed-4438-a6af-b1f42d9a4ed4",
+    "spaces_url": "/v2/space_quota_definitions/a9097bc8-c6cf-4a8f-bc47-623fa22e8019/spaces"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: 8026961b-4129-42cd-8b66-d5fbf57b4888
+Content-Length: 778
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

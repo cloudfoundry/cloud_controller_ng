@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Organization Quota Definitions API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Organization Quota Definitions API</h1>
+
+  <div class="article">
+    <h2>Updating a Organization Quota Definition</h2>
+    <h3>PUT /v2/quota_definitions/:guid</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">PUT /v2/quota_definitions/213b27a0-c937-4074-aade-bba2226980aa</pre>
+
+        <h4>Parameters</h4>
+        <table class="parameters table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">guid</span>
+              </td>
+              <td>
+                  <span class="description">The guid of the Organization Quota Definition</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">name</span>
+              </td>
+              <td>
+                <span class="description">The name for the Organization Quota Definition.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>gold_quota</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">non_basic_services_allowed</span>
+              </td>
+              <td>
+                <span class="description">If an organization can have non basic services</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                    <li>true</li>
+                    <li>false</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">total_services</span>
+              </td>
+              <td>
+                <span class="description">How many services an organization can have. (-1 represents an unlimited amount)</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>-1</li>
+                      <li>5</li>
+                      <li>201</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">total_service_keys</span>
+              </td>
+              <td>
+                <span class="description">How many service keys an organization can have. (-1 represents an unlimited amount)</span>
+              </td>
+              <td>
+                <span class="default">-1</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>-1</li>
+                      <li>5</li>
+                      <li>201</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">total_routes</span>
+              </td>
+              <td>
+                <span class="description">How many routes an organization can have. (-1 represents an unlimited amount)</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>-1</li>
+                      <li>10</li>
+                      <li>23</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">total_reserved_route_ports</span>
+              </td>
+              <td>
+                <span class="description">How many routes an organization can have that use a reserved port. These routes count toward total_routes. (-1 represents an unlimited amount)</span>
+              </td>
+              <td>
+                <span class="default">0</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>-1</li>
+                      <li>10</li>
+                      <li>20</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">total_private_domains</span>
+              </td>
+              <td>
+                <span class="description">How many private domains an organization can have. (-1 represents an unlimited amount)</span>
+              </td>
+              <td>
+                <span class="default">-1</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>-1</li>
+                      <li>10</li>
+                      <li>23</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">memory_limit</span>
+              </td>
+              <td>
+                <span class="description">How much memory in megabyte an organization can have.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>5120</li>
+                      <li>9999</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">instance_memory_limit</span>
+              </td>
+              <td>
+                <span class="description">The maximum amount of memory in megabyte an application instance can have. (-1 represents an unlimited amount)</span>
+              </td>
+              <td>
+                <span class="default">-1</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>-1</li>
+                      <li>10240</li>
+                      <li>9999</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated ">
+              <td class=" ">
+                <span class="name">trial_db_allowed</span>
+              </td>
+              <td>
+                <span class="description">If an organization can have a trial db.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">app_instance_limit</span>
+              </td>
+              <td>
+                <span class="description">How many app instances an organization can create. (-1 represents an unlimited amount)</span>
+              </td>
+              <td>
+                <span class="default">-1</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>-1</li>
+                      <li>10</li>
+                      <li>23</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" experimental">
+                <span class="name">app_task_limit</span>
+              </td>
+              <td>
+                <span class="description">The number of tasks that can be run per app. (-1 represents an unlimited amount)</span>
+              </td>
+              <td>
+                <span class="default">-1</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>-1</li>
+                      <li>10</li>
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request body">{
+
+}</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTMzMiIsImVtYWlsIjoiZW1haWwtMjI3QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTl9.cNl6syslTs86UeaDxvmUS-oiS_FyyZvg9kMPpzJ-M1Q
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/quota_definitions/213b27a0-c937-4074-aade-bba2226980aa&quot; -d &#39;{
+
+}&#39; -X PUT \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTMzMiIsImVtYWlsIjoiZW1haWwtMjI3QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTl9.cNl6syslTs86UeaDxvmUS-oiS_FyyZvg9kMPpzJ-M1Q&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "213b27a0-c937-4074-aade-bba2226980aa",
+    "url": "/v2/quota_definitions/213b27a0-c937-4074-aade-bba2226980aa",
+    "created_at": "2016-06-08T16:41:39Z",
+    "updated_at": "2016-06-08T16:41:39Z"
+  },
+  "entity": {
+    "name": "name-1998",
+    "non_basic_services_allowed": true,
+    "total_services": 60,
+    "total_routes": 1000,
+    "total_private_domains": -1,
+    "memory_limit": 20480,
+    "trial_db_allowed": false,
+    "instance_memory_limit": -1,
+    "app_instance_limit": -1,
+    "app_task_limit": -1,
+    "total_service_keys": -1,
+    "total_reserved_route_ports": 5
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: f3db0cf6-db75-4fb6-bfd6-f6e1e7724b31
+Content-Length: 613
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

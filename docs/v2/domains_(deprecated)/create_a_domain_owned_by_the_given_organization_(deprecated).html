@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Domains (deprecated) API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Domains (deprecated) API</h1>
+
+  <div class="article">
+    <h2>Create a Domain owned by the given Organization (deprecated)</h2>
+    <h3>POST /v2/domains</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">POST /v2/domains</pre>
+
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">guid</span>
+              </td>
+              <td>
+                <span class="description">The guid of the domain.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">name</span>
+              </td>
+              <td>
+                <span class="description">The name of the domain.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>example.com</li>
+                      <li>foo.example.com</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">wildcard</span>
+              </td>
+              <td>
+                <span class="description">Allow routes with non-empty hosts</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                    <li>true</li>
+                    <li>false</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">owning_organization_guid</span>
+              </td>
+              <td>
+                <span class="description">The organization that owns the domain. If not specified, the domain is shared.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request body">{
+  "name": "exmaple.com",
+  "wildcard": true,
+  "owning_organization_guid": "83f6ff9e-2cd8-4dbc-a3da-124ec61510eb"
+}</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTI2NSIsImVtYWlsIjoiZW1haWwtMTg5QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTV9.YfotTDCwdT_Ke8QR6Jwv6HEbEknkm3_lYYU5r45m6z8
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/domains&quot; -d &#39;{
+  &quot;name&quot;: &quot;exmaple.com&quot;,
+  &quot;wildcard&quot;: true,
+  &quot;owning_organization_guid&quot;: &quot;83f6ff9e-2cd8-4dbc-a3da-124ec61510eb&quot;
+}&#39; -X POST \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTI2NSIsImVtYWlsIjoiZW1haWwtMTg5QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTV9.YfotTDCwdT_Ke8QR6Jwv6HEbEknkm3_lYYU5r45m6z8&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "d6b88020-bb62-404b-9b4e-0f673deb7bd1",
+    "url": "/v2/private_domains/d6b88020-bb62-404b-9b4e-0f673deb7bd1",
+    "created_at": "2016-06-08T16:41:35Z",
+    "updated_at": null
+  },
+  "entity": {
+    "name": "exmaple.com",
+    "owning_organization_guid": "83f6ff9e-2cd8-4dbc-a3da-124ec61510eb",
+    "owning_organization_url": "/v2/organizations/83f6ff9e-2cd8-4dbc-a3da-124ec61510eb",
+    "spaces_url": "/v2/domains/d6b88020-bb62-404b-9b4e-0f673deb7bd1/spaces"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+Location: /v2/domains/d6b88020-bb62-404b-9b4e-0f673deb7bd1
+X-VCAP-Request-ID: 611872e6-e26d-43f5-906f-ad7d9276cae7
+X-Cf-Warnings: Endpoint+deprecated
+Content-Length: 494
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

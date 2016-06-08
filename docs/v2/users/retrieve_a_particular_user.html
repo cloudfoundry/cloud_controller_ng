@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Users API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Users API</h1>
+
+  <div class="article">
+    <h2>Retrieve a Particular User</h2>
+    <h3>GET /v2/users/:guid</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/users/uaa-id-317</pre>
+
+
+
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTMxOCIsImVtYWlsIjoiZW1haWwtMjE0QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTd9.e2byZUP7dNqBcLxD0b_seK18ks5EIorKvCtrCqM6IdA
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/users/uaa-id-317&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTMxOCIsImVtYWlsIjoiZW1haWwtMjE0QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTd9.e2byZUP7dNqBcLxD0b_seK18ks5EIorKvCtrCqM6IdA&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "uaa-id-317",
+    "url": "/v2/users/uaa-id-317",
+    "created_at": "2016-06-08T16:41:37Z",
+    "updated_at": null
+  },
+  "entity": {
+    "admin": false,
+    "active": false,
+    "default_space_guid": "fc898723-2192-42d9-9567-c0b2e03a3169",
+    "default_space_url": "/v2/spaces/fc898723-2192-42d9-9567-c0b2e03a3169",
+    "spaces_url": "/v2/users/uaa-id-317/spaces",
+    "organizations_url": "/v2/users/uaa-id-317/organizations",
+    "managed_organizations_url": "/v2/users/uaa-id-317/managed_organizations",
+    "billing_managed_organizations_url": "/v2/users/uaa-id-317/billing_managed_organizations",
+    "audited_organizations_url": "/v2/users/uaa-id-317/audited_organizations",
+    "managed_spaces_url": "/v2/users/uaa-id-317/managed_spaces",
+    "audited_spaces_url": "/v2/users/uaa-id-317/audited_spaces"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: f379b6cd-06b5-48ff-9857-df00addc84ec
+Content-Length: 845
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

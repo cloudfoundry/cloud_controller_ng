@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Private Domains API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Private Domains API</h1>
+
+  <div class="article">
+    <h2>List all Private Domains</h2>
+    <h3>GET /v2/private_domains</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/private_domains</pre>
+
+        <h4>Parameters</h4>
+        <table class="parameters table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">q</span>
+              </td>
+              <td>
+                  <span class="description">Parameters used to filter the result set.<br/>Format queries as &lt;filter&gt;&lt;op&gt;&lt;value&gt;<br/> Valid ops: : &gt;= &lt;= &lt; &gt; IN<br/> Valid filters: name</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                    <li>q=filter:value</li>
+                    <li>q=filter&gt;value</li>
+                    <li>q=filter IN a,b,c</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">page</span>
+              </td>
+              <td>
+                  <span class="description">Page of results to fetch</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">results-per-page</span>
+              </td>
+              <td>
+                  <span class="description">Number of results per page</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">order-direction</span>
+              </td>
+              <td>
+                  <span class="description">Order of the results: asc (default) or desc</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">inline-relations-depth</span>
+              </td>
+              <td>
+                  <span class="description">0 - don&#39;t inline any relations and return URLs.  Otherwise, inline to depth N.</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">orphan-relations</span>
+              </td>
+              <td>
+                  <span class="description">0 - de-duplicate object entries in response</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">exclude-relations</span>
+              </td>
+              <td>
+                  <span class="description">comma-delimited list of relations to drop from response</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">include-relations</span>
+              </td>
+              <td>
+                  <span class="description">comma-delimited list of the only relations to include in response</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTMzNSIsImVtYWlsIjoiZW1haWwtMjMwQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTl9.MIITrhzS9LDq-sEAGzqgohvp7nQqybYjCe87L78vHaM
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/private_domains&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTMzNSIsImVtYWlsIjoiZW1haWwtMjMwQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTl9.MIITrhzS9LDq-sEAGzqgohvp7nQqybYjCe87L78vHaM&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "total_results": 4,
+  "total_pages": 1,
+  "prev_url": null,
+  "next_url": null,
+  "resources": [
+    {
+      "metadata": {
+        "guid": "b2a35f0c-d5ad-4a59-bea7-461711d96b0d",
+        "url": "/v2/private_domains/b2a35f0c-d5ad-4a59-bea7-461711d96b0d",
+        "created_at": "2016-06-08T16:41:39Z",
+        "updated_at": null
+      },
+      "entity": {
+        "name": "vcap.me",
+        "owning_organization_guid": "4cf3bc47-eccd-4662-9322-7833c3bdcded",
+        "owning_organization_url": "/v2/organizations/4cf3bc47-eccd-4662-9322-7833c3bdcded",
+        "shared_organizations_url": "/v2/private_domains/b2a35f0c-d5ad-4a59-bea7-461711d96b0d/shared_organizations"
+      }
+    },
+    {
+      "metadata": {
+        "guid": "28db6393-cc6f-4318-a63c-f4009e8842bc",
+        "url": "/v2/private_domains/28db6393-cc6f-4318-a63c-f4009e8842bc",
+        "created_at": "2016-06-08T16:41:39Z",
+        "updated_at": null
+      },
+      "entity": {
+        "name": "domain-61.example.com",
+        "owning_organization_guid": "c262280e-0ccc-4e13-918a-6852f2d1e3a0",
+        "owning_organization_url": "/v2/organizations/c262280e-0ccc-4e13-918a-6852f2d1e3a0",
+        "shared_organizations_url": "/v2/private_domains/28db6393-cc6f-4318-a63c-f4009e8842bc/shared_organizations"
+      }
+    },
+    {
+      "metadata": {
+        "guid": "a16ffec7-5fab-4447-861e-c38da6548c6d",
+        "url": "/v2/private_domains/a16ffec7-5fab-4447-861e-c38da6548c6d",
+        "created_at": "2016-06-08T16:41:39Z",
+        "updated_at": null
+      },
+      "entity": {
+        "name": "domain-62.example.com",
+        "owning_organization_guid": "68f69961-f751-4b52-907c-4469009fdf74",
+        "owning_organization_url": "/v2/organizations/68f69961-f751-4b52-907c-4469009fdf74",
+        "shared_organizations_url": "/v2/private_domains/a16ffec7-5fab-4447-861e-c38da6548c6d/shared_organizations"
+      }
+    },
+    {
+      "metadata": {
+        "guid": "4168cdaf-1586-41a6-9e5f-d8c715c332f5",
+        "url": "/v2/private_domains/4168cdaf-1586-41a6-9e5f-d8c715c332f5",
+        "created_at": "2016-06-08T16:41:39Z",
+        "updated_at": null
+      },
+      "entity": {
+        "name": "domain-63.example.com",
+        "owning_organization_guid": "8d8ed1ba-f7f3-48f1-8d9a-2dfaad91335b",
+        "owning_organization_url": "/v2/organizations/8d8ed1ba-f7f3-48f1-8d9a-2dfaad91335b",
+        "shared_organizations_url": "/v2/private_domains/4168cdaf-1586-41a6-9e5f-d8c715c332f5/shared_organizations"
+      }
+    }
+  ]
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: e7466682-8519-4095-92f0-876fb75cb553
+Content-Length: 2483
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

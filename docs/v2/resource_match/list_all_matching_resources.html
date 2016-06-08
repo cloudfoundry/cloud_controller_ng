@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Resource Match API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Resource Match API</h1>
+
+  <div class="article">
+    <h2>List all matching resources</h2>
+    <h3>PUT /v2/resource_match</h3>
+      <p class="explanation">
+        This endpoint matches given resource SHA / file size pairs against the Cloud Controller cache,
+        and reports the subset which describes already existing files.
+        This is usually used to avoid uploading duplicate files when
+        pushing an app which has only been partially changed.
+        Cloud Foundry operators may set minimum / maximum file sizes to match against.
+        If the file size provided is outside this range, it will not be matched against.
+      </p>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">PUT /v2/resource_match</pre>
+
+
+
+
+        <pre class="request body">[
+  {
+    "sha1": "002d760bea1be268e27077412e11a320d0f164d3",
+    "size": 36
+  },
+  {
+    "sha1": "a9993e364706816aba3e25717850c26c9cd0d89d",
+    "size": 1
+  }
+]</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM0MCIsImVtYWlsIjoiZW1haWwtMjM1QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDB9.Jpw9QysYfAb7Ztlx7u_RDaBTpOnqsqCBUzjPykUVwc8
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/resource_match&quot; -d &#39;[
+  {
+    &quot;sha1&quot;: &quot;002d760bea1be268e27077412e11a320d0f164d3&quot;,
+    &quot;size&quot;: 36
+  },
+  {
+    &quot;sha1&quot;: &quot;a9993e364706816aba3e25717850c26c9cd0d89d&quot;,
+    &quot;size&quot;: 1
+  }
+]&#39; -X PUT \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM0MCIsImVtYWlsIjoiZW1haWwtMjM1QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDB9.Jpw9QysYfAb7Ztlx7u_RDaBTpOnqsqCBUzjPykUVwc8&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">[
+  {
+    "sha1": "002d760bea1be268e27077412e11a320d0f164d3",
+    "size": 36
+  }
+]</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: 7e3d4770-d1cd-4915-84a3-86e2301bd08e
+Content-Length: 63
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

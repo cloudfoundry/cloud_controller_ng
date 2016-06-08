@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Events API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Events API</h1>
+
+  <div class="article">
+    <h2>List Service Instance Bind Route Events</h2>
+    <h3>GET /v2/events</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/events?q=type:audit.service_instance.bind_route</pre>
+
+        <h4>Parameters</h4>
+        <table class="parameters table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">q</span>
+              </td>
+              <td>
+                  <span class="description">Parameters used to filter the result set.<br/>Format queries as &lt;filter&gt;&lt;op&gt;&lt;value&gt;<br/> Valid ops: : &gt;= &lt;= &lt; &gt; IN<br/> Valid filters: timestamp, type, actee</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                    <li>q=filter:value</li>
+                    <li>q=filter&gt;value</li>
+                    <li>q=filter IN a,b,c</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">page</span>
+              </td>
+              <td>
+                  <span class="description">Page of results to fetch</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">results-per-page</span>
+              </td>
+              <td>
+                  <span class="description">Number of results per page</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">order-direction</span>
+              </td>
+              <td>
+                  <span class="description">Order of the results: asc (default) or desc</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">inline-relations-depth</span>
+              </td>
+              <td>
+                  <span class="description">0 - don&#39;t inline any relations and return URLs.  Otherwise, inline to depth N.</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">orphan-relations</span>
+              </td>
+              <td>
+                  <span class="description">0 - de-duplicate object entries in response</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">exclude-relations</span>
+              </td>
+              <td>
+                  <span class="description">comma-delimited list of relations to drop from response</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">include-relations</span>
+              </td>
+              <td>
+                  <span class="description">comma-delimited list of the only relations to include in response</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request query_parameters highlight">q: type:audit.service_instance.bind_route</pre>
+
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTY3IiwiZW1haWwiOiJlbWFpbC00N0Bzb21lZG9tYWluLmNvbSIsInNjb3BlIjpbImNsb3VkX2NvbnRyb2xsZXIuYWRtaW4iXSwiYXVkIjpbImNsb3VkX2NvbnRyb2xsZXIiXSwiZXhwIjoxNDY2MDA4ODg1fQ.SSZ02dzdv9n81ixfehQkfgMbyXAi0jFXayVC0euUxk8
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/events?q=type:audit.service_instance.bind_route&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTY3IiwiZW1haWwiOiJlbWFpbC00N0Bzb21lZG9tYWluLmNvbSIsInNjb3BlIjpbImNsb3VkX2NvbnRyb2xsZXIuYWRtaW4iXSwiYXVkIjpbImNsb3VkX2NvbnRyb2xsZXIiXSwiZXhwIjoxNDY2MDA4ODg1fQ.SSZ02dzdv9n81ixfehQkfgMbyXAi0jFXayVC0euUxk8&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+          <table class="response-fields table table-striped table-bordered table-condensed">
+            <thead>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Valid Values</th>
+              <th>Example Values</th>
+            </tr>
+            </thead>
+            <tbody>
+              <tr class="">
+                <td>
+                    <span class="name">guid</span>
+                </td>
+                <td>
+                  <span class="description">The guid of the event.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">type</span>
+                </td>
+                <td>
+                  <span class="description">The type of the event.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                      <li>app.crash</li>
+                      <li>audit.app.copy-bits</li>
+                      <li>audit.app.create</li>
+                      <li>audit.app.delete-request</li>
+                      <li>audit.app.droplet_mapped</li>
+                      <li>audit.app.map-route</li>
+                      <li>audit.app.package.create</li>
+                      <li>audit.app.package.delete</li>
+                      <li>audit.app.package.download</li>
+                      <li>audit.app.package.upload</li>
+                      <li>audit.app.restage</li>
+                      <li>audit.app.ssh-authorized</li>
+                      <li>audit.app.ssh-unauthorized</li>
+                      <li>audit.app.start</li>
+                      <li>audit.app.stop</li>
+                      <li>audit.app.unmap-route</li>
+                      <li>audit.app.update</li>
+                      <li>audit.route.create</li>
+                      <li>audit.route.delete-request</li>
+                      <li>audit.route.update</li>
+                      <li>audit.service.create</li>
+                      <li>audit.service.delete</li>
+                      <li>audit.service.update</li>
+                      <li>audit.service_binding.create</li>
+                      <li>audit.service_binding.delete</li>
+                      <li>audit.service_broker.create</li>
+                      <li>audit.service_broker.delete</li>
+                      <li>audit.service_broker.update</li>
+                      <li>audit.service_dashboard_client.create</li>
+                      <li>audit.service_dashboard_client.delete</li>
+                      <li>audit.service_instance.bind_route</li>
+                      <li>audit.service_instance.create</li>
+                      <li>audit.service_instance.delete</li>
+                      <li>audit.service_instance.unbind_route</li>
+                      <li>audit.service_instance.update</li>
+                      <li>audit.service_key.create</li>
+                      <li>audit.service_key.delete</li>
+                      <li>audit.service_plan.create</li>
+                      <li>audit.service_plan.delete</li>
+                      <li>audit.service_plan.update</li>
+                      <li>audit.service_plan_visibility.create</li>
+                      <li>audit.service_plan_visibility.delete</li>
+                      <li>audit.service_plan_visibility.update</li>
+                      <li>audit.space.create</li>
+                      <li>audit.space.delete-request</li>
+                      <li>audit.space.update</li>
+                      <li>audit.user_provided_service_instance.create</li>
+                      <li>audit.user_provided_service_instance.delete</li>
+                      <li>audit.user_provided_service_instance.update</li>
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>app.crash</li>
+                        <li>audit.app.update</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td class="experimental">
+                    <span class="name">type</span>
+                </td>
+                <td>
+                  <span class="description">The type of the event.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                      <li>audit.app.droplet.create</li>
+                      <li>audit.app.droplet.delete</li>
+                      <li>audit.app.droplet.download</li>
+                      <li>audit.app.process.crash</li>
+                      <li>audit.app.process.create</li>
+                      <li>audit.app.process.delete</li>
+                      <li>audit.app.process.scale</li>
+                      <li>audit.app.process.terminate_instance</li>
+                      <li>audit.app.process.update</li>
+                      <li>audit.app.task.cancel</li>
+                      <li>audit.app.task.create</li>
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>audit.app.process.crash</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">actor</span>
+                </td>
+                <td>
+                  <span class="description">The GUID of the actor.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">actor_type</span>
+                </td>
+                <td>
+                  <span class="description">The actor type.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>service_broker</li>
+                        <li>system</li>
+                        <li>user</li>
+                        <li>v3-process</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">actor_name</span>
+                </td>
+                <td>
+                  <span class="description">The name of the actor.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">actee</span>
+                </td>
+                <td>
+                  <span class="description">The GUID of the actee.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">actee_type</span>
+                </td>
+                <td>
+                  <span class="description">The actee type.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>app</li>
+                        <li>route</li>
+                        <li>service</li>
+                        <li>service_binding</li>
+                        <li>service_broker</li>
+                        <li>service_dashboard_client</li>
+                        <li>service_instance</li>
+                        <li>service_key</li>
+                        <li>service_plan</li>
+                        <li>service_plan_visibility</li>
+                        <li>space</li>
+                        <li>user_provided_service_instance</li>
+                        <li>v3-app (experimental)</li>
+                        <li>v3-service-binding (experimental)</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">actee_name</span>
+                </td>
+                <td>
+                  <span class="description">The name of the actee.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">timestamp</span>
+                </td>
+                <td>
+                  <span class="description">The event creation time.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">metadata</span>
+                </td>
+                <td>
+                  <span class="description">The additional information about event.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">space_guid</span>
+                </td>
+                <td>
+                  <span class="description">The guid of the associated space.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">organization_guid</span>
+                </td>
+                <td>
+                  <span class="description">The guid of the associated organization.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <pre class="response body">{
+  "total_results": 1,
+  "total_pages": 1,
+  "prev_url": null,
+  "next_url": null,
+  "resources": [
+    {
+      "metadata": {
+        "guid": "6179aa1e-3ca8-42b2-a7ea-80316cb0787d",
+        "url": "/v2/events/6179aa1e-3ca8-42b2-a7ea-80316cb0787d",
+        "created_at": "2016-06-08T16:41:25Z",
+        "updated_at": null
+      },
+      "entity": {
+        "type": "audit.service_instance.bind_route",
+        "actor": "uaa-id-66",
+        "actor_type": "user",
+        "actor_name": "user@example.com",
+        "actee": "08133fc7-1df9-40de-95bb-68e6e6a17615",
+        "actee_type": "service_instance",
+        "actee_name": "name-637",
+        "timestamp": "2016-06-08T16:41:25Z",
+        "metadata": {
+          "request": {
+            "route_guid": "b80100e4-3e0c-4828-9b32-d884b6f3a570",
+            "parameters": "[PRIVATE DATA HIDDEN]"
+          }
+        },
+        "space_guid": "c34634f4-7c6d-4dc6-b50a-a11fa7607580",
+        "organization_guid": "cb04ed5e-fcc4-4e9b-a896-d9a2e2deff06"
+      }
+    }
+  ]
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: a890d660-0fb6-40d6-b98f-f612f6cb1d40
+Content-Length: 1015
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

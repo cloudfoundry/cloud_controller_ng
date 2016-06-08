@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Events API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Events API</h1>
+
+  <div class="article">
+    <h2>Retrieve a Particular Event</h2>
+    <h3>GET /v2/events/:guid</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/events/a595fe2f-01ff-4965-a50c-290258ab8582</pre>
+
+
+
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM3IiwiZW1haWwiOiJlbWFpbC0zMkBzb21lZG9tYWluLmNvbSIsInNjb3BlIjpbImNsb3VkX2NvbnRyb2xsZXIuYWRtaW4iXSwiYXVkIjpbImNsb3VkX2NvbnRyb2xsZXIiXSwiZXhwIjoxNDY2MDA4ODgzfQ.9Z59B6sbOxTtFqHdOKwLd-XznsNKZbYe8sKU4Sun_jg
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/events/a595fe2f-01ff-4965-a50c-290258ab8582&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM3IiwiZW1haWwiOiJlbWFpbC0zMkBzb21lZG9tYWluLmNvbSIsInNjb3BlIjpbImNsb3VkX2NvbnRyb2xsZXIuYWRtaW4iXSwiYXVkIjpbImNsb3VkX2NvbnRyb2xsZXIiXSwiZXhwIjoxNDY2MDA4ODgzfQ.9Z59B6sbOxTtFqHdOKwLd-XznsNKZbYe8sKU4Sun_jg&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+          <table class="response-fields table table-striped table-bordered table-condensed">
+            <thead>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Valid Values</th>
+              <th>Example Values</th>
+            </tr>
+            </thead>
+            <tbody>
+              <tr class="">
+                <td>
+                    <span class="name">guid</span>
+                </td>
+                <td>
+                  <span class="description">The guid of the event.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">type</span>
+                </td>
+                <td>
+                  <span class="description">The type of the event.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                      <li>app.crash</li>
+                      <li>audit.app.copy-bits</li>
+                      <li>audit.app.create</li>
+                      <li>audit.app.delete-request</li>
+                      <li>audit.app.droplet_mapped</li>
+                      <li>audit.app.map-route</li>
+                      <li>audit.app.package.create</li>
+                      <li>audit.app.package.delete</li>
+                      <li>audit.app.package.download</li>
+                      <li>audit.app.package.upload</li>
+                      <li>audit.app.restage</li>
+                      <li>audit.app.ssh-authorized</li>
+                      <li>audit.app.ssh-unauthorized</li>
+                      <li>audit.app.start</li>
+                      <li>audit.app.stop</li>
+                      <li>audit.app.unmap-route</li>
+                      <li>audit.app.update</li>
+                      <li>audit.route.create</li>
+                      <li>audit.route.delete-request</li>
+                      <li>audit.route.update</li>
+                      <li>audit.service.create</li>
+                      <li>audit.service.delete</li>
+                      <li>audit.service.update</li>
+                      <li>audit.service_binding.create</li>
+                      <li>audit.service_binding.delete</li>
+                      <li>audit.service_broker.create</li>
+                      <li>audit.service_broker.delete</li>
+                      <li>audit.service_broker.update</li>
+                      <li>audit.service_dashboard_client.create</li>
+                      <li>audit.service_dashboard_client.delete</li>
+                      <li>audit.service_instance.bind_route</li>
+                      <li>audit.service_instance.create</li>
+                      <li>audit.service_instance.delete</li>
+                      <li>audit.service_instance.unbind_route</li>
+                      <li>audit.service_instance.update</li>
+                      <li>audit.service_key.create</li>
+                      <li>audit.service_key.delete</li>
+                      <li>audit.service_plan.create</li>
+                      <li>audit.service_plan.delete</li>
+                      <li>audit.service_plan.update</li>
+                      <li>audit.service_plan_visibility.create</li>
+                      <li>audit.service_plan_visibility.delete</li>
+                      <li>audit.service_plan_visibility.update</li>
+                      <li>audit.space.create</li>
+                      <li>audit.space.delete-request</li>
+                      <li>audit.space.update</li>
+                      <li>audit.user_provided_service_instance.create</li>
+                      <li>audit.user_provided_service_instance.delete</li>
+                      <li>audit.user_provided_service_instance.update</li>
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>app.crash</li>
+                        <li>audit.app.update</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td class="experimental">
+                    <span class="name">type</span>
+                </td>
+                <td>
+                  <span class="description">The type of the event.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                      <li>audit.app.droplet.create</li>
+                      <li>audit.app.droplet.delete</li>
+                      <li>audit.app.droplet.download</li>
+                      <li>audit.app.process.crash</li>
+                      <li>audit.app.process.create</li>
+                      <li>audit.app.process.delete</li>
+                      <li>audit.app.process.scale</li>
+                      <li>audit.app.process.terminate_instance</li>
+                      <li>audit.app.process.update</li>
+                      <li>audit.app.task.cancel</li>
+                      <li>audit.app.task.create</li>
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>audit.app.process.crash</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">actor</span>
+                </td>
+                <td>
+                  <span class="description">The GUID of the actor.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">actor_type</span>
+                </td>
+                <td>
+                  <span class="description">The actor type.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>service_broker</li>
+                        <li>system</li>
+                        <li>user</li>
+                        <li>v3-process</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">actor_name</span>
+                </td>
+                <td>
+                  <span class="description">The name of the actor.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">actee</span>
+                </td>
+                <td>
+                  <span class="description">The GUID of the actee.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">actee_type</span>
+                </td>
+                <td>
+                  <span class="description">The actee type.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>app</li>
+                        <li>route</li>
+                        <li>service</li>
+                        <li>service_binding</li>
+                        <li>service_broker</li>
+                        <li>service_dashboard_client</li>
+                        <li>service_instance</li>
+                        <li>service_key</li>
+                        <li>service_plan</li>
+                        <li>service_plan_visibility</li>
+                        <li>space</li>
+                        <li>user_provided_service_instance</li>
+                        <li>v3-app (experimental)</li>
+                        <li>v3-service-binding (experimental)</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">actee_name</span>
+                </td>
+                <td>
+                  <span class="description">The name of the actee.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">timestamp</span>
+                </td>
+                <td>
+                  <span class="description">The event creation time.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">metadata</span>
+                </td>
+                <td>
+                  <span class="description">The additional information about event.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">space_guid</span>
+                </td>
+                <td>
+                  <span class="description">The guid of the associated space.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">organization_guid</span>
+                </td>
+                <td>
+                  <span class="description">The guid of the associated organization.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "a595fe2f-01ff-4965-a50c-290258ab8582",
+    "url": "/v2/events/a595fe2f-01ff-4965-a50c-290258ab8582",
+    "created_at": "2016-06-08T16:41:23Z",
+    "updated_at": null
+  },
+  "entity": {
+    "type": "name-191",
+    "actor": "guid-d144abe3-3d7b-40d4-b63f-2584798d3ee5",
+    "actor_type": "name-192",
+    "actor_name": "name-193",
+    "actee": "guid-2e3151ba-9a63-4345-9c5b-6d8c238f4e55",
+    "actee_type": "name-194",
+    "actee_name": "name-195",
+    "timestamp": "2016-06-08T16:41:23Z",
+    "metadata": {
+
+    },
+    "space_guid": "cb97dd25-d4f7-4185-9e6f-ad6e585c207c",
+    "organization_guid": "d9be96f5-ea8f-4549-923f-bec882e32e3c"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: b870e2c4-e7bd-4157-8b0b-2c494e6bf31b
+Content-Length: 670
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

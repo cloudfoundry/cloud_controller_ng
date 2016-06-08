@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Organizations API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Organizations API</h1>
+
+  <div class="article">
+    <h2>Associate Billing Manager with the Organization by Username</h2>
+    <h3>PUT v2/organizations/:guid/billing_managers</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">PUT v2/organizations/e27e8ab6-0f64-4ea0-aa5c-273b04bdfe1f/billing_managers</pre>
+
+        <h4>Parameters</h4>
+        <table class="parameters table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">guid</span>
+              </td>
+              <td>
+                  <span class="description">The guid of the Organization</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">username</span>
+              </td>
+              <td>
+                <span class="description">The user&#39;s name</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>user@example.com</li>
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request body">{
+  "username": "user@example.com"
+}</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTIwNyIsImVtYWlsIjoiZW1haWwtMTU3QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTR9.PmHwz5cz7CIYf1Hs5M8oNjwdk8RSgeF_fq1H4ucHA94
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]v2/organizations/e27e8ab6-0f64-4ea0-aa5c-273b04bdfe1f/billing_managers&quot; -d &#39;{
+  &quot;username&quot;: &quot;user@example.com&quot;
+}&#39; -X PUT \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTIwNyIsImVtYWlsIjoiZW1haWwtMTU3QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTR9.PmHwz5cz7CIYf1Hs5M8oNjwdk8RSgeF_fq1H4ucHA94&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "e27e8ab6-0f64-4ea0-aa5c-273b04bdfe1f",
+    "url": "/v2/organizations/e27e8ab6-0f64-4ea0-aa5c-273b04bdfe1f",
+    "created_at": "2016-06-08T16:41:34Z",
+    "updated_at": null
+  },
+  "entity": {
+    "name": "name-1725",
+    "billing_enabled": false,
+    "quota_definition_guid": "232e6e89-30d2-43e6-b2ec-a2068e43c929",
+    "status": "active",
+    "quota_definition_url": "/v2/quota_definitions/232e6e89-30d2-43e6-b2ec-a2068e43c929",
+    "spaces_url": "/v2/organizations/e27e8ab6-0f64-4ea0-aa5c-273b04bdfe1f/spaces",
+    "domains_url": "/v2/organizations/e27e8ab6-0f64-4ea0-aa5c-273b04bdfe1f/domains",
+    "private_domains_url": "/v2/organizations/e27e8ab6-0f64-4ea0-aa5c-273b04bdfe1f/private_domains",
+    "users_url": "/v2/organizations/e27e8ab6-0f64-4ea0-aa5c-273b04bdfe1f/users",
+    "managers_url": "/v2/organizations/e27e8ab6-0f64-4ea0-aa5c-273b04bdfe1f/managers",
+    "billing_managers_url": "/v2/organizations/e27e8ab6-0f64-4ea0-aa5c-273b04bdfe1f/billing_managers",
+    "auditors_url": "/v2/organizations/e27e8ab6-0f64-4ea0-aa5c-273b04bdfe1f/auditors",
+    "app_events_url": "/v2/organizations/e27e8ab6-0f64-4ea0-aa5c-273b04bdfe1f/app_events",
+    "space_quota_definitions_url": "/v2/organizations/e27e8ab6-0f64-4ea0-aa5c-273b04bdfe1f/space_quota_definitions"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: 1386ed4f-8d58-4c9f-94a1-8b7a31e6645b
+Content-Length: 1300
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

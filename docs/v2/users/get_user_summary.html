@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Users API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Users API</h1>
+
+  <div class="article">
+    <h2>Get User summary</h2>
+    <h3>GET /v2/users/:guid/summary</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/users/uaa-id-355/summary</pre>
+
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">guid</span>
+              </td>
+              <td>
+                <span class="description">The guid of the user for which summary is requested</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">audited_spaces</span>
+              </td>
+              <td>
+                <span class="description">List of spaces that the user is an auditor for.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">managed_spaces</span>
+              </td>
+              <td>
+                <span class="description">List of spaces that the user is a manager for.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">spaces</span>
+              </td>
+              <td>
+                <span class="description">List of spaces that the user is developer for.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">audited_organizations</span>
+              </td>
+              <td>
+                <span class="description">List of organizations that the user is an auditor for.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">billing_managed_organizations</span>
+              </td>
+              <td>
+                <span class="description">List of organizations that the user is a billing manager for.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">managed_organizations</span>
+              </td>
+              <td>
+                <span class="description">List of organizations that the user is a manager for.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">organizations</span>
+              </td>
+              <td>
+                <span class="description">List of organizations that the user is a member of.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM1NiIsImVtYWlsIjoiZW1haWwtMjUwQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDB9.y6hCPRCWcZRS3-hi8MbXPFDHtaOm9lbX4G_g56ML_y8
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/users/uaa-id-355/summary&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM1NiIsImVtYWlsIjoiZW1haWwtMjUwQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDB9.y6hCPRCWcZRS3-hi8MbXPFDHtaOm9lbX4G_g56ML_y8&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "uaa-id-355",
+    "created_at": "2016-06-08T16:41:40Z",
+    "updated_at": null
+  },
+  "entity": {
+    "organizations": [
+      {
+        "metadata": {
+          "guid": "a8f940a4-3b9f-4e26-9ceb-2e5062cc1513",
+          "created_at": "2016-06-08T16:41:40Z",
+          "updated_at": null
+        },
+        "entity": {
+          "name": "name-2041",
+          "billing_enabled": false,
+          "status": "active",
+          "spaces": [
+            {
+              "metadata": {
+                "guid": "db69758e-14e9-4fed-b69a-353a98a05a2e",
+                "created_at": "2016-06-08T16:41:40Z",
+                "updated_at": null
+              },
+              "entity": {
+                "name": "name-2043"
+              }
+            }
+          ],
+          "quota_definition": {
+            "metadata": {
+              "guid": "6c6b51c9-823d-4c91-ab5c-9487a93360bc",
+              "created_at": "2016-06-08T16:41:40Z",
+              "updated_at": null
+            },
+            "entity": {
+              "name": "name-2042",
+              "non_basic_services_allowed": true,
+              "total_services": 60,
+              "memory_limit": 20480,
+              "trial_db_allowed": false,
+              "total_routes": 1000,
+              "instance_memory_limit": -1,
+              "total_private_domains": -1,
+              "app_instance_limit": -1,
+              "app_task_limit": -1
+            }
+          },
+          "managers": [
+            {
+              "metadata": {
+                "guid": "uaa-id-355",
+                "created_at": "2016-06-08T16:41:40Z",
+                "updated_at": null
+              },
+              "entity": {
+                "admin": false,
+                "active": false,
+                "default_space_guid": null
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "managed_organizations": [
+      {
+        "metadata": {
+          "guid": "a8f940a4-3b9f-4e26-9ceb-2e5062cc1513",
+          "created_at": "2016-06-08T16:41:40Z",
+          "updated_at": null
+        },
+        "entity": {
+          "name": "name-2041",
+          "billing_enabled": false,
+          "status": "active",
+          "spaces": [
+            {
+              "metadata": {
+                "guid": "db69758e-14e9-4fed-b69a-353a98a05a2e",
+                "created_at": "2016-06-08T16:41:40Z",
+                "updated_at": null
+              },
+              "entity": {
+                "name": "name-2043"
+              }
+            }
+          ],
+          "quota_definition": {
+            "metadata": {
+              "guid": "6c6b51c9-823d-4c91-ab5c-9487a93360bc",
+              "created_at": "2016-06-08T16:41:40Z",
+              "updated_at": null
+            },
+            "entity": {
+              "name": "name-2042",
+              "non_basic_services_allowed": true,
+              "total_services": 60,
+              "memory_limit": 20480,
+              "trial_db_allowed": false,
+              "total_routes": 1000,
+              "instance_memory_limit": -1,
+              "total_private_domains": -1,
+              "app_instance_limit": -1,
+              "app_task_limit": -1
+            }
+          },
+          "managers": [
+            {
+              "metadata": {
+                "guid": "uaa-id-355",
+                "created_at": "2016-06-08T16:41:40Z",
+                "updated_at": null
+              },
+              "entity": {
+                "admin": false,
+                "active": false,
+                "default_space_guid": null
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "billing_managed_organizations": [
+      {
+        "metadata": {
+          "guid": "a8f940a4-3b9f-4e26-9ceb-2e5062cc1513",
+          "created_at": "2016-06-08T16:41:40Z",
+          "updated_at": null
+        },
+        "entity": {
+          "name": "name-2041",
+          "billing_enabled": false,
+          "status": "active",
+          "spaces": [
+            {
+              "metadata": {
+                "guid": "db69758e-14e9-4fed-b69a-353a98a05a2e",
+                "created_at": "2016-06-08T16:41:40Z",
+                "updated_at": null
+              },
+              "entity": {
+                "name": "name-2043"
+              }
+            }
+          ],
+          "quota_definition": {
+            "metadata": {
+              "guid": "6c6b51c9-823d-4c91-ab5c-9487a93360bc",
+              "created_at": "2016-06-08T16:41:40Z",
+              "updated_at": null
+            },
+            "entity": {
+              "name": "name-2042",
+              "non_basic_services_allowed": true,
+              "total_services": 60,
+              "memory_limit": 20480,
+              "trial_db_allowed": false,
+              "total_routes": 1000,
+              "instance_memory_limit": -1,
+              "total_private_domains": -1,
+              "app_instance_limit": -1,
+              "app_task_limit": -1
+            }
+          },
+          "managers": [
+            {
+              "metadata": {
+                "guid": "uaa-id-355",
+                "created_at": "2016-06-08T16:41:40Z",
+                "updated_at": null
+              },
+              "entity": {
+                "admin": false,
+                "active": false,
+                "default_space_guid": null
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "audited_organizations": [
+      {
+        "metadata": {
+          "guid": "a8f940a4-3b9f-4e26-9ceb-2e5062cc1513",
+          "created_at": "2016-06-08T16:41:40Z",
+          "updated_at": null
+        },
+        "entity": {
+          "name": "name-2041",
+          "billing_enabled": false,
+          "status": "active",
+          "spaces": [
+            {
+              "metadata": {
+                "guid": "db69758e-14e9-4fed-b69a-353a98a05a2e",
+                "created_at": "2016-06-08T16:41:40Z",
+                "updated_at": null
+              },
+              "entity": {
+                "name": "name-2043"
+              }
+            }
+          ],
+          "quota_definition": {
+            "metadata": {
+              "guid": "6c6b51c9-823d-4c91-ab5c-9487a93360bc",
+              "created_at": "2016-06-08T16:41:40Z",
+              "updated_at": null
+            },
+            "entity": {
+              "name": "name-2042",
+              "non_basic_services_allowed": true,
+              "total_services": 60,
+              "memory_limit": 20480,
+              "trial_db_allowed": false,
+              "total_routes": 1000,
+              "instance_memory_limit": -1,
+              "total_private_domains": -1,
+              "app_instance_limit": -1,
+              "app_task_limit": -1
+            }
+          },
+          "managers": [
+            {
+              "metadata": {
+                "guid": "uaa-id-355",
+                "created_at": "2016-06-08T16:41:40Z",
+                "updated_at": null
+              },
+              "entity": {
+                "admin": false,
+                "active": false,
+                "default_space_guid": null
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "spaces": [
+      {
+        "metadata": {
+          "guid": "db69758e-14e9-4fed-b69a-353a98a05a2e",
+          "created_at": "2016-06-08T16:41:40Z",
+          "updated_at": null
+        },
+        "entity": {
+          "name": "name-2043"
+        }
+      }
+    ],
+    "managed_spaces": [
+      {
+        "metadata": {
+          "guid": "db69758e-14e9-4fed-b69a-353a98a05a2e",
+          "created_at": "2016-06-08T16:41:40Z",
+          "updated_at": null
+        },
+        "entity": {
+          "name": "name-2043"
+        }
+      }
+    ],
+    "audited_spaces": [
+      {
+        "metadata": {
+          "guid": "db69758e-14e9-4fed-b69a-353a98a05a2e",
+          "created_at": "2016-06-08T16:41:40Z",
+          "updated_at": null
+        },
+        "entity": {
+          "name": "name-2043"
+        }
+      }
+    ]
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: 91d52285-9499-4b27-85fc-f5087607f0e1
+Content-Length: 4259
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

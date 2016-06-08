@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Apps API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Apps API</h1>
+
+  <div class="article">
+    <h2>Get the env for an App</h2>
+    <h3>GET /v2/apps/:guid/env</h3>
+      <p class="explanation">
+                Get the environment variables for an App using the app guid. Restricted to SpaceDeveloper role.
+
+      </p>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/apps/a7c47787-a982-467c-95d7-9ab17cbcc918/env</pre>
+
+        <h4>Parameters</h4>
+        <table class="parameters table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">guid</span>
+              </td>
+              <td>
+                  <span class="description">The guid of the App</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQzMyIsImVtYWlsIjoiZW1haWwtMjk1QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDN9.suI8M5XCj8SAme02poDBYdGyR0J8yYt8AB5zuIHP2ZA
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/apps/a7c47787-a982-467c-95d7-9ab17cbcc918/env&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQzMyIsImVtYWlsIjoiZW1haWwtMjk1QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDN9.suI8M5XCj8SAme02poDBYdGyR0J8yYt8AB5zuIHP2ZA&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "staging_env_json": {
+    "STAGING_ENV": "staging_value"
+  },
+  "running_env_json": {
+    "RUNNING_ENV": "running_value"
+  },
+  "environment_json": {
+    "env_var": "env_val"
+  },
+  "system_env_json": {
+    "VCAP_SERVICES": {
+
+    }
+  },
+  "application_env_json": {
+    "VCAP_APPLICATION": {
+      "limits": {
+        "fds": 16384,
+        "mem": 1024,
+        "disk": 1024
+      },
+      "application_name": "name-2245",
+      "application_uris": [
+
+      ],
+      "name": "name-2245",
+      "space_name": "name-2246",
+      "space_id": "3309d44f-78ae-4058-99e1-c50469d1e043",
+      "uris": [
+
+      ],
+      "users": null,
+      "application_id": "a7c47787-a982-467c-95d7-9ab17cbcc918",
+      "version": "ed59723c-d691-4d4f-ac5b-f174266c988f",
+      "application_version": "ed59723c-d691-4d4f-ac5b-f174266c988f"
+    }
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: 9db67b12-3bef-4029-9e81-3d68898cc999
+Content-Length: 829
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

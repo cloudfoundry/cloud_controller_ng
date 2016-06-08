@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Security Groups API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Security Groups API</h1>
+
+  <div class="article">
+    <h2>Updating a Security Group</h2>
+    <h3>PUT /v2/security_groups/:guid</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">PUT /v2/security_groups/1452e164-0c3e-4a6c-b3c3-c40ad9fd0159</pre>
+
+        <h4>Parameters</h4>
+        <table class="parameters table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">guid</span>
+              </td>
+              <td>
+                  <span class="description">The guid of the Security Group</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">name</span>
+              </td>
+              <td>
+                <span class="description">The name of the security group.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>my_super_sec_group</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">rules</span>
+              </td>
+              <td>
+                <span class="description">The egress rules for apps that belong to this security group.
+A rule consists of a protocol (tcp,icmp,udp,all), destination CIDR or destination range,
+port or port range (tcp,udp,all), type (control signal for icmp), code (control signal for icmp),
+log (enables logging for the egress rule), description (optional description of the rule). This field is limited to 16MB.
+</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li><pre>[
+  {
+    &quot;protocol&quot;: &quot;icmp&quot;,
+    &quot;destination&quot;: &quot;0.0.0.0/0&quot;,
+    &quot;type&quot;: 0,
+    &quot;code&quot;: 1
+  },
+  {
+    &quot;protocol&quot;: &quot;tcp&quot;,
+    &quot;destination&quot;: &quot;0.0.0.0/0&quot;,
+    &quot;ports&quot;: &quot;2048-3000&quot;,
+    &quot;log&quot;: true
+  },
+  {
+    &quot;protocol&quot;: &quot;udp&quot;,
+    &quot;destination&quot;: &quot;0.0.0.0/0&quot;,
+    &quot;ports&quot;: &quot;53, 5353&quot;
+  },
+  {
+    &quot;protocol&quot;: &quot;all&quot;,
+    &quot;destination&quot;: &quot;0.0.0.0/0&quot;,
+    &quot;description&quot;: &quot;This rule allows access to all ips and protocols&quot;
+  }
+]</pre></li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">space_guids</span>
+              </td>
+              <td>
+                <span class="description">The list of associated spaces.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request body">{
+  "name": "new_name",
+  "rules": [
+
+  ]
+}</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTExIiwiZW1haWwiOiJlbWFpbC0xMUBzb21lZG9tYWluLmNvbSIsInNjb3BlIjpbImNsb3VkX2NvbnRyb2xsZXIuYWRtaW4iXSwiYXVkIjpbImNsb3VkX2NvbnRyb2xsZXIiXSwiZXhwIjoxNDY2MDA4ODgxfQ._-hD6v10noyAKyUnYBI0BrsrOXbXqxob5Jau3cMkl5E
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/security_groups/1452e164-0c3e-4a6c-b3c3-c40ad9fd0159&quot; -d &#39;{
+  &quot;name&quot;: &quot;new_name&quot;,
+  &quot;rules&quot;: [
+
+  ]
+}&#39; -X PUT \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTExIiwiZW1haWwiOiJlbWFpbC0xMUBzb21lZG9tYWluLmNvbSIsInNjb3BlIjpbImNsb3VkX2NvbnRyb2xsZXIuYWRtaW4iXSwiYXVkIjpbImNsb3VkX2NvbnRyb2xsZXIiXSwiZXhwIjoxNDY2MDA4ODgxfQ._-hD6v10noyAKyUnYBI0BrsrOXbXqxob5Jau3cMkl5E&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "1452e164-0c3e-4a6c-b3c3-c40ad9fd0159",
+    "url": "/v2/security_groups/1452e164-0c3e-4a6c-b3c3-c40ad9fd0159",
+    "created_at": "2016-06-08T16:41:21Z",
+    "updated_at": "2016-06-08T16:41:21Z"
+  },
+  "entity": {
+    "name": "new_name",
+    "rules": [
+
+    ],
+    "running_default": false,
+    "staging_default": false,
+    "spaces_url": "/v2/security_groups/1452e164-0c3e-4a6c-b3c3-c40ad9fd0159/spaces"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: 7b0e4992-81ed-4c22-b42e-0ef051f51971
+Content-Length: 439
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

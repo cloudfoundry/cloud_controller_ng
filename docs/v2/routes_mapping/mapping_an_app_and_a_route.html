@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Routes Mapping API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Routes Mapping API</h1>
+
+  <div class="article">
+    <h2>Mapping an App and a Route</h2>
+    <h3>POST /v2/route_mappings</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">POST /v2/route_mappings</pre>
+
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">app_guid</span>
+              </td>
+              <td>
+                <span class="description">The guid of the bound application.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>guid-9b46b715-5a34-42fb-9d4f-f4d2c763ae5a</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">route_guid</span>
+              </td>
+              <td>
+                <span class="description">The guid of the bound route.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>guid-3e598d8e-5414-4ed0-99c2-0c87d25ce6cc</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">app_port</span>
+              </td>
+              <td>
+                <span class="description">Port on which the application should
+                      listen, and to which requests for the
+                      mapped route will be routed. Must be
+                      among those already configured for the app.
+                      If a port is not specified when mapping the
+                      route, the first one in the list of those
+                      configured for the app will be chosen.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request body">{
+  "app_guid": "fa23ddfc-b635-4205-8283-844c53122888",
+  "route_guid": "e00fb1e1-f7d4-4e36-9912-f76a587e9858",
+  "app_port": 8888
+}</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQyOCIsImVtYWlsIjoiZW1haWwtMjkwQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDJ9.FW51EL1bd_qko7cWDjCNANoZyX2Qy8zMuKP1-GZu4s4
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/route_mappings&quot; -d &#39;{
+  &quot;app_guid&quot;: &quot;fa23ddfc-b635-4205-8283-844c53122888&quot;,
+  &quot;route_guid&quot;: &quot;e00fb1e1-f7d4-4e36-9912-f76a587e9858&quot;,
+  &quot;app_port&quot;: 8888
+}&#39; -X POST \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQyOCIsImVtYWlsIjoiZW1haWwtMjkwQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDJ9.FW51EL1bd_qko7cWDjCNANoZyX2Qy8zMuKP1-GZu4s4&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "f869fa46-22b1-40ee-b491-58e321345528",
+    "url": "/v2/route_mappings/f869fa46-22b1-40ee-b491-58e321345528",
+    "created_at": "2016-06-08T16:41:42Z",
+    "updated_at": null
+  },
+  "entity": {
+    "app_port": 8888,
+    "app_guid": "fa23ddfc-b635-4205-8283-844c53122888",
+    "route_guid": "e00fb1e1-f7d4-4e36-9912-f76a587e9858",
+    "app_url": "/v2/apps/fa23ddfc-b635-4205-8283-844c53122888",
+    "route_url": "/v2/routes/e00fb1e1-f7d4-4e36-9912-f76a587e9858"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+Location: /v2/route_mappings/f869fa46-22b1-40ee-b491-58e321345528
+X-VCAP-Request-ID: dfdc0d02-549c-434b-9bc7-4513479a2569
+Content-Length: 496
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

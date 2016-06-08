@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Organizations API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Organizations API</h1>
+
+  <div class="article">
+    <h2>Creating an Organization</h2>
+    <h3>POST /v2/organizations/</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">POST /v2/organizations</pre>
+
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">name</span>
+              </td>
+              <td>
+                <span class="description">The name of the organization</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>my-org-name</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">status</span>
+              </td>
+              <td>
+                <span class="description">Status of the organization</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">quota_definition_guid</span>
+              </td>
+              <td>
+                <span class="description">The guid of quota to associate with this organization</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>org-quota-def-guid</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated ">
+              <td class=" ">
+                <span class="name">billing_enabled</span>
+              </td>
+              <td>
+                <span class="description">If billing is enabled for this organization</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request body">{
+  "name": "my-org-name",
+  "quota_definition_guid": "b7887f5c-34bb-40c5-9778-577572e4fb2d"
+}</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE5NyIsImVtYWlsIjoiZW1haWwtMTUyQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTN9.y8hmBxkt8_VWH24vjpcznozricp6gU-WCG-jwnH2OHc
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/organizations&quot; -d &#39;{
+  &quot;name&quot;: &quot;my-org-name&quot;,
+  &quot;quota_definition_guid&quot;: &quot;b7887f5c-34bb-40c5-9778-577572e4fb2d&quot;
+}&#39; -X POST \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE5NyIsImVtYWlsIjoiZW1haWwtMTUyQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTN9.y8hmBxkt8_VWH24vjpcznozricp6gU-WCG-jwnH2OHc&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "22b3b0a0-6511-47e5-8f7a-93bbd2ff446e",
+    "url": "/v2/organizations/22b3b0a0-6511-47e5-8f7a-93bbd2ff446e",
+    "created_at": "2016-06-08T16:41:33Z",
+    "updated_at": null
+  },
+  "entity": {
+    "name": "my-org-name",
+    "billing_enabled": false,
+    "quota_definition_guid": "b7887f5c-34bb-40c5-9778-577572e4fb2d",
+    "status": "active",
+    "quota_definition_url": "/v2/quota_definitions/b7887f5c-34bb-40c5-9778-577572e4fb2d",
+    "spaces_url": "/v2/organizations/22b3b0a0-6511-47e5-8f7a-93bbd2ff446e/spaces",
+    "domains_url": "/v2/organizations/22b3b0a0-6511-47e5-8f7a-93bbd2ff446e/domains",
+    "private_domains_url": "/v2/organizations/22b3b0a0-6511-47e5-8f7a-93bbd2ff446e/private_domains",
+    "users_url": "/v2/organizations/22b3b0a0-6511-47e5-8f7a-93bbd2ff446e/users",
+    "managers_url": "/v2/organizations/22b3b0a0-6511-47e5-8f7a-93bbd2ff446e/managers",
+    "billing_managers_url": "/v2/organizations/22b3b0a0-6511-47e5-8f7a-93bbd2ff446e/billing_managers",
+    "auditors_url": "/v2/organizations/22b3b0a0-6511-47e5-8f7a-93bbd2ff446e/auditors",
+    "app_events_url": "/v2/organizations/22b3b0a0-6511-47e5-8f7a-93bbd2ff446e/app_events",
+    "space_quota_definitions_url": "/v2/organizations/22b3b0a0-6511-47e5-8f7a-93bbd2ff446e/space_quota_definitions"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+Location: /v2/organizations/22b3b0a0-6511-47e5-8f7a-93bbd2ff446e
+X-VCAP-Request-ID: 5b30c754-7ed7-49c6-8a36-89b915e97b78
+Content-Length: 1302
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

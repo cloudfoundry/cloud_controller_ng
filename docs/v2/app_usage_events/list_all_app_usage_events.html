@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>App Usage Events API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>App Usage Events API</h1>
+
+  <div class="article">
+    <h2>List all App Usage Events</h2>
+    <h3>GET /v2/app_usage_events</h3>
+      <p class="explanation">
+                Events are sorted by internal database IDs. This order may differ from created_at.
+
+        Events close to the current time should not be processed because other events may still have open
+        transactions that will change their order in the results.
+
+      </p>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/app_usage_events?results-per-page=1&amp;after_guid=5a3416b0-cf3c-425a-a14c-45a317c497ed</pre>
+
+        <h4>Parameters</h4>
+        <table class="parameters table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">page</span>
+              </td>
+              <td>
+                  <span class="description">Page of results to fetch</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">results-per-page</span>
+              </td>
+              <td>
+                  <span class="description">Number of results per page</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">order-direction</span>
+              </td>
+              <td>
+                  <span class="description">Order of the results: asc (default) or desc</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">inline-relations-depth</span>
+              </td>
+              <td>
+                  <span class="description">0 - don&#39;t inline any relations and return URLs.  Otherwise, inline to depth N.</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">orphan-relations</span>
+              </td>
+              <td>
+                  <span class="description">0 - de-duplicate object entries in response</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">exclude-relations</span>
+              </td>
+              <td>
+                  <span class="description">comma-delimited list of relations to drop from response</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated">
+              <td class=" ">
+                  <span class="name">include-relations</span>
+              </td>
+              <td>
+                  <span class="description">comma-delimited list of the only relations to include in response</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="">
+              <td class=" ">
+                  <span class="name">after_guid</span>
+              </td>
+              <td>
+                  <span class="description">Restrict results to App Usage Events after the one with the given guid</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request query_parameters highlight">results-per-page: 1
+after_guid: 5a3416b0-cf3c-425a-a14c-45a317c497ed</pre>
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">app_guid</span>
+              </td>
+              <td>
+                <span class="description">The GUID of the app.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">app_name</span>
+              </td>
+              <td>
+                <span class="description">The name of the app.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">buildpack_guid</span>
+              </td>
+              <td>
+                <span class="description">The GUID of the buildpack used to stage the app.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">buildpack_name</span>
+              </td>
+              <td>
+                <span class="description">The name of the buildpack or the URL of the custom buildpack used to stage the app.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>https://example.com/buildpack.git</li>
+                      <li>admin_buildpack</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">created_at</span>
+              </td>
+              <td>
+                <span class="description">The timestamp when the event is recorded. It is possible that later events may have earlier created_at values.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">guid</span>
+              </td>
+              <td>
+                <span class="description">The guid of the event.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">instance_count</span>
+              </td>
+              <td>
+                <span class="description">The number of instance of an application</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">memory_in_mb_per_instance</span>
+              </td>
+              <td>
+                <span class="description">Memory usage per app instance.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>128</li>
+                      <li>256</li>
+                      <li>512</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">org_guid</span>
+              </td>
+              <td>
+                <span class="description">The GUID of the organization.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">package_state</span>
+              </td>
+              <td>
+                <span class="description">The state of the package.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                    <li>PENDING</li>
+                    <li>STAGED</li>
+                    <li> FAILED</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" experimental">
+                <span class="name">parent_app_guid</span>
+              </td>
+              <td>
+                <span class="description">The GUID for a parent v3 application if one exists</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" experimental">
+                <span class="name">parent_app_name</span>
+              </td>
+              <td>
+                <span class="description">The name for a parent v3 application if one exists</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">previous_instance_count</span>
+              </td>
+              <td>
+                <span class="description">The number of instance of an application previously</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">previous_memory_in_mb_per_instance</span>
+              </td>
+              <td>
+                <span class="description">Previous memory usage per app instance.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>128</li>
+                      <li>256</li>
+                      <li>512</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">previous_package_state</span>
+              </td>
+              <td>
+                <span class="description">The previous state of the package.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                    <li>PENDING</li>
+                    <li>STAGED</li>
+                    <li> FAILED</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">previous_state</span>
+              </td>
+              <td>
+                <span class="description">The previous desired state of the app or &#39;BUILDPACK_SET&#39; when buildpack info has been set.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                    <li>STARTED</li>
+                    <li>STOPPED</li>
+                    <li>BUILDPACK_SET</li>
+                    <li>TASK_STARTED</li>
+                    <li>TASK_STOPPED</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" experimental">
+                <span class="name">process_type</span>
+              </td>
+              <td>
+                <span class="description">The process_type for applications.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">space_guid</span>
+              </td>
+              <td>
+                <span class="description">The GUID of the space.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">space_name</span>
+              </td>
+              <td>
+                <span class="description">The name of the space.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" ">
+                <span class="name">state</span>
+              </td>
+              <td>
+                <span class="description">The desired state of the app or &#39;BUILDPACK_SET&#39; when buildpack info has been set.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                    <li>STARTED</li>
+                    <li>STOPPED</li>
+                    <li>BUILDPACK_SET</li>
+                    <li>TASK_STARTED</li>
+                    <li>TASK_STOPPED</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" experimental">
+                <span class="name">task_guid</span>
+              </td>
+              <td>
+                <span class="description">The GUID of the task if one exists.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" readonly">
+              <td class=" experimental">
+                <span class="name">task_name</span>
+              </td>
+              <td>
+                <span class="description">The NAME of the task if one exists.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE4NCIsImVtYWlsIjoiZW1haWwtMTM5QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTN9.WJpYrqT6mYQtACQQ02kxr3dUMZV9EI6GDBu0ErNXlvU
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/app_usage_events?results-per-page=1&amp;after_guid=5a3416b0-cf3c-425a-a14c-45a317c497ed&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE4NCIsImVtYWlsIjoiZW1haWwtMTM5QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTN9.WJpYrqT6mYQtACQQ02kxr3dUMZV9EI6GDBu0ErNXlvU&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "total_results": 2,
+  "total_pages": 2,
+  "prev_url": null,
+  "next_url": "/v2/app_usage_events?after_guid=5a3416b0-cf3c-425a-a14c-45a317c497ed&order-direction=asc&page=2&results-per-page=1",
+  "resources": [
+    {
+      "metadata": {
+        "guid": "b32241a5-5508-4d42-893c-360e42a300b6",
+        "url": "/v2/app_usage_events/b32241a5-5508-4d42-893c-360e42a300b6",
+        "created_at": "2016-06-08T16:41:33Z"
+      },
+      "entity": {
+        "state": "STARTED",
+        "previous_state": null,
+        "memory_in_mb_per_instance": 564,
+        "previous_memory_in_mb_per_instance": null,
+        "instance_count": 1,
+        "previous_instance_count": null,
+        "app_guid": "guid-d9fbb7f8-cba5-44a2-b720-c24f1fe5e1c4",
+        "app_name": "name-1663",
+        "space_guid": "guid-5e28f12f-9d80-473e-b826-537b148eb338",
+        "space_name": "name-1664",
+        "org_guid": "guid-036444f4-f2f5-4ea8-a353-e73330ca0f0a",
+        "buildpack_guid": "guid-df37754c-819b-4697-a523-4b457d3c83dd",
+        "buildpack_name": "name-1665",
+        "package_state": "STAGED",
+        "previous_package_state": null,
+        "parent_app_guid": null,
+        "parent_app_name": null,
+        "process_type": "web",
+        "task_name": null,
+        "task_guid": null
+      }
+    }
+  ]
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: 42349fc5-4aef-4253-9893-e3ff8ab5c137
+Content-Length: 1286
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>
