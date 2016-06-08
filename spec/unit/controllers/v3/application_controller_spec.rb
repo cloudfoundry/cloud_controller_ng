@@ -31,6 +31,14 @@ describe ApplicationController, type: :controller do
       can_write?(params[:space_guid])
       head 200
     end
+
+    def api_explode
+      raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'omg no!')
+    end
+
+    def blobstore_error
+      raise CloudController::Blobstore::BlobstoreError.new('it broke!')
+    end
   end
 
   describe 'read permission scope validation' do
@@ -233,6 +241,28 @@ describe ApplicationController, type: :controller do
       get :write_access, space_guid: 'space-guid', org_guid: 'org-guid'
 
       expect(permissions).to have_received(:can_write_to_space?).with('space-guid')
+    end
+  end
+
+  describe '#handle_blobstore_error' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'rescues from ApiError and renders an error presenter' do
+      routes.draw { get 'blobstore_error' => 'anonymous#blobstore_error' }
+      get :blobstore_error
+      expect(response.status).to eq(500)
+      expect(parsed_body['description']).to match /three retries/
+    end
+  end
+
+  describe '#handle_api_error' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'rescues from ApiError and renders an error presenter' do
+      routes.draw { get 'api_explode' => 'anonymous#api_explode' }
+      get :api_explode
+      expect(response.status).to eq(400)
+      expect(parsed_body['description']).to eq('The request is invalid')
     end
   end
 end

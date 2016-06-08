@@ -30,6 +30,11 @@ module VCAP::CloudController
       end
       define_route :get, '/test_sql_hook_failed', :test_sql_hook_failed
 
+      def test_blobstore_error
+        raise CloudController::Blobstore::BlobstoreError.new('whoops!')
+      end
+      define_route :get, '/test_blobstore_error', :test_blobstore_error
+
       def test_database_error
         raise Sequel::DatabaseError.new('error')
       end
@@ -99,29 +104,35 @@ module VCAP::CloudController
 
         it 'processes Sequel Validation errors using translate_validation_exception' do
           get '/test_validation_error'
-          expect(decoded_response['description']).to eq 'validation failed'
+          expect(decoded_response['description']).to eq('validation failed')
+        end
+
+        it 'processes BlobstoreError using translate_validation_exception' do
+          get '/test_blobstore_error'
+          expect(decoded_response['code']).to eq(150007)
+          expect(decoded_response['description']).to match(/three retries/)
         end
 
         it 'returns InvalidRequest when Sequel HookFailed error occurs' do
           get '/test_sql_hook_failed'
-          expect(decoded_response['code']).to eq 10004
+          expect(decoded_response['code']).to eq(10004)
         end
 
         it 'logs the error when a Sequel Database Error occurs' do
           expect(logger).to receive(:warn).with(/exception not translated/)
           get '/test_database_error'
-          expect(decoded_response['code']).to eq 10011
+          expect(decoded_response['code']).to eq(10011)
         end
 
         it 'logs an error when a JSON error occurs' do
           expect(logger).to receive(:debug).with(/Rescued JsonMessage::Error/)
           get '/test_json_error'
-          expect(decoded_response['code']).to eq 1001
+          expect(decoded_response['code']).to eq(1001)
         end
 
         it 'returns InvalidRelation when an Invalid Relation error occurs' do
           get '/test_invalid_relation_error'
-          expect(decoded_response['code']).to eq 1002
+          expect(decoded_response['code']).to eq(1002)
         end
       end
 

@@ -84,6 +84,8 @@ module VCAP::CloudController::RestController
       raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', e.message)
     rescue Sequel::DatabaseError => e
       raise self.class.translate_and_log_exception(logger, e)
+    rescue CloudController::Blobstore::BlobstoreError => e
+      raise CloudController::Errors::ApiError.new_from_details('BlobstoreError', e.message)
     rescue JsonMessage::Error => e
       logger.debug("Rescued JsonMessage::Error at #{__FILE__}:#{__LINE__}\n#{e.inspect}\n#{e.backtrace.join("\n")}")
       raise CloudController::Errors::ApiError.new_from_details('MessageParseError', e)

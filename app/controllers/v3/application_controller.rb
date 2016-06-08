@@ -30,6 +30,7 @@ class ApplicationController < ActionController::Base
   before_action :check_write_permissions!, except: [:index, :show, :not_found, :internal_error, :bad_request]
   before_action :null_coalesce_body
 
+  rescue_from CloudController::Blobstore::BlobstoreError, with: :handle_blobstore_error
   rescue_from CloudController::Errors::ApiError, with: :handle_api_error
 
   def configuration
@@ -124,6 +125,11 @@ class ApplicationController < ActionController::Base
     end
 
     raise CloudController::Errors::ApiError.new_from_details('InvalidAuthToken')
+  end
+
+  def handle_blobstore_error(error)
+    error = CloudController::Errors::ApiError.new_from_details('BlobstoreError', error.message)
+    handle_api_error(error)
   end
 
   def handle_api_error(error)
