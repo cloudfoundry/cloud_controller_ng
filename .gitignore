@@ -23,30 +23,30 @@ test.out
 
 #DOCS
 
-docs/*.gem
-docs/*.rbc
-docs/.bundle
-docs/.config
-docs/coverage
-docs/InstalledFiles
-docs/lib/bundler/man
-docs/npm-debug.log
-docs/pkg
-docs/rdoc
-docs/spec/reports
-docs/test/tmp
-docs/test/version_tmp
-docs/tmp
-docs/*.DS_STORE
-docs/build/
-docs/.cache
-docs/node_modules
-docs/node_modules/**/*
-docs/source/version
+docs/v3/*.gem
+docs/v3/*.rbc
+docs/v3/.bundle
+docs/v3/.config
+docs/v3/coverage
+docs/v3/InstalledFiles
+docs/v3/lib/bundler/man
+docs/v3/npm-debug.log
+docs/v3/pkg
+docs/v3/rdoc
+docs/v3/spec/reports
+docs/v3/test/tmp
+docs/v3/test/version_tmp
+docs/v3/tmp
+docs/v3/*.DS_STORE
+docs/v3/build/
+docs/v3/.cache
+docs/v3/node_modules
+docs/v3/node_modules/**/*
+docs/v3/source/version
 
 # YARD artifacts
-docs/.yardoc
-docs/_yardoc
-docs/doc/
-docs/.idea/
+docs/v3/.yardoc
+docs/v3/_yardoc
+docs/v3/doc/
+docs/v3/.idea/
 

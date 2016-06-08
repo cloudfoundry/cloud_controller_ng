@@ -8,10 +8,11 @@ if [[ $# -eq 0 ]]; then
 fi
 
 readonly ROOT_DIR="$(dirname "$0")/.."
+readonly GENERATED_DOCS_DIR="docs/v3"
 readonly VERSION=$1
 
 function build_docs() {
-  pushd "${ROOT_DIR}/docs" > /dev/null
+  pushd "${GENERATED_DOCS_DIR}" > /dev/null
     bundle
 
     touch source/versionfile
@@ -95,13 +96,13 @@ function push_docs() {
   git commit -m "Bump v3 API docs version ${VERSION}"
 
   git remote add origin-ssh git@github.com:cloudfoundry/cloud_controller_ng.git
-  git push origin-ssh gh-pages
+  #git push origin-ssh gh-pages
 }
 
 function add_new_docs() {
   mkdir -p "version/${VERSION}"
-  mv docs/build/* "version/${VERSION}"
-  rm -rf docs/build
+  mv ${GENERATED_DOCS_DIR}/build/* "version/${VERSION}"
+  rm -rf "${GENERATED_DOCS_DIR}/build"
 }
 
 function main() {
