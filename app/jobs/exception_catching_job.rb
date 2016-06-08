@@ -3,6 +3,12 @@ require 'presenters/error_presenter'
 module VCAP::CloudController
   module Jobs
     class ExceptionCatchingJob < WrappingJob
+      def perform
+        super
+      rescue CloudController::Blobstore::BlobstoreError => e
+        raise CloudController::Errors::ApiError.new_from_details('BlobstoreError', e.message)
+      end
+
       def error(job, e)
         error_presenter = ErrorPresenter.new(e)
         log_error(error_presenter)

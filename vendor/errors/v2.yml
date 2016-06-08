@@ -498,6 +498,11 @@
   http_code: 502
   message: "Failed to perform operation due to blobstore unavailability."
 
+150007:
+  name: BlobstoreError
+  http_code: 500
+  message: "Failed to perform blobstore operation after three retries."
+
 160001:
   name: AppBitsUploadInvalid
   http_code: 400

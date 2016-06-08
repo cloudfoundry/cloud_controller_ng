@@ -30,7 +30,7 @@ module VCAP::CloudController
             uploaded_compressed_path,
             CloudController::Blobstore::FingerprintsCollection.new(fingerprints))
 
-        rescue CloudController::Errors::ApiError
+        rescue
           app.mark_as_failed_to_stage
           raise
         end

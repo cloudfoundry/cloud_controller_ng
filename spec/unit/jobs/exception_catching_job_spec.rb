@@ -13,6 +13,16 @@ module VCAP::CloudController
         it 'delegates to the handler' do
           expect(exception_catching_job.perform).to eq('fake-perform')
         end
+
+        context 'when a BlobstoreError occurs' do
+          it 'wraps the error in an ApiError' do
+            allow(handler).to receive(:perform).and_raise(CloudController::Blobstore::BlobstoreError, 'oh no!')
+
+            expect {
+              exception_catching_job.perform
+            }.to raise_error(CloudController::Errors::ApiError, /three retries/)
+          end
+        end
       end
 
       context '#max_attempts' do
