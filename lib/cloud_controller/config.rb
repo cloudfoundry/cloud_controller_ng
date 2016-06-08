@@ -378,7 +378,7 @@ module VCAP::CloudController
         config[:broker_client_default_async_poll_interval_seconds] ||= 60
         config[:packages][:max_valid_packages_stored] ||= 5
         config[:droplets][:max_staged_droplets_stored] ||= 5
-        config[:minimum_candidate_stagers] ||= 5
+        config[:minimum_candidate_stagers] = (config[:minimum_candidate_stagers] && config[:minimum_candidate_stagers] > 0) ? config[:minimum_candidate_stagers] : 5
 
         unless config.key?(:users_can_select_backend)
           config[:users_can_select_backend] = true
