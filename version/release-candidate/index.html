@@ -4813,6 +4813,15 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 
 
+  <li class="method-list-item">
+      <h4 class="method-list-item-label">
+        app_port
+        <span class="method-list-item-type">integer</span>
+      </h4>
+
+      <p class="method-list-item-description">The port that traffic will be routed to for the mapped process.</p>
+  </li>
+
     <li class="method-list-item">
     <h4 class="method-list-item-label">
       created_at
@@ -4879,23 +4888,24 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
 
 {
-   "guid": "89323d4e-2e84-43e7-83e9-adbf50a20c0e",
-   "created_at": "2016-02-17T01:50:05Z",
-   "updated_at": null,
-   "links": {
-      "self": {
-         "href": "/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
-      },
-      "app": {
-         "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
-      },
-      "route": {
-         "href": "/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
-      },
-      "process": {
-         "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
-      }
-   }
+  "guid": "89323d4e-2e84-43e7-83e9-adbf50a20c0e",
+  "app_port": 8080,
+  "created_at": "2016-02-17T01:50:05Z",
+  "updated_at": null,
+  "links": {
+    "self": {
+      "href": "/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
+    },
+    "app": {
+      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+    },
+    "route": {
+      "href": "/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
+    },
+    "process": {
+      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
+    }
+  }
 }
 
 </code></pre>
@@ -4905,6 +4915,15 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <h3 id="body-parameters">Body Parameters</h3>
 
 <ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      app_port
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">The port that traffic will be routed to for the mapped process. Defaults to <code>8080</code></p>
+  </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
       relationships[&lsquo;app&rsquo;]['guid&rsquo;]
@@ -4930,7 +4949,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Type of the process on the app to which you would like to map the route. Defaults to 'web&rsquo;</p>
+    <p class="method-list-item-description">Type of the process on the app to which you would like to map the route. Defaults to <code>web</code></p>
   </li>
 </ul>
 
@@ -4950,23 +4969,24 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
 
 {
-   "guid": "89323d4e-2e84-43e7-83e9-adbf50a20c0e",
-   "created_at": "2016-02-17T01:50:05Z",
-   "updated_at": null,
-   "links": {
-      "self": {
-         "href": "/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
-      },
-      "app": {
-         "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
-      },
-      "route": {
-         "href": "/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
-      },
-      "process": {
-         "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
-      }
-   }
+  "guid": "89323d4e-2e84-43e7-83e9-adbf50a20c0e",
+  "app_port": 8080,
+  "created_at": "2016-02-17T01:50:05Z",
+  "updated_at": null,
+  "links": {
+    "self": {
+      "href": "/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
+    },
+    "app": {
+      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+    },
+    "route": {
+      "href": "/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
+    },
+    "process": {
+      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
+    }
+  }
 }
 
 </code></pre>
@@ -5039,42 +5059,44 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   },
   "resources": [
     {
-       "guid": "89323d4e-2e84-43e7-83e9-adbf50a20c0e",
-       "created_at": "2016-02-17T01:50:05Z",
-       "updated_at": null,
-       "links": {
-          "self": {
-             "href": "/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
-          },
-          "app": {
-             "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
-          },
-          "route": {
-             "href": "/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
-          },
-          "process": {
-             "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
-          }
-       }
+      "guid": "89323d4e-2e84-43e7-83e9-adbf50a20c0e",
+      "app_port": 8080,
+      "created_at": "2016-02-17T01:50:05Z",
+      "updated_at": null,
+      "links": {
+        "self": {
+          "href": "/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
+        },
+        "app": {
+          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+        },
+        "route": {
+          "href": "/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
+        },
+        "process": {
+          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
+        }
+      }
     },
     {
-       "guid": "9f4970a8-9e6f-4984-b0a5-5e4a8af91665",
-       "created_at": "2016-02-17T01:50:05Z",
-       "updated_at": null,
-       "links": {
-          "self": {
-             "href": "/v3/route_mappings/9f4970a8-9e6f-4984-b0a5-5e4a8af91665"
-          },
-          "app": {
-             "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
-          },
-          "route": {
-             "href": "/v2/routes/a32332f0-fb30-4e9e-9b78-348b8b6b98b6"
-          },
-          "process": {
-             "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
-          }
-       }
+      "guid": "9f4970a8-9e6f-4984-b0a5-5e4a8af91665",
+      "app_port": 8080,
+      "created_at": "2016-02-17T01:50:05Z",
+      "updated_at": null,
+      "links": {
+        "self": {
+          "href": "/v3/route_mappings/9f4970a8-9e6f-4984-b0a5-5e4a8af91665"
+        },
+        "app": {
+          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+        },
+        "route": {
+          "href": "/v2/routes/a32332f0-fb30-4e9e-9b78-348b8b6b98b6"
+        },
+        "process": {
+          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/admin-web"
+        }
+      }
     }
   ]
 }
@@ -5187,42 +5209,44 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   },
   "resources": [
     {
-       "guid": "89323d4e-2e84-43e7-83e9-adbf50a20c0e",
-       "created_at": "2016-02-17T01:50:05Z",
-       "updated_at": null,
-       "links": {
-          "self": {
-             "href": "/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
-          },
-          "app": {
-             "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
-          },
-          "route": {
-             "href": "/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
-          },
-          "process": {
-             "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
-          }
-       }
+      "guid": "89323d4e-2e84-43e7-83e9-adbf50a20c0e",
+      "app_port": 8080,
+      "created_at": "2016-02-17T01:50:05Z",
+      "updated_at": null,
+      "links": {
+        "self": {
+          "href": "/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
+        },
+        "app": {
+          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+        },
+        "route": {
+          "href": "/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
+        },
+        "process": {
+          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
+        }
+      }
     },
     {
-       "guid": "9f4970a8-9e6f-4984-b0a5-5e4a8af91665",
-       "created_at": "2016-02-17T01:50:05Z",
-       "updated_at": null,
-       "links": {
-          "self": {
-             "href": "/v3/route_mappings/9f4970a8-9e6f-4984-b0a5-5e4a8af91665"
-          },
-          "app": {
-             "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
-          },
-          "route": {
-             "href": "/v2/routes/a32332f0-fb30-4e9e-9b78-348b8b6b98b6"
-          },
-          "process": {
-             "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
-          }
-       }
+      "guid": "9f4970a8-9e6f-4984-b0a5-5e4a8af91665",
+      "app_port": 8080,
+      "created_at": "2016-02-17T01:50:05Z",
+      "updated_at": null,
+      "links": {
+        "self": {
+          "href": "/v3/route_mappings/9f4970a8-9e6f-4984-b0a5-5e4a8af91665"
+        },
+        "app": {
+          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+        },
+        "route": {
+          "href": "/v2/routes/a32332f0-fb30-4e9e-9b78-348b8b6b98b6"
+        },
+        "process": {
+          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/admin-web"
+        }
+      }
     }
   ]
 }
