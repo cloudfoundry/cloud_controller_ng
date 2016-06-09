@@ -67,7 +67,7 @@ module VCAP::CloudController
             it 'raises' do
               expect {
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, 'Port must be specified when app process does not have the default port 8080')
+              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /8080 is not available/)
             end
           end
 
@@ -94,7 +94,7 @@ module VCAP::CloudController
               it 'raises' do
                 expect {
                   route_mapping_create.add
-                }.to raise_error(RouteMappingCreate::InvalidRouteMapping, 'Port must be specified when app process does not have the default port 8080')
+                }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /8080 is not available/)
               end
             end
           end
