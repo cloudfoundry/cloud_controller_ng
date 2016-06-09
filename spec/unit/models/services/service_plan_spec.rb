@@ -89,14 +89,13 @@ module VCAP::CloudController
         end
 
         context 'when a plan with the same name has already been added for this service' do
-          let(:attrs1) { { name: 'dumbo', service_id: service.id } }
-          let(:attrs2) { { name: 'dumbo', service_id: service.id } }
-          let(:service) { Service.make({}) }
+          let(:service) { Service.make(label: 'my-service') }
 
-          before { ServicePlan.make(attrs1) }
+          before { ServicePlan.make(name: 'dumbo', service_id: service.id) }
 
           it 'throws a useful error' do
-            expect { ServicePlan.make(attrs2) }.to raise_exception('Plan names must be unique within a service')
+            expect { ServicePlan.make(name: 'dumbo', service_id: service.id) }.
+              to raise_exception('Plan names must be unique within a service. Service my-service already has a plan named dumbo')
           end
         end
       end
