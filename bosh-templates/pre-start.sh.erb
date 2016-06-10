@@ -16,4 +16,15 @@ app_domains=<%= p("app_domains").map { |domain|
 system_domain="<%= p('system_domain') %>"
 
 ruby "${SCRIPT_DIR}/check_for_domain_overlap.rb" "${system_domain}" "${app_domains[@]}"
-exit $?
+overlap_result=$?
+if [[ $overlap_result -ne 0 ]]; then
+  exit $overlap_result
+fi
+
+"${SCRIPT_DIR}/setup_paths.sh"
+setup_paths_result=$?
+if [[ $setup_paths_result -ne 0 ]]; then
+  exit $setup_paths_result
+fi
+
+exit 0
