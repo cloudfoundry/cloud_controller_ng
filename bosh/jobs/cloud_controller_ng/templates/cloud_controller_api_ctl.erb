@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 export RAILS_ENV=production
 
@@ -54,22 +54,22 @@ tee_output_to_sys_log "${LOG_DIR}"
 case $1 in
 
   start)
-    pid_guard $PIDFILE "Cloud controller ng"
+    pid_guard "$PIDFILE" "Cloud controller ng"
 
     wait_for_blobstore
 
     ulimit -c unlimited
 
-    cd $CC_PACKAGE_DIR/cloud_controller_ng
+    cd "${CC_PACKAGE_DIR}/cloud_controller_ng"
 
     <% if spec.index.to_i == 0 %>
-    exec chpst -u vcap:vcap $CC_PACKAGE_DIR/cloud_controller_ng/bin/cloud_controller --insert-seed \<% else %>
-    exec chpst -u vcap:vcap $CC_PACKAGE_DIR/cloud_controller_ng/bin/cloud_controller \<% end %>
-      -c $CLOUD_CONTROLLER_NG_CONFIG
+    "${CC_PACKAGE_DIR}/cloud_controller_ng/bin/cloud_controller" --insert-seed \<% else %>
+    "${CC_PACKAGE_DIR}/cloud_controller_ng/bin/cloud_controller" \<% end %>
+      -c "$CLOUD_CONTROLLER_NG_CONFIG"
     ;;
 
   stop)
-    kill_and_wait $PIDFILE
+    kill_and_wait "$PIDFILE"
     ;;
 
   *)
