@@ -53,7 +53,9 @@ check process cloud_controller_worker_local_<%= index %>
 check process nginx_cc
   with pidfile /var/vcap/sys/run/nginx_cc/nginx.pid
   start program "/var/vcap/jobs/cloud_controller_ng/bin/nginx_ctl start"
+        as uid vcap and gid vcap
   stop program "/var/vcap/jobs/cloud_controller_ng/bin/nginx_ctl stop"
+        as uid vcap and gid vcap
   depends on cloud_controller_ng
   group vcap
 

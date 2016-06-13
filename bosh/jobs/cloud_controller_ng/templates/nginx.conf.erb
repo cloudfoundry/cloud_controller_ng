@@ -1,5 +1,4 @@
 # deployment cloudcontroller nginx.conf
-user  vcap vcap;
 
 error_log <%= p("cc.nginx_error_log_destination") %> <%= p("cc.nginx_error_log_level") %>;
 pid       /var/vcap/sys/run/nginx_cc/nginx.pid;
@@ -25,6 +24,12 @@ http {
   keepalive_timeout  75 20; #inherited from router
 
   client_max_body_size <%= p("cc.client_max_body_size") %>; #already enforced upstream/but doesn't hurt.
+
+  client_body_temp_path /var/vcap/data/nginx_cc/tmp/client_body_temp;
+  proxy_temp_path       /var/vcap/data/nginx_cc/tmp/proxy_temp;
+  fastcgi_temp_path     /var/vcap/data/nginx_cc/tmp/fastcgi_temp;
+  uwsgi_temp_path       /var/vcap/data/nginx_cc/tmp/uwsgi_temp;
+  scgi_temp_path        /var/vcap/data/nginx_cc/tmp/scgi_temp;
 
   upstream cloud_controller {
     server unix:/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock;
