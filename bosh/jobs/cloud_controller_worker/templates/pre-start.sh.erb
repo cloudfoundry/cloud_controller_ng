@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -ex
+
+SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+function setup_directories {
+  mkdir -p "/var/vcap/sys/run/cloud_controller_worker"
+  chown -R vcap:vcap "/var/vcap/sys/run/cloud_controller_worker"
+
+  mkdir -p "/var/vcap/sys/log/cloud_controller_worker"
+  chown -R vcap:vcap "/var/vcap/sys/log/cloud_controller_worker"
+
+  source "${SCRIPT_DIR}/handle_local_blobstore.sh"
+}
+
+function main {
+  setup_directories
+}
+
+main
+
+exit 0

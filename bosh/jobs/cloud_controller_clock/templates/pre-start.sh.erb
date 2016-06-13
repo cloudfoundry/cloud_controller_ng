@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+set -ex
+
+SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+function setup_directories {
+  RUN_DIR="/var/vcap/sys/run/cloud_controller_clock"
+  LOG_DIR="/var/vcap/sys/log/cloud_controller_clock"
+
+  mkdir -p "$RUN_DIR"
+  mkdir -p "$LOG_DIR"
+
+  chown -R vcap:vcap "$RUN_DIR"
+  chown -R vcap:vcap "$LOG_DIR"
+}
+
+function main {
+  setup_directories
+}
+
+main
+
+exit 0

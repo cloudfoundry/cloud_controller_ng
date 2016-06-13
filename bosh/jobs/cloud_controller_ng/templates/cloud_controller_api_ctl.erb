@@ -39,6 +39,11 @@ export LANG=en_US.UTF-8
 export NEWRELIC_ENABLE=<%= !!properties.cc.newrelic.license_key || p("cc.development_mode") %>
 export NRCONFIG=$CONFIG_DIR/newrelic.yml
 export NEW_RELIC_ENV=<%= p("cc.newrelic.environment_name") %>
+# Setting ENV['DYNO'] so NewRelic properly names our Hostnames.
+# If this isn't done, all activity will be grouped under 'dynamic hostname'
+# Note: this will only take effect if heroku.use_dyno_names in newrelic.yml
+#       is set to true
+export DYNO=<%= "#{spec.job.name}-#{spec.index}" %>
 
 source /var/vcap/packages/capi_utils/syslog_utils.sh
 source /var/vcap/packages/capi_utils/pid_utils.sh
@@ -53,20 +58,7 @@ case $1 in
 
     wait_for_blobstore
 
-    source $CC_JOB_DIR/bin/handle_local_blobstore.sh
-
-    # Configure the core file location
-    <% if p("cc.core_file_pattern") %>
-    echo <%= p("cc.core_file_pattern") %> > /proc/sys/kernel/core_pattern
-    <% end %>
-
     ulimit -c unlimited
-
-    # Setting ENV['DYNO'] so NewRelic properly names our Hostnames.
-    # If this isn't done, all activity will be grouped under 'dynamic hostname'
-    # Note: this will only take effect if heroku.use_dyno_names in newrelic.yml
-    #       is set to true
-    export DYNO=<%= "#{spec.job.name}-#{spec.index}" %>
 
     cd $CC_PACKAGE_DIR/cloud_controller_ng
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 INDEX=$2
 
@@ -42,8 +42,8 @@ case $1 in
 
     cd $CC_PACKAGE_DIR/cloud_controller_ng
 
-    # Run the buildpack install only on the first CC Worker launch
     <% if spec.index.to_i == 0 %>
+    # Run the buildpack install only on the first CC Worker launch
     if [ $INDEX == 1 ]; then
       bundle exec rake buildpacks:install
 

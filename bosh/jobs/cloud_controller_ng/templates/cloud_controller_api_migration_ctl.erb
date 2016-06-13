@@ -26,12 +26,11 @@ tee_output_to_sys_log "${LOG_DIR}"
 case $1 in
 
   start)
-
     pid_guard $PIDFILE "Cloud controller migration"
 
     echo "$$" > $PIDFILE
 
-    cd $CC_PACKAGE_DIR/cloud_controller_ng
+    cd "${CC_PACKAGE_DIR}/cloud_controller_ng"
 
     # Run the migrations only on the first CC launch
     <% if spec.index.to_i == 0 %>

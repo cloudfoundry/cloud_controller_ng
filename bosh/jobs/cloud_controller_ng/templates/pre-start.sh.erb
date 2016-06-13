@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+set -ex
+
+SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+source "${SCRIPT_DIR}/ruby_version.sh"
+
+function deny_overlapping_app_and_system_domains {
+  app_domains=<%= p("app_domains").map { |domain|
+      if domain.is_a?(Hash)
+          domain['name']
+      else
+          domain
+      end
+  }.join(',') %>
+
+  system_domain="<%= p('system_domain') %>"
+
+  ruby "${SCRIPT_DIR}/check_for_domain_overlap.rb" "${system_domain}" "${app_domains[@]}"
+
+  overlap_result=$?
+  if [[ $overlap_result -ne 0 ]]; then
+    exit $overlap_result
+  fi
+}
+
+function setup_directories {
+  mkdir -p "/var/vcap/sys/run/cloud_controller_ng"
+  chown -R vcap:vcap "/var/vcap/sys/run/cloud_controller_ng"
+
+  mkdir -p "/var/vcap/sys/log/cloud_controller_ng"
+  chown -R vcap:vcap "/var/vcap/sys/log/cloud_controller_ng"
+
+  mkdir -p "/var/vcap/data/cloud_controller_ng/tmp"
+  chown -R vcap:vcap "/var/vcap/data/cloud_controller_ng/tmp"
+
+  mkdir -p "/var/vcap/sys/cores"
+  chown -R vcap:vcap "/var/vcap/sys/cores"
+  # Configure the core file location
+  <% if p("cc.core_file_pattern") %>
+  echo <%= p("cc.core_file_pattern") %> > /proc/sys/kernel/core_pattern
+  <% end %>
+
+  mkdir -p "/var/vcap/sys/run/cloud_controller_migration"
+  chown -R vcap:vcap "/var/vcap/sys/run/cloud_controller_migration"
+
+  mkdir -p "/var/vcap/sys/log/cloud_controller_migration"
+  chown -R vcap:vcap "/var/vcap/sys/log/cloud_controller_migration"
+
+  source "${SCRIPT_DIR}/handle_local_blobstore.sh"
+
+  <% if_p("cc.directories.diagnostics") do |diag_dir| %>
+  mkdir -p "<%= diag_dir %>"
+  chown -R vcap:vcap "<%= diag_dir %>"
+  <% end %>
+}
+
+function main {
+  setup_directories
+  deny_overlapping_app_and_system_domains
+}
+
+main
+
+exit 0
