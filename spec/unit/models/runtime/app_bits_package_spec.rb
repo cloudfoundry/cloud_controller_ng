@@ -8,11 +8,15 @@ describe AppBitsPackage do
   let(:local_tmp_dir) { Dir.mktmpdir }
 
   let(:global_app_bits_cache) do
-    CloudController::Blobstore::FogClient.new({ provider: 'Local', local_root: blobstore_dir }, 'global_app_bits_cache', nil, nil, 4, 8)
+    CloudController::Blobstore::FogClient.new(connection_config: { provider: 'Local', local_root: blobstore_dir },
+                                              directory_key: 'global_app_bits_cache',
+                                              min_size: 4,
+                                              max_size: 8)
   end
 
   let(:package_blobstore) do
-    CloudController::Blobstore::FogClient.new({ provider: 'Local', local_root: blobstore_dir }, 'package')
+    CloudController::Blobstore::FogClient.new(connection_config: { provider: 'Local', local_root: blobstore_dir },
+                                              directory_key: 'package')
   end
 
   let(:packer) { AppBitsPackage.new }

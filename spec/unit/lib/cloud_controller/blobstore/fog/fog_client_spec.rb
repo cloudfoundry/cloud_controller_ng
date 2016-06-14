@@ -9,7 +9,6 @@ module CloudController
       let(:content) { 'Some Nonsense' }
       let(:sha_of_content) { Digester.new.digest(content) }
       let(:local_dir) { Dir.mktmpdir }
-      let(:directory_key) { 'a-directory-key' }
       let(:connection_config) do
         {
           provider:              'AWS',
@@ -17,16 +16,23 @@ module CloudController
           aws_secret_access_key: 'fake_secret_access_key',
         }
       end
-      let(:min_size) { 20 }
-      let(:max_size) { 50 }
+      let(:directory_key) { 'a-directory-key' }
+      let(:client_with_root) do
+        described_class.new(connection_config: connection_config,
+                            directory_key: directory_key,
+                            root_dir: root_dir)
+      end
+
       subject(:client) do
-        described_class.new(connection_config, directory_key)
+        described_class.new(connection_config: connection_config,
+                            directory_key: directory_key)
       end
 
       describe 'conforms to blobstore client interface' do
         let(:deletable_blob) { instance_double(FogBlob, file: nil) }
+
         before do
-          subject.cp_to_blobstore(tmpfile.path, key)
+          client.cp_to_blobstore(tmpfile.path, key)
         end
 
         it_behaves_like 'a blobstore client'
@@ -45,13 +51,15 @@ module CloudController
       end
 
       context 'for a remote blobstore backed by a CDN' do
-        subject(:client) do
-          described_class.new(connection_config, directory_key, cdn)
-        end
-
         let(:cdn) { double(:cdn) }
         let(:url_from_cdn) { 'http://some_distribution.cloudfront.net/ab/cd/abcdef' }
         let(:key) { 'abcdef' }
+
+        subject(:client) do
+          described_class.new(connection_config: connection_config,
+                              directory_key: directory_key,
+                              cdn: cdn)
+        end
 
         before do
           upload_tmpfile(client, key)
@@ -78,9 +86,7 @@ module CloudController
       end
 
       context 'a local blobstore' do
-        subject(:client) do
-          described_class.new({ provider: 'Local' }, directory_key)
-        end
+        let(:connection_config) { { provider: 'Local' } }
 
         it 'is true if the provider is local' do
           expect(client).to be_local
@@ -89,9 +95,9 @@ module CloudController
 
       context 'common behaviors' do
         let(:directory) { Fog::Storage.new(connection_config).directories.create(key: directory_key) }
-        subject(:client) do
-          described_class.new(connection_config, directory_key)
-        end
+        let(:client) { described_class.new(connection_config: connection_config,
+                                           directory_key: directory_key)
+        }
 
         context 'with existing files' do
           before do
@@ -116,7 +122,7 @@ module CloudController
         describe '#cp_r_to_blobstore' do
           let(:sha_of_nothing) { Digester.new.digest('') }
 
-          it 'ensure that the sha of nothing and sha of content are different for subsequent tests' do
+          it 'ensures that the sha of nothing and sha of content are different for subsequent tests' do
             expect(sha_of_nothing[0..1]).not_to eq(sha_of_content[0..1])
           end
 
@@ -149,8 +155,14 @@ module CloudController
           end
 
           context 'limit the file size' do
-            let(:client) do
-              described_class.new(connection_config, directory_key, nil, nil, min_size, max_size)
+            let(:min_size) { 20 }
+            let(:max_size) { 50 }
+
+            subject(:client) do
+              described_class.new(connection_config: connection_config,
+                                  directory_key: directory_key,
+                                  min_size: min_size,
+                                  max_size: max_size)
             end
 
             it 'does not copy files below the minimum size limit' do
@@ -175,6 +187,7 @@ module CloudController
 
         describe '#download_from_blobstore' do
           let(:destination) { File.join(local_dir, 'some_directory_to_place_file', 'downloaded_file') }
+
           context 'when directly from the underlying storage' do
             before do
               upload_tmpfile(client, sha_of_content)
@@ -260,7 +273,7 @@ module CloudController
             expect(client.blob(key).file.public_url).to be
           end
 
-          it 'sets conten-type to mime-type of application/zip when not specified' do
+          it 'sets content-type to mime-type of application/zip when not specified' do
             path = File.join(local_dir, 'empty_file')
             FileUtils.touch(path)
 
@@ -269,7 +282,7 @@ module CloudController
             expect(directory.files.head('ab/cd/abcdef123456').content_type).to eq('application/zip')
           end
 
-          it 'sets conten-type to mime-type of file when specified' do
+          it 'sets content-type to mime-type of file when specified' do
             path = File.join(local_dir, 'empty_file.png')
             FileUtils.touch(path)
 
@@ -279,8 +292,14 @@ module CloudController
           end
 
           context 'limit the file size' do
-            let(:client) do
-              described_class.new(connection_config, directory_key, nil, nil, min_size, max_size)
+            let(:min_size) { 20 }
+            let(:max_size) { 50 }
+
+            subject(:client) do
+              described_class.new(connection_config: connection_config,
+                                  directory_key: directory_key,
+                                  min_size: min_size,
+                                  max_size: max_size)
             end
 
             it 'does not copy files below the minimum size limit' do
@@ -299,6 +318,52 @@ module CloudController
 
               client.cp_to_blobstore(path, key)
               expect(client.exists?(key)).to be false
+            end
+          end
+
+          context 'encryption' do
+            let(:files) { double(:files, create: true) }
+
+            before do
+              allow_any_instance_of(FogClient).to receive(:files).and_return(files)
+            end
+
+            context 'when encryption type is specified' do
+              let(:client_with_encryption) { described_class.new(connection_config: connection_config,
+                                                                 directory_key: directory_key,
+                                                                 encryption: 'my-algo')
+              }
+
+              it 'passes the encryption options to aws' do
+                path = File.join(local_dir, 'empty_file.png')
+                FileUtils.touch(path)
+
+                client_with_encryption.cp_to_blobstore(path, 'abcdef123456')
+
+                expect(files).to have_received(:create).with(key: anything,
+                                                             body: anything,
+                                                             content_type: anything,
+                                                             public: anything,
+                                                             encryption: 'my-algo')
+              end
+            end
+
+            context 'when encryption type is not specified' do
+              let(:client_with_encryption) { described_class.new(connection_config: connection_config,
+                                                                 directory_key: directory_key)
+              }
+
+              it 'passes the encryption options to aws' do
+                path = File.join(local_dir, 'empty_file.png')
+                FileUtils.touch(path)
+
+                client_with_encryption.cp_to_blobstore(path, 'abcdef123456')
+
+                expect(files).to have_received(:create).with(key: anything,
+                                                             body: anything,
+                                                             content_type: anything,
+                                                             public: anything)
+              end
             end
           end
         end
@@ -440,9 +505,7 @@ module CloudController
           end
 
           context 'when a root dir is provided' do
-            let(:client_with_root) do
-              described_class.new(connection_config, directory_key, nil, 'root-dir')
-            end
+            let(:root_dir) { 'root-dir' }
 
             it 'only deletes files at the root' do
               allow(client_with_root).to receive(:delete_files).and_call_original
@@ -525,9 +588,7 @@ module CloudController
           end
 
           context 'when a root dir is provided' do
-            let(:client_with_root) do
-              described_class.new(connection_config, directory_key, nil, 'root-dir')
-            end
+            let(:root_dir) { 'root-dir' }
 
             it 'only deletes files at the root' do
               path = File.join(local_dir, 'empty_file')
@@ -600,15 +661,13 @@ module CloudController
       end
 
       context 'with root directory specified' do
-        subject(:client) do
-          described_class.new(connection_config, directory_key, nil, 'my-root')
-        end
+        let(:root_dir) { 'my-root' }
 
         it 'includes the directory in the partitioned key' do
-          upload_tmpfile(client, 'abcdef')
-          expect(client.exists?('abcdef')).to be true
-          expect(client.blob('abcdef')).to be
-          expect(client.blob('abcdef').public_download_url).to match(%r{my-root/ab/cd/abcdef})
+          upload_tmpfile(client_with_root, 'abcdef')
+          expect(client_with_root.exists?('abcdef')).to be true
+          expect(client_with_root.blob('abcdef')).to be
+          expect(client_with_root.blob('abcdef').public_download_url).to match(%r{my-root/ab/cd/abcdef})
         end
       end
 
@@ -629,6 +688,14 @@ module CloudController
 
         describe 'from a CDN' do
           let(:port) { 9875 } # TODO: Can we find a free port?
+          let(:uri) { "http://localhost:#{port}" }
+          let(:cdn) { Cdn.make(uri) }
+
+          subject(:client) do
+            described_class.new(connection_config: connection_config,
+                                directory_key: directory_key,
+                                cdn: cdn)
+          end
 
           around(:each) do |example|
             WebMock.disable_net_connect!(allow_localhost: true)
@@ -637,10 +704,6 @@ module CloudController
           end
 
           it 'correctly downloads byte streams' do
-            uri    = "http://localhost:#{port}"
-            cdn    = Cdn.make(uri)
-            client = described_class.new(connection_config, directory_key, cdn)
-
             source_directory_path = File.expand_path('../../../../../fixtures/', File.dirname(__FILE__))
             source_file_path      = File.join(source_directory_path, 'pa/rt/partitioned_key')
             source_hexdigest      = Digest::SHA2.file(source_file_path).hexdigest
@@ -666,6 +729,9 @@ module CloudController
         end
 
         describe 'from a blobstore' do
+          let(:local_root) { File.expand_path('../../../../../', File.dirname(__FILE__)) }
+          let(:connection_config) { { provider: 'Local', local_root: local_root } }
+          let(:directory_key) { 'fixtures' }
           around(:each) do |example|
             Fog.unmock!
             example.run
@@ -674,10 +740,7 @@ module CloudController
 
           it 'correctly downloads byte streams' do
             Fog.unmock!
-            local_root            = File.expand_path('../../../../../', File.dirname(__FILE__))
-            source_directory_path = File.join(local_root, 'fixtures')
-
-            client = described_class.new({ provider: 'Local', local_root: local_root }, 'fixtures')
+            source_directory_path = File.join(local_root, directory_key)
 
             source_file_path = File.join(source_directory_path, 'pa/rt/partitioned_key')
             source_hexdigest = Digest::SHA2.file(source_file_path).hexdigest

@@ -270,6 +270,9 @@ module VCAP::CloudController
         @test_config = {
           packages: {
             fog_connection: {},
+            fog_aws_storage_options: {
+              encryption: 'AES256'
+            },
             app_package_directory_key: 'app_key',
           },
           droplets: {

@@ -8,7 +8,8 @@ module VCAP::CloudController
       let(:droplet_bits_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }
       let(:blobstore_dir) { Dir.mktmpdir }
       let(:droplet_blobstore) do
-        CloudController::Blobstore::FogClient.new({ provider: 'Local', local_root: blobstore_dir }, 'droplet')
+        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'Local', local_root: blobstore_dir },
+                                                  directory_key: 'droplet')
       end
       let(:source_droplet) { DropletModel.make(:buildpack, droplet_hash: 'abcdef1234') }
       let(:destination_droplet) { DropletModel.make(:buildpack, state: DropletModel::PENDING_STATE) }

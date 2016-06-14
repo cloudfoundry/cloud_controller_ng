@@ -242,6 +242,8 @@ properties:
   cc.resource_pool.blobstore_type:
     description: "The type of blobstore backing to use. Valid values: ['fog', 'webdav']"
     default: "fog"
+  cc.resource_pool.fog_aws_storage_options:
+    description: "Storage options passed to fog for aws blobstores. Valid keys: ['encryption']."
   cc.resource_pool.webdav_config.blobstore_timeout:
     description: "The timeout in seconds for requests to the blobstore"
     default: 5
@@ -284,6 +286,8 @@ properties:
   cc.packages.blobstore_type:
     description: "The type of blobstore backing to use. Valid values: ['fog', 'webdav']"
     default: "fog"
+  cc.packages.fog_aws_storage_options:
+    description: "Storage options passed to fog for aws blobstores. Valid keys: ['encryption']."
   cc.packages.webdav_config.blobstore_timeout:
     description: "The timeout in seconds for requests to the blobstore"
     default: 5
@@ -326,6 +330,8 @@ properties:
   cc.droplets.blobstore_type:
     description: "The type of blobstore backing to use. Valid values: ['fog', 'webdav']"
     default: "fog"
+  cc.droplets.fog_aws_storage_options:
+    description: "Storage options passed to fog for aws blobstores. Valid keys: ['encryption']."
   cc.droplets.webdav_config.blobstore_timeout:
     description: "The timeout in seconds for requests to the blobstore"
     default: 5
@@ -365,6 +371,8 @@ properties:
   cc.buildpacks.blobstore_type:
     description: "The type of blobstore backing to use. Valid values: ['fog', 'webdav']"
     default: "fog"
+  cc.buildpacks.fog_aws_storage_options:
+    description: "Storage options passed to fog for aws blobstores. Valid keys: ['encryption']."
   cc.buildpacks.webdav_config.blobstore_timeout:
     description: "The timeout in seconds for requests to the blobstore"
     default: 5

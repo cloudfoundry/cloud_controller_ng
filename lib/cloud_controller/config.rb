@@ -170,20 +170,28 @@ module VCAP::CloudController
           optional(:maximum_size) => Integer,
           optional(:minimum_size) => Integer,
           :resource_directory_key => String,
-          :fog_connection => Hash
+          :fog_connection => Hash,
+          optional(:fog_aws_storage_options) => Hash
+        },
+
+        :buildpacks => {
+          :fog_connection => Hash,
+          optional(:fog_aws_storage_options) => Hash
         },
 
         :packages => {
           optional(:max_package_size) => Integer,
           optional(:max_valid_packages_stored) => Integer,
           :app_package_directory_key => String,
-          :fog_connection => Hash
+          :fog_connection => Hash,
+          optional(:fog_aws_storage_options) => Hash
         },
 
         :droplets => {
           droplet_directory_key: String,
           optional(:max_staged_droplets_stored) => Integer,
-          fog_connection: Hash
+          :fog_connection => Hash,
+          optional(:fog_aws_storage_options) => Hash
         },
 
         :db_encryption_key => String,

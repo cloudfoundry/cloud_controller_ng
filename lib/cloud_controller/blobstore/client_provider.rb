@@ -20,16 +20,18 @@ module CloudController
         private
 
         def provide_fog(options, directory_key, root_dir)
-          cdn_uri = options[:cdn].try(:[], :uri)
-          cdn     = CloudController::Blobstore::Cdn.make(cdn_uri)
+          cdn_uri        = options[:cdn].try(:[], :uri)
+          cdn            = CloudController::Blobstore::Cdn.make(cdn_uri)
+          encryption = options.try(:[], :fog_aws_storage_options).try(:[], :encryption)
 
           client = FogClient.new(
-            options.fetch(:fog_connection),
-            directory_key,
-            cdn,
-            root_dir,
-            options[:minimum_size],
-            options[:maximum_size]
+            connection_config: options.fetch(:fog_connection),
+            directory_key: directory_key,
+            cdn: cdn,
+            root_dir: root_dir,
+            min_size: options[:minimum_size],
+            max_size: options[:maximum_size],
+            encryption: encryption
           )
 
           logger = Steno.logger('cc.blobstore')
