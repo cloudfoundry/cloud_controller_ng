@@ -22,7 +22,7 @@ export NEWRELIC_ENABLE="false"
 source /var/vcap/packages/capi_utils/syslog_utils.sh
 source /var/vcap/packages/capi_utils/pid_utils.sh
 
-tee_output_to_sys_log "${LOG_DIR}"
+tee_output_to_sys_log_and_file "${LOG_DIR}" "$(basename "$0")"
 
 case $1 in
 start)

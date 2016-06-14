@@ -2,6 +2,9 @@
 
 set -ex
 
+source /var/vcap/packages/capi_utils/syslog_utils.sh
+tee_output_to_sys_log "cloud_controller_worker.$(basename "$0")"
+
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 function setup_directories {
