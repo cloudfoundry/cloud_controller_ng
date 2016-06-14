@@ -1,5 +1,6 @@
 require 'support/bootstrap/test_config'
 require 'support/bootstrap/table_recreator'
+require 'cloud_controller/seeds'
 
 module VCAP::CloudController
   module SpecBootstrap

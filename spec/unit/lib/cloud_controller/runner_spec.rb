@@ -122,104 +122,6 @@ module VCAP::CloudController
         end
       end
 
-      describe 'insert seed flag' do
-        context 'when the insert seed flag is passed in' do
-          let(:argv) { ['-s'] }
-          before do
-            Organization.dataset.destroy
-            QuotaDefinition.dataset.destroy
-            SecurityGroup.dataset.destroy
-            allow(Stack).to receive(:configure)
-          end
-
-          it_behaves_like 'running Cloud Controller'
-
-          describe 'when the seed data has not yet been created' do
-            before { subject.run! }
-
-            it 'creates stacks from the config file' do
-              cider = Stack.find(name: 'cider')
-              expect(cider.description).to eq('cider-description')
-              expect(cider).to be_valid
-            end
-
-            it 'should load quota definitions' do
-              expect(QuotaDefinition.count).to eq(2)
-              default = QuotaDefinition[name: 'default']
-              expect(default.non_basic_services_allowed).to eq(true)
-              expect(default.total_services).to eq(100)
-              expect(default.memory_limit).to eq(10240)
-            end
-
-            it 'creates the system domain organization' do
-              expect(Organization.last.name).to eq('the-system-domain-org-name')
-              expect(Organization.last.quota_definition.name).to eq('default')
-            end
-
-            it 'creates the system domain, owned by the system domain org' do
-              domain = Domain.find(name: 'the-system-domain.com')
-              expect(domain.owning_organization.name).to eq('the-system-domain-org-name')
-            end
-
-            it 'creates the application serving domains' do
-              ['customer-app-domain1.com', 'customer-app-domain2.com'].each do |domain|
-                expect(Domain.find(name: domain)).not_to be_nil
-                expect(Domain.find(name: domain).owning_organization).to be_nil
-              end
-            end
-
-            it 'creates the security group defaults' do
-              expect(SecurityGroup.count).to eq(1)
-            end
-          end
-
-          it 'does not try to create the system domain twice' do
-            subject.run!
-            expect { subject.run! }.not_to change(Domain, :count)
-          end
-
-          context "when the 'default' quota is missing from the config file" do
-            let(:config_file) do
-              config = YAML.load_file(valid_config_file_path)
-              config['quota_definitions'].delete('default')
-              file = Tempfile.new('config')
-              file.write(YAML.dump(config))
-              file.rewind
-              file
-            end
-
-            it 'raises an exception' do
-              expect {
-                subject.run!
-              }.to raise_error(ArgumentError, /Missing .*default.* quota/)
-            end
-          end
-
-          context 'when the app domains include the system domain' do
-            let(:config_file) do
-              config = YAML.load_file(valid_config_file_path)
-              config['app_domains'].push({ 'name' => 'the-system-domain.com' })
-              file = Tempfile.new('config')
-              file.write(YAML.dump(config))
-              file.rewind
-              file
-            end
-
-            it 'creates the system domain as a private domain' do
-              subject.run!
-              domain = Domain.find(name: 'the-system-domain.com')
-              expect(domain.owning_organization).to be_nil
-            end
-          end
-        end
-      end
-
-      context 'when the insert seed flag is not passed in' do
-        let(:argv) { [] }
-
-        it_behaves_like 'running Cloud Controller'
-      end
-
       it 'sets up logging before creating a logger' do
         steno_configurer = instance_double(StenoConfigurer)
         logger = Steno.logger('logger')
@@ -324,16 +226,6 @@ module VCAP::CloudController
               it 'should set the configuration file' do
                 expect(subject.config_file).to eq(config_file.path)
               end
-            end
-          end
-        end
-
-        describe 'Insert seed data' do
-          ['-s', '--insert-seed'].each do |flag|
-            let(:argv_options) { [flag] }
-
-            it 'should set insert_seed_data to true' do
-              expect(subject.insert_seed_data).to be true
             end
           end
         end

@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'cloud_controller/seeds'
 
 module VCAP::CloudController
   describe VCAP::CloudController::Seeds do

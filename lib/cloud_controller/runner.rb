@@ -12,7 +12,6 @@ require 'cloud_controller/rack_app_builder'
 require 'cloud_controller/metrics/periodic_updater'
 require 'cloud_controller/metrics/request_metrics'
 
-require_relative 'seeds'
 require_relative 'message_bus_configurer'
 
 module VCAP::CloudController
@@ -48,10 +47,6 @@ module VCAP::CloudController
         opts.on('-c', '--config [ARG]', 'Configuration File') do |opt|
           @config_file = opt
         end
-
-        opts.on('-s', '--insert-seed', 'Insert seed data') do
-          @insert_seed_data = true
-        end
       end
     end
 
@@ -84,8 +79,6 @@ module VCAP::CloudController
           message_bus = MessageBus::Configurer.new(servers: @config[:message_bus_servers], logger: logger).go
 
           start_cloud_controller(message_bus)
-
-          Seeds.write_seed_data(@config) if @insert_seed_data
 
           Dea::SubSystem.setup!(message_bus)
 

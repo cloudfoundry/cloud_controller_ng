@@ -62,9 +62,7 @@ case $1 in
 
     cd "${CC_PACKAGE_DIR}/cloud_controller_ng"
 
-    <% if spec.index.to_i == 0 %>
-    "${CC_PACKAGE_DIR}/cloud_controller_ng/bin/cloud_controller" --insert-seed \<% else %>
-    "${CC_PACKAGE_DIR}/cloud_controller_ng/bin/cloud_controller" \<% end %>
+    "${CC_PACKAGE_DIR}/cloud_controller_ng/bin/cloud_controller" \
       -c "$CLOUD_CONTROLLER_NG_CONFIG"
     ;;
 

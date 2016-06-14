@@ -127,4 +127,11 @@ end
   end
 
   task recreate: %w[drop create]
+
+  desc "Seed the database"
+  task :seed do
+    require 'cloud_controller/seeds'
+    BackgroundJobEnvironment.new(RakeConfig.config).setup_environment
+    VCAP::CloudController::Seeds.write_seed_data(RakeConfig.config)
+  end
 end

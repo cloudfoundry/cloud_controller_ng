@@ -36,11 +36,11 @@ module IntegrationSetup
         'DB_CONNECTION_STRING' => db_connection_string,
         'DB' => db
       }.merge(opts[:env] || {})
-      run_cmd('bundle exec rake db:recreate db:migrate', wait: true, env: env)
+      run_cmd('bundle exec rake db:recreate db:migrate db:seed', wait: true, env: env)
     end
 
     @cc_pids ||= []
-    @cc_pids << run_cmd("bin/cloud_controller -s -c #{config_file}", opts.merge(env: { 'DB_CONNECTION_STRING' => db_connection_string }.merge(opts[:env] || {})))
+    @cc_pids << run_cmd("bin/cloud_controller -c #{config_file}", opts.merge(env: { 'DB_CONNECTION_STRING' => db_connection_string }.merge(opts[:env] || {})))
 
     info_endpoint = "http://localhost:#{config['external_port']}/info"
 
