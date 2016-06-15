@@ -40,7 +40,7 @@ case $1 in
     wait_for_blobstore
 
     cd "${CC_PACKAGE_DIR}/cloud_controller_ng"
-    bundle exec rake jobs:generic[cc_global_worker.<%= spec.job.name %>.<%= spec.index %>.${INDEX}]
+    exec bundle exec rake jobs:generic[cc_global_worker.<%= spec.job.name %>.<%= spec.index %>.${INDEX}]
   ;;
 
   stop)

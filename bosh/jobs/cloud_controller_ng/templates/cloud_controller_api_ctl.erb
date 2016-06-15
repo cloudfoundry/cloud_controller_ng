@@ -62,7 +62,7 @@ case $1 in
 
     cd "${CC_PACKAGE_DIR}/cloud_controller_ng"
 
-    "${CC_PACKAGE_DIR}/cloud_controller_ng/bin/cloud_controller" \
+    exec "${CC_PACKAGE_DIR}/cloud_controller_ng/bin/cloud_controller" \
       -c "$CLOUD_CONTROLLER_NG_CONFIG"
     ;;
 

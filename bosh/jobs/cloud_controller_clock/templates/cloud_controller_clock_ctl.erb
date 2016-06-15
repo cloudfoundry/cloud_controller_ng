@@ -31,7 +31,7 @@ start)
   echo $$ > "$PIDFILE"
 
   cd "${CC_PACKAGE_DIR}/cloud_controller_ng"
-  bundle exec rake clock:start
+  exec bundle exec rake clock:start
   ;;
 
 stop)
