@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'membrane'
-# require 'cloud_controller/diego/staging_guid'
 
 module VCAP::CloudController
   module Dea
