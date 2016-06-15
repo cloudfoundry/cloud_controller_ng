@@ -9,8 +9,6 @@ module VCAP::CloudController
         let(:dea_client) { double(VCAP::CloudController::Dea::Client) }
 
         subject(:respondent) { Dea::HM9000::Respondent.new(dea_client, message_bus) }
-
-        # Fill this in
       end
     end
   end
