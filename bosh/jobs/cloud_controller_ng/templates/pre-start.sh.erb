@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
 
 set -ex
+export LANG="en_US.UTF-8"
 
 source /var/vcap/packages/capi_utils/syslog_utils.sh
 tee_output_to_sys_log "cloud_controller_ng.$(basename "$0")"
 
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+CC_JOB_DIR="/var/vcap/jobs/cloud_controller_ng"
+CC_PACKAGE_DIR="/var/vcap/packages/cloud_controller_ng"
+CONFIG_DIR="${CC_JOB_DIR}/config"
+
+export CLOUD_CONTROLLER_NG_CONFIG="${CONFIG_DIR}/cloud_controller_ng.yml"
+export BUNDLE_GEMFILE="${CC_PACKAGE_DIR}/cloud_controller_ng/Gemfile"
+
 source "${SCRIPT_DIR}/ruby_version.sh"
 
 function deny_overlapping_app_and_system_domains {
@@ -68,18 +76,8 @@ function setup_api_directories {
   <% end %>
 }
 
-function setup_migration_directories {
-  mkdir -p "/var/vcap/sys/run/cloud_controller_migration"
-  chown -R vcap:vcap "/var/vcap/sys/run/cloud_controller_migration"
-
-  mkdir -p "/var/vcap/sys/log/cloud_controller_migration"
-  chown -R vcap:vcap "/var/vcap/sys/log/cloud_controller_migration"
-}
-
-
 function setup_directories {
   setup_api_directories
-  setup_migration_directories
   setup_nginx_directories
 
   source "${SCRIPT_DIR}/handle_local_blobstore.sh"
@@ -90,9 +88,43 @@ function setup_directories {
   <% end %>
 }
 
+function perform_migration {
+  <% if spec.bootstrap %>
+  pushd "${CC_PACKAGE_DIR}/cloud_controller_ng" > /dev/null
+    chpst -u vcap:vcap bundle exec rake db:migrate
+
+    result=$?
+    if [[ $result -ne 0 ]]; then
+      echo "Migrations failed"
+      exit $result
+    fi
+  popd > /dev/null
+  <% else %>
+  echo "Skipping migrations"
+  <% end %>
+}
+
+function seed_db {
+  <% if spec.bootstrap %>
+  pushd "${CC_PACKAGE_DIR}/cloud_controller_ng" > /dev/null
+    chpst -u vcap:vcap bundle exec rake db:seed
+
+    result=$?
+    if [[ $result -ne 0 ]]; then
+      echo "DB seeding failed"
+      exit $result
+    fi
+  popd > /dev/null
+  <% else %>
+  echo "Skipping DB seeding"
+  <% end %>
+}
+
 function main {
   setup_directories
   deny_overlapping_app_and_system_domains
+  perform_migration
+  seed_db
 }
 
 main

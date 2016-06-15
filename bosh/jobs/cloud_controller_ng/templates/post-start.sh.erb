@@ -14,25 +14,10 @@ source "${CC_JOB_DIR}/bin/ruby_version.sh"
 source /var/vcap/packages/capi_utils/syslog_utils.sh
 tee_output_to_sys_log "cloud_controller_ng.$(basename "$0")"
 
-function seed_db {
-  <% if spec.index.to_i == 0 %>
-  pushd "${CC_PACKAGE_DIR}/cloud_controller_ng" > /dev/null
-    bundle exec rake db:seed
-
-    if [[ $? -ne 0 ]]; then
-      echo "DB seeding failed"
-      exit 1
-    fi
-  popd > /dev/null
-  <% else %>
-  echo "Skipping DB seeding"
-  <% end %>
-}
-
 function install_buildpacks {
-  <% if spec.index.to_i == 0 %>
+  <% if spec.bootstrap %>
   pushd "${CC_PACKAGE_DIR}/cloud_controller_ng" > /dev/null
-    bundle exec rake buildpacks:install
+    chpst -u vcap:vcap bundle exec rake buildpacks:install
 
     if [[ $? -ne 0 ]]; then
       echo "Buildpacks installation failed"
@@ -45,7 +30,6 @@ function install_buildpacks {
 }
 
 function main {
-  seed_db
   install_buildpacks
 }
 

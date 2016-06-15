@@ -40,11 +40,7 @@ check process cloud_controller_worker_local_<%= index %>
         as uid vcap and gid vcap
   stop program "/var/vcap/jobs/cloud_controller_ng/bin/cloud_controller_worker_ctl stop <%= index %>"
         as uid vcap and gid vcap
-<% if spec.index.to_i == 0 %>
-  depends on cloud_controller_ng
-<% end %>
   group vcap
-
   if totalmem > <%= p("cc.thresholds.api.alert_if_above_mb") %> Mb for 3 cycles then alert
   if totalmem > <%= p("cc.thresholds.api.restart_if_consistently_above_mb") %> Mb for 15 cycles then restart
   if totalmem > <%= p("cc.thresholds.api.restart_if_above_mb") %> Mb for 3 cycles then restart
@@ -66,11 +62,3 @@ check process nginx_newrelic_plugin
   stop program "/var/vcap/jobs/cloud_controller_ng/bin/nginx_newrelic_plugin_ctl stop"
   group vcap
 <% end %>
-
-check process cloud_controller_migration
-  with pidfile /var/vcap/sys/run/cloud_controller_migration/cloud_controller_migration.pid
-  start program "/var/vcap/jobs/cloud_controller_ng/bin/cloud_controller_migration_ctl start"
-        as uid vcap and gid vcap
-  stop program "/var/vcap/jobs/cloud_controller_ng/bin/cloud_controller_migration_ctl stop"
-        as uid vcap and gid vcap
-  group vcap
