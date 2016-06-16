@@ -59,6 +59,9 @@ describe 'Routes' do
     end
 
     context 'with inline-relations-depth' do
+      let!(:process) { VCAP::CloudController::AppFactory.make(space: space) }
+      let!(:route_mapping) { VCAP::CloudController::RouteMapping.make(app: process, route: route) }
+
       it 'includes related records' do
         get '/v2/routes?inline-relations-depth=1', nil, headers_for(user)
 
@@ -125,9 +128,54 @@ describe 'Routes' do
                     'security_groups_url'         => "/v2/spaces/#{space.guid}/security_groups"
                   }
                 },
-                'apps_url'              => "/v2/routes/#{route.guid}/apps",
-                'apps'                  => [],
-                'route_mappings_url'    => "/v2/routes/#{route.guid}/route_mappings"
+                'apps_url' => "/v2/routes/#{route.guid}/apps",
+                'apps' => [
+                  {
+                    'metadata' =>                    {
+                      'guid'       => process.guid,
+                      'url'        => "/v2/apps/#{process.guid}",
+                      'created_at' => iso8601,
+                      'updated_at' => iso8601,
+                    },
+                    'entity' => {
+                      'name'                       => process.name,
+                      'production'                 => false,
+                      'space_guid'                 => space.guid,
+                      'stack_guid'                 => process.stack.guid,
+                      'buildpack'                  => nil,
+                      'detected_buildpack'         => nil,
+                      'environment_json'           => nil,
+                      'memory'                     => 1024,
+                      'instances'                  => 1,
+                      'disk_quota'                 => 1024,
+                      'state'                      => 'STOPPED',
+                      'version'                    => process.version,
+                      'command'                    => nil,
+                      'console'                    => false,
+                      'debug'                      => nil,
+                      'staging_task_id'            => nil,
+                      'package_state'              => 'PENDING',
+                      'health_check_type'          => 'port',
+                      'health_check_timeout'       => nil,
+                      'staging_failed_reason'      => nil,
+                      'staging_failed_description' => nil,
+                      'diego'                      => false,
+                      'docker_image'               => nil,
+                      'package_updated_at'         => iso8601,
+                      'detected_start_command'     => '',
+                      'enable_ssh'                 => true,
+                      'docker_credentials_json'    => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
+                      'ports'                      => nil,
+                      'space_url'                  => "/v2/spaces/#{space.guid}",
+                      'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
+                      'routes_url'                 => "/v2/apps/#{process.guid}/routes",
+                      'events_url'                 => "/v2/apps/#{process.guid}/events",
+                      'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
+                      'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+                    }
+                  }
+                ],
+                'route_mappings_url' => "/v2/routes/#{route.guid}/route_mappings"
               }
             }]
           }
