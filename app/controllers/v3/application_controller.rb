@@ -31,6 +31,7 @@ class ApplicationController < ActionController::Base
   before_action :null_coalesce_body
 
   rescue_from CloudController::Blobstore::BlobstoreError, with: :handle_blobstore_error
+  rescue_from CloudController::Errors::NotAuthenticated, with: :handle_not_authenticated
   rescue_from CloudController::Errors::ApiError, with: :handle_api_error
 
   def configuration
@@ -121,7 +122,7 @@ class ApplicationController < ActionController::Base
     return if current_user
 
     if VCAP::CloudController::SecurityContext.missing_token?
-      raise CloudController::Errors::ApiError.new_from_details('NotAuthenticated')
+      raise CloudController::Errors::NotAuthenticated
     end
 
     raise CloudController::Errors::ApiError.new_from_details('InvalidAuthToken')
@@ -130,6 +131,12 @@ class ApplicationController < ActionController::Base
   def handle_blobstore_error(error)
     error = CloudController::Errors::ApiError.new_from_details('BlobstoreError', error.message)
     handle_api_error(error)
+  end
+
+  def handle_not_authenticated(error)
+    presenter = ErrorPresenter.new(error, Rails.env.test?)
+    logger.info(presenter.log_message)
+    render status: presenter.response_code, json: presenter
   end
 
   def handle_api_error(error)

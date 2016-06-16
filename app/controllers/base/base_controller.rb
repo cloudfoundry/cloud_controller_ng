@@ -132,7 +132,7 @@ module VCAP::CloudController::RestController
       return if VCAP::CloudController::SecurityContext.current_user
 
       if VCAP::CloudController::SecurityContext.missing_token?
-        raise CloudController::Errors::ApiError.new_from_details('NotAuthenticated')
+        raise CloudController::Errors::NotAuthenticated
       elsif VCAP::CloudController::SecurityContext.invalid_token?
         raise CloudController::Errors::ApiError.new_from_details('InvalidAuthToken')
       else
@@ -290,7 +290,7 @@ module VCAP::CloudController::RestController
 
           unless CloudController::BasicAuth::BasicAuthAuthenticator.valid?(env, credentials) ||
                   CloudController::BasicAuth::DeaBasicAuthAuthenticator.valid?(env, credentials)
-            raise CloudController::Errors::ApiError.new_from_details('NotAuthenticated')
+            raise CloudController::Errors::NotAuthenticated
           end
         end
       end

@@ -10,6 +10,7 @@ require 'eventmachine/schedule_sync'
 
 require 'vcap/common'
 require 'cloud_controller/errors/api_error'
+require 'cloud_controller/errors/not_authenticated'
 require 'cloud_controller/errors/blob_not_found'
 require 'cloud_controller/errors/details'
 require 'uaa/token_coder'
