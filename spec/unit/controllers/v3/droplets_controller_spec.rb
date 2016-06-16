@@ -200,11 +200,12 @@ describe DropletsController, type: :controller do
             set_current_user_as_admin(user: user)
           end
 
-          it 'returns a 201 Created response and creates a droplet' do
-            expect {
-              post :create, package_guid: package.guid, body: req_body
-            }.to change { VCAP::CloudController::DropletModel.count }.from(0).to(1)
-            expect(response.status).to eq 201
+          it 'raises 403' do
+            post :create, package_guid: package.guid, body: req_body
+
+            expect(response.status).to eq(403)
+            expect(response.body).to include('FeatureDisabled')
+            expect(response.body).to include('diego_docker')
           end
         end
       end

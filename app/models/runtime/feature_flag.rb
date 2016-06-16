@@ -20,7 +20,7 @@ module VCAP::CloudController
       space_developer_env_var_visibility: true
     }.freeze
 
-    ADMIN_SKIPPABLE = [:diego_docker].freeze
+    ADMIN_SKIPPABLE = [].freeze
 
     export_attributes :name, :enabled, :error_message
     import_attributes :name, :enabled, :error_message

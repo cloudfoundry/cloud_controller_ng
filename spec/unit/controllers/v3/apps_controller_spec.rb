@@ -354,12 +354,11 @@ describe AppsV3Controller, type: :controller do
           set_current_user_as_admin(user: user)
         end
 
-        it 'returns a 201 Created and the app' do
+        it 'raises 403' do
           post :create, body: req_body
-          app_model = space.app_models.last
-
-          expect(response.status).to eq 201
-          expect(parsed_body['guid']).to eq(app_model.guid)
+          expect(response.status).to eq(403)
+          expect(response.body).to include('FeatureDisabled')
+          expect(response.body).to include('diego_docker')
         end
       end
 
@@ -970,14 +969,12 @@ describe AppsV3Controller, type: :controller do
           set_current_user_as_admin(user: user)
         end
 
-        it 'returns a 200 and the app' do
+        it 'raises 403' do
           put :start, guid: app_model.guid
 
-          response_body = parsed_body
-
-          expect(response.status).to eq 200
-          expect(response_body['guid']).to eq(app_model.guid)
-          expect(response_body['desired_state']).to eq('STARTED')
+          expect(response.status).to eq(403)
+          expect(response.body).to include('FeatureDisabled')
+          expect(response.body).to include('diego_docker')
         end
       end
 
