@@ -40,7 +40,6 @@ module VCAP::CloudController
     end
 
     def upload?(app)
-      return true if admin_user?
       FeatureFlag.raise_unless_enabled!('app_bits_upload')
       update?(app)
     end

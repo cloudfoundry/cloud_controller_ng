@@ -130,7 +130,7 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_see_secrets?(space)
 
-    FeatureFlag.raise_unless_enabled!('space_developer_env_var_visibility') unless roles.admin?
+    FeatureFlag.raise_unless_enabled!('space_developer_env_var_visibility')
 
     render status: :ok, json: Presenters::V3::AppEnvPresenter.new(app)
   end

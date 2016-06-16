@@ -20,7 +20,14 @@ module VCAP::CloudController
       space_developer_env_var_visibility: true
     }.freeze
 
-    ADMIN_SKIPPABLE = [].freeze
+    ADMIN_SKIPPABLE = [
+      :app_bits_upload,
+      :app_scaling,
+      :set_roles_by_username,
+      :space_developer_env_var_visibility,
+      :task_creation,
+      :unset_roles_by_username,
+    ].freeze
 
     export_attributes :name, :enabled, :error_message
     import_attributes :name, :enabled, :error_message
