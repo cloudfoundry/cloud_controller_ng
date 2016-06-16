@@ -30,6 +30,22 @@ module CloudController
       describe '#get' do
         let(:path_location) { 'ab/cd/abcdefghi' }
 
+        context 'on http errors' do
+          let(:fake_client) { instance_double(HTTPClient, ssl_config: double(set_default_paths: true)) }
+
+          before do
+            allow(HTTPClient).to receive(:new).and_return(fake_client)
+          end
+
+          it 'tries 3 times' do
+            allow(fake_client).to receive(:get).and_raise('nope')
+            expect {
+              cdn.get(path_location)
+            }.to raise_error('nope')
+            expect(fake_client).to have_received(:get).exactly(3).times
+          end
+        end
+
         context 'when CloudFront Signer is not configured' do
           before do
             allow(Aws::CF::Signer).to receive(:is_configured?).and_return(false)

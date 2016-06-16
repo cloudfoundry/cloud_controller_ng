@@ -13,10 +13,17 @@ module CloudController
       end
 
       def get(path, &block)
-        client = HTTPClient.new
-        client.ssl_config.set_default_paths
-        client.get(download_uri(path)) do |chunk|
-          block.yield chunk
+        retries = 0
+        begin
+          client = HTTPClient.new
+          client.ssl_config.set_default_paths
+          client.get(download_uri(path)) do |chunk|
+            block.yield chunk
+          end
+        rescue
+          raise if retries > 1
+          retries += 1
+          retry
         end
       end
 
