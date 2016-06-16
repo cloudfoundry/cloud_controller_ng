@@ -2,7 +2,7 @@ module VCAP::CloudController
   class OrganizationAccess < BaseAccess
     def create?(org, params=nil)
       return true if admin_user?
-      FeatureFlag.enabled?('user_org_creation')
+      FeatureFlag.enabled?(:user_org_creation)
     end
 
     def read_for_update?(org, params=nil)

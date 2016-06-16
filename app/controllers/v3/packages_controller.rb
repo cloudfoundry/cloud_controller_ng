@@ -34,7 +34,7 @@ class PackagesController < ApplicationController
   end
 
   def upload
-    FeatureFlag.raise_unless_enabled!('app_bits_upload')
+    FeatureFlag.raise_unless_enabled!(:app_bits_upload)
 
     message = PackageUploadMessage.create_from_params(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?

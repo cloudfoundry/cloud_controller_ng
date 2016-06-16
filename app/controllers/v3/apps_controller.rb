@@ -50,7 +50,7 @@ class AppsV3Controller < ApplicationController
     unauthorized! unless can_write?(message.space_guid)
 
     if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
-      FeatureFlag.raise_unless_enabled!('diego_docker')
+      FeatureFlag.raise_unless_enabled!(:diego_docker)
     end
 
     lifecycle = AppLifecycleProvider.provide_for_create(message)
@@ -103,7 +103,7 @@ class AppsV3Controller < ApplicationController
     droplet_not_found! unless app.droplet
     unauthorized! unless can_write?(space.guid)
     if app.droplet.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
-      FeatureFlag.raise_unless_enabled!('diego_docker')
+      FeatureFlag.raise_unless_enabled!(:diego_docker)
     end
 
     AppStart.new(current_user, current_user_email).start(app)
@@ -130,7 +130,7 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_see_secrets?(space)
 
-    FeatureFlag.raise_unless_enabled!('space_developer_env_var_visibility')
+    FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
 
     render status: :ok, json: Presenters::V3::AppEnvPresenter.new(app)
   end

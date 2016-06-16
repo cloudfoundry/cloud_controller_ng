@@ -42,10 +42,10 @@ module VCAP::CloudController
     end
 
     def self.enabled?(feature_flag_name)
-      return true if ADMIN_SKIPPABLE.include?(feature_flag_name.to_sym) && admin?
-      feature_flag = FeatureFlag.find(name: feature_flag_name)
+      return true if ADMIN_SKIPPABLE.include?(feature_flag_name) && admin?
+      feature_flag = FeatureFlag.find(name: feature_flag_name.to_s)
       return feature_flag.enabled if feature_flag
-      DEFAULT_FLAGS.fetch(feature_flag_name.to_sym)
+      DEFAULT_FLAGS.fetch(feature_flag_name)
 
     rescue KeyError
       raise UndefinedFeatureFlagError.new "invalid key: #{feature_flag_name}"
@@ -56,7 +56,7 @@ module VCAP::CloudController
     end
 
     def self.raise_unless_enabled!(feature_flag_name)
-      feature_flag = FeatureFlag.find(name: feature_flag_name)
+      feature_flag = FeatureFlag.find(name: feature_flag_name.to_s)
 
       err_message = feature_flag_name
 

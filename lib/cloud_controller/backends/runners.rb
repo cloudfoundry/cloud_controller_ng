@@ -56,7 +56,7 @@ module VCAP::CloudController
                    where(package_state: 'STAGED').
                    where('deleted_at IS NULL').
                    where(diego: true)
-      diego_apps = filter_docker_apps(diego_apps) unless FeatureFlag.enabled?('diego_docker')
+      diego_apps = filter_docker_apps(diego_apps) unless FeatureFlag.enabled?(:diego_docker)
       diego_apps.order(:id).
         limit(batch_size).
         select_map([:id, :guid, :version, :updated_at])

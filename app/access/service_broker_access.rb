@@ -2,7 +2,7 @@ module VCAP::CloudController
   class ServiceBrokerAccess < BaseAccess
     def create?(service_broker, _=nil)
       return true if admin_user?
-      FeatureFlag.raise_unless_enabled!('space_scoped_private_broker_creation')
+      FeatureFlag.raise_unless_enabled!(:space_scoped_private_broker_creation)
 
       unless service_broker.nil?
         return validate_object_access(service_broker)

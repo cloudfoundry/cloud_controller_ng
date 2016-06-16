@@ -3,7 +3,7 @@ module VCAP::CloudController
     def create?(private_domain, params=nil)
       return true if admin_user?
       return false unless update?(private_domain, params)
-      FeatureFlag.raise_unless_enabled!('private_domain_creation')
+      FeatureFlag.raise_unless_enabled!(:private_domain_creation)
       true
     end
 

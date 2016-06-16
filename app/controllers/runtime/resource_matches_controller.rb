@@ -3,7 +3,7 @@ module VCAP::CloudController
     put '/v2/resource_match', :match
     def match
       return ApiError.new_from_details('NotAuthorized') unless user
-      FeatureFlag.raise_unless_enabled!('app_bits_upload')
+      FeatureFlag.raise_unless_enabled!(:app_bits_upload)
 
       begin
         fingerprints_all_clientside_bits = MultiJson.load(body)

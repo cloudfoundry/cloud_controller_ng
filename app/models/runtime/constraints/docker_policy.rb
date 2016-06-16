@@ -12,7 +12,7 @@ class DockerPolicy
       @errors.add(:docker_image, BUILDPACK_DETECTED_ERROR_MSG)
     end
 
-    if @app.docker? && VCAP::CloudController::FeatureFlag.disabled?('diego_docker')
+    if @app.docker? && VCAP::CloudController::FeatureFlag.disabled?(:diego_docker)
       @errors.add(:docker, :docker_disabled) if @app.being_started?
     end
 

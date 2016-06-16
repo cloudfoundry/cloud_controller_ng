@@ -95,8 +95,8 @@ module VCAP::CloudController
     end
 
     describe '.enabled?' do
-      let(:key) { 'user_org_creation' }
-      let(:default_value) { FeatureFlag::DEFAULT_FLAGS[key.to_sym] }
+      let(:key) { :user_org_creation }
+      let(:default_value) { FeatureFlag::DEFAULT_FLAGS[key] }
 
       context 'when the feature flag is overridden' do
         before do
@@ -119,10 +119,10 @@ module VCAP::CloudController
       context 'when feature flag does not exist' do
         it 'blows up somehow' do
           expect {
-            FeatureFlag.enabled?('bogus_feature_flag')
+            FeatureFlag.enabled?(:bogus_feature_flag)
           }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
           expect {
-            FeatureFlag.disabled?('bogus_feature_flag')
+            FeatureFlag.disabled?(:bogus_feature_flag)
           }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
         end
       end
@@ -138,7 +138,7 @@ module VCAP::CloudController
           it 'is always enabled' do
             FeatureFlag.create(name: 'blahrgha', enabled: false)
 
-            expect(FeatureFlag.enabled?('blahrgha')).to eq(true)
+            expect(FeatureFlag.enabled?(:blahrgha)).to eq(true)
           end
         end
 
@@ -146,7 +146,7 @@ module VCAP::CloudController
           it 'is false if the flag is disabled' do
             FeatureFlag.create(name: 'normal', enabled: false)
 
-            expect(FeatureFlag.enabled?('normal')).to eq(false)
+            expect(FeatureFlag.enabled?(:normal)).to eq(false)
           end
         end
       end
@@ -198,7 +198,7 @@ module VCAP::CloudController
       context 'when the flag does not exist' do
         it 'blows up somehow' do
           expect {
-            FeatureFlag.raise_unless_enabled!('bogus_feature_flag')
+            FeatureFlag.raise_unless_enabled!(:bogus_feature_flag)
           }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
         end
       end

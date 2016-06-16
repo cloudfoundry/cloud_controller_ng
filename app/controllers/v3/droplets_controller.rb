@@ -79,7 +79,7 @@ class DropletsController < ApplicationController
     staging_in_progress! if package.app.staging_in_progress?
 
     if package.type == VCAP::CloudController::PackageModel::DOCKER_TYPE
-      FeatureFlag.raise_unless_enabled!('diego_docker')
+      FeatureFlag.raise_unless_enabled!(:diego_docker)
     end
 
     unauthorized! unless can_write?(package.space.guid)

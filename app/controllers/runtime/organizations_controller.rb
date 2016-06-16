@@ -119,7 +119,7 @@ module VCAP::CloudController
       put "/v2/organizations/:guid/#{plural_role}", "add_#{role}_by_username".to_sym
 
       define_method("add_#{role}_by_username") do |guid|
-        FeatureFlag.raise_unless_enabled!('set_roles_by_username')
+        FeatureFlag.raise_unless_enabled!(:set_roles_by_username)
 
         username = parse_and_validate_json(body)['username']
 
@@ -147,7 +147,7 @@ module VCAP::CloudController
       delete "/v2/organizations/:guid/#{plural_role}", "remove_#{role}_by_username".to_sym
 
       define_method("remove_#{role}_by_username") do |guid|
-        FeatureFlag.raise_unless_enabled!('unset_roles_by_username')
+        FeatureFlag.raise_unless_enabled!(:unset_roles_by_username)
 
         username = parse_and_validate_json(body)['username']
 

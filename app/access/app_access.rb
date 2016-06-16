@@ -12,7 +12,7 @@ module VCAP::CloudController
       return true if params.nil?
 
       if %w(instances memory disk_quota).any? { |k| params.key?(k) && params[k] != app.send(k.to_sym) }
-        FeatureFlag.raise_unless_enabled!('app_scaling')
+        FeatureFlag.raise_unless_enabled!(:app_scaling)
       end
 
       if !Config.config[:users_can_select_backend] && params.key?('diego') && params['diego'] != app.diego
@@ -40,7 +40,7 @@ module VCAP::CloudController
     end
 
     def upload?(app)
-      FeatureFlag.raise_unless_enabled!('app_bits_upload')
+      FeatureFlag.raise_unless_enabled!(:app_bits_upload)
       update?(app)
     end
 

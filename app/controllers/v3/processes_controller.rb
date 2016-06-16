@@ -83,7 +83,7 @@ class ProcessesController < ApplicationController
   end
 
   def scale
-    FeatureFlag.raise_unless_enabled!('app_scaling')
+    FeatureFlag.raise_unless_enabled!(:app_scaling)
 
     message = ProcessScaleMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) if message.invalid?

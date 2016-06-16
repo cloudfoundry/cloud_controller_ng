@@ -44,7 +44,7 @@ module VCAP::CloudController
 
       vcap_application = VCAP::VarsBuilder.new(app).to_hash
 
-      FeatureFlag.raise_unless_enabled!('space_developer_env_var_visibility')
+      FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
       [
         HTTP::OK,
         {},

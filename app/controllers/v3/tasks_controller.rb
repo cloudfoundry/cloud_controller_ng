@@ -31,7 +31,7 @@ class TasksController < ApplicationController
   end
 
   def create
-    FeatureFlag.raise_unless_enabled!('task_creation')
+    FeatureFlag.raise_unless_enabled!(:task_creation)
 
     message = TaskCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
