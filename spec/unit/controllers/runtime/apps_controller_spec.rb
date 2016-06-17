@@ -691,6 +691,7 @@ module VCAP::CloudController
       let(:app_obj) { AppFactory.make }
       let(:developer) { make_developer_for_space(app_obj.space) }
       let(:decoded_response) { MultiJson.load(last_response.body) }
+      let(:parent_app) { app_obj.app }
 
       before do
         set_current_user(developer)
@@ -701,9 +702,14 @@ module VCAP::CloudController
       end
 
       it 'deletes the app' do
+        expect(app_obj.exists?).to be_truthy
+        expect(parent_app.exists?).to be_truthy
+
         delete_app
+
         expect(last_response.status).to eq(204)
-        expect(App.filter(id: app_obj.id)).to be_empty
+        expect(app_obj.exists?).to be_falsey
+        expect(parent_app.exists?).to be_falsey
       end
 
       context 'non recursive deletion' do

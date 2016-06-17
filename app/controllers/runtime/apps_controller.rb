@@ -119,7 +119,7 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_bindings', app.class.table_name)
       end
 
-      app.destroy
+      AppDelete.new(SecurityContext.current_user.guid, SecurityContext.current_user_email).delete(app.app)
 
       @app_event_repository.record_app_delete_request(
         app,
@@ -143,11 +143,6 @@ module VCAP::CloudController
 
     def blob_dispatcher
       BlobDispatcher.new(blobstore: @blobstore, controller: self)
-    end
-
-    def before_create
-      space = VCAP::CloudController::Space[guid: request_attrs['space_guid']]
-      verify_enable_ssh(space)
     end
 
     def before_update(app)
@@ -192,16 +187,6 @@ module VCAP::CloudController
       end
     end
 
-    def after_create(app)
-      record_app_create_value = @app_event_repository.record_app_create(
-        app,
-        app.space,
-        SecurityContext.current_user.guid,
-        SecurityContext.current_user_email,
-        request_attrs)
-      record_app_create_value if request_attrs
-    end
-
     def after_update(app)
       stager_response = app.last_stager_response
       if stager_response.respond_to?(:streaming_log_url) && stager_response.streaming_log_url
@@ -222,7 +207,8 @@ module VCAP::CloudController
 
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: redact_attributes(:create, request_attrs)
 
-      before_create
+      space = VCAP::CloudController::Space[guid: request_attrs['space_guid']]
+      verify_enable_ssh(space)
 
       app = nil
       model.db.transaction do
@@ -262,7 +248,12 @@ module VCAP::CloudController
         validate_access(:create, app, request_attrs)
       end
 
-      after_create(app)
+      @app_event_repository.record_app_create(
+        app,
+        app.space,
+        SecurityContext.current_user.guid,
+        SecurityContext.current_user_email,
+        request_attrs)
 
       [
         HTTP::CREATED,
