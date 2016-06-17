@@ -63,13 +63,6 @@ module VCAP::CloudController
       end
     end
 
-    def self.user_visible(user)
-      dataset.
-        join(AppModel.table_name, :"#{AppModel.table_name}__guid" => :"#{DropletModel.table_name}__app_guid").
-        where(AppModel.user_visibility_filter(user)).
-        select_all(DropletModel.table_name)
-    end
-
     def blobstore_key(hash=nil)
       hash ||= droplet_hash
       File.join(guid, hash) if hash

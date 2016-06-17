@@ -27,12 +27,5 @@ module VCAP::CloudController
       validates_includes PACKAGE_STATES, :state, allow_missing: true
       errors.add(:type, 'cannot have docker data if type is bits') if docker_data && type != DOCKER_TYPE
     end
-
-    def self.user_visible(user)
-      dataset.
-        join(AppModel.table_name, :"#{AppModel.table_name}__guid" => :"#{PackageModel.table_name}__app_guid").
-        where(AppModel.user_visibility_filter(user)).
-        select_all(PackageModel.table_name)
-    end
   end
 end
