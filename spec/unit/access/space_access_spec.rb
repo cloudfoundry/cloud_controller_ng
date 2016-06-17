@@ -136,5 +136,86 @@ module VCAP::CloudController
 
       it_behaves_like :no_access
     end
+
+    describe '#can_remove_related_object?' do
+      let(:params) { { relation: relation, related_guid: related_guid } }
+      let(:space) { object }
+
+      context 'with auditors' do
+        let(:relation) { :auditors }
+
+        context 'when acting against themselves' do
+          let(:related_guid) { user.guid }
+
+          it 'is true' do
+            expect(access.can_remove_related_object?(space, params)).to be true
+          end
+        end
+
+        context 'when acting against another' do
+          let(:related_guid) { 123456 }
+
+          it 'is false' do
+            expect(access.can_remove_related_object?(space, params)).to be false
+          end
+        end
+      end
+
+      context 'with developers' do
+        context 'when acting against themselves'
+        let(:relation) { :developers }
+
+        context 'when acting against themselves' do
+          let(:related_guid) { user.guid }
+
+          it 'is true' do
+            expect(access.can_remove_related_object?(space, params)).to be true
+          end
+        end
+
+        context 'when acting against another' do
+          let(:related_guid) { 123456 }
+
+          it 'is false' do
+            expect(access.can_remove_related_object?(space, params)).to be false
+          end
+        end
+      end
+
+      context 'with managers' do
+        let(:relation) { :managers }
+
+        before do
+          org.add_user(user)
+          org.add_manager(user)
+          space.add_manager(user)
+        end
+
+        context 'when acting against themselves' do
+          let(:related_guid) { user.guid }
+
+          it 'is true' do
+            expect(access.can_remove_related_object?(space, params)).to be true
+          end
+        end
+
+        context 'when acting against another' do
+          let(:related_guid) { 123456 }
+
+          it 'is true' do
+            expect(access.can_remove_related_object?(space, params)).to be true
+          end
+        end
+      end
+
+      context 'with apps' do
+        let(:relation) { :apps }
+        let(:related_guid) { user.guid }
+
+        it 'is false even when the guid matches the current user' do
+          expect(access.can_remove_related_object?(space, params)).to be false
+        end
+      end
+    end
   end
 end

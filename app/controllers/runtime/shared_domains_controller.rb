@@ -99,7 +99,7 @@ module VCAP::CloudController
       end
     end
 
-    def self.not_found_exception_name
+    def self.not_found_exception_name(_model_class)
       :DomainNotFound
     end
   end

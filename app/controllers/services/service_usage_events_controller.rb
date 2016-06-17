@@ -20,7 +20,7 @@ module VCAP::CloudController
       [HTTP::NO_CONTENT, nil]
     end
 
-    def self.not_found_exception_name
+    def self.not_found_exception_name(_model_class)
       'EventNotFound'
     end
 

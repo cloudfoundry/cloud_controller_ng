@@ -42,6 +42,34 @@ module VCAP::CloudController
       @collection_renderer = dependencies[:username_populating_collection_renderer]
     end
 
+    delete "#{path_guid}/spaces/:other_id" do |api, id, other_id|
+      api.dispatch(:remove_related, other_id, :developers, id, Space)
+    end
+
+    delete "#{path_guid}/managed_spaces/:other_id" do |api, id, other_id|
+      api.dispatch(:remove_related, other_id, :managers, id, Space)
+    end
+
+    delete "#{path_guid}/audited_spaces/:other_id" do |api, id, other_id|
+      api.dispatch(:remove_related, other_id, :auditors, id, Space)
+    end
+
+    delete "#{path_guid}/organizations/:other_id" do |api, id, other_id|
+      api.dispatch(:remove_related, other_id, :users, id, Organization)
+    end
+
+    delete "#{path_guid}/managed_organizations/:other_id" do |api, id, other_id|
+      api.dispatch(:remove_related, other_id, :managers, id, Organization)
+    end
+
+    delete "#{path_guid}/billing_managed_organizations/:other_id" do |api, id, other_id|
+      api.dispatch(:remove_related, other_id, :billing_managers, id, Organization)
+    end
+
+    delete "#{path_guid}/audited_organizations/:other_id" do |api, id, other_id|
+      api.dispatch(:remove_related, other_id, :auditors, id, Organization)
+    end
+
     define_messages
     define_routes
   end

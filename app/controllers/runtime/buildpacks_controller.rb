@@ -35,7 +35,7 @@ module VCAP::CloudController
       response
     end
 
-    def self.not_found_exception_name
+    def self.not_found_exception_name(_model_class)
       'NotFound'
     end
 

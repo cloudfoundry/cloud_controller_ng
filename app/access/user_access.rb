@@ -7,10 +7,10 @@ module VCAP::CloudController
       related_model == Organization || related_model == Space
     end
 
-    def read?(object)
+    def read?(user)
       return true if admin_user?
       return false if context.user.nil?
-      object.guid == context.user.guid
+      user.guid == context.user.guid
     end
   end
 end

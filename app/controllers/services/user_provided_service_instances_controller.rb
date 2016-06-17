@@ -118,14 +118,14 @@ module VCAP::CloudController
     define_messages
     define_routes
 
-    def add_related(guid, name, other_guid)
-      return super(guid, name, other_guid) if name != :routes
+    def add_related(guid, name, other_guid, find_model=model)
+      return super(guid, name, other_guid, find_model) if name != :routes
 
       bind_route(other_guid, guid)
     end
 
-    def remove_related(guid, name, other_guid)
-      return super(guid, name, other_guid) if name != :routes
+    def remove_related(guid, name, other_guid, find_model=model)
+      return super(guid, name, other_guid, find_model) if name != :routes
 
       unbind_route(other_guid, guid)
     end
