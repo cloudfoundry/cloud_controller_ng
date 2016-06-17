@@ -212,10 +212,11 @@ module VCAP::CloudController
     stack             { Stack.make }
     instances         { 1 }
     type              { Sham.name }
+    app               { AppModel.make(name: object.name, environment_variables: object.environment_json, space: object.space) }
   end
 
   App.blueprint(:process) do
-    app { AppModel.make }
+    app { AppModel.make(environment_variables: object.environment_json) }
     diego { true }
     name { Sham.name }
     space { app.space }

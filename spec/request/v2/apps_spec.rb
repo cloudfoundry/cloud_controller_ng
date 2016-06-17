@@ -261,7 +261,8 @@ RSpec.describe 'Apps' do
         name:                    'maria',
         space_guid:              space.guid,
         detected_start_command:  'argh',
-        docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' }
+        docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' },
+        environment_json:        { 'KEY' => 'val' },
       })
 
       post '/v2/apps', post_params, headers_for(user)
@@ -284,9 +285,7 @@ RSpec.describe 'Apps' do
             'buildpack'                  => nil,
             'detected_buildpack'         => nil,
             'detected_buildpack_guid'    => nil,
-            'environment_json'           => {
-
-            },
+            'environment_json'           => { 'KEY' => 'val' },
             'memory'                     => 1024,
             'instances'                  => 1,
             'disk_quota'                 => 1024,
@@ -303,12 +302,10 @@ RSpec.describe 'Apps' do
             'staging_failed_description' => nil,
             'diego'                      => false,
             'docker_image'               => nil,
-            'package_updated_at'         => nil,
+            'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'docker_credentials_json'    => {
-              'redacted_message' => '[PRIVATE DATA HIDDEN]'
-            },
+            'docker_credentials_json'    => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
             'ports'                      => nil,
             'space_url'                  => "/v2/spaces/#{space.guid}",
             'stack_url'                  => "/v2/stacks/#{process.stack.guid}",

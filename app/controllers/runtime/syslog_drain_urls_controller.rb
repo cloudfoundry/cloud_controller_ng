@@ -23,8 +23,9 @@ module VCAP::CloudController
 
       guid_to_drain_maps.each do |guid_and_drains|
         drain_urls[guid_and_drains[:guid]] = guid_and_drains[:syslog_drain_urls].split(',')
-        next_page_token = last_id + batch_size
       end
+
+      next_page_token = last_id + batch_size unless guid_to_drain_maps.empty?
 
       [HTTP::OK, {}, MultiJson.dump({ results: drain_urls, next_id: next_page_token }, pretty: true)]
     end

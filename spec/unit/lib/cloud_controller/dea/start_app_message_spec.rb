@@ -152,24 +152,6 @@ module VCAP::CloudController
           expect(request[:env]).to include('KEY=value')
         end
       end
-
-      context 'when the app is associated with a v3 app' do
-        let(:app_model) { AppModel.make }
-        let(:droplet) { DropletModel.make(droplet_hash: 'foobar', state: DropletModel::STAGED_STATE) }
-
-        before do
-          app_model.update(droplet_guid: droplet.guid)
-          app_model.add_process(app)
-        end
-
-        it 'should have a v3 download url, droplet_hash, and an app package' do
-          res = Dea::StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
-
-          expect(res[:executableUri]).to eq('v3_app_uri')
-          expect(res[:sha1]).to eq(droplet.droplet_hash)
-          expect(res.has_app_package?).to be true
-        end
-      end
     end
   end
 end

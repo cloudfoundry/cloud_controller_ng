@@ -843,10 +843,10 @@ module VCAP::CloudController
               }.to_not change { App.count }
             end
 
-            it 'deletes all the v3 apps' do
+            it 'does not delete any of the v3 apps' do
               expect {
                 delete "/v2/spaces/#{space_guid}?recursive=true"
-              }.to change { AppModel.count }.by(-1)
+              }.not_to change { AppModel.count }
             end
           end
 

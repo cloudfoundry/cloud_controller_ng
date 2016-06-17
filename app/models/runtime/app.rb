@@ -130,8 +130,8 @@ module VCAP::CloudController
     def validate
       validates_presence :name
       validates_presence :space
-      validates_unique [:space_id, :name] if is_v2?
-      validate_uniqueness_of_type_for_same_app_model if is_v3?
+      validates_unique [:space_id, :name]
+      validate_uniqueness_of_type_for_same_app_model
       validates_format APP_NAME_REGEX, :name
 
       copy_buildpack_errors
@@ -171,6 +171,7 @@ module VCAP::CloudController
 
     def after_update
       super
+      app.save_changes if app
       create_app_usage_event
     end
 
@@ -317,11 +318,7 @@ module VCAP::CloudController
     alias_method_chain :command, :fallback
 
     def execution_metadata
-      if is_v2?
-        (current_droplet && current_droplet.execution_metadata) || ''
-      else
-        app.droplet.try(:execution_metadata)
-      end
+      droplet.try(:execution_metadata) || ''
     end
 
     def detected_start_command
@@ -349,15 +346,45 @@ module VCAP::CloudController
       self.metadata && self.metadata['debug']
     end
 
+    def droplet
+      if app.try(:droplet)
+        app.droplet
+      else
+        current_droplet
+      end
+    end
+
+    def name
+      if app
+        app.name
+      else
+        super
+      end
+    end
+
+    def name=(v)
+      if app
+        app.name = v
+      end
+      super
+    end
+
     def environment_json_with_serialization=(env)
+      if app
+        app.environment_variables = env
+      end
       self.environment_json_without_serialization = MultiJson.dump(env)
     end
     alias_method_chain :environment_json=, 'serialization'
 
     def environment_json_with_serialization
-      string = environment_json_without_serialization
-      return if string.blank?
-      MultiJson.load string
+      if app
+        app.environment_variables
+      else
+        string = environment_json_without_serialization
+        return if string.blank?
+        MultiJson.load string
+      end
     end
     alias_method_chain :environment_json, 'serialization'
 
@@ -622,7 +649,7 @@ module VCAP::CloudController
     end
 
     def is_v2?
-      app.nil?
+      app.nil? || app.name == self[:name]
     end
 
     def handle_add_route(route)
@@ -655,7 +682,6 @@ module VCAP::CloudController
 
     def docker_ports
       exposed_ports = []
-      droplet = is_v3? ? app.droplet : current_saved_droplet
       if !self.needs_staging? && !droplet.nil? && self.execution_metadata.present?
         begin
           metadata = JSON.parse(self.execution_metadata)
@@ -675,6 +701,8 @@ module VCAP::CloudController
     private
 
     def non_unique_process_types
+      return [] unless app
+
       @non_unique_process_types ||= app.processes_dataset.select_map(:type).select do |process_type|
         process_type.downcase == type.downcase
       end

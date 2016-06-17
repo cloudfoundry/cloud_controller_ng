@@ -6,24 +6,14 @@ module VCAP::CloudController
       def initialize(process, index, config, blobstore_url_generator)
         super()
 
-        # Grab the v3 droplet if the app is a v3 process
-        if process.is_v2?
-          droplet_download_url = blobstore_url_generator.droplet_download_url(process)
-          droplet_hash = process.droplet_hash
-        else
-          droplet = DropletModel.find(guid: process.app.droplet_guid)
-          droplet_download_url = blobstore_url_generator.v3_droplet_download_url(droplet)
-          droplet_hash = droplet.droplet_hash
-        end
-
         self[:droplet]        = process.guid
         self[:name]           = process.name
         self[:stack]          = process.stack.name
         self[:uris]           = process.uris
         self[:prod]           = process.production
-        self[:sha1]           = droplet_hash
+        self[:sha1]           = process.droplet_hash
         self[:executableFile] = 'deprecated'
-        self[:executableUri]  = droplet_download_url
+        self[:executableUri]  = blobstore_url_generator.droplet_download_url(process)
         self[:version]        = process.version
 
         self[:services] = process.service_bindings.map do |sb|

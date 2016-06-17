@@ -190,7 +190,7 @@ module VCAP::CloudController
             'health_check_type' => app.health_check_type,
             'health_check_timeout_in_seconds' => app.health_check_timeout,
             'log_guid' => app.guid,
-            'log_source' => 'APP',
+            'log_source' => 'APP/PROC/WEB',
             'memory_mb' => app.memory,
             'num_instances' => app.desired_instances,
             'process_guid' => ProcessGuid.from_process(app),
@@ -293,23 +293,10 @@ module VCAP::CloudController
         end
 
         describe 'log_source' do
-          context 'when the app is v2' do
-            it 'is "APP"' do
-              expect(message).to match(hash_including('log_source' => 'APP'))
-            end
-          end
-
-          context 'when the app is v3' do
-            let(:parent_app) { AppModel.make }
-            before do
-              app.type = 'potato'
-              app.app_guid = parent_app.guid
-              app.save
-            end
-
-            it 'includes the process type' do
-              expect(message).to match(hash_including('log_source' => 'APP/PROC/POTATO'))
-            end
+          it 'includes the process type' do
+            app.type = 'potato'
+            app.save
+            expect(message).to match(hash_including('log_source' => 'APP/PROC/POTATO'))
           end
         end
       end

@@ -146,10 +146,11 @@ module VCAP::CloudController
         end
 
         context 'when the app is a v3 process' do
-          let(:v3_app) { AppModel.make(name: 'v3_app_name') }
+          let(:v3_app) { app.app }
 
           before do
-            v3_app.add_process_by_guid(app.guid)
+            v3_app.name = 'v3_app_name'
+            v3_app.save
             app.reload
           end
 

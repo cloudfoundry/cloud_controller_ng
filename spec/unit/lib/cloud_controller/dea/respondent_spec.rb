@@ -70,34 +70,6 @@ module VCAP::CloudController
             expect(app_event.metadata['reason']).to eq(reason)
           end
         end
-
-        context 'when the app is a process that belongs to a v3 app' do
-          let(:app_model) { AppModel.make }
-
-          before do
-            app_model.add_process_by_guid(app.guid)
-          end
-
-          it 'adds a record in the events table' do
-            time = Time.new(1990, 07, 06)
-            stub_const('Sequel::CURRENT_TIMESTAMP', time)
-            respondent.process_droplet_exited_message(payload)
-
-            v3event = Event.last
-            expect(v3event.type).to eq('app.process.crash')
-            expect(v3event.actor).to eq(app.guid)
-            expect(v3event.actor_type).to eq('process')
-            expect(v3event.actor_name).to eq(app.name)
-            expect(v3event.actee_name).to eq(app_model.name)
-            expect(v3event.actee_type).to eq('v3-app')
-            expect(v3event.actee).to eq(app_model.guid)
-            expect(v3event.metadata['instance']).to eq(payload['instance'])
-            expect(v3event.metadata['index']).to eq(payload['index'])
-            expect(v3event.metadata['exit_status']).to eq(payload['exit_status'])
-            expect(v3event.metadata['exit_description']).to eq(payload['exit_description'])
-            expect(v3event.metadata['reason']).to eq(reason)
-          end
-        end
       end
     end
   end

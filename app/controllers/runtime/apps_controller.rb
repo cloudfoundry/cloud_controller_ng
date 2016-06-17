@@ -215,6 +215,62 @@ module VCAP::CloudController
       @app_event_repository.record_app_update(app, app.space, SecurityContext.current_user.guid, SecurityContext.current_user_email, request_attrs)
     end
 
+    def create
+      json_msg = self.class::CreateMessage.decode(body)
+
+      @request_attrs = json_msg.extract(stringify_keys: true)
+
+      logger.debug 'cc.create', model: self.class.model_class_name, attributes: redact_attributes(:create, request_attrs)
+
+      before_create
+
+      app = nil
+      model.db.transaction do
+        v3_app = AppModel.create(
+          name:                  request_attrs['name'],
+          space_guid:            request_attrs['space_guid'],
+          environment_variables: request_attrs['environment_json']
+        )
+
+        app = App.create(
+          name:                    request_attrs['name'],
+          environment_json:        request_attrs['environment_json'],
+          production:              request_attrs['production'],
+          space_guid:              request_attrs['space_guid'],
+          stack_guid:              request_attrs['stack'],
+          buildpack:               request_attrs['buildpack'],
+          detected_buildpack:      request_attrs['detected-buildpack'],
+          memory:                  request_attrs['memory'],
+          instances:               request_attrs['instances'],
+          disk_quota:              request_attrs['disk_quota'],
+          state:                   request_attrs['state'],
+          command:                 request_attrs['command'],
+          console:                 request_attrs['console'],
+          debug:                   request_attrs['debug'],
+          health_check_type:       request_attrs['health_check_type'],
+          health_check_timeout:    request_attrs['health_check_timeout'],
+          diego:                   request_attrs['diego'],
+          docker_image:            request_attrs['docker_image'],
+          enable_ssh:              request_attrs['enable_ssh'],
+          docker_credentials_json: request_attrs['docker_credentials_json'],
+          ports:                   request_attrs['ports'],
+          route_guids:             request_attrs['route_guids'],
+          service_binding_guids:   request_attrs['service_binding_guids'],
+          app:                     v3_app
+        )
+
+        validate_access(:create, app, request_attrs)
+      end
+
+      after_create(app)
+
+      [
+        HTTP::CREATED,
+        { 'Location' => "#{self.class.path}/#{app.guid}" },
+        object_renderer.render_json(self.class, app, @opts)
+      ]
+    end
+
     define_messages
     define_routes
   end

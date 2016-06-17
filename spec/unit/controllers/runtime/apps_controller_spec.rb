@@ -316,6 +316,28 @@ module VCAP::CloudController
           end
         end
       end
+
+      it 'creates the app' do
+        request = {
+          name: 'maria',
+          space_guid: space.guid,
+          environment_json: { 'KEY' => 'val' }
+        }
+
+        set_current_user(admin_user, admin: true)
+
+        post '/v2/apps', MultiJson.dump(request)
+
+        v2_app = App.last
+        expect(v2_app.name).to eq('maria')
+        expect(v2_app.space).to eq(space)
+        expect(v2_app.environment_json).to eq({ 'KEY' => 'val' })
+
+        v3_app = v2_app.app
+        expect(v3_app.name).to eq('maria')
+        expect(v3_app.space).to eq(space)
+        expect(v3_app.environment_variables).to eq({ 'KEY' => 'val' })
+      end
     end
 
     describe 'docker image credentials' do

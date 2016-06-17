@@ -2,8 +2,8 @@ require 'spec_helper'
 
 RSpec.describe 'Route Mappings' do
   let(:space) { VCAP::CloudController::Space.make }
-  let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
-  let(:process) { VCAP::CloudController::App.make(:process, space: space, app: app_model, type: 'worker', ports: [8888]) }
+  let(:app_model) { VCAP::CloudController::AppModel.make(space: space, process_guids: [process.guid]) }
+  let(:process) { VCAP::CloudController::App.make(:process, space: space, type: 'worker', ports: [8888]) }
   let(:route) { VCAP::CloudController::Route.make(space: space) }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) do

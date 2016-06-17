@@ -389,7 +389,7 @@ module VCAP::CloudController
           AppFactory.make(name: 'lowercase', space: space)
 
           expect {
-            AppFactory.make(name: 'lowerCase', space: space)
+            App.new(name: 'lowerCase', space: space).save
           }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
         end
 
@@ -638,28 +638,17 @@ module VCAP::CloudController
       end
 
       describe 'uniqueness of types for v3 app processes' do
-        context 'when the app (process) belongs to app model (v3)' do
-          let(:app_model) { AppModel.make }
+        let(:app_model) { AppModel.make }
 
-          before do
-            App.make(app: app_model, type: 'web')
-          end
-
-          it 'validates uniqueness of process types for the belonging app' do
-            msg = 'application process types must be unique (case-insensitive), received: [Web, web]'
-            expect {
-              App.make(app: app_model, type: 'Web')
-            }.to raise_error(Sequel::ValidationFailed).with_message(msg)
-          end
+        before do
+          App.make(app: app_model, type: 'web')
         end
 
-        context "when the app (process) doesn't belong to app model (v2)" do
-          before { App.make(type: 'web') }
-
-          it "doesn't validate against type" do
-            valid_app = App.make(type: 'Web')
-            expect(valid_app).to be_valid
-          end
+        it 'validates uniqueness of process types for the belonging app' do
+          msg = 'application process types must be unique (case-insensitive), received: [Web, web]'
+          expect {
+            App.make(app: app_model, type: 'Web')
+          }.to raise_error(Sequel::ValidationFailed).with_message(msg)
         end
       end
     end
@@ -960,9 +949,9 @@ module VCAP::CloudController
         end
 
         context 'when the app does not have a current droplet' do
-          it 'returns nil' do
+          it 'returns empty string' do
             expect(v2_app.app.droplet).to be_nil
-            expect(v2_app.execution_metadata).to be_nil
+            expect(v2_app.execution_metadata).to eq('')
           end
         end
       end
@@ -2835,8 +2824,8 @@ module VCAP::CloudController
         end
 
         context 'when the app is a v3 process' do
-          let(:v3_app) { AppModel.make }
-          let(:app) { App.make(app: v3_app, diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1) }
+          let(:v3_app) { app.app }
+          let(:app) { App.make(:process, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1) }
 
           before do
             droplet = DropletModel.make(
@@ -3000,6 +2989,57 @@ module VCAP::CloudController
               expect(app.user_provided_ports).to eq([1025, 1026, 1027, 1028])
             end
           end
+        end
+      end
+    end
+
+    describe 'name' do
+      let!(:app) { App.make(name: 'process-name') }
+
+      it 'returns the name' do
+        expect(app.name).to eq('process-name')
+      end
+
+      it 'sets the name' do
+        app.name = 'new-process-name'
+        expect(app.name).to eq('new-process-name')
+      end
+
+      context 'when there is a parent app' do
+        let(:parent_app) { AppModel.make(name: 'app-name') }
+
+        before do
+          app.app = parent_app
+          app.save
+        end
+
+        it 'returns the name of the parent app' do
+          expect(app.name).to eq('app-name')
+        end
+
+        it 'sets both the parent app and the app name' do
+          app.name = 'new-app-name'
+          expect(app.name).to eq('new-app-name')
+          expect(parent_app.name).to eq('new-app-name')
+        end
+      end
+    end
+
+    describe 'droplet' do
+      let!(:app) { AppFactory.make }
+
+      it 'returns the current_droplet' do
+        expect(app.droplet).to eq(app.current_droplet)
+      end
+
+      context 'when there is a v3 droplet' do
+        before do
+          app.app.droplet = DropletModel.make(app: app.app, state: 'STAGED')
+          app.app.save
+        end
+
+        it 'returns the v3 droplet' do
+          expect(app.droplet).to eq(app.app.droplet)
         end
       end
     end

@@ -128,7 +128,7 @@ module VCAP::CloudController
 
           it 'should eventually return entire collection, batch after batch' do
             apps = {}
-            total_size = App.count + AppModel.count
+            total_size = AppModel.count
 
             token = 0
             while apps.size < total_size
