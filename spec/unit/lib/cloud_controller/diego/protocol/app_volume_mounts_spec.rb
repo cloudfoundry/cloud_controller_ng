@@ -4,7 +4,7 @@ require 'cloud_controller/diego/protocol/app_volume_mounts'
 module VCAP::CloudController
   module Diego
     class Protocol
-      describe AppVolumeMounts do
+      RSpec.describe AppVolumeMounts do
         subject(:mounts) { AppVolumeMounts.new(app) }
 
         let(:app) { App.make }

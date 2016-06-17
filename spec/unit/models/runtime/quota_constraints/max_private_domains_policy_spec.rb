@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe MaxPrivateDomainsPolicy do
+RSpec.describe MaxPrivateDomainsPolicy do
   let(:quota_definition) { double(:quota_definition, total_private_domains: 4) }
   let(:private_domain_counter) { double(:private_domain_counter, count: 0) }
 

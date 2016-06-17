@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceInstanceOperation, type: :model do
+  RSpec.describe ServiceInstanceOperation, type: :model do
     let(:updated_at_time) { Time.now }
     let(:created_at_time) { Time.now }
     let(:operation_attributes) do

@@ -3,7 +3,7 @@ require 'request_metrics'
 
 module CloudFoundry
   module Middleware
-    describe RequestMetrics do
+    RSpec.describe RequestMetrics do
       let(:middleware) { described_class.new(app, request_metrics) }
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:request_metrics) { instance_double(VCAP::CloudController::Metrics::RequestMetrics, start_request: nil, complete_request: nil) }

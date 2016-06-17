@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Tasks' do
+RSpec.describe 'Tasks' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:user) { VCAP::CloudController::User.make }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }

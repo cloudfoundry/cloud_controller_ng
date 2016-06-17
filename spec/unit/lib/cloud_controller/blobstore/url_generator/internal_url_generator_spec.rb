@@ -3,7 +3,7 @@ require 'cloud_controller/blobstore/url_generator/internal_url_generator'
 
 module CloudController
   module Blobstore
-    describe InternalUrlGenerator do
+    RSpec.describe InternalUrlGenerator do
       let(:blobstore_host) do
         'api.example.com'
       end

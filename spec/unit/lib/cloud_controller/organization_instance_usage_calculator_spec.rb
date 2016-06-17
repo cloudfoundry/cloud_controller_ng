@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe OrganizationInstanceUsageCalculator do
+  RSpec.describe OrganizationInstanceUsageCalculator do
     describe '#get_instance_usage' do
       let!(:org) { Organization.make }
       let!(:space1) { Space.make(organization: org) }

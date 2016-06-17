@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Permissions do
+  RSpec.describe Permissions do
     let(:user) { User.make }
     let(:space) { Space.make(organization: org) }
     let(:org) { Organization.make }

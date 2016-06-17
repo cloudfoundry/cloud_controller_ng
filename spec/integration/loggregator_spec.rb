@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'securerandom'
 
-describe 'Cloud controller Loggregator Integration', type: :integration do
+RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
   before(:all) do
     @loggregator_server = FakeLoggregatorServer.new(12345)
     @loggregator_server.start

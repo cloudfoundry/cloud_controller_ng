@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe SharedDomain, type: :model do
+  RSpec.describe SharedDomain, type: :model do
     subject { described_class.make name: 'test.example.com', router_group_guid: 'my-router-group-guid', router_group_type: 'tcp' }
 
     it { is_expected.to have_timestamp_columns }

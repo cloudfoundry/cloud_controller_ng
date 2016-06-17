@@ -2,7 +2,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AppModel do
+  RSpec.describe AppModel do
     let(:app_model) { AppModel.make }
     let(:space) { Space.find(guid: app_model.space_guid) }
 

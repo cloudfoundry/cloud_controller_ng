@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'queries/app_fetcher'
 
 module VCAP::CloudController
-  describe AppFetcher do
+  RSpec.describe AppFetcher do
     describe '#fetch' do
       let(:app) { AppModel.make }
       let(:space) { app.space }

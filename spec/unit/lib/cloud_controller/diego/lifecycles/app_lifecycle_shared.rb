@@ -1,4 +1,4 @@
-shared_examples_for 'a app lifecycle' do
+RSpec.shared_examples_for 'a app lifecycle' do
   let(:app) { VCAP::CloudController::AppModel.make }
 
   it 'creates a lifecycle data model' do

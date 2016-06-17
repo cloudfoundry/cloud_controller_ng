@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceBindingAccess, type: :access do
+  RSpec.describe ServiceBindingAccess, type: :access do
     subject(:access) { ServiceBindingAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 

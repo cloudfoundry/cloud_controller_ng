@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Apps' do
+RSpec.describe 'Apps' do
   let(:user) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }
 

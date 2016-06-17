@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/task_create'
 
 module VCAP::CloudController
-  describe TaskCreate do
+  RSpec.describe TaskCreate do
     subject(:task_create_action) { described_class.new(config) }
     let(:config) { {} }
 

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers::V2
-  describe HttpClient do
+  RSpec.describe HttpClient do
     let(:auth_username) { 'me' }
     let(:auth_password) { 'abc123' }
     let(:request_id) { Sham.guid }

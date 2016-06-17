@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe FeatureFlagAccess, type: :access do
+  RSpec.describe FeatureFlagAccess, type: :access do
     subject(:access) { FeatureFlagAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
     let(:user) { VCAP::CloudController::User.make }

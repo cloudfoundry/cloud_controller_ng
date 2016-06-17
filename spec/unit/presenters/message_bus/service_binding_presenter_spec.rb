@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'presenters/message_bus/service_binding_presenter'
 
-describe ServiceBindingPresenter do
+RSpec.describe ServiceBindingPresenter do
   context 'for a managed service instance' do
     let(:service) { VCAP::CloudController::Service.make(requires: ['syslog_drain'], label: Sham.label) }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(name: Sham.name, service: service) }

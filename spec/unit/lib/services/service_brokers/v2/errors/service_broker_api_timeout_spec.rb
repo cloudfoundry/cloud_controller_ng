@@ -4,7 +4,7 @@ module VCAP::Services
   module ServiceBrokers
     module V2
       module Errors
-        describe ServiceBrokerApiTimeout do
+        RSpec.describe ServiceBrokerApiTimeout do
           let(:uri) { 'http://uri.example.com' }
           let(:method) { 'POST' }
           let(:error) { StandardError.new }

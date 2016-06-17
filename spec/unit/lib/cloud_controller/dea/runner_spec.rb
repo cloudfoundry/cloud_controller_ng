@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Dea
-    describe Runner do
+    RSpec.describe Runner do
       let(:config) { TestConfig.config }
 
       let(:message_bus) do

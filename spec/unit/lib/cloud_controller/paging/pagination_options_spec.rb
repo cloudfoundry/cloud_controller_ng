@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/paging/pagination_options'
 
 module VCAP::CloudController
-  describe PaginationOptions do
+  RSpec.describe PaginationOptions do
     describe '.from_params' do
       let(:params) do
         {

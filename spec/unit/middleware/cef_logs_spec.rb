@@ -3,7 +3,7 @@ require 'request_logs'
 
 module CloudFoundry
   module Middleware
-    describe CefLogs do
+    RSpec.describe CefLogs do
       subject(:middleware) { described_class.new(app, logger, '10.10.10.100') }
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:logger) { double('logger', info: nil) }

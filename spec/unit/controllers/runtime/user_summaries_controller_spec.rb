@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe UserSummariesController do
+  RSpec.describe UserSummariesController do
     describe 'GET /users/:guid/summary' do
       let(:org) { Organization.make }
       let(:space) { Space.make(organization: org) }

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::ServiceKey, type: :model do
+  RSpec.describe VCAP::CloudController::ServiceKey, type: :model do
     let(:client) { double('broker client', unbind: nil, deprovision: nil) }
 
     before do

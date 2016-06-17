@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Diego
-    describe Messenger do
+    RSpec.describe Messenger do
       let(:stager_client) { instance_double(StagerClient) }
       let(:nsync_client) { instance_double(NsyncClient) }
       let(:config) { TestConfig.config }

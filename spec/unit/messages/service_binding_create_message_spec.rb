@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/service_binding_create_message'
 
 module VCAP::CloudController
-  describe ServiceBindingCreateMessage do
+  RSpec.describe ServiceBindingCreateMessage do
     describe '.create_from_http_request' do
       let(:body) {
         {

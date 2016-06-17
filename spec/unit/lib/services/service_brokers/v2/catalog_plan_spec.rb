@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'securerandom'
 
 module VCAP::Services::ServiceBrokers::V2
-  describe CatalogPlan do
+  RSpec.describe CatalogPlan do
     def build_valid_plan_attrs(opts={})
       {
         'id'          => opts[:id] || 'broker-provided-plan-id',

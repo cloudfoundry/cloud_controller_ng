@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/package_create_message'
 
 module VCAP::CloudController
-  describe PackageCreateMessage do
+  RSpec.describe PackageCreateMessage do
     describe '.create_from_http_request' do
       let(:body) { { 'type' => 'docker' } }
 

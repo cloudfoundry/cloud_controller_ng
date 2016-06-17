@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/diego/lifecycles/buildpack_info'
 
 module VCAP::CloudController
-  describe BuildpackInfo do
+  RSpec.describe BuildpackInfo do
     subject(:info) { BuildpackInfo.new(buildpack_name_or_url, buildpack_record) }
 
     let(:buildpack_name_or_url) { buildpack_record.name.upcase }

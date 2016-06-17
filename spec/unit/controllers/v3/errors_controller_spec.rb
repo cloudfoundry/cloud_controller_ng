@@ -1,7 +1,7 @@
 require 'rails_helper'
 require 'action_dispatch/middleware/params_parser'
 
-describe ErrorsController, type: :controller do
+RSpec.describe ErrorsController, type: :controller do
   describe '#not_found' do
     it 'returns an error' do
       get :not_found

@@ -3,7 +3,7 @@ require 'membrane'
 
 module VCAP::CloudController
   module Dea
-    describe HM9000StopController do
+    RSpec.describe HM9000StopController do
       let(:respondent) { instance_double(HM9000::Respondent, process_hm9000_stop: nil) }
 
       def make_dea_app(app_state)

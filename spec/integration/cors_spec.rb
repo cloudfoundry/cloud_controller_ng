@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'CORS', type: :integration do
+RSpec.describe 'CORS', type: :integration do
   before(:all) do
     start_nats
     start_cc

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/app_start'
 
 module VCAP::CloudController
-  describe AppStart do
+  RSpec.describe AppStart do
     let(:user) { double(:user, guid: '7') }
     let(:user_email) { '1@2.3' }
     let(:app_start) { AppStart.new(user, user_email) }

@@ -3,7 +3,7 @@ require 'jobs/v3/buildpack_cache_delete'
 
 module VCAP::CloudController
   module Jobs::V3
-    describe BuildpackCacheDelete do
+    RSpec.describe BuildpackCacheDelete do
       let(:app_guid) { 'some-guid' }
       let(:local_dir) { Dir.mktmpdir }
       let!(:blobstore) do

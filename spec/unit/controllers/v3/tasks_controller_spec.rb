@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe TasksController, type: :controller do
+RSpec.describe TasksController, type: :controller do
   let(:tasks_enabled) { true }
   let(:app_model) { VCAP::CloudController::AppModel.make }
   let(:space) { app_model.space }

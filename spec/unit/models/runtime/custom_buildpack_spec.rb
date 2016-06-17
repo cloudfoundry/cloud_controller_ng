@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe CustomBuildpack do
+  RSpec.describe CustomBuildpack do
     subject(:buildpack) { CustomBuildpack.new(url) }
 
     let(:url) { 'http://foo_bar/baz' }

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'PrivateDomains' do
+RSpec.describe 'PrivateDomains' do
   let(:user) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }
   let(:organization) { space.organization }

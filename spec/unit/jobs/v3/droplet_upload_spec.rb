@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::V3
-    describe DropletUpload do
+    RSpec.describe DropletUpload do
       let(:droplet) { DropletModel.make }
       let(:file_content) { 'some_file_content' }
       let(:local_file) do

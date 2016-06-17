@@ -13,13 +13,13 @@ module VCAP::CloudController
       end
     end
 
-    describe FakeLifecycleProtocol do
+    RSpec.describe FakeLifecycleProtocol do
       let(:lifecycle_protocol) { FakeLifecycleProtocol.new }
 
       it_behaves_like 'a lifecycle protocol'
     end
 
-    describe Protocol do
+    RSpec.describe Protocol do
       let(:blobstore_url_generator) do
         instance_double(CloudController::Blobstore::UrlGenerator,
           buildpack_cache_download_url: 'http://buildpack-artifacts-cache.com',

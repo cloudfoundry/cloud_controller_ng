@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/backends/staging_environment_builder'
 
 module VCAP::CloudController
-  describe StagingEnvironmentBuilder do
+  RSpec.describe StagingEnvironmentBuilder do
     let(:builder) { StagingEnvironmentBuilder.new }
 
     describe '#build' do

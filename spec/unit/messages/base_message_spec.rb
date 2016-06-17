@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/base_message'
 
 module VCAP::CloudController
-  describe BaseMessage do
+  RSpec.describe BaseMessage do
     describe '#requested?' do
       it 'returns true if the key was requested, false otherwise' do
         FakeClass = Class.new(BaseMessage) do

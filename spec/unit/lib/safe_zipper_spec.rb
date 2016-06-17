@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'cloud_controller/safe_zipper'
 
-describe SafeZipper do
+RSpec.describe SafeZipper do
   around do |example|
     Dir.mktmpdir('foo') do |tmpdir|
       @tmpdir = tmpdir

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe HttpResponseError do
+RSpec.describe HttpResponseError do
   let(:endpoint) { 'http://www.example.com/' }
 
   describe '#initialize' do

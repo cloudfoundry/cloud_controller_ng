@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/process_scale'
 
 module VCAP::CloudController
-  describe ProcessScale do
+  RSpec.describe ProcessScale do
     subject(:process_scale) { ProcessScale.new(user, user_email, process, message) }
     let(:valid_message_params) { { instances: 2, memory_in_mb: 100, disk_in_mb: 200 } }
     let(:message) { ProcessScaleMessage.new(valid_message_params) }

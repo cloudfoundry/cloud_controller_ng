@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe EventsController do
+  RSpec.describe EventsController do
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:timestamp) }
       it { expect(described_class).to be_queryable_by(:type) }

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/validators'
 
 module VCAP::CloudController::Validators
-  describe 'Validators' do
+  RSpec.describe 'Validators' do
     let(:fake_class) do
       Class.new do
         include ActiveModel::Model

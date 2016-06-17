@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe RestController::BaseController do
+  RSpec.describe RestController::BaseController do
     let(:logger) { double(:logger, debug: nil, error: nil) }
     let(:params) { {} }
     let(:env) { {} }

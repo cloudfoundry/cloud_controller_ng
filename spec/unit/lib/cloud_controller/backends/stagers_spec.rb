@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Stagers do
+  RSpec.describe Stagers do
     let(:config) { TestConfig.config }
 
     let(:message_bus) { instance_double(CfMessageBus::MessageBus) }

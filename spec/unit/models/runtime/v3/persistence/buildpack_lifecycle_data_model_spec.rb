@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe BuildpackLifecycleDataModel do
+  RSpec.describe BuildpackLifecycleDataModel do
     let(:buildpack_lifecycle_data_model) { BuildpackLifecycleDataModel.new }
 
     describe '#stack' do

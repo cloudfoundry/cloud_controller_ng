@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module CloudController::Presenters::V2
-  describe RelationsPresenter do
+  RSpec.describe RelationsPresenter do
     describe '#to_hash' do
       let(:test_model) { VCAP::CloudController::TestModel.make(unique_value: 'something', required_attr: true) }
       let(:opts) { {} }

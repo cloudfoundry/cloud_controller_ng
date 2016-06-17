@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/droplet_copy_message'
 
 module VCAP::CloudController
-  describe DropletCopyMessage do
+  RSpec.describe DropletCopyMessage do
     let(:body) do
       {
         'relationships' => {

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/routing_api/router_group'
 
 module VCAP::CloudController::RoutingApi
-  describe RouterGroup do
+  RSpec.describe RouterGroup do
     context 'reservable ports' do
       let(:router_group) { RouterGroup.new({
                                               'guid' => '896c4de9-7a93-4ae8-4643-0864a694ef51',

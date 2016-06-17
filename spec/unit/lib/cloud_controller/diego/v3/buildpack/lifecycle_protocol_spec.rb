@@ -8,7 +8,7 @@ module VCAP
     module Diego
       module V3
         module Buildpack
-          describe LifecycleProtocol do
+          RSpec.describe LifecycleProtocol do
             let(:app) { AppModel.make }
             let(:package) { PackageModel.make(app_guid: app.guid) }
             let(:droplet) { DropletModel.make(package_guid: package.guid, app_guid: app.guid) }

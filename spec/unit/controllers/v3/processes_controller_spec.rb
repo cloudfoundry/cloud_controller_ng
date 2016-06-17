@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe ProcessesController, type: :controller do
+RSpec.describe ProcessesController, type: :controller do
   let(:space) { VCAP::CloudController::Space.make }
 
   describe '#index' do

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module CloudController
   module Blobstore
-    describe UrlGenerator do
+    RSpec.describe UrlGenerator do
       let(:blobstore_options) do
         {
           blobstore_host: 'api.example.com',

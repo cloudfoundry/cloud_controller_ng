@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Packages' do
+RSpec.describe 'Packages' do
   let(:email) { 'potato@house.com' }
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user, email: email) }

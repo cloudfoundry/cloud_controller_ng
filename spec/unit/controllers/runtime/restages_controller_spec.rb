@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe RestagesController do
+  RSpec.describe RestagesController do
     let(:app_event_repository) { Repositories::AppEventRepository.new }
     before { CloudController::DependencyLocator.instance.register(:app_event_repository, app_event_repository) }
 

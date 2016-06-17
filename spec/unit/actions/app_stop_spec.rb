@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/app_stop'
 
 module VCAP::CloudController
-  describe AppStop do
+  RSpec.describe AppStop do
     let(:app_stop) { AppStop.new(user, user_email) }
     let(:user) { double(:user, guid: 'diug') }
     let(:user_email) { 'guy@place.io' }

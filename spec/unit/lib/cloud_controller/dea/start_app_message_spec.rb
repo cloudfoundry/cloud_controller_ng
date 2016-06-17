@@ -2,7 +2,7 @@ require 'spec_helper'
 require_relative '../../../../../lib/vcap/vars_builder'
 
 module VCAP::CloudController
-  describe Dea::StartAppMessage do
+  RSpec.describe Dea::StartAppMessage do
     let(:num_service_instances) { 3 }
 
     let(:app) do

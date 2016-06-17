@@ -2,7 +2,7 @@ require 'spec_helper'
 require_relative 'lifecycle_shared'
 
 module VCAP::CloudController
-  describe DockerLifecycle do
+  RSpec.describe DockerLifecycle do
     subject(:lifecycle) { DockerLifecycle.new(package, staging_message) }
     let(:package) { PackageModel.make(:docker) }
     let(:staging_message) { DropletCreateMessage.new }

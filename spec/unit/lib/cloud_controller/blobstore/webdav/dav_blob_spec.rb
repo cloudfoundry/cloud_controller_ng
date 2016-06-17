@@ -3,7 +3,7 @@ require_relative '../blob_shared'
 
 module CloudController
   module Blobstore
-    describe DavBlob do
+    RSpec.describe DavBlob do
       subject(:blob) { DavBlob.new(httpmessage: httpmessage, key: 'fo/ob/foobar', signer: signer) }
       let(:httpmessage) { instance_double(HTTP::Message, headers: {}) }
       let(:key) { 'fo/ob/foobar' }

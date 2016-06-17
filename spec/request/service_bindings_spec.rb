@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'v3 service bindings' do
+RSpec.describe 'v3 service bindings' do
   let(:app_model) { VCAP::CloudController::AppModel.make }
   let(:space) { app_model.space }
   let(:user) { make_developer_for_space(space) }

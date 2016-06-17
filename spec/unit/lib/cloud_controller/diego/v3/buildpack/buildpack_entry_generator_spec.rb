@@ -5,7 +5,7 @@ module VCAP::CloudController
   module Diego
     module V3
       module Buildpack
-        describe BuildpackEntryGenerator do
+        RSpec.describe BuildpackEntryGenerator do
           subject(:buildpack_entry_generator) { BuildpackEntryGenerator.new(blobstore_url_generator) }
 
           let(:admin_buildpack_download_url) { 'http://admin-buildpack.example.com' }

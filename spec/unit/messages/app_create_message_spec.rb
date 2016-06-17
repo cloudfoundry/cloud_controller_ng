@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/app_create_message'
 
 module VCAP::CloudController
-  describe AppCreateMessage do
+  RSpec.describe AppCreateMessage do
     describe '.create_from_http_request' do
       let(:body) {
         {

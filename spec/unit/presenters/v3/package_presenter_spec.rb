@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'presenters/v3/package_presenter'
 
 module VCAP::CloudController::Presenters::V3
-  describe PackagePresenter do
+  RSpec.describe PackagePresenter do
     describe '#to_hash' do
       let(:result) { PackagePresenter.new(package).to_hash }
       let(:package) { VCAP::CloudController::PackageModel.make(type: 'package_type', created_at: Time.at(1), updated_at: Time.at(2)) }

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/diego/process_guid'
 
 module VCAP::CloudController::Diego
-  describe ProcessGuid do
+  RSpec.describe ProcessGuid do
     let(:app) do
       VCAP::CloudController::AppFactory.make
     end

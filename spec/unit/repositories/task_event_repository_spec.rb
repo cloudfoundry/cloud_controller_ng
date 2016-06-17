@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP
   module CloudController
     module Repositories
-      describe TaskEventRepository do
+      RSpec.describe TaskEventRepository do
         let(:task) { TaskModel.make }
         let(:user_guid) { 'user-guid' }
         let(:user_email) { 'user-email' }

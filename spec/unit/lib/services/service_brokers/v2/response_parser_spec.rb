@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::Services
   module ServiceBrokers
     module V2
-      describe 'ResponseParser' do
+      RSpec.describe 'ResponseParser' do
         def get_method_and_path(operation)
           case operation
           when :provision

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::RestAPI
-  describe VCAP::RestAPI::Query do
+  RSpec.describe VCAP::RestAPI::Query do
     include VCAP::RestAPI
 
     class Author < Sequel::Model

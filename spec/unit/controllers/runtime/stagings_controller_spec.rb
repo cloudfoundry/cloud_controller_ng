@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe StagingsController do
+  RSpec.describe StagingsController do
     let(:timeout_in_seconds) { 120 }
     let(:cc_addr) { '1.2.3.4' }
     let(:cc_port) { 5678 }

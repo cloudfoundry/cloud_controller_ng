@@ -2,7 +2,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe PackageModel do
+  RSpec.describe PackageModel do
     describe 'validations' do
       it { is_expected.to validates_includes PackageModel::PACKAGE_STATES, :state, allow_missing: true }
 

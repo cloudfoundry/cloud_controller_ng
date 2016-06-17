@@ -5,7 +5,7 @@ require 'fog/aws/models/storage/files'
 
 module CloudController
   module Blobstore
-    describe FogClient do
+    RSpec.describe FogClient do
       let(:content) { 'Some Nonsense' }
       let(:sha_of_content) { Digester.new.digest(content) }
       let(:local_dir) { Dir.mktmpdir }

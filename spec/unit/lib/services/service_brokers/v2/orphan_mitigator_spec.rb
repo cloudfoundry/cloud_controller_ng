@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::Services
   module ServiceBrokers::V2
-    describe OrphanMitigator do
+    RSpec.describe OrphanMitigator do
       let(:client_attrs) { { uri: 'broker.com' } }
 
       let(:plan) { VCAP::CloudController::ServicePlan.make }

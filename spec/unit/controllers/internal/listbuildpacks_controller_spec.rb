@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ListBuildpacksController do
+  RSpec.describe ListBuildpacksController do
     let(:blobstore) { CloudController::DependencyLocator.instance.buildpack_blobstore }
 
     let(:url) { '/internal/buildpacks' }

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe CustomBuildpackPolicy do
+RSpec.describe CustomBuildpackPolicy do
   let(:app) { VCAP::CloudController::AppFactory.make }
   let(:buildpack) { double('build') }
 

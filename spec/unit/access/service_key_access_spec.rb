@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceKeyAccess, type: :access do
+  RSpec.describe ServiceKeyAccess, type: :access do
     subject(:access) { ServiceKeyAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 

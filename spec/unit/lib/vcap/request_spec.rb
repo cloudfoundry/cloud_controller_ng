@@ -3,7 +3,7 @@ require 'vcap/request'
 require 'securerandom'
 
 module VCAP
-  describe Request do
+  RSpec.describe Request do
     describe '::HEADER_NAME' do
       it 'constant is expected header name' do
         expect(Request::HEADER_NAME).to eq 'X-VCAP-Request-ID'

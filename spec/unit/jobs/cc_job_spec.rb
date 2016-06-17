@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs
-    describe CCJob do
+    RSpec.describe CCJob do
       describe '#reschedule_at' do
         it 'uses the default from Delayed::Job' do
           time = Time.now

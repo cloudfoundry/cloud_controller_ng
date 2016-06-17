@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/app_delete'
 
 module VCAP::CloudController
-  describe AppDelete do
+  RSpec.describe AppDelete do
     subject(:app_delete) { AppDelete.new(user.guid, user_email) }
 
     describe '#delete' do

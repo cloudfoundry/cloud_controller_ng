@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::AppsController do
+  RSpec.describe VCAP::CloudController::AppsController do
     let(:admin_user) { User.make }
     let(:non_admin_user) { User.make }
     let(:app_event_repository) { Repositories::AppEventRepository.new }

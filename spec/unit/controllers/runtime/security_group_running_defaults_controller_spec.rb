@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe SecurityGroupRunningDefaultsController do
+  RSpec.describe SecurityGroupRunningDefaultsController do
     before { set_current_user_as_admin }
 
     it 'returns an error for a regular user' do

@@ -4,7 +4,7 @@ module VCAP::Services
   module ServiceBrokers
     module V2
       module Errors
-        describe 'ServiceBrokerConflict' do
+        RSpec.describe 'ServiceBrokerConflict' do
           let(:error_message) { 'error message' }
           let(:response_body) { "{\"description\": \"#{error_message}\"}" }
           let(:response) { double(code: 409, reason: 'Conflict', body: response_body) }

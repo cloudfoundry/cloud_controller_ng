@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe MinMemoryPolicy do
+RSpec.describe MinMemoryPolicy do
   let(:app) { VCAP::CloudController::AppFactory.make(memory: 64) }
 
   subject(:validator) { MinMemoryPolicy.new(app) }

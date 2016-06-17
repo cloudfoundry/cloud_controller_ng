@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Routes' do
+RSpec.describe 'Routes' do
   let(:user) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }
 

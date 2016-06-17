@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Diego
-    describe Stager do
+    RSpec.describe Stager do
       let(:messenger) { instance_double(Messenger, send_desire_request: nil) }
       let(:process) { AppFactory.make }
       let(:config) { TestConfig.config }

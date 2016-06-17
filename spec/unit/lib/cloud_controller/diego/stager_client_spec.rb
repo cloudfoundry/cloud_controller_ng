@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController::Diego
-  describe StagerClient do
+  RSpec.describe StagerClient do
     let(:content_type_header) { { 'Content-Type' => 'application/json' } }
     let(:app) { VCAP::CloudController::AppFactory.make(staging_task_id: 'staging-task-id') }
     let(:staging_guid) { StagingGuid.from_process(app) }

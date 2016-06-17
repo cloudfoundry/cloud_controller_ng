@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::UserProvidedServiceInstance, type: :model do
+  RSpec.describe VCAP::CloudController::UserProvidedServiceInstance, type: :model do
     let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
 
     it_behaves_like 'a model with an encrypted attribute' do

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceKeysController do
+  RSpec.describe ServiceKeysController do
     describe 'Attributes' do
       it do
         expect(described_class).to have_creatable_attributes({

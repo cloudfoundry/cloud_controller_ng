@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'presenters/v3/paginated_list_presenter'
 
 module VCAP::CloudController::Presenters::V3
-  describe PaginatedListPresenter do
+  RSpec.describe PaginatedListPresenter do
     subject(:presenter) { described_class.new(dataset, base_url, message) }
     let(:set) { [Monkey.new('bobo'), Monkey.new('george')] }
     let(:dataset) { double('sequel dataset') }

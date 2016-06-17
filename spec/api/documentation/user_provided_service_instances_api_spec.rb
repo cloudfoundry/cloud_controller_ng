@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'User Provided Service Instances', type: [:api, :legacy_api] do
+RSpec.resource 'User Provided Service Instances', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
   let(:guid) { service_instance.guid }

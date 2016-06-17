@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/route_mappings_create_message'
 
 module VCAP::CloudController
-  describe RouteMappingsCreateMessage do
+  RSpec.describe RouteMappingsCreateMessage do
     let(:body) do
       {
         'app_port' => 1234,

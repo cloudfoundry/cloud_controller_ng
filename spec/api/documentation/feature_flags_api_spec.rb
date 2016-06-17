@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 # rubocop:disable Metrics/LineLength
-resource 'Feature Flags', type: [:api, :legacy_api] do
+RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
 
   authenticated_request

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe BlobDispatcher do
+  RSpec.describe BlobDispatcher do
     subject(:dispatcher) { described_class.new(blobstore: blobstore, controller: controller) }
 
     let(:blob_sender) { instance_double(CloudController::BlobSender::DefaultLocalBlobSender, send_blob: nil) }

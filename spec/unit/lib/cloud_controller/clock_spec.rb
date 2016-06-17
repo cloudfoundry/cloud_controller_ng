@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/clock'
 
 module VCAP::CloudController
-  describe Clock do
+  RSpec.describe Clock do
     subject(:clock) { Clock.new(config) }
 
     let(:some_class) { Class.new { def initialize(_); end } }

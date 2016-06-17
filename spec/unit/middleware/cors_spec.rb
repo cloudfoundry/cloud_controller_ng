@@ -3,7 +3,7 @@ require 'cors'
 
 module CloudFoundry
   module Middleware
-    describe Cors do
+    RSpec.describe Cors do
       let(:allowed_domains) { ['http://*.inblue.net', 'http://talkoncorners.com', 'http://borrowedheaven.org'] }
       let(:middleware) { described_class.new(app, allowed_domains) }
       let(:app) { double(:app, call: [123, {}, 'a body']) }

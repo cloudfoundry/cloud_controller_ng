@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe AppEnvironmentPolicy do
+RSpec.describe AppEnvironmentPolicy do
   describe 'env' do
     let(:app) { VCAP::CloudController::AppFactory.make }
 

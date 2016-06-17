@@ -3,7 +3,7 @@ require 'membrane'
 require 'cloud_controller/diego/staging_guid'
 
 module VCAP::CloudController
-  describe StagingCompletionController do
+  RSpec.describe StagingCompletionController do
     let(:buildpack) { Buildpack.make }
     let(:buildpack_key) { buildpack.key }
     let(:detected_buildpack) { 'detected_buildpack' }

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController::RoutingApi
-  describe Client do
+  RSpec.describe Client do
     let(:token_issuer) { double(:token_issuer) }
     let(:token_info) { double(:token_info) }
     let(:routing_api_url) { 'http://routing-api.example.com' }

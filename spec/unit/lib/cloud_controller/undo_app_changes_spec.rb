@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe UndoAppChanges do
+  RSpec.describe UndoAppChanges do
     let(:state) { 'STARTED' }
     let(:instances) { 2 }
     let(:app) do

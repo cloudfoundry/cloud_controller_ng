@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Diagnostics do
+  RSpec.describe Diagnostics do
     let(:request_method) { 'GET' }
     let(:path) { '/path' }
     let(:query_string) { 'query' }

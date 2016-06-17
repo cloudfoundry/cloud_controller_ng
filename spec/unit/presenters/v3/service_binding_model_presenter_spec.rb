@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'presenters/v3/service_binding_model_presenter'
 
 module VCAP::CloudController::Presenters::V3
-  describe ServiceBindingModelPresenter do
+  RSpec.describe ServiceBindingModelPresenter do
     let(:presenter) { ServiceBindingModelPresenter.new(service_binding) }
     let(:credentials) { { 'very-secret' => 'password' }.to_json }
     let(:volume_mounts) { [{ 'not-secret' => 'normal stuff', 'private': { 'very-secret' => 'password' } }] }

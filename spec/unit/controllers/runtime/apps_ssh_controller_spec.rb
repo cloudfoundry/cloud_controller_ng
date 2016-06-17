@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/diego/process_guid'
 
 module VCAP::CloudController
-  describe AppsSSHController do
+  RSpec.describe AppsSSHController do
     let(:diego) { true }
     let(:enable_ssh) { true }
     let(:user) { User.make }

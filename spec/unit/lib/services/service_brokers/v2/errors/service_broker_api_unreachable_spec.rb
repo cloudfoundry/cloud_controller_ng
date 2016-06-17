@@ -4,7 +4,7 @@ module VCAP::Services
   module ServiceBrokers
     module V2
       module Errors
-        describe ServiceBrokerApiUnreachable do
+        RSpec.describe ServiceBrokerApiUnreachable do
           let(:uri) { 'http://www.example.com/' }
           let(:error) { SocketError.new('some message') }
 

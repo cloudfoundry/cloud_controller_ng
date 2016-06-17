@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/backends/staging_disk_calculator'
 
 module VCAP::CloudController
-  describe StagingDiskCalculator do
+  RSpec.describe StagingDiskCalculator do
     let(:calculator) { StagingDiskCalculator.new }
 
     describe '#get_limit' do

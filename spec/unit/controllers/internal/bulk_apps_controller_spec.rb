@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/diego/process_guid'
 
 module VCAP::CloudController
-  describe BulkAppsController do
+  RSpec.describe BulkAppsController do
     def make_diego_app(options={})
       AppFactory.make(options).tap do |app|
         app.package_state = 'STAGED'

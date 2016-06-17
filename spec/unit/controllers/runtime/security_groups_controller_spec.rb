@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe SecurityGroupsController do
+  RSpec.describe SecurityGroupsController do
     let(:group) { SecurityGroup.make }
 
     describe 'Query Parameters' do

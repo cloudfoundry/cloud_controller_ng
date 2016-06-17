@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Service Broker' do
+RSpec.describe 'Service Broker' do
   include VCAP::CloudController::BrokerApiHelper
 
   let(:catalog_with_no_plans) {{

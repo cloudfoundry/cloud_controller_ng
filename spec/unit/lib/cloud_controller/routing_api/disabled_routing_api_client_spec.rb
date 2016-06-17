@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController::RoutingApi
-  describe DisabledClient do
+  RSpec.describe DisabledClient do
     let(:client) { DisabledClient.new }
 
     describe '.enabled?' do

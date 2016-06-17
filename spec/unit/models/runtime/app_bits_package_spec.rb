@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe AppBitsPackage do
+RSpec.describe AppBitsPackage do
   let(:compressed_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }
   let(:app) { VCAP::CloudController::AppFactory.make }
   let(:package) { VCAP::CloudController::PackageModel.make }

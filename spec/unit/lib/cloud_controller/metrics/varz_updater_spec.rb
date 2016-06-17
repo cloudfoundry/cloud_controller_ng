@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/metrics/varz_updater'
 
 module VCAP::CloudController::Metrics
-  describe VarzUpdater do
+  RSpec.describe VarzUpdater do
     let(:varz) { VarzUpdater.new }
 
     describe '#record_user_count' do

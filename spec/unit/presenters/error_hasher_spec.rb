@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe ErrorHasher do
+RSpec.describe ErrorHasher do
   subject(:error_hasher) { ErrorHasher.new(error) }
 
   let(:unknown_error) do

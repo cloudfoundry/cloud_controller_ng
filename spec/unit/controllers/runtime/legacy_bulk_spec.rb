@@ -4,7 +4,7 @@ require 'json_message'
 require 'cf_message_bus/mock_message_bus'
 
 module VCAP::CloudController
-  describe LegacyBulk do
+  RSpec.describe LegacyBulk do
     let(:mbus) { CfMessageBus::MockMessageBus.new({}) }
 
     before do

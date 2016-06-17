@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe FeatureFlagsController do
+  RSpec.describe FeatureFlagsController do
     before { set_current_user_as_admin }
 
     describe 'PUT /v2/config/feature_flags/:name' do

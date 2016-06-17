@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe App, type: :model do
+  RSpec.describe App, type: :model do
     let(:org) { Organization.make }
     let(:space) { Space.make(organization: org) }
 

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe BuildpackBitsDelete do
+  RSpec.describe BuildpackBitsDelete do
     let(:staging_timeout) { 144 }
     let(:key) { 'key' }
     let!(:blobstore) do

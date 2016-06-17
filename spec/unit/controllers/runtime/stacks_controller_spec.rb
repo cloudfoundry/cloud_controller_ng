@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::StacksController do
+  RSpec.describe VCAP::CloudController::StacksController do
     let(:user) { User.make }
 
     before do

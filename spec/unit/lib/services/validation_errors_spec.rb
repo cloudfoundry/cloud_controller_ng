@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::Services
-  describe ValidationErrors do
+  RSpec.describe ValidationErrors do
     let!(:errors) { ValidationErrors.new }
 
     describe '#add' do

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module CloudController::Errors
-  describe Details do
+  RSpec.describe Details do
     describe '.new(name)' do
       let(:name) { 'DomainInvalid' }
 

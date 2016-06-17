@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/service_binding_create'
 
 module VCAP::CloudController
-  describe ServiceBindingCreate do
+  RSpec.describe ServiceBindingCreate do
     describe '#create' do
       subject(:service_binding_create) { ServiceBindingCreate.new(user_guid, user_email) }
       let(:user_guid) { 'some-guid' }

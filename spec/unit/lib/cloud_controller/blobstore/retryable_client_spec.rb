@@ -5,7 +5,7 @@ require_relative 'client_shared'
 
 module CloudController
   module Blobstore
-    describe RetryableClient do
+    RSpec.describe RetryableClient do
       subject(:client) do
         described_class.new(
           client: wrapped_client,

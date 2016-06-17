@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Dea::HM9000::LegacyClient do
+  RSpec.describe VCAP::CloudController::Dea::HM9000::LegacyClient do
     def generate_hm_api_response(app, running_instances, crash_counts=[])
       result = {
         droplet: app.guid,

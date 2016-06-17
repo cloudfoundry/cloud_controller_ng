@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Services', type: [:api, :legacy_api] do
+RSpec.resource 'Services', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
   let!(:service) { VCAP::CloudController::Service.make(service_broker: service_broker) }

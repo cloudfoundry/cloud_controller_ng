@@ -4,7 +4,7 @@ module VCAP::Services
   module ServiceBrokers
     module V2
       module Errors
-        describe ServiceBrokerBadResponse do
+        RSpec.describe ServiceBrokerBadResponse do
           let(:uri) { 'http://www.example.com/' }
           let(:response) { double(code: 500, message: 'Internal Server Error', body: response_body) }
           let(:method) { 'PUT' }

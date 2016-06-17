@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController::RestController
-  describe CommonParams do
+  RSpec.describe CommonParams do
     let(:logger) do
       double('Logger').as_null_object
     end

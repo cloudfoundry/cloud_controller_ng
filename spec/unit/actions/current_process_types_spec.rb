@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/current_process_types'
 
 module VCAP::CloudController
-  describe CurrentProcessTypes do
+  RSpec.describe CurrentProcessTypes do
     let(:user) { double(:user, guid: Sham.guid) }
     let(:droplet) { nil }
     let(:app) { AppModel.make(droplet: droplet, name: 'my_app') }

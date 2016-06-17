@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe RouterGroupTypePopulator do
+  RSpec.describe RouterGroupTypePopulator do
     describe 'transform' do
       let(:router_group_type_populator) { RouterGroupTypePopulator.new(RoutingApi::DisabledClient.new) }
       let(:domain1) { SharedDomain.new(name: '1', router_group_guid: 'guid1') }

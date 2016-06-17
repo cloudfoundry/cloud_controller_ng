@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'cloud_controller/multi_response_message_bus_request'
 
-describe MultiResponseMessageBusRequest do
+RSpec.describe MultiResponseMessageBusRequest do
   let(:message_bus) { CfMessageBus::MockMessageBus.new }
   subject(:multi_response_message_bus_request) { described_class.new(message_bus, 'fake nats subject') }
 

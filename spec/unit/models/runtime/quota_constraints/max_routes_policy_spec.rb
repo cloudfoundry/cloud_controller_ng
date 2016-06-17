@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe MaxRoutesPolicy do
+RSpec.describe MaxRoutesPolicy do
   let(:quota_definition) { double(:quota_definition, total_routes: 4) }
   let(:route_counter) { double(:route_counter, count: 0) }
 

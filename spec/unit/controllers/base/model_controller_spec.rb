@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'stringio'
 
 module VCAP::CloudController
-  describe RestController::ModelController do
+  RSpec.describe RestController::ModelController do
     let(:user) { User.make(active: true) }
 
     describe '#validate_access' do

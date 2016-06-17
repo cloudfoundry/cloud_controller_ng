@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Dea::Client do
+  RSpec.describe VCAP::CloudController::Dea::Client do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:dea_pool) { double(:dea_pool) }
     let(:num_service_instances) { 3 }

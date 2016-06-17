@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe PackagesController, type: :controller do
+RSpec.describe PackagesController, type: :controller do
   describe '#upload' do
     let(:package) { VCAP::CloudController::PackageModel.make }
     let(:space) { package.space }

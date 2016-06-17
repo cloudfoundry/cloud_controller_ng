@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Membership do
+  RSpec.describe Membership do
     let(:user) { User.make }
     let!(:space) { Space.make(organization: organization) }
     let(:organization) { Organization.make }

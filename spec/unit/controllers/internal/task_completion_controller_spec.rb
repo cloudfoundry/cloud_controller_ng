@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'membrane'
 
 module VCAP::CloudController
-  describe TasksCompletionController do
+  RSpec.describe TasksCompletionController do
     context 'running a task' do
       let(:url) { "/internal/v3/tasks/#{task.guid}/completed" }
       let(:task) { TaskModel.make }

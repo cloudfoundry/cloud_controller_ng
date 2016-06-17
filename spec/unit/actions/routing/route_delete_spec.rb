@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe RouteDelete do
+  RSpec.describe RouteDelete do
     let(:app_event_repository) { instance_double(Repositories::AppEventRepository) }
     let(:route_event_repository) { instance_double(Repositories::RouteEventRepository) }
 

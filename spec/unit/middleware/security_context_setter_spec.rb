@@ -3,7 +3,7 @@ require 'security_context_setter'
 
 module CloudFoundry
   module Middleware
-    describe SecurityContextSetter do
+    RSpec.describe SecurityContextSetter do
       let(:middleware) { described_class.new(app, security_context_configurer) }
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:env) do

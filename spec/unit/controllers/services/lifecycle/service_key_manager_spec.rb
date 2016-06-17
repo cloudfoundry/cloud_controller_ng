@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceKeyManager do
+  RSpec.describe ServiceKeyManager do
     let(:guid_pattern) { '[[:alnum:]-]+' }
     let(:unbind_status) { 200 }
     let(:unbind_body) { {} }

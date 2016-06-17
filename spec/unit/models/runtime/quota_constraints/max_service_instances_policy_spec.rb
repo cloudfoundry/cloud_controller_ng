@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe MaxServiceInstancePolicy do
+RSpec.describe MaxServiceInstancePolicy do
   let(:org) { VCAP::CloudController::Organization.make quota_definition: quota }
   let(:space) { VCAP::CloudController::Space.make organization: org }
   let(:service_instance) do

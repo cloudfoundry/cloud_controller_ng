@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    describe PruneCompletedTasks do
+    RSpec.describe PruneCompletedTasks do
       let(:cutoff_age_in_days) { 30 }
       let(:logger) { instance_double(Steno::Logger, info: nil) }
 

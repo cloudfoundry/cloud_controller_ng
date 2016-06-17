@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::V3
-    describe DropletBitsCopier do
+    RSpec.describe DropletBitsCopier do
       subject(:job) { DropletBitsCopier.new(source_droplet.guid, destination_droplet.guid) }
 
       let(:droplet_bits_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }

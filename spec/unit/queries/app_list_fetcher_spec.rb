@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/apps_list_message'
 
 module VCAP::CloudController
-  describe AppListFetcher do
+  RSpec.describe AppListFetcher do
     describe '#fetch' do
       let(:space) { Space.make }
       let(:app) { AppModel.make(space_guid: space.guid) }

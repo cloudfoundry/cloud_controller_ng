@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::Services::SSO
-  describe DashboardClientManager do
+  RSpec.describe DashboardClientManager do
     let(:client_manager) { double('client_manager') }
     let(:user) { VCAP::CloudController::User.make }
     let(:email) { 'email@example.com' }

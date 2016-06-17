@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AppBitsUploadController do
+  RSpec.describe AppBitsUploadController do
     let(:app_event_repository) { Repositories::AppEventRepository.new }
     before { CloudController::DependencyLocator.instance.register(:app_event_repository, app_event_repository) }
 

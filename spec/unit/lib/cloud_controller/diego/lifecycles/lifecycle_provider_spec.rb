@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe LifecycleProvider do
+  RSpec.describe LifecycleProvider do
     let(:package) { PackageModel.make }
     let(:message) { DropletCreateMessage.new(request) }
 

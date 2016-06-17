@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 require 'cgi'
 
-resource 'Events', type: [:api, :legacy_api] do
+RSpec.resource 'Events', type: [:api, :legacy_api] do
   DOCUMENTED_EVENT_TYPES = %w(
     app.crash
     audit.app.start

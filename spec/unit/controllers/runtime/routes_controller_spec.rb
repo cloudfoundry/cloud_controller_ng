@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::RoutesController do
+  RSpec.describe VCAP::CloudController::RoutesController do
     let(:routing_api_client) { double('routing_api_client', enabled?: true) }
     let(:tcp_group_1) { 'tcp-group-1' }
     let(:tcp_group_2) { 'tcp-group-2' }

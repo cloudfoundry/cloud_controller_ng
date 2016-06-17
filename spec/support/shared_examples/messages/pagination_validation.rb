@@ -1,4 +1,4 @@
-shared_examples_for 'a page validator' do
+RSpec.shared_examples_for 'a page validator' do
   describe 'page' do
     it 'is invalid if page is a string' do
       message = described_class.new page: 'a string'
@@ -20,7 +20,7 @@ shared_examples_for 'a page validator' do
   end
 end
 
-shared_examples_for 'a per_page validator' do
+RSpec.shared_examples_for 'a per_page validator' do
   describe 'per_page' do
     it 'is invalid if per_page is a string' do
       message = described_class.new per_page: 'not number'
@@ -42,7 +42,7 @@ shared_examples_for 'a per_page validator' do
   end
 end
 
-shared_examples_for 'an order_by validator' do
+RSpec.shared_examples_for 'an order_by validator' do
   describe 'order_by' do
     it 'must be one of the valid strings' do
       message1 = described_class.new order_by: 'created_at'
@@ -57,7 +57,7 @@ shared_examples_for 'an order_by validator' do
   end
 end
 
-shared_examples_for 'an order_direction validator' do
+RSpec.shared_examples_for 'an order_direction validator' do
   describe 'order_direction' do
     it 'must be one of the valid strings' do
       message1 = described_class.new order_by: 'created_at', order_direction: '+'

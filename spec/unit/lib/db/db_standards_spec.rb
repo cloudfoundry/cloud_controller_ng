@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'DB Schema' do
+RSpec.describe 'DB Schema' do
   connection = DbConfig.new.connection
 
   connection.tables.each do |table|

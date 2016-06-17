@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/diego/process_guid'
 
 module VCAP::CloudController
-  describe BulkTasksController do
+  RSpec.describe BulkTasksController do
     def task_table_entry(index)
       TaskModel.order_by(:id).all[index - 1]
     end

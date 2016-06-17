@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    describe PendingPackagesCleanup do
+    RSpec.describe PendingPackagesCleanup do
       let(:expiration_in_seconds) { 5.minutes }
 
       subject(:cleanup_job) { PendingPackagesCleanup.new(expiration_in_seconds) }

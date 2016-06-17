@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe EnvironmentVariableGroup, type: :model do
+  RSpec.describe EnvironmentVariableGroup, type: :model do
     subject(:env_group) { EnvironmentVariableGroup.make }
 
     it { is_expected.to have_timestamp_columns }

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe 'orphan mitigation' do
+  RSpec.describe 'orphan mitigation' do
     include VCAP::CloudController::BrokerApiHelper
 
     let(:guid_pattern) { '[[:alnum:]-]+' }

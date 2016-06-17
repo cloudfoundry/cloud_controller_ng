@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServicePlanVisibilityAccess, type: :access do
+  RSpec.describe ServicePlanVisibilityAccess, type: :access do
     subject(:access) { ServicePlanVisibilityAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 

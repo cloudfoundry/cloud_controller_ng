@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Blobstores', type: :api do
+RSpec.resource 'Blobstores', type: :api do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:request_headers) { { 'AUTHORIZATION' => admin_auth_header } }
   let(:file) { File.expand_path('../../fixtures/good.zip', File.dirname(__FILE__)) }

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Dea
-    describe SubSystem do
+    RSpec.describe SubSystem do
       let(:message_bus) { CfMessageBus::MockMessageBus.new }
       let(:dea_respondent) { instance_double(Respondent, start: nil) }
       let(:hm9000_respondent) { instance_double(HM9000::Respondent, handle_requests: nil) }

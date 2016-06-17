@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Processes' do
+RSpec.describe 'Processes' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my_app') }
   let(:developer) { make_developer_for_space(space) }

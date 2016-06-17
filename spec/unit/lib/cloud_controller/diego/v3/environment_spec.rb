@@ -3,7 +3,7 @@ require 'cloud_controller/diego/v3/environment'
 
 module VCAP::CloudController::Diego
   module V3
-    describe Environment do
+    RSpec.describe Environment do
       let(:app_env_vars) { { 'ENV_VAR_2' => 'jeff' } }
       let(:app) { VCAP::CloudController::AppModel.make(environment_variables: app_env_vars, name: 'utako') }
       let(:task) { VCAP::CloudController::TaskModel.make(name: 'my-task', command: 'echo foo', memory_in_mb: 1024) }

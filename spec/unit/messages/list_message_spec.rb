@@ -8,7 +8,7 @@ class VCAP::CloudController::ListMessage
 end
 
 module VCAP::CloudController
-  describe ListMessage do
+  RSpec.describe ListMessage do
     describe 'page' do
       it 'is invalid if page is a string' do
         message = described_class.new page: 'a string'

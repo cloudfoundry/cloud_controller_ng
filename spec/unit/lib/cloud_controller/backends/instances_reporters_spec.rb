@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe InstancesReporters do
+  RSpec.describe InstancesReporters do
     let(:tps_client) { instance_double(Diego::TPSClient) }
     let(:hm_client) { instance_double(Dea::HM9000::Client) }
 

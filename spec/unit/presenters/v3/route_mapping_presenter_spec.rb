@@ -3,7 +3,7 @@ require 'presenters/v3/route_mapping_presenter'
 require 'messages/route_mappings_list_message'
 
 module VCAP::CloudController::Presenters::V3
-  describe RouteMappingPresenter do
+  RSpec.describe RouteMappingPresenter do
     subject(:presenter) { described_class.new(route_mapping) }
 
     let(:route_mapping) do

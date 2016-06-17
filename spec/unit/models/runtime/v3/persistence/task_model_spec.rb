@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe TaskModel do
+  RSpec.describe TaskModel do
     describe 'validations' do
       let(:task) { TaskModel.make }
       let(:org) { Organization.make }

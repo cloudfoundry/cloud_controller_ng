@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Route Mappings' do
+RSpec.describe 'Route Mappings' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
   let(:process) { VCAP::CloudController::App.make(:process, space: space, app: app_model, type: 'worker', ports: [8888]) }

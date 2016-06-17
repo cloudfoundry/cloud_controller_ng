@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/package_delete'
 
 module VCAP::CloudController
-  describe PackageDelete do
+  RSpec.describe PackageDelete do
     subject(:package_delete) { PackageDelete.new(user_guid, user_email) }
     let(:user_guid) { 'schmuid' }
     let(:user_email) { 'amandaplease@gmail.com' }

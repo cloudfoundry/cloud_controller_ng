@@ -1,4 +1,4 @@
-shared_examples_for 'a lifecycle protocol' do
+RSpec.shared_examples_for 'a lifecycle protocol' do
   let(:app) { double(:app) }
 
   it 'provides lifecycle data' do
@@ -14,7 +14,7 @@ shared_examples_for 'a lifecycle protocol' do
   end
 end
 
-shared_examples_for 'a v3 lifecycle protocol' do
+RSpec.shared_examples_for 'a v3 lifecycle protocol' do
   let(:package) { double(:package) }
   let(:staging_details) { double(:staging_details) }
 

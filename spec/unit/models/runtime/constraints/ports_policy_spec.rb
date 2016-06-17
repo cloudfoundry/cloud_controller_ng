@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe PortsPolicy do
+RSpec.describe PortsPolicy do
   let!(:app) { VCAP::CloudController::AppFactory.make }
   let(:validator) { PortsPolicy.new(app, changed_to_diego) }
   let(:changed_to_diego) { false }

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::InfoController do
+  RSpec.describe VCAP::CloudController::InfoController do
     describe 'GET /v2/info' do
       it "returns a 'user' entry when authenticated" do
         set_current_user(User.make)

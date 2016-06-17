@@ -3,7 +3,7 @@ require 'cloud_controller/blobstore/local_app_bits'
 
 module CloudController
   module Blobstore
-    describe LocalAppBits do
+    RSpec.describe LocalAppBits do
       let(:compressed_zip_path) { '/tmp/zipped.compressed_zip_path' }
       let(:root_path) { '/tmp/safezipper' }
       let(:uncompressed_path) { File.join(root_path, LocalAppBits::UNCOMPRESSED_DIR) }

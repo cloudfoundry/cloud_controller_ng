@@ -3,7 +3,7 @@ require 'repositories/service_binding_event_repository'
 
 module VCAP::CloudController
   module Repositories
-    describe ServiceBindingEventRepository do
+    RSpec.describe ServiceBindingEventRepository do
       let(:user_guid) { 'user-guid' }
       let(:user_email) { 'user@example.com' }
       let(:service_binding) { ServiceBindingModel.make }

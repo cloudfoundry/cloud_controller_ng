@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/services/service_key_create'
 
 module VCAP::CloudController
-  describe ServiceKeyCreate do
+  RSpec.describe ServiceKeyCreate do
     let(:service_instance) { ManagedServiceInstance.make }
     let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
 

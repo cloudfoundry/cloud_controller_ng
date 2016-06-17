@@ -3,7 +3,7 @@ require 'cloud_controller/blobstore/url_generator/upload_url_generator'
 
 module CloudController
   module Blobstore
-    describe UploadUrlGenerator do
+    RSpec.describe UploadUrlGenerator do
       let(:blobstore_host) do
         'api.example.com'
       end

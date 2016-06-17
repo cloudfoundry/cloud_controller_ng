@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AppSummariesController do
+  RSpec.describe AppSummariesController do
     before do
       @num_services = 2
       @free_mem_size = 128

@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'presenters/api/api_presenter'
 
-describe ApiPresenter do
+RSpec.describe ApiPresenter do
   let(:created_at) { 10.minutes.ago }
   let(:updated_at) { 5.minutes.ago }
   let(:record) { double('record', guid: '12345ac', created_at: created_at, updated_at: updated_at) }

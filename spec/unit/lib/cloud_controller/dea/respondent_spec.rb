@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/dea/respondent'
 
 module VCAP::CloudController
-  describe Dea::Respondent do
+  RSpec.describe Dea::Respondent do
     before { allow(message_bus).to receive(:subscribe).with(anything) }
 
     let(:message_bus) { double('message_bus') }

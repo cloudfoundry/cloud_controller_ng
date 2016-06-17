@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Loggregator do
+RSpec.describe Loggregator do
   describe 'when no emitter is set' do
     before { Loggregator.emitter = nil }
 

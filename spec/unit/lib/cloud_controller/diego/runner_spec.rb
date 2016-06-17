@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Diego
-    describe Runner do
+    RSpec.describe Runner do
       let(:messenger) { instance_double(Messenger) }
       let(:app) { AppFactory.make(state: 'STARTED') }
       let(:protocol) { instance_double(Diego::Protocol, desire_app_message: {}) }

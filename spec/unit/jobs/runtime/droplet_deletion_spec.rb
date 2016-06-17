@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    describe DropletDeletion do
+    RSpec.describe DropletDeletion do
       let(:old_droplet_key) { 'abcdefh' }
       let(:new_droplet_key) { 'zyxwvy' }
       subject(:job) { DropletDeletion.new(new_droplet_key, old_droplet_key) }

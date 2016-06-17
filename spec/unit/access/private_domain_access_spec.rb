@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe PrivateDomainAccess, type: :access do
+  RSpec.describe PrivateDomainAccess, type: :access do
     subject(:access) { PrivateDomainAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 

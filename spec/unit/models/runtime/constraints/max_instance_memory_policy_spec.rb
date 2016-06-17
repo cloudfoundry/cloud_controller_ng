@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'max instance memory policies' do
+RSpec.describe 'max instance memory policies' do
   let(:policy_target) { double(instance_memory_limit: 150) }
   let(:error_name) { :random_memory_error }
 

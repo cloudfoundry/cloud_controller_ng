@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe DropletsController, type: :controller do
+RSpec.describe DropletsController, type: :controller do
   describe '#create' do
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:stagers) { instance_double(VCAP::CloudController::Stagers) }

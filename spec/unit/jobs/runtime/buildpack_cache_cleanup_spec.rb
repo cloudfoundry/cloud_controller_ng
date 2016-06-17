@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    describe BuildpackCacheCleanup do
+    RSpec.describe BuildpackCacheCleanup do
       let(:cc_addr) { '1.2.3.4' }
       let(:cc_port) { 5678 }
       let(:orphan_key) { 'orphan-key' }

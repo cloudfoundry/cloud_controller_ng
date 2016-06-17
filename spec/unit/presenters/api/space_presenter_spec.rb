@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe SpacePresenter do
+RSpec.describe SpacePresenter do
   describe '#to_hash' do
     let(:space) { VCAP::CloudController::Space.make }
     subject { SpacePresenter.new(space) }

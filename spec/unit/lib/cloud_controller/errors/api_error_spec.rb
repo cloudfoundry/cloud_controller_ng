@@ -3,7 +3,7 @@
 require 'spec_helper'
 
 module CloudController::Errors
-  describe ApiError do
+  RSpec.describe ApiError do
     def create_details(message)
       double(Details,
              name: message,

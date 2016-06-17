@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::ServiceInstancePurger do
+  RSpec.describe VCAP::CloudController::ServiceInstancePurger do
     let(:event_repository) { VCAP::CloudController::Repositories::ServiceEventRepository.new({ user: User.make, user_email: 'email' }) }
     let(:purger) { ServiceInstancePurger.new(event_repository) }
 

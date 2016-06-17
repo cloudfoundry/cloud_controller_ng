@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module CloudController
   module Blobstore
-    describe ClientProvider do
+    RSpec.describe ClientProvider do
       let(:options) { { blobstore_type: blobstore_type } }
 
       context 'when no type is requested' do

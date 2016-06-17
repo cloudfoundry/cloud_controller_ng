@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Dea::InstancesReporter do
+  RSpec.describe Dea::InstancesReporter do
     subject { described_class.new(health_manager_client) }
     let(:app) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED') }
     let(:health_manager_client) { double(:health_manager_client) }

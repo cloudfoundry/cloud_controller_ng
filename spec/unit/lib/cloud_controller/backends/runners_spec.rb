@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/diego/process_guid'
 
 module VCAP::CloudController
-  describe Runners do
+  RSpec.describe Runners do
     let(:config) do
       {
           staging: {

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe PackageDockerDataModel do
+  RSpec.describe PackageDockerDataModel do
     describe 'associations' do
       let(:package) { PackageModel.make }
 

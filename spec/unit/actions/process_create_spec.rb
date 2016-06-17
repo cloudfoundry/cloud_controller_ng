@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/process_create'
 
 module VCAP::CloudController
-  describe ProcessCreate do
+  RSpec.describe ProcessCreate do
     subject(:process_create) { described_class.new(user_guid, user_email) }
     let(:app) { AppModel.make }
     let(:user_guid) { 'user-guid' }

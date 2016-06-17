@@ -2,7 +2,7 @@ require 'membrane'
 require 'ext/validation_error_message_overrides'
 require 'vcap/rest_api/message'
 
-describe ::Membrane::Schemas::Regexp::MatchValidator do
+RSpec.describe ::Membrane::Schemas::Regexp::MatchValidator do
   describe '#fail' do
     let(:object) { 'some-string' }
 

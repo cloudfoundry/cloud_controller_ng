@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Droplet, type: :model do
+  RSpec.describe VCAP::CloudController::Droplet, type: :model do
     let(:app) do
       AppFactory.make(droplet_hash: nil)
     end

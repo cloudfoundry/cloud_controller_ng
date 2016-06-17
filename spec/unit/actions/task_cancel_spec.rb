@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/task_cancel'
 
 module VCAP::CloudController
-  describe TaskCancel do
+  RSpec.describe TaskCancel do
     describe '#cancel' do
       subject(:task_cancel) { described_class.new }
 

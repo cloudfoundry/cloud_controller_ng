@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/diego/staging_guid'
 
 module VCAP::CloudController::Diego
-  describe StagingGuid do
+  RSpec.describe StagingGuid do
     let(:app) do
       VCAP::CloudController::AppFactory.make(staging_task_id: Sham.guid)
     end

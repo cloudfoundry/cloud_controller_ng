@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::Services::SSO::UAA
-  describe UaaClientManager do
+  RSpec.describe UaaClientManager do
     let(:dashboard_client_hash) do
       {
         'id' => 'client-id',

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::OrganizationSummariesController do
+  RSpec.describe VCAP::CloudController::OrganizationSummariesController do
     num_spaces = 2
     num_services = 2
     num_prod_apps = 3

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AppUsageEventsController do
+  RSpec.describe AppUsageEventsController do
     before do
       @event1 = AppUsageEvent.make
       set_current_user_as_admin

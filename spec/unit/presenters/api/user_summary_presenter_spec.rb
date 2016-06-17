@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe UserSummaryPresenter do
+RSpec.describe UserSummaryPresenter do
   describe '#to_hash' do
     let(:org) { VCAP::CloudController::Organization.make }
     let(:managed_org) { VCAP::CloudController::Organization.make }

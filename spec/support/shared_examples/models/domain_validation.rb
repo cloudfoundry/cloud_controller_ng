@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  shared_examples_for 'domain validation' do
+  RSpec.shared_examples_for 'domain validation' do
     context 'when the name is not present' do
       before { subject.name = nil }
 

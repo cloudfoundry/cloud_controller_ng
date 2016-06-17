@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ManagedServiceInstance, type: :model do
+  RSpec.describe ManagedServiceInstance, type: :model do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
     let(:email) { Sham.email }
     let(:guid) { Sham.guid }

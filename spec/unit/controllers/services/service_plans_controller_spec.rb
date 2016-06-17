@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServicePlansController, :services do
+  RSpec.describe ServicePlansController, :services do
     shared_examples 'enumerate and read plan only' do |perm_name|
       include_examples 'permission enumeration', perm_name,
         name: 'service plan',

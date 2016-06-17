@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe IntegerArraySerializer do
+  RSpec.describe IntegerArraySerializer do
     it 'should register with sequel' do
       expect(Sequel::Plugins::Serialization).to receive(:register_format)
       class Foo; extend IntegerArraySerializer; end

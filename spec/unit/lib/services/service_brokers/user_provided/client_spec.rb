@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::Services
-  describe ServiceBrokers::UserProvided::Client do
+  RSpec.describe ServiceBrokers::UserProvided::Client do
     subject(:client) { ServiceBrokers::UserProvided::Client.new }
 
     describe '#provision' do

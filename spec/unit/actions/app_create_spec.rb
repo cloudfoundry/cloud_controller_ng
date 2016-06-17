@@ -3,7 +3,7 @@ require 'messages/app_create_message'
 require 'cloud_controller/diego/lifecycles/app_buildpack_lifecycle'
 
 module VCAP::CloudController
-  describe AppCreate do
+  RSpec.describe AppCreate do
     let(:user) { double(:user, guid: 'single') }
     let(:user_email) { 'user-email' }
     subject(:app_create) { AppCreate.new(user, user_email) }

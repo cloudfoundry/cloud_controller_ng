@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'vcap/uaa_verification_key'
 
 module VCAP
-  describe UaaVerificationKey do
+  RSpec.describe UaaVerificationKey do
     subject { described_class.new(config_hash[:verification_key], uaa_info) }
 
     let(:config_hash) do

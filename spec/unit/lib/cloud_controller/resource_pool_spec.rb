@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::ResourcePool do
+  RSpec.describe VCAP::CloudController::ResourcePool do
     include_context 'resource pool'
 
     describe '#match_resources' do

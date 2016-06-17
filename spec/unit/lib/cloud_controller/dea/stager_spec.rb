@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Dea
-    describe Stager do
+    RSpec.describe Stager do
       let(:config) do
         instance_double(Config)
       end

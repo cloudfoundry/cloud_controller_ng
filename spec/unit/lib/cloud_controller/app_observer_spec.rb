@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AppObserver do
+  RSpec.describe AppObserver do
     let(:stagers) { double(:stagers, stager_for_app: stager) }
     let(:runners) { instance_double(Runners, runner_for_app: runner) }
     let(:stager) { double(:stager) }

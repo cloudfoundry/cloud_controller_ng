@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe BitsExpiration do
+  RSpec.describe BitsExpiration do
     before do
       allow(Config).to receive(:config) { config }
     end

@@ -3,7 +3,7 @@ require 'cloud_controller/diego/lifecycles/app_buildpack_lifecycle'
 require_relative 'app_lifecycle_shared'
 
 module VCAP::CloudController
-  describe AppBuildpackLifecycle do
+  RSpec.describe AppBuildpackLifecycle do
     subject(:lifecycle) { AppBuildpackLifecycle.new(message) }
     let(:message) { VCAP::CloudController::AppCreateMessage.new(request) }
     let(:request) { { lifecycle: { type: 'buildpack', data: lifecycle_request_data } } }

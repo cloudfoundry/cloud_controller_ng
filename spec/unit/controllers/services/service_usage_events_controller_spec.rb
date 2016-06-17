@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceUsageEventsController do
+  RSpec.describe ServiceUsageEventsController do
     let(:event_guid1) { SecureRandom.uuid }
 
     describe 'Query Parameters' do

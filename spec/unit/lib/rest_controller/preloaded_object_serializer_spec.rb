@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe RestController::PreloadedObjectSerializer do
+  RSpec.describe RestController::PreloadedObjectSerializer do
     describe '#serialize' do
       let(:object) { double(:object) }
       let(:presenter) { instance_double(::CloudController::Presenters::V2::DefaultPresenter, to_hash: serialized_object) }

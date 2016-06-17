@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Diego
     module Buildpack
-      describe BuildpackEntryGenerator do
+      RSpec.describe BuildpackEntryGenerator do
         subject(:buildpack_entry_generator) { BuildpackEntryGenerator.new(blobstore_url_generator) }
         let(:app) { AppFactory.make(command: '/a/custom/command') }
 

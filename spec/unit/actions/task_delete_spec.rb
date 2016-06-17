@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/task_delete'
 
 module VCAP::CloudController
-  describe TaskDelete do
+  RSpec.describe TaskDelete do
     describe '#delete' do
       subject(:task_delete) { described_class.new('user-guid', 'user@example.com') }
 

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe QuotaDefinitionPresenter do
+RSpec.describe QuotaDefinitionPresenter do
   describe '#to_hash' do
     let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make }
     subject { QuotaDefinitionPresenter.new(quota_definition) }

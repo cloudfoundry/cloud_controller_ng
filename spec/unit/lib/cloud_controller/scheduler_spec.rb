@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/scheduler'
 
 module VCAP::CloudController
-  describe Scheduler do
+  RSpec.describe Scheduler do
     describe '#start' do
       subject(:schedule) { Scheduler.new(config) }
 

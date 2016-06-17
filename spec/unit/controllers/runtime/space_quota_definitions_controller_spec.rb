@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::SpaceQuotaDefinitionsController do
+  RSpec.describe VCAP::CloudController::SpaceQuotaDefinitionsController do
     before { set_current_user_as_admin }
 
     describe 'Attributes' do

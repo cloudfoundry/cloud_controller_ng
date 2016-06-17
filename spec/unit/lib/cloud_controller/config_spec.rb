@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Config do
+  RSpec.describe Config do
     let(:message_bus) { Config.message_bus }
 
     describe '.from_file' do

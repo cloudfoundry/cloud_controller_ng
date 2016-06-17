@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'nats/client'
 require 'json'
 
-describe 'NATS', type: :integration do
+RSpec.describe 'NATS', type: :integration do
   before(:all) do
     start_nats debug: false, port: 4223
     start_cc debug: false, config: 'spec/fixtures/config/non_default_message_bus.yml'

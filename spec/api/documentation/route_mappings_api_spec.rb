@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Routes Mapping', type: [:api, :legacy_api] do
+RSpec.resource 'Routes Mapping', type: [:api, :legacy_api] do
   let!(:app_obj) { VCAP::CloudController::AppFactory.make(diego: true, ports: [8888, 8889]) }
   let!(:route) { VCAP::CloudController::Route.make(space: app_obj.space) }
 

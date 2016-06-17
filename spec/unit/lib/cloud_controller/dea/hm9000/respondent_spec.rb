@@ -4,7 +4,7 @@ require 'cloud_controller/dea/hm9000/respondent'
 module VCAP::CloudController
   module Dea
     module HM9000
-      describe Respondent do
+      RSpec.describe Respondent do
         let(:message_bus) { CfMessageBus::MockMessageBus.new }
         let(:dea_client) { double(VCAP::CloudController::Dea::Client) }
 

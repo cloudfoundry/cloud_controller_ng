@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'queries/process_fetcher'
 
 module VCAP::CloudController
-  describe ProcessFetcher do
+  RSpec.describe ProcessFetcher do
     subject(:fetcher) { described_class.new }
 
     describe '#fetch' do

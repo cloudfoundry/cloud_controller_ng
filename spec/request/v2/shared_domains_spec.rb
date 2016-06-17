@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'SharedDomains' do
+RSpec.describe 'SharedDomains' do
   let(:user) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }
 

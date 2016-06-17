@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe DiegoToDeaPolicy do
+RSpec.describe DiegoToDeaPolicy do
   let(:app_hash) do
     {
       name: 'test',

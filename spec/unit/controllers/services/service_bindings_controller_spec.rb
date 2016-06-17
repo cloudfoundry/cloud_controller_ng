@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceBindingsController do
+  RSpec.describe ServiceBindingsController do
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:app_guid) }
       it { expect(described_class).to be_queryable_by(:service_instance_guid) }

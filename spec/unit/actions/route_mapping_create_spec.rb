@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe RouteMappingCreate do
+  RSpec.describe RouteMappingCreate do
     let(:route_mapping_create) { described_class.new(user, user_email, app, route, process, message) }
     let(:space) { app.space }
     let(:app) { AppModel.make }

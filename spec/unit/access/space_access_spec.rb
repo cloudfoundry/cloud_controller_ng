@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe SpaceAccess, type: :access do
+  RSpec.describe SpaceAccess, type: :access do
     subject(:access) { SpaceAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
     let(:org) { VCAP::CloudController::Organization.make }

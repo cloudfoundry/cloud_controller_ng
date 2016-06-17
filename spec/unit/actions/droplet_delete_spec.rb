@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/droplet_delete'
 
 module VCAP::CloudController
-  describe DropletDelete do
+  RSpec.describe DropletDelete do
     let(:user) { User.make }
     let(:user_email) { 'user@example.com' }
 

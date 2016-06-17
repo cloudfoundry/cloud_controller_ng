@@ -26,7 +26,7 @@ module VCAP::CloudController
     validates_with CompleteValidator
   end
 
-  describe NestedMessageValidator do
+  RSpec.describe NestedMessageValidator do
     context 'is an abstract interface' do
       describe 'when it is subclassed' do
         let(:incomplete_validator)  { IncompleteValidator.new }

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe EnvironmentVariableGroupAccess, type: :access do
+  RSpec.describe EnvironmentVariableGroupAccess, type: :access do
     subject(:access) { EnvironmentVariableGroupAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
     let(:user) { VCAP::CloudController::User.make }

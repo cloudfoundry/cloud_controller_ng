@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe SpaceReservedRoutePorts do
+  RSpec.describe SpaceReservedRoutePorts do
     let(:organization) { Organization.make }
     let(:space_quota) { SpaceQuotaDefinition.make(organization: organization) }
     let(:space) { Space.make(organization: organization, space_quota_definition: space_quota) }

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Diego
-    describe EgressRules do
+    RSpec.describe EgressRules do
       subject(:egress_rules) { described_class.new }
 
       describe '#staging' do

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Cloud Controller', type: :integration do
+RSpec.describe 'Cloud Controller', type: :integration do
   before(:all) do
     start_nats
     start_cc

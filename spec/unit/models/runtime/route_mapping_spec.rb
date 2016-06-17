@@ -1,6 +1,6 @@
 require 'spec_helper'
 module VCAP::CloudController
-  describe VCAP::CloudController::RouteMapping, type: :model do
+  RSpec.describe VCAP::CloudController::RouteMapping, type: :model do
     let(:mapping) { RouteMapping.new }
     let(:space) { Space.make }
     it { is_expected.to have_timestamp_columns }

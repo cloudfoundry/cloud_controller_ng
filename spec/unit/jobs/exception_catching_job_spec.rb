@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs
-    describe ExceptionCatchingJob do
+    RSpec.describe ExceptionCatchingJob do
       subject(:exception_catching_job) do
         ExceptionCatchingJob.new(handler)
       end

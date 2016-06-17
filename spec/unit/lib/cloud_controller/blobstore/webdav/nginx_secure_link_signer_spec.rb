@@ -3,7 +3,7 @@ require 'cloud_controller/blobstore/webdav/nginx_secure_link_signer'
 
 module CloudController
   module Blobstore
-    describe NginxSecureLinkSigner do
+    RSpec.describe NginxSecureLinkSigner do
       subject(:signer) do
         described_class.new(
           internal_endpoint:    internal_endpoint,

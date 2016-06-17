@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Dea::StagingMessage do
+  RSpec.describe Dea::StagingMessage do
     let(:blobstore_url_generator) { CloudController::DependencyLocator.instance.blobstore_url_generator }
     let(:config_hash) { { staging: { timeout_in_seconds: 360 } } }
     let(:task_id) { 'somthing' }

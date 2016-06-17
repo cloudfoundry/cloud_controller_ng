@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AppCrashedController do
+  RSpec.describe AppCrashedController do
     let(:diego_app) do
       AppFactory.make.tap do |app|
         app.package_state = 'PENDING'

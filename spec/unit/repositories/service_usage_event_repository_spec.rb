@@ -3,7 +3,7 @@ require 'repositories/service_usage_event_repository'
 
 module VCAP::CloudController
   module Repositories
-    describe ServiceUsageEventRepository do
+    RSpec.describe ServiceUsageEventRepository do
       let(:guid_pattern) { '[[:alnum:]-]+' }
 
       subject(:repository) do

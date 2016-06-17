@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe EgressNetworkRulesPresenter do
+  RSpec.describe EgressNetworkRulesPresenter do
     let(:sg1) { SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '8080', 'destination' => '198.41.191.47/1' }]) }
     let(:sg2) { SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '9090', 'destination' => '198.41.191.48/1', 'log' => true }]) }
     let(:sg3) { SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '1010', 'destination' => '198.41.191.49/1' }]) }

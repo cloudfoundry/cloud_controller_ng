@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe BackgroundJobEnvironment do
+RSpec.describe BackgroundJobEnvironment do
   let(:bg_config) { { db: 'cc-db', logging: { level: 'debug2' } } }
   subject(:background_job_environment) { described_class.new(bg_config) }
 

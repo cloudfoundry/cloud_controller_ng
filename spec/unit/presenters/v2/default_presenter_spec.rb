@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module CloudController::Presenters::V2
-  describe DefaultPresenter do
+  RSpec.describe DefaultPresenter do
     subject { described_class.new }
 
     let(:controller) { 'controller' }

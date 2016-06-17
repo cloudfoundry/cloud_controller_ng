@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceDashboardClient do
+  RSpec.describe ServiceDashboardClient do
     let(:service_broker) { ServiceBroker.make }
     let(:other_broker) { ServiceBroker.make }
     let(:uaa_id) { 'claimed_client_id' }

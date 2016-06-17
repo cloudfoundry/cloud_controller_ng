@@ -1,6 +1,6 @@
 require 'utils/hash_utils'
 
-describe HashUtils do
+RSpec.describe HashUtils do
   describe 'dig' do
     it 'returns nested value' do
       hash = { foo: { bar: { baz: { qux: true } } } }

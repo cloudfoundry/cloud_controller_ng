@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Event, type: :model do
+  RSpec.describe Event, type: :model do
     let(:space) { Space.make }
 
     let(:event) do

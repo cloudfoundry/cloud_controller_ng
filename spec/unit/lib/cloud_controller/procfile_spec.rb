@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Procfile do
+  RSpec.describe Procfile do
     describe '.load' do
       it 'loads a procfile into a hash' do
         hash = Procfile.load('a: command')

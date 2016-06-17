@@ -3,7 +3,7 @@ require 'membrane'
 
 module VCAP::CloudController
   module Dea
-    describe StagingCompletionController do
+    RSpec.describe StagingCompletionController do
       let(:buildpack) { Buildpack.make }
       let(:buildpack_key) { buildpack.key }
       let(:detected_buildpack) { 'detected_buildpack' }

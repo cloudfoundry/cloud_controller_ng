@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/process_delete'
 
 module VCAP::CloudController
-  describe ProcessDelete do
+  RSpec.describe ProcessDelete do
     subject(:process_delete) { described_class.new(user_guid, user_email) }
     let(:user_guid) { 'user-guid' }
     let(:user_email) { 'user@example.com' }

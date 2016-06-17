@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/tasks_list_message'
 
 module VCAP::CloudController
-  describe TasksListMessage do
+  RSpec.describe TasksListMessage do
     describe '.from_params' do
       let(:params) do
         {

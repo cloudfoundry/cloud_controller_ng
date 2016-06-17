@@ -5,7 +5,7 @@ require 'cloud_controller/diego/docker/staging_completion_handler'
 module VCAP::CloudController
   module Diego
     module Docker
-      describe StagingCompletionHandler do
+      RSpec.describe StagingCompletionHandler do
         let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
         let(:runner) { instance_double(Diego::Runner, start: nil) }
         let(:runners) { instance_double(Runners, runner_for_app: runner) }

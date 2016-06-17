@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Buildpack, type: :model do
+  RSpec.describe Buildpack, type: :model do
     def ordered_buildpacks
       Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
     end

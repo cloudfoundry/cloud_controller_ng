@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    describe AppBitsCopier do
+    RSpec.describe AppBitsCopier do
       let(:src_app) { VCAP::CloudController::AppFactory.make }
       let(:dest_app) { VCAP::CloudController::AppFactory.make }
       let(:compressed_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }

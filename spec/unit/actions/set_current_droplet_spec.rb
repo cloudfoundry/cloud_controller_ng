@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/app_update'
 
 module VCAP::CloudController
-  describe SetCurrentDroplet do
+  RSpec.describe SetCurrentDroplet do
     let(:app_model) { AppModel.make }
     let(:user) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }

@@ -3,7 +3,7 @@ require 'request_logs'
 
 module CloudFoundry
   module Middleware
-    describe RequestLogs do
+    RSpec.describe RequestLogs do
       let(:middleware) { described_class.new(app, logger) }
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:logger) { double('logger', info: nil) }

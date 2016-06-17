@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    describe BlobstoreUpload do
+    RSpec.describe BlobstoreUpload do
       let(:local_file) { Tempfile.new('tmpfile') }
       let(:blobstore_key) { 'key' }
       let(:blobstore_name) { :droplet_blobstore }

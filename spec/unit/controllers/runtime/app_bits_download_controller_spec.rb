@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AppBitsDownloadController do
+  RSpec.describe AppBitsDownloadController do
     describe 'GET /v2/app/:id/download' do
       let(:app_obj) { AppFactory.make }
       let(:user) { make_user_for_space(app_obj.space) }

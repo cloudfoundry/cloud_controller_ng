@@ -1,7 +1,7 @@
 require 'cloud_controller/domain_helper'
 
 module CloudController
-  describe DomainHelper do
+  RSpec.describe DomainHelper do
     describe '.intermediate_domains' do
       # TODO: (pego): not sure this is really what we want or if we want this to raise an error
       it 'returns an empty array if the name is nil' do

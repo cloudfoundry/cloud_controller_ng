@@ -3,7 +3,7 @@ require 'presenters/system_env_presenter'
 require_relative '../../../../../lib/vcap/vars_builder'
 
 module VCAP::CloudController::Diego
-  describe Environment do
+  RSpec.describe Environment do
     let(:app) { VCAP::CloudController::AppFactory.make }
     let!(:binding) { VCAP::CloudController::ServiceBinding.make(app: app, service_instance: VCAP::CloudController::ManagedServiceInstance.make(space: app.space)) }
     before do

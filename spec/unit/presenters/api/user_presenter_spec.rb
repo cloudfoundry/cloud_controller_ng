@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe UserPresenter do
+RSpec.describe UserPresenter do
   describe '#to_hash' do
     let(:user) { VCAP::CloudController::User.make(admin: true) }
     subject { UserPresenter.new(user) }

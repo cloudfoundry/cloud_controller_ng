@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::BuildpacksController do
+  RSpec.describe VCAP::CloudController::BuildpacksController do
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:name) }
     end

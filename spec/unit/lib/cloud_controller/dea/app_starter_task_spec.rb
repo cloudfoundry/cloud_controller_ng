@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Dea::AppStarterTask do
+  RSpec.describe Dea::AppStarterTask do
     let(:num_service_instances) { 3 }
     let(:app) do
       AppFactory.make.tap do |app|

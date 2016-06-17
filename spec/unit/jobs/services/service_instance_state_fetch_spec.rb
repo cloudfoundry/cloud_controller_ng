@@ -4,7 +4,7 @@ require 'jobs/services/service_instance_state_fetch'
 module VCAP::CloudController
   module Jobs
     module Services
-      describe ServiceInstanceStateFetch do
+      RSpec.describe ServiceInstanceStateFetch do
         let(:broker) { ServiceBroker.make }
         let(:client_attrs) do
           {

@@ -3,7 +3,7 @@ require 'repositories/app_usage_event_repository'
 
 module VCAP::CloudController
   module Repositories
-    describe AppUsageEventRepository do
+    RSpec.describe AppUsageEventRepository do
       subject(:repository) do
         AppUsageEventRepository.new
       end

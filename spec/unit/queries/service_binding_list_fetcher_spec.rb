@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'queries/service_binding_list_fetcher'
 
 module VCAP::CloudController
-  describe ServiceBindingListFetcher do
+  RSpec.describe ServiceBindingListFetcher do
     let(:fetcher) { ServiceBindingListFetcher.new(message) }
     let(:message) { ServiceBindingsListMessage.new(filters) }
     let(:filters) { {} }

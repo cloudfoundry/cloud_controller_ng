@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::CrashesController do
+  RSpec.describe VCAP::CloudController::CrashesController do
     describe 'GET /v2/apps/:id/crashes' do
       before :each do
         @app = AppFactory.make

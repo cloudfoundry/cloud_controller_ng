@@ -6,7 +6,7 @@ module VCAP::CloudController
   module Diego
     module V3
       module Docker
-        describe StagingCompletionHandler do
+        RSpec.describe StagingCompletionHandler do
           let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
           let(:droplet) { DropletModel.make }
 

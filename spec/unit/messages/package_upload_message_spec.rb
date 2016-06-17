@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/package_upload_message'
 
 module VCAP::CloudController
-  describe PackageUploadMessage do
+  RSpec.describe PackageUploadMessage do
     context 'when the path is not provided' do
       let(:opts) { {} }
       it 'is not valid' do

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Domain do
+  RSpec.describe Domain do
     it { is_expected.to have_timestamp_columns }
 
     it 'cannot create top level domains' do

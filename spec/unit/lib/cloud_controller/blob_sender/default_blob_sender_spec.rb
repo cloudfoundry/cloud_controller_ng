@@ -3,7 +3,7 @@ require 'cloud_controller/blob_sender/default_blob_sender'
 
 module CloudController
   module BlobSender
-    describe DefaultLocalBlobSender do
+    RSpec.describe DefaultLocalBlobSender do
       subject(:sender) do
         DefaultLocalBlobSender.new
       end

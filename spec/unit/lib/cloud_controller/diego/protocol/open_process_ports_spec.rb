@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Diego
     class Protocol
-      describe OpenProcessPorts do
+      RSpec.describe OpenProcessPorts do
         describe '#to_a' do
           let(:process) do
             AppFactory.make(

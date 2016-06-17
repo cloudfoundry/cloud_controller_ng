@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/packages_list_message'
 
 module VCAP::CloudController
-  describe PackagesListMessage do
+  RSpec.describe PackagesListMessage do
     describe '.from_params' do
       let(:params) do
         {

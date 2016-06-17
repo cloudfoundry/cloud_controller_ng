@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe SyslogDrainUrlsController do
+  RSpec.describe SyslogDrainUrlsController do
     let(:bulk_user) { 'bulk_user' }
     let(:bulk_password) { 'bulk_password' }
     let(:app_obj) { AppFactory.make }

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    describe DropletUpload do
+    RSpec.describe DropletUpload do
       let(:app) { App.make }
       let(:file_content) { 'some_file_content' }
       let(:message_bus) { CfMessageBus::MockMessageBus.new }

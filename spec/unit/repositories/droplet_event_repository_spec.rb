@@ -3,7 +3,7 @@ require 'repositories/droplet_event_repository'
 
 module VCAP::CloudController
   module Repositories
-    describe DropletEventRepository do
+    RSpec.describe DropletEventRepository do
       let(:app) { AppModel.make(name: 'popsicle') }
       let(:user) { User.make }
       let(:package) { PackageModel.make(app_guid: app.guid) }

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe PrivateDomain, type: :model do
+  RSpec.describe PrivateDomain, type: :model do
     let(:private_domain) { described_class.make name: 'test.example.com' }
     let(:reserved) { nil }
 

@@ -5,7 +5,7 @@ require 'cloud_controller/blobstore/null_client'
 
 module CloudController
   module Blobstore
-    describe ErrorHandlingClient do
+    RSpec.describe ErrorHandlingClient do
       subject(:client) { ErrorHandlingClient.new(wrapped_client) }
       let(:wrapped_client) { Blobstore::NullClient.new }
 

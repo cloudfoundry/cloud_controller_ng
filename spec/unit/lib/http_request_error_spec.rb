@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe HttpRequestError do
+RSpec.describe HttpRequestError do
   let(:endpoint) { 'http://www.example.com/' }
   let(:nested_exception) { SocketError.new }
 

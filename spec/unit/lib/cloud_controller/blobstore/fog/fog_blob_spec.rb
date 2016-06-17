@@ -3,7 +3,7 @@ require_relative '../blob_shared'
 
 module CloudController
   module Blobstore
-    describe FogBlob do
+    RSpec.describe FogBlob do
       subject(:blob) do
         described_class.new(file, cdn)
       end

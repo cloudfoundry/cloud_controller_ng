@@ -4,7 +4,7 @@ require_relative 'client_shared'
 
 module CloudController
   module Blobstore
-    describe NullClient do
+    RSpec.describe NullClient do
       subject(:client) { NullClient.new }
       let(:deletable_blob) { instance_double(Blob) }
 

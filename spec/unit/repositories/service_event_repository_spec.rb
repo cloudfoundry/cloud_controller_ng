@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Repositories
-    describe ServiceEventRepository do
+    RSpec.describe ServiceEventRepository do
       let(:user) { VCAP::CloudController::User.make }
       let(:email) { 'email@example.com' }
       let(:logger) { double(:logger, error: nil) }

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AppLifecycleProvider do
+  RSpec.describe AppLifecycleProvider do
     describe '#provide_for_create' do
       let(:message) { AppCreateMessage.new(request) }
 

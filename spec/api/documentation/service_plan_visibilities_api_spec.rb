@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Service Plan Visibilities', type: [:api, :legacy_api] do
+RSpec.resource 'Service Plan Visibilities', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:service_plan_visibility) { VCAP::CloudController::ServicePlanVisibility.make }
   let(:guid) { service_plan_visibility.guid }

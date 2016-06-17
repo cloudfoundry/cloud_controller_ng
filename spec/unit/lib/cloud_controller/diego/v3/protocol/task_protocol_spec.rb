@@ -6,7 +6,7 @@ module VCAP::CloudController
   module Diego
     module V3
       module Protocol
-        describe TaskProtocol do
+        RSpec.describe TaskProtocol do
           let(:default_health_check_timeout) { 99 }
           let(:egress_rules) { double(:egress_rules) }
 

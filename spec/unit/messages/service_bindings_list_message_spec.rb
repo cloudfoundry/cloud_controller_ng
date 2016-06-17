@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/service_bindings_list_message'
 
 module VCAP::CloudController
-  describe ServiceBindingsListMessage do
+  RSpec.describe ServiceBindingsListMessage do
     describe '.from_params' do
       let(:params) do
         {

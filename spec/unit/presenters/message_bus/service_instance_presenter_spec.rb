@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'presenters/message_bus/service_instance_presenter'
 
-describe ServiceInstancePresenter do
+RSpec.describe ServiceInstancePresenter do
   describe '#to_hash' do
     subject { ServiceInstancePresenter.new(service_instance).to_hash }
 

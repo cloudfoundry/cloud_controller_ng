@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'presenters/v3/app_env_presenter'
 
 module VCAP::CloudController::Presenters::V3
-  describe AppEnvPresenter do
+  RSpec.describe AppEnvPresenter do
     let(:app) do
       VCAP::CloudController::AppModel.make(
         created_at: Time.at(1),

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Droplets' do
+RSpec.describe 'Droplets' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
   let(:developer) { make_developer_for_space(space) }

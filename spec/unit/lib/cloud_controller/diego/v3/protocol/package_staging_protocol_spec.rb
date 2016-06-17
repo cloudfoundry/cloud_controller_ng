@@ -12,13 +12,13 @@ module VCAP::CloudController
           end
         end
 
-        describe FakeLifecycleProtocol do
+        RSpec.describe FakeLifecycleProtocol do
           let(:lifecycle_protocol) { FakeLifecycleProtocol.new }
 
           it_behaves_like 'a v3 lifecycle protocol'
         end
 
-        describe PackageStagingProtocol do
+        RSpec.describe PackageStagingProtocol do
           let(:default_health_check_timeout) { 99 }
           let(:egress_rules) { double(:egress_rules) }
           let(:lifecycle_type) { 'dev/null' }

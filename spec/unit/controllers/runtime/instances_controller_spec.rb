@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::InstancesController do
+  RSpec.describe VCAP::CloudController::InstancesController do
     let(:instances_reporters) { double(:instances_reporters) }
     let(:index_stopper) { double(:index_stopper) }
 

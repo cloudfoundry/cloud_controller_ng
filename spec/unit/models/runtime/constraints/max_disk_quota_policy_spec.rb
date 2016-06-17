@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe MaxDiskQuotaPolicy do
+RSpec.describe MaxDiskQuotaPolicy do
   let(:app) { VCAP::CloudController::AppFactory.make }
   let(:max_mb) { 10 }
 

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe MaxReservedRoutePortsPolicy do
+  RSpec.describe MaxReservedRoutePortsPolicy do
     let(:quota_definition) do
       instance_double(VCAP::CloudController::QuotaDefinition,
                       total_reserved_route_ports: 4,

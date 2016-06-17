@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe BuildpacksCacheController do
+  RSpec.describe BuildpacksCacheController do
     describe 'DELETE /v2/blobstores/buildpack_cache' do
       before { set_current_user_as_admin }
 

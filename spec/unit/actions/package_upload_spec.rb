@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/package_upload'
 
 module VCAP::CloudController
-  describe PackageUpload do
+  RSpec.describe PackageUpload do
     subject(:package_upload) { PackageUpload.new(user_guid, user_email) }
     let(:user_guid) { 'gooid' }
     let(:user_email) { 'utako.loves@cats.com' }

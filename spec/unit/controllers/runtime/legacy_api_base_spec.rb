@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::LegacyApiBase do
+  RSpec.describe VCAP::CloudController::LegacyApiBase do
     let(:user) { User.make(admin: true, active: true) }
     let(:logger) { Steno.logger('vcap_spec') }
     let(:fake_req) { '' }

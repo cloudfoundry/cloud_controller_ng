@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/droplet_copy'
 
 module VCAP::CloudController
-  describe DropletCopy do
+  RSpec.describe DropletCopy do
     let(:droplet_copy) { DropletCopy.new(source_droplet) }
     let(:source_space) { VCAP::CloudController::Space.make }
     let(:target_app) { VCAP::CloudController::AppModel.make(name: 'target-app-name') }

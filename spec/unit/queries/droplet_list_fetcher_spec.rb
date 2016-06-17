@@ -3,7 +3,7 @@ require 'queries/droplet_list_fetcher'
 require 'messages/droplets_list_message'
 
 module VCAP::CloudController
-  describe DropletListFetcher do
+  RSpec.describe DropletListFetcher do
     subject(:fetcher) { described_class.new(message: message) }
     let(:pagination_options) { PaginationOptions.new({}) }
     let(:message) { DropletsListMessage.new(filters) }

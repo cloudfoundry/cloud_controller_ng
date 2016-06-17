@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'presenters/v3/pagination_presenter'
 
 module VCAP::CloudController::Presenters::V3
-  describe PaginationPresenter do
+  RSpec.describe PaginationPresenter do
     let(:presenter) { PaginationPresenter.new }
 
     it 'has consistent presentation' do

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/process_update_message'
 
 module VCAP::CloudController
-  describe ProcessUpdateMessage do
+  RSpec.describe ProcessUpdateMessage do
     describe '.create_from_http_request' do
       let(:body) { { 'command' => 'foo' } }
 

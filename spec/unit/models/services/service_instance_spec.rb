@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceInstance, type: :model do
+  RSpec.describe ServiceInstance, type: :model do
     let(:service_instance_attrs)  do
       {
         name: 'my favorite service',

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe RouteMappingValidator do
+  RSpec.describe RouteMappingValidator do
     let(:app) { AppFactory.make }
     let(:tcp_domain) { SharedDomain.make(router_group_guid: 'router-group-guid') }
     let(:domain) { SharedDomain.make }

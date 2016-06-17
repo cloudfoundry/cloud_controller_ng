@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module CloudController
   module BlobSender
-    describe NginxLocalBlobSender do
+    RSpec.describe NginxLocalBlobSender do
       subject(:sender) do
         described_class.new
       end

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Dea::AppStagerTask do
+  RSpec.describe Dea::AppStagerTask do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:dea_pool) { double(:dea_pool, reserve_app_memory: nil) }
     let(:config_hash) { { staging: { timeout_in_seconds: 360 } } }

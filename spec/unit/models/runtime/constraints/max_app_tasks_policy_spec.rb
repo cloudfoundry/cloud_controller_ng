@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe MaxAppTasksPolicy do
+RSpec.describe MaxAppTasksPolicy do
   let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make(app_task_limit: 1) }
   let(:org) { space.organization }
   let(:space) { VCAP::CloudController::Space.make }

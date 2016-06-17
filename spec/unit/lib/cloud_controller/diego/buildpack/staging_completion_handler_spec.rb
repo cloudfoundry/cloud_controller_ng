@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/diego/staging_guid'
 
 module VCAP::CloudController
-  describe Diego::Buildpack::StagingCompletionHandler do
+  RSpec.describe Diego::Buildpack::StagingCompletionHandler do
     let(:diego) { false }
     let(:staged_app) { App.make(instances: 3, staging_task_id: 'the-staging-task-id', diego: diego) }
     let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }

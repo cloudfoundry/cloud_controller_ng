@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rails_helper'
 
-describe ApplicationController, type: :controller do
+RSpec.describe ApplicationController, type: :controller do
   RSpec::Matchers.define_negated_matcher :not_change, :change
 
   controller do

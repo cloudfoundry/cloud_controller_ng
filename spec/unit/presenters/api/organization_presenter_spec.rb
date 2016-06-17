@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe OrganizationPresenter do
+RSpec.describe OrganizationPresenter do
   describe '#to_hash' do
     let(:org) { VCAP::CloudController::Organization.make }
     before do

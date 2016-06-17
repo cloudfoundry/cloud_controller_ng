@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/metrics/request_metrics'
 
 module VCAP::CloudController::Metrics
-  describe RequestMetrics do
+  RSpec.describe RequestMetrics do
     let(:statsd_client) { double(:statsd_client) }
     let!(:request_metrics) { RequestMetrics.new(statsd_client) } # varz is initialized on create so force the new first
 

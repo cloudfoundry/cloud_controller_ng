@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/seeds'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Seeds do
+  RSpec.describe VCAP::CloudController::Seeds do
     let(:config) { TestConfig.config.clone }
 
     describe '.create_seed_stacks' do

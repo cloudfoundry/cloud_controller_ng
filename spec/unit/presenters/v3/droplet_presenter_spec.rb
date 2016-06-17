@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'presenters/v3/droplet_presenter'
 
 module VCAP::CloudController::Presenters::V3
-  describe DropletPresenter do
+  RSpec.describe DropletPresenter do
     let(:droplet) do
       VCAP::CloudController::DropletModel.make(
         :buildpack,

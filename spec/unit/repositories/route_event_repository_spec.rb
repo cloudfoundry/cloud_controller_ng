@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Repositories
-    describe RouteEventRepository do
+    RSpec.describe RouteEventRepository do
       let(:user) { User.make }
       let(:route) { Route.make }
       let(:request_attrs) { { 'host' => 'dora', 'domain_guid' => route.domain.guid, 'space_guid' => route.space.guid } }

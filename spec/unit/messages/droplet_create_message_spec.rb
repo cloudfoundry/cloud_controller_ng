@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/droplet_create_message'
 
 module VCAP::CloudController
-  describe DropletCreateMessage do
+  RSpec.describe DropletCreateMessage do
     describe '.create_from_http_request' do
       let(:body) { { 'staging_memory_in_mb' => 10 } }
 

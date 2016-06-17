@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe DeserializationRetry do
+RSpec.describe DeserializationRetry do
   context 'when a Delayed::Job fails to load because the class is missing' do
     it 'prevents DelayedJob from marking it as failed' do
       handler = VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(10_000)

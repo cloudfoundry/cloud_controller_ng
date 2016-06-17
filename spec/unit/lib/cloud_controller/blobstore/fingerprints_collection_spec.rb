@@ -3,7 +3,7 @@ require 'cloud_controller/blobstore/fingerprints_collection'
 
 module CloudController
   module Blobstore
-    describe FingerprintsCollection do
+    RSpec.describe FingerprintsCollection do
       let(:unpresented_fingerprints) do
         [
           { 'fn' => 'path/to/file.txt', 'size' => 123, 'sha1' => 'abc' },

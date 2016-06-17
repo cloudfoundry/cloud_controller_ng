@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Runner do
+  RSpec.describe Runner do
     let(:valid_config_file_path) { File.join(Paths::FIXTURES, 'config/minimal_config.yml') }
     let(:config_file) { File.new(valid_config_file_path) }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }

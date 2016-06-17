@@ -4,7 +4,7 @@ require 'cloud_controller/diego/buildpack/lifecycle_data'
 module VCAP::CloudController
   module Diego
     module Buildpack
-      describe LifecycleData do
+      RSpec.describe LifecycleData do
         let(:lifecycle_data) do
           data = LifecycleData.new
           data.app_bits_download_uri = 'app_bits_download'

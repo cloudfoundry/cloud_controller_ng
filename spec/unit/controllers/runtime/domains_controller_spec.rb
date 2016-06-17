@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::DomainsController do
+  RSpec.describe VCAP::CloudController::DomainsController do
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:name) }
       it { expect(described_class).to be_queryable_by(:owning_organization_guid) }
@@ -306,20 +306,20 @@ module VCAP::CloudController
         end
       end
     end
-  end
 
-  describe 'GET /v2/domains/:id/spaces' do
-    let!(:private_domain) { PrivateDomain.make }
-    let!(:space) { Space.make(organization: private_domain.owning_organization) }
+    describe 'GET /v2/domains/:id/spaces' do
+      let!(:private_domain) { PrivateDomain.make }
+      let!(:space) { Space.make(organization: private_domain.owning_organization) }
 
-    before { set_current_user_as_admin }
+      before { set_current_user_as_admin }
 
-    it 'returns the spaces associated with the owning organization' do
-      get "/v2/domains/#{private_domain.guid}/spaces"
-      expect(last_response.status).to eq(200)
-      expect(decoded_response['resources']).to have(1).item
-      expect(decoded_response['resources'][0]['entity']['name']).to eq(space.name)
-      expect(last_response).to be_a_deprecated_response
+      it 'returns the spaces associated with the owning organization' do
+        get "/v2/domains/#{private_domain.guid}/spaces"
+        expect(last_response.status).to eq(200)
+        expect(decoded_response['resources']).to have(1).item
+        expect(decoded_response['resources'][0]['entity']['name']).to eq(space.name)
+        expect(last_response).to be_a_deprecated_response
+      end
     end
   end
 end

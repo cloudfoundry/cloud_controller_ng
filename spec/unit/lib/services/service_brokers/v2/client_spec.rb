@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers::V2
-  describe Client do
+  RSpec.describe Client do
     let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
 
     let(:client_attrs) {

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module CloudController
   module Blobstore
-    describe IdempotentDirectory do
+    RSpec.describe IdempotentDirectory do
       let(:fog_directory) do
         double('Fog::**::Directory')
       end

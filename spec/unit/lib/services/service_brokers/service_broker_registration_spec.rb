@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers
-  describe ServiceBrokerRegistration do
+  RSpec.describe ServiceBrokerRegistration do
     subject(:registration) { ServiceBrokerRegistration.new(broker, service_manager, services_event_repository, false, false) }
 
     let(:client_manager) { instance_double(VCAP::Services::SSO::DashboardClientManager, synchronize_clients_with_catalog: true, warnings: []) }

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/task_create_message'
 
 module VCAP::CloudController
-  describe TaskCreateMessage do
+  RSpec.describe TaskCreateMessage do
     describe '.create_from_http_request' do
       let(:body) do
         {

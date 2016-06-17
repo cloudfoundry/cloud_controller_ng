@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController::Diego
-  describe TPSClient do
+  RSpec.describe TPSClient do
     let(:app) { VCAP::CloudController::AppFactory.make }
     let(:app2) { VCAP::CloudController::AppFactory.make }
 

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/package_copy'
 
 module VCAP::CloudController
-  describe PackageCopy do
+  RSpec.describe PackageCopy do
     let(:package_copy) { PackageCopy.new(user_guid, user_email) }
     let(:user_guid) { 'gooid' }
     let(:user_email) { 'amelia@cats.com' }

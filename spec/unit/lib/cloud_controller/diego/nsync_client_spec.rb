@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/diego/v3/protocol/task_protocol'
 
 module VCAP::CloudController::Diego
-  describe NsyncClient do
+  RSpec.describe NsyncClient do
     let(:content_type_header) { { 'Content-Type' => 'application/json' } }
     let(:app) { VCAP::CloudController::AppFactory.make }
     let(:process_guid) { ProcessGuid.from_process(app) }

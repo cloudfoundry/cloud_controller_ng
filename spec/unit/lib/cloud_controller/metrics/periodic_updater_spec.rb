@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/metrics/periodic_updater'
 
 module VCAP::CloudController::Metrics
-  describe PeriodicUpdater do
+  RSpec.describe PeriodicUpdater do
     let(:periodic_updater) { PeriodicUpdater.new(start_time, log_counter, [updater1, updater2]) }
     let(:updater1) { double(:updater1) }
     let(:updater2) { double(:updater2) }

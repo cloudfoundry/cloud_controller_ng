@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::BuildpackBitsController do
+  RSpec.describe VCAP::CloudController::BuildpackBitsController do
     let(:user) { make_user }
     let(:tmpdir) { Dir.mktmpdir }
     let(:filename) { 'file.zip' }

@@ -6,7 +6,7 @@ require 'cloud_controller/diego/v3/buildpack/staging_completion_handler'
 module VCAP::CloudController
   module Diego
     module V3
-      describe Stager do
+      RSpec.describe Stager do
         let(:messenger) { instance_double(Diego::V3::Messenger) }
         let(:protocol) { instance_double(Diego::V3::Protocol::PackageStagingProtocol) }
         let(:package) { PackageModel.make }

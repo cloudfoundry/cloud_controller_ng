@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Diego
     class Protocol
-      describe ContainerNetworkInfo do
+      RSpec.describe ContainerNetworkInfo do
         subject(:container_info) { ContainerNetworkInfo.new(process).to_h }
         let(:process) { AppFactory.make(diego: true) }
 

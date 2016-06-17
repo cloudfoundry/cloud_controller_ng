@@ -5,7 +5,7 @@ module VCAP
   module CloudController
     module Diego
       module Docker
-        describe LifecycleProtocol do
+        RSpec.describe LifecycleProtocol do
           let(:lifecycle_protocol) { LifecycleProtocol.new }
 
           it_behaves_like 'a lifecycle protocol' do

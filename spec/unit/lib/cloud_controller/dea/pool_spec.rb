@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Dea::Pool do
+  RSpec.describe VCAP::CloudController::Dea::Pool do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:config) { TestConfig.config }
     subject { Dea::Pool.new(config, message_bus) }

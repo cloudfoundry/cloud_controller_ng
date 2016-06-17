@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 require 'uri'
 
-resource 'Service Instances', type: [:api, :legacy_api] do
+RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
   tags = %w(accounting mongodb)
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:service_broker) { VCAP::CloudController::ServiceBroker.make }

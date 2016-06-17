@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe SpaceSummariesController do
+  RSpec.describe SpaceSummariesController do
     let(:space) { Space.make }
     let(:app_obj) { AppFactory.make(space: space) }
     let!(:first_route) { Route.make(space: space, app_guids: [app_obj.guid]) }

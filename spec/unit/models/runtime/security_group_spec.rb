@@ -2,7 +2,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe SecurityGroup, type: :model do
+  RSpec.describe SecurityGroup, type: :model do
     def build_transport_rule(attrs={})
       {
         'protocol' => 'udp',

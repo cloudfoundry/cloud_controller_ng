@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'cloud_controller/dependency_locator'
 
-describe CloudController::DependencyLocator do
+RSpec.describe CloudController::DependencyLocator do
   subject(:locator) { CloudController::DependencyLocator.instance }
 
   let(:config) { TestConfig.config }

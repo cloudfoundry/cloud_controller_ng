@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'presenters/v3/task_presenter'
 
 module VCAP::CloudController::Presenters::V3
-  describe TaskPresenter do
+  RSpec.describe TaskPresenter do
     subject(:presenter) { TaskPresenter.new(task) }
     let(:task) {
       VCAP::CloudController::TaskModel.make(

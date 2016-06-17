@@ -6,7 +6,7 @@ require 'cloud_controller/backends/staging_environment_builder'
 require 'messages/droplet_create_message'
 
 module VCAP::CloudController
-  describe DropletCreate do
+  RSpec.describe DropletCreate do
     describe '#create_and_stage' do
       let(:user) { User.make }
       let(:user_email) { 'user@example.com' }

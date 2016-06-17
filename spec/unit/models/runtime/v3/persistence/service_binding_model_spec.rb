@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceBindingModel do
+  RSpec.describe ServiceBindingModel do
     let(:credentials) { { 'secret' => 'password' }.to_json }
     let(:volume_mounts) { [{ 'array' => 'hashes' }].to_json }
     let(:last_row) { ServiceBindingModel.dataset.naked.order_by(:id).last }

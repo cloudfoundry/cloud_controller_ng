@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe StructuredError do
+RSpec.describe StructuredError do
   context 'with a hash source' do
     let(:source) { { 'foo' => 'bar' } }
 

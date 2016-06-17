@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module CloudController::Presenters::V2
-  describe BasePresenter do
+  RSpec.describe BasePresenter do
     subject { described_class.new }
     let(:controller) { double(:controller, url_for_guid: 'controller-url') }
     let(:obj) { double(:obj, guid: 'obj-guid', created_at: 'obj-created-at', updated_at: 'obj-updated-at') }

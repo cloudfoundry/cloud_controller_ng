@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe UploadBuildpack do
+  RSpec.describe UploadBuildpack do
     let(:buildpack_blobstore) { double(:buildpack_blobstore).as_null_object }
     let!(:buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'upload_binary_buildpack', position: 0 }) }
 

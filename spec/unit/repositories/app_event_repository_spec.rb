@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Repositories
-    describe AppEventRepository do
+    RSpec.describe AppEventRepository do
       subject(:app_event_repository) do
         AppEventRepository.new
       end

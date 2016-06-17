@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::OrganizationsController do
+  RSpec.describe VCAP::CloudController::OrganizationsController do
     let(:org) { Organization.make }
 
     describe 'Query Parameters' do

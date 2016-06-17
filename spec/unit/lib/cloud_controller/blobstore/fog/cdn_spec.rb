@@ -4,7 +4,7 @@ require 'cloudfront-signer'
 
 module CloudController
   module Blobstore
-    describe Cdn do
+    RSpec.describe Cdn do
       let(:cdn_host) { 'https://some_distribution.cloudfront.net' }
       let(:cdn) { Cdn.make(cdn_host) }
 

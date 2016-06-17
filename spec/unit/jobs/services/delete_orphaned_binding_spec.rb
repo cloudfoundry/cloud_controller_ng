@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Services
-    describe DeleteOrphanedBinding do
+    RSpec.describe DeleteOrphanedBinding do
       let(:client) { instance_double('VCAP::Services::ServiceBrokers::V2::Client') }
       let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
       let(:binding_info) { OrphanedBindingInfo.new(service_binding) }

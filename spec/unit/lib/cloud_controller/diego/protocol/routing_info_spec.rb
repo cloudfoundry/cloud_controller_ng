@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Diego
     class Protocol
-      describe RoutingInfo do
+      RSpec.describe RoutingInfo do
         describe 'routing_info' do
           subject(:routing_info) { RoutingInfo.new(app).routing_info }
 

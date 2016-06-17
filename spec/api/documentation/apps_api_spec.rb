@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Apps', type: [:api, :legacy_api] do
+RSpec.resource 'Apps', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:admin_buildpack) { VCAP::CloudController::Buildpack.make }
   let!(:apps) { 3.times { VCAP::CloudController::AppFactory.make } }

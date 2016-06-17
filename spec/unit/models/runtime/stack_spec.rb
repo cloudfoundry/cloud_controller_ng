@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Stack, type: :model do
+  RSpec.describe Stack, type: :model do
     let(:file) { File.join(Paths::FIXTURES, 'config/stacks.yml') }
 
     it { is_expected.to have_timestamp_columns }

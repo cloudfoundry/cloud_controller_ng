@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe FeatureFlag, type: :model do
+  RSpec.describe FeatureFlag, type: :model do
     let(:valid_flags) do
       [:user_org_creation, :private_domain_creation, :app_bits_upload,
        :app_scaling, :route_creation, :service_instance_creation,

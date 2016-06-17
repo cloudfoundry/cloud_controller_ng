@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServicePlanVisibility, type: :model do
+  RSpec.describe ServicePlanVisibility, type: :model do
     it { is_expected.to have_timestamp_columns }
 
     describe 'Associations' do

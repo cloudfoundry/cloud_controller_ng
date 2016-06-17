@@ -2,7 +2,7 @@ require 'spec_helper'
 require_relative 'lifecycle_shared'
 
 module VCAP::CloudController
-  describe BuildpackLifecycle do
+  RSpec.describe BuildpackLifecycle do
     let!(:package) { PackageModel.make(type: PackageModel::BITS_TYPE) }
     let(:staging_message) { DropletCreateMessage.new(lifecycle: { data: request_data, type: 'buildpack' }) }
     let(:request_data) { {} }

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/request_scheme_validator'
 
 module CloudController
-  describe RequestSchemeValidator do
+  RSpec.describe RequestSchemeValidator do
     let(:validator) { described_class.new }
     let(:user) { double(:user) }
     let(:roles) { double(:roles) }

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/app_update'
 
 module VCAP::CloudController
-  describe AppUpdate do
+  RSpec.describe AppUpdate do
     let(:app_model) { AppModel.make(name: app_name, environment_variables: environment_variables) }
     let!(:buildpack_lifecycle_model) { BuildpackLifecycleDataModel.make(buildpack: buildpack, stack: Stack.default.name, app: app_model) }
     let(:user) { double(:user, guid: '1337') }

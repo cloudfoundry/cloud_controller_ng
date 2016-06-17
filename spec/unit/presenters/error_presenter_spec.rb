@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe ErrorPresenter do
+RSpec.describe ErrorPresenter do
   subject(:presenter) { ErrorPresenter.new(error, test_mode, error_hasher) }
 
   let(:error) { StandardError.new }

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/diego/staging_request'
 
 module VCAP::CloudController::Diego
-  describe StagingRequest do
+  RSpec.describe StagingRequest do
     let(:app) do
       a = VCAP::CloudController::App.make
       a.staging_task_id = 'staging-task-id'

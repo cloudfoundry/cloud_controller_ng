@@ -1,4 +1,4 @@
-shared_examples_for 'a blobstore client' do
+RSpec.shared_examples_for 'a blobstore client' do
   let!(:tmpfile) do
     Tempfile.open('') do |tmpfile|
       tmpfile.write('file content')

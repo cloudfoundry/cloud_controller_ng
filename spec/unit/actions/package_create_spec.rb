@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/package_create'
 
 module VCAP::CloudController
-  describe PackageCreate do
+  RSpec.describe PackageCreate do
     let(:package_create) { PackageCreate.new(user_guid, user_email) }
 
     describe '#create' do

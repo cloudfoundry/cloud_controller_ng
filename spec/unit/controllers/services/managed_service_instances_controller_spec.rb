@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ManagedServiceInstancesController, :services do
+  RSpec.describe ManagedServiceInstancesController, :services do
     describe 'GET', '/v2/managed_service_instances' do
       it 'should be deprecated' do
         get '/v2/managed_service_instances'

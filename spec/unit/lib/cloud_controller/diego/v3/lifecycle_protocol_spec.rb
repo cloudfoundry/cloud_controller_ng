@@ -3,7 +3,7 @@ require 'cloud_controller/diego/v3/lifecycle_protocol'
 
 module VCAP::CloudController::Diego
   module V3
-    describe LifecycleProtocol do
+    RSpec.describe LifecycleProtocol do
       describe '.protocol_for_type' do
         subject(:protocol) { LifecycleProtocol.protocol_for_type(type) }
 

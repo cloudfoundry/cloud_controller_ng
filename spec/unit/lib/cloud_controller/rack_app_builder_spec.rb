@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe RackAppBuilder do
+  RSpec.describe RackAppBuilder do
     subject(:builder) { RackAppBuilder.new }
 
     describe '#build' do

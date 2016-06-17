@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/services/service_binding_delete'
 
 module VCAP::CloudController
-  describe ServiceBindingDelete do
+  RSpec.describe ServiceBindingDelete do
     subject(:service_binding_delete) { ServiceBindingDelete.new }
 
     describe '#delete' do

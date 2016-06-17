@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController::RestController
-  describe OrderApplicator do
+  RSpec.describe OrderApplicator do
     subject(:order_applicator) do
       OrderApplicator.new(opts)
     end

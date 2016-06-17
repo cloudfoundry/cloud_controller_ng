@@ -3,7 +3,7 @@ require_relative '../client_shared'
 
 module CloudController
   module Blobstore
-    describe DavClient do
+    RSpec.describe DavClient do
       subject(:client) do
         DavClient.new(
           directory_key: directory_key,

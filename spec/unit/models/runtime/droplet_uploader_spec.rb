@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'tmpdir'
 
-describe CloudController::DropletUploader do
+RSpec.describe CloudController::DropletUploader do
   let(:app) do
     VCAP::CloudController::AppFactory.make(droplet_hash: nil)
   end

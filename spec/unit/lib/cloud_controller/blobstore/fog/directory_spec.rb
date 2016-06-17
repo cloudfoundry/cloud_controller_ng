@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module CloudController
   module Blobstore
-    describe Directory do
+    RSpec.describe Directory do
       let(:fog_directory) do
         double('Fog::**::Directory')
       end

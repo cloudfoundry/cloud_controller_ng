@@ -5,7 +5,7 @@ require 'cloud_controller/diego/v3/messenger'
 module VCAP::CloudController
   module Diego
     module V3
-      describe Messenger do
+      RSpec.describe Messenger do
         let(:stager_client) { instance_double(StagerClient) }
         let(:config) { TestConfig.config }
         let(:protocol) { instance_double(V3::Protocol::PackageStagingProtocol) }

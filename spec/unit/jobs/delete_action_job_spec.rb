@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs
-    describe DeleteActionJob do
+    RSpec.describe DeleteActionJob do
       let(:user) { User.make(admin: true) }
       let(:delete_action) { double(SpaceDelete, delete: []) }
       let(:space) { Space.make(name: Sham.guid) }

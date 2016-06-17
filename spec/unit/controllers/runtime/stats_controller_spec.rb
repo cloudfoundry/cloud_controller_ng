@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::StatsController do
+  RSpec.describe VCAP::CloudController::StatsController do
     describe 'GET /v2/apps/:id/stats' do
       before :each do
         @app = AppFactory.make(package_hash: 'abc', package_state: 'STAGED')

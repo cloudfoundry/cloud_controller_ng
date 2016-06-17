@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'vcap/uaa_token_decoder'
 
 module VCAP
-  describe UaaTokenDecoder do
+  RSpec.describe UaaTokenDecoder do
     subject { described_class.new(config_hash) }
 
     let(:config_hash) do

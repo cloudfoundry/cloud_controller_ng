@@ -5,7 +5,7 @@ module VCAP
   module CloudController
     module Diego
       module Buildpack
-        describe LifecycleProtocol do
+        RSpec.describe LifecycleProtocol do
           let(:blobstore_url_generator) do
             instance_double(::CloudController::Blobstore::UrlGenerator).tap do |url_generator|
               allow(url_generator).to receive(:app_package_download_url).and_return('')

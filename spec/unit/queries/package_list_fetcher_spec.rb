@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'queries/package_list_fetcher'
 
 module VCAP::CloudController
-  describe PackageListFetcher do
+  RSpec.describe PackageListFetcher do
     let(:space1) { Space.make }
     let(:space2) { Space.make }
     let(:space3) { Space.make }

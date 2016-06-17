@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/service_binding_delete'
 
 module VCAP::CloudController
-  describe ServiceBindingModelDelete do
+  RSpec.describe ServiceBindingModelDelete do
     subject(:service_binding_delete) { described_class.new(user_guid, user_email) }
     let(:user_guid) { 'user-guid' }
     let(:user_email) { 'user@example.com' }

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe DockerPolicy do
+RSpec.describe DockerPolicy do
   let(:app) { VCAP::CloudController::AppFactory.make }
 
   subject(:validator) { DockerPolicy.new(app) }
