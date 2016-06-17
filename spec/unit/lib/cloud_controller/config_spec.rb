@@ -241,6 +241,7 @@ module VCAP::CloudController
             config_hash['app_bits_upload_grace_period_in_seconds'] = -2345
             config_hash['staging']['auth']['user'] = 'f@t:%a'
             config_hash['staging']['auth']['password'] = 'm@/n!'
+            config_hash['minimum_candidate_stagers'] = 0
 
             File.open(File.join(tmpdir, 'incorrect_overridden_config.yml'), 'w') do |f|
               YAML.dump(config_hash, f)
@@ -249,6 +250,10 @@ module VCAP::CloudController
 
           after do
             FileUtils.rm_r(tmpdir)
+          end
+
+          it 'resets minimum_candidate_stagers to the default of 5' do
+            expect(config_from_file[:minimum_candidate_stagers]).to eq(5)
           end
 
           it 'reset the negative value of app_bits_upload_grace_period_in_seconds to 0' do
