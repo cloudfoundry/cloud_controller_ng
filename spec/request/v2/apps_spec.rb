@@ -186,6 +186,63 @@ RSpec.describe 'Apps' do
         )
       end
     end
+
+    describe 'filtering' do
+      it 'filters by name' do
+        VCAP::CloudController::App.make(space: space, name: 'filter-name')
+
+        get '/v2/apps?q=name:filter-name', nil, headers_for(user)
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['total_results']).to eq(1)
+        expect(parsed_response['resources'][0]['entity']['name']).to eq('filter-name')
+      end
+
+      it 'filters by space_guid' do
+        VCAP::CloudController::App.make
+
+        get "/v2/apps?q=space_guid:#{space.guid}", nil, admin_headers
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['total_results']).to eq(1)
+        expect(parsed_response['resources'][0]['entity']['space_guid']).to eq(space.guid)
+      end
+
+      it 'filters by organization_guid' do
+        VCAP::CloudController::App.make
+
+        get "/v2/apps?q=organization_guid:#{space.organization.guid}", nil, admin_headers
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['total_results']).to eq(1)
+        expect(parsed_response['resources'][0]['entity']['space_guid']).to eq(space.guid)
+      end
+
+      it 'filters by diego' do
+        VCAP::CloudController::App.make(diego: true, name: 'filter-name')
+
+        get '/v2/apps?q=diego:true', nil, admin_headers
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['total_results']).to eq(1)
+        expect(parsed_response['resources'][0]['entity']['name']).to eq('filter-name')
+      end
+
+      it 'filters by stack_guid' do
+        search_app = VCAP::CloudController::App.make
+
+        get "/v2/apps?q=stack_guid:#{search_app.stack.guid}", nil, admin_headers
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['total_results']).to eq(1)
+        expect(parsed_response['resources'][0]['entity']['stack_guid']).to eq(search_app.stack.guid)
+      end
+    end
   end
 
   describe 'GET /v2/apps/:guid' do
