@@ -9,8 +9,11 @@ module VCAP::CloudController
       processes = Array(processes)
 
       processes.each do |process|
-        Repositories::ProcessEventRepository.record_delete(process, @user_guid, @user_email)
-        process.destroy
+        process.db.transaction do
+          process.lock!
+          Repositories::ProcessEventRepository.record_delete(process, @user_guid, @user_email)
+          process.destroy
+        end
       end
     end
   end

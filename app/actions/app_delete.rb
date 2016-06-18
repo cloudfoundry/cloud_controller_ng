@@ -24,16 +24,20 @@ module VCAP::CloudController
       apps.each do |app|
         raise_if_service_bindings_exist!(app)
 
-        delete_subresources(app)
+        app.db.transaction do
+          app.lock!
 
-        Repositories::AppEventRepository.new.record_app_delete_request(
-          app,
-          app.space,
-          @user_guid,
-          @user_email
-        )
+          delete_subresources(app)
 
-        app.destroy
+          Repositories::AppEventRepository.new.record_app_delete_request(
+            app,
+            app.space,
+            @user_guid,
+            @user_email
+          )
+
+          app.destroy
+        end
       end
     end
 

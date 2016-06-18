@@ -11,6 +11,7 @@ module VCAP::CloudController
 
     def scale
       @process.db.transaction do
+        @process.app.lock!
         @process.lock!
 
         @process.instances = @message.instances if @message.requested?(:instances)
