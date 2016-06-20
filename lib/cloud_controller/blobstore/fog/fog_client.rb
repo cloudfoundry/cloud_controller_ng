@@ -89,11 +89,9 @@ module CloudController
         source_file.copy(@directory_key, partitioned_key(destination_key))
 
         dest_file = file(destination_key)
+        dest_file.public = 'public-read' if local?
 
-        if local?
-          dest_file.public = 'public-read'
-        end
-        dest_file.save
+        @encryption ? dest_file.save({ 'x-amz-server-side-encryption' => @encryption }) : dest_file.save
       end
 
       def delete_all(page_size=DEFAULT_BATCH_SIZE)

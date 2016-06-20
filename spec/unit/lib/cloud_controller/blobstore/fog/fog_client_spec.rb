@@ -427,6 +427,38 @@ module CloudController
               expect(directory.files).to have(0).items
             end
           end
+
+          context 'encryption' do
+            let(:encryption) { 'my-algo' }
+            let(:client) do
+              described_class.new(connection_config: connection_config,
+                                  directory_key: directory_key,
+                                  encryption: encryption)
+            end
+            let(:dest_file) { double(:file, copy: true, save: true, nil?: false) }
+            let(:src_file) { double(:file, copy: true, nil?: false) }
+
+            before do
+              allow_any_instance_of(FogClient).to receive(:file).with(src_key).and_return(src_file)
+              allow_any_instance_of(FogClient).to receive(:file).with(dest_key).and_return(dest_file)
+            end
+
+            context 'when encryption type is specified' do
+              it 'passes the encryption options to aws' do
+                client.cp_file_between_keys(src_key, dest_key)
+                expect(dest_file).to have_received(:save).with('x-amz-server-side-encryption' => 'my-algo')
+              end
+            end
+
+            context 'when encryption type is not specified' do
+              let(:encryption) { nil }
+
+              it 'passes the encryption options to aws' do
+                client.cp_file_between_keys(src_key, dest_key)
+                expect(dest_file).to have_received(:save).with(no_args)
+              end
+            end
+          end
         end
 
         describe '#delete_all' do
