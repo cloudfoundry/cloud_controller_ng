@@ -19,6 +19,7 @@ module CloudController
 end
 
 require_relative 'base_presenter'
+require_relative 'app_presenter'
 require_relative 'default_presenter'
 require_relative 'relations_presenter'
 
