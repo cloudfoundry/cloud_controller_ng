@@ -314,9 +314,11 @@ RSpec.describe 'Apps' do
 
   describe 'POST /v2/apps' do
     it 'creates an app' do
+      stack       = VCAP::CloudController::Stack.make
       post_params = MultiJson.dump({
         name:                    'maria',
         space_guid:              space.guid,
+        stack_guid:              stack.guid,
         detected_start_command:  'argh',
         docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' },
         environment_json:        { 'KEY' => 'val' },
@@ -338,7 +340,7 @@ RSpec.describe 'Apps' do
             'name'                       => 'maria',
             'production'                 => false,
             'space_guid'                 => space.guid,
-            'stack_guid'                 => process.stack.guid,
+            'stack_guid'                 => stack.guid,
             'buildpack'                  => nil,
             'detected_buildpack'         => nil,
             'detected_buildpack_guid'    => nil,
