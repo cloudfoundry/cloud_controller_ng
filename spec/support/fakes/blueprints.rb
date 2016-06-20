@@ -211,7 +211,7 @@ module VCAP::CloudController
     space             { Space.make }
     stack             { Stack.make }
     instances         { 1 }
-    type              { Sham.name }
+    type              { 'web' }
     app               { AppModel.make(name: object.name, environment_variables: object.environment_json, space: object.space) }
   end
 

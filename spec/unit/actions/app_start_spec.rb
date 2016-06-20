@@ -9,8 +9,8 @@ module VCAP::CloudController
 
     describe '#start' do
       let(:environment_variables) { { 'FOO' => 'bar' } }
-      let!(:process1) { App.make(state: 'STOPPED', app: app_model) }
-      let!(:process2) { App.make(state: 'STOPPED', app: app_model) }
+      let!(:process1) { App.make(:process, state: 'STOPPED', app: app_model) }
+      let!(:process2) { App.make(:process, state: 'STOPPED', app: app_model) }
 
       let(:app_model) do
         AppModel.make(:buildpack,

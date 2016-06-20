@@ -219,6 +219,7 @@ module VCAP::CloudController
         )
 
         app = App.create(
+          guid:                    v3_app.guid,
           name:                    request_attrs['name'],
           environment_json:        request_attrs['environment_json'],
           production:              request_attrs['production'],
@@ -260,6 +261,10 @@ module VCAP::CloudController
         { 'Location' => "#{self.class.path}/#{app.guid}" },
         object_renderer.render_json(self.class, app, @opts)
       ]
+    end
+
+    def filter_dataset(dataset)
+      dataset.where(type: 'web')
     end
 
     define_messages

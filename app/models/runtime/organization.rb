@@ -12,7 +12,7 @@ module VCAP::CloudController
                 dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces, is_gateway_service: true) }
 
     one_to_many :apps,
-                dataset: -> { App.filter(space: spaces) }
+                dataset: -> { App.filter(space: spaces, type: 'web') }
 
     one_to_many :app_models,
                 dataset: -> { AppModel.filter(space: spaces) }

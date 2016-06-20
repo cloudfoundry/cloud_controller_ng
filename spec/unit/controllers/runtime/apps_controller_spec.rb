@@ -337,6 +337,8 @@ module VCAP::CloudController
         expect(v3_app.name).to eq('maria')
         expect(v3_app.space).to eq(space)
         expect(v3_app.environment_variables).to eq({ 'KEY' => 'val' })
+
+        expect(v3_app.guid).to eq(v2_app.guid)
       end
     end
 
@@ -1641,6 +1643,21 @@ module VCAP::CloudController
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(310008)
+      end
+    end
+
+    describe 'enumerate' do
+      let!(:web_app) { App.make(type: 'web') }
+      let!(:other_app) { App.make(type: 'other') }
+
+      before do
+        set_current_user_as_admin
+      end
+
+      it 'displays apps with type web' do
+        get '/v2/apps'
+        expect(decoded_response['total_results']).to eq(1)
+        expect(decoded_response['resources'][0]['metadata']['guid']).to eq(web_app.guid)
       end
     end
   end

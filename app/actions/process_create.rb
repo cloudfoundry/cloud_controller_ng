@@ -16,6 +16,7 @@ module VCAP::CloudController
         instances:         message[:type] == 'web' ? 1 : 0,
         health_check_type: message[:type] == 'web' ? 'port' : 'process'
       })
+      attrs[:guid] = app.guid if message[:type] == 'web'
 
       process = nil
       app.class.db.transaction do

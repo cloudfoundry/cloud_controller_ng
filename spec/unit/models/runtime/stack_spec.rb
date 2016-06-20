@@ -8,6 +8,13 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it { is_expected.to have_associated :apps }
+
+      it 'does not associate non-web v2 apps' do
+        stack = Stack.make
+        app1 = App.make(type: 'web', stack: stack)
+        app2 = App.make(type: 'other', stack: stack)
+        expect(stack.apps).to match_array([app1])
+      end
     end
 
     describe 'Validations' do

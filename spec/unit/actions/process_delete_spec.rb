@@ -30,8 +30,8 @@ module VCAP::CloudController
       end
 
       context 'when deleting multiple' do
-        let!(:process1) { AppFactory.make(app: app) }
-        let!(:process2) { AppFactory.make(app: app) }
+        let!(:process1) { App.make(:process, app: app) }
+        let!(:process2) { App.make(:process, app: app) }
 
         it 'deletes the process record' do
           expect {

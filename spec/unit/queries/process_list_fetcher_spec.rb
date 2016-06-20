@@ -113,9 +113,9 @@ module VCAP::CloudController
       end
 
       it 'returns the processes for the app' do
-        process1 = App.make(app: app)
-        process2 = App.make(app: app)
-        App.make
+        process1 = App.make(:process, app: app)
+        process2 = App.make(:process, app: app)
+        App.make(:process)
 
         _app, results = fetcher.fetch_for_app
         expect(results.all).to match_array([process1, process2])

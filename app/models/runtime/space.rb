@@ -18,7 +18,7 @@ module VCAP::CloudController
     define_user_group :auditors, reciprocal: :audited_spaces, before_add: :validate_auditor
 
     many_to_one :organization, before_set: :validate_change_organization
-    one_to_many :apps
+    one_to_many :apps, conditions: { type: 'web' }
     one_to_many :app_models, primary_key: :guid, key: :space_guid
     one_to_many :events, primary_key: :guid, key: :space_guid
     one_to_many :service_instances

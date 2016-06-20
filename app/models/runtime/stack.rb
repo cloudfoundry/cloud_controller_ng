@@ -3,7 +3,7 @@ module VCAP::CloudController
     class MissingConfigFileError < StandardError; end
     class MissingDefaultStackError < StandardError; end
 
-    one_to_many :apps
+    one_to_many :apps, conditions: { type: 'web' }
 
     plugin :serialization
 

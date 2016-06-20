@@ -179,6 +179,18 @@ module VCAP::CloudController
           expect(mapping2.exists?).to be_falsey
         end
       end
+
+      it 'does not associate non-web v2 apps' do
+        space = Space.make
+        app1 = App.make(type: 'web', space: space)
+        app2 = App.make(type: 'other', space: space)
+        route = Route.make(space: space)
+
+        app1.add_route(route)
+        app2.add_route(route)
+
+        expect(route.apps).to match_array([app1])
+      end
     end
 
     describe 'Validations' do

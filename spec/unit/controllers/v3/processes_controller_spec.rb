@@ -27,9 +27,9 @@ RSpec.describe ProcessesController, type: :controller do
       let(:app) { VCAP::CloudController::AppModel.make(space: space) }
 
       it 'uses the app as a filter' do
-        process1 = VCAP::CloudController::ProcessModel.make(app_guid: app.guid)
-        process2 = VCAP::CloudController::ProcessModel.make(app_guid: app.guid)
-        VCAP::CloudController::ProcessModel.make
+        process1 = VCAP::CloudController::ProcessModel.make(:process, app_guid: app.guid)
+        process2 = VCAP::CloudController::ProcessModel.make(:process, app_guid: app.guid)
+        VCAP::CloudController::ProcessModel.make(:process)
 
         get :index, app_guid: app.guid
 
@@ -49,8 +49,8 @@ RSpec.describe ProcessesController, type: :controller do
         let(:params) { { 'page' => page, 'per_page' => per_page, app_guid: app.guid } }
 
         it 'paginates the response' do
-          VCAP::CloudController::ProcessModel.make(app_guid: app.guid)
-          VCAP::CloudController::ProcessModel.make(app_guid: app.guid)
+          VCAP::CloudController::ProcessModel.make(:process, app_guid: app.guid)
+          VCAP::CloudController::ProcessModel.make(:process, app_guid: app.guid)
 
           get :index, params
 
