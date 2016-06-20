@@ -200,7 +200,7 @@ properties:
     description: "Log level for cc database operations"
 
   cc.logging_level:
-    default: "debug2"
+    default: "info"
     description: "Log level for cc"
   cc.logging_max_retries:
     default: 1
