@@ -28,7 +28,7 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
       client.get '/v2/config/feature_flags', {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(12)
+      expect(parsed_response.length).to eq(13)
       expect(parsed_response).to include(
         {
           'name'          => 'user_org_creation',
@@ -112,6 +112,13 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
             'enabled' => true,
             'error_message' => nil,
             'url' => '/v2/config/feature_flags/space_developer_env_var_visibility'
+        })
+      expect(parsed_response).to include(
+        {
+           'name' => 'env_var_visibility',
+           'enabled' => true,
+           'error_message' => nil,
+           'url' => '/v2/config/feature_flags/env_var_visibility'
         })
     end
   end

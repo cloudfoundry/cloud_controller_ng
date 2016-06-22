@@ -39,12 +39,14 @@ module VCAP::CloudController
     query_parameters :name, :space_guid, :organization_guid, :diego, :stack_guid
 
     get '/v2/apps/:guid/env', :read_env
+
     def read_env(guid)
+      FeatureFlag.raise_unless_enabled!(:env_var_visibility)
       app = find_guid_and_validate_access(:read_env, guid, App)
+      FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
 
       vcap_application = VCAP::VarsBuilder.new(app).to_hash
 
-      FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
       [
         HTTP::OK,
         {},

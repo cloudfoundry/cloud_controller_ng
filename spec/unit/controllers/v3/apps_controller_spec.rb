@@ -1087,18 +1087,14 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:user) { VCAP::CloudController::User.make }
 
     before do
-      allow(controller).to receive(:can_see_secrets?).and_return(false)
       set_current_user(user)
       allow_user_read_access(user, space: space)
       allow_user_write_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
-    before do
-      allow(controller).to receive(:can_see_secrets?).and_return(true)
-    end
-
     it 'returns 200 and the environment variables' do
+      allow(controller).to receive(:can_see_secrets?).and_return(true)
       get :show_environment, guid: app_model.guid
 
       expect(response.status).to eq 200
@@ -1132,7 +1128,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
       end
 
-      context 'when users have role to see secrets' do
+      context 'when user can see secrets' do
         before do
           allow(controller).to receive(:can_see_secrets?).and_return(true)
         end
@@ -1143,7 +1139,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
       end
 
-      context 'when users does not have role to see secrets' do
+      context 'when user can not see secrets' do
         before do
           allow(controller).to receive(:can_see_secrets?).and_return(false)
         end
@@ -1158,6 +1154,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the space_developer_env_var_visibility feature flag is disabled' do
         before do
+          allow(controller).to receive(:can_see_secrets?).and_return(true)
           VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
         end
 
@@ -1176,7 +1173,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           expect(response.status).to eq(200)
         end
 
-        context 'when user does not have role to read secret' do
+        context 'when user can not see secrets' do
           before do
             allow(controller).to receive(:can_see_secrets?).and_return(false)
           end
@@ -1187,6 +1184,21 @@ RSpec.describe AppsV3Controller, type: :controller do
             expect(response.status).to eq 403
             expect(response.body).to include 'NotAuthorized'
           end
+        end
+      end
+
+      context 'when the env_var_visibility feature flag is disabled' do
+        before do
+          allow(controller).to receive(:can_see_secrets?).and_return(true)
+          VCAP::CloudController::FeatureFlag.make(name: 'env_var_visibility', enabled: false, error_message: nil)
+        end
+
+        it 'raises 403 for all users' do
+          set_current_user_as_admin(user: user)
+          get :show_environment, guid: app_model.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('Feature Disabled: env_var_visibility')
         end
       end
     end

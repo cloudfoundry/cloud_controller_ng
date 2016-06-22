@@ -788,8 +788,8 @@ module VCAP::CloudController
     describe "read an app's env" do
       let(:space)     { Space.make }
       let(:developer) { make_developer_for_space(space) }
-      let(:auditor) { make_auditor_for_space(space) }
-      let(:app_obj) { AppFactory.make(detected_buildpack: 'buildpack-name') }
+      let(:auditor)   { make_auditor_for_space(space) }
+      let(:app_obj)   { AppFactory.make(detected_buildpack: 'buildpack-name') }
       let(:decoded_response) { MultiJson.load(last_response.body) }
 
       before do
@@ -804,7 +804,7 @@ module VCAP::CloudController
             set_current_user(User.make)
           end
 
-          it 'returns a JSON payload indicating they do not have permission to manage this instance' do
+          it 'returns a JSON payload indicating they do not have permission to read this endpoint' do
             get "/v2/apps/#{app_obj.guid}/env"
             expect(last_response.status).to eql(403)
             expect(JSON.parse(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
@@ -861,7 +861,7 @@ module VCAP::CloudController
             let!(:app_model) { AppModel.make(name: 'v3-parent-app', space: space) }
             let!(:process) { AppFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'process-name', space: space) }
 
-            it 'returns appenvironment with VCAP_APPLICATION with v3 app name' do
+            it 'returns app environment variables with VCAP_APPLICATION with v3 app name' do
               app_model.add_process(process)
 
               get "/v2/apps/#{process.guid}/env"
@@ -1002,7 +1002,6 @@ module VCAP::CloudController
       end
 
       context 'when the user has not authenticated with Cloud Controller' do
-        let(:instance)  { ManagedServiceInstance.make }
         let(:developer) { nil }
 
         it 'returns an error saying that the user is not authenticated' do
@@ -1049,6 +1048,92 @@ module VCAP::CloudController
             get "/v2/apps/#{app_obj.guid}/env"
             expect(last_response.status).to eql(403)
             expect(JSON.parse(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
+          end
+        end
+      end
+
+      context 'when the env_var_visibility feature flag is disabled' do
+        let(:app_obj) { AppFactory.make(detected_buildpack: 'buildpack-name', space: space) }
+
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'env_var_visibility', enabled: false, error_message: nil)
+        end
+
+        it 'raises 403 all user' do
+          set_current_user_as_admin
+          get "/v2/apps/#{app_obj.guid}/env"
+
+          expect(last_response.status).to eq(403)
+          expect(last_response.body).to include('Feature Disabled: env_var_visibility')
+        end
+
+        context 'when the space_developer_env_var_visibility feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: true, error_message: nil)
+          end
+
+          it 'raises 403 for non-admins' do
+            set_current_user(developer)
+            get "/v2/apps/#{app_obj.guid}/env"
+
+            expect(last_response.status).to eq(403)
+            expect(last_response.body).to include('Feature Disabled: env_var_visibility')
+          end
+        end
+      end
+
+      context 'when the env_var_visibility feature flag is enabled' do
+        let(:app_obj) { AppFactory.make(detected_buildpack: 'buildpack-name', space: space) }
+
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'env_var_visibility', enabled: true, error_message: nil)
+        end
+
+        it 'continues to show 403 for roles that never had access to envs' do
+          set_current_user(auditor)
+          get "/v2/apps/#{app_obj.guid}/env"
+
+          expect(last_response.status).to eq(403)
+          expect(last_response.body).to include('NotAuthorized')
+        end
+
+        it 'show envs for admins' do
+          set_current_user_as_admin
+          get "/v2/apps/#{app_obj.guid}/env"
+
+          expect(last_response.status).to eq(200)
+          expect(decoded_response['application_env_json']).to match({
+            'VCAP_APPLICATION' => {
+              'limits' => {
+                'mem'  => app_obj.memory,
+                'disk' => app_obj.disk_quota,
+                'fds'  => 16384
+              },
+              'application_id'      => app_obj.guid,
+              'application_name'    => app_obj.name,
+              'name'                => app_obj.name,
+              'application_uris'    => [],
+              'uris'                => [],
+              'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+              'version'             => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+              'space_name'          => app_obj.space.name,
+              'space_id'            => app_obj.space.guid,
+              'users'               => nil
+            }
+          })
+        end
+
+        context 'when the space_developer_env_var_visibility feature flag is disabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
+          end
+
+          it 'raises 403 for space developers' do
+            set_current_user(developer)
+            get "/v2/apps/#{app_obj.guid}/env"
+
+            expect(last_response.status).to eq(403)
+            expect(last_response.body).to include('Feature Disabled: space_developer_env_var_visibility')
           end
         end
       end

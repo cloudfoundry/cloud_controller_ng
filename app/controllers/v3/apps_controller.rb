@@ -127,6 +127,9 @@ class AppsV3Controller < ApplicationController
 
   def show_environment
     app, space, org = AppFetcher.new.fetch(params[:guid])
+
+    FeatureFlag.raise_unless_enabled!(:env_var_visibility)
+
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_see_secrets?(space)
 
