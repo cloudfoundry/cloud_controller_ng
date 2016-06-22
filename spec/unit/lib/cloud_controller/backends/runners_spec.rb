@@ -222,27 +222,6 @@ module VCAP::CloudController
 
         expect(batch).not_to include(non_diego_app)
       end
-
-      it 'loads all of the associations eagerly' do
-        expect {
-          runners.diego_apps(100, 0).each do |app|
-            app.current_droplet
-            app.space
-            app.stack
-            app.routes
-            app.service_bindings
-            app.routes.map(&:domain)
-          end
-        }.to have_queried_db_times(/SELECT/, [
-          :apps,
-          :droplets,
-          :spaces,
-          :stacks,
-          :routes,
-          :service_bindings,
-          :domain
-        ].freeze.length)
-      end
     end
 
     describe '#diego_apps_from_process_guids' do
@@ -304,30 +283,6 @@ module VCAP::CloudController
         diego_guids = diego_apps.map { |app| Diego::ProcessGuid.from_process(app) }
 
         expect(runners.diego_apps_from_process_guids(diego_guids)).to match_array(diego_apps)
-      end
-
-      it 'loads all of the associations eagerly' do
-        diego_apps = App.where(diego: true).all
-        diego_guids = diego_apps.map { |app| Diego::ProcessGuid.from_process(app) }
-
-        expect {
-          runners.diego_apps_from_process_guids(diego_guids).each do |app|
-            app.current_droplet
-            app.space
-            app.stack
-            app.routes
-            app.service_bindings
-            app.routes.map(&:domain)
-          end
-        }.to have_queried_db_times(/SELECT/, [
-          :apps,
-          :droplets,
-          :spaces,
-          :stacks,
-          :routes,
-          :service_bindings,
-          :domain
-        ].freeze.length)
       end
 
       context 'when the process guid is not found' do

@@ -24,7 +24,7 @@ module VCAP::CloudController
 
     def diego_apps(batch_size, last_id)
       App.
-        eager(:current_saved_droplet, :space, :stack, :service_bindings, { routes: :domain }).
+        eager(:current_saved_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
         where('apps.id > ?', last_id).
         where('deleted_at IS NULL').
         where(state: 'STARTED').
@@ -38,7 +38,7 @@ module VCAP::CloudController
     def diego_apps_from_process_guids(process_guids)
       process_guids = Array(process_guids).to_set
       App.
-        eager(:current_saved_droplet, :space, :stack, :service_bindings, { routes: :domain }).
+        eager(:current_saved_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
         where(guid: process_guids.map { |pg| Diego::ProcessGuid.app_guid(pg) }).
         where('deleted_at IS NULL').
         where(state: 'STARTED').

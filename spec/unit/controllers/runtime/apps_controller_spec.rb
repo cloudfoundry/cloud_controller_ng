@@ -31,8 +31,15 @@ module VCAP::CloudController
     describe 'querying by stack guid' do
       let(:stack1) { Stack.make }
       let(:stack2) { Stack.make }
-      let!(:app1) { App.make(stack_id: stack1.id) }
-      let!(:app2) { App.make(stack_id: stack2.id) }
+      let(:app1) { App.make }
+      let(:app2) { App.make }
+
+      before do
+        app1.stack = stack1
+        app2.stack = stack2
+        app1.save
+        app2.save
+      end
 
       it 'filters apps by stack guid' do
         set_current_user_as_admin
@@ -318,10 +325,13 @@ module VCAP::CloudController
       end
 
       it 'creates the app' do
+        stack = Stack.make(name: 'stack-name')
         request = {
           name: 'maria',
           space_guid: space.guid,
-          environment_json: { 'KEY' => 'val' }
+          environment_json: { 'KEY' => 'val' },
+          stack_guid: stack.guid,
+          buildpack: 'http://example.com/buildpack'
         }
 
         set_current_user(admin_user, admin: true)
@@ -332,13 +342,63 @@ module VCAP::CloudController
         expect(v2_app.name).to eq('maria')
         expect(v2_app.space).to eq(space)
         expect(v2_app.environment_json).to eq({ 'KEY' => 'val' })
+        expect(v2_app.stack).to eq(stack)
+        expect(v2_app.buildpack.url).to eq('http://example.com/buildpack')
 
         v3_app = v2_app.app
         expect(v3_app.name).to eq('maria')
         expect(v3_app.space).to eq(space)
         expect(v3_app.environment_variables).to eq({ 'KEY' => 'val' })
+        expect(v3_app.lifecycle_type).to eq(BuildpackLifecycleDataModel::LIFECYCLE_TYPE)
+        expect(v3_app.lifecycle_data.stack).to eq('stack-name')
+        expect(v3_app.lifecycle_data.buildpack).to eq('http://example.com/buildpack')
 
         expect(v3_app.guid).to eq(v2_app.guid)
+      end
+
+      context 'creating a buildpack app' do
+        it 'creates the v2 and v3 apps correctly' do
+          stack = Stack.make(name: 'stack-name')
+          request = {
+            name: 'maria',
+            space_guid: space.guid,
+            stack_guid: stack.guid,
+            buildpack: 'http://example.com/buildpack'
+          }
+
+          set_current_user(admin_user, admin: true)
+
+          post '/v2/apps', MultiJson.dump(request)
+
+          v2_app = App.last
+          expect(v2_app.stack_guid).to eq(stack.guid)
+          expect(v2_app.buildpack.url).to eq('http://example.com/buildpack')
+
+          v3_app = v2_app.app
+          expect(v3_app.lifecycle_type).to eq(BuildpackLifecycleDataModel::LIFECYCLE_TYPE)
+          expect(v3_app.lifecycle_data.stack).to eq('stack-name')
+          expect(v3_app.lifecycle_data.buildpack).to eq('http://example.com/buildpack')
+        end
+      end
+
+      context 'creating a docker app' do
+        it 'creates the v2 and v3 apps correctly' do
+          request = {
+            name:         'maria',
+            space_guid:   space.guid,
+            docker_image: 'some-image:latest',
+          }
+
+          set_current_user(admin_user, admin: true)
+
+          post '/v2/apps', MultiJson.dump(request)
+
+          v2_app = App.last
+          expect(v2_app.docker_image).to eq('some-image:latest')
+
+          v3_app = v2_app.app
+          expect(v3_app.lifecycle_type).to eq(DockerLifecycleDataModel::LIFECYCLE_TYPE)
+        end
       end
     end
 

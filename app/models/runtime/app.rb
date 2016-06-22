@@ -75,7 +75,6 @@ module VCAP::CloudController
 
     encrypt :environment_json, salt: :salt, column: :encrypted_environment_json
     encrypt :docker_credentials_json, salt: :docker_salt, column: :encrypted_docker_credentials_json
-    encrypt :buildpack, salt: :buildpack_salt, column: :encrypted_buildpack
 
     APP_STATES = %w(STOPPED STARTED).map(&:freeze).freeze
     PACKAGE_STATES = %w(PENDING STAGED FAILED).map(&:freeze).freeze
@@ -192,7 +191,11 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
       end
 
-      self.stack ||= Stack.default
+      self[:stack_id] ||= if app && app.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE && !app.lifecycle_data.stack.blank?
+                            Stack.find(name: app.lifecycle_data.stack).id
+                          else
+                            Stack.default.id
+                          end
       self.memory ||= Config.config[:default_app_memory]
       self.disk_quota ||= Config.config[:default_app_disk_in_mb]
       self.enable_ssh = Config.config[:allow_app_ssh_access] && space.allow_ssh if enable_ssh.nil?
@@ -388,34 +391,6 @@ module VCAP::CloudController
     end
     alias_method_chain :environment_json, 'serialization'
 
-    def buildpack_with_serialization=(buildpack_name)
-      self.admin_buildpack = nil
-      self.buildpack_without_serialization = nil
-
-      admin_buildpack = Buildpack.find(name: buildpack_name.to_s)
-
-      if admin_buildpack
-        self.admin_buildpack = admin_buildpack
-      elsif buildpack_name != '' # git url case
-
-        self.buildpack_without_serialization = buildpack_name
-      end
-    end
-    alias_method_chain :buildpack=, 'serialization'
-
-    def buildpack_with_serialization
-      string = buildpack_without_serialization
-
-      if admin_buildpack
-        return admin_buildpack
-      elsif string
-        return CustomBuildpack.new(string)
-      end
-
-      AutoDetectionBuildpack.new
-    end
-    alias_method_chain :buildpack, 'serialization'
-
     def docker?
       docker_image.present?
     end
@@ -556,6 +531,39 @@ module VCAP::CloudController
       self.package_pending_since = Sequel::CURRENT_TIMESTAMP
     end
 
+    def buildpack
+      if app && app.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
+        return AutoDetectionBuildpack.new if app.lifecycle_data.buildpack.nil?
+
+        known_buildpack = Buildpack.find(name: app.lifecycle_data.buildpack)
+        return known_buildpack if known_buildpack
+
+        return CustomBuildpack.new(app.lifecycle_data.buildpack)
+      else
+        return admin_buildpack if admin_buildpack
+        return CustomBuildpack.new(super) if super
+        return AutoDetectionBuildpack.new
+      end
+    end
+
+    def buildpack=(buildpack_name)
+      if app && app.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
+        app.lifecycle_data.buildpack = buildpack_name.blank? ? nil : buildpack_name
+        app.lifecycle_data.save
+      end
+
+      self.admin_buildpack = nil
+      super(nil)
+
+      admin_buildpack = Buildpack.find(name: buildpack_name.to_s)
+
+      if admin_buildpack
+        self.admin_buildpack = admin_buildpack
+      elsif buildpack_name != '' # git url case
+        super(buildpack_name)
+      end
+    end
+
     def buildpack_specified?
       !buildpack.is_a?(AutoDetectionBuildpack)
     end
@@ -580,9 +588,23 @@ module VCAP::CloudController
       self.package_updated_at = Sequel.datetime_class.now
     end
 
+    def stack
+      if app && app.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE && !app.lifecycle_data.stack.blank?
+        Stack.find(name: app.lifecycle_data.stack)
+      else
+        super
+      end
+    end
+
     def stack=(stack)
-      mark_for_restaging unless new?
       super(stack)
+
+      if app && app.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
+        app.lifecycle_data.stack = stack.nil? ? nil : stack.name
+        app.lifecycle_data.save
+      end
+
+      mark_for_restaging unless new?
     end
 
     def add_new_droplet(hash)

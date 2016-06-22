@@ -378,6 +378,11 @@ module VCAP::CloudController
 
         let(:state) { 'TEST_STATE' }
 
+        before do
+          droplet.lifecycle_data.buildpack = 'le-buildpack'
+          droplet.lifecycle_data.save
+        end
+
         it 'creates an AppUsageEvent' do
           expect {
             repository.create_from_droplet(droplet, state)
@@ -408,7 +413,7 @@ module VCAP::CloudController
             expect(event.app_guid).to eq('')
             expect(event.app_name).to eq('')
             expect(event.process_type).to be_nil
-            expect(event.buildpack_name).to match /name-\d+/
+            expect(event.buildpack_name).to eq('le-buildpack')
             expect(event.buildpack_guid).to be_nil
             expect(event.package_state).to eq(package_state)
             expect(event.previous_package_state).to eq(package_state)

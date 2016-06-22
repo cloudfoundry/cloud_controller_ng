@@ -588,6 +588,11 @@ RSpec.describe AppsV3Controller, type: :controller do
               } }
           end
 
+          before do
+            app_model.lifecycle_data.buildpack = 'some-buildpack'
+            app_model.lifecycle_data.save
+          end
+
           it 'sets the buildpack to nil' do
             expect(app_model.lifecycle_data.buildpack).to_not be_nil
             put :update, guid: app_model.guid, body: req_body

@@ -245,30 +245,35 @@ module VCAP::CloudController
       end
 
       describe 'buildpack' do
+        let(:app) { App.make }
+
         it 'does allow nil value' do
           expect {
-            AppFactory.make(buildpack: nil)
+            app.buildpack = nil
+            app.save
           }.to_not raise_error
         end
 
         context 'when custom buildpacks are enabled' do
           it 'does allow a public url' do
             expect {
-              AppFactory.make(buildpack: 'git://user@github.com:repo')
+              app.buildpack = 'git://user@github.com:repo'
+              app.save
             }.to_not raise_error
           end
 
           it 'allows a public http url' do
             expect {
-              AppFactory.make(buildpack: 'http://example.com/foo')
+              app.buildpack = 'http://example.com/foo'
+              app.save
             }.to_not raise_error
           end
 
           it 'allows a buildpack name' do
             admin_buildpack = VCAP::CloudController::Buildpack.make
-            app = nil
             expect {
-              app = AppFactory.make(buildpack: admin_buildpack.name)
+              app.buildpack = admin_buildpack.name
+              app.save
             }.to_not raise_error
 
             expect(app.admin_buildpack).to eql(admin_buildpack)
@@ -280,21 +285,23 @@ module VCAP::CloudController
 
           it 'does NOT allow a public git url' do
             expect {
-              AppFactory.make(buildpack: 'git://user@github.com:repo')
+              app.buildpack = 'git://user@github.com:repo'
+              app.save
             }.to raise_error(Sequel::ValidationFailed, /custom buildpacks are disabled/)
           end
 
           it 'does NOT allow a public http url' do
             expect {
-              AppFactory.make(buildpack: 'http://example.com/foo')
+              app.buildpack = 'http://example.com/foo'
+              app.save
             }.to raise_error(Sequel::ValidationFailed, /custom buildpacks are disabled/)
           end
 
           it 'does allow a buildpack name' do
             admin_buildpack = VCAP::CloudController::Buildpack.make
-            app = nil
             expect {
-              app = AppFactory.make(buildpack: admin_buildpack.name)
+              app.buildpack = admin_buildpack.name
+              app.save
             }.to_not raise_error
 
             expect(app.admin_buildpack).to eql(admin_buildpack)
@@ -302,20 +309,23 @@ module VCAP::CloudController
 
           it 'does not allow a private git url' do
             expect {
-              AppFactory.make(buildpack: 'git@example.com:foo.git')
+              app.buildpack = 'git@example.com:foo.git'
+              app.save
             }.to raise_error(Sequel::ValidationFailed, /custom buildpacks are disabled/)
           end
 
           it 'does not allow a private git url with ssh schema' do
             expect {
-              AppFactory.make(buildpack: 'ssh://git@example.com:foo.git')
+              app.buildpack = 'ssh://git@example.com:foo.git'
+              app.save
             }.to raise_error(Sequel::ValidationFailed, /custom buildpacks are disabled/)
           end
         end
 
         context 'when custom buildpacks are disabled after app creation' do
           it 'permits the change even though the buildpack is still custom' do
-            app = AppFactory.make(buildpack: 'git://user@github.com:repo')
+            app.buildpack = 'git://user@github.com:repo'
+            app.save
 
             disable_custom_buildpacks
 
@@ -328,7 +338,8 @@ module VCAP::CloudController
 
         it 'does not allow a non-url string' do
           expect {
-            AppFactory.make(buildpack: 'Hello, world!')
+            app.buildpack = 'Hello, world!'
+            app.save
           }.to raise_error(Sequel::ValidationFailed, /is not valid public url or a known buildpack name/)
         end
       end
@@ -779,6 +790,20 @@ module VCAP::CloudController
         subject { AppFactory.make }
         it_always_sets_stack
       end
+
+      it 'gets stack from the parent app' do
+        app = App.make
+        hidden_stack = Stack.make
+        app.stack = hidden_stack
+        app.save
+        expect(app.stack).to eq(hidden_stack)
+
+        desired_stack = Stack.make
+        app.app.lifecycle_data.stack = desired_stack.name
+        app.app.lifecycle_data.save
+
+        expect(app.stack).to eq(desired_stack)
+      end
     end
 
     describe '#buildpack_cache_key' do
@@ -840,6 +865,12 @@ module VCAP::CloudController
             subject.stack = new_stack
           }.to change { subject.staged? }.from(true).to(false)
         end
+      end
+
+      it 'stores stack on the parent app' do
+        app = App.make
+        app.stack = new_stack
+        expect(app.app.lifecycle_data.reload.stack).to eq(new_stack.name)
       end
     end
 
@@ -1407,50 +1438,12 @@ module VCAP::CloudController
       end
     end
 
-    describe 'buildpack=' do
-      let(:valid_git_url) do
-        'git://user@github.com:repo'
-      end
-      it 'can be set to a git url' do
-        app = App.new
-        app.buildpack = valid_git_url
-        expect(app.buildpack).to eql CustomBuildpack.new(valid_git_url)
-      end
-
-      it 'can be set to a buildpack name' do
-        buildpack = Buildpack.make
-        app = App.new
-        app.buildpack = buildpack.name
-        expect(app.buildpack).to eql(buildpack)
-      end
-
-      it 'can be set to empty string' do
-        app = App.new
-        app.buildpack = ''
-        expect(app.buildpack).to eql(nil)
-      end
-
-      context 'switching between buildpacks' do
-        it 'allows changing from admin buildpacks to a git url' do
-          buildpack = Buildpack.make
-          app = App.new(buildpack: buildpack.name)
-          app.buildpack = valid_git_url
-          expect(app.buildpack).to eql(CustomBuildpack.new(valid_git_url))
-        end
-
-        it 'allows changing from git url to admin buildpack' do
-          buildpack = Buildpack.make
-          app = App.new(buildpack: valid_git_url)
-          app.buildpack = buildpack.name
-          expect(app.buildpack).to eql(buildpack)
-        end
-      end
-    end
-
     describe 'custom_buildpack_url' do
       context 'when a custom buildpack is associated with the app' do
         it 'should be the custom url' do
-          app = App.make(buildpack: 'https://example.com/repo.git')
+          app = App.make
+          app.buildpack = 'https://example.com/repo.git'
+          app.save
           expect(app.custom_buildpack_url).to eq('https://example.com/repo.git')
         end
       end
@@ -2503,7 +2496,9 @@ module VCAP::CloudController
 
       context 'when a custom buildpack was used for staging' do
         it 'creates an AppUsageEvent that contains the custom buildpack url' do
-          app = AppFactory.make(buildpack: 'https://example.com/repo.git', state: 'STOPPED')
+          app = AppFactory.make(state: 'STOPPED')
+          app.buildpack = 'https://example.com/repo.git'
+          app.save
           expect {
             app.update(state: 'STARTED')
           }.to change { AppUsageEvent.count }.by(1)
@@ -3021,6 +3016,49 @@ module VCAP::CloudController
           app.name = 'new-app-name'
           expect(app.name).to eq('new-app-name')
           expect(parent_app.name).to eq('new-app-name')
+        end
+      end
+    end
+
+    describe 'buildpack=' do
+      let(:valid_git_url) do
+        'git://user@github.com:repo'
+      end
+      it 'can be set to a git url' do
+        app = App.make
+        app.buildpack = valid_git_url
+        expect(app.buildpack).to eql CustomBuildpack.new(valid_git_url)
+        expect(app.app.lifecycle_data.reload.buildpack).to eq(valid_git_url)
+      end
+
+      it 'can be set to a buildpack name' do
+        buildpack = Buildpack.make
+        app = App.make
+        app.buildpack = buildpack.name
+        expect(app.buildpack).to eql(buildpack)
+        expect(app.app.lifecycle_data.reload.buildpack).to eq(buildpack.name)
+      end
+
+      it 'can be set to empty string' do
+        app = App.make
+        app.buildpack = ''
+        expect(app.buildpack).to eql(nil)
+        expect(app.app.lifecycle_data.reload.buildpack).to be_nil
+      end
+
+      context 'switching between buildpacks' do
+        it 'allows changing from admin buildpacks to a git url' do
+          buildpack = Buildpack.make
+          app = App.new(buildpack: buildpack.name)
+          app.buildpack = valid_git_url
+          expect(app.buildpack).to eql(CustomBuildpack.new(valid_git_url))
+        end
+
+        it 'allows changing from git url to admin buildpack' do
+          buildpack = Buildpack.make
+          app = App.new(buildpack: valid_git_url)
+          app.buildpack = buildpack.name
+          expect(app.buildpack).to eql(buildpack)
         end
       end
     end

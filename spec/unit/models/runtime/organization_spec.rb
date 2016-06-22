@@ -33,7 +33,7 @@ module VCAP::CloudController
         space = Space.make
         org = space.organization
         app1 = App.make(type: 'web', space: space)
-        app2 = App.make(type: 'other', space: space)
+        App.make(type: 'other', space: space)
         expect(org.apps).to match_array([app1])
       end
 

@@ -12,7 +12,7 @@ module VCAP::CloudController
       it 'does not associate non-web v2 apps' do
         stack = Stack.make
         app1 = App.make(type: 'web', stack: stack)
-        app2 = App.make(type: 'other', stack: stack)
+        App.make(type: 'other', stack: stack)
         expect(stack.apps).to match_array([app1])
       end
     end

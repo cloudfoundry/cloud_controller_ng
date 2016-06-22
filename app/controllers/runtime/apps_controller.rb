@@ -215,8 +215,17 @@ module VCAP::CloudController
         v3_app = AppModel.create(
           name:                  request_attrs['name'],
           space_guid:            request_attrs['space_guid'],
-          environment_variables: request_attrs['environment_json']
+          environment_variables: request_attrs['environment_json'],
         )
+
+        if request_attrs['docker_image'].blank?
+          stack = Stack.find(guid: request_attrs['stack_guid'])
+          BuildpackLifecycleDataModel.create(
+            buildpack: request_attrs['buildpack'],
+            stack:     stack.try(:name),
+            app:       v3_app
+          )
+        end
 
         app = App.create(
           guid:                    v3_app.guid,
