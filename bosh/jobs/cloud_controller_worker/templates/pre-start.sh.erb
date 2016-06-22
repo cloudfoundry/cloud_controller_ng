@@ -13,8 +13,6 @@ function setup_directories {
 
   mkdir -p "/var/vcap/sys/log/cloud_controller_worker"
   chown -R vcap:vcap "/var/vcap/sys/log/cloud_controller_worker"
-
-  source "${SCRIPT_DIR}/handle_local_blobstore.sh"
 }
 
 function main {
