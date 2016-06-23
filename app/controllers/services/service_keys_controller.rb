@@ -12,7 +12,7 @@ module VCAP::CloudController
 
     query_parameters :name, :service_instance_guid
 
-    def self.not_found_exception(guid, _find_model)
+    def self.not_found_exception(guid)
       CloudController::Errors::ApiError.new_from_details('ServiceKeyNotFound', guid)
     end
 

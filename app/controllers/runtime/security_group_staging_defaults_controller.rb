@@ -8,7 +8,7 @@ module VCAP::CloudController
       "#{V2_ROUTE_PREFIX}/config/staging_security_groups"
     end
 
-    def self.not_found_exception(guid, _find_model)
+    def self.not_found_exception(guid)
       CloudController::Errors::ApiError.new_from_details('SecurityGroupStagingDefaultInvalid', guid)
     end
 

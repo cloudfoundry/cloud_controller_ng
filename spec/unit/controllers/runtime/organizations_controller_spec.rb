@@ -410,9 +410,7 @@ module VCAP::CloudController
     describe 'Removing a user from the organization' do
       let(:mgr) { User.make }
       let(:user) { User.make }
-      let(:org_users) { [user.guid] }
-      let(:org) { Organization.make(manager_guids: org_managers, user_guids: org_users) }
-      let(:org_managers) { [mgr.guid] }
+      let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [user.guid]) }
       let(:org_space_empty) { Space.make(organization: org) }
       let(:org_space_full)  { Space.make(organization: org, manager_guids: [user.guid], developer_guids: [user.guid], auditor_guids: [user.guid]) }
 
@@ -421,81 +419,23 @@ module VCAP::CloudController
       context 'DELETE /v2/organizations/org_guid/users/user_guid' do
         context 'without the recursive flag' do
           context 'a single organization' do
-            context 'as an admin' do
-              it 'should remove the user from the organization if that user does not belong to any space' do
-                org.add_space(org_space_empty)
-                expect(org.users).to include(user)
-                delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
-                expect(last_response.status).to eql(204)
+            it 'should remove the user from the organization if that user does not belong to any space' do
+              org.add_space(org_space_empty)
+              expect(org.users).to include(user)
+              delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
+              expect(last_response.status).to eql(204)
 
-                org.refresh
-                expect(org.user_guids).not_to include(user)
-              end
-
-              it 'should not remove the user from the organization if that user belongs to a space associated with the organization' do
-                org.add_space(org_space_full)
-                delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
-
-                expect(last_response.status).to eql(400)
-                org.refresh
-                expect(org.users).to include(user)
-              end
+              org.refresh
+              expect(org.user_guids).not_to include(user)
             end
 
-            context 'as an organization user' do
-              before do
-                set_current_user(user)
-              end
+            it 'should not remove the user from the organization if that user belongs to a space associated with the organization' do
+              org.add_space(org_space_full)
+              delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
 
-              context 'when org has at least one more user' do
-                let(:org_users) { [user.guid, mgr.guid] }
-
-                it 'allows the user to remove themselves from the organization' do
-                  org.add_space(org_space_empty)
-                  expect(org.users).to include(user)
-                  delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
-                  expect(last_response.status).to eql(204)
-
-                  org.refresh
-                  expect(org.user_guids).not_to include(user.guid)
-                end
-              end
-
-              context 'when the user is the last user in the org' do
-                let(:org_users) { [user.guid] }
-
-                it 'allows the user to remove themselves' do
-                  org.add_space(org_space_empty)
-                  expect(org.users).to include(user)
-                  delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
-                  expect(last_response.status).to eql(204)
-
-                  org.refresh
-                  expect(org.user_guids).not_to include(user.guid)
-                end
-              end
-            end
-
-            context 'as an organization manager' do
-              let(:org_managers) { [user.guid] }
-
-              before do
-                set_current_user(user)
-              end
-
-              context 'when the user is the last user in the org' do
-                let(:org_users) { [user.guid] }
-
-                it 'allows the user to remove themselves' do
-                  org.add_space(org_space_empty)
-                  expect(org.users).to include(user)
-                  delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
-                  expect(last_response.status).to eql(204)
-
-                  org.refresh
-                  expect(org.user_guids).not_to include(user.guid)
-                end
-              end
+              expect(last_response.status).to eql(400)
+              org.refresh
+              expect(org.users).to include(user)
             end
           end
         end
@@ -716,31 +656,6 @@ module VCAP::CloudController
           end
         end
 
-        context 'when there are users are managers and such' do
-          before do
-            org.add_user(User.make)
-            org.add_manager(User.make)
-            org.add_billing_manager(User.make)
-          end
-
-          OrganizationUserJoin = Sequel::Model(:organizations_users)
-          OrganizationManagerJoin = Sequel::Model(:organizations_managers)
-          OrganizationBillingManagerJoin = Sequel::Model(:organizations_billing_managers)
-
-          it 'removes the join records' do
-            expect(OrganizationUserJoin.count).to eq(1)
-            expect(OrganizationManagerJoin.count).to eq(1)
-            expect(OrganizationBillingManagerJoin.count).to eq(1)
-
-            delete "/v2/organizations/#{org.guid}?recursive=true"
-            expect(last_response).to have_status_code 204
-
-            expect(OrganizationUserJoin.count).to eq(0)
-            expect(OrganizationManagerJoin.count).to eq(0)
-            expect(OrganizationBillingManagerJoin.count).to eq(0)
-          end
-        end
-
         context 'when one of the spaces has a service instance in it' do
           before do
             stub_deprovision(service_instance, accepts_incomplete: true)
@@ -941,118 +856,7 @@ module VCAP::CloudController
 
             delete "/v2/organizations/#{org.guid}/managers/#{org_manager.guid}"
             expect(last_response.status).to eql(403)
-            expect(decoded_response['code']).to eq(30004)
-          end
-        end
-      end
-
-      describe 'when there are other managers' do
-        describe 'removing oneself' do
-          before do
-            org.add_manager User.make
-          end
-
-          it 'is allowed' do
-            set_current_user(org_manager)
-            delete "/v2/organizations/#{org.guid}/managers/#{org_manager.guid}"
-            expect(last_response.status).to eq(204)
-          end
-        end
-      end
-    end
-
-    describe 'DELETE /v2/organizations/:guid/billing_managers/:user_guid' do
-      let(:billing_manager) { User.make }
-
-      before do
-        org.add_billing_manager billing_manager
-        org.save
-      end
-
-      describe 'removing the last billing manager' do
-        context 'as an admin' do
-          it 'is allowed' do
-            set_current_user_as_admin
-
-            delete "/v2/organizations/#{org.guid}/billing_managers/#{billing_manager.guid}"
-            expect(last_response.status).to eq(204)
-          end
-        end
-
-        context 'as the manager' do
-          it 'is not allowed' do
-            set_current_user(billing_manager)
-
-            delete "/v2/organizations/#{org.guid}/billing_managers/#{billing_manager.guid}"
-            expect(last_response.status).to eql(403)
-            expect(decoded_response['code']).to eq(30005)
-          end
-        end
-      end
-
-      describe 'when there are other billing managers' do
-        describe 'removing oneself' do
-          before do
-            org.add_billing_manager User.make
-          end
-
-          it 'is allowed' do
-            set_current_user(billing_manager)
-            delete "/v2/organizations/#{org.guid}/billing_managers/#{billing_manager.guid}"
-            expect(last_response.status).to eq(204)
-          end
-        end
-      end
-    end
-
-    describe 'DELETE /v2/organizations/:guid/auditors/:user_guid' do
-      let(:auditor) { User.make }
-
-      before do
-        org.add_auditor auditor
-        org.save
-      end
-
-      describe 'removing the last auditor' do
-        context 'as an admin' do
-          it 'is allowed' do
-            set_current_user_as_admin
-
-            delete "/v2/organizations/#{org.guid}/auditors/#{auditor.guid}"
-            expect(last_response.status).to eq(204)
-          end
-        end
-
-        context 'as the auditor' do
-          it 'is allowed' do
-            set_current_user(auditor)
-
-            delete "/v2/organizations/#{org.guid}/auditors/#{auditor.guid}"
-            expect(last_response.status).to eql(204)
-          end
-        end
-
-        context 'as the org manager' do
-          let(:org_manager) { User.make }
-          before do
-            org.add_manager org_manager
-            set_current_user org_manager
-          end
-          it 'is allowed' do
-            delete "/v2/organizations/#{org.guid}/auditors/#{auditor.guid}"
-            expect(last_response.status).to eql(204)
-          end
-        end
-
-        context 'as a user' do
-          let(:user) { User.make }
-          before do
-            org.add_user user
-            set_current_user user
-          end
-          it 'is not allowed' do
-            delete "/v2/organizations/#{org.guid}/auditors/#{auditor.guid}"
-            expect(last_response.status).to eql(403)
+            expect(decoded_response['code']).to eq(10003)
           end
         end
       end

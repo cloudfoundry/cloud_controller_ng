@@ -158,8 +158,8 @@ module VCAP::CloudController::RestController
     # @param [Symbol] name The name of the relation.
     #
     # @param [String] other_guid The GUID of the object to add to the relation
-    def add_related(guid, name, other_guid, find_model=model)
-      do_related('add', guid, name, other_guid, find_model)
+    def add_related(guid, name, other_guid)
+      do_related('add', guid, name, other_guid)
     end
 
     # Remove a related object.
@@ -171,8 +171,8 @@ module VCAP::CloudController::RestController
     #
     # @param [String] other_guid The GUID of the object to delete from the
     # relation.
-    def remove_related(guid, name, other_guid, find_model=model)
-      do_related('remove', guid, name, other_guid, find_model)
+    def remove_related(guid, name, other_guid)
+      do_related('remove', guid, name, other_guid)
     end
 
     # Add or Remove a related object.
@@ -186,21 +186,21 @@ module VCAP::CloudController::RestController
     #
     # @param [String] other_guid The GUID of the object to be "verb"ed to the
     # relation.
-    def do_related(verb, guid, name, other_guid, parent_model=model)
+    def do_related(verb, guid, name, other_guid)
       logger.debug "cc.association.#{verb}", guid: guid, assocation: name, other_guid: other_guid
 
       singular_name = name.to_s.singularize
 
-      @request_attrs = { singular_name => other_guid, verb: verb, relation: name, related_guid: other_guid }
+      @request_attrs = { singular_name => other_guid }
 
-      obj = find_guid(guid, parent_model)
+      obj = find_guid(guid)
 
       before_update(obj)
 
-      parent_model.db.transaction do
-        read_validation = verb == 'remove' ? :can_remove_related_object : :read_related_object_for_update
-        validate_access(read_validation, obj, request_attrs)
+      model.db.transaction do
+        validate_access(:read_for_update, obj, request_attrs)
         obj.send("#{verb}_#{singular_name}_by_guid", other_guid)
+        validate_access(:update, obj, request_attrs)
       end
 
       after_update(obj)
@@ -302,7 +302,7 @@ module VCAP::CloudController::RestController
 
     def find_guid(guid, find_model=model)
       obj = find_model.find(guid: guid)
-      raise self.class.not_found_exception(guid, find_model) if obj.nil?
+      raise self.class.not_found_exception(guid) if obj.nil?
       obj
     end
 
@@ -356,16 +356,16 @@ module VCAP::CloudController::RestController
       # Model class name associated with this rest/api endpoint.
       #
       # @return [String] The class name of the model associated with
-      def not_found_exception_name(model_class)
-        "#{model_class.name.demodulize}NotFound"
+      def not_found_exception_name
+        "#{model_class_name}NotFound"
       end
 
       # Lookup the not-found exception for this rest/api endpoint.
       #
       # @return [Exception] The vcap not-found exception for this
       # rest/api endpoint.
-      def not_found_exception(guid, find_model)
-        CloudController::Errors::ApiError.new_from_details(not_found_exception_name(find_model), guid)
+      def not_found_exception(guid)
+        CloudController::Errors::ApiError.new_from_details(not_found_exception_name, guid)
       end
 
       # Start the DSL for defining attributes.  This is used inside
