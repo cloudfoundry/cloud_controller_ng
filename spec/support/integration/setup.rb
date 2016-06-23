@@ -4,7 +4,7 @@ module IntegrationSetup
   CC_START_TIMEOUT = 20
   SLEEP_INTERVAL = 0.5
   def start_nats(opts={})
-    port = opts[:port] || 4222
+    port = opts.delete(:port) || 4222
     @nats_pid = run_cmd("nats-server -V -D -p #{port}", opts)
     wait_for_nats_to_start(port)
   end
@@ -89,8 +89,8 @@ module IntegrationSetupHelpers
     pid = Process.spawn(opts[:env], cmd, spawn_opts)
 
     if opts[:wait]
-      Process.wait(pid)
-      raise "`#{cmd}` exited with #{$CHILD_STATUS}" unless $CHILD_STATUS.success?
+      _, child_status = Process.wait2(pid)
+      raise "`#{cmd}` exited with #{child_status}" unless child_status.success?
     end
 
     pid
