@@ -39,6 +39,7 @@ module VCAP::CloudController
               result = result.merge({
                 'rootfs' => app.lifecycle_data.stack,
                 'droplet_uri' => blobstore_url_generator.v3_droplet_download_url(droplet),
+                'droplet_hash' => droplet.droplet_hash,
               })
             elsif app.lifecycle_type == Lifecycles::DOCKER
               result = result.merge(
