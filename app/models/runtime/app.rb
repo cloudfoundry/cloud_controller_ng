@@ -414,9 +414,11 @@ module VCAP::CloudController
 
     def validate_space(space)
       objection = CloudController::Errors::InvalidRouteRelation.new(space.guid)
-
       raise objection unless routes.all? { |route| route.space_id == space.id }
+
       service_bindings.each { |binding| binding.validate_app_and_service_instance(self, binding.service_instance) }
+
+      raise CloudController::Errors::ApiError.new_from_details('SpaceInvalid', 'apps cannot be moved into different spaces') if column_changed?(:space_id) && !new?
     end
 
     def validate_route(route)

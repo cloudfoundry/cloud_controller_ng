@@ -28,13 +28,6 @@ module VCAP::CloudController
         expect(subject).to allow_op_on_object(:read_env, object)
         expect(subject).to allow_op_on_object(:upload, object)
       end
-
-      context 'when the space changes' do
-        it 'succeeds when not developer in the new space' do
-          object.space = Space.make
-          expect(subject.update?(object, nil)).to be_truthy
-        end
-      end
     end
 
     context 'admin read only' do
@@ -74,19 +67,6 @@ module VCAP::CloudController
       context 'when the organization is suspended' do
         before { object.space.organization.status = 'suspended' }
         it_behaves_like :read_only_access
-      end
-
-      context 'when the space changes' do
-        it 'succeeds as a developer in the new space' do
-          object.space = Space.make(organization: org)
-          object.space.add_developer(user)
-          expect(subject.update?(object, nil)).to be_truthy
-        end
-
-        it 'fails when not developer in the new space' do
-          object.space = Space.make
-          expect(subject.update?(object, nil)).to be_falsey
-        end
       end
 
       context 'when the app_scaling feature flag is disabled' do

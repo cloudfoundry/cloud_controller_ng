@@ -98,10 +98,15 @@ module VCAP::CloudController
       end
       it { is_expected.to have_associated :events, class: AppEvent }
       it { is_expected.to have_associated :admin_buildpack, class: Buildpack }
-      it { is_expected.to have_associated :space }
       it { is_expected.to have_associated :stack }
       it { is_expected.to have_associated :routes, associated_instance: ->(app) { Route.make(space: app.space) } }
       it { is_expected.to have_associated :route_mappings, associated_instance: -> (app) { RouteMapping.make(app_id: app.id, route_id: Route.make(space: app.space).id) } }
+
+      it 'has an associated space' do
+        app = App.make(space: space)
+        app.reload
+        expect(app.space).to eq(space)
+      end
 
       context 'when an app has multiple ports bound to the same route' do
         let(:app) { AppFactory.make(space: space, diego: true, ports: [8080, 9090]) }
@@ -1022,9 +1027,12 @@ module VCAP::CloudController
 
     describe 'bad relationships' do
       context 'when changing space' do
-        it 'is allowed if there are no space related associations' do
+        # this is behavior that is meant to be re-enabled following v2 and v3 apps converging
+        # for now this would cause inconsistencies since v3 apps cannot change spaces
+        # https://www.pivotaltracker.com/story/show/92603644
+        it 'is not allowed' do
           app = AppFactory.make
-          expect { app.space = Space.make }.not_to raise_error
+          expect { app.space = Space.make }.to raise_error(CloudController::Errors::ApiError)
         end
 
         it 'should fail if routes do not exist in that spaces' do
