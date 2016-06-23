@@ -64,6 +64,11 @@ module VCAP::CloudController
           process = process_create.create(app, message)
           expect(process.guid).to eq(app.guid)
         end
+
+        it 'sets the name to the app name' do
+          process = process_create.create(app, message)
+          expect(process[:name]).to eq(app.name)
+        end
       end
 
       describe 'default values for non-web processes' do
@@ -73,6 +78,7 @@ module VCAP::CloudController
             command: 'gogogadget'
           }
         end
+
         it '0 instances, process health_check_type, nil ports' do
           process = process_create.create(app, message)
 
@@ -80,6 +86,11 @@ module VCAP::CloudController
           expect(process.health_check_type).to eq('process')
           expect(process.ports).to eq(nil)
           expect(process.diego).to be_truthy
+        end
+
+        it 'generates a name' do
+          process = process_create.create(app, message)
+          expect(process[:name]).not_to eq(app.name)
         end
       end
     end

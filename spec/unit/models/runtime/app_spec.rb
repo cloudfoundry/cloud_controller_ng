@@ -3008,8 +3008,12 @@ module VCAP::CloudController
           app.save
         end
 
-        it 'returns the name of the parent app' do
+        it 'returns the name of the parent app if the type is web' do
           expect(app.name).to eq('app-name')
+
+          non_web_app = App.make(name: 'some-name', app: parent_app, type: 'potato')
+          expect(non_web_app.name).to eq('some-name')
+          expect(non_web_app.name).not_to eq(parent_app.name)
         end
 
         it 'sets both the parent app and the app name' do

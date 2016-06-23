@@ -358,7 +358,7 @@ module VCAP::CloudController
     end
 
     def name
-      if app
+      if app && type == 'web'
         app.name
       else
         super
@@ -366,7 +366,7 @@ module VCAP::CloudController
     end
 
     def name=(v)
-      if app
+      if app && type == 'web'
         app.name = v
       end
       super
