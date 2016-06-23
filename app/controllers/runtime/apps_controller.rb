@@ -219,7 +219,7 @@ module VCAP::CloudController
         )
 
         if request_attrs['docker_image'].blank?
-          stack = Stack.find(guid: request_attrs['stack_guid'])
+          stack = request_attrs['stack_guid'] ? Stack.find(guid: request_attrs['stack_guid']) : Stack.default
           BuildpackLifecycleDataModel.create(
             buildpack: request_attrs['buildpack'],
             stack:     stack.try(:name),

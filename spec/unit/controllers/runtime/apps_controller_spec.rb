@@ -325,12 +325,10 @@ module VCAP::CloudController
       end
 
       it 'creates the app' do
-        stack = Stack.make(name: 'stack-name')
         request = {
           name: 'maria',
           space_guid: space.guid,
           environment_json: { 'KEY' => 'val' },
-          stack_guid: stack.guid,
           buildpack: 'http://example.com/buildpack'
         }
 
@@ -342,7 +340,7 @@ module VCAP::CloudController
         expect(v2_app.name).to eq('maria')
         expect(v2_app.space).to eq(space)
         expect(v2_app.environment_json).to eq({ 'KEY' => 'val' })
-        expect(v2_app.stack).to eq(stack)
+        expect(v2_app.stack).to eq(Stack.default)
         expect(v2_app.buildpack.url).to eq('http://example.com/buildpack')
 
         v3_app = v2_app.app
@@ -350,8 +348,9 @@ module VCAP::CloudController
         expect(v3_app.space).to eq(space)
         expect(v3_app.environment_variables).to eq({ 'KEY' => 'val' })
         expect(v3_app.lifecycle_type).to eq(BuildpackLifecycleDataModel::LIFECYCLE_TYPE)
-        expect(v3_app.lifecycle_data.stack).to eq('stack-name')
+        expect(v3_app.lifecycle_data.stack).to eq(Stack.default.name)
         expect(v3_app.lifecycle_data.buildpack).to eq('http://example.com/buildpack')
+        expect(v3_app.desired_state).to eq(v2_app.state)
 
         expect(v3_app.guid).to eq(v2_app.guid)
       end
