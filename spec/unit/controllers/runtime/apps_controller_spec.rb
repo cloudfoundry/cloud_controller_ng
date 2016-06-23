@@ -68,8 +68,6 @@ module VCAP::CloudController
             name:                    { type: 'string', required: true },
             production:              { type: 'bool', default: false },
             state:                   { type: 'string', default: 'STOPPED' },
-            event_guids:             { type: '[string]' },
-            route_guids:             { type: '[string]' },
             space_guid:              { type: 'string', required: true },
             stack_guid:              { type: 'string' },
             diego:                   { type: 'bool' },
@@ -96,9 +94,6 @@ module VCAP::CloudController
             name:                    { type: 'string' },
             production:              { type: 'bool' },
             state:                   { type: 'string' },
-            event_guids:             { type: '[string]' },
-            route_guids:             { type: '[string]' },
-            service_binding_guids:   { type: '[string]' },
             space_guid:              { type: 'string' },
             stack_guid:              { type: 'string' },
             diego:                   { type: 'bool' },
@@ -704,7 +699,7 @@ module VCAP::CloudController
 
         context 'when the update fails' do
           before do
-            allow_any_instance_of(App).to receive(:update_from_hash).and_raise('Error saving')
+            allow_any_instance_of(App).to receive(:save).and_raise('Error saving')
             allow(app_event_repository).to receive(:record_app_update)
           end
 
@@ -1370,7 +1365,7 @@ module VCAP::CloudController
           expect(app.uris).to include('app.jesse.cloud')
         end
 
-        put @app_url, MultiJson.dump({ route_guids: [route.guid] })
+        put "#{@app_url}/routes/#{route.guid}"
         expect(last_response.status).to eq(201)
       end
 
@@ -1429,7 +1424,7 @@ module VCAP::CloudController
           space: space,
           domain: domain,
         )
-        route = @app.add_route(
+        new_route = Route.make(
           host: 'foo',
           space: space,
           domain: domain,
@@ -1437,13 +1432,13 @@ module VCAP::CloudController
         get "#{@app_url}/routes"
         expect(decoded_response['resources'].map { |r|
           r['metadata']['guid']
-        }.sort).to eq([bar_route.guid, route.guid].sort)
+        }).to match_array([bar_route.guid])
 
         expect(Dea::Client).to receive(:update_uris).with(an_instance_of(VCAP::CloudController::App)) do |app|
           expect(app.uris).to include('foo.jesse.cloud')
         end
 
-        put @app_url, MultiJson.dump({ route_guids: [route.guid] })
+        put "#{@app_url}/routes/#{new_route.guid}"
 
         expect(last_response.status).to eq(201)
       end

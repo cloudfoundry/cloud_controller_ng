@@ -30,10 +30,10 @@ module VCAP::CloudController
       to_one :space
       to_one :stack, optional_in: :create
 
-      to_many :routes
-      to_many :events,              link_only: true
-      to_many :service_bindings,    exclude_in: :create
-      to_many :route_mappings,      link_only: true, exclude_in: [:create, :update], route_for: :get
+      to_many :routes,              exclude_in: [:create, :update]
+      to_many :events,              exclude_in: [:create, :update], link_only: true
+      to_many :service_bindings,    exclude_in: [:create, :update]
+      to_many :route_mappings,      exclude_in: [:create, :update], link_only: true, route_for: :get
     end
 
     query_parameters :name, :space_guid, :organization_guid, :diego, :stack_guid
