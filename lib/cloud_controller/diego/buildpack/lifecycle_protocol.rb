@@ -26,6 +26,7 @@ module VCAP
             {
               'start_command' => app.command.nil? ? app.detected_start_command : app.command,
               'droplet_uri' => @blobstore_url_generator.unauthorized_perma_droplet_download_url(app),
+              'droplet_hash' => app.current_droplet.droplet_hash,
             }
           end
         end
