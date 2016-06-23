@@ -48,7 +48,7 @@ module VCAP::CloudController
 
             context 'the task has a buildpack droplet' do
               let(:app) { AppModel.make }
-              let(:droplet) { DropletModel.make(:buildpack, app_guid: app.guid, droplet_hash: "some_hash") }
+              let(:droplet) { DropletModel.make(:buildpack, app_guid: app.guid, droplet_hash: 'some_hash') }
 
               before do
                 app.buildpack_lifecycle_data = BuildpackLifecycleDataModel.make
@@ -67,7 +67,7 @@ module VCAP::CloudController
                   'disk_mb' => 1024,
                   'egress_rules' => ['running_egress_rule'],
                   'droplet_uri' => 'www.droplet.url',
-                  'droplet_hash' => "some_hash",
+                  'droplet_hash' => 'some_hash',
                   'lifecycle' => Lifecycles::BUILDPACK,
                   'command' => 'be rake my panda',
                   'completion_callback' => "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed",

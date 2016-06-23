@@ -17,7 +17,7 @@ module VCAP
           end
           let(:lifecycle_protocol) { LifecycleProtocol.new(blobstore_url_generator) }
           let(:app) do
-            app_with_droplet = App.make 
+            app_with_droplet = App.make
             app_with_droplet.add_new_droplet('meowmeowmeow')
             app_with_droplet.current_droplet.save
             app_with_droplet
@@ -25,7 +25,7 @@ module VCAP
 
           it_behaves_like 'a lifecycle protocol' do
             let(:app) do
-              app_with_droplet = App.make 
+              app_with_droplet = App.make
               app_with_droplet.add_new_droplet('meowmeowmeow')
               app_with_droplet.current_droplet.save
               app_with_droplet
@@ -130,7 +130,7 @@ module VCAP
 
             context 'droplet_hash' do
               before do
-                app.current_droplet.droplet_hash = "some_hash"
+                app.current_droplet.droplet_hash = 'some_hash'
               end
 
               it 'includes the droplet_hash' do
