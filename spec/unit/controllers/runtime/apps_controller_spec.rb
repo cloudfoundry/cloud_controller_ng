@@ -746,6 +746,38 @@ module VCAP::CloudController
           end
         end
       end
+
+      it 'updates the app' do
+        v2_app = App.make
+        v3_app = v2_app.app
+
+        stack = Stack.make(name: 'stack-name')
+
+        request = {
+          name: 'maria',
+          environment_json: { 'KEY' => 'val' },
+          stack_guid: stack.guid,
+          buildpack: 'http://example.com/buildpack',
+        }
+
+        set_current_user(admin_user, admin: true)
+
+        put "/v2/apps/#{v2_app.guid}", MultiJson.dump(request)
+
+        v2_app.reload
+        v3_app.reload
+
+        expect(v2_app.name).to eq('maria')
+        expect(v2_app.environment_json).to eq({ 'KEY' => 'val' })
+        expect(v2_app.stack).to eq(stack)
+        expect(v2_app.buildpack.url).to eq('http://example.com/buildpack')
+
+        expect(v3_app.name).to eq('maria')
+        expect(v3_app.environment_variables).to eq({ 'KEY' => 'val' })
+        expect(v3_app.lifecycle_type).to eq(BuildpackLifecycleDataModel::LIFECYCLE_TYPE)
+        expect(v3_app.lifecycle_data.stack).to eq('stack-name')
+        expect(v3_app.lifecycle_data.buildpack).to eq('http://example.com/buildpack')
+      end
     end
 
     describe 'delete an app' do

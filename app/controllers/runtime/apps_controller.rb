@@ -200,6 +200,32 @@ module VCAP::CloudController
       @app_event_repository.record_app_update(app, app.space, SecurityContext.current_user.guid, SecurityContext.current_user_email, request_attrs)
     end
 
+    def update(guid)
+      json_msg = self.class::UpdateMessage.decode(body)
+      @request_attrs = json_msg.extract(stringify_keys: true)
+      logger.debug 'cc.update', guid: guid, attributes: redact_attributes(:update, request_attrs)
+      raise InvalidRequest unless request_attrs
+
+      obj = find_guid(guid)
+
+      before_update(obj)
+
+      model.db.transaction do
+        obj.lock!
+        obj.app.lock! if obj.app
+
+        validate_access(:read_for_update, obj, request_attrs)
+
+        obj.update_from_hash(request_attrs)
+
+        validate_access(:update, obj, request_attrs)
+      end
+
+      after_update(obj)
+
+      [HTTP::CREATED, object_renderer.render_json(self.class, obj, @opts)]
+    end
+
     def create
       json_msg = self.class::CreateMessage.decode(body)
 
@@ -250,7 +276,6 @@ module VCAP::CloudController
           docker_credentials_json: request_attrs['docker_credentials_json'],
           ports:                   request_attrs['ports'],
           route_guids:             request_attrs['route_guids'],
-          service_binding_guids:   request_attrs['service_binding_guids'],
           app:                     v3_app
         )
 
