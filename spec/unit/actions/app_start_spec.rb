@@ -9,17 +9,16 @@ module VCAP::CloudController
 
     describe '#start' do
       let(:environment_variables) { { 'FOO' => 'bar' } }
-      let!(:process1) { App.make(:process, state: 'STOPPED', app: app_model) }
-      let!(:process2) { App.make(:process, state: 'STOPPED', app: app_model) }
-
-      let(:app_model) do
-        AppModel.make(:buildpack,
-                      { desired_state: 'STOPPED',
-                        droplet_guid: droplet_guid,
-                        environment_variables: environment_variables })
-      end
 
       context 'when the app has a docker lifecycle' do
+        let(:app_model) do
+          AppModel.make(:docker,
+            { desired_state: 'STOPPED',
+              droplet_guid: droplet_guid,
+              environment_variables: environment_variables })
+        end
+        let!(:process1) { App.make(:process, state: 'STOPPED', app: app_model, docker_image: 'unset') }
+        let!(:process2) { App.make(:process, state: 'STOPPED', app: app_model, docker_image: 'unset') }
         let(:package) { PackageModel.make(:docker, package_hash: 'some-awesome-thing', state: PackageModel::READY_STATE) }
         let(:droplet) { DropletModel.make(:docker, package_guid: package.guid, state: DropletModel::STAGED_STATE, docker_receipt_image: package.docker_data.image) }
         let(:droplet_guid) { droplet.guid }
@@ -43,6 +42,14 @@ module VCAP::CloudController
 
       context 'when the app has a buildpack lifecycle' do
         context 'when the droplet exists' do
+          let(:app_model) do
+            AppModel.make(:buildpack,
+              { desired_state: 'STOPPED',
+                droplet_guid: droplet_guid,
+                environment_variables: environment_variables })
+          end
+          let!(:process1) { App.make(:process, state: 'STOPPED', app: app_model) }
+          let!(:process2) { App.make(:process, state: 'STOPPED', app: app_model) }
           let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, droplet_hash: 'the-hash') }
           let(:droplet_guid) { droplet.guid }
 

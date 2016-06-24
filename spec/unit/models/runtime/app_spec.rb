@@ -2310,27 +2310,6 @@ module VCAP::CloudController
             end
           end
         end
-
-        context 'when using a docker app' do
-          before do
-            app.update_from_hash(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
-            app.add_droplet(Droplet.new(
-                              app: app,
-                              droplet_hash: 'the-droplet-hash',
-                              execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
-            ))
-            app.droplet_hash = 'the-droplet-hash'
-            app.save
-          end
-
-          it 'does not save the app port' do
-            expect(app.reload.ports).to be nil
-            app.route_mappings.each do |rm|
-              expect(rm.user_provided_app_port).to be_nil
-              expect(rm.app_port).to be nil
-            end
-          end
-        end
       end
 
       context 'when the app has a route mapping' do
