@@ -4,8 +4,6 @@ RSpec.describe 'Service Broker API integration' do
   describe 'v2.10' do
     include VCAP::CloudController::BrokerApiHelper
 
-    before { setup_cc }
-
     describe 'Binding' do
       let(:broker_response_status) { 200 }
       let(:broker_response_body) do
@@ -22,15 +20,10 @@ RSpec.describe 'Service Broker API integration' do
       end
       let(:app_guid) { @app_guid }
       let(:service_instance_guid) { @service_instance_guid }
-      let(:request_from_cc_to_broker) do
-        {
-          plan_id: 'plan1-guid-here',
-          service_id: 'service-guid-here'
-        }
-      end
       let(:catalog) { default_catalog(requires: ['volume_mount']) }
 
       before do
+        setup_cc
         setup_broker(catalog)
         provision_service
         create_app
