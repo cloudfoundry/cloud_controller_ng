@@ -38,6 +38,7 @@ module VCAP::CloudController
     def validate!(org, params)
       validate_remove_billing_manager_by_guid!(org) if params[:relation] == :billing_managers
       validate_remove_manager_by_guid!(org) if params[:relation] == :managers
+      validate_remove_user_by_guid!(org, params[:related_guid]) if params[:relation] == :users
     end
 
     def validate_remove_billing_manager_by_guid!(org)
@@ -48,6 +49,16 @@ module VCAP::CloudController
     def validate_remove_manager_by_guid!(org)
       return if org.managers.count > 1
       raise CloudController::Errors::ApiError.new_from_details('LastManagerInOrg')
+    end
+
+    def validate_remove_user_by_guid!(org, user_guid)
+      if org.managers.count == 1 && org.managers[0].guid == user_guid
+        raise CloudController::Errors::ApiError.new_from_details('LastManagerInOrg')
+      end
+
+      if org.billing_managers.count == 1 && org.billing_managers[0].guid == user_guid
+        raise CloudController::Errors::ApiError.new_from_details('LastBillingManagerInOrg')
+      end
     end
   end
 end

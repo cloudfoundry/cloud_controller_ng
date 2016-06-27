@@ -366,21 +366,42 @@ module VCAP::CloudController
             expect(decoded_response['code']).to eq(10003)
           end
         end
+
       end
 
       context 'as a manager' do
-        context 'when acting on another user' do
-          let(:other_user) { User.make }
 
-          before do
-            org.add_manager(user)
-            org.add_user(other_user)
-          end
+        before do
+          org.add_manager(user)
+        end
 
-          it 'succeeds' do
-            delete "/v2/users/#{other_user.guid}/organizations/#{org.guid}"
-            expect(last_response.status).to eq(204)
-          end
+        it 'succeeds removing itself if it is not the only manager' do
+          org.add_manager(User.make)
+          delete "/v2/users/#{user.guid}/organizations/#{org.guid}"
+          expect(last_response.status).to eq(204)
+        end
+
+        it 'cannot remove itself if it is the only manager' do
+          delete "/v2/users/#{user.guid}/organizations/#{org.guid}"
+          expect(last_response.status).to eq(403)
+        end
+      end
+
+      context 'as a billing manager' do
+
+        before do
+          org.add_billing_manager(user)
+        end
+
+        it 'can remove itself if it is not the only billing manager' do
+          org.add_billing_manager(User.make)
+          delete "/v2/users/#{user.guid}/organizations/#{org.guid}"
+          expect(last_response.status).to eq(204)
+        end
+
+        it 'cannot remove itself if it is the only billing manager' do
+          delete "/v2/users/#{user.guid}/organizations/#{org.guid}"
+          expect(last_response.status).to eq(403)
         end
       end
 

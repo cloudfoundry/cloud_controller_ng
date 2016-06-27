@@ -486,14 +486,11 @@ module VCAP::CloudController
               context 'when the user is the last user in the org' do
                 let(:org_users) { [user.guid] }
 
-                it 'allows the user to remove themselves' do
+                it 'does not allow the user to remove themselves' do
                   org.add_space(org_space_empty)
                   expect(org.users).to include(user)
                   delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
-                  expect(last_response.status).to eql(204)
-
-                  org.refresh
-                  expect(org.user_guids).not_to include(user.guid)
+                  expect(last_response.status).to eql(403)
                 end
               end
             end
