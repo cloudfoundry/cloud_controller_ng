@@ -17,6 +17,14 @@ module VCAP::CloudController
       admin_user?
     end
 
+    def can_remove_related_object?(object, params=nil)
+      read_for_update?(object, params)
+    end
+
+    def read_related_object_for_update?(object, params=nil)
+      read_for_update?(object, params)
+    end
+
     def update?(object, params=nil)
       admin_user?
     end
@@ -42,6 +50,14 @@ module VCAP::CloudController
 
     def read_for_update_with_token?(_)
       admin_user? || has_write_scope?
+    end
+
+    def can_remove_related_object_with_token?(*args)
+      read_for_update_with_token?(*args)
+    end
+
+    def read_related_object_for_update_with_token?(*args)
+      read_for_update_with_token?(*args)
     end
 
     def update_with_token?(_)

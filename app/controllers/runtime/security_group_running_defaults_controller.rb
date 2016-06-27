@@ -8,7 +8,7 @@ module VCAP::CloudController
       "#{V2_ROUTE_PREFIX}/config/running_security_groups"
     end
 
-    def self.not_found_exception(guid)
+    def self.not_found_exception(guid, _find_model)
       CloudController::Errors::ApiError.new_from_details('SecurityGroupRunningDefaultInvalid', guid)
     end
 

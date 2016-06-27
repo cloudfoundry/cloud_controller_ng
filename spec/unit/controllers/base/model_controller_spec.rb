@@ -634,20 +634,12 @@ module VCAP::CloudController
           context 'because read_for_update? denies access' do
             it 'fails' do
               expect_any_instance_of(TestModelAccess).to receive(:read_for_update?).with(
-                instance_of(TestModel), { 'test_model_many_to_one' => associated_model1.guid }).and_return(false)
-
-              put "/v2/test_models/#{model.guid}/test_model_many_to_ones/#{associated_model1.guid}", '{}'
-
-              expect(last_response.status).to eq(403)
-              model.reload
-              expect(model.test_model_many_to_ones).to_not include(associated_model1)
-            end
-          end
-
-          context 'because update? denies access' do
-            it 'fails' do
-              expect_any_instance_of(TestModelAccess).to receive(:update?).with(
-                instance_of(TestModel), { 'test_model_many_to_one' => associated_model1.guid }).and_return(false)
+                instance_of(TestModel), {
+                'test_model_many_to_one' => associated_model1.guid,
+                verb: 'add',
+                relation: :test_model_many_to_ones,
+                related_guid: associated_model1.guid
+              }).and_return(false)
 
               put "/v2/test_models/#{model.guid}/test_model_many_to_ones/#{associated_model1.guid}", '{}'
 
