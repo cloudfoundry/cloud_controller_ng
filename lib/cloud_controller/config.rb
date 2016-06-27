@@ -266,6 +266,12 @@ module VCAP::CloudController
         optional(:security_event_logging) => {
           enabled: bool
         },
+
+        optional(:bits_service) => {
+          enabled: bool,
+          optional(:public_endpoint) => String,
+          optional(:private_endpoint) => String
+        }
       }
     end
 

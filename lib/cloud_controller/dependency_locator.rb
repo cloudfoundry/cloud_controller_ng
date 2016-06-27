@@ -11,6 +11,7 @@ require 'cloud_controller/diego/stager_client'
 require 'cloud_controller/diego/tps_client'
 require 'cloud_controller/diego/messenger'
 require 'cloud_controller/blobstore/client_provider'
+require 'bits_service/resource_pool'
 
 module CloudController
   class DependencyLocator
@@ -79,7 +80,9 @@ module CloudController
 
       Blobstore::ClientProvider.provide(
         options: options,
-        directory_key: options.fetch(:droplet_directory_key)
+        directory_key: options.fetch(:droplet_directory_key),
+        resource_type: :droplets,
+        bits_service_options: bits_service_options
       )
     end
 
@@ -89,7 +92,9 @@ module CloudController
       Blobstore::ClientProvider.provide(
         options: options,
         directory_key: options.fetch(:droplet_directory_key),
-        root_dir: 'buildpack_cache'
+        root_dir: 'buildpack_cache',
+        resource_type: :buildpack_cache,
+        bits_service_options: bits_service_options
       )
     end
 
@@ -98,7 +103,9 @@ module CloudController
 
       Blobstore::ClientProvider.provide(
         options: options,
-        directory_key: options.fetch(:app_package_directory_key)
+        directory_key: options.fetch(:app_package_directory_key),
+        resource_type: :packages,
+        bits_service_options: bits_service_options
       )
     end
 
@@ -116,7 +123,9 @@ module CloudController
 
       Blobstore::ClientProvider.provide(
         options: options,
-        directory_key: options.fetch(:buildpack_directory_key, 'cc-buildpacks')
+        directory_key: options.fetch(:buildpack_directory_key, 'cc-buildpacks'),
+        resource_type: :buildpacks,
+        bits_service_options: bits_service_options
       )
     end
 
@@ -220,6 +229,19 @@ module CloudController
       else
         CloudController::BlobSender::DefaultLocalBlobSender.new
       end
+    end
+
+    def bits_service_resource_pool
+      return nil unless use_bits_service
+      BitsService::ResourcePool.new(endpoint: bits_service_options[:private_endpoint])
+    end
+
+    def bits_service_options
+      @config[:bits_service] || { enabled: false }
+    end
+
+    def use_bits_service
+      bits_service_options[:enabled]
     end
 
     private
