@@ -9,7 +9,7 @@ gem 'eventmachine', '~> 1.0.9'
 
 gem 'fog'
 gem 'i18n'
-gem 'nokogiri', '~> 1.6.2'
+gem 'nokogiri', '~> 1.6.8'
 gem 'unf'
 gem 'netaddr'
 gem 'rfc822'
