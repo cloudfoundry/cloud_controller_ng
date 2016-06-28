@@ -4,39 +4,25 @@ module VCAP::CloudController
   module Jobs
     module Runtime
       class BitsServicePacker < VCAP::CloudController::Jobs::CCJob
-        attr_accessor :app_guid, :uploaded_compressed_path, :fingerprints
-
-        def initialize(app_guid, uploaded_compressed_path, fingerprints)
+        def initialize(app_guid, zip_of_files_not_in_blobstore_path, cached_fingerprints)
           @app_guid = app_guid
-          @uploaded_compressed_path = uploaded_compressed_path
-          @fingerprints = fingerprints
+          @zip_of_files_not_in_blobstore_path = zip_of_files_not_in_blobstore_path
+          @cached_fingerprints = cached_fingerprints
+          @resource_pool = CloudController::DependencyLocator.instance.bits_service_resource_pool
+          @package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
         end
 
         def perform
-          logger.info("Packing the app bits for app '#{app_guid}' - Using BITS SERVICE")
+          logger.info("Packing the app bits for app '#{@app_guid}' - Using BITS SERVICE")
 
-          app = VCAP::CloudController::App.find(guid: app_guid)
-
+          app = VCAP::CloudController::App.find(guid: @app_guid)
           if app.nil?
-            logger.error("App not found: #{app_guid}")
+            logger.error("App not found: #{@app_guid}")
             return
           end
 
-          resource_pool = CloudController::DependencyLocator.instance.bits_service_resource_pool
-
-          if uploaded_compressed_path.to_s != ''
-            entries_response = resource_pool.upload_entries(uploaded_compressed_path)
-            receipt = JSON.parse(entries_response.body)
-            fingerprints.concat(receipt)
-          end
-          package_response = resource_pool.bundles(fingerprints.to_json)
-
-          package = Tempfile.new('package.zip').binmode
-          package.write(package_response.body)
-          package.close
-
-          package_blobstore.cp_to_blobstore(package.path, app.guid)
-          app.package_hash = Digester.new.digest_file(package)
+          fingerprints_from_upload = upload_missing_entries(@zip_of_files_not_in_blobstore_path)
+          app.package_hash = generate_package(@cached_fingerprints | fingerprints_from_upload, 'package.zip', app.guid)
           app.save
         rescue => e
           app.mark_as_failed_to_stage
@@ -52,14 +38,33 @@ module VCAP::CloudController
           1
         end
 
-        def logger
-          @logger ||= Steno.logger('cc.background')
-        end
-
         private
 
-        def package_blobstore
-          @package_blobstore ||= CloudController::DependencyLocator.instance.package_blobstore
+        def upload_missing_entries(zip_of_files_not_in_blobstore_path)
+          if zip_of_files_not_in_blobstore_path.to_s != ''
+            entries_response = @resource_pool.upload_entries(zip_of_files_not_in_blobstore_path)
+            JSON.parse(entries_response.body)
+          else
+            []
+          end
+        end
+
+        def generate_package(fingerprints, package_filename, app_guid)
+          bundle_response = @resource_pool.bundles(fingerprints.to_json)
+          package = create_temp_file_with_content(package_filename, bundle_response.body)
+          @package_blobstore.cp_to_blobstore(package.path, app_guid)
+          Digester.new.digest_file(package)
+        end
+
+        def create_temp_file_with_content(filename, content)
+          package = Tempfile.new(filename).binmode
+          package.write(content)
+          package.close
+          package
+        end
+
+        def logger
+          @logger ||= Steno.logger('cc.background')
         end
       end
     end
