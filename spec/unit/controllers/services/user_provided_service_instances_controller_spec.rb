@@ -154,6 +154,86 @@ module VCAP::CloudController
           expect(decoded_response['resources'].length).to eq(1)
           expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
         end
+
+        it 'allows filtering by multiple keys' do
+          org_guid = service_instance.space.organization.guid
+          space_guid = service_instance.space.guid
+          get "v2/user_provided_service_instances?q=space_guid:#{space_guid}&q=organization_guid%20IN%20#{org_guid}"
+          puts last_response.body
+
+          expect(last_response.status).to eq(200)
+          expect(decoded_response['resources'].length).to eq(1)
+          expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
+        end
+
+        context 'when filtering by org guid' do
+          let(:org1) { Organization.make(guid: '1') }
+          let(:org2) { Organization.make(guid: '2') }
+          let(:org3) { Organization.make(guid: '3') }
+          let(:space1) { Space.make(organization: org1) }
+          let(:space2) { Space.make(organization: org2) }
+          let(:space3) { Space.make(organization: org3) }
+
+          before { set_current_user_as_admin }
+
+          context 'when the operator is ":"' do
+            it 'successfully filters' do
+              instance1 = UserProvidedServiceInstance.make(name: 'instance-1', space: space1)
+              UserProvidedServiceInstance.make(name: 'instance-2', space: space2)
+
+              get "v2/user_provided_service_instances?q=organization_guid:#{org1.guid}"
+
+              expect(last_response.status).to eq(200)
+              expect(decoded_response['resources'].length).to eq(1)
+              expect(decoded_response['resources'][0].fetch('metadata').fetch('guid')).to eq(instance1.guid)
+            end
+
+            context 'when filtering by other parameters as well' do
+              it 'filters by both parameters' do
+                instance1 = UserProvidedServiceInstance.make(name: 'instance-1', space: space1)
+                UserProvidedServiceInstance.make(name: 'instance-2', space: space1)
+                UserProvidedServiceInstance.make(name: instance1.name, space: space2)
+
+                get "v2/user_provided_service_instances?q=organization_guid:#{org1.guid}&q=name:#{instance1.name}"
+
+                expect(last_response.status).to eq(200)
+                resources = decoded_response['resources']
+                expect(resources.length).to eq(1)
+                expect(resources[0].fetch('metadata').fetch('guid')).to eq(instance1.guid)
+              end
+            end
+          end
+
+          context 'when the operator is "IN"' do
+            it 'successfully filters' do
+              instance1 = UserProvidedServiceInstance.make(name: 'inst1', space: space1)
+              instance2 = UserProvidedServiceInstance.make(name: 'inst2', space: space2)
+              UserProvidedServiceInstance.make(name: 'inst3', space: space3)
+
+              get "v2/user_provided_service_instances?q=organization_guid%20IN%20#{org1.guid},#{org2.guid}"
+
+              expect(last_response.status).to eq(200)
+              services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+              expect(services.length).to eq(2)
+              expect(services).to include(instance1.guid)
+              expect(services).to include(instance2.guid)
+            end
+          end
+
+
+          context 'when the query is missing an operator or a value' do
+            it 'filters by org_guid = nil (to match behavior of filters other than org guid)' do
+              UserProvidedServiceInstance.make(name: 'instance-1', space: space1)
+              UserProvidedServiceInstance.make(name: 'instance-2', space: space2)
+
+              get 'v2/user_provided_service_instances?q=organization_guid'
+
+              expect(last_response.status).to eq(200)
+              services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+              expect(services.length).to eq(0)
+            end
+          end
+        end
       end
     end
 

@@ -99,20 +99,41 @@ module VCAP::CloudController
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
-      single_filter = opts[:q][0] if opts[:q]
+      # special case: we cannot query columns in the org table from the UPSI
+      # table, so we have to join w/ orgs and then select on the spaces of the org
+      org_filters = []
 
-      if single_filter && single_filter.start_with?('organization_guid')
-        org_guid = single_filter.split(':')[1]
-
-        Query.
-          filtered_dataset_from_query_params(model, ds, qp, { q: '' }).
-          select_all(:service_instances).
-          left_join(:spaces, id: :service_instances__space_id).
-          left_join(:organizations, id: :spaces__organization_id).
-          where(organizations__guid: org_guid)
-      else
-        super(model, ds, qp, opts)
+      opts[:q] ||= []
+      opts[:q].each do |filter|
+        key, comparison, value = filter.split(/(:|>=|<=|<|>| IN )/, 2)
+        org_filters.push [key, comparison, value] if key == 'organization_guid'
       end
+
+      opts[:q] -= org_filters.map(&:join)
+      opts.delete(:q) if opts[:q].blank?
+
+      if org_filters.empty?
+        super(model, ds, qp, opts)
+      else
+        super(model, ds, qp, opts).where(space_id: select_on_org_filters_using_spaces(org_filters))
+      end
+    end
+
+    def select_on_org_filters_using_spaces(org_filters)
+      space_ids = Space.select(:spaces__id).left_join(:organizations, id: :spaces__organization_id)
+      org_filters.each do |_, comparison, value|
+        space_ids = if value.blank?
+                      space_ids.where(organizations__guid: nil)
+                    elsif comparison == ':'
+                      space_ids.where(organizations__guid: value)
+                    elsif comparison == ' IN '
+                      space_ids.where(organizations__guid: value.split(','))
+                    else
+                      space_ids.where("organizations.guid #{comparison} ?", value)
+                    end
+      end
+
+      space_ids
     end
 
     define_messages
