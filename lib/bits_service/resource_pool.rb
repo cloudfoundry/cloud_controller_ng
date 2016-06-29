@@ -87,13 +87,18 @@ module BitsService
         request_id: request_id
       })
       request.add_field(VCAP::Request::HEADER_NAME, VCAP::Request.current_id)
+
       http_client.request(request).tap do |response|
         @logger.info('Response', { code: response.code, vcap_id: VCAP::Request.current_id, request_id: request_id })
       end
     end
 
     def http_client
-      @http_client ||= Net::HTTP.new(endpoint.host, endpoint.port)
+      @http_client ||= Net::HTTP.new(endpoint.host, endpoint.port).tap { |c| c.read_timeout = request_timeout }
+    end
+
+    def request_timeout
+      CloudController::DependencyLocator.instance.config[:request_timeout_in_seconds]
     end
   end
 end
