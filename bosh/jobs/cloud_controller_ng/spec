@@ -55,6 +55,10 @@ properties:
     default: ""
   app_domains:
     description: "Array of domains for user apps (example: 'user.app.space.foo', a user app called 'neat' will listen at 'http://neat.user.app.space.foo')"
+    example:  |
+      - name: example.com
+      - name: tcp.example.com
+        router_group_name: default-tcp
 
   app_ssh.host_key_fingerprint:
     description: "Fingerprint of the host key of the SSH proxy that brokers connections to application instances"
