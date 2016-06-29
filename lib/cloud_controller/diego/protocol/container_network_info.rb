@@ -11,6 +11,7 @@ module VCAP::CloudController
         def to_h
           {
             'properties' => {
+              'policy_group_id' => process.guid,
               'app_id' => process.guid,
               'space_id' => process.space.guid,
               'org_id' => process.organization.guid,
