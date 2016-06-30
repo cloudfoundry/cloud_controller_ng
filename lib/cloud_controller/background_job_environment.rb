@@ -35,4 +35,8 @@ class BackgroundJobEnvironment
       end
     end
   end
+
+  def stop
+    EM.stop
+  end
 end

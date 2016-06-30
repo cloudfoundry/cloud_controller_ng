@@ -133,5 +133,6 @@ end
     require 'cloud_controller/seeds'
     BackgroundJobEnvironment.new(RakeConfig.config).setup_environment
     VCAP::CloudController::Seeds.write_seed_data(RakeConfig.config)
+    BackgroundJobEnvironment.new(RakeConfig.config).stop
   end
 end
