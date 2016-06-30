@@ -24,6 +24,8 @@ module IntegrationSetup
   end
 
   def start_cc(opts={})
+    @cc_pids ||= []
+
     config_file = opts[:config] || 'config/cloud_controller.yml'
     config = YAML.load_file(config_file)
 
@@ -39,7 +41,6 @@ module IntegrationSetup
       run_cmd('bundle exec rake db:recreate db:migrate db:seed', wait: true, env: env)
     end
 
-    @cc_pids ||= []
     @cc_pids << run_cmd("bin/cloud_controller -c #{config_file}", opts.merge(env: { 'DB_CONNECTION_STRING' => db_connection_string }.merge(opts[:env] || {})))
 
     info_endpoint = "http://localhost:#{config['external_port']}/info"
@@ -80,23 +81,27 @@ module IntegrationSetupHelpers
   def run_cmd(cmd, opts={})
     opts[:env] ||= {}
     project_path = File.join(File.dirname(__FILE__), '../../..')
-    spawn_opts = {
-      chdir: project_path,
-      out: opts[:debug] ? :out : '/dev/null',
-      err: opts[:debug] ? :out : '/dev/null',
-    }
 
-    pid = Process.spawn(opts[:env], cmd, spawn_opts)
+    spawn_opts = { chdir: project_path }
 
     if opts[:wait]
-      _, child_status = Process.wait2(pid)
-      raise "`#{cmd}` exited with #{child_status}" unless child_status.success?
+      stdout, stderr, child_status = Open3.capture3(opts[:env], cmd, spawn_opts)
+      pid = child_status.pid
+
+      unless child_status.success?
+        raise "`#{cmd}` exited with #{child_status} #{coredump_text(child_status)}\n#{failure_output(stdout, stderr)}"
+      end
+    else
+      spawn_opts[:out] = opts[:debug] ? :out : '/dev/null'
+      spawn_opts[:err] = opts[:debug] ? :out : '/dev/null'
+
+      pid = Process.spawn(opts[:env], cmd, spawn_opts)
     end
 
     pid
   end
 
-  def graceful_kill(name, pid)
+  def graceful_kill(_name, pid)
     Process.kill('TERM', pid)
     Timeout.timeout(1) do
       Process.wait(pid)
@@ -113,5 +118,18 @@ module IntegrationSetupHelpers
     true
   rescue Errno::ESRCH
     false
+  end
+
+  private
+
+  def coredump_text(status)
+    status.coredump? ? '(core dumped)' : '(without core dump)'
+  end
+
+  def failure_output(stdout, stderr)
+    "================ STDOUT\n" \
+    "#{stdout}\n" \
+    "================ STDERR\n" \
+    "#{stderr}"
   end
 end
