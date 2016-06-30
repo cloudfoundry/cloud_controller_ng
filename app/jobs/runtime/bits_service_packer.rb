@@ -8,8 +8,6 @@ module VCAP::CloudController
           @app_guid = app_guid
           @zip_of_files_not_in_blobstore_path = zip_of_files_not_in_blobstore_path
           @cached_fingerprints = cached_fingerprints
-          @resource_pool = CloudController::DependencyLocator.instance.bits_service_resource_pool
-          @package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
         end
 
         def perform
@@ -42,7 +40,7 @@ module VCAP::CloudController
 
         def upload_missing_entries(zip_of_files_not_in_blobstore_path)
           if zip_of_files_not_in_blobstore_path.to_s != ''
-            entries_response = @resource_pool.upload_entries(zip_of_files_not_in_blobstore_path)
+            entries_response = resource_pool.upload_entries(zip_of_files_not_in_blobstore_path)
             JSON.parse(entries_response.body)
           else
             []
@@ -50,9 +48,9 @@ module VCAP::CloudController
         end
 
         def generate_package(fingerprints, package_filename, app_guid)
-          bundle_response = @resource_pool.bundles(fingerprints.to_json)
+          bundle_response = resource_pool.bundles(fingerprints.to_json)
           package = create_temp_file_with_content(package_filename, bundle_response.body)
-          @package_blobstore.cp_to_blobstore(package.path, app_guid)
+          package_blobstore.cp_to_blobstore(package.path, app_guid)
           Digester.new.digest_file(package)
         end
 
@@ -65,6 +63,14 @@ module VCAP::CloudController
 
         def logger
           @logger ||= Steno.logger('cc.background')
+        end
+
+        def resource_pool
+          CloudController::DependencyLocator.instance.bits_service_resource_pool
+        end
+
+        def package_blobstore
+          CloudController::DependencyLocator.instance.package_blobstore
         end
       end
     end
