@@ -11,23 +11,27 @@ source $JOB_DIR/bin/ruby_version.sh
 source /var/vcap/packages/capi_utils/syslog_utils.sh
 source /var/vcap/packages/capi_utils/pid_utils.sh
 
-tee_output_to_sys_log_and_file "${LOG_DIR}" "$(basename "$0")"
-
 case $1 in
 
   start)
     pid_guard $PIDFILE "Nginx Newrelic Plugin"
 
     mkdir -p $RUN_DIR
+    chown -R vcap:vcap $RUN_DIR
+
     mkdir -p $LOG_DIR
+    chown -R vcap:vcap $LOG_DIR
 
     echo $$ > $PIDFILE
 
     cp $CONFIG_DIR/newrelic_plugin.yml $NGINX_NEWRELIC_PLUGIN_DIR/config
+    chown -R vcap:vcap $NGINX_NEWRELIC_PLUGIN_DIR/config/newrelic_plugin.yml
 
     cd $NGINX_NEWRELIC_PLUGIN_DIR
 
-    exec $NGINX_NEWRELIC_PLUGIN_DIR/newrelic_nginx_agent
+    tee_output_to_sys_log_and_file "${LOG_DIR}" "$(basename "$0")"
+
+    exec chpst -u vcap:vcap $NGINX_NEWRELIC_PLUGIN_DIR/newrelic_nginx_agent
     ;;
 
   stop)
