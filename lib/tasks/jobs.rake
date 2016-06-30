@@ -1,8 +1,9 @@
 namespace :jobs do
   desc "Clear the delayed_job queue."
   task :clear do
-    BackgroundJobEnvironment.new(RakeConfig.config).setup_environment
-    Delayed::Job.delete_all
+    BackgroundJobEnvironment.new(RakeConfig.config).setup_environment do
+      Delayed::Job.delete_all
+    end
   end
 
   desc "Start a delayed_job worker that works on jobs that require access to local resources."

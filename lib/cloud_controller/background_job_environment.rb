@@ -34,6 +34,12 @@ class BackgroundJobEnvironment
         VCAP::CloudController::Dea::Client.configure(@config, message_bus, no_op_dea_pool, blobstore_url_generator)
       end
     end
+
+    if block_given?
+      yield
+
+      stop
+    end
   end
 
   def stop
