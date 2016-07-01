@@ -28,14 +28,8 @@ module VCAP::CloudController
 
       crash_payload['version'] = Diego::ProcessGuid.app_version(process_guid)
 
-      if process.is_v3?
-        Repositories::ProcessEventRepository.record_crash(
-          process,
-          crash_payload
-        )
-      else
-        Repositories::AppEventRepository.new.create_app_exit_event(process, crash_payload)
-      end
+      Repositories::ProcessEventRepository.record_crash(process, crash_payload)
+      Repositories::AppEventRepository.new.create_app_exit_event(process, crash_payload)
     end
 
     private

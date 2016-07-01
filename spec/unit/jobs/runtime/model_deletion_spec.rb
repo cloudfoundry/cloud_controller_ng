@@ -12,7 +12,7 @@ module VCAP::CloudController
       it { is_expected.to be_a_valid_job }
 
       describe '#perform' do
-        let!(:app) { App.make(space: space) }
+        let!(:app) { AppFactory.make(space: space) }
 
         context 'deleting a space' do
           it 'can delete the space' do

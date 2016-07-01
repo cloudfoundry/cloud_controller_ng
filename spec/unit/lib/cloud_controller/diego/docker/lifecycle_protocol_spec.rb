@@ -63,7 +63,7 @@ module VCAP
               context 'when there is no current_droplet for app' do
                 let(:docker_image) { 'cloudfoundry/diego-docker-app:latest' }
                 let(:app) do
-                  App.make(
+                  AppFactory.make(
                     name: Sham.name,
                     space: Space.make,
                     stack: Stack.default,

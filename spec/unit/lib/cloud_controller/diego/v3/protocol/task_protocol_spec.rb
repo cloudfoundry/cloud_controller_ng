@@ -78,8 +78,8 @@ module VCAP::CloudController
             end
 
             context 'the task has a docker file droplet' do
-              let(:app) { AppModel.make }
-              let(:droplet) { DropletModel.make(:docker, app_guid: app.guid, environment_variables: { 'foo' => 'bar' }, docker_receipt_image: 'cloudfoundry/capi-docker') }
+              let(:app) { AppModel.make(:docker) }
+              let(:droplet) { DropletModel.make(:docker, app: app, environment_variables: { 'foo' => 'bar' }, docker_receipt_image: 'cloudfoundry/capi-docker') }
 
               it 'contains the correct payload for creating a task' do
                 result = protocol.task_request(task, config)

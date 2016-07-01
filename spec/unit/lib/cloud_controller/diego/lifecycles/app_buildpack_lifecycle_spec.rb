@@ -12,7 +12,7 @@ module VCAP::CloudController
     it_behaves_like 'a app lifecycle'
 
     describe '#create_lifecycle_data_model' do
-      let(:app) { AppModel.make }
+      let!(:app) { AppModel.make }
 
       it 'creates BuildpackLifecycleDataModel' do
         expect {

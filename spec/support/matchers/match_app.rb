@@ -19,7 +19,7 @@ RSpec::Matchers.define :match_app do |expected_app|
     unless actual_event.app_name == expected_app.name
       problems << "event.app_name: #{actual_event.app_name}, app.name: #{expected_app.name}"
     end
-    unless actual_event.org_guid == expected_app.organization.guid
+    unless actual_event.org_guid == expected_app.space.organization.guid || actual_event.org_guid.nil?
       problems << "event.org_guid: #{actual_event.org_guid}, app.space.organization_guid: #{expected_app.organization.guid}"
     end
     unless actual_event.space_guid == expected_app.space_guid

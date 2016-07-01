@@ -60,7 +60,7 @@ module VCAP
 
             context 'when a buildpack is requested' do
               before do
-                app.buildpack = 'ruby'
+                app.app.lifecycle_data.update(buildpack: 'ruby')
               end
 
               it 'sends buildpacks with skip detect' do
@@ -75,7 +75,7 @@ module VCAP
             context 'when a custom buildpack is requested' do
               let(:buildpack_url) { 'http://example.com/buildpack' }
               before do
-                app.buildpack = buildpack_url
+                app.app.lifecycle_data.update(buildpack: buildpack_url)
               end
 
               it 'sends buildpacks with skip detect' do

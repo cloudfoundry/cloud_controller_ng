@@ -72,9 +72,9 @@ module VCAP::CloudController
     describe 'Associations' do
       it { is_expected.to have_associated :domain }
       it { is_expected.to have_associated :space, associated_instance: ->(route) { Space.make(organization: route.domain.owning_organization) } }
-      it { is_expected.to have_associated :apps, associated_instance: ->(route) { App.make(space: route.space) } }
+      it { is_expected.to have_associated :apps, associated_instance: ->(route) { AppFactory.make(space: route.space) } }
       it { is_expected.to have_associated :route_mappings, associated_instance: ->(route) { RouteMappingModel.make(app: AppModel.make(space: route.space), route: route) } }
-      it { is_expected.to have_associated :app_route_mappings, associated_instance: ->(route) { RouteMapping.make(app: App.make(space: route.space), route: route) } }
+      it { is_expected.to have_associated :app_route_mappings, associated_instance: ->(route) { RouteMapping.make(app: AppFactory.make(space: route.space), route: route) } }
 
       context 'when bound to a service instance' do
         let(:route) { Route.make }
@@ -182,8 +182,8 @@ module VCAP::CloudController
 
       it 'does not associate non-web v2 apps' do
         space = Space.make
-        app1 = App.make(type: 'web', space: space)
-        app2 = App.make(type: 'other', space: space)
+        app1 = AppFactory.make(type: 'web', space: space)
+        app2 = AppFactory.make(type: 'other', space: space)
         route = Route.make(space: space)
 
         app1.add_route(route)

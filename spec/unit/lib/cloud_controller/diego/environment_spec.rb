@@ -4,17 +4,16 @@ require_relative '../../../../../lib/vcap/vars_builder'
 
 module VCAP::CloudController::Diego
   RSpec.describe Environment do
-    let(:app) { VCAP::CloudController::AppFactory.make }
+    let(:app) { VCAP::CloudController::AppFactory.make(environment_json: environment) }
     let!(:binding) { VCAP::CloudController::ServiceBinding.make(app: app, service_instance: VCAP::CloudController::ManagedServiceInstance.make(space: app.space)) }
-    before do
-      app.environment_json = {
+    let(:environment) do
+      {
         APP_KEY1: 'APP_VAL1',
         APP_KEY2: { nested: 'data' },
         APP_KEY3: [1, 2, 3],
         APP_KEY4: 1,
         APP_KEY5: true,
       }
-      app
     end
 
     it 'returns the correct environment hash for an application' do

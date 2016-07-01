@@ -32,7 +32,7 @@ RSpec.resource 'Service Bindings', type: [:api, :legacy_api] do
     example 'Create a Service Binding' do
       space = VCAP::CloudController::Space.make
       service_instance_guid = VCAP::CloudController::ServiceInstance.make(space: space).guid
-      app_guid = VCAP::CloudController::App.make(space: space).guid
+      app_guid = VCAP::CloudController::AppFactory.make(space: space).guid
       request_json = MultiJson.dump({ service_instance_guid: service_instance_guid, app_guid: app_guid, parameters: { the_service_broker: 'wants this object' } }, pretty: true)
 
       client.post '/v2/service_bindings', request_json, headers

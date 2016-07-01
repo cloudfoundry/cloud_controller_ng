@@ -30,10 +30,10 @@ module VCAP::CloudController
       end
 
       it 'does not associate non-web v2 apps' do
-        space = Space.make
-        org = space.organization
-        app1 = App.make(type: 'web', space: space)
-        App.make(type: 'other', space: space)
+        app_model = AppModel.make
+        org = app_model.space.organization
+        app1 = App.make(type: 'web', app: app_model)
+        App.make(type: 'other', app: app_model)
         expect(org.apps).to match_array([app1])
       end
 

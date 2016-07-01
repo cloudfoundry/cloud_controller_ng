@@ -47,7 +47,7 @@ module VCAP::CloudController
       errored = false
 
       begin
-        decrypted_value = Encryptor.decrypt(saved_attribute, model.salt)
+        decrypted_value = Encryptor.decrypt(saved_attribute, model.send(attr_salt))
       rescue OpenSSL::Cipher::CipherError
         errored = true
       end

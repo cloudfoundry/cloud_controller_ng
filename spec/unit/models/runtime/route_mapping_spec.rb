@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       let(:route) { Route.make(space: space) }
-      let(:app) { App.make(space: space) }
+      let(:app) { AppFactory.make(space: space) }
 
       it { is_expected.to have_associated :app, associated_instance: ->(m) { app } }
       it { is_expected.to have_associated :route, associated_instance: ->(m) { route } }

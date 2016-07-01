@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     describe '#system_env' do
       context 'when there are no services' do
-        let(:app) { App.make(environment_json: { 'jesse' => 'awesome' }) }
+        let(:app) { AppFactory.make(environment_json: { 'jesse' => 'awesome' }) }
 
         it 'contains an empty vcap_services' do
           expect(system_env_presenter.system_env[:VCAP_SERVICES]).to eq({})
@@ -15,7 +15,7 @@ module VCAP::CloudController
 
       context 'when there are services' do
         let(:space) { Space.make }
-        let(:app) { App.make(environment_json: { 'jesse' => 'awesome' }, space: space) }
+        let(:app) { AppFactory.make(environment_json: { 'jesse' => 'awesome' }, space: space) }
         let(:service) { Service.make(label: 'elephantsql-n/a', provider: 'cool-provider') }
         let(:service_alt) { Service.make(label: 'giraffesql-n/a') }
         let(:service_plan) { ServicePlan.make(service: service) }
@@ -87,7 +87,7 @@ module VCAP::CloudController
         end
 
         context 'when process belongs to a parent(v3) app bound to a service' do
-          let(:parent_app) { AppModel.make space_guid: space.guid }
+          let(:parent_app) { AppModel.make(space: space) }
           let(:service) { Service.make(label: 'rabbit', tags: ['swell']) }
           let(:service_plan) { ServicePlan.make(service: service) }
           let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'rabbit-instance') }

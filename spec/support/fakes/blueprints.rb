@@ -37,16 +37,17 @@ module VCAP::CloudController
     guid       { Sham.guid }
     name       { Sham.name }
     space      { Space.make }
-  end
-
-  AppModel.blueprint(:buildpack) do
-    guid       { Sham.guid }
-    name       { Sham.name }
-    space { Space.make }
     buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(app: object.save) }
   end
 
   AppModel.blueprint(:docker) do
+    guid       { Sham.guid }
+    name       { Sham.name }
+    space { Space.make }
+    buildpack_lifecycle_data { nil.tap { |_| object.save } }
+  end
+
+  AppModel.blueprint(:buildpack) do
   end
 
   PackageModel.blueprint do
@@ -207,29 +208,14 @@ module VCAP::CloudController
   # if you want to create an app with droplet, use AppFactory.make
   # This is because the lack of factory hooks in Machinist.
   App.blueprint do
-    name { Sham.name }
-    space { Space.make }
-    stack { Stack.make }
     instances { 1 }
     type { 'web' }
-    app {
-      a = AppModel.make(:buildpack,
-        name:                  object.name,
-        environment_variables: object.environment_json,
-        space:                 object.space,
-      )
-      a.buildpack_lifecycle_data.stack = object.stack.name
-      a.buildpack_lifecycle_data.save
-      a
-    }
+    app { AppModel.make }
   end
 
   App.blueprint(:process) do
-    app { AppModel.make(environment_variables: object.environment_json) }
+    app { AppModel.make }
     diego { true }
-    name { Sham.name }
-    space { app.space }
-    stack { Stack.make }
     instances { 1 }
     type { Sham.name }
     metadata { {} }

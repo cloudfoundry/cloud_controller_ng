@@ -18,7 +18,7 @@ module VCAP::CloudController
     end
 
     def copy(destination_app, user_guid, user_email)
-      new_droplet = DropletModel.new(state: DropletModel::PENDING_STATE, app_guid: destination_app.guid)
+      new_droplet = DropletModel.new(state: DropletModel::PENDING_STATE, app: destination_app)
 
       # Needed to execute serializers and deserializers correctly on source and destination models
       CLONED_ATTRIBUTES.each do |attr|
@@ -45,13 +45,15 @@ module VCAP::CloudController
           destination_app.space.organization_guid
           )
       end
-      new_droplet.reload
+
+      new_droplet
     end
 
     def copy_buildpack_droplet(new_droplet)
-      BuildpackLifecycleDataModel.create(droplet_guid: new_droplet.guid,
-                                         stack:                                         @source_droplet.buildpack_lifecycle_data.stack,
-                                         buildpack:                                     @source_droplet.buildpack_lifecycle_data.buildpack)
+      new_droplet.buildpack_lifecycle_data = BuildpackLifecycleDataModel.new(
+        stack:     @source_droplet.buildpack_lifecycle_data.stack,
+        buildpack: @source_droplet.buildpack_lifecycle_data.buildpack
+      )
 
       copy_job = Jobs::V3::DropletBitsCopier.new(@source_droplet.guid, new_droplet.guid)
       Jobs::Enqueuer.new(copy_job, queue: 'cc-generic').enqueue

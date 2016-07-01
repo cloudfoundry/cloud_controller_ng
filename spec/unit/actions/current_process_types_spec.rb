@@ -21,7 +21,7 @@ module VCAP::CloudController
       end
 
       it 'deletes processes that are no longer mentioned' do
-        process_to_delete = App.make(type: 'bogus', space: app.space, app: app)
+        process_to_delete = App.make(type: 'bogus', app: app)
 
         current_process_types.process_current_droplet(app)
 
@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       it 'updates existing processes' do
-        existing_process = AppFactory.make(type: 'other', command: 'old', space: app.space, app: app)
+        existing_process = AppFactory.make(type: 'other', command: 'old', app: app)
         expect {
           current_process_types.process_current_droplet(app)
         }.to change { existing_process.refresh.command }.from('old').to('stuff')

@@ -92,7 +92,7 @@ module VCAP::CloudController
         context 'when an admin buildpack is associated with the app' do
           let(:buildpack) { Buildpack.make }
           before do
-            app.admin_buildpack         = buildpack
+            app.app.lifecycle_data.update(buildpack: buildpack.name)
             app.detected_buildpack_guid = buildpack.guid
             app.detected_buildpack_name = buildpack.name
           end
@@ -107,7 +107,7 @@ module VCAP::CloudController
           let(:buildpack_url) { 'https://git.example.com/repo.git' }
 
           before do
-            app.buildpack = buildpack_url
+            app.app.lifecycle_data.update(buildpack: buildpack_url)
           end
 
           it 'will create an event with the buildpack url as the name' do
@@ -123,7 +123,7 @@ module VCAP::CloudController
 
         context "when the DEA doesn't provide optional buildpack information" do
           before do
-            app.buildpack = nil
+            app.app.lifecycle_data.update(buildpack: nil)
           end
 
           it 'will create an event that does not contain buildpack name or guid' do
@@ -611,7 +611,7 @@ module VCAP::CloudController
             let(:buildpack) { Buildpack.make }
 
             before do
-              app.buildpack               = buildpack.name
+              app.app.lifecycle_data.update(buildpack: buildpack.name)
               app.detected_buildpack      = 'Detect script output'
               app.detected_buildpack_guid = buildpack.guid
               app.detected_buildpack_name = buildpack.name

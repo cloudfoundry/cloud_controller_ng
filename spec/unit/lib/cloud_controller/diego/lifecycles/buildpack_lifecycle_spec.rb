@@ -3,7 +3,8 @@ require_relative 'lifecycle_shared'
 
 module VCAP::CloudController
   RSpec.describe BuildpackLifecycle do
-    let!(:package) { PackageModel.make(type: PackageModel::BITS_TYPE) }
+    let(:app) { AppModel.create(name: 'some-app', space: Space.make) }
+    let!(:package) { PackageModel.make(type: PackageModel::BITS_TYPE, app: app) }
     let(:staging_message) { DropletCreateMessage.new(lifecycle: { data: request_data, type: 'buildpack' }) }
     let(:request_data) { {} }
 
@@ -56,7 +57,7 @@ module VCAP::CloudController
       context 'when the user does not specify a stack' do
         context 'and the app has a stack' do
           before do
-            BuildpackLifecycleDataModel.make(app: package.app)
+            BuildpackLifecycleDataModel.make(app: app)
           end
 
           it 'uses the value set on the app' do
@@ -66,7 +67,7 @@ module VCAP::CloudController
 
         context 'and the app does not have a stack' do
           before do
-            BuildpackLifecycleDataModel.make(app: package.app, stack: nil)
+            BuildpackLifecycleDataModel.make(app: app, stack: nil)
           end
 
           it 'uses the default value for stack' do
@@ -80,7 +81,7 @@ module VCAP::CloudController
       let(:app_buildpack) { Buildpack.make }
       let(:staging_buildpack) { Buildpack.make }
       let(:app) { AppModel.make }
-      let(:package) { PackageModel.make(app_guid: app.guid) }
+      let(:package) { PackageModel.make(app: app) }
 
       describe 'buildpack_receipt_buildpack_guid' do
         context 'when the buildpack is in the system' do
@@ -88,7 +89,7 @@ module VCAP::CloudController
             let(:staging_message) { DropletCreateMessage.new }
 
             before do
-              BuildpackLifecycleDataModel.make(app: app, buildpack: app_buildpack.name)
+              app.lifecycle_data.update(buildpack: app_buildpack.name)
             end
 
             it 'is the guid of the app buildpack' do
@@ -103,7 +104,7 @@ module VCAP::CloudController
             end
 
             before do
-              BuildpackLifecycleDataModel.make(app: app, buildpack: app_buildpack.name)
+              app.lifecycle_data.update(buildpack: app_buildpack.name)
             end
 
             it 'is the guid of the staging message buildpack' do

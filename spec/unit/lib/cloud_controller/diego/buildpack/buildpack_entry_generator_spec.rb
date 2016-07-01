@@ -29,7 +29,7 @@ module VCAP::CloudController
           context 'when the app has a CustomBuildpack' do
             context 'when the CustomBuildpack uri ends with .zip' do
               before do
-                app.buildpack = 'http://example.com/mybuildpack.zip'
+                app.app.lifecycle_data.update(buildpack: 'http://example.com/mybuildpack.zip')
               end
 
               it "should use the CustomBuildpack's uri and name it 'custom', and use the url as the key" do
@@ -41,7 +41,7 @@ module VCAP::CloudController
 
             context 'when the CustomBuildpack uri does not end with .zip' do
               before do
-                app.buildpack = 'http://example.com/mybuildpack'
+                app.app.lifecycle_data.update(buildpack: 'http://example.com/mybuildpack')
               end
 
               it "should use the CustomBuildpack's uri and name it 'custom', and use the url as the key" do
@@ -54,7 +54,7 @@ module VCAP::CloudController
 
           context 'when the app has a named buildpack' do
             before do
-              app.buildpack = 'java'
+              app.app.lifecycle_data.update(buildpack: 'java')
             end
 
             it 'should use that buildpack' do

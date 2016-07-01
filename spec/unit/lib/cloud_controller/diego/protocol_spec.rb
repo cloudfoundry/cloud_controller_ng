@@ -189,7 +189,7 @@ module VCAP::CloudController
             'file_descriptors' => app.file_descriptors,
             'health_check_type' => app.health_check_type,
             'health_check_timeout_in_seconds' => app.health_check_timeout,
-            'log_guid' => app.guid,
+            'log_guid' => app.app.guid,
             'log_source' => 'APP/PROC/WEB',
             'memory_mb' => app.memory,
             'num_instances' => app.desired_instances,
@@ -273,22 +273,14 @@ module VCAP::CloudController
         end
 
         describe 'log_guid' do
-          context 'when the app is v2' do
-            it 'is the v2 app guid' do
-              expect(message).to match(hash_including('log_guid' => app.guid))
-            end
+          let(:parent_app) { AppModel.make }
+          before do
+            app.app_guid = parent_app.guid
+            app.save
           end
 
-          context 'when the app is v3' do
-            let(:parent_app) { AppModel.make }
-            before do
-              app.app_guid = parent_app.guid
-              app.save
-            end
-
-            it 'is the v3 app guid' do
-              expect(message).to match(hash_including('log_guid' => app.app.guid))
-            end
+          it 'is the parent app guid' do
+            expect(message).to match(hash_including('log_guid' => app.app.guid))
           end
         end
 

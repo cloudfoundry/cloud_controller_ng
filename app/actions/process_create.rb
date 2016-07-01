@@ -10,8 +10,6 @@ module VCAP::CloudController
     def create(app, message)
       attrs = message.merge({
         diego:             true,
-        space:             app.space,
-        name:              message[:type] == 'web' ? app.name : "v3-#{app.name}-#{message[:type]}",
         instances:         message[:type] == 'web' ? 1 : 0,
         health_check_type: message[:type] == 'web' ? 'port' : 'process',
         metadata:          {},

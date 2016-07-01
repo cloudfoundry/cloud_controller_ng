@@ -80,9 +80,7 @@ module VCAP::CloudController
       app_model.processes_dataset.
         select(:"#{ProcessModel.table_name}__guid",
         :"#{ProcessModel.table_name}__id",
-        :"#{ProcessModel.table_name}__app_guid",
-        :"#{ProcessModel.table_name}__name",
-        :"#{ProcessModel.table_name}__space_id").all
+        :"#{ProcessModel.table_name}__app_guid").all
     end
 
     def tasks_to_delete(app_model)

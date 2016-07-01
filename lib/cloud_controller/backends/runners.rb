@@ -25,7 +25,7 @@ module VCAP::CloudController
     def diego_apps(batch_size, last_id)
       App.
         eager(:current_saved_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
-        where('apps.id > ?', last_id).
+        where('processes.id > ?', last_id).
         where('deleted_at IS NULL').
         where(state: 'STARTED').
         where(package_state: 'STAGED').

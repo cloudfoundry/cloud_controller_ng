@@ -3,7 +3,10 @@ module VCAP::CloudController
     class MissingConfigFileError < StandardError; end
     class MissingDefaultStackError < StandardError; end
 
-    one_to_many :apps, conditions: { type: 'web' }
+    many_to_many :apps, join_table: BuildpackLifecycleDataModel.table_name,
+                        left_primary_key: :name, left_key: :stack,
+                        right_primary_key: :app_guid, right_key: :app_guid,
+                        conditions: { type: 'web' }
 
     plugin :serialization
 

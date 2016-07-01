@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:app) { AppModel.make }
     let(:user) { double(:user, guid: '7') }
     let(:user_email) { '1@2.3' }
-    let(:process) { App.make(:process, app: app, space: space, type: process_type, ports: ports, health_check_type: 'none') }
+    let(:process) { App.make(:process, app: app, type: process_type, ports: ports, health_check_type: 'none') }
     let(:process_type) { 'web' }
     let(:ports) { [8888] }
     let(:requested_port) { 8888 }
@@ -260,7 +260,7 @@ module VCAP::CloudController
         end
 
         context 'for a different process type' do
-          let(:worker_process) { App.make(:process, app_guid: app.guid, space: space, type: 'worker', ports: [8888]) }
+          let(:worker_process) { App.make(:process, app: app, type: 'worker', ports: [8888]) }
           let(:worker_message) { RouteMappingsCreateMessage.new({ app_port: 8888, relationships: { process: { type: 'worker' } } }) }
 
           it 'allows a new route mapping' do

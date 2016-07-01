@@ -7,10 +7,14 @@ require 'repositories/droplet_event_repository'
 
 module VCAP::CloudController
   class DropletCreate
-    class InvalidPackage < StandardError; end
-    class SpaceQuotaExceeded < StandardError; end
-    class OrgQuotaExceeded < StandardError; end
-    class DiskLimitExceeded < StandardError; end
+    class InvalidPackage < StandardError
+    end
+    class SpaceQuotaExceeded < StandardError
+    end
+    class OrgQuotaExceeded < StandardError
+    end
+    class DiskLimitExceeded < StandardError
+    end
 
     def initialize(memory_limit_calculator=StagingMemoryCalculator.new,
       disk_limit_calculator=StagingDiskCalculator.new,
@@ -21,8 +25,8 @@ module VCAP::CloudController
       @memory_limit_calculator = memory_limit_calculator
       @disk_limit_calculator   = disk_limit_calculator
       @environment_builder     = environment_presenter
-      @actor = actor
-      @actor_name = actor_email
+      @actor                   = actor
+      @actor_name              = actor_email
     end
 
     def create_and_stage(package, lifecycle, message)
@@ -52,7 +56,7 @@ module VCAP::CloudController
           package.app.name,
           package.app.space_guid,
           package.app.space.organization_guid
-          )
+        )
       end
 
       load_association(droplet)
@@ -74,9 +78,9 @@ module VCAP::CloudController
 
     def get_staging_details(package, lifecycle)
       staging_message = lifecycle.staging_message
-      app   = package.app
-      space = package.space
-      org   = space.organization
+      app             = package.app
+      space           = package.space
+      org             = space.organization
 
       memory_limit          = get_memory_limit(staging_message.staging_memory_in_mb, space, org)
       disk_limit            = get_disk_limit(staging_message.staging_disk_in_mb)

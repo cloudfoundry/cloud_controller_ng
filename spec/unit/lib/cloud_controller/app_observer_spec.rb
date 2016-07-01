@@ -9,8 +9,7 @@ module VCAP::CloudController
     let(:app_active) { true }
     let(:diego) { false }
     let(:app) do
-      double(
-        :app,
+      instance_double(App,
         package_hash: package_hash,
         guid: 'app-guid',
         previous_changes: previous_changes,
@@ -19,8 +18,9 @@ module VCAP::CloudController
         active?: app_active,
         buildpack_cache_key: key,
         diego: diego,
-        is_v3?: false,
-        staging?: staging?
+        staging?: staging?,
+        droplet: nil,
+        app: instance_double(AppModel, packages: [])
       )
     end
     let(:app_started) { false }
@@ -71,7 +71,7 @@ module VCAP::CloudController
       end
 
       it "does NOT delete the app's buildpack cache when the app is a v3 process" do
-        allow(app).to receive(:is_v3?).and_return(true)
+        allow(app).to receive(:droplet).and_return(DropletModel.new)
 
         delete_buildpack_cache_jobs = Delayed::Job.where("handler like '%buildpack_cache_blobstore%'")
         expect { subject }.to_not change { delete_buildpack_cache_jobs.count }
@@ -99,7 +99,7 @@ module VCAP::CloudController
 
         context 'when the app is a v3 process' do
           before do
-            allow(app).to receive(:is_v3?).and_return(true)
+            allow(app).to receive(:app).and_return(instance_double(AppModel, packages: ['not-empty']))
           end
 
           it "does not delete the app's package" do

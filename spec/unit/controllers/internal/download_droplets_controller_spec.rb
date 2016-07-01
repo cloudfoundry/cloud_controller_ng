@@ -141,7 +141,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the app is a v3 app' do
+      context 'when the app has a v3 droplet' do
         let(:v3_app) { AppModel.make(droplet: droplet) }
         let(:process) { App.make(app: v3_app) }
         let(:droplet) { DropletModel.make(state: 'STAGED') }

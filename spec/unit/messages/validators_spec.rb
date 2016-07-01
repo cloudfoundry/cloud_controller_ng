@@ -167,6 +167,18 @@ module VCAP::CloudController::Validators
         expect(fake_class.errors[:field]).to include 'cannot start with VCAP_'
       end
 
+      it 'does not allow variables that start with VMC_' do
+        fake_class = environment_variables_class.new field: { VMC_BANANA: 'woo' }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'cannot start with VMC_'
+      end
+
+      it 'does not allow variables that start with vmc_' do
+        fake_class = environment_variables_class.new field: { vmc_donkey: 'hee-haw' }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'cannot start with VMC_'
+      end
+
       it 'does not allow variables that are PORT' do
         fake_class = environment_variables_class.new field: { PORT: 'el lunes nos ponemos camisetas naranjas' }
         expect(fake_class.valid?).to be_falsey

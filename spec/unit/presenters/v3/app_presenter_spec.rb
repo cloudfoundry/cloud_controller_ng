@@ -5,18 +5,15 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe AppPresenter do
     let(:app) do
       VCAP::CloudController::AppModel.make(
-        created_at: Time.at(1),
-        updated_at: Time.at(2),
         environment_variables: { 'some' => 'stuff' },
         desired_state: 'STOPPED',
       )
     end
 
     before do
-      VCAP::CloudController::BuildpackLifecycleDataModel.create(
+      app.lifecycle_data.update(
         buildpack: 'git://user@github.com:repo',
         stack: 'the-happiest-stack',
-        app: app
       )
     end
 
@@ -24,16 +21,15 @@ module VCAP::CloudController::Presenters::V3
       let(:result) { AppPresenter.new(app).to_hash }
 
       it 'presents the app as json' do
-        process = VCAP::CloudController::App.make(space: app.space, instances: 4)
-        app.add_process(process)
+        app.add_process({ app: app, instances: 4 })
 
         expect(result[:guid]).to eq(app.guid)
         expect(result[:name]).to eq(app.name)
         expect(result[:desired_state]).to eq(app.desired_state)
         expect(result[:environment_variables]).to eq(app.environment_variables)
         expect(result[:total_desired_instances]).to eq(4)
-        expect(result[:created_at]).to eq('1970-01-01T00:00:01Z')
-        expect(result[:updated_at]).to eq('1970-01-01T00:00:02Z')
+        expect(result[:created_at]).to be_a(Time)
+        expect(result[:updated_at]).to be_a(Time)
         expect(result[:links]).to include(:droplet)
         expect(result[:links]).to include(:start)
         expect(result[:links]).to include(:stop)
@@ -82,7 +78,7 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'includes a link to the droplets if present' do
-            VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: 'PENDING')
+            VCAP::CloudController::DropletModel.make(app: app, state: 'PENDING')
             expect(result[:links][:droplets][:href]).to eq("/v3/apps/#{app.guid}/droplets")
           end
         end

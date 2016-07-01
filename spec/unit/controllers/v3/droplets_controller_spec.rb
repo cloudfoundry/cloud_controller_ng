@@ -17,11 +17,7 @@ RSpec.describe DropletsController, type: :controller do
       allow_user_write_access(user, space: space)
       allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
       allow(stagers).to receive(:stager_for_package).and_return(double(:stager, stage: nil))
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(
-        app:       app_model,
-        buildpack: nil,
-        stack:     VCAP::CloudController::Stack.default.name
-      )
+      app_model.lifecycle_data.update(buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns a 201 Created response' do
@@ -111,8 +107,7 @@ RSpec.describe DropletsController, type: :controller do
           let(:req_body) { {} }
 
           before do
-            app_model.buildpack_lifecycle_data.buildpack = buildpack.name
-            app_model.buildpack_lifecycle_data.save
+            app_model.lifecycle_data.update(buildpack: buildpack.name)
           end
 
           it 'uses the apps buildpack' do

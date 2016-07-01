@@ -4,21 +4,21 @@ require 'cloud_controller/diego/staging_request'
 module VCAP::CloudController::Diego
   RSpec.describe StagingRequest do
     let(:app) do
-      a = VCAP::CloudController::App.make
-      a.staging_task_id = 'staging-task-id'
-      a.stack = VCAP::CloudController::Stack.default
-      a.file_descriptors = 16384
-      a.memory = 1024
-      a.disk_quota = 4096
-      a
+      VCAP::CloudController::AppFactory.make(
+        staging_task_id:  'staging-task-id',
+        stack:            VCAP::CloudController::Stack.default,
+        file_descriptors: 16384,
+        memory:           1024,
+        disk_quota:       1946,
+      )
     end
 
     let(:staging_payload) do
       {
         app_id: app.guid,
-        file_descriptors: app.file_descriptors,
-        memory_mb: app.memory,
-        disk_mb: app.disk_quota,
+        file_descriptors: 16384,
+        memory_mb: 1024,
+        disk_mb: 1946,
         environment: Environment.new(app).as_json,
         egress_rules: [],
         timeout: 1800,
@@ -34,9 +34,9 @@ module VCAP::CloudController::Diego
     let(:staging_request) do
       request = StagingRequest.new
       request.app_id = app.guid
-      request.file_descriptors = app.file_descriptors
-      request.memory_mb = app.memory
-      request.disk_mb = app.disk_quota
+      request.file_descriptors = 16384
+      request.memory_mb = 1024
+      request.disk_mb = 1946
       request.environment = Environment.new(app).as_json
       request.egress_rules = []
       request.timeout = 1800

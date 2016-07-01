@@ -42,6 +42,8 @@ module VCAP::CloudController::Validators
             record.errors.add(attribute, 'cannot start with CF_')
           elsif key =~ /^VCAP_/i
             record.errors.add(attribute, 'cannot start with VCAP_')
+          elsif key =~ /^VMC/i
+            record.errors.add(attribute, 'cannot start with VMC_')
           elsif key =~ /^PORT$/i
             record.errors.add(attribute, 'cannot set PORT')
           end

@@ -834,7 +834,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     describe '#bind' do
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
-      let(:app) { VCAP::CloudController::App.make(space: instance.space) }
+      let(:app) { VCAP::CloudController::AppFactory.make(space: instance.space) }
       let(:binding) do
         VCAP::CloudController::ServiceBinding.new(
           service_instance: instance,

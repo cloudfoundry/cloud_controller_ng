@@ -5,16 +5,17 @@ module VCAP::CloudController
   RSpec.describe DropletCopy do
     let(:droplet_copy) { DropletCopy.new(source_droplet) }
     let(:source_space) { VCAP::CloudController::Space.make }
-    let(:target_app) { VCAP::CloudController::AppModel.make(name: 'target-app-name') }
-    let(:source_app) { VCAP::CloudController::AppModel.make(name: 'source-app-name', space_guid: source_space.guid) }
+    let!(:target_app) { VCAP::CloudController::AppModel.make(name: 'target-app-name') }
+    let!(:source_app) { VCAP::CloudController::AppModel.make(name: 'source-app-name', space: source_space) }
     let(:lifecycle_type) { :buildpack }
-    let!(:source_droplet) { VCAP::CloudController::DropletModel.make(lifecycle_type,
-      app_guid: source_app.guid,
-      droplet_hash: 'abcdef',
-      process_types: { web: 'bundle exec rails s' },
-      environment_variables: { 'THING' => 'STUFF' },
-      state: VCAP::CloudController::DropletModel::STAGING_STATE)
-    }
+    let!(:source_droplet) do
+      VCAP::CloudController::DropletModel.make(lifecycle_type,
+        app_guid:              source_app.guid,
+        droplet_hash:          'abcdef',
+        process_types:         { web: 'bundle exec rails s' },
+        environment_variables: { 'THING' => 'STUFF' },
+        state:                 VCAP::CloudController::DropletModel::STAGING_STATE)
+    end
 
     describe '#copy' do
       it 'copies the passed in droplet to the target app' do

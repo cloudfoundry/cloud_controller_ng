@@ -5,7 +5,7 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe 'Associations' do
-      it { is_expected.to have_associated :app, associated_instance: ->(binding) { App.make(space: binding.space) } }
+      it { is_expected.to have_associated :app, associated_instance: ->(binding) { AppFactory.make(space: binding.space) } }
       it { is_expected.to have_associated :service_instance, associated_instance: ->(binding) { ServiceInstance.make(space: binding.space) } }
     end
 
@@ -34,7 +34,7 @@ module VCAP::CloudController
           end
 
           it 'does not allow changing app after it has been set' do
-            binding.app = App.make(space: binding.app.space)
+            binding.app = AppFactory.make(space: binding.app.space)
             expect { binding.save }.to raise_error Sequel::ValidationFailed, /app/
           end
         end

@@ -31,7 +31,7 @@ module VCAP::CloudController
 
       describe 'recursive deletion' do
         it 'deletes associated packages' do
-          package = PackageModel.make(app_guid: app.guid)
+          package = PackageModel.make(app: app)
 
           expect {
             app_delete.delete(app_dataset)
@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated droplets' do
-          droplet = DropletModel.make(app_guid: app.guid)
+          droplet = DropletModel.make(app: app)
 
           expect {
             app_delete.delete(app_dataset)
@@ -51,7 +51,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated processes' do
-          process = App.make(app: app, space: app.space)
+          process = App.make(app: app)
 
           expect {
             app_delete.delete(app_dataset)
@@ -71,7 +71,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated tasks' do
-          task_model = TaskModel.make(app_guid: app.guid, name: 'task1', state: TaskModel::SUCCEEDED_STATE)
+          task_model = TaskModel.make(app: app, name: 'task1', state: TaskModel::SUCCEEDED_STATE)
 
           expect {
             app_delete.delete(app_dataset)

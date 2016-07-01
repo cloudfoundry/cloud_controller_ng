@@ -45,7 +45,6 @@ module VCAP::CloudController
       def desire_app_message(default_health_check_timeout)
         env = Environment.new(process, EnvironmentVariableGroup.running.environment_json).as_json
         logger.debug2("running environment: #{env.map { |e| e['name'] }}")
-        log_guid = process.is_v3? ? process.app.guid : process.guid
 
         {
           'process_guid'                    => ProcessGuid.from_process(process),
@@ -58,7 +57,7 @@ module VCAP::CloudController
           'num_instances'                   => process.desired_instances,
           'routes'                          => process.uris,
           'routing_info'                    => RoutingInfo.new(process).routing_info,
-          'log_guid'                        => log_guid,
+          'log_guid'                        => process.app.guid,
           'log_source'                      => "APP/PROC/#{process.type.upcase}",
           'health_check_type'               => process.health_check_type,
           'health_check_timeout_in_seconds' => process.health_check_timeout || default_health_check_timeout,

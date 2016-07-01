@@ -3,8 +3,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe AppModel do
-    let(:app_model) { AppModel.make }
-    let(:space) { Space.find(guid: app_model.space_guid) }
+    let(:app_model) { AppModel.create(space: space, name: 'some-name') }
+    let(:space) { Space.make }
 
     describe '#staging_in_progress' do
       context 'when a droplet is in staging state' do
@@ -33,6 +33,8 @@ module VCAP::CloudController
     end
 
     describe 'validations' do
+      it { is_expected.to strip_whitespace :name }
+
       describe 'name' do
         let(:space_guid) { space.guid }
         let(:app) { AppModel.make }
@@ -171,7 +173,7 @@ module VCAP::CloudController
       end
 
       context 'buildpack_lifecycle_data is nil' do
-        let(:non_buildpack_app_model) { AppModel.make }
+        let(:non_buildpack_app_model) { AppModel.create(name: 'non-buildpack', space: space) }
 
         it 'returns a docker data model' do
           expect(non_buildpack_app_model.lifecycle_data).to be_a(DockerLifecycleDataModel)

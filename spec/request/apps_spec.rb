@@ -145,16 +145,14 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v3/apps' do
     it 'returns a paginated list of apps the user has access to' do
-      buildpack                           = VCAP::CloudController::Buildpack.make(name: 'bp-name')
-      stack                               = VCAP::CloudController::Stack.make(name: 'stack-name')
-      app_model1                          = VCAP::CloudController::AppModel.make(:buildpack,
-        name:          'name1',
-        space:         space,
-        desired_state: 'STOPPED'
+      buildpack = VCAP::CloudController::Buildpack.make(name: 'bp-name')
+      stack     = VCAP::CloudController::Stack.make(name: 'stack-name')
+
+      app_model1 = VCAP::CloudController::AppModel.make(name: 'name1', space: space, desired_state: 'STOPPED')
+      app_model1.lifecycle_data.update(
+        buildpack: buildpack.name,
+        stack:     stack.name
       )
-      app_model1.lifecycle_data.buildpack = buildpack.name
-      app_model1.lifecycle_data.stack     = stack.name
-      app_model1.lifecycle_data.save
 
       app_model2 = VCAP::CloudController::AppModel.make(
         :docker,
@@ -217,7 +215,7 @@ RSpec.describe 'Apps' do
               'data' => {}
             },
             'created_at'              => iso8601,
-            'updated_at'              => nil,
+            'updated_at'              => iso8601,
             'environment_variables'   => {
               'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
             },
@@ -355,8 +353,8 @@ RSpec.describe 'Apps' do
       app_model.lifecycle_data.buildpack = buildpack.name
       app_model.lifecycle_data.stack     = stack.name
       app_model.lifecycle_data.save
-      app_model.add_process(VCAP::CloudController::App.make(space: space, instances: 1))
-      app_model.add_process(VCAP::CloudController::App.make(space: space, instances: 2))
+      app_model.add_process(VCAP::CloudController::App.make(instances: 1))
+      app_model.add_process(VCAP::CloudController::App.make(instances: 2))
 
       get "/v3/apps/#{app_model.guid}", nil, user_header
 
@@ -500,7 +498,7 @@ RSpec.describe 'Apps' do
     let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'app_name', space: space) }
     let!(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
     let!(:droplet) { VCAP::CloudController::DropletModel.make(package: package, app: app_model) }
-    let!(:process) { VCAP::CloudController::AppFactory.make(app: app_model, space: space) }
+    let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
 
     it 'deletes an App' do
       delete "/v3/apps/#{app_model.guid}", nil, user_header
@@ -933,7 +931,7 @@ RSpec.describe 'Apps' do
     end
 
     it 'creates audit.app.process.update events' do
-      process_to_update = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'web', command: 'original', space: app_model.space, metadata: {})
+      process_to_update = VCAP::CloudController::ProcessModel.make(:process, app: app_model, type: 'web', command: 'original')
 
       droplet = VCAP::CloudController::DropletModel.make(
         app:           app_model,
@@ -972,7 +970,7 @@ RSpec.describe 'Apps' do
     end
 
     it 'creates audit.app.process.delete events' do
-      process_to_delete = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'bob', space: app_model.space)
+      process_to_delete = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'bob')
 
       droplet = VCAP::CloudController::DropletModel.make(
         app:           app_model,

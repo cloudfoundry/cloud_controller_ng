@@ -3,13 +3,12 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe AppCrashedController do
     let(:diego_app) do
-      AppFactory.make.tap do |app|
-        app.package_state = 'PENDING'
-        app.state = 'STARTED'
-        app.staging_task_id = 'task-1'
-        app.diego = true
-        app.save
-      end
+      AppFactory.make(
+        package_state: 'PENDING',
+        state: 'STARTED',
+        staging_task_id: 'task-1',
+        diego: true
+      )
     end
 
     let(:process_guid) { Diego::ProcessGuid.from(diego_app.guid, 'some-version-guid') }

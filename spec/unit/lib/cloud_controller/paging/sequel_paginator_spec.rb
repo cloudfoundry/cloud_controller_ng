@@ -49,7 +49,7 @@ module VCAP::CloudController
 
       it 'works with a multi table result set' do
         options = { page: 2, per_page: per_page }
-        new_dataset = dataset.join(:packages, packages__app_guid: :apps_v3__guid)
+        new_dataset = dataset.join(:packages, packages__app_guid: :apps__guid)
         pagination_options = PaginationOptions.new(options)
 
         expect {

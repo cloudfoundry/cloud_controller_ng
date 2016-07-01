@@ -782,7 +782,7 @@ module VCAP::CloudController
         end
 
         describe 'deleting service instances' do
-          let(:app_model) { AppFactory.make(space_guid: space_guid) }
+          let(:app_model) { AppFactory.make(space: space) }
 
           let!(:service_instance_1) { ManagedServiceInstance.make(space_guid: space_guid) }
           let!(:service_instance_2) { ManagedServiceInstance.make(space_guid: space_guid) }

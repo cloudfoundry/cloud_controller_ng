@@ -5,7 +5,7 @@ module VCAP::CloudController
   module Repositories
     RSpec.describe ProcessEventRepository do
       let(:app) { AppModel.make(name: 'zach-loves-kittens') }
-      let(:process) { App.make(app: app, space: app.space, type: 'potato') }
+      let(:process) { App.make(app: app, type: 'potato') }
       let(:user_guid) { 'user_guid' }
       let(:email) { 'user-email' }
 

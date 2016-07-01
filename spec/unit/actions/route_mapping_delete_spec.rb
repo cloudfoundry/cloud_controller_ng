@@ -30,7 +30,7 @@ module VCAP::CloudController
       end
 
       context 'when a mapped process is present' do
-        let(:process) { AppFactory.make(app: app, space: space, type: 'other') }
+        let(:process) { AppFactory.make(app: app, type: 'other') }
 
         before do
           process.add_route(route)

@@ -22,14 +22,14 @@ module VCAP::CloudController
           space_name:                         app.space.name,
           buildpack_guid:                     buildpack_guid_for_app(app),
           buildpack_name:                     buildpack_name_for_app(app),
-          parent_app_guid:                    app.is_v3? ? app.app.guid : nil,
-          parent_app_name:                    app.is_v3? ? app.app.name : nil,
+          parent_app_guid:                    app.app.guid,
+          parent_app_name:                    app.app.name,
           process_type:                       app.type
         )
       end
 
       def buildpack_name_for_app(app)
-        if app.is_v2?
+        if !app.droplet.is_a?(DropletModel)
           app.custom_buildpack_url || app.detected_buildpack_name
         else
           process = app
@@ -44,8 +44,8 @@ module VCAP::CloudController
       end
 
       def buildpack_guid_for_app(app)
-        return app.detected_buildpack_guid if app.is_v2?
-        app.app.droplet.buildpack_receipt_buildpack_guid if app.app.droplet
+        return app.app.droplet.buildpack_receipt_buildpack_guid if app.droplet.is_a?(DropletModel)
+        app.detected_buildpack_guid
       end
 
       def create_from_task(task, state)
@@ -105,30 +105,31 @@ module VCAP::CloudController
         AppUsageEvent.dataset.truncate
 
         column_map = {
-          guid:                               :apps__guid,
-          app_guid:                           :apps__guid,
           app_name:                           :apps__name,
-          state:                              :apps__state,
-          previous_state:                     :apps__state,
-          package_state:                      :apps__package_state,
-          previous_package_state:             :apps__package_state,
-          instance_count:                     :apps__instances,
-          previous_instance_count:            :apps__instances,
-          memory_in_mb_per_instance:          :apps__memory,
-          previous_memory_in_mb_per_instance: :apps__memory,
+          guid:                               :processes__guid,
+          app_guid:                           :processes__guid,
+          state:                              :processes__state,
+          previous_state:                     :processes__state,
+          package_state:                      :processes__package_state,
+          previous_package_state:             :processes__package_state,
+          instance_count:                     :processes__instances,
+          previous_instance_count:            :processes__instances,
+          memory_in_mb_per_instance:          :processes__memory,
+          previous_memory_in_mb_per_instance: :processes__memory,
+          buildpack_guid:                     :processes__detected_buildpack_guid,
+          buildpack_name:                     :processes__detected_buildpack_name,
           space_guid:                         :spaces__guid,
           space_name:                         :spaces__name,
           org_guid:                           :organizations__guid,
-          buildpack_guid:                     :apps__detected_buildpack_guid,
-          buildpack_name:                     :apps__detected_buildpack_name,
           created_at:                         Sequel.datetime_class.now,
         }
 
-        usage_query = App.join(:spaces, id: :apps__space_id).
-                      join(:organizations, id: :spaces__organization_id).
+        usage_query = App.join(AppModel.table_name.to_sym, guid: :app_guid).
+                      join(Space.table_name.to_sym, guid: :space_guid).
+                      join(Organization.table_name.to_sym, id: :organization_id).
                       select(*column_map.values).
-                      where(apps__state: 'STARTED').
-                      order(:apps__id)
+                      where(processes__state: 'STARTED').
+                      order(:processes__id)
 
         AppUsageEvent.insert(column_map.keys, usage_query)
       end

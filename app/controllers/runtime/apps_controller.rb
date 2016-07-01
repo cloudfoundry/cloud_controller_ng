@@ -1,4 +1,5 @@
 require 'presenters/system_env_presenter'
+require 'queries/v2/app_query'
 
 module VCAP::CloudController
   class AppsController < RestController::ModelController
@@ -61,7 +62,7 @@ module VCAP::CloudController
     end
 
     def self.translate_validation_exception(e, attributes)
-      space_and_name_errors  = e.errors.on([:space_id, :name])
+      space_and_name_errors  = e.errors.on([:space_guid, :name])
       memory_errors          = e.errors.on(:memory)
       instance_number_errors = e.errors.on(:instances)
       app_instance_limit_errors = e.errors.on(:app_instance_limit)
@@ -114,6 +115,7 @@ module VCAP::CloudController
 
     def delete(guid)
       app = find_guid_and_validate_access(:delete, guid)
+      space = app.space
 
       if !recursive_delete? && app.service_bindings.present?
         raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_bindings', app.class.table_name)
@@ -123,7 +125,7 @@ module VCAP::CloudController
 
       @app_event_repository.record_app_delete_request(
         app,
-        app.space,
+        space,
         SecurityContext.current_user.guid,
         SecurityContext.current_user_email,
         recursive_delete?)
@@ -200,31 +202,70 @@ module VCAP::CloudController
       @app_event_repository.record_app_update(app, app.space, SecurityContext.current_user.guid, SecurityContext.current_user_email, request_attrs)
     end
 
+    # rubocop:disable Metrics/CyclomaticComplexity
     def update(guid)
       json_msg = self.class::UpdateMessage.decode(body)
       @request_attrs = json_msg.extract(stringify_keys: true)
       logger.debug 'cc.update', guid: guid, attributes: redact_attributes(:update, request_attrs)
       raise InvalidRequest unless request_attrs
 
-      obj = find_guid(guid)
+      app = find_guid(guid)
+      v3_app = app.app
 
-      before_update(obj)
+      before_update(app)
 
       model.db.transaction do
-        obj.lock!
-        obj.app.lock! if obj.app
+        app.lock!
+        v3_app.lock!
 
-        validate_access(:read_for_update, obj, request_attrs)
+        validate_access(:read_for_update, app, request_attrs)
 
-        obj.update_from_hash(request_attrs)
+        v3_app.name = request_attrs['name'] if request_attrs.key?('name')
+        v3_app.space_guid = request_attrs['space_guid'] if request_attrs.key?('space_guid')
+        v3_app.environment_variables = request_attrs['environment_json'] if request_attrs.key?('environment_json')
 
-        validate_access(:update, obj, request_attrs)
+        if request_attrs['docker_image'].blank?
+          v3_app.lifecycle_data.buildpack = request_attrs['buildpack'] if request_attrs.key?('buildpack')
+
+          if request_attrs.key?('stack_guid')
+            v3_app.lifecycle_data.stack = Stack.find(guid: request_attrs['stack_guid']).try(:name)
+            app.mark_for_restaging
+          end
+        end
+
+        app.production              = request_attrs['production'] if request_attrs.key?('production')
+        app.memory                  = request_attrs['memory'] if request_attrs.key?('memory')
+        app.instances               = request_attrs['instances'] if request_attrs.key?('instances')
+        app.disk_quota              = request_attrs['disk_quota'] if request_attrs.key?('disk_quota')
+        app.state                   = request_attrs['state'] if request_attrs.key?('state')
+        app.command                 = request_attrs['command'] if request_attrs.key?('command')
+        app.console                 = request_attrs['console'] if request_attrs.key?('console')
+        app.debug                   = request_attrs['debug'] if request_attrs.key?('debug')
+        app.health_check_type       = request_attrs['health_check_type'] if request_attrs.key?('health_check_type')
+        app.health_check_timeout    = request_attrs['health_check_timeout'] if request_attrs.key?('health_check_timeout')
+        app.diego                   = request_attrs['diego'] if request_attrs.key?('diego')
+        app.docker_image            = request_attrs['docker_image'] if request_attrs.key?('docker_image')
+        app.enable_ssh              = request_attrs['enable_ssh'] if request_attrs.key?('enable_ssh')
+        app.docker_credentials_json = request_attrs['docker_credentials_json'] if request_attrs.key?('docker_credentials_json')
+        app.ports                   = request_attrs['ports'] if request_attrs.key?('ports')
+        app.route_guids             = request_attrs['route_guids'] if request_attrs.key?('route_guids')
+
+        if request_attrs.key?('buildpack')
+          v3_app.lifecycle_data.save
+          validate_buildpack!(app)
+        end
+
+        app.save
+        v3_app.save
+
+        validate_access(:update, app, request_attrs)
       end
 
-      after_update(obj)
+      after_update(app)
 
-      [HTTP::CREATED, object_renderer.render_json(self.class, obj, @opts)]
+      [HTTP::CREATED, object_renderer.render_json(self.class, app, @opts)]
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     def create
       json_msg = self.class::CreateMessage.decode(body)
@@ -253,14 +294,9 @@ module VCAP::CloudController
           )
         end
 
-        app = App.create(
+        app = App.new(
           guid:                    v3_app.guid,
-          name:                    request_attrs['name'],
-          environment_json:        request_attrs['environment_json'],
           production:              request_attrs['production'],
-          space_guid:              request_attrs['space_guid'],
-          stack_guid:              request_attrs['stack_guid'],
-          buildpack:               request_attrs['buildpack'],
           memory:                  request_attrs['memory'],
           instances:               request_attrs['instances'],
           disk_quota:              request_attrs['disk_quota'],
@@ -279,6 +315,10 @@ module VCAP::CloudController
           app:                     v3_app
         )
 
+        validate_buildpack!(app)
+
+        app.save
+
         validate_access(:create, app, request_attrs)
       end
 
@@ -296,8 +336,22 @@ module VCAP::CloudController
       ]
     end
 
+    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
+      AppQuery.filtered_dataset_from_query_params(model, ds, qp, opts)
+    end
+
     def filter_dataset(dataset)
       dataset.where(type: 'web')
+    end
+
+    def validate_buildpack!(app)
+      if app.buildpack.custom? && custom_buildpacks_disabled?
+        raise CloudController::Errors::ApiError.new_from_details('AppInvalid', 'custom buildpacks are disabled')
+      end
+    end
+
+    def custom_buildpacks_disabled?
+      VCAP::CloudController::Config.config[:disable_custom_buildpacks]
     end
 
     define_messages

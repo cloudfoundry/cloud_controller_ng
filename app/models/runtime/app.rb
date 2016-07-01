@@ -11,32 +11,48 @@ require 'presenters/v3/cache_key_presenter'
 require_relative 'buildpack'
 
 module VCAP::CloudController
-  class App < Sequel::Model
+  class App < Sequel::Model(:processes)
+    include Serializer
+
     plugin :serialization
     plugin :after_initialize
+    plugin :many_through_many
 
     extend IntegerArraySerializer
 
     def after_initialize
-      default_instances = db_schema[:instances][:default].to_i
-
-      self.instances ||= default_instances
-      self.memory ||= VCAP::CloudController::Config.config[:default_app_memory]
+      self.instances        ||= db_schema[:instances][:default].to_i
+      self.memory           ||= Config.config[:default_app_memory]
+      self.disk_quota       ||= Config.config[:default_app_disk_in_mb]
+      self.file_descriptors ||= Config.config[:instance_file_descriptor_limit] if Config.config[:instance_file_descriptor_limit]
     end
 
     DEFAULT_HTTP_PORT = 8080
     DEFAULT_PORTS = [DEFAULT_HTTP_PORT].freeze
 
-    APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
-
     one_to_many :droplets
     one_to_many :service_bindings
     one_to_many :events, class: VCAP::CloudController::AppEvent
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
-    many_to_one :admin_buildpack, class: VCAP::CloudController::Buildpack
-    many_to_one :space, after_set: :validate_space
-    many_to_one :stack
-    one_through_one :organization, join_table: :spaces, left_key: :id, left_primary_key: :space_id, right_key: :organization_id
+
+    one_through_one :space, join_table: AppModel.table_name,
+                            left_primary_key: :app_guid, left_key: :guid,
+                            right_primary_key: :guid, right_key: :space_guid
+
+    one_through_one :stack, join_table: BuildpackLifecycleDataModel.table_name,
+                            left_primary_key: :app_guid, left_key: :app_guid,
+                            right_primary_key: :name, right_key: :stack,
+                            after_load: :convert_nil_to_default_stack
+    def convert_nil_to_default_stack(stack)
+      self.associations[:stack] = Stack.default unless stack
+    end
+
+    one_through_many :organization,
+        [
+          [:processes, :id, :app_guid],
+          [:apps, :guid, :space_guid],
+          [:spaces, :guid, :organization_id]
+        ]
 
     many_to_many :routes,
                  distinct: true,
@@ -68,13 +84,11 @@ module VCAP::CloudController
                       :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh,
                       :docker_credentials_json, :ports
 
-    strip_attributes :name
-
     serialize_attributes :json, :metadata
     serialize_attributes :integer_array, :ports
 
-    encrypt :environment_json, salt: :salt, column: :encrypted_environment_json
     encrypt :docker_credentials_json, salt: :docker_salt, column: :encrypted_docker_credentials_json
+    serializes_via_json :docker_credentials_json
 
     APP_STATES = %w(STOPPED STARTED).map(&:freeze).freeze
     PACKAGE_STATES = %w(PENDING STAGED FAILED).map(&:freeze).freeze
@@ -106,7 +120,6 @@ module VCAP::CloudController
 
     def validation_policies
       [
-        AppEnvironmentPolicy.new(self),
         MaxDiskQuotaPolicy.new(self, max_app_disk_in_mb),
         MinDiskQuotaPolicy.new(self),
         MetadataPolicy.new(self, metadata_deserialized),
@@ -119,7 +132,6 @@ module VCAP::CloudController
         MaxAppInstancesPolicy.new(self, organization, organization && organization.quota_definition, :app_instance_limit_exceeded),
         MaxAppInstancesPolicy.new(self, space, space && space.space_quota_definition, :space_app_instance_limit_exceeded),
         HealthCheckPolicy.new(self, health_check_timeout),
-        CustomBuildpackPolicy.new(self, custom_buildpacks_enabled?),
         DockerPolicy.new(self),
         PortsPolicy.new(self, changed_from_dea_to_diego?),
         DiegoToDeaPolicy.new(self, changed_from_diego_to_dea?)
@@ -127,11 +139,8 @@ module VCAP::CloudController
     end
 
     def validate
-      validates_presence :name
-      validates_presence :space
-      validates_unique [:space_id, :name]
+      validates_presence :app
       validate_uniqueness_of_type_for_same_app_model
-      validates_format APP_NAME_REGEX, :name
 
       copy_buildpack_errors
 
@@ -170,7 +179,6 @@ module VCAP::CloudController
 
     def after_update
       super
-      app.save_changes if app
       create_app_usage_event
     end
 
@@ -191,20 +199,9 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
       end
 
-      self[:stack_id] ||= if app && app.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE && !app.lifecycle_data.stack.blank?
-                            Stack.find(name: app.lifecycle_data.stack).id
-                          else
-                            Stack.default.id
-                          end
-      self.memory ||= Config.config[:default_app_memory]
-      self.disk_quota ||= Config.config[:default_app_disk_in_mb]
       self.enable_ssh = Config.config[:allow_app_ssh_access] && space.allow_ssh if enable_ssh.nil?
 
       update_route_mappings_ports
-
-      if Config.config[:instance_file_descriptor_limit]
-        self.file_descriptors ||= Config.config[:instance_file_descriptor_limit]
-      end
 
       set_new_version if version_needs_to_be_updated?
 
@@ -271,16 +268,8 @@ module VCAP::CloudController
       new? || !being_stopped?
     end
 
-    def buildpack_changed?
-      column_changed?(:encrypted_buildpack)
-    end
-
     def desired_instances
       started? ? instances : 0
-    end
-
-    def organization
-      space && space.organization
     end
 
     def before_destroy
@@ -358,54 +347,16 @@ module VCAP::CloudController
     end
 
     def name
-      if app && type == 'web'
-        app.name
-      else
-        super
-      end
+      app.name
     end
 
-    def name=(v)
-      if app && type == 'web'
-        app.name = v
-      end
-      super
+    def environment_json
+      app.environment_variables
     end
-
-    def environment_json_with_serialization=(env)
-      if app
-        app.environment_variables = env
-      end
-      self.environment_json_without_serialization = MultiJson.dump(env)
-    end
-    alias_method_chain :environment_json=, 'serialization'
-
-    def environment_json_with_serialization
-      if app
-        app.environment_variables
-      else
-        string = environment_json_without_serialization
-        return if string.blank?
-        MultiJson.load string
-      end
-    end
-    alias_method_chain :environment_json, 'serialization'
 
     def docker?
       docker_image.present?
     end
-
-    def docker_credentials_json_with_serialization=(env)
-      self.docker_credentials_json_without_serialization = MultiJson.dump(env)
-    end
-    alias_method_chain :docker_credentials_json=, 'serialization'
-
-    def docker_credentials_json_with_serialization
-      string = docker_credentials_json_without_serialization
-      return if string.blank?
-      MultiJson.load string
-    end
-    alias_method_chain :docker_credentials_json, 'serialization'
 
     def database_uri
       service_uris = service_bindings.map { |binding| binding.credentials['uri'] }.compact
@@ -457,14 +408,13 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
+      space_guids = Space.join(:spaces_developers, space_id: :id, user_id: user.id).select(:spaces__guid).
+                    union(Space.join(:spaces_managers, space_id: :id, user_id: user.id).select(:spaces__guid)).
+                    union(Space.join(:spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__guid)).
+                    union(Space.join(:organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid)).select(:guid)
+
       {
-        space_id: Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).union(
-          Space.dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__id)
-          ).union(
-            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__id)
-          ).union(
-            Space.dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__id)
-          ).select(:id)
+        app_guid: AppModel.where(space: space_guids.all).select(:guid)
       }
     end
 
@@ -530,7 +480,7 @@ module VCAP::CloudController
       self.package_state = 'PENDING'
       self.staging_failed_reason = nil
       self.staging_failed_description = nil
-      self.package_pending_since = Sequel::CURRENT_TIMESTAMP
+      self.package_pending_since = Sequel::CURRENT_TIMESTAMP if self.package_hash
     end
 
     def buildpack
@@ -542,27 +492,7 @@ module VCAP::CloudController
 
         return CustomBuildpack.new(app.lifecycle_data.buildpack)
       else
-        return admin_buildpack if admin_buildpack
-        return CustomBuildpack.new(super) if super
-        return AutoDetectionBuildpack.new
-      end
-    end
-
-    def buildpack=(buildpack_name)
-      if app && app.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
-        app.lifecycle_data.buildpack = buildpack_name.blank? ? nil : buildpack_name
-        app.lifecycle_data.save
-      end
-
-      self.admin_buildpack = nil
-      super(nil)
-
-      admin_buildpack = Buildpack.find(name: buildpack_name.to_s)
-
-      if admin_buildpack
-        self.admin_buildpack = admin_buildpack
-      elsif buildpack_name != '' # git url case
-        super(buildpack_name)
+        AutoDetectionBuildpack.new
       end
     end
 
@@ -588,25 +518,6 @@ module VCAP::CloudController
       super(hash)
       mark_for_restaging if column_changed?(:package_hash)
       self.package_updated_at = Sequel.datetime_class.now
-    end
-
-    def stack
-      if app && app.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE && !app.lifecycle_data.stack.blank?
-        Stack.find(name: app.lifecycle_data.stack)
-      else
-        super
-      end
-    end
-
-    def stack=(stack)
-      super(stack)
-
-      if app && app.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
-        app.lifecycle_data.stack = stack.nil? ? nil : stack.name
-        app.lifecycle_data.save
-      end
-
-      mark_for_restaging unless new?
     end
 
     def add_new_droplet(hash)
@@ -668,19 +579,9 @@ module VCAP::CloudController
       super(opts)
     end
 
-    def is_v3?
-      !is_v2?
-    end
-
-    def is_v2?
-      app.nil? || app.name == self[:name]
-    end
-
     def handle_add_route(route)
       mark_routes_changed
-      if is_v2?
-        Repositories::AppEventRepository.new.record_map_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
-      end
+      Repositories::AppEventRepository.new.record_map_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
     end
 
     # If you change this function, also change _add_app in route.rb
@@ -691,9 +592,7 @@ module VCAP::CloudController
 
     def handle_remove_route(route)
       mark_routes_changed
-      if is_v2?
-        Repositories::AppEventRepository.new.record_unmap_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
-      end
+      Repositories::AppEventRepository.new.record_unmap_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
     end
 
     def handle_update_route(route)

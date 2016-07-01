@@ -74,11 +74,13 @@ module VCAP::CloudController
     end
 
     describe '#fetch_for_spaces' do
-      let(:space1) { Space.make }
-      let!(:process_in_space1) { App.make(space: space1) }
-      let!(:process2_in_space1) { App.make(space: space1) }
-      let(:space2) { Space.make }
-      let!(:process_in_space2) { App.make(space: space2) }
+      let(:app1) { AppModel.make }
+      let(:space1) { app1.space }
+      let!(:process_in_space1) { App.make(app: app1, type: 'a') }
+      let!(:process2_in_space1) { App.make(app: app1, type: 'b') }
+      let(:app2) { AppModel.make }
+      let(:space2) { app2.space }
+      let!(:process_in_space2) { App.make(app: app2) }
 
       before { App.make }
 

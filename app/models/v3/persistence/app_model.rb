@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class AppModel < Sequel::Model(:apps_v3)
+  class AppModel < Sequel::Model(:apps)
     include Serializer
     APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
 
@@ -24,6 +24,8 @@ module VCAP::CloudController
     serializes_via_json :environment_variables
 
     add_association_dependencies buildpack_lifecycle_data: :delete
+
+    strip_attributes :name
 
     def validate
       validates_presence :name
@@ -50,6 +52,28 @@ module VCAP::CloudController
       end
 
       false
+    end
+
+    class << self
+      def user_visible(user)
+        dataset.where(user_visibility_filter(user))
+      end
+
+      def user_visibility_filter(user)
+        {
+          space_guid: space_guids_where_visible(user)
+        }
+      end
+
+      private
+
+      def space_guids_where_visible(user)
+        Space.join(:spaces_developers, space_id: :id, user_id: user.id).select(:spaces__guid).
+          union(Space.join(:spaces_managers, space_id: :id, user_id: user.id).select(:spaces__guid)).
+          union(Space.join(:spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__guid)).
+          union(Space.join(:organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid)).
+          select(:space_guid)
+      end
     end
 
     private

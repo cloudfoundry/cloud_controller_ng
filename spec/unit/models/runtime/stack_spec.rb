@@ -7,12 +7,17 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe 'Associations' do
-      it { is_expected.to have_associated :apps }
+      it 'has apps' do
+        stack = Stack.make
+        app1 = AppFactory.make(stack: stack)
+        app2 = AppFactory.make(stack: stack)
+        expect(stack.apps).to match_array([app1, app2])
+      end
 
       it 'does not associate non-web v2 apps' do
         stack = Stack.make
-        app1 = App.make(type: 'web', stack: stack)
-        App.make(type: 'other', stack: stack)
+        app1 = AppFactory.make(type: 'web', stack: stack)
+        AppFactory.make(type: 'other', stack: stack)
         expect(stack.apps).to match_array([app1])
       end
     end
