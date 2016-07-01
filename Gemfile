@@ -48,7 +48,7 @@ gem 'cf-uaa-lib', '~> 3.1.0', git: 'https://github.com/cloudfoundry/cf-uaa-lib.g
 gem 'cf-message-bus', '~> 0.3.0'
 
 group :db do
-  gem 'mysql2', '0.3.20'
+  gem 'mysql2', '0.4.4'
   gem 'pg', '0.18.4'
 end
 
