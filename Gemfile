@@ -49,7 +49,7 @@ gem 'cf-message-bus', '~> 0.3.0'
 
 group :db do
   gem 'mysql2', '0.4.4'
-  gem 'pg', '0.18.4'
+  gem 'pg', '0.16.0'
 end
 
 group :operations do
