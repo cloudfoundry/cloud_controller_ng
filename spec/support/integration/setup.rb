@@ -38,7 +38,8 @@ module IntegrationSetup
         'DB_CONNECTION_STRING' => db_connection_string,
         'DB' => db
       }.merge(opts[:env] || {})
-      run_cmd('bundle exec rake db:recreate db:migrate db:seed', wait: true, env: env)
+      run_cmd('bundle exec rake db:recreate db:migrate', wait: true, env: env)
+      run_cmd('bundle exec rake db:seed', wait: true, env: env, continue_on_failure: true)
     end
 
     @cc_pids << run_cmd("bin/cloud_controller -c #{config_file}", opts.merge(env: { 'DB_CONNECTION_STRING' => db_connection_string }.merge(opts[:env] || {})))
@@ -88,7 +89,7 @@ module IntegrationSetupHelpers
       stdout, stderr, child_status = Open3.capture3(opts[:env], cmd, spawn_opts)
       pid = child_status.pid
 
-      unless child_status.success?
+      unless child_status.success? || opts[:continue_on_failure]
         raise "`#{cmd}` exited with #{child_status} #{coredump_text(child_status)}\n#{failure_output(stdout, stderr)}"
       end
     else
