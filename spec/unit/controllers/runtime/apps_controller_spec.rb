@@ -861,6 +861,24 @@ module VCAP::CloudController
       describe 'setting stack' do
         let(:new_stack) { Stack.make }
 
+        it 'changes the stack' do
+          set_current_user(admin_user, admin: true)
+
+          app_obj = AppFactory.make(
+            package_hash:  'package-hash',
+            instances:     1,
+            droplet_hash:  'droplet-hash',
+            package_state: 'STAGED',
+            state:         'STARTED')
+
+          expect(app_obj.stack).not_to eq(new_stack)
+
+          put "/v2/apps/#{app_obj.guid}", MultiJson.dump({ stack_guid: new_stack.guid })
+
+          expect(last_response.status).to eq(201)
+          expect(app_obj.reload.stack).to eq(new_stack)
+        end
+
         context 'when the app is already staged' do
           let(:app_obj) do
             AppFactory.make(
@@ -921,6 +939,34 @@ module VCAP::CloudController
             expect(app_obj.staged?).to be_falsey
             expect(app_obj.needs_staging?).to be_nil
             expect(app_obj.package_pending_since).to be_nil
+          end
+        end
+      end
+
+      describe 'changing lifecycle types' do
+        context 'when changing from docker to buildpack' do
+          let(:app_obj) { App.make(app: AppModel.make(:docker)) }
+
+          it 'raises an error setting buildpack' do
+            put "/v2/apps/#{app_obj.guid}", MultiJson.dump({ buildpack: 'https://buildpack.example.com' })
+            expect(last_response.status).to eq(400)
+            expect(last_response.body).to include('Lifecycle type cannot be changed')
+          end
+
+          it 'raises an error setting stack' do
+            put "/v2/apps/#{app_obj.guid}", MultiJson.dump({ stack_guid: 'phat-stackz' })
+            expect(last_response.status).to eq(400)
+            expect(last_response.body).to include('Lifecycle type cannot be changed')
+          end
+        end
+
+        context 'when changing from buildpack to docker' do
+          let(:app_obj) { App.make(app: AppModel.make(:buildpack)) }
+
+          it 'raises an error' do
+            put "/v2/apps/#{app_obj.guid}", MultiJson.dump({ docker_image: 'repo/great-image' })
+            expect(last_response.status).to eq(400)
+            expect(last_response.body).to include('Lifecycle type cannot be changed')
           end
         end
       end

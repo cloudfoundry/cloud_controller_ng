@@ -219,12 +219,15 @@ module VCAP::CloudController
         v3_app.lock!
 
         validate_access(:read_for_update, app, request_attrs)
+        validate_not_changing_lifecycle_type!(app, request_attrs)
+
+        buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
 
         v3_app.name = request_attrs['name'] if request_attrs.key?('name')
         v3_app.space_guid = request_attrs['space_guid'] if request_attrs.key?('space_guid')
         v3_app.environment_variables = request_attrs['environment_json'] if request_attrs.key?('environment_json')
 
-        if request_attrs['docker_image'].blank?
+        if buildpack_type_requested
           v3_app.lifecycle_data.buildpack = request_attrs['buildpack'] if request_attrs.key?('buildpack')
 
           if request_attrs.key?('stack_guid')
@@ -250,13 +253,9 @@ module VCAP::CloudController
         app.ports                   = request_attrs['ports'] if request_attrs.key?('ports')
         app.route_guids             = request_attrs['route_guids'] if request_attrs.key?('route_guids')
 
-        if request_attrs.key?('buildpack')
-          v3_app.lifecycle_data.save
-          validate_buildpack!(app)
-        end
-
         app.save
         v3_app.save
+        v3_app.lifecycle_data.save && validate_buildpack!(app.reload) if buildpack_type_requested
 
         validate_access(:update, app, request_attrs)
       end
@@ -352,6 +351,18 @@ module VCAP::CloudController
 
     def custom_buildpacks_disabled?
       VCAP::CloudController::Config.config[:disable_custom_buildpacks]
+    end
+
+    def validate_not_changing_lifecycle_type!(app, request_attrs)
+      buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
+      docker_type_requested = request_attrs.key?('docker_image')
+
+      type_is_docker = app.app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
+      type_is_buildpack = !type_is_docker
+
+      if (type_is_docker && buildpack_type_requested) || (type_is_buildpack && docker_type_requested)
+        raise CloudController::Errors::ApiError.new_from_details('AppInvalid', 'Lifecycle type cannot be changed')
+      end
     end
 
     define_messages
