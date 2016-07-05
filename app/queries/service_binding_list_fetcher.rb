@@ -20,7 +20,7 @@ module VCAP::CloudController
 
     def filter(dataset)
       if @message.requested?(:app_guids)
-        dataset = dataset.join(:apps, id: :v3_service_bindings__app_id, guid: @message.app_guids).select_all(:v3_service_bindings)
+        dataset = dataset.join(AppModel.table_name, id: :v3_service_bindings__app_id, guid: @message.app_guids).select_all(:v3_service_bindings)
       end
 
       if @message.requested?(:service_instance_guids)

@@ -18,13 +18,13 @@ module VCAP::CloudController
     # This is a v2 relationship for the /v2/route_mappings endpoints and associations
     one_to_many :app_route_mappings, class: 'VCAP::CloudController::RouteMapping'
 
-    many_to_many :apps,
-                 distinct: true,
-                 order: Sequel.asc(:id),
-                 before_add:   :validate_app,
-                 after_add:    :handle_add_app,
-                 after_remove: :handle_remove_app,
-                 conditions: { type: 'web' }
+    many_to_many :apps, class: 'VCAP::CloudController::App',
+                        distinct: true,
+                        order: Sequel.asc(:id),
+                        before_add:   :validate_app,
+                        after_add:    :handle_add_app,
+                        after_remove: :handle_remove_app,
+                        conditions: { type: 'web' }
 
     one_to_one :route_binding
     one_through_one :service_instance, join_table: :route_bindings

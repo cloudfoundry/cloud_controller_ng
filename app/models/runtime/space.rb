@@ -9,6 +9,8 @@ module VCAP::CloudController
 
     SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
 
+    plugin :many_through_many
+
     many_to_one :isolation_segment_model,
        primary_key: :guid,
        key: :isolation_segment_guid
@@ -21,32 +23,12 @@ module VCAP::CloudController
 
     one_to_many :app_models, primary_key: :guid, key: :space_guid
 
-    one_to_many :processes, class: 'VCAP::CloudController::App',  dataset: -> { App.filter(app: app_models) }
+    one_to_many :processes, class: 'VCAP::CloudController::App', dataset: -> { App.filter(app: app_models) }
 
-    one_to_many :apps,
-      class: 'VCAP::CloudController::App',
-      dataset: -> { App.filter(app: app_models, type: 'web') },
-      eager_loader: ->(spaces_map) {
-        spaces_map[:rows].each { |space| space.associations[:apps] = [] }
-
-        ds = App.filter(type: 'web')
-        ds = spaces_map[:eager_block].call(ds) if spaces_map[:eager_block]
-
-        space_to_app_map = ds.select_all(App.table_name.to_sym).
-                           join(AppModel.table_name.to_sym, guid: :app_guid, space_guid: Space.select(:guid).where(id: spaces_map[:id_map].keys)).
-                           join(Space.table_name.to_sym, guid: :space_guid).
-                           select_append(:spaces__id___space_id).
-                           to_hash_groups(:space_id)
-
-        space_to_app_map.each do |space_id, apps|
-          spaces = spaces_map[:id_map][space_id]
-          if spaces
-            spaces.each do |space|
-              space.associations[:apps] = apps
-            end
-          end
-        end
-      }
+    many_through_many :apps, [
+      [:spaces, :id, :guid],
+      [:apps, :space_guid, :guid]
+    ], class: 'VCAP::CloudController::App', right_primary_key: :app_guid, conditions: { type: 'web' }
 
     one_to_many :events, primary_key: :guid, key: :space_guid
     one_to_many :service_instances
@@ -118,7 +100,7 @@ module VCAP::CloudController
 
     export_attributes :name, :organization_guid, :space_quota_definition_guid, :allow_ssh
 
-    import_attributes :name, :organization_guid, :developer_guids, :allow_ssh, :isolation_segment_guid,
+    import_attributes :name, :organization_guid, :developer_guids, :allow_ssh,
       :manager_guids, :auditor_guids, :security_group_guids, :space_quota_definition_guid
 
     strip_attributes :name
@@ -172,14 +154,11 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       {
-        # id: Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).union(
-        spaces__id: Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).union(
-          Space.dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__id)
-          ).union(
-            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__id)
-          ).union(
-            Space.dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__id)
-          ).select(:id)
+        spaces__id: dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).
+          union(dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__id)).
+          union(dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__id)).
+          union(dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__id)).
+          select(:id)
       }
     end
 
@@ -220,9 +199,7 @@ module VCAP::CloudController
     end
 
     def running_task_memory
-      TaskModel.join(:apps, id: :app_id).
-        where(state: TaskModel::RUNNING_STATE, apps__space_guid: guid).
-        sum(:memory_in_mb) || 0
+      tasks_dataset.where(state: TaskModel::RUNNING_STATE).sum(:memory_in_mb) || 0
     end
 
     def started_app_memory

@@ -49,8 +49,8 @@ module VCAP::CloudController
 
     one_through_many :organization,
         [
-          [:processes, :id, :app_guid],
-          [:apps, :guid, :space_guid],
+          [App.table_name, :id, :app_guid],
+          [AppModel.table_name, :guid, :space_guid],
           [:spaces, :guid, :organization_id]
         ]
 
