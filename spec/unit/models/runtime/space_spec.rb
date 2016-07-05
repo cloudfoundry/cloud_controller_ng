@@ -436,6 +436,18 @@ module VCAP::CloudController
         expect(event).to be
         expect(event.space).to be_nil
       end
+
+      it 'destroys all processes' do
+        app1 = AppFactory.make(space: space)
+        app2 = AppFactory.make(space: space)
+        app3 = AppFactory.make(space: space, type: 'potato')
+
+        expect {
+          subject.destroy
+        }.to change {
+          App.where(id: [app1.id, app2.id, app3.id]).count
+        }.by(-3)
+      end
     end
 
     describe '#has_remaining_memory' do

@@ -21,6 +21,8 @@ module VCAP::CloudController
 
     one_to_many :app_models, primary_key: :guid, key: :space_guid
 
+    one_to_many :processes, class: 'VCAP::CloudController::App',  dataset: -> { App.filter(app: app_models) }
+
     one_to_many :apps,
       class: 'VCAP::CloudController::App',
       dataset: -> { App.filter(app: app_models, type: 'web') },
@@ -109,7 +111,7 @@ module VCAP::CloudController
 
     add_association_dependencies(
       default_users: :nullify,
-      apps: :destroy,
+      processes: :destroy,
       routes: :destroy,
       security_groups: :nullify,
     )
