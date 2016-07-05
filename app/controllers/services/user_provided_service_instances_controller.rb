@@ -16,6 +16,9 @@ module VCAP::CloudController
 
     query_parameters :name, :space_guid, :organization_guid
 
+    CENSORED_FIELDS = ['credentials'].freeze
+    CENSORED_MESSAGE = 'PRIVATE_DATA_HIDDEN'.freeze
+
     def self.dependencies
       [:services_event_repository]
     end
@@ -49,7 +52,8 @@ module VCAP::CloudController
     def create
       @request_attrs = decode_create_request_attrs
 
-      logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
+      censored_attrs = censor(@request_attrs)
+      logger.debug 'cc.create', model: self.class.model_class_name, attributes: censored_attrs
       service_instance = create_instance(request_attrs)
       @services_event_repository.record_user_provided_service_instance_event(:create, service_instance, request_attrs)
       route_service_warning(service_instance) unless route_services_enabled?
@@ -64,7 +68,8 @@ module VCAP::CloudController
     def update(guid)
       @request_attrs = decode_update_request_attrs
 
-      logger.debug 'cc.update', guid: guid, attributes: request_attrs
+      censored_attrs = censor(@request_attrs)
+      logger.debug 'cc.update', guid: guid, attributes: censored_attrs
       raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless request_attrs
 
       service_instance = find_guid(guid)
@@ -237,6 +242,14 @@ module VCAP::CloudController
 
     def propagate_instance_credentials(service_instance)
       PropagateInstanceCredentials.new.execute service_instance
+    end
+
+    def censor(request_attrs)
+      request_attrs.dup.tap do |changes|
+        CENSORED_FIELDS.map(&:to_s).each do |censored|
+          changes[censored] = CENSORED_MESSAGE if changes.key?(censored)
+        end
+      end
     end
   end
 end

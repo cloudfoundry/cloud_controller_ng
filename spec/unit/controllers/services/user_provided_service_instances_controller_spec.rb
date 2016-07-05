@@ -220,7 +220,6 @@ module VCAP::CloudController
             end
           end
 
-
           context 'when the query is missing an operator or a value' do
             it 'filters by org_guid = nil (to match behavior of filters other than org guid)' do
               UserProvidedServiceInstance.make(name: 'instance-1', space: space1)
