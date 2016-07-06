@@ -24,9 +24,27 @@ Sequel.migration do
       drop_foreign_key [:droplet_id]
     end
 
+    generate_stop_events_query = <<-SQL
+        INSERT INTO app_usage_events
+          (guid, created_at, instance_count, memory_in_mb_per_instance, state, app_guid, app_name, space_guid, space_name, org_guid, buildpack_guid, buildpack_name, package_state, parent_app_name, parent_app_guid, process_type, task_guid, task_name, package_guid, previous_state, previous_package_state, previous_memory_in_mb_per_instance, previous_instance_count)
+        SELECT %s, now(), p.instances, p.memory, 'STOPPED', p.guid, p.name, s.guid, s.name, o.guid, d.buildpack_receipt_buildpack_guid, COALESCE(d.buildpack_receipt_buildpack, l.buildpack), p.package_state, a.name, a.guid, p.type, NULL, NULL, pkg.guid, 'STARTED', p.package_state, p.memory, p.instances
+          FROM apps as p
+        INNER JOIN apps_v3 as a ON (a.guid=p.app_guid)
+        INNER JOIN spaces as s ON (s.guid=a.space_guid)
+        INNER JOIN organizations as o ON (o.id=s.organization_id)
+        INNER JOIN packages as pkg ON (a.guid=pkg.app_guid)
+        INNER JOIN v3_droplets as d ON (a.guid=d.app_guid)
+        INNER JOIN buildpack_lifecycle_data as l ON (d.guid=l.droplet_guid)
+    SQL
+    if self.class.name.match(/mysql/i)
+      run generate_stop_events_query % 'UUID()'
+    elsif self.class.name.match(/postgres/i)
+      run generate_stop_events_query % 'get_uuid()'
+    end
+
     run 'DELETE FROM apps_routes WHERE app_id IN (SELECT id FROM apps WHERE app_guid IS NOT NULL);'
-    run 'DELETE FROM apps WHERE app_guid IS NOT NULL;'  #THIS WILL NOT CREATE APP USAGE EVENTS
-    self[:route_mappings].truncate  # what about the v2 route mappings that get created?
+    run 'DELETE FROM apps WHERE app_guid IS NOT NULL;'
+    self[:route_mappings].truncate
     self[:v3_droplets].truncate
     self[:package_docker_data].truncate
     self[:packages].truncate
@@ -63,6 +81,7 @@ Sequel.migration do
         SELECT p.guid, p.name, p.salt, p.encrypted_environment_json, p.created_at, p.updated_at, s.guid
         FROM processes as p, spaces as s
         WHERE p.space_id = s.id
+        ORDER BY p.id
     SQL
 
     run <<-SQL
