@@ -19,10 +19,7 @@ Sequel.migration do
     alter_table(:v3_service_bindings) do
       drop_foreign_key [:app_id]
     end
-    alter_table(:tasks) do
-      drop_foreign_key [:app_id]
-      drop_foreign_key [:droplet_id]
-    end
+    drop_table(:tasks)
 
     generate_stop_events_query = <<-SQL
         INSERT INTO app_usage_events
@@ -49,7 +46,7 @@ Sequel.migration do
     self[:package_docker_data].truncate
     self[:packages].truncate
     self[:buildpack_lifecycle_data].truncate
-    self[:v3_service_bindings].truncate  #THIS WILL NOT REMOVE BINDINGS FROM THE BROKER OR CREATE SERVICE USAGE EVENTS
+    self[:v3_service_bindings].truncate
     self[:apps_v3].truncate
 
     rename_table :apps, :processes
@@ -57,23 +54,44 @@ Sequel.migration do
 
     alter_table(:processes) do
       add_index :app_guid
-      add_foreign_key [:app_guid], :apps, key: :guid
+      add_foreign_key [:app_guid], :apps, key: :guid, name: :fk_processes_app_guid
     end
     alter_table(:packages) do
-      add_foreign_key [:app_guid], :apps, key: :guid
+      add_foreign_key [:app_guid], :apps, key: :guid, name: :fk_packages_app_guid
     end
     alter_table(:route_mappings) do
-      add_foreign_key [:app_guid], :apps, key: :guid
+      add_foreign_key [:app_guid], :apps, key: :guid, name: :fk_route_mappings_app_guid
     end
     alter_table(:v3_droplets) do
-      add_foreign_key [:app_guid], :apps, key: :guid
+      add_foreign_key [:app_guid], :apps, key: :guid, name: :fk_v3_droplets_app_guid
     end
     alter_table(:v3_service_bindings) do
-      add_foreign_key [:app_id], :apps, key: :id   # this is by id instead of guid
+      add_foreign_key [:app_id], :apps, key: :id, name: :fk_v3_service_bindings_app_id   # this is by id instead of guid
     end
-    alter_table(:tasks) do
-      add_foreign_key [:app_id], :apps, key: :id   # this is by id instead of guid
-      add_foreign_key [:droplet_id], :v3_droplets, key: :id   # this is by id instead of guid
+
+    create_table :tasks do
+      VCAP::Migration.common(self)
+
+      String :name, case_insensitive: true, null: false
+      index :name, name: :tasks_name_index
+      String :command, null: false, text: true
+      String :state, null: false
+      index :state, name: :tasks_state_index
+      Integer :memory_in_mb, null: true
+      String :encrypted_environment_variables, text: true, null: true
+      String :salt, null: true
+      String :failure_reason, null: true, size: 4096
+
+      String :app_guid, null: false
+      foreign_key [:app_guid], :apps, key: :guid, name: :fk_tasks_app_guid
+
+      String :droplet_guid, null: false
+      foreign_key [:droplet_guid], :v3_droplets, key: :guid, name: :fk_tasks_droplet_guid
+
+      if self.class.name.match /mysql/i
+        table_name = tables.find { |t| t =~ /tasks/ }
+        run "ALTER TABLE `#{table_name}` CONVERT TO CHARACTER SET utf8;"
+      end
     end
 
     run <<-SQL
