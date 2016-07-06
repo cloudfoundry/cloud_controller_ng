@@ -159,7 +159,6 @@ module VCAP::CloudController
           org_guid = service_instance.space.organization.guid
           space_guid = service_instance.space.guid
           get "v2/user_provided_service_instances?q=space_guid:#{space_guid}&q=organization_guid%20IN%20#{org_guid}"
-          puts last_response.body
 
           expect(last_response.status).to eq(200)
           expect(decoded_response['resources'].length).to eq(1)
