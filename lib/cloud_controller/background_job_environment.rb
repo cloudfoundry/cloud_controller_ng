@@ -43,6 +43,6 @@ class BackgroundJobEnvironment
   end
 
   def stop
-    EM.stop
+    EM.stop if EM.reactor_running?
   end
 end
