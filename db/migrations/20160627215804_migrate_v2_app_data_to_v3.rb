@@ -26,12 +26,13 @@ Sequel.migration do
           (guid, created_at, instance_count, memory_in_mb_per_instance, state, app_guid, app_name, space_guid, space_name, org_guid, buildpack_guid, buildpack_name, package_state, parent_app_name, parent_app_guid, process_type, task_guid, task_name, package_guid, previous_state, previous_package_state, previous_memory_in_mb_per_instance, previous_instance_count)
         SELECT %s, now(), p.instances, p.memory, 'STOPPED', p.guid, p.name, s.guid, s.name, o.guid, d.buildpack_receipt_buildpack_guid, COALESCE(d.buildpack_receipt_buildpack, l.buildpack), p.package_state, a.name, a.guid, p.type, NULL, NULL, pkg.guid, 'STARTED', p.package_state, p.memory, p.instances
           FROM apps as p
-        INNER JOIN apps_v3 as a ON (a.guid=p.app_guid)
-        INNER JOIN spaces as s ON (s.guid=a.space_guid)
-        INNER JOIN organizations as o ON (o.id=s.organization_id)
-        INNER JOIN packages as pkg ON (a.guid=pkg.app_guid)
-        INNER JOIN v3_droplets as d ON (a.guid=d.app_guid)
-        INNER JOIN buildpack_lifecycle_data as l ON (d.guid=l.droplet_guid)
+            INNER JOIN apps_v3 as a ON (a.guid=p.app_guid)
+            INNER JOIN spaces as s ON (s.guid=a.space_guid)
+            INNER JOIN organizations as o ON (o.id=s.organization_id)
+            INNER JOIN packages as pkg ON (a.guid=pkg.app_guid)
+            INNER JOIN v3_droplets as d ON (a.guid=d.app_guid)
+            INNER JOIN buildpack_lifecycle_data as l ON (d.guid=l.droplet_guid)
+          WHERE p.state='STARTED'
     SQL
     if self.class.name.match(/mysql/i)
       run generate_stop_events_query % 'UUID()'
