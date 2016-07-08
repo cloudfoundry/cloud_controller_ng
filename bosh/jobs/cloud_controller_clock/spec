@@ -212,7 +212,7 @@ properties:
     default: ""
   cc.resource_pool.webdav_config.private_endpoint:
     description: "The location of the webdav server eg: https://blobstore.internal"
-    default: "https://blobstore.service.cf.internal"
+    default: "https://blobstore.service.cf.internal:4443"
   cc.resource_pool.webdav_config.username:
     description: "The basic auth user that CC uses to connect to the admin endpoint on webdav"
     default: ""
@@ -256,7 +256,7 @@ properties:
     default: ""
   cc.packages.webdav_config.private_endpoint:
     description: "The location of the webdav server eg: https://blobstore.internal"
-    default: "https://blobstore.service.cf.internal"
+    default: "https://blobstore.service.cf.internal:4443"
   cc.packages.webdav_config.username:
     description: "The basic auth user that CC uses to connect to the admin endpoint on webdav"
     default: ""
@@ -297,7 +297,7 @@ properties:
     default: ""
   cc.droplets.webdav_config.private_endpoint:
     description: "The location of the webdav server eg: https://blobstore.internal"
-    default: "https://blobstore.service.cf.internal"
+    default: "https://blobstore.service.cf.internal:4443"
   cc.droplets.webdav_config.username:
     description: "The basic auth user that CC uses to connect to the admin endpoint on webdav"
     default: ""
@@ -335,7 +335,7 @@ properties:
     default: ""
   cc.buildpacks.webdav_config.private_endpoint:
     description: "The location of the webdav server eg: https://blobstore.internal"
-    default: "https://blobstore.service.cf.internal"
+    default: "https://blobstore.service.cf.internal:4443"
   cc.buildpacks.webdav_config.username:
     description: "The basic auth user that CC uses to connect to the admin endpoint on webdav"
     default: ""
