@@ -112,8 +112,6 @@ module VCAP::CloudController
                 state: 'STARTED',
                 instances: 2,
                 memory: 128,
-                package_hash: 'abc',
-                package_state: 'STAGED'
               )
             end
 

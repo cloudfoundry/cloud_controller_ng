@@ -37,35 +37,6 @@ module CloudController
 
       let(:app) { VCAP::CloudController::AppFactory.make }
 
-      describe 'app package' do
-        it 'gives a local URI to the blobstore host/port' do
-          uri = URI.parse(url_generator.app_package_download_url(app))
-          expect(uri.host).to eql blobstore_host
-          expect(uri.port).to eql blobstore_port
-          expect(uri.user).to eql 'username'
-          expect(uri.password).to eql 'password'
-          expect(uri.path).to eql "/staging/apps/#{app.guid}"
-        end
-
-        context 'and the package does not exist' do
-          before { allow(package_blobstore).to receive_messages(exists?: false) }
-
-          it 'returns nil' do
-            expect(url_generator.app_package_download_url(app)).to be_nil
-          end
-        end
-
-        context "when the droplet doesn't exist (app created before droplet)" do
-          it 'should return a nil url for stage/start first instance' do
-            app.droplets_dataset.destroy
-            app.droplet_hash = nil
-            app.save
-            app.reload
-            expect(url_generator.droplet_download_url(app)).to be_nil
-          end
-        end
-      end
-
       describe 'buildpack cache' do
         it 'gives a local URI to the blobstore host/port' do
           uri = URI.parse(url_generator.buildpack_cache_download_url(app))

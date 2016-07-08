@@ -47,6 +47,43 @@ module VCAP::CloudController
       self.associations[:stack] = Stack.default unless stack
     end
 
+    one_through_one :package, class: 'VCAP::CloudController::PackageModel',
+                              join_table: AppModel.table_name,
+                              left_primary_key: :app_guid, left_key: :guid,
+                              right_primary_key: :app_guid, right_key: :guid,
+                              order: [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
+
+    def package_hash
+      return nil unless package
+
+      if package.bits?
+        package.package_hash
+      elsif package.docker?
+        package.image
+      end
+    end
+
+    def package_state
+      state = package.try(:state)
+
+      # TODO: this isn't really correct logic.  need to move droplets over and then we can get the right thing
+      if state == PackageModel::FAILED_STATE
+        'FAILED'
+      elsif state == 'READY' && droplet
+        'STAGED'
+      else
+        'PENDING'
+      end
+    end
+
+    def package_updated_at
+      package.try(:updated_at) || package.try(:created_at)
+    end
+
+    def docker_image
+      package.try(:image)
+    end
+
     one_through_many :organization,
         [
           [App.table_name, :id, :app_guid],
@@ -144,7 +181,7 @@ module VCAP::CloudController
 
       copy_buildpack_errors
 
-      validates_includes PACKAGE_STATES, :package_state, allow_missing: true
+      # validates_includes PACKAGE_STATES, :package_state, allow_missing: true
       validates_includes APP_STATES, :state, allow_missing: true, message: 'must be one of ' + APP_STATES.join(', ')
       validates_includes STAGING_FAILED_REASONS, :staging_failed_reason, allow_nil: true
       validates_includes HEALTH_CHECK_TYPES, :health_check_type, allow_missing: true, message: 'must be one of ' + HEALTH_CHECK_TYPES.join(', ')
@@ -196,7 +233,7 @@ module VCAP::CloudController
 
     def before_save
       if needs_package_in_current_state? && !package_hash
-        raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
+        # raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
       end
 
       self.enable_ssh = Config.config[:allow_app_ssh_access] && space.allow_ssh if enable_ssh.nil?
@@ -355,7 +392,7 @@ module VCAP::CloudController
     end
 
     def docker?
-      docker_image.present?
+      app.docker?
     end
 
     def database_uri
@@ -508,13 +545,8 @@ module VCAP::CloudController
       Presenters::V3::CacheKeyPresenter.cache_key(guid: guid, stack_name: stack.name)
     end
 
-    def docker_image=(value)
-      value = docker_image_with_tag_name(value)
-      super
-      self.package_hash = value
-    end
-
     def package_hash=(hash)
+      raise 'NO LONGER SETTING PACKAGE HASH'
       super(hash)
       mark_for_restaging if column_changed?(:package_hash)
       self.package_updated_at = Sequel.datetime_class.now
@@ -682,17 +714,6 @@ module VCAP::CloudController
         set_new_version
         save
       end
-    end
-
-    # there's no concrete schema for what constitutes a valid docker
-    # repo/image reference online at the moment, so make a best effort to turn
-    # the passed value into a complete, plausible docker image reference:
-    # registry-name:registry-port/[scope-name/]repo-name:tag-name
-    def docker_image_with_tag_name(docker_image_name)
-      return unless docker_image_name
-      segs = docker_image_name.split('/')
-      segs[-1] = segs.last + ':latest' unless segs.last.include?(':')
-      segs.join('/')
     end
 
     def metadata_deserialized

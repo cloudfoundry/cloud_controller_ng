@@ -55,7 +55,7 @@ module VCAP::CloudController
           created_package = PackageModel.find(guid: result.guid)
 
           expect(created_package).to eq(result)
-          expect(created_package.docker_data.image).to eq('registry/image:latest')
+          expect(created_package.image).to eq('registry/image:latest')
         end
       end
 

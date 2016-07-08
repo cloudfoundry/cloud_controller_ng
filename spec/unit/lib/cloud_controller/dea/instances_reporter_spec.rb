@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe Dea::InstancesReporter do
     subject { described_class.new(health_manager_client) }
-    let(:app) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED') }
+    let(:app) { AppFactory.make }
     let(:health_manager_client) { double(:health_manager_client) }
 
     describe '#all_instances_for_app' do
@@ -56,7 +56,7 @@ module VCAP::CloudController
 
         context 'and the app failed to stage' do
           before do
-            app.package_state = 'FAILED'
+            app.package.update(state: 'FAILED')
           end
 
           it 'returns 0' do
@@ -71,22 +71,24 @@ module VCAP::CloudController
     describe '#number_of_starting_and_running_instances_for_processes' do
       let(:running_apps) do
         Array.new(3) do
-          AppFactory.make(state: 'STARTED', package_state: 'STAGED', package_hash: 'abc')
+          AppFactory.make(state: 'STARTED')
         end
       end
 
       let(:stopped_apps) do
         Array.new(3) do
-          AppFactory.make(state: 'STOPPED', package_state: 'STAGED', package_hash: 'xyz')
+          AppFactory.make(state: 'STOPPED')
         end
       end
 
       let(:failed_apps) do
-        [AppFactory.make(state: 'STARTED', package_state: 'FAILED', package_hash: 'def')]
+        a = AppFactory.make(state: 'STARTED')
+        a.package.update(state: 'FAILED')
+        [a]
       end
 
       let(:pending_apps) do
-        [AppFactory.make(state: 'STARTED', package_state: 'PENDING', package_hash: 'def')]
+        [App.make(state: 'STARTED')]
       end
 
       let(:apps) { running_apps + stopped_apps + failed_apps + pending_apps }
@@ -169,7 +171,9 @@ module VCAP::CloudController
       describe 'started apps that failed to stage' do
         let(:staging_failed_apps) do
           Array.new(3) do
-            AppFactory.make(state: 'STARTED', package_state: 'FAILED', package_hash: 'abc')
+            AppFactory.make(state: 'STARTED').tap do |a|
+              a.package.update(state: 'FAILED')
+            end
           end
         end
         before do

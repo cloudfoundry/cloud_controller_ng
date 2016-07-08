@@ -431,6 +431,10 @@ module VCAP::CloudController
 
           v2_app = App.last
           expect(v2_app.docker_image).to eq('some-image:latest')
+          expect(v2_app.package_hash).to eq('some-image:latest')
+
+          package = v2_app.package
+          expect(package.image).to eq('some-image:latest')
         end
       end
     end
@@ -882,10 +886,7 @@ module VCAP::CloudController
         context 'when the app is already staged' do
           let(:app_obj) do
             AppFactory.make(
-              package_hash: 'package-hash',
               instances: 1,
-              droplet_hash: 'droplet-hash',
-              package_state: 'STAGED',
               state: 'STARTED')
           end
 
@@ -903,12 +904,12 @@ module VCAP::CloudController
 
         context 'when the app needs staged' do
           let(:app_obj) do
-            AppFactory.make(
-              package_hash:  'package-hash',
-              package_state: 'PENDING',
-              instances:     1,
-              state:         'STARTED'
-            )
+            App.make(state: 'STARTED')
+          end
+
+          before do
+            PackageModel.make(app: app_obj.app, package_hash: 'some-hash')
+            app_obj.reload
           end
 
           it 'keeps app as needs staging' do
@@ -968,6 +969,22 @@ module VCAP::CloudController
             expect(last_response.status).to eq(400)
             expect(last_response.body).to include('Lifecycle type cannot be changed')
           end
+        end
+      end
+
+      describe 'updating docker_image' do
+        it 'creates a new docker package' do
+          app = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
+          original_package = app.package
+
+          expect(app.docker_image).not_to eq('repo/new-image')
+
+          set_current_user(admin_user, admin: true)
+
+          put "/v2/apps/#{app.guid}", MultiJson.dump({ docker_image: 'repo/new-image' })
+
+          expect(app.reload.docker_image).to eq('repo/new-image')
+          expect(app.package).not_to eq(original_package)
         end
       end
     end
@@ -1426,8 +1443,8 @@ module VCAP::CloudController
 
       context 'when app will be staged', isolation: :truncation do
         let(:app_obj) do
-          AppFactory.make(package_hash: 'abc', state: 'STOPPED',
-                          droplet_hash: nil, package_state: 'PENDING',
+          AppFactory.make(state: 'STOPPED',
+                          droplet_hash: nil,
                           instances: 1)
         end
         let(:stager_response) do
@@ -1611,7 +1628,7 @@ module VCAP::CloudController
 
       context 'when docker is disabled' do
         let!(:started_app) do
-          App.make(state: 'STARTED', package_hash: 'made-up-package-hash', docker_image: 'docker-image')
+          AppFactory.make(state: 'STARTED', docker_image: 'docker-image')
         end
 
         before do
@@ -1633,10 +1650,8 @@ module VCAP::CloudController
       end
 
       context 'when docker is disabled' do
-        let!(:stopped_app) { App.make(state: 'STOPPED', package_hash: 'made-up-package-hash', docker_image: 'docker-image') }
-        let!(:started_app) do
-          App.make(state: 'STARTED', package_hash: 'made-up-package-hash', docker_image: 'docker-image')
-        end
+        let!(:stopped_app) { AppFactory.make(:docker, state: 'STOPPED', docker_image: 'docker-image') }
+        let!(:started_app) { AppFactory.make(:docker, state: 'STARTED', docker_image: 'docker-image') }
 
         before do
           FeatureFlag.find(name: 'diego_docker').update(enabled: false)
@@ -1747,7 +1762,7 @@ module VCAP::CloudController
 
     describe 'Validation messages' do
       let(:space) { app_obj.space }
-      let!(:app_obj) { App.make(state: 'STARTED', package_hash: 'some-made-up-package-hash') }
+      let!(:app_obj) { App.make(state: 'STARTED') }
 
       before do
         set_current_user(make_developer_for_space(space))

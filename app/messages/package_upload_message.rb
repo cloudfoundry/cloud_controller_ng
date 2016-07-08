@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class PackageUploadMessage < BaseMessage
-    ALLOWED_KEYS = [:bits_path, :bits_name].freeze
+    ALLOWED_KEYS = [:bits_path, :bits_name, :cached_resources].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 

@@ -35,24 +35,6 @@ module CloudController
       end
 
       context 'downloads' do
-        describe 'app package' do
-          let(:app) { double(:app) }
-
-          it 'delegates to local_url_generator when local' do
-            allow(package_blobstore).to receive(:local?).and_return(true)
-            allow(local_url_generator).to receive(:app_package_download_url)
-            url_generator.app_package_download_url(app)
-            expect(local_url_generator).to have_received(:app_package_download_url).with(app)
-          end
-
-          it 'delegates to internal_url_generator when not local' do
-            allow(package_blobstore).to receive(:local?).and_return(false)
-            allow(internal_url_generator).to receive(:app_package_download_url)
-            url_generator.app_package_download_url(app)
-            expect(internal_url_generator).to have_received(:app_package_download_url).with(app)
-          end
-        end
-
         describe 'buildpack cache' do
           let(:app) { double(:app) }
 

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe DockerPolicy do
-  let(:app) { VCAP::CloudController::AppFactory.make(docker_image: 'some-image:latest') }
+  let(:app) { VCAP::CloudController::AppFactory.make(:docker, docker_image: 'some-image:latest') }
 
   subject(:validator) { DockerPolicy.new(app) }
 
@@ -68,16 +68,6 @@ RSpec.describe DockerPolicy do
 
     it 'does not register an error' do
       expect(validator).to validate_with_error(app, :docker_credentials, DockerPolicy::DOCKER_CREDENTIALS_ERROR_MSG)
-    end
-  end
-
-  context 'when attempting to switch to docker from buildpack' do
-    let(:parent_app) { VCAP::CloudController::AppModel.make(:buildpack) }
-    let!(:app) { VCAP::CloudController::App.make(app: parent_app) }
-
-    it 'registers an error' do
-      app.docker_image = 'image'
-      expect(validator).to validate_with_error(app, :docker_image, DockerPolicy::LIFECYCLE_CHANGE_ERROR_MSG)
     end
   end
 end

@@ -27,11 +27,11 @@ module VCAP::CloudController
       end
 
       it 'copies over docker info' do
-        PackageDockerDataModel.create(package: source_package, image: 'image-magick.com')
+        source_package = PackageModel.make(type: 'docker', docker_image: 'image-magick.com')
         result = package_copy.copy(app_guid, source_package)
         created_package = PackageModel.find(guid: result.guid)
 
-        expect(created_package.docker_data.image).to eq('image-magick.com')
+        expect(created_package.image).to eq('image-magick.com')
       end
 
       it 'creates an v3 audit event' do

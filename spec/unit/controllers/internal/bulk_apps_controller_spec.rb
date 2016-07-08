@@ -87,7 +87,6 @@ module VCAP::CloudController
             app = make_diego_app(
               state: 'STARTED',
               package_state: 'STAGED',
-              package_hash: 'package-hash',
               disk_quota: 1_024,
               environment_json: {
                 'env-key-3' => 'env-value-3',

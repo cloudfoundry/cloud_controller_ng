@@ -8,7 +8,7 @@ module VCAP
         RSpec.describe LifecycleProtocol do
           let(:blobstore_url_generator) do
             instance_double(::CloudController::Blobstore::UrlGenerator).tap do |url_generator|
-              allow(url_generator).to receive(:app_package_download_url).and_return('')
+              allow(url_generator).to receive(:package_download_url).and_return('')
               allow(url_generator).to receive(:buildpack_cache_download_url).and_return('')
               allow(url_generator).to receive(:buildpack_cache_upload_url).and_return('')
               allow(url_generator).to receive(:droplet_upload_url).and_return('')

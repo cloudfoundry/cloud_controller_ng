@@ -20,7 +20,11 @@ Sequel.migration do
       drop_foreign_key [:app_id]
     end
     drop_table(:tasks)
+    drop_table(:package_docker_data)
 
+    ####
+    ##  App usage events
+    ####
     generate_stop_events_query = <<-SQL
         INSERT INTO app_usage_events
           (guid, created_at, instance_count, memory_in_mb_per_instance, state, app_guid, app_name, space_guid, space_name, org_guid, buildpack_guid, buildpack_name, package_state, parent_app_name, parent_app_guid, process_type, task_guid, task_name, package_guid, previous_state, previous_package_state, previous_memory_in_mb_per_instance, previous_instance_count)
@@ -40,11 +44,13 @@ Sequel.migration do
       run generate_stop_events_query % 'get_uuid()'
     end
 
+    ###
+    ##  V3 data removal
+    ###
     run 'DELETE FROM apps_routes WHERE app_id IN (SELECT id FROM apps WHERE app_guid IS NOT NULL);'
     run 'DELETE FROM apps WHERE app_guid IS NOT NULL;'
     self[:route_mappings].truncate
     self[:v3_droplets].truncate
-    self[:package_docker_data].truncate
     self[:packages].truncate
     self[:buildpack_lifecycle_data].truncate
     self[:v3_service_bindings].truncate
@@ -95,6 +101,9 @@ Sequel.migration do
       end
     end
 
+    ####
+    ## Backfill apps table
+    ###
     run <<-SQL
         INSERT INTO apps (guid, name, salt, encrypted_environment_variables, created_at, updated_at, space_guid)
         SELECT p.guid, p.name, p.salt, p.encrypted_environment_json, p.created_at, p.updated_at, s.guid
@@ -107,6 +116,9 @@ Sequel.migration do
         UPDATE processes SET app_guid=guid
     SQL
 
+    #####
+    ## App Lifecycle
+    ####
     alter_table(:buildpack_lifecycle_data) do
       drop_index(:guid)
       set_column_allow_null(:guid)
@@ -150,6 +162,28 @@ Sequel.migration do
       add_index :guid, unique: true, name: :buildpack_lifecycle_data_guid_index
     end
 
+    #####
+    ## Backfill packages
+    ####
+    alter_table(:packages) do
+      drop_column :url
+      add_column :docker_image, String, type: :text
+    end
+
+    run <<-SQL
+      INSERT INTO packages (guid, type, package_hash, state, error, app_guid)
+      SELECT guid, 'bits', package_hash, 'READY', NULL, guid
+        FROM processes
+      WHERE package_hash IS NOT NULL AND docker_image IS NULL
+    SQL
+
+    run <<-SQL
+      INSERT INTO packages (guid, type, state, error, app_guid, docker_image)
+      SELECT  guid, 'docker', 'READY', NULL, guid, docker_image
+        FROM processes
+      WHERE docker_image IS NOT NULL
+    SQL
+
     alter_table(:processes) do
       drop_column :name
       drop_column :encrypted_environment_json
@@ -158,6 +192,9 @@ Sequel.migration do
       drop_column :space_id
       drop_column :stack_id
       drop_column :admin_buildpack_id
+      drop_column :docker_image
+      drop_column :package_hash
+      # drop_column :package_state
     end
   end
 end

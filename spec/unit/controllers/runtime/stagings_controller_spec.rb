@@ -80,11 +80,10 @@ module VCAP::CloudController
 
       def self.it_downloads_staged_app
         it 'succeeds for valid packages' do
-          guid = app_obj.guid
           tmpdir = Dir.mktmpdir
           zipname = File.join(tmpdir, 'test.zip')
           TestZip.create(zipname, 10, 1024)
-          Jobs::Runtime::AppBitsPacker.new(guid, zipname, []).perform
+          Jobs::V3::PackageBits.new(app_obj.package.guid, zipname, []).perform
           FileUtils.rm_rf(tmpdir)
 
           get "/staging/apps/#{app_obj.guid}"

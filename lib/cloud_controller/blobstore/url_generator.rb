@@ -20,14 +20,6 @@ module CloudController
         @upload_url_generator      = UploadUrlGenerator.new(blobstore_options)
       end
 
-      def app_package_download_url(app)
-        if @package_blobstore.local?
-          @local_url_generator.app_package_download_url(app)
-        else
-          @internal_url_generator.app_package_download_url(app)
-        end
-      end
-
       def package_download_url(package)
         if @package_blobstore.local?
           @local_url_generator.package_download_url(package)

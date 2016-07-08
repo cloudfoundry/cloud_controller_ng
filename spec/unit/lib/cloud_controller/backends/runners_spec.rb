@@ -130,7 +130,6 @@ module VCAP::CloudController
         last_app = make_diego_app({
           'id' => 6,
           'state' => 'STARTED',
-          'package_hash' => 'package-hash',
           'disk_quota' => 1_024,
           'package_state' => 'STAGED',
           'environment_json' => {
@@ -375,7 +374,7 @@ module VCAP::CloudController
         end
 
         let!(:docker_app) do
-          make_diego_app(docker_image: 'some-image', state: 'STARTED')
+          AppFactory.make(:docker, docker_image: 'some-image', state: 'STARTED', package_state: 'STAGED')
         end
 
         context 'when docker is enabled' do
@@ -420,7 +419,6 @@ module VCAP::CloudController
         last_app = make_dea_app({
           'id' => 6,
           'state' => 'STARTED',
-          'package_hash' => 'package-hash',
           'disk_quota' => 1_024,
           'package_state' => 'STAGED',
           'environment_json' => {

@@ -25,13 +25,13 @@ module VCAP::CloudController
         DEFAULT_HASHING_ALGORITHM = 'sha1'.freeze
 
         def build_data
-          data = package.type == 'docker' && package.docker_data ? docker_data : buildpack_data
+          data = package.docker? ? docker_data : buildpack_data
           data
         end
 
         def docker_data
           {
-            image: package.docker_data.image,
+            image: package.image,
           }
         end
 

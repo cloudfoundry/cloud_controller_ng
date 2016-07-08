@@ -38,19 +38,11 @@ module VCAP::CloudController
       end
     end
 
-    # Order matters for this buildpack_update_hash, because setting
-    # the package_hash on v2 App will reset the package_state to 'PENDING' to
-    # mark for restaging, which is necessary for AppObserver behavior.
-
     def buildpack_update_hash(app)
-      package_hash = app.droplet.package.nil? ? 'unknown' : app.droplet.package.package_hash
-
       {
         state:                 'STARTED',
         diego:                 true,
         droplet_hash:          app.droplet.droplet_hash,
-        package_hash:          package_hash,
-        package_state:         'STAGED',
         package_pending_since: nil,
       }
     end
@@ -60,8 +52,6 @@ module VCAP::CloudController
         state:                 'STARTED',
         diego:                 true,
         droplet_hash:          app.droplet.droplet_hash,
-        docker_image:          app.droplet.docker_receipt_image,
-        package_state:         'STAGED',
         package_pending_since: nil,
       }
     end

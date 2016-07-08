@@ -379,7 +379,7 @@ module VCAP::CloudController
           let(:org) { Organization.make(quota_definition: quota) }
           let(:space) { Space.make(organization: org, space_quota_definition: space_quota) }
           let(:parent_app) { AppModel.make(space: space) }
-          subject!(:app) { AppFactory.make(app: parent_app, memory: 64, instances: 2, state: 'STARTED', package_hash: 'a-hash') }
+          subject!(:app) { AppFactory.make(app: parent_app, memory: 64, instances: 2, state: 'STARTED') }
 
           it 'should raise error when quota is exceeded' do
             app.memory = 65
@@ -446,20 +446,14 @@ module VCAP::CloudController
           end
 
           it 'allows stopping an app that is above quota' do
-            app.update(state: 'STARTED',
-                       package_hash: 'abc',
-                       package_state: 'STAGED',
-                       droplet_hash: 'def')
-
             org.quota_definition = QuotaDefinition.make(memory_limit: 72)
             act_as_cf_admin { org.save }
 
-            app.reload
-            app.state = 'STOPPED'
+            expect(app.reload).to be_started
 
+            app.state = 'STOPPED'
             app.save
 
-            app.reload
             expect(app).to be_stopped
           end
 
@@ -678,9 +672,7 @@ module VCAP::CloudController
       context 'app is already staged' do
         subject do
           AppFactory.make(
-            package_hash: 'package-hash',
             instances: 1,
-            package_state: 'STAGED',
             droplet_hash: 'droplet-hash')
         end
 
@@ -718,11 +710,7 @@ module VCAP::CloudController
 
     describe '#execution_metadata' do
       subject do
-        App.make(
-          package_hash: 'package-hash',
-          instances: 1,
-          package_state: 'STAGED',
-        )
+        App.make
       end
 
       context 'v2' do
@@ -752,18 +740,16 @@ module VCAP::CloudController
       context 'v3' do
         let(:v3_app) { AppModel.make }
         let(:v2_app) do
-          App.make(
-            package_hash: 'package-hash',
+          AppFactory.make(
             instances: 1,
-            package_state: 'STAGED',
-            app_guid: v3_app.guid
+            app: v3_app
           )
         end
 
         context 'when the app has a current droplet' do
           let(:v3_droplet) do
             DropletModel.make(
-              app_guid: v3_app.guid,
+              app: v3_app,
               execution_metadata: 'some-other-metadata',
               state: VCAP::CloudController::DropletModel::STAGED_STATE
             )
@@ -789,13 +775,7 @@ module VCAP::CloudController
     end
 
     describe '#detected_start_command' do
-      subject do
-        App.make(
-          package_hash: 'package-hash',
-          instances: 1,
-          package_state: 'STAGED',
-        )
-      end
+      subject { App.make }
 
       context 'when the app has a current droplet' do
         before do
@@ -1078,7 +1058,7 @@ module VCAP::CloudController
       context 'when staging has completed' do
         context 'and the app state remains STARTED' do
           it 'creates an app usage event with BUILDPACK_SET as the state' do
-            app = AppFactory.make(package_hash: 'abc', state: 'STARTED', package_state: 'STAGED')
+            app = AppFactory.make(state: 'STARTED')
             expect {
               app.update_detected_buildpack(detect_output, nil)
             }.to change { AppUsageEvent.count }.by(1)
@@ -1092,7 +1072,7 @@ module VCAP::CloudController
 
         context 'and the app state is no longer STARTED' do
           it 'does ont create an app usage event' do
-            app = AppFactory.make(package_hash: 'abc', state: 'STOPPED')
+            app = AppFactory.make(state: 'STOPPED')
             expect {
               app.update_detected_buildpack(detect_output, nil)
             }.to_not change { AppUsageEvent.count }
@@ -1317,7 +1297,7 @@ module VCAP::CloudController
     end
 
     describe 'version' do
-      let(:app) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED') }
+      let(:app) { AppFactory.make }
 
       it 'should have a version on create' do
         expect(app.version).not_to be_nil
@@ -1872,19 +1852,521 @@ module VCAP::CloudController
       end
     end
 
-    describe 'ports' do
-      context 'switching from diego to dea' do
-        let(:app_hash) do
-          {
-            app: parent_app,
-            package_hash: 'abc',
-            package_state: 'STAGED',
-            state: 'STARTED',
-            diego: true,
-            ports: [8080, 2345]
-          }
+    describe 'saving' do
+      it 'calls AppObserver.updated', isolation: :truncation do
+        app = AppFactory.make
+        expect(AppObserver).to receive(:updated).with(app)
+        app.update(instances: app.instances + 1)
+      end
+
+      context 'when AppObserver.updated fails' do
+        let(:app) { AppFactory.make }
+        let(:undo_app) { double(:undo_app_changes, undo: true) }
+
+        context 'when the app is a dea app' do
+          it 'should undo any change', isolation: :truncation do
+            allow(UndoAppChanges).to receive(:new).with(app).and_return(undo_app)
+
+            expect(AppObserver).to receive(:updated).once.with(app).
+              and_raise(CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty'))
+            expect(undo_app).to receive(:undo)
+            expect { app.update(state: 'STARTED') }.to raise_error(CloudController::Errors::ApiError, /app package hash/)
+          end
         end
-        let(:app) { AppFactory.make(app_hash) }
+
+        context 'when the app is a diego app' do
+          before do
+            allow(UndoAppChanges).to receive(:new)
+          end
+
+          let(:app) { AppFactory.make(diego: true) }
+
+          it 'does not call UndoAppChanges', isolation: :truncation do
+            expect(AppObserver).to receive(:updated).once.with(app).
+              and_raise(CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty'))
+            expect { app.update(state: 'STARTED') }.to raise_error(CloudController::Errors::ApiError, /app package hash/)
+            expect(UndoAppChanges).not_to have_received(:new)
+          end
+        end
+
+        it 'does not call UndoAppChanges when its not an ApiError', isolation: :truncation do
+          expect(AppObserver).to receive(:updated).once.with(app).and_raise('boom')
+          expect(UndoAppChanges).not_to receive(:new)
+          expect { app.update(state: 'STARTED') }.to raise_error('boom')
+        end
+      end
+
+      context 'when app state changes from STOPPED to STARTED' do
+        it 'creates an AppUsageEvent' do
+          app = AppFactory.make
+          expect {
+            app.update(state: 'STARTED')
+          }.to change { AppUsageEvent.count }.by(1)
+          event = AppUsageEvent.last
+          expect(event).to match_app(app)
+        end
+      end
+
+      context 'when app state changes from STARTED to STOPPED' do
+        it 'creates an AppUsageEvent' do
+          app = AppFactory.make(state: 'STARTED')
+          expect {
+            app.update(state: 'STOPPED')
+          }.to change { AppUsageEvent.count }.by(1)
+          event = AppUsageEvent.last
+          expect(event).to match_app(app)
+        end
+      end
+
+      context 'when app instances changes' do
+        it 'creates an AppUsageEvent when the app is STARTED' do
+          app = AppFactory.make(state: 'STARTED')
+          expect {
+            app.update(instances: 2)
+          }.to change { AppUsageEvent.count }.by(1)
+          event = AppUsageEvent.last
+          expect(event).to match_app(app)
+        end
+
+        it 'does not create an AppUsageEvent when the app is STOPPED' do
+          app = AppFactory.make(state: 'STOPPED')
+          expect {
+            app.update(instances: 2)
+          }.not_to change { AppUsageEvent.count }
+        end
+      end
+
+      context 'when app memory changes' do
+        it 'creates an AppUsageEvent when the app is STARTED' do
+          app = AppFactory.make(state: 'STARTED')
+          expect {
+            app.update(memory: 2)
+          }.to change { AppUsageEvent.count }.by(1)
+          event = AppUsageEvent.last
+          expect(event).to match_app(app)
+        end
+
+        it 'does not create an AppUsageEvent when the app is STOPPED' do
+          app = AppFactory.make(state: 'STOPPED')
+          expect {
+            app.update(memory: 2)
+          }.not_to change { AppUsageEvent.count }
+        end
+      end
+
+      context 'when a custom buildpack was used for staging' do
+        it 'creates an AppUsageEvent that contains the custom buildpack url' do
+          app = AppFactory.make(state: 'STOPPED')
+          app.app.lifecycle_data.update(buildpack: 'https://example.com/repo.git')
+          expect {
+            app.update(state: 'STARTED')
+          }.to change { AppUsageEvent.count }.by(1)
+          event = AppUsageEvent.last
+          expect(event.buildpack_name).to eq('https://example.com/repo.git')
+          expect(event).to match_app(app)
+        end
+      end
+
+      context 'when a detected admin buildpack was used for staging' do
+        it 'creates an AppUsageEvent that contains the detected buildpack guid' do
+          buildpack = Buildpack.make
+          app = AppFactory.make(
+            state: 'STOPPED',
+            detected_buildpack: 'Admin buildpack detect string',
+            detected_buildpack_guid: buildpack.guid
+          )
+          expect {
+            app.update(state: 'STARTED')
+          }.to change { AppUsageEvent.count }.by(1)
+          event = AppUsageEvent.last
+          expect(event.buildpack_guid).to eq(buildpack.guid)
+          expect(event).to match_app(app)
+        end
+      end
+    end
+
+    describe 'destroy' do
+      let(:app) { AppFactory.make(app: parent_app) }
+
+      it 'notifies the app observer', isolation: :truncation do
+        expect(AppObserver).to receive(:deleted).with(app)
+        app.destroy
+      end
+
+      it 'should nullify the routes' do
+        app.add_route(route)
+        expect {
+          app.destroy
+        }.to change { route.reload.apps.collect(&:guid) }.from([app.guid]).to([])
+      end
+
+      context 'when the service broker can successfully delete service bindings' do
+        it 'should destroy all dependent service bindings' do
+          service_binding = ServiceBinding.make(
+            app: app,
+            service_instance: ManagedServiceInstance.make(space: app.space)
+          )
+          stub_unbind(service_binding)
+
+          expect {
+            app.destroy
+          }.to change { ServiceBinding.where(id: service_binding.id).count }.from(1).to(0)
+        end
+      end
+
+      context 'when the service broker cannot successfully delete service bindings' do
+        it 'should raise an exception when it fails to delete service bindings' do
+          service_binding = ServiceBinding.make(
+            app: app,
+            service_instance: ManagedServiceInstance.make(:v2, space: app.space)
+          )
+          stub_unbind(service_binding, status: 500)
+
+          expect {
+            app.destroy
+          }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
+        end
+      end
+
+      it 'should destroy all dependent crash events' do
+        app_event = AppEvent.make(app: app)
+
+        expect {
+          app.destroy
+        }.to change {
+               AppEvent.where(id: app_event.id).count
+             }.from(1).to(0)
+      end
+
+      it 'creates an AppUsageEvent when the app state is STARTED' do
+        app = AppFactory.make(state: 'STARTED')
+        expect {
+          app.destroy
+        }.to change { AppUsageEvent.count }.by(1)
+        expect(AppUsageEvent.last).to match_app(app)
+      end
+
+      it 'does not create an AppUsageEvent when the app state is STOPPED' do
+        app = AppFactory.make(state: 'STOPPED')
+        expect {
+          app.destroy
+        }.not_to change { AppUsageEvent.count }
+      end
+
+      it 'locks the record when destroying' do
+        expect(app).to receive(:lock!)
+        app.destroy
+      end
+    end
+
+    describe 'file_descriptors' do
+      subject { AppFactory.make }
+      its(:file_descriptors) { should == 16_384 }
+    end
+
+    describe 'docker_image' do
+      subject(:app) { AppFactory.make(app: parent_app) }
+
+      it 'does not allow a docker package for a buildpack app' do
+        app.app.lifecycle_data.update(buildpack: Buildpack.make.name)
+        PackageModel.make(:docker, app: app.app)
+        expect {
+          app.save
+        }.to raise_error(Sequel::ValidationFailed, /incompatible with buildpack/)
+      end
+    end
+
+    describe 'diego' do
+      subject { AppFactory.make }
+
+      context 'default values' do
+        context 'when the config specifies dea as the default backend' do
+          before { TestConfig.override(default_to_diego_backend: false) }
+
+          it 'does not run on diego' do
+            expect(subject.diego).to be_falsey
+          end
+        end
+
+        context 'when the config specifies diego as the default backend' do
+          before { TestConfig.override(default_to_diego_backend: true) }
+
+          it 'runs on diego' do
+            expect(subject.diego).to be_truthy
+          end
+        end
+      end
+
+      context 'when adding and removing routes', isolation: :truncation do
+        let(:domain) do
+          PrivateDomain.make owning_organization: subject.space.organization
+        end
+
+        let(:route) { Route.make domain: domain, space: subject.space }
+
+        before do
+          subject.diego = true
+          allow(AppObserver).to receive(:routes_changed).with(subject)
+          process_guid = Diego::ProcessGuid.from_process(subject)
+          stub_request(:delete, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}").to_return(status: 202)
+        end
+
+        it 'does not update the app version' do
+          expect { subject.add_route(route) }.to_not change(subject, :version)
+          expect { subject.remove_route(route) }.to_not change(subject, :version)
+        end
+
+        it 'updates the app updated_at' do
+          expect { subject.add_route(route) }.to change(subject, :updated_at)
+          expect { subject.remove_route(route) }.to change(subject, :updated_at)
+        end
+
+        it 'calls the app observer with the app' do
+          expect(AppObserver).to receive(:routes_changed).with(subject)
+          subject.add_route(route)
+        end
+
+        it 'calls the app observer when route_guids are updated' do
+          expect(AppObserver).to receive(:routes_changed).with(subject)
+
+          subject.route_guids = [route.guid]
+        end
+
+        context 'when modifying multiple routes at one time' do
+          let(:routes) { Array.new(3) { Route.make domain: domain, space: subject.space } }
+
+          before do
+            allow(AppObserver).to receive(:updated).with(subject)
+
+            subject.add_route(route)
+            subject.save
+          end
+
+          it 'calls the app observer once when multiple routes have changed' do
+            expect(AppObserver).to receive(:routes_changed).with(subject).once
+
+            App.db.transaction(savepoint: true) do
+              subject.route_guids = routes.collect(&:guid)
+              subject.remove_route(route)
+              subject.save
+            end
+          end
+        end
+      end
+
+      context 'when updating app ports' do
+        let!(:app) { AppFactory.make(diego: true, state: 'STARTED') }
+
+        before do
+          allow(AppObserver).to receive(:updated).with(app)
+        end
+
+        it 'calls the app observer with the app', isolation: :truncation do
+          expect(AppObserver).not_to have_received(:updated).with(app)
+          app.ports = [1111, 2222]
+          app.save
+          expect(AppObserver).to have_received(:updated).with(app)
+        end
+
+        it 'updates the app version' do
+          expect {
+            app.ports = [1111, 2222]
+            app.memory = 2048
+            app.save
+          }.to change(app, :version)
+        end
+      end
+    end
+
+    describe '#needs_package_in_current_state?' do
+      it 'returns true if started' do
+        app = App.new(state: 'STARTED')
+        expect(app.needs_package_in_current_state?).to eq(true)
+      end
+
+      it 'returns false if not started' do
+        expect(App.new(state: 'STOPPED').needs_package_in_current_state?).to eq(false)
+      end
+    end
+
+    describe '#docker_ports' do
+      describe 'when the app is not docker' do
+        let(:app) { AppFactory.make(diego: true, docker_image: nil) }
+
+        it 'is an empty array' do
+          expect(app.docker_ports).to eq []
+        end
+      end
+
+      context 'when tcp ports are saved in the droplet metadata' do
+        let(:app) {
+          app = AppFactory.make(diego: true, docker_image: 'some-docker-image')
+          app.add_droplet(Droplet.new(
+                            app:                app,
+                            droplet_hash:       'the-droplet-hash',
+                            execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
+          ))
+          app.droplet_hash = 'the-droplet-hash'
+          app
+        }
+
+        it 'returns an array of the tcp ports' do
+          expect(app.docker_ports).to eq([1024, 1025])
+        end
+      end
+    end
+
+    describe 'ports' do
+      context 'serialization' do
+        it 'serializes and deserializes arrays of integers' do
+          app = App.make(diego: true, ports: [1025, 1026, 1027, 1028])
+          expect(app.ports).to eq([1025, 1026, 1027, 1028])
+
+          app = App.make(diego: true, ports: [1024])
+          expect(app.ports).to eq([1024])
+        end
+      end
+
+      context 'docker app' do
+        context 'when app is not staged' do
+          let(:app) { App.make(:docker, diego: true) }
+
+          it 'does not save the ports to the database' do
+            expect(app.user_provided_ports).to be_nil
+          end
+
+          context 'when the app has a route' do
+            let(:route) { Route.make(space: app.space) }
+            before do
+              app.add_route(route)
+            end
+
+            it 'should not save app_port to the route mappings' do
+              route_mapping = RouteMapping.last
+              expect(route_mapping.user_provided_app_port).to be_nil
+            end
+
+            it 'returns nil app_port on the route mapping' do
+              route_mapping = RouteMapping.last
+              expect(route_mapping.app_port).to be nil
+            end
+          end
+        end
+
+        context 'when app is staged' do
+          context 'when some tcp ports are exposed' do
+            let(:app) {
+              app = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
+              app.add_droplet(Droplet.new(
+                                app: app,
+                                droplet_hash: 'the-droplet-hash',
+                                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
+                              ))
+              app.droplet_hash = 'the-droplet-hash'
+              app
+            }
+
+            it 'does not change ports' do
+              expect(app.ports).to be nil
+            end
+
+            it 'does not save ports to the database' do
+              expect(app.user_provided_ports).to be_nil
+            end
+
+            context 'when the user provided ports' do
+              before do
+                app.ports = [1111]
+                app.save
+              end
+
+              it 'saves to db and returns the user provided ports' do
+                expect(app.user_provided_ports).to eq([1111])
+                expect(app.ports).to eq([1111])
+              end
+            end
+          end
+
+          context 'when no tcp ports are exposed' do
+            it 'returns the ports that were specified during creation' do
+              app = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
+              app.add_droplet(Droplet.new(
+                                app: app,
+                                droplet_hash: 'the-droplet-hash',
+                                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"udp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"udp"}]}',
+                              ))
+              app.droplet_hash = 'the-droplet-hash'
+              expect(app.ports).to be nil
+              expect(app.user_provided_ports).to be_nil
+            end
+          end
+
+          context 'when execution metadata is malformed' do
+            it 'returns the ports that were specified during creation' do
+              app = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1, ports: [1111])
+              app.add_droplet(Droplet.new(
+                                app: app,
+                                droplet_hash: 'the-droplet-hash',
+                                execution_metadata: 'some-invalid-json',
+                              ))
+              app.droplet_hash = 'the-droplet-hash'
+              expect(app.user_provided_ports).to eq([1111])
+              expect(app.ports).to eq([1111])
+            end
+          end
+
+          context 'when no ports are specified in the execution metadata' do
+            it 'returns the default port' do
+              app = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
+              app.add_droplet(Droplet.new(
+                                app: app,
+                                droplet_hash: 'the-droplet-hash',
+                                execution_metadata: '{"cmd":"run.sh"}',
+                              ))
+              app.droplet_hash = 'the-droplet-hash'
+              expect(app.ports).to be nil
+              expect(app.user_provided_ports).to be_nil
+            end
+          end
+        end
+      end
+
+      context 'buildpack app' do
+        context 'when app is not staged' do
+          it 'returns the ports that were specified during creation' do
+            app = App.make(diego: true, ports: [1025, 1026, 1027, 1028], package_state: 'PENDING')
+            expect(app.ports).to eq([1025, 1026, 1027, 1028])
+            expect(app.user_provided_ports).to eq([1025, 1026, 1027, 1028])
+          end
+        end
+
+        context 'when app is staged' do
+          context 'with no execution_metadata' do
+            it 'returns the ports that were specified during creation' do
+              app = AppFactory.make(diego: true, ports: [1025, 1026, 1027, 1028], instances: 1)
+              expect(app.ports).to eq([1025, 1026, 1027, 1028])
+              expect(app.user_provided_ports).to eq([1025, 1026, 1027, 1028])
+            end
+          end
+
+          context 'with execution_metadata' do
+            it 'returns the ports that were specified during creation' do
+              app = App.make(diego: true, ports: [1025, 1026, 1027, 1028], instances: 1)
+              app.add_droplet(Droplet.new(
+                                app: app,
+                                droplet_hash: 'the-droplet-hash',
+                                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":8080, "Protocol":"tcp"}]}',
+                              ))
+              app.droplet_hash = 'the-droplet-hash'
+              expect(app.ports).to eq([1025, 1026, 1027, 1028])
+              expect(app.user_provided_ports).to eq([1025, 1026, 1027, 1028])
+            end
+          end
+        end
+      end
+
+      context 'switching from diego to dea' do
+        let(:app) { AppFactory.make(app: parent_app, state: 'STARTED', diego: true, ports: [8080, 2345]) }
         let(:route) { Route.make(host: 'host', space: app.space) }
         let(:route2) { Route.make(host: 'host', space: app.space) }
         let!(:route_mapping_1) { RouteMapping.make(app: app, route: route) }
@@ -2028,7 +2510,7 @@ module VCAP::CloudController
       end
 
       context 'when changing ports on a docker app' do
-        let(:app) { App.make(diego: true, docker_image: 'some-docker-image', package_state: 'PENDING') }
+        let(:app) { AppFactory.make(diego: true, docker_image: 'some-docker-image') }
         let(:route) { Route.make(space: app.space) }
 
         before do
@@ -2041,581 +2523,6 @@ module VCAP::CloudController
             app.save
             app.reload
           }.to_not change { app.route_mappings.map(&:user_provided_app_port) }
-        end
-      end
-    end
-
-    describe 'saving' do
-      it 'calls AppObserver.updated', isolation: :truncation do
-        app = AppFactory.make
-        expect(AppObserver).to receive(:updated).with(app)
-        app.update(instances: app.instances + 1)
-      end
-
-      context 'when AppObserver.updated fails' do
-        let(:app) { AppFactory.make }
-        let(:undo_app) { double(:undo_app_changes, undo: true) }
-
-        context 'when the app is a dea app' do
-          it 'should undo any change', isolation: :truncation do
-            allow(UndoAppChanges).to receive(:new).with(app).and_return(undo_app)
-
-            expect(AppObserver).to receive(:updated).once.with(app).
-              and_raise(CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty'))
-            expect(undo_app).to receive(:undo)
-            expect { app.update(state: 'STARTED') }.to raise_error(CloudController::Errors::ApiError, /app package hash/)
-          end
-        end
-
-        context 'when the app is a diego app' do
-          before do
-            allow(UndoAppChanges).to receive(:new)
-          end
-
-          let(:app) { AppFactory.make(diego: true) }
-
-          it 'does not call UndoAppChanges', isolation: :truncation do
-            expect(AppObserver).to receive(:updated).once.with(app).
-              and_raise(CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty'))
-            expect { app.update(state: 'STARTED') }.to raise_error(CloudController::Errors::ApiError, /app package hash/)
-            expect(UndoAppChanges).not_to have_received(:new)
-          end
-        end
-
-        it 'does not call UndoAppChanges when its not an ApiError', isolation: :truncation do
-          expect(AppObserver).to receive(:updated).once.with(app).and_raise('boom')
-          expect(UndoAppChanges).not_to receive(:new)
-          expect { app.update(state: 'STARTED') }.to raise_error('boom')
-        end
-      end
-
-      context 'when app state changes from STOPPED to STARTED' do
-        it 'creates an AppUsageEvent' do
-          app = AppFactory.make
-          expect {
-            app.update(state: 'STARTED')
-          }.to change { AppUsageEvent.count }.by(1)
-          event = AppUsageEvent.last
-          expect(event).to match_app(app)
-        end
-      end
-
-      context 'when app state changes from STARTED to STOPPED' do
-        it 'creates an AppUsageEvent' do
-          app = AppFactory.make(package_hash: 'abc', state: 'STARTED')
-          expect {
-            app.update(state: 'STOPPED')
-          }.to change { AppUsageEvent.count }.by(1)
-          event = AppUsageEvent.last
-          expect(event).to match_app(app)
-        end
-      end
-
-      context 'when app instances changes' do
-        it 'creates an AppUsageEvent when the app is STARTED' do
-          app = AppFactory.make(package_hash: 'abc', state: 'STARTED')
-          expect {
-            app.update(instances: 2)
-          }.to change { AppUsageEvent.count }.by(1)
-          event = AppUsageEvent.last
-          expect(event).to match_app(app)
-        end
-
-        it 'does not create an AppUsageEvent when the app is STOPPED' do
-          app = AppFactory.make(package_hash: 'abc', state: 'STOPPED')
-          expect {
-            app.update(instances: 2)
-          }.not_to change { AppUsageEvent.count }
-        end
-      end
-
-      context 'when app memory changes' do
-        it 'creates an AppUsageEvent when the app is STARTED' do
-          app = AppFactory.make(package_hash: 'abc', state: 'STARTED')
-          expect {
-            app.update(memory: 2)
-          }.to change { AppUsageEvent.count }.by(1)
-          event = AppUsageEvent.last
-          expect(event).to match_app(app)
-        end
-
-        it 'does not create an AppUsageEvent when the app is STOPPED' do
-          app = AppFactory.make(package_hash: 'abc', state: 'STOPPED')
-          expect {
-            app.update(memory: 2)
-          }.not_to change { AppUsageEvent.count }
-        end
-      end
-
-      context 'when a custom buildpack was used for staging' do
-        it 'creates an AppUsageEvent that contains the custom buildpack url' do
-          app = AppFactory.make(state: 'STOPPED')
-          app.app.lifecycle_data.update(buildpack: 'https://example.com/repo.git')
-          expect {
-            app.update(state: 'STARTED')
-          }.to change { AppUsageEvent.count }.by(1)
-          event = AppUsageEvent.last
-          expect(event.buildpack_name).to eq('https://example.com/repo.git')
-          expect(event).to match_app(app)
-        end
-      end
-
-      context 'when a detected admin buildpack was used for staging' do
-        it 'creates an AppUsageEvent that contains the detected buildpack guid' do
-          buildpack = Buildpack.make
-          app = AppFactory.make(
-            state: 'STOPPED',
-            detected_buildpack: 'Admin buildpack detect string',
-            detected_buildpack_guid: buildpack.guid
-          )
-          expect {
-            app.update(state: 'STARTED')
-          }.to change { AppUsageEvent.count }.by(1)
-          event = AppUsageEvent.last
-          expect(event.buildpack_guid).to eq(buildpack.guid)
-          expect(event).to match_app(app)
-        end
-      end
-    end
-
-    describe 'destroy' do
-      let(:app) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED', app: parent_app) }
-
-      it 'notifies the app observer', isolation: :truncation do
-        expect(AppObserver).to receive(:deleted).with(app)
-        app.destroy
-      end
-
-      it 'should nullify the routes' do
-        app.add_route(route)
-        expect {
-          app.destroy
-        }.to change { route.reload.apps.collect(&:guid) }.from([app.guid]).to([])
-      end
-
-      context 'when the service broker can successfully delete service bindings' do
-        it 'should destroy all dependent service bindings' do
-          service_binding = ServiceBinding.make(
-            app: app,
-            service_instance: ManagedServiceInstance.make(space: app.space)
-          )
-          stub_unbind(service_binding)
-
-          expect {
-            app.destroy
-          }.to change { ServiceBinding.where(id: service_binding.id).count }.from(1).to(0)
-        end
-      end
-
-      context 'when the service broker cannot successfully delete service bindings' do
-        it 'should raise an exception when it fails to delete service bindings' do
-          service_binding = ServiceBinding.make(
-            app: app,
-            service_instance: ManagedServiceInstance.make(:v2, space: app.space)
-          )
-          stub_unbind(service_binding, status: 500)
-
-          expect {
-            app.destroy
-          }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
-        end
-      end
-
-      it 'should destroy all dependent crash events' do
-        app_event = AppEvent.make(app: app)
-
-        expect {
-          app.destroy
-        }.to change {
-               AppEvent.where(id: app_event.id).count
-             }.from(1).to(0)
-      end
-
-      it 'creates an AppUsageEvent when the app state is STARTED' do
-        app = AppFactory.make(package_hash: 'abc', package_state: 'STAGED', state: 'STARTED')
-        expect {
-          app.destroy
-        }.to change { AppUsageEvent.count }.by(1)
-        expect(AppUsageEvent.last).to match_app(app)
-      end
-
-      it 'does not create an AppUsageEvent when the app state is STOPPED' do
-        app = AppFactory.make(package_hash: 'abc', package_state: 'STAGED', state: 'STOPPED')
-        expect {
-          app.destroy
-        }.not_to change { AppUsageEvent.count }
-      end
-
-      it 'locks the record when destroying' do
-        expect(app).to receive(:lock!)
-        app.destroy
-      end
-    end
-
-    describe 'file_descriptors' do
-      subject { AppFactory.make }
-      its(:file_descriptors) { should == 16_384 }
-    end
-
-    describe 'docker_image' do
-      subject(:app) do
-        App.new(app: parent_app)
-      end
-
-      it 'sets the package hash to the image name any time the image is set' do
-        expect {
-          app.docker_image = 'foo/bar:latest'
-        }.to change { app.package_hash }.to('foo/bar:latest')
-      end
-
-      it 'preserves its existing behavior as a setter' do
-        expect {
-          app.docker_image = 'foo/bar:latest'
-        }.to change { app.docker_image }.to('foo/bar:latest')
-      end
-
-      user_docker_images = [
-        'bar',
-        'foo/bar',
-        'foo/bar/baz',
-        'fake.registry.com/bar',
-        'fake.registry.com/foo/bar',
-        'fake.registry.com/foo/bar/baz',
-        'fake.registry.com:5000/bar',
-        'fake.registry.com:5000/foo/bar',
-        'fake.registry.com:5000/foo/bar/baz',
-      ]
-
-      user_docker_images.each do |partial_ref|
-        complete_ref = partial_ref + ':0.1'
-        it "keeps the user specified tag :0.1 on #{complete_ref}" do
-          expect {
-            app.docker_image = complete_ref
-          }.to change { app.docker_image }.to end_with(':0.1')
-        end
-      end
-
-      user_docker_images.each do |partial_ref|
-        complete_ref = partial_ref + ':latest'
-        it "keeps the user specified tag :latest on #{complete_ref}" do
-          expect {
-            app.docker_image = complete_ref
-          }.to change { app.docker_image }.to end_with(':latest')
-        end
-      end
-
-      user_docker_images.each do |partial_ref|
-        it "inserts the tag :latest on #{partial_ref}" do
-          expect {
-            app.docker_image = partial_ref
-          }.to change { app.docker_image }.to end_with(':latest')
-        end
-      end
-
-      it 'does not allow a docker_image and an admin buildpack' do
-        admin_buildpack = VCAP::CloudController::Buildpack.make
-        app.app.lifecycle_data.update(buildpack: admin_buildpack.name)
-        expect {
-          app.docker_image = 'foo/bar'
-          app.save
-        }.to raise_error(Sequel::ValidationFailed, /incompatible with buildpack/)
-      end
-
-      it 'does not allow a docker_image and a custom buildpack' do
-        app.app.lifecycle_data.update(buildpack: 'git://user@github.com:repo')
-        expect {
-          app.docker_image = 'foo/bar'
-          app.save
-        }.to raise_error(Sequel::ValidationFailed, /incompatible with buildpack/)
-      end
-    end
-
-    describe 'diego' do
-      subject { AppFactory.make }
-
-      context 'default values' do
-        context 'when the config specifies dea as the default backend' do
-          before { TestConfig.override(default_to_diego_backend: false) }
-
-          it 'does not run on diego' do
-            expect(subject.diego).to be_falsey
-          end
-        end
-
-        context 'when the config specifies diego as the default backend' do
-          before { TestConfig.override(default_to_diego_backend: true) }
-
-          it 'runs on diego' do
-            expect(subject.diego).to be_truthy
-          end
-        end
-      end
-
-      context 'when adding and removing routes', isolation: :truncation do
-        let(:domain) do
-          PrivateDomain.make owning_organization: subject.space.organization
-        end
-
-        let(:route) { Route.make domain: domain, space: subject.space }
-
-        before do
-          subject.diego = true
-          allow(AppObserver).to receive(:routes_changed).with(subject)
-          process_guid = Diego::ProcessGuid.from_process(subject)
-          stub_request(:delete, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}").to_return(status: 202)
-        end
-
-        it 'does not update the app version' do
-          expect { subject.add_route(route) }.to_not change(subject, :version)
-          expect { subject.remove_route(route) }.to_not change(subject, :version)
-        end
-
-        it 'updates the app updated_at' do
-          expect { subject.add_route(route) }.to change(subject, :updated_at)
-          expect { subject.remove_route(route) }.to change(subject, :updated_at)
-        end
-
-        it 'calls the app observer with the app' do
-          expect(AppObserver).to receive(:routes_changed).with(subject)
-          subject.add_route(route)
-        end
-
-        it 'calls the app observer when route_guids are updated' do
-          expect(AppObserver).to receive(:routes_changed).with(subject)
-
-          subject.route_guids = [route.guid]
-        end
-
-        context 'when modifying multiple routes at one time' do
-          let(:routes) { Array.new(3) { Route.make domain: domain, space: subject.space } }
-
-          before do
-            allow(AppObserver).to receive(:updated).with(subject)
-
-            subject.add_route(route)
-            subject.save
-          end
-
-          it 'calls the app observer once when multiple routes have changed' do
-            expect(AppObserver).to receive(:routes_changed).with(subject).once
-
-            App.db.transaction(savepoint: true) do
-              subject.route_guids = routes.collect(&:guid)
-              subject.remove_route(route)
-              subject.save
-            end
-          end
-        end
-      end
-
-      context 'when updating app ports' do
-        let!(:app) { AppFactory.make(diego: true, state: 'STARTED') }
-
-        before do
-          allow(AppObserver).to receive(:updated).with(app)
-        end
-
-        it 'calls the app observer with the app', isolation: :truncation do
-          expect(AppObserver).not_to have_received(:updated).with(app)
-          app.ports = [1111, 2222]
-          app.save
-          expect(AppObserver).to have_received(:updated).with(app)
-        end
-
-        it 'updates the app version' do
-          expect {
-            app.ports = [1111, 2222]
-            app.memory = 2048
-            app.save
-          }.to change(app, :version)
-        end
-      end
-    end
-
-    describe '#needs_package_in_current_state?' do
-      it 'returns true if started' do
-        app = App.new(state: 'STARTED', package_hash: nil)
-        expect(app.needs_package_in_current_state?).to eq(true)
-      end
-
-      it 'returns false if not started' do
-        expect(App.new(state: 'STOPPED', package_hash: nil).needs_package_in_current_state?).to eq(false)
-      end
-    end
-
-    describe '#docker_ports' do
-      describe 'when the app is not docker' do
-        let(:app) { AppFactory.make(diego: true, docker_image: nil) }
-
-        it 'is an empty array' do
-          expect(app.docker_ports).to eq []
-        end
-      end
-
-      context 'when tcp ports are saved in the droplet metadata' do
-        let(:app) {
-          app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
-          app.add_droplet(Droplet.new(
-                            app:                app,
-                            droplet_hash:       'the-droplet-hash',
-                            execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
-          ))
-          app.droplet_hash = 'the-droplet-hash'
-          app
-        }
-
-        it 'returns an array of the tcp ports' do
-          expect(app.docker_ports).to eq([1024, 1025])
-        end
-      end
-    end
-
-    describe 'ports' do
-      context 'serialization' do
-        it 'serializes and deserializes arrays of integers' do
-          app = App.make(diego: true, ports: [1025, 1026, 1027, 1028])
-          expect(app.ports).to eq([1025, 1026, 1027, 1028])
-
-          app = App.make(diego: true, ports: [1024])
-          expect(app.ports).to eq([1024])
-        end
-      end
-
-      context 'docker app' do
-        context 'when app is not staged' do
-          let(:app) { App.make(diego: true, docker_image: 'some-docker-image', package_state: 'PENDING') }
-
-          it 'does not save the ports to the database' do
-            expect(app.user_provided_ports).to be_nil
-          end
-
-          context 'when the app has a route' do
-            let(:route) { Route.make(space: app.space) }
-            before do
-              app.add_route(route)
-            end
-
-            it 'should not save app_port to the route mappings' do
-              route_mapping = RouteMapping.last
-              expect(route_mapping.user_provided_app_port).to be_nil
-            end
-
-            it 'returns nil app_port on the route mapping' do
-              route_mapping = RouteMapping.last
-              expect(route_mapping.app_port).to be nil
-            end
-          end
-        end
-
-        context 'when app is staged' do
-          context 'when some tcp ports are exposed' do
-            let(:app) {
-              app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
-              app.add_droplet(Droplet.new(
-                                app: app,
-                                droplet_hash: 'the-droplet-hash',
-                                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
-                              ))
-              app.droplet_hash = 'the-droplet-hash'
-              app
-            }
-
-            it 'does not change ports' do
-              expect(app.ports).to be nil
-            end
-
-            it 'does not save ports to the database' do
-              expect(app.user_provided_ports).to be_nil
-            end
-
-            context 'when the user provided ports' do
-              before do
-                app.ports = [1111]
-                app.save
-              end
-
-              it 'saves to db and returns the user provided ports' do
-                expect(app.user_provided_ports).to eq([1111])
-                expect(app.ports).to eq([1111])
-              end
-            end
-          end
-
-          context 'when no tcp ports are exposed' do
-            it 'returns the ports that were specified during creation' do
-              app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
-              app.add_droplet(Droplet.new(
-                                app: app,
-                                droplet_hash: 'the-droplet-hash',
-                                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"udp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"udp"}]}',
-                              ))
-              app.droplet_hash = 'the-droplet-hash'
-              expect(app.ports).to be nil
-              expect(app.user_provided_ports).to be_nil
-            end
-          end
-
-          context 'when execution metadata is malformed' do
-            it 'returns the ports that were specified during creation' do
-              app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1, ports: [1111])
-              app.add_droplet(Droplet.new(
-                                app: app,
-                                droplet_hash: 'the-droplet-hash',
-                                execution_metadata: 'some-invalid-json',
-                              ))
-              app.droplet_hash = 'the-droplet-hash'
-              expect(app.user_provided_ports).to eq([1111])
-              expect(app.ports).to eq([1111])
-            end
-          end
-
-          context 'when no ports are specified in the execution metadata' do
-            it 'returns the default port' do
-              app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
-              app.add_droplet(Droplet.new(
-                                app: app,
-                                droplet_hash: 'the-droplet-hash',
-                                execution_metadata: '{"cmd":"run.sh"}',
-                              ))
-              app.droplet_hash = 'the-droplet-hash'
-              expect(app.ports).to be nil
-              expect(app.user_provided_ports).to be_nil
-            end
-          end
-        end
-      end
-
-      context 'buildpack app' do
-        context 'when app is not staged' do
-          it 'returns the ports that were specified during creation' do
-            app = App.make(diego: true, ports: [1025, 1026, 1027, 1028], package_state: 'PENDING')
-            expect(app.ports).to eq([1025, 1026, 1027, 1028])
-            expect(app.user_provided_ports).to eq([1025, 1026, 1027, 1028])
-          end
-        end
-
-        context 'when app is staged' do
-          context 'with no execution_metadata' do
-            it 'returns the ports that were specified during creation' do
-              app = App.make(diego: true, ports: [1025, 1026, 1027, 1028], package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
-              expect(app.ports).to eq([1025, 1026, 1027, 1028])
-              expect(app.user_provided_ports).to eq([1025, 1026, 1027, 1028])
-            end
-          end
-
-          context 'with execution_metadata' do
-            it 'returns the ports that were specified during creation' do
-              app = App.make(diego: true, ports: [1025, 1026, 1027, 1028], package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
-              app.add_droplet(Droplet.new(
-                                app: app,
-                                droplet_hash: 'the-droplet-hash',
-                                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":8080, "Protocol":"tcp"}]}',
-                              ))
-              app.droplet_hash = 'the-droplet-hash'
-              expect(app.ports).to eq([1025, 1026, 1027, 1028])
-              expect(app.user_provided_ports).to eq([1025, 1026, 1027, 1028])
-            end
-          end
         end
       end
     end

@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe VCAP::CloudController::FilesController do
     describe 'GET /v2/apps/:id/instances/:instance/files/(:path)' do
       before :each do
-        @app = AppFactory.make(package_hash: 'abc', package_state: 'STAGED')
+        @app = AppFactory.make
         @user = make_user_for_space(@app.space)
         @developer = make_developer_for_space(@app.space)
       end

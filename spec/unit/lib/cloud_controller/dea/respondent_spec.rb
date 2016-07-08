@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     let(:app) do
       AppFactory.make(
-        instances: 2, state: 'STARTED', package_hash: 'SOME_HASH', package_state: 'STAGED'
+        instances: 2, state: 'STARTED'
       ).save
     end
 

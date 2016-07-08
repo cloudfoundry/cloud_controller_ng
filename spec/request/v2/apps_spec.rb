@@ -360,7 +360,7 @@ RSpec.describe 'Apps' do
             'staging_failed_description' => nil,
             'diego'                      => false,
             'docker_image'               => nil,
-            'package_updated_at'         => iso8601,
+            'package_updated_at'         => nil,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
             'docker_credentials_json'    => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
@@ -519,7 +519,7 @@ RSpec.describe 'Apps' do
     describe 'docker apps' do
       let(:app_model) { VCAP::CloudController::AppModel.make(:docker, name: 'mario', space: space, environment_variables: { 'RAILS_ENV' => 'staging' }) }
       let!(:process) {
-        VCAP::CloudController::App.make(
+        VCAP::CloudController::AppFactory.make(
           app:                     app_model,
           docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' },
           docker_image:            'cloudfoundry/diego-docker-app:latest'
@@ -611,7 +611,7 @@ RSpec.describe 'Apps' do
 
     describe 'docker apps' do
       let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space: space) }
-      let!(:process) { VCAP::CloudController::App.make(app: app_model, docker_image: 'cloudfoundry/diego-docker-app:latest') }
+      let!(:process) { VCAP::CloudController::AppFactory.make(app: app_model, docker_image: 'cloudfoundry/diego-docker-app:latest') }
 
       it 'deletes the specified app' do
         delete "/v2/apps/#{process.guid}", nil, headers_for(user)

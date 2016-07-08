@@ -157,7 +157,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :app
-        expect(parsed_response['entity']['docker_image']).to eq('cloudfoundry/diego-docker-app:latest')
+        expect(parsed_response['entity']['docker_image']).to eq('cloudfoundry/diego-docker-app')
         expect(parsed_response['entity']['diego']).to be_truthy
 
         app_guid = parsed_response['metadata']['guid']

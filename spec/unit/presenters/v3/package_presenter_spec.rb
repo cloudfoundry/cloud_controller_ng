@@ -20,7 +20,7 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when the package type is bits' do
-        let(:package) { VCAP::CloudController::PackageModel.make(type: 'bits', url: 'foobar') }
+        let(:package) { VCAP::CloudController::PackageModel.make(type: 'bits') }
 
         it 'includes links to upload and stage' do
           expect(result[:links][:upload][:href]).to eq("/v3/packages/#{package.guid}/upload")
@@ -33,19 +33,12 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when the package type is docker' do
         let(:package) do
-          VCAP::CloudController::PackageModel.make(type: 'docker')
-        end
-
-        let!(:data_model) do
-          VCAP::CloudController::PackageDockerDataModel.create({
-              image: 'registry/image:latest',
-              package: package
-            })
+          VCAP::CloudController::PackageModel.make(type: 'docker', docker_image: 'registry/image:latest')
         end
 
         it 'presents the docker information in the data section' do
           data = result[:data]
-          expect(data[:image]).to eq data_model.image
+          expect(data[:image]).to eq('registry/image:latest')
         end
 
         it 'includes links to stage' do
@@ -55,7 +48,7 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when the package type is not bits' do
-        let(:package) { VCAP::CloudController::PackageModel.make(type: 'docker', url: 'foobar') }
+        let(:package) { VCAP::CloudController::PackageModel.make(type: 'docker', docker_image: 'some-image') }
 
         it 'does NOT include a link to upload' do
           expect(result[:links][:upload]).to be_nil

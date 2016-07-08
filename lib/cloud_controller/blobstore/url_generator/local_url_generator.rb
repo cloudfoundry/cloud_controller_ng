@@ -14,12 +14,6 @@ module CloudController
       end
 
       # Downloads
-      def app_package_download_url(app)
-        return nil unless @package_blobstore.exists?(app.guid)
-
-        basic_auth_uri("/staging/apps/#{app.guid}")
-      end
-
       def package_download_url(package)
         return nil unless @package_blobstore.exists?(package.guid)
 

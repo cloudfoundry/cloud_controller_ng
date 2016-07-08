@@ -5,11 +5,10 @@ module VCAP::CloudController
     let(:state) { 'STARTED' }
     let(:instances) { 2 }
     let(:app) do
-      AppFactory.make(package_hash: 'abc',
-                      name: 'app-name',
-                      droplet_hash: 'I DO NOTHING',
-                      state: state,
-                      instances: instances,
+      AppFactory.make(
+        name: 'app-name',
+        state: state,
+        instances: instances,
                       )
     end
     let(:changes) { { updated_at: [2.days.ago, app.updated_at] } }

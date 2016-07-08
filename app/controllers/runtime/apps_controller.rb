@@ -234,6 +234,10 @@ module VCAP::CloudController
             v3_app.lifecycle_data.stack = Stack.find(guid: request_attrs['stack_guid']).try(:name)
             app.mark_for_restaging
           end
+        elsif request_attrs.key?('docker_image')
+          create_message = PackageCreateMessage.new({ type: 'docker', app_guid: v3_app.guid, data: { image: request_attrs['docker_image'] } })
+          creator        = PackageCreate.new(SecurityContext.current_user.guid, SecurityContext.current_user_email)
+          creator.create(create_message)
         end
 
         app.production              = request_attrs['production'] if request_attrs.key?('production')
@@ -247,7 +251,6 @@ module VCAP::CloudController
         app.health_check_type       = request_attrs['health_check_type'] if request_attrs.key?('health_check_type')
         app.health_check_timeout    = request_attrs['health_check_timeout'] if request_attrs.key?('health_check_timeout')
         app.diego                   = request_attrs['diego'] if request_attrs.key?('diego')
-        app.docker_image            = request_attrs['docker_image'] if request_attrs.key?('docker_image')
         app.enable_ssh              = request_attrs['enable_ssh'] if request_attrs.key?('enable_ssh')
         app.docker_credentials_json = request_attrs['docker_credentials_json'] if request_attrs.key?('docker_credentials_json')
         app.ports                   = request_attrs['ports'] if request_attrs.key?('ports')
@@ -284,13 +287,20 @@ module VCAP::CloudController
           environment_variables: request_attrs['environment_json'],
         )
 
-        if request_attrs['docker_image'].blank?
+        buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
+        if buildpack_type_requested
           stack = request_attrs['stack_guid'] ? Stack.find(guid: request_attrs['stack_guid']) : Stack.default
-          BuildpackLifecycleDataModel.create(
+          v3_app.buildpack_lifecycle_data = BuildpackLifecycleDataModel.new(
             buildpack: request_attrs['buildpack'],
             stack:     stack.try(:name),
-            app:       v3_app
           )
+          v3_app.save
+        end
+
+        if request_attrs.key?('docker_image')
+          create_message = PackageCreateMessage.new({ type: 'docker', app_guid: v3_app.guid, data: { image: request_attrs['docker_image'] } })
+          creator        = PackageCreate.new(SecurityContext.current_user.guid, SecurityContext.current_user_email)
+          creator.create(create_message)
         end
 
         app = App.new(
@@ -306,7 +316,6 @@ module VCAP::CloudController
           health_check_type:       request_attrs['health_check_type'],
           health_check_timeout:    request_attrs['health_check_timeout'],
           diego:                   request_attrs['diego'],
-          docker_image:            request_attrs['docker_image'],
           enable_ssh:              request_attrs['enable_ssh'],
           docker_credentials_json: request_attrs['docker_credentials_json'],
           ports:                   request_attrs['ports'],

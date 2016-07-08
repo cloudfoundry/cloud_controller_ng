@@ -24,7 +24,6 @@ RSpec.describe 'Droplets' do
         app_guid: app_model.guid,
         state:    VCAP::CloudController::PackageModel::READY_STATE,
         type:     VCAP::CloudController::PackageModel::BITS_TYPE,
-        url:      'hello.com'
       )
     end
 

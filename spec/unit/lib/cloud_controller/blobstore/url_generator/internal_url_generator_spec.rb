@@ -40,45 +40,6 @@ module CloudController
 
       let(:app) { VCAP::CloudController::AppFactory.make }
 
-      describe '#app_package_download_url' do
-        it 'gives out signed url to remote blobstore for appbits' do
-          expect(url_generator.app_package_download_url(app)).to eql(internal_url)
-          expect(package_blobstore).to have_received(:blob).with(app.guid)
-        end
-
-        context 'when package does not exist' do
-          before do
-            allow(package_blobstore).to receive(:blob).and_return(nil)
-          end
-
-          it 'returns nil' do
-            expect(url_generator.app_package_download_url(app)).to be_nil
-          end
-        end
-
-        context "when the droplet doesn't exist (app created before droplet)" do
-          it 'should return a nil url for stage/start first instance' do
-            app.droplets_dataset.destroy
-            app.droplet_hash = nil
-            app.save
-            app.reload
-            expect(url_generator.droplet_download_url(app)).to be_nil
-          end
-        end
-
-        context 'when a SigningRequestError is raised' do
-          before do
-            allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
-          end
-
-          it 'bubbles up an ApiError' do
-            expect {
-              url_generator.app_package_download_url(app)
-            }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
-          end
-        end
-      end
-
       describe '#buildpack_cache_download_url' do
         it 'gives out signed url to remote blobstore for buildpack cache' do
           expect(url_generator.buildpack_cache_download_url(app)).to eql(internal_url)

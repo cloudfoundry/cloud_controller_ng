@@ -4,10 +4,11 @@ module VCAP
       def self.make(*args)
         parent_app_attributes = args.extract_options!.symbolize_keys
         attributes = parent_app_attributes.slice!(:name, :space, :environment_json, :stack)
+        package_attributes = attributes
+        attributes = package_attributes.slice!(:docker_image)
 
         defaults = {
             droplet_hash: Sham.guid,
-            package_hash: Sham.guid,
             metadata: {},
         }
         attributes = defaults.merge(attributes)
@@ -32,6 +33,13 @@ module VCAP
         args << attributes
 
         app = VCAP::CloudController::App.make(*args)
+
+        if package_attributes.empty?
+          VCAP::CloudController::PackageModel.make(app: app.app, state: PackageModel::READY_STATE, package_hash: Sham.guid)
+        else
+          VCAP::CloudController::PackageModel.make(:docker, app: app.app, docker_image: package_attributes[:docker_image])
+        end
+
         app.add_new_droplet(app.droplet_hash) if app.droplet_hash
         app.reload
       end

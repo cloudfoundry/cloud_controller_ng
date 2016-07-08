@@ -54,6 +54,14 @@ module VCAP::CloudController
       false
     end
 
+    def docker?
+      lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
+    end
+
+    def buildpack?
+      lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
+    end
+
     private
 
     def validate_environment_variables

@@ -13,7 +13,7 @@ module VCAP
 
           def lifecycle_data(app)
             lifecycle_data = LifecycleData.new
-            lifecycle_data.app_bits_download_uri = @blobstore_url_generator.app_package_download_url(app)
+            lifecycle_data.app_bits_download_uri = @blobstore_url_generator.package_download_url(app.package)
             lifecycle_data.build_artifacts_cache_download_uri = @blobstore_url_generator.buildpack_cache_download_url(app)
             lifecycle_data.build_artifacts_cache_upload_uri = @blobstore_url_generator.buildpack_cache_upload_url(app)
             lifecycle_data.droplet_upload_uri = @blobstore_url_generator.droplet_upload_url(app)

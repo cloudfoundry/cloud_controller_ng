@@ -14,13 +14,6 @@ module CloudController
       end
 
       # Downloads
-      def app_package_download_url(app)
-        blob = @package_blobstore.blob(app.guid)
-        return nil unless blob
-
-        url_for_blob(blob)
-      end
-
       def buildpack_cache_download_url(app)
         blob = @buildpack_cache_blobstore.blob(app.buildpack_cache_key)
         return nil unless blob

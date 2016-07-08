@@ -47,7 +47,6 @@ module VCAP::CloudController
         instances: 2,
         state: app_state,
         droplet_hash: droplet_hash,
-        package_hash: 'abcd',
         package_state: package_state,
         diego: diego,
       )

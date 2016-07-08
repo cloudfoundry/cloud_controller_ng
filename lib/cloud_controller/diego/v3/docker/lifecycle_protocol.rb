@@ -9,7 +9,7 @@ module VCAP
           class LifecycleProtocol
             def lifecycle_data(package, _)
               lifecycle_data              = Diego::Docker::LifecycleData.new
-              lifecycle_data.docker_image = package.docker_data.image
+              lifecycle_data.docker_image = package.image
               [Lifecycles::DOCKER, lifecycle_data.message]
             end
           end

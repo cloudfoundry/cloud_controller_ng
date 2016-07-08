@@ -5,11 +5,9 @@ module VCAP::CloudController
     let(:tps_client) { instance_double(Diego::TPSClient) }
     let(:hm_client) { instance_double(Dea::HM9000::Client) }
 
-    let(:dea_app) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED') }
+    let(:dea_app) { AppFactory.make }
     let(:diego_app) do
       AppFactory.make(
-        package_hash: 'abc',
-        package_state: 'STAGED',
         diego: true
       )
     end

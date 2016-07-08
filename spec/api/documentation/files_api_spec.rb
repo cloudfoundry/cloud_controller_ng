@@ -5,7 +5,7 @@ RSpec.resource 'Files', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   authenticated_request
 
-  let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED', package_hash: 'abc') }
+  let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED') }
   let(:app_guid) { app_obj.guid }
   let(:instance_index) { '0' }
   let(:file_path) { 'path_to_file' }

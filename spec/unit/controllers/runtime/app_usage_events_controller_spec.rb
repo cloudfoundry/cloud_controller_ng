@@ -79,7 +79,7 @@ module VCAP::CloudController
       end
 
       it 'creates events for existing STARTED apps' do
-        app = AppFactory.make(state: 'STARTED', package_hash: Sham.guid)
+        app = AppFactory.make(state: 'STARTED')
         AppFactory.make(state: 'STOPPED')
         post '/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps'
         expect(last_response).to be_successful

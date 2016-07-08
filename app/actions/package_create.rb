@@ -12,14 +12,14 @@ module VCAP::CloudController
     def create(message)
       logger.info("creating package type #{message.type} for app #{message.app_guid}")
 
-      package          = PackageModel.new
-      package.app_guid = message.app_guid
-      package.type     = message.type
-      package.state    = get_package_state(message)
+      package              = PackageModel.new
+      package.app_guid     = message.app_guid
+      package.type         = message.type
+      package.state        = get_package_state(message)
+      package.docker_image = message.docker_data.image if message.docker_type?
 
       package.db.transaction do
         package.save
-        make_docker_data(message, package)
 
         Repositories::PackageEventRepository.record_app_package_create(
           package,
@@ -37,16 +37,6 @@ module VCAP::CloudController
 
     def get_package_state(message)
       message.bits_type? ? PackageModel::CREATED_STATE : PackageModel::READY_STATE
-    end
-
-    def make_docker_data(message, package)
-      return nil unless message.docker_type?
-
-      data = PackageDockerDataModel.new
-      data.package = package
-      data.image = message.docker_data.image
-      data.save
-      package.docker_data = data
     end
 
     def logger

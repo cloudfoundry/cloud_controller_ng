@@ -9,7 +9,7 @@ module VCAP
           let(:lifecycle_protocol) { LifecycleProtocol.new }
 
           it_behaves_like 'a lifecycle protocol' do
-            let(:app) { App.make(docker_image: 'https://cool.image') }
+            let(:app) { AppFactory.make(docker_image: 'https://cool.image') }
           end
 
           describe '#lifecycle_data' do

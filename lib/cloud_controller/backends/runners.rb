@@ -50,8 +50,8 @@ module VCAP::CloudController
     end
 
     def diego_apps_cache_data(batch_size, last_id)
-      diego_apps = App.select(:id, :guid, :version, :updated_at).
-                   where('id > ?', last_id).
+      diego_apps = App.
+                   where("#{App.table_name}.id > ?", last_id).
                    where(state: 'STARTED').
                    where(package_state: 'STAGED').
                    where('deleted_at IS NULL').
@@ -59,7 +59,12 @@ module VCAP::CloudController
       diego_apps = filter_docker_apps(diego_apps) unless FeatureFlag.enabled?(:diego_docker)
       diego_apps.order(:id).
         limit(batch_size).
-        select_map([:id, :guid, :version, :updated_at])
+        select_map([
+          "#{App.table_name}__id".to_sym,
+          "#{App.table_name}__guid".to_sym,
+          "#{App.table_name}__version".to_sym,
+          "#{App.table_name}__updated_at".to_sym
+        ])
     end
 
     def dea_apps(batch_size, last_id)
@@ -124,7 +129,7 @@ module VCAP::CloudController
     end
 
     def filter_docker_apps(query)
-      query.where(docker_image: nil)
+      query.inner_join(BuildpackLifecycleDataModel.table_name, app_guid: :app_guid)
     end
   end
 end
