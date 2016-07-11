@@ -450,6 +450,7 @@ properties:
     description: "URL of the hm9000 server"
   hm9000.port:
     description: "Port of the hm9000 Api Server"
+    default: 5155
 
   uaa.jwt.verification_key:
     default: ""
