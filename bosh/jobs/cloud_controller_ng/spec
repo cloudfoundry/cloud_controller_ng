@@ -237,7 +237,7 @@ properties:
     description: "User's password used to access internal endpoints of Cloud Controller to upload files when staging"
 
   cc.quota_definitions:
-    description: "Hash of default quota definitions to be used during Cloud Controller database seeded. This property can be used to add quotas with subsequent deploys, but not to update existing ones."
+    description: "Hash of default quota definitions to be seeded. This property can be used to add quotas with subsequent deploys, but not to update existing ones."
     example: |
       - example-quota:
           memory_limit: 10240
