@@ -217,6 +217,7 @@ module VCAP::CloudController
             'ports' => [2222, 3333],
             'network' => {
               'properties' => {
+                'policy_group_id' => app.guid,
                 'app_id' => app.guid,
                 'space_id' => app.space.guid,
                 'org_id' => app.organization.guid,
