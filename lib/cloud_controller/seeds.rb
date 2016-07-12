@@ -74,7 +74,7 @@ module VCAP::CloudController
         end
 
         unless domain_overlap(domains, system_domain)
-          raise 'The organization that owns the system domain cannot be nil' unless system_org
+          raise 'A system_domain_organization must be provided if the system_domain is not shared with (in the list of) app_domains' unless system_org
 
           domain = Domain.find(name: system_domain)
 
