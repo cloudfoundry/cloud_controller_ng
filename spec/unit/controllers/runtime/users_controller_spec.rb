@@ -366,11 +366,9 @@ module VCAP::CloudController
             expect(decoded_response['code']).to eq(10003)
           end
         end
-
       end
 
       context 'as a manager' do
-
         before do
           org.add_manager(user)
         end
@@ -388,7 +386,6 @@ module VCAP::CloudController
       end
 
       context 'as a billing manager' do
-
         before do
           org.add_billing_manager(user)
         end
