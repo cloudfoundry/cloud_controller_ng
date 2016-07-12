@@ -38,7 +38,10 @@ module CloudController
 
           # work around https://github.com/fog/fog/issues/3137
           # and Fog raising an EOFError SocketError intermittently
-          errors = [Excon::Errors::BadRequest, Excon::Errors::SocketError, SystemCallError]
+          # and https://github.com/fog/fog-aws/issues/264
+          # and https://github.com/fog/fog-aws/issues/265
+          errors = [Excon::Errors::BadRequest, Excon::Errors::SocketError, SystemCallError,
+                    Excon::Errors::InternalServerError, Excon::Errors::ServiceUnavailable]
           retryable_client = RetryableClient.new(client: client, errors: errors, logger: logger)
 
           Client.new(ErrorHandlingClient.new(SafeDeleteClient.new(retryable_client, root_dir)))
