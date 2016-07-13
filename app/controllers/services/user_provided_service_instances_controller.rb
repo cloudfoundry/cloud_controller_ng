@@ -34,14 +34,14 @@ module VCAP::CloudController
 
       if space_and_name_errors && space_and_name_errors.include?(:unique)
         CloudController::Errors::ApiError.new_from_details('ServiceInstanceNameTaken', attributes['name'])
-      elsif service_instance_errors.include?(:space_mismatch)
+      elsif service_instance_errors && service_instance_errors.include?(:space_mismatch)
         CloudController::Errors::ApiError.new_from_details('ServiceInstanceRouteBindingSpaceMismatch')
-      elsif service_instance_errors.include?(:route_binding_not_allowed)
+      elsif service_instance_errors && service_instance_errors.include?(:route_binding_not_allowed)
         CloudController::Errors::ApiError.new_from_details('ServiceDoesNotSupportRoutes')
-      elsif service_instance_errors.include?(:route_service_url_not_https)
+      elsif service_instance_errors && service_instance_errors.include?(:route_service_url_not_https)
         raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid',
                                                       'Scheme for route_service_url must be https.')
-      elsif service_instance_errors.include?(:route_service_url_invalid)
+      elsif service_instance_errors && service_instance_errors.include?(:route_service_url_invalid)
         raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid',
                                                       'route_service_url is invalid.')
       else
