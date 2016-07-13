@@ -13,7 +13,7 @@ module VCAP::CloudController
         self[:prod]           = process.production
         self[:sha1]           = process.droplet_hash
         self[:executableFile] = 'deprecated'
-        self[:executableUri]  = blobstore_url_generator.droplet_download_url(process)
+        self[:executableUri]  = blobstore_url_generator.droplet_download_url(process.current_droplet)
         self[:version]        = process.version
 
         self[:services] = process.service_bindings.map do |sb|

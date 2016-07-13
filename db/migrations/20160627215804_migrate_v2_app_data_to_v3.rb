@@ -1,27 +1,5 @@
 Sequel.migration do
   up do
-    alter_table(:v3_droplets) do
-      drop_foreign_key [:app_guid]
-    end
-    alter_table(:packages) do
-      drop_foreign_key [:app_guid]
-    end
-    alter_table(:apps) do
-      drop_foreign_key [:app_guid]
-      drop_index :app_guid
-      drop_foreign_key [:space_id]
-      drop_foreign_key [:stack_id], name: :fk_apps_stack_id
-      drop_index [:name, :space_id], name: :apps_space_id_name_nd_idx
-    end
-    alter_table(:route_mappings) do
-      drop_foreign_key [:app_guid]
-    end
-    alter_table(:v3_service_bindings) do
-      drop_foreign_key [:app_id]
-    end
-    drop_table(:tasks)
-    drop_table(:package_docker_data)
-
     ####
     ##  App usage events
     ####
@@ -47,10 +25,29 @@ Sequel.migration do
     ###
     ##  V3 data removal
     ###
+    alter_table(:packages) do
+      drop_foreign_key [:app_guid]
+    end
+    alter_table(:apps) do
+      drop_foreign_key [:app_guid]
+      drop_index :app_guid
+      drop_foreign_key [:space_id]
+      drop_foreign_key [:stack_id], name: :fk_apps_stack_id
+      drop_index [:name, :space_id], name: :apps_space_id_name_nd_idx
+    end
+    alter_table(:route_mappings) do
+      drop_foreign_key [:app_guid]
+    end
+    alter_table(:v3_service_bindings) do
+      drop_foreign_key [:app_id]
+    end
+    drop_table(:tasks)
+    drop_table(:package_docker_data)
+    drop_table(:v3_droplets)
+
     run 'DELETE FROM apps_routes WHERE app_id IN (SELECT id FROM apps WHERE app_guid IS NOT NULL);'
-    run 'DELETE FROM apps WHERE app_guid IS NOT NULL;'
+    run 'DELETE FROM apps WHERE app_guid IS NOT NULL OR deleted_at IS NOT NULL;'
     self[:route_mappings].truncate
-    self[:v3_droplets].truncate
     self[:packages].truncate
     self[:buildpack_lifecycle_data].truncate
     self[:v3_service_bindings].truncate
@@ -69,11 +66,40 @@ Sequel.migration do
     alter_table(:route_mappings) do
       add_foreign_key [:app_guid], :apps, key: :guid, name: :fk_route_mappings_app_guid
     end
-    alter_table(:v3_droplets) do
-      add_foreign_key [:app_guid], :apps, key: :guid, name: :fk_v3_droplets_app_guid
-    end
     alter_table(:v3_service_bindings) do
       add_foreign_key [:app_id], :apps, key: :id, name: :fk_v3_service_bindings_app_id   # this is by id instead of guid
+    end
+
+    create_table :v3_droplets do
+      VCAP::Migration.common(self)
+
+      String :state, null: false
+      index :state, name: :droplets_state_index
+      String :droplet_hash
+      String :process_types, type: :text
+      String :execution_metadata, type: :text
+      String :error_id
+      String :error_description, type: :text
+      String :encrypted_environment_variables, text: true
+      String :salt
+      Integer :staging_memory_in_mb
+      Integer :staging_disk_in_mb
+
+      String :buildpack_receipt_stack_name
+      String :buildpack_receipt_buildpack
+      String :buildpack_receipt_buildpack_guid
+      String :docker_receipt_image
+
+      String :package_guid
+      index :package_guid, name: :package_guid_index
+
+      String :app_guid
+      foreign_key [:app_guid], :apps, key: :guid, name: :fk_droplets_app_guid
+
+      if self.class.name.match /mysql/i
+        table_name = tables.find { |t| t =~ /v3_droplets/ }
+        run "ALTER TABLE `#{table_name}` CONVERT TO CHARACTER SET utf8;"
+      end
     end
 
     create_table :tasks do
@@ -194,7 +220,10 @@ Sequel.migration do
       drop_column :admin_buildpack_id
       drop_column :docker_image
       drop_column :package_hash
-      # drop_column :package_state
+      drop_column :package_state
+      drop_column :droplet_hash
+      drop_column :package_pending_since
+      drop_column :deleted_at
     end
   end
 end

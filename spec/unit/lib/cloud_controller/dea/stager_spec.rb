@@ -3,31 +3,14 @@ require 'spec_helper'
 module VCAP::CloudController
   module Dea
     RSpec.describe Stager do
-      let(:config) do
-        instance_double(Config)
-      end
-
-      let(:message_bus) do
-        instance_double(CfMessageBus::MessageBus, publish: nil)
-      end
-
-      let(:dea_pool) do
-        instance_double(Dea::Pool)
-      end
-
-      let(:runners) do
-        instance_double(Runners)
-      end
-
+      subject(:stager) { Stager.new(app.package, config, message_bus, dea_pool, runners) }
+      let(:config) { instance_double(Config) }
+      let(:message_bus) { instance_double(CfMessageBus::MessageBus, publish: nil) }
+      let(:dea_pool) { instance_double(Dea::Pool) }
+      let(:runners) { instance_double(Runners) }
       let(:runner) { double(:Runner) }
-
-      subject(:stager) do
-        Stager.new(app, config, message_bus, dea_pool, runners)
-      end
-
-      let(:stager_task) do
-        double(AppStagerTask)
-      end
+      let(:stager_task) { instance_double(AppStagerTask) }
+      let(:staging_details) { instance_double(Diego::V3::StagingDetails, droplet: app.latest_droplet)}
 
       let(:reply_json_error) { nil }
       let(:reply_error_info) { nil }
@@ -56,9 +39,7 @@ module VCAP::CloudController
 
       let(:app) { AppFactory.make }
 
-      it_behaves_like 'a stager' do
-        let(:app) { nil }
-      end
+      it_behaves_like 'a stager'
 
       describe '#stage' do
         before do
@@ -69,23 +50,18 @@ module VCAP::CloudController
         end
 
         it 'stages the app with a stager task' do
-          stager.stage
+          stager.stage(staging_details)
           expect(stager_task).to have_received(:stage)
           expect(AppStagerTask).to have_received(:new).with(config,
                                                             message_bus,
-                                                            app,
+                                                            app.latest_droplet,
                                                             dea_pool,
                                                             an_instance_of(CloudController::Blobstore::UrlGenerator))
         end
 
         it 'starts the app with the returned staging result' do
-          stager.stage
+          stager.stage(staging_details)
           expect(runner).to have_received(:start).with('fake-staging-result')
-        end
-
-        it 'records the stager response on the app' do
-          stager.stage
-          expect(app.last_stager_response).to eq('fake-stager-response')
         end
       end
 

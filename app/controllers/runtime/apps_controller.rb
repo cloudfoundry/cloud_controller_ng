@@ -288,7 +288,7 @@ module VCAP::CloudController
         )
 
         buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
-        if buildpack_type_requested
+        if buildpack_type_requested || !request_attrs.key?('docker_image')
           stack = request_attrs['stack_guid'] ? Stack.find(guid: request_attrs['stack_guid']) : Stack.default
           v3_app.buildpack_lifecycle_data = BuildpackLifecycleDataModel.new(
             buildpack: request_attrs['buildpack'],

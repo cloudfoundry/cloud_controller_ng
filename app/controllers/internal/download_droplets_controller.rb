@@ -23,20 +23,14 @@ module VCAP::CloudController
       raise ApiError.new_from_details('NotFound', droplet_hash) unless app.droplet_hash == droplet_hash
 
       blob_name = 'droplet'
-      droplet = app.droplet
+      droplet   = app.current_droplet
 
       if @blobstore.local?
-        blob = droplet.respond_to?(:blob) ? droplet.blob : @blobstore.blob(droplet.blobstore_key)
-
+        blob = @blobstore.blob(droplet.blobstore_key)
         @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless droplet && blob
         @blob_sender.send_blob(blob, self)
       else
-        url = if droplet.is_a?(DropletModel)
-                @blobstore_url_generator.v3_droplet_download_url(droplet)
-              else
-                @blobstore_url_generator.droplet_download_url(app)
-              end
-
+        url = @blobstore_url_generator.droplet_download_url(droplet)
         @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless url
         redirect url
       end

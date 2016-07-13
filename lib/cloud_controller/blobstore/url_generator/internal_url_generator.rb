@@ -13,14 +13,6 @@ module CloudController
         @droplet_blobstore         = droplet_blobstore
       end
 
-      # Downloads
-      def buildpack_cache_download_url(app)
-        blob = @buildpack_cache_blobstore.blob(app.buildpack_cache_key)
-        return nil unless blob
-
-        url_for_blob(blob)
-      end
-
       def admin_buildpack_download_url(buildpack)
         blob = @admin_buildpack_blobstore.blob(buildpack.key)
         return nil unless blob
@@ -28,22 +20,15 @@ module CloudController
         url_for_blob(blob)
       end
 
-      def droplet_download_url(app)
-        droplet = app.current_droplet
+      def droplet_download_url(droplet)
         return nil unless droplet
-        blob = droplet.blob
-        url_for_blob(blob) if blob
-      end
-
-      # V3 downloads
-      def v3_droplet_download_url(droplet)
         blob = @droplet_blobstore.blob(droplet.blobstore_key)
         return nil unless blob
 
         url_for_blob(blob)
       end
 
-      def v3_app_buildpack_cache_download_url(app_guid, stack)
+      def buildpack_cache_download_url(app_guid, stack)
         blob = @buildpack_cache_blobstore.blob("#{app_guid}/#{stack}")
         return nil unless blob
 

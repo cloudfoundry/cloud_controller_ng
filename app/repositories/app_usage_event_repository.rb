@@ -29,22 +29,21 @@ module VCAP::CloudController
       end
 
       def buildpack_name_for_app(app)
-        if !app.droplet.is_a?(DropletModel)
+        # if !app.droplet.is_a?(DropletModel)
           app.custom_buildpack_url || app.detected_buildpack_name
-        else
-          process = app
-          droplet = process.app.droplet
-          return nil unless droplet.present?
-          return droplet.buildpack_receipt_buildpack if droplet.buildpack_receipt_buildpack.present?
-
-          if droplet.lifecycle_data && droplet.lifecycle_data.class::LIFECYCLE_TYPE != 'docker'
-            droplet.lifecycle_data.buildpack
-          end
-        end
+        # else
+        #   process = app
+        #   droplet = process.app.droplet
+        #   return nil unless droplet.present?
+        #   return droplet.buildpack_receipt_buildpack if droplet.buildpack_receipt_buildpack.present?
+        #
+        #   if droplet.lifecycle_data && droplet.lifecycle_data.class::LIFECYCLE_TYPE != 'docker'
+        #     droplet.lifecycle_data.buildpack
+        #   end
+        # end
       end
 
       def buildpack_guid_for_app(app)
-        return app.app.droplet.buildpack_receipt_buildpack_guid if app.droplet.is_a?(DropletModel)
         app.detected_buildpack_guid
       end
 

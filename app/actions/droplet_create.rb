@@ -16,6 +16,8 @@ module VCAP::CloudController
     class DiskLimitExceeded < StandardError
     end
 
+    attr_reader :staging_response
+
     def initialize(memory_limit_calculator=StagingMemoryCalculator.new,
       disk_limit_calculator=StagingDiskCalculator.new,
       environment_presenter=StagingEnvironmentBuilder.new,
@@ -64,7 +66,7 @@ module VCAP::CloudController
       logger.info("droplet created: #{droplet.guid}")
 
       logger.info("staging package: #{package.inspect} for droplet #{droplet.guid}")
-      stagers.stager_for_package(package, lifecycle.type).stage(staging_details)
+      @staging_response = stagers.stager_for_package(package, lifecycle.type).stage(staging_details)
       logger.info("package staging requested: #{package.inspect}")
 
       droplet

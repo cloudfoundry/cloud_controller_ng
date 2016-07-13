@@ -29,6 +29,11 @@ module VCAP::CloudController
     serializes_via_json :environment_variables
     serializes_via_json :process_types
 
+    def error
+      e = [error_id, error_description].join(' - ')
+      e.blank? ? nil : e
+    end
+
     def validate
       super
       validates_includes DROPLET_STATES, :state, allow_missing: true
@@ -76,12 +81,20 @@ module VCAP::CloudController
       lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
     end
 
+    def failed?
+      self.state == FAILED_STATE
+    end
+
     def staged?
       self.state == STAGED_STATE
     end
 
     def mark_as_staged
       self.state = STAGED_STATE
+    end
+
+    def mark_as_failed
+      self.state = FAILED_STATE
     end
 
     def lifecycle_type

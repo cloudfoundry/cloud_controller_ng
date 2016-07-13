@@ -38,37 +38,6 @@ module CloudController
           droplet_blobstore)
       end
 
-      let(:app) { VCAP::CloudController::AppFactory.make }
-
-      describe '#buildpack_cache_download_url' do
-        it 'gives out signed url to remote blobstore for buildpack cache' do
-          expect(url_generator.buildpack_cache_download_url(app)).to eql(internal_url)
-          expect(buildpack_cache_blobstore).to have_received(:blob).with(app.buildpack_cache_key)
-        end
-
-        context 'when buildpack cache does not exist' do
-          before do
-            allow(buildpack_cache_blobstore).to receive(:blob).and_return(nil)
-          end
-
-          it 'returns nil' do
-            expect(url_generator.buildpack_cache_download_url(app)).to be_nil
-          end
-        end
-
-        context 'when a SigningRequestError is raised' do
-          before do
-            allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
-          end
-
-          it 'bubbles up an ApiError' do
-            expect {
-              url_generator.buildpack_cache_download_url(app)
-            }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
-          end
-        end
-      end
-
       describe '#admin_buildpack_download_url' do
         let(:buildpack) { VCAP::CloudController::Buildpack.make }
 
@@ -101,23 +70,20 @@ module CloudController
       end
 
       describe '#droplet_download_url' do
-        before do
-          allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).
-            and_return(droplet_blobstore)
-        end
+        let(:droplet) { VCAP::CloudController::DropletModel.make }
 
         it 'gives out signed url to remote blobstore from the blob' do
-          expect(url_generator.droplet_download_url(app)).to eql(internal_url)
+          expect(url_generator.droplet_download_url(droplet)).to eql(internal_url)
+          expect(droplet_blobstore).to have_received(:blob).with(droplet.blobstore_key)
         end
 
         context 'when the droplet does not exist' do
           before do
-            app.droplet_hash = nil
-            app.save
+            allow(droplet_blobstore).to receive(:blob).and_return(nil)
           end
 
           it 'returns nil' do
-            expect(url_generator.droplet_download_url(app)).to be_nil
+            expect(url_generator.droplet_download_url(droplet)).to be_nil
           end
         end
 
@@ -128,102 +94,69 @@ module CloudController
 
           it 'bubbles up an ApiError' do
             expect {
-              url_generator.droplet_download_url(app)
+              url_generator.droplet_download_url(droplet)
             }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
           end
         end
       end
 
-      context 'v3 urls' do
-        describe '#v3_droplet_download_url' do
-          let(:droplet) { VCAP::CloudController::DropletModel.make }
+      describe '#buildpack_cache_download_url' do
+        let(:app_model) { double(:app_model, guid: Sham.guid) }
+        let(:stack) { Sham.name }
 
-          it 'gives out signed url to remote blobstore from the blob' do
-            expect(url_generator.v3_droplet_download_url(droplet)).to eql(internal_url)
-            expect(droplet_blobstore).to have_received(:blob).with(droplet.blobstore_key)
+        it 'gives out signed url to remote blobstore for buildpack cache' do
+          expect(url_generator.buildpack_cache_download_url(app_model.guid, stack)).to eql(internal_url)
+          expect(buildpack_cache_blobstore).to have_received(:blob).with("#{app_model.guid}/#{stack}")
+        end
+
+        context 'when the buildpack cache does not exist' do
+          before do
+            allow(buildpack_cache_blobstore).to receive(:blob).and_return(nil)
           end
 
-          context 'when the droplet does not exist' do
-            before do
-              allow(droplet_blobstore).to receive(:blob).and_return(nil)
-            end
-
-            it 'returns nil' do
-              expect(url_generator.v3_droplet_download_url(droplet)).to be_nil
-            end
-          end
-
-          context 'when a SigningRequestError is raised' do
-            before do
-              allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
-            end
-
-            it 'bubbles up an ApiError' do
-              expect {
-                url_generator.v3_droplet_download_url(droplet)
-              }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
-            end
+          it 'returns nil' do
+            expect(url_generator.buildpack_cache_download_url(app_model.guid, stack)).to be_nil
           end
         end
 
-        describe '#v3_app_buildpack_cache_download_url' do
-          let(:app_model) { double(:app_model, guid: Sham.guid) }
-          let(:stack) { Sham.name }
-
-          it 'gives out signed url to remote blobstore for buildpack cache' do
-            expect(url_generator.v3_app_buildpack_cache_download_url(app_model.guid, stack)).to eql(internal_url)
-            expect(buildpack_cache_blobstore).to have_received(:blob).with("#{app_model.guid}/#{stack}")
+        context 'when a SigningRequestError is raised' do
+          before do
+            allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
           end
 
-          context 'when the buildpack cache does not exist' do
-            before do
-              allow(buildpack_cache_blobstore).to receive(:blob).and_return(nil)
-            end
-
-            it 'returns nil' do
-              expect(url_generator.v3_app_buildpack_cache_download_url(app_model.guid, stack)).to be_nil
-            end
+          it 'bubbles up an ApiError' do
+            expect {
+              url_generator.buildpack_cache_download_url(app_model.guid, stack)
+            }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
           end
+        end
+      end
 
-          context 'when a SigningRequestError is raised' do
-            before do
-              allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
-            end
+      describe '#package_download_url' do
+        let(:package) { VCAP::CloudController::PackageModel.make }
 
-            it 'bubbles up an ApiError' do
-              expect {
-                url_generator.v3_app_buildpack_cache_download_url(app_model.guid, stack)
-              }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
-            end
+        it 'gives out signed url to remote blobstore for package' do
+          expect(url_generator.package_download_url(package)).to eql(internal_url)
+          expect(package_blobstore).to have_received(:blob).with(package.guid)
+        end
+
+        context 'and the package does not exist' do
+          before { allow(package_blobstore).to receive_messages(blob: nil) }
+
+          it 'returns nil' do
+            expect(url_generator.package_download_url(package)).to be_nil
           end
         end
 
-        describe '#package_download_url' do
-          let(:package) { VCAP::CloudController::PackageModel.make }
-
-          it 'gives out signed url to remote blobstore for package' do
-            expect(url_generator.package_download_url(package)).to eql(internal_url)
-            expect(package_blobstore).to have_received(:blob).with(package.guid)
+        context 'when a SigningRequestError is raised' do
+          before do
+            allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
           end
 
-          context 'and the package does not exist' do
-            before { allow(package_blobstore).to receive_messages(blob: nil) }
-
-            it 'returns nil' do
-              expect(url_generator.package_download_url(package)).to be_nil
-            end
-          end
-
-          context 'when a SigningRequestError is raised' do
-            before do
-              allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
-            end
-
-            it 'bubbles up an ApiError' do
-              expect {
-                url_generator.package_download_url(package)
-              }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
-            end
+          it 'bubbles up an ApiError' do
+            expect {
+              url_generator.package_download_url(package)
+            }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
           end
         end
       end

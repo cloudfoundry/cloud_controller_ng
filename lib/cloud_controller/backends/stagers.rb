@@ -41,22 +41,14 @@ module VCAP::CloudController
     end
 
     def stager_for_package(package, lifecycle_type)
-      Diego::V3::Stager.new(package, lifecycle_type, @config)
-    end
-
-    def stager_for_app(app)
-      app.diego? ? diego_stager(app) : dea_stager(app)
+      if package.app.processes.any? { |p| p.diego? }
+        Diego::V3::Stager.new(package, lifecycle_type, @config)
+      else
+        Dea::Stager.new(package, @config, @message_bus, @dea_pool)
+      end
     end
 
     private
-
-    def dea_stager(app)
-      Dea::Stager.new(app, @config, @message_bus, @dea_pool)
-    end
-
-    def diego_stager(app)
-      Diego::Stager.new(app, @config)
-    end
 
     def dependency_locator
       CloudController::DependencyLocator.instance

@@ -26,6 +26,15 @@ module VCAP::CloudController
       expect(matching_validitor).to be_empty
     end
 
+it 'does' do
+  a = AppFactory.make
+
+  puts a.package.guid
+  z = App.where(guid: a.guid).eager(:current_droplet, package: :latest_droplet).all.first
+  puts z.package.guid
+
+end
+
     before do
       VCAP::CloudController::Seeds.create_seed_stacks
     end

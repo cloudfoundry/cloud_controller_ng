@@ -67,9 +67,18 @@ module VCAP::CloudController
 
   DropletModel.blueprint do
     guid     { Sham.guid }
-    state    { VCAP::CloudController::DropletModel::STAGING_STATE }
+    state    { VCAP::CloudController::DropletModel::PENDING_STATE }
     app { AppModel.make }
     staging_memory_in_mb { 123 }
+    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(droplet: object.save) }
+  end
+
+  DropletModel.blueprint(:staged) do
+    guid     { Sham.guid }
+    state    { VCAP::CloudController::DropletModel::STAGED_STATE }
+    app { AppModel.make }
+    staging_memory_in_mb { 123 }
+    droplet_hash { Sham.guid }
     buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(droplet: object.save) }
   end
 

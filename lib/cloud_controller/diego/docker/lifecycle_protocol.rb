@@ -19,11 +19,9 @@ module VCAP
           end
 
           def desired_app_message(process)
-            cached_docker_image = process.current_droplet.cached_docker_image if process.current_droplet
-
             {
               'start_command' => process.command,
-              'docker_image'  => cached_docker_image || process.docker_image,
+              'docker_image'  => process.current_droplet.docker_receipt_image
             }
           end
         end

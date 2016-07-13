@@ -19,8 +19,9 @@ module VCAP::CloudController
         buildpack_cache_key: key,
         diego: diego,
         staging?: staging?,
-        droplet: nil,
-        app: instance_double(AppModel, packages: [])
+        current_droplet: nil,
+        memory: 12,
+        disk_quota: 34,
       )
     end
     let(:app_started) { false }
@@ -60,58 +61,14 @@ module VCAP::CloudController
           end
         end
       end
-
-      it "deletes the app's buildpack cache" do
-        delete_buildpack_cache_jobs = Delayed::Job.where("handler like '%buildpack_cache_blobstore%'")
-        expect { subject }.to change { delete_buildpack_cache_jobs.count }.by(1)
-        job = delete_buildpack_cache_jobs.last
-
-        expect(job.handler).to include(key)
-        expect(job.queue).to eq('cc-generic')
-      end
-
-      it "does NOT delete the app's buildpack cache when the app is a v3 process" do
-        allow(app).to receive(:droplet).and_return(DropletModel.new)
-
-        delete_buildpack_cache_jobs = Delayed::Job.where("handler like '%buildpack_cache_blobstore%'")
-        expect { subject }.to_not change { delete_buildpack_cache_jobs.count }
-      end
-
-      context 'when the app has no package hash' do
-        let(:package_hash) { nil }
-
-        it "does not delete the app's package" do
-          delete_package_jobs = Delayed::Job.where("handler like '%package_blobstore%'")
-          expect { subject }.to_not change { delete_package_jobs.count }
-        end
-      end
-
-      context 'when the app has a package hash' do
-        let(:package_hash) { 'package-hash' }
-
-        it 'deletes the package' do
-          delete_package_jobs = Delayed::Job.where("handler like '%package_blobstore%'")
-          expect { subject }.to change { delete_package_jobs.count }.by(1)
-          job = delete_package_jobs.last
-          expect(job.handler).to include(app.guid)
-          expect(job.queue).to eq('cc-generic')
-        end
-
-        context 'when the app is a v3 process' do
-          before do
-            allow(app).to receive(:app).and_return(instance_double(AppModel, packages: ['not-empty']))
-          end
-
-          it "does not delete the app's package" do
-            delete_package_jobs = Delayed::Job.where("handler like '%package_blobstore%'")
-            expect { subject }.to_not change { delete_package_jobs.count }
-          end
-        end
-      end
     end
 
     describe '.updated' do
       subject { AppObserver.updated(app) }
+
+      before do
+        allow(AppObserverStagingHelper).to receive(:stage_app).and_return(nil)
+      end
 
       context 'when the app state is changed' do
         let(:previous_changes) { { state: 'original-state' } }
@@ -152,7 +109,7 @@ module VCAP::CloudController
 
             it 'validates and stages the app' do
               expect(stagers).to receive(:validate_app).with(app)
-              expect(stager).to receive(:stage)
+              expect(AppObserverStagingHelper).to receive(:stage_app).with(app)
               subject
             end
           end
@@ -207,7 +164,7 @@ module VCAP::CloudController
 
             it 'validates and stages the app' do
               expect(stagers).to receive(:validate_app).with(app)
-              expect(stager).to receive(:stage)
+              expect(AppObserverStagingHelper).to receive(:stage_app).with(app)
               subject
             end
           end
@@ -262,7 +219,7 @@ module VCAP::CloudController
 
             it 'validates and stages the app' do
               expect(stagers).to receive(:validate_app).with(app)
-              expect(stager).to receive(:stage)
+              expect(AppObserverStagingHelper).to receive(:stage_app).with(app)
               subject
             end
           end

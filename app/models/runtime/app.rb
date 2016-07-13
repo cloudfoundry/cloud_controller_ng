@@ -30,7 +30,9 @@ module VCAP::CloudController
     DEFAULT_HTTP_PORT = 8080
     DEFAULT_PORTS = [DEFAULT_HTTP_PORT].freeze
 
-    one_to_many :droplets
+    many_through_many :droplets, [[App.table_name, :id, :app_guid]],
+      class: 'VCAP::CloudController::DropletModel', right_primary_key: :app_guid
+
     one_to_many :service_bindings
     one_to_many :events, class: VCAP::CloudController::AppEvent
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
@@ -47,11 +49,38 @@ module VCAP::CloudController
       self.associations[:stack] = Stack.default unless stack
     end
 
-    one_through_one :package, class: 'VCAP::CloudController::PackageModel',
-                              join_table: AppModel.table_name,
-                              left_primary_key: :app_guid, left_key: :guid,
-                              right_primary_key: :app_guid, right_key: :guid,
-                              order: [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
+      one_through_one :package, class: 'VCAP::CloudController::PackageModel',
+                                join_table: AppModel.table_name,
+                                left_primary_key: :app_guid, left_key: :guid,
+                                right_primary_key: :app_guid, right_key: :guid,
+                                order: [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
+
+
+    dataset_module do
+      def staged
+        association_join(:current_droplet)
+      end
+
+      def runnable
+        staged.where("#{App.table_name}__state".to_sym => 'STARTED').where{instances > 0}
+      end
+
+      def diego
+        where(diego: true)
+      end
+
+      def dea
+        where(diego: false)
+      end
+
+      def buildpack_type
+        inner_join(BuildpackLifecycleDataModel.table_name, app_guid: :app_guid)
+      end
+    end
+
+    def latest_droplet
+      package.try(:latest_droplet)
+    end
 
     def package_hash
       return nil unless package
@@ -67,21 +96,29 @@ module VCAP::CloudController
       state = package.try(:state)
 
       # TODO: this isn't really correct logic.  need to move droplets over and then we can get the right thing
-      if state == PackageModel::FAILED_STATE
+      if state == PackageModel::FAILED_STATE || latest_droplet.try(:failed?)
         'FAILED'
-      elsif state == 'READY' && droplet
+      elsif state == 'READY' && current_droplet && current_droplet == latest_droplet
         'STAGED'
       else
         'PENDING'
       end
     end
 
+    def droplet_hash
+      current_droplet.try(:droplet_hash)
+    end
+
     def package_updated_at
-      package.try(:updated_at) || package.try(:created_at)
+      package.try(:created_at)
     end
 
     def docker_image
       package.try(:image)
+    end
+
+    def detected_buildpack
+      current_droplet.try(:buildpack_receipt_buildpack)
     end
 
     one_through_many :organization,
@@ -98,14 +135,17 @@ module VCAP::CloudController
                  after_add: :handle_add_route,
                  after_remove: :handle_remove_route
 
-    one_to_one :current_saved_droplet,
-               class: '::VCAP::CloudController::Droplet',
-               key: :droplet_hash,
-               primary_key: :droplet_hash
+    one_through_one :current_droplet,
+      class:             '::VCAP::CloudController::DropletModel',
+      join_table:        AppModel.table_name,
+      left_primary_key:  :app_guid, left_key: :guid,
+      right_primary_key: :guid, right_key: :droplet_guid
 
     one_to_many :route_mappings
 
-    add_association_dependencies routes: :nullify, events: :delete, droplets: :destroy
+    add_association_dependencies routes: :nullify,
+      events: :delete
+      #droplets: :destroy
 
     export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
                       :detected_buildpack, :detected_buildpack_guid, :environment_json, :memory, :instances, :disk_quota,
@@ -128,7 +168,6 @@ module VCAP::CloudController
     serializes_via_json :docker_credentials_json
 
     APP_STATES = %w(STOPPED STARTED).map(&:freeze).freeze
-    PACKAGE_STATES = %w(PENDING STAGED FAILED).map(&:freeze).freeze
     STAGING_FAILED_REASONS = %w(StagerError StagingError StagingTimeExpired NoAppDetectedError BuildpackCompileFailed
                                 BuildpackReleaseFailed InsufficientResources NoCompatibleCell).map(&:freeze).freeze
     HEALTH_CHECK_TYPES = %w(port none process).map(&:freeze).freeze
@@ -181,7 +220,6 @@ module VCAP::CloudController
 
       copy_buildpack_errors
 
-      # validates_includes PACKAGE_STATES, :package_state, allow_missing: true
       validates_includes APP_STATES, :state, allow_missing: true, message: 'must be one of ' + APP_STATES.join(', ')
       validates_includes STAGING_FAILED_REASONS, :staging_failed_reason, allow_nil: true
       validates_includes HEALTH_CHECK_TYPES, :health_check_type, allow_missing: true, message: 'must be one of ' + HEALTH_CHECK_TYPES.join(', ')
@@ -347,11 +385,27 @@ module VCAP::CloudController
     alias_method_chain :command, :fallback
 
     def execution_metadata
-      droplet.try(:execution_metadata) || ''
+      current_droplet.try(:execution_metadata) || ''
     end
 
     def detected_start_command
-      (current_droplet && current_droplet.detected_start_command) || ''
+      current_droplet.try(:process_types).try(:[], 'web') || ''
+    end
+
+    def detected_buildpack_guid
+      current_droplet.try(:buildpack_receipt_buildpack_guid)
+    end
+
+    def detected_buildpack_name
+      current_droplet.try(:buildpack_receipt_buildpack)
+    end
+
+    def staging_failed_reason
+      latest_droplet.try(:error_id)
+    end
+
+    def staging_failed_description
+      latest_droplet.try(:error_description)
     end
 
     def console=(c)
@@ -373,14 +427,6 @@ module VCAP::CloudController
 
     def debug
       self.metadata && self.metadata['debug']
-    end
-
-    def droplet
-      if app.try(:droplet)
-        app.droplet
-      else
-        current_droplet
-      end
     end
 
     def name
@@ -495,11 +541,16 @@ module VCAP::CloudController
     end
 
     def mark_as_staged
+      raise 'MARK AS STAGED'
+
       self.package_state = 'STAGED'
       self.package_pending_since = nil
     end
 
     def mark_as_failed_to_stage(reason='StagingError')
+      raise 'MARK AS FAILED TO STAGE'
+
+
       unless STAGING_FAILED_REASONS.include?(reason)
         logger.warn("Invalid staging failure reason: #{reason}, provided for app #{self.guid}")
         reason = 'StagingError'
@@ -550,19 +601,6 @@ module VCAP::CloudController
       super(hash)
       mark_for_restaging if column_changed?(:package_hash)
       self.package_updated_at = Sequel.datetime_class.now
-    end
-
-    def add_new_droplet(hash)
-      self.droplet_hash = hash
-      add_droplet(droplet_hash: hash)
-      save
-    end
-
-    def current_droplet
-      return nil unless droplet_hash
-      # The droplet may not be in the droplet table as we did not backfill
-      # existing droplets when creating the table.
-      current_saved_droplet || Droplet.create(app: self, droplet_hash: droplet_hash)
     end
 
     def start!
@@ -637,7 +675,7 @@ module VCAP::CloudController
 
     def docker_ports
       exposed_ports = []
-      if !self.needs_staging? && !droplet.nil? && self.execution_metadata.present?
+      if !self.needs_staging? && !current_droplet.nil? && self.execution_metadata.present?
         begin
           metadata = JSON.parse(self.execution_metadata)
           unless metadata['ports'].nil?

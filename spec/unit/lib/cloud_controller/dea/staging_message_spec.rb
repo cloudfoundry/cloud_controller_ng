@@ -5,7 +5,6 @@ module VCAP::CloudController
     let(:blobstore_url_generator) { CloudController::DependencyLocator.instance.blobstore_url_generator }
     let(:config_hash) { { staging: { timeout_in_seconds: 360 } } }
     let(:task_id) { 'somthing' }
-    let(:droplet_guid) { 'abc123' }
     let(:log_id) { 'log-id' }
     let(:staging_message) { Dea::StagingMessage.new(config_hash, blobstore_url_generator) }
 
@@ -16,7 +15,7 @@ module VCAP::CloudController
     end
 
     describe '.staging_request' do
-      let(:app) { AppFactory.make droplet_hash: nil, package_state: 'PENDING' }
+      let(:app) { AppFactory.make }
 
       before do
         3.times do
@@ -28,9 +27,9 @@ module VCAP::CloudController
 
       it 'includes app guid, task id, download/upload uris, stack name, and accepts_http flag' do
         allow(blobstore_url_generator).to receive(:package_download_url).with(app.package).and_return('http://www.app.uri')
-        allow(blobstore_url_generator).to receive(:droplet_upload_url).with(app).and_return('http://www.droplet.upload.uri')
-        allow(blobstore_url_generator).to receive(:buildpack_cache_download_url).with(app).and_return('http://www.buildpack.cache.download.uri')
-        allow(blobstore_url_generator).to receive(:buildpack_cache_upload_url).with(app).and_return('http://www.buildpack.cache.upload.uri')
+        allow(blobstore_url_generator).to receive(:droplet_upload_url).with(task_id).and_return('http://www.droplet.upload.uri')
+        allow(blobstore_url_generator).to receive(:buildpack_cache_download_url).with(app.app.guid, app.stack.name).and_return('http://www.buildpack.cache.download.uri')
+        allow(blobstore_url_generator).to receive(:buildpack_cache_upload_url).with(app.app.guid, app.stack.name).and_return('http://www.buildpack.cache.upload.uri')
         request = staging_message.staging_request(app, task_id)
 
         expect(request[:app_id]).to eq(app.guid)

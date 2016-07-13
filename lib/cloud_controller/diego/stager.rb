@@ -9,7 +9,7 @@ module VCAP::CloudController
       end
 
       def stage
-        if @process.pending? && @process.staging_task_id
+        if @process.staging?
           messenger.send_stop_staging_request
         end
 

@@ -20,13 +20,7 @@ module CloudController
         basic_auth_uri("/staging/packages/#{package.guid}")
       end
 
-      def buildpack_cache_download_url(app)
-        return nil unless @buildpack_cache_blobstore.exists?(app.buildpack_cache_key)
-
-        basic_auth_uri("/staging/buildpack_cache/#{app.guid}/download")
-      end
-
-      def v3_app_buildpack_cache_download_url(app_guid, stack)
+      def buildpack_cache_download_url(app_guid, stack)
         return nil unless @buildpack_cache_blobstore.exists?("#{app_guid}/#{stack}")
 
         basic_auth_uri("/staging/v3/buildpack_cache/#{stack}/#{app_guid}/download")
@@ -38,15 +32,7 @@ module CloudController
         basic_auth_uri("/v2/buildpacks/#{buildpack.guid}/download")
       end
 
-      def droplet_download_url(app)
-        droplet = app.current_droplet
-        return nil unless droplet
-        return nil unless droplet.blob
-
-        basic_auth_uri("/staging/droplets/#{app.guid}/download")
-      end
-
-      def v3_droplet_download_url(droplet)
+      def droplet_download_url(droplet)
         return nil unless @droplet_blobstore.exists?(droplet.blobstore_key)
 
         basic_auth_uri("/staging/v3/droplets/#{droplet.guid}/download")
