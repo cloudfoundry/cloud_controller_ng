@@ -249,7 +249,7 @@ properties:
 
   cc.default_quota_definition:
     default: default
-    description: "Local to use a local (NFS) file system.  AWS to use AWS."
+    description: "The name of the quota definition CC will fallback on for org and space limits from the list of quota definitions."
 
   cc.resource_pool.blobstore_type:
     description: "The type of blobstore backing to use. Valid values: ['fog', 'webdav']"
