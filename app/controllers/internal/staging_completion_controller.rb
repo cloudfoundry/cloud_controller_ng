@@ -34,7 +34,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found') if package.nil?
 
       begin
-        stagers.stager_for_package(package, droplet.lifecycle_type).staging_complete(droplet, staging_response, params['start'] == 'true')
+        stagers.stager_for_app(droplet.app).staging_complete(droplet, staging_response, params['start'] == 'true')
         BitsExpiration.new.expire_droplets!(droplet.app)
       rescue CloudController::Errors::ApiError => api_err
         raise api_err

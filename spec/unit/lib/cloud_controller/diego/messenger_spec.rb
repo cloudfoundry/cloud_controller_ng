@@ -23,6 +23,7 @@ module VCAP::CloudController
         let(:message) { { staging: 'message' } }
         let(:staging_details) do
           VCAP::CloudController::Diego::StagingDetails.new.tap do |sd|
+            sd.package = package
             sd.droplet = droplet
           end
         end
@@ -33,9 +34,9 @@ module VCAP::CloudController
         end
 
         it 'sends the staging message to the stager' do
-          messenger.send_stage_request(package, config, staging_details)
+          messenger.send_stage_request(config, staging_details)
 
-          expect(protocol).to have_received(:stage_package_request).with(package, config, staging_details)
+          expect(protocol).to have_received(:stage_package_request).with(config, staging_details)
           expect(stager_client).to have_received(:stage).with(staging_guid, message)
         end
       end
@@ -60,14 +61,14 @@ module VCAP::CloudController
       end
 
       describe '#send_stop_staging_request' do
-        let(:staging_guid) { StagingGuid.from_process(app) }
+        let(:staging_guid) { 'whatever' }
 
         before do
           allow(stager_client).to receive(:stop_staging)
         end
 
         it 'sends a stop_staging request to the stager' do
-          messenger.send_stop_staging_request
+          messenger.send_stop_staging_request(staging_guid)
 
           expect(stager_client).to have_received(:stop_staging).with(staging_guid)
         end

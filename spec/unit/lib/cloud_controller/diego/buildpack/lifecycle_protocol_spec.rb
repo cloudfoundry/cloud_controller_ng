@@ -18,6 +18,7 @@ module VCAP
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
                 details.droplet   = droplet
+                details.package   = package
                 details.lifecycle = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: buildpack_info)
               end
             end
@@ -63,6 +64,7 @@ module VCAP
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
                 details.droplet               = droplet
+                details.package               = package
                 details.environment_variables = { 'nightshade_fruit' => 'potato' }
                 details.staging_memory_in_mb  = 42
                 details.staging_disk_in_mb    = 51
@@ -72,7 +74,7 @@ module VCAP
 
             context 'when auto-detecting' do
               it 'sends buildpacks without skip_detect' do
-                lifecycle_data = lifecycle_protocol.lifecycle_data(package, staging_details)
+                lifecycle_data = lifecycle_protocol.lifecycle_data(staging_details)
 
                 expect(lifecycle_data[:buildpacks]).to have(1).items
                 bp = lifecycle_data[:buildpacks][0]
@@ -85,7 +87,7 @@ module VCAP
               let(:buildpack) { 'ruby' }
 
               it 'sends buildpacks with skip detect' do
-                lifecycle_data = lifecycle_protocol.lifecycle_data(package, staging_details)
+                lifecycle_data = lifecycle_protocol.lifecycle_data(staging_details)
 
                 expect(lifecycle_data[:buildpacks]).to have(1).items
                 bp = lifecycle_data[:buildpacks][0]
@@ -97,7 +99,7 @@ module VCAP
               let(:buildpack) { 'http://custom.com' }
 
               it 'sends buildpacks with skip detect' do
-                lifecycle_data = lifecycle_protocol.lifecycle_data(package, staging_details)
+                lifecycle_data = lifecycle_protocol.lifecycle_data(staging_details)
 
                 expect(lifecycle_data[:buildpacks]).to have(1).items
                 bp = lifecycle_data[:buildpacks][0]

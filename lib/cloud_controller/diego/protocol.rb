@@ -14,16 +14,16 @@ module VCAP::CloudController
         @egress_rules = Diego::EgressRules.new
       end
 
-      def stage_package_request(package, config, staging_details)
+      def stage_package_request(config, staging_details)
         env = VCAP::CloudController::Diego::NormalEnvHashToDiegoEnvArrayPhilosopher.muse(staging_details.environment_variables)
         logger.debug2("staging environment: #{env.map { |e| e['name'] }}")
 
         lifecycle_type = staging_details.droplet.lifecycle_type
-        lifecycle_data = LifecycleProtocol.protocol_for_type(lifecycle_type).lifecycle_data(package, staging_details)
+        lifecycle_data = LifecycleProtocol.protocol_for_type(lifecycle_type).lifecycle_data(staging_details)
 
         staging_request                     = StagingRequest.new
         staging_request.app_id              = staging_details.droplet.guid
-        staging_request.log_guid            = package.app_guid
+        staging_request.log_guid            = staging_details.package.app_guid
         staging_request.environment         = env
         staging_request.memory_mb           = staging_details.staging_memory_in_mb
         staging_request.disk_mb             = staging_details.staging_disk_in_mb

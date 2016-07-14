@@ -22,6 +22,7 @@ module VCAP
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
                 details.droplet   = droplet
+                details.package   = package
                 details.lifecycle = instance_double(VCAP::CloudController::DockerLifecycle)
               end
             end
@@ -33,12 +34,13 @@ module VCAP
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
                 details.droplet   = droplet
+                details.package   = package
                 details.lifecycle = instance_double(VCAP::CloudController::DockerLifecycle)
               end
             end
 
             it 'sets the docker image' do
-              message = lifecycle_protocol.lifecycle_data(package, staging_details)
+              message = lifecycle_protocol.lifecycle_data(staging_details)
               expect(message[:docker_image]).to eq('registry/image-name:latest')
             end
           end

@@ -34,7 +34,7 @@ module VCAP::CloudController
     def create_and_stage(package, lifecycle, message, start_after_staging=false)
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
 
-      staging_details = get_staging_details(package, lifecycle)
+      staging_details                     = get_staging_details(package, lifecycle)
       staging_details.start_after_staging = start_after_staging
 
       droplet = DropletModel.new({
@@ -67,7 +67,7 @@ module VCAP::CloudController
       logger.info("droplet created: #{droplet.guid}")
 
       logger.info("staging package: #{package.inspect} for droplet #{droplet.guid}")
-      @staging_response = stagers.stager_for_package(package, lifecycle.type).stage(staging_details)
+      @staging_response = stagers.stager_for_app(package.app).stage(staging_details)
       logger.info("package staging requested: #{package.inspect}")
 
       droplet
@@ -95,6 +95,7 @@ module VCAP::CloudController
         staging_message.environment_variables)
 
       staging_details                       = Diego::StagingDetails.new
+      staging_details.package               = package
       staging_details.staging_memory_in_mb  = memory_limit
       staging_details.staging_disk_in_mb    = disk_limit
       staging_details.environment_variables = environment_variables

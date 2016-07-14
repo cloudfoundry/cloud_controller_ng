@@ -3,19 +3,17 @@ require 'cloud_controller/dependency_locator'
 module VCAP::CloudController
   module Diego
     class Messenger
-      def send_stage_request(package, config, staging_details)
-        logger.info('staging.begin', package_guid: package.guid)
+      def send_stage_request(config, staging_details)
+        logger.info('staging.begin', package_guid: staging_details.package.guid)
 
         staging_guid    = staging_details.droplet.guid
-        staging_message = protocol.stage_package_request(package, config, staging_details)
+        staging_message = protocol.stage_package_request(config, staging_details)
         stager_client.stage(staging_guid, staging_message)
       end
 
-      def send_stop_staging_request
-        # logger.info('staging.stop', app_guid: process.guid)
-        #
-        # staging_guid = StagingGuid.from_process(process)
-        # stager_client.stop_staging(staging_guid)
+      def send_stop_staging_request(staging_guid)
+        logger.info('staging.stop', staging_guid: staging_guid)
+        stager_client.stop_staging(staging_guid)
       end
 
       def send_desire_request(process, default_health_check_timeout)

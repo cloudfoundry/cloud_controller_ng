@@ -128,35 +128,35 @@ module VCAP::CloudController
       end
     end
 
-    describe '#stager_for_package' do
+    describe '#stager_for_app' do
       let(:lifecycle_type) { 'buildpack' }
-      let(:package) { PackageModel.make }
+      let(:app) { AppModel.make }
 
-      context 'when the package has diego processes' do
+      context 'when the app has diego processes' do
         before do
-          App.make(app: package.app, diego: true)
+          App.make(app: app, diego: true)
         end
 
         it 'finds a diego stager' do
-          stager = stagers.stager_for_package(package, lifecycle_type)
+          stager = stagers.stager_for_app(app)
           expect(stager).to be_a(Diego::Stager)
         end
       end
 
-      context 'when the package has dea processes' do
+      context 'when the app has dea processes' do
         before do
-          App.make(app: package.app, diego: false)
+          App.make(app: app, diego: false)
         end
 
         it 'finds a DEA backend' do
-          stager = stagers.stager_for_package(package, lifecycle_type)
+          stager = stagers.stager_for_app(app)
           expect(stager).to be_a(Dea::Stager)
         end
       end
 
       context 'when there are no processes' do
         it 'finds a diego stager' do
-          stager = stagers.stager_for_package(package, lifecycle_type)
+          stager = stagers.stager_for_app(app)
           expect(stager).to be_a(Diego::Stager)
         end
       end

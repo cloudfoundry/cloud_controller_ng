@@ -1,10 +1,9 @@
 RSpec.shared_examples_for 'a lifecycle protocol' do
   let(:process) { double(:process) }
-  let(:package) { double(:package) }
   let(:staging_details) { double(:staging_details) }
 
   it 'provides lifecycle data' do
-    lifecycle_data = lifecycle_protocol.lifecycle_data(package, staging_details)
+    lifecycle_data = lifecycle_protocol.lifecycle_data(staging_details)
     expect(lifecycle_data).to be_a(Hash)
   end
 

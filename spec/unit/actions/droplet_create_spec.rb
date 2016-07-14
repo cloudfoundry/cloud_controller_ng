@@ -13,8 +13,8 @@ module VCAP::CloudController
 
       let(:action) { described_class.new(memory_limit_calculator, disk_limit_calculator, environment_builder, actor: user, actor_email: user_email) }
 
-      let(:stagers) { double(:stagers) }
-      let(:stager) { instance_double(Diego::V3::Stager) }
+      let(:stagers) { instance_double(Stagers) }
+      let(:stager) { instance_double(Diego::Stager) }
       let(:memory_limit_calculator) { double(:memory_limit_calculator) }
       let(:disk_limit_calculator) { double(:disk_limit_calculator) }
       let(:environment_builder) { double(:environment_builder) }
@@ -56,7 +56,7 @@ module VCAP::CloudController
 
       before do
         allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
-        allow(stagers).to receive(:stager_for_package).and_return(stager)
+        allow(stagers).to receive(:stager_for_app).and_return(stager)
         allow(stager).to receive(:stage)
         allow(memory_limit_calculator).to receive(:get_limit).with(staging_memory_in_mb, space, org).and_return(calculated_mem_limit)
         allow(disk_limit_calculator).to receive(:get_limit).with(staging_disk_in_mb).and_return(calculated_staging_disk_in_mb)
@@ -100,6 +100,7 @@ module VCAP::CloudController
         it 'initiates a staging request' do
           droplet = action.create_and_stage(package, lifecycle, staging_message)
           expect(stager).to have_received(:stage) do |staging_details|
+            expect(staging_details.package).to eq(package)
             expect(staging_details.droplet).to eq(droplet)
             expect(staging_details.staging_memory_in_mb).to eq(calculated_mem_limit)
             expect(staging_details.staging_disk_in_mb).to eq(calculated_staging_disk_in_mb)

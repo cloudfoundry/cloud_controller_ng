@@ -4,7 +4,7 @@ require_relative 'lifecycle_protocol_shared'
 module VCAP::CloudController
   module Diego
     class FakeLifecycleProtocol
-      def lifecycle_data(_, _)
+      def lifecycle_data(_)
         { 'some' => 'data' }
       end
 
@@ -37,6 +37,7 @@ module VCAP::CloudController
         let(:staging_details) do
           Diego::StagingDetails.new.tap do |details|
             details.droplet               = droplet
+            details.package               = package
             details.environment_variables = { 'nightshade_fruit' => 'potato' }
             details.staging_memory_in_mb  = 42
             details.staging_disk_in_mb    = 51
@@ -69,7 +70,7 @@ module VCAP::CloudController
         end
 
         it 'contains the correct payload for staging a package' do
-          result = protocol.stage_package_request(package, config, staging_details)
+          result = protocol.stage_package_request(config, staging_details)
 
           expect(result).to eq({
             app_id:              staging_details.droplet.guid,

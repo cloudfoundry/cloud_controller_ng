@@ -6,16 +6,14 @@ require 'cloud_controller/diego/buildpack/staging_completion_handler'
 module VCAP::CloudController
   module Diego
     RSpec.describe Stager do
-      subject(:stager) { Stager.new(package, lifecycle_type, config) }
+      subject(:stager) { Stager.new(config) }
 
       let(:messenger) { instance_double(Diego::Messenger) }
       let(:protocol) { instance_double(Diego::Protocol) }
       let(:package) { PackageModel.make }
       let(:config) { TestConfig.config }
-      let(:lifecycle_type) { 'buildpack' }
 
       before do
-        allow(Diego::Protocol).to receive(:new).with(lifecycle_type).and_return(protocol)
         allow(Diego::Messenger).to receive(:new).and_return(messenger)
       end
 
@@ -29,6 +27,7 @@ module VCAP::CloudController
         let(:staging_details) do
           details                       = VCAP::CloudController::Diego::StagingDetails.new
           details.droplet               = droplet
+          details.package               = package
           details.environment_variables = environment_variables
           details.staging_memory_in_mb  = staging_memory_in_mb
           details.staging_disk_in_mb    = staging_disk_in_mb
@@ -40,7 +39,7 @@ module VCAP::CloudController
         end
 
         it 'notifies Diego that the package needs staging' do
-          expect(messenger).to receive(:send_stage_request).with(package, config, staging_details)
+          expect(messenger).to receive(:send_stage_request).with(config, staging_details)
           stager.stage(staging_details)
         end
 
@@ -78,7 +77,7 @@ module VCAP::CloudController
         end
 
         context 'buildpack' do
-          let(:lifecycle_type) { 'buildpack' }
+          let(:droplet) { DropletModel.make }
 
           it 'delegates to a buildpack staging completion handler' do
             stager.staging_complete(droplet, staging_response)
@@ -88,13 +87,24 @@ module VCAP::CloudController
         end
 
         context 'docker' do
-          let(:lifecycle_type) { 'docker' }
+          let(:droplet) { DropletModel.make(:docker) }
 
           it 'delegates to a docker staging completion handler' do
             stager.staging_complete(droplet, staging_response)
             expect(buildpack_completion_handler).not_to have_received(:staging_complete)
             expect(docker_completion_handler).to have_received(:staging_complete).with(staging_response, boolean)
           end
+        end
+      end
+
+      describe '#stop_stage' do
+        before do
+          allow(messenger).to receive(:send_stop_staging_request)
+        end
+
+        it 'delegates to the messenger' do
+          stager.stop_stage('staging-guid')
+          expect(messenger).to have_received(:send_stop_staging_request).with('staging-guid')
         end
       end
     end

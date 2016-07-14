@@ -51,15 +51,6 @@ module VCAP::CloudController
           allow(runner).to receive(:stop).and_raise(VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError)
           expect { subject }.not_to raise_error
         end
-
-        context 'when the app is staging' do
-          let(:staging?) { true }
-
-          it 'stops staging before stopping the application' do
-            expect(stager).to receive(:stop_stage)
-            subject
-          end
-        end
       end
     end
 

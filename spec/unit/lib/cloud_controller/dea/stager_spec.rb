@@ -3,14 +3,14 @@ require 'spec_helper'
 module VCAP::CloudController
   module Dea
     RSpec.describe Stager do
-      subject(:stager) { Stager.new(app.package, config, message_bus, dea_pool, runners) }
+      subject(:stager) { Stager.new(app, config, message_bus, dea_pool, runners) }
       let(:config) { instance_double(Config) }
       let(:message_bus) { instance_double(CfMessageBus::MessageBus, publish: nil) }
       let(:dea_pool) { instance_double(Dea::Pool) }
       let(:runners) { instance_double(Runners) }
       let(:runner) { double(:Runner) }
       let(:stager_task) { instance_double(AppStagerTask) }
-      let(:staging_details) { instance_double(Diego::V3::StagingDetails, droplet: app.latest_droplet)}
+      let(:staging_details) { instance_double(Diego::StagingDetails, droplet: process.latest_droplet)}
 
       let(:reply_json_error) { nil }
       let(:reply_error_info) { nil }
@@ -37,7 +37,8 @@ module VCAP::CloudController
 
       let(:response) { reply_json }
 
-      let(:app) { AppFactory.make }
+      let(:app) { AppModel.make }
+      let(:process) { AppFactory.make(app: app, type: 'web') }
 
       it_behaves_like 'a stager'
 
@@ -45,7 +46,7 @@ module VCAP::CloudController
         before do
           allow(AppStagerTask).to receive(:new).and_return(stager_task)
           allow(stager_task).to receive(:stage).and_yield('fake-staging-result').and_return('fake-stager-response')
-          allow(runners).to receive(:runner_for_app).with(app).and_return(runner)
+          allow(runners).to receive(:runner_for_app).with(process).and_return(runner)
           allow(runner).to receive(:start).with('fake-staging-result')
         end
 
@@ -54,7 +55,7 @@ module VCAP::CloudController
           expect(stager_task).to have_received(:stage)
           expect(AppStagerTask).to have_received(:new).with(config,
                                                             message_bus,
-                                                            app.latest_droplet,
+                                                            process.latest_droplet,
                                                             dea_pool,
                                                             an_instance_of(CloudController::Blobstore::UrlGenerator))
         end
@@ -78,7 +79,7 @@ module VCAP::CloudController
         context 'when the callback is invoked' do
           before do
             allow(stager_task).to receive(:handle_http_response).and_yield('fake-staging-result').and_return('fake-stager-response')
-            allow(runners).to receive(:runner_for_app).with(app).and_return(runner)
+            allow(runners).to receive(:runner_for_app).with(process).and_return(runner)
             allow(runner).to receive(:start).with('fake-staging-result')
           end
 
