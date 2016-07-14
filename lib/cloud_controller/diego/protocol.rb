@@ -32,7 +32,7 @@ module VCAP::CloudController
         staging_request.timeout             = config[:staging][:timeout_in_seconds]
         staging_request.lifecycle           = lifecycle_type
         staging_request.lifecycle_data      = lifecycle_data
-        staging_request.completion_callback = staging_completion_callback(staging_details.droplet, config)
+        staging_request.completion_callback = staging_completion_callback(staging_details, config)
 
         staging_request.message
       end
@@ -71,10 +71,10 @@ module VCAP::CloudController
 
       private
 
-      def staging_completion_callback(droplet, config)
+      def staging_completion_callback(staging_details, config)
         auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"
         host_port = "#{config[:internal_service_hostname]}:#{config[:external_port]}"
-        path      = "/internal/v3/staging/#{droplet.guid}/droplet_completed"
+        path      = "/internal/v3/staging/#{staging_details.droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}"
         "http://#{auth}@#{host_port}#{path}"
       end
 

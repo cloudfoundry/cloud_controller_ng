@@ -40,6 +40,7 @@ module VCAP::CloudController
             details.environment_variables = { 'nightshade_fruit' => 'potato' }
             details.staging_memory_in_mb  = 42
             details.staging_disk_in_mb    = 51
+            details.start_after_staging = true
           end
         end
         let(:config) do
@@ -81,7 +82,7 @@ module VCAP::CloudController
             timeout:             90,
             lifecycle:           droplet.lifecycle_type,
             lifecycle_data:      { 'some' => 'data' },
-            completion_callback: "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/staging/#{droplet.guid}/droplet_completed"
+            completion_callback: "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}"
           })
         end
       end

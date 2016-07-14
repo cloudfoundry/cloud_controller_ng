@@ -82,7 +82,7 @@ module VCAP::CloudController
 
           it 'delegates to a buildpack staging completion handler' do
             stager.staging_complete(droplet, staging_response)
-            expect(buildpack_completion_handler).to have_received(:staging_complete).with(staging_response)
+            expect(buildpack_completion_handler).to have_received(:staging_complete).with(staging_response, boolean)
             expect(docker_completion_handler).not_to have_received(:staging_complete)
           end
         end
@@ -93,7 +93,7 @@ module VCAP::CloudController
           it 'delegates to a docker staging completion handler' do
             stager.staging_complete(droplet, staging_response)
             expect(buildpack_completion_handler).not_to have_received(:staging_complete)
-            expect(docker_completion_handler).to have_received(:staging_complete).with(staging_response)
+            expect(docker_completion_handler).to have_received(:staging_complete).with(staging_response, boolean)
           end
         end
       end

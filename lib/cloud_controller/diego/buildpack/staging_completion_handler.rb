@@ -4,6 +4,10 @@ module VCAP::CloudController
   module Diego
     module Buildpack
       class StagingCompletionHandler < VCAP::CloudController::Diego::StagingCompletionHandler
+        def logger_prefix
+          'diego.staging.buildpack.'
+        end
+
         def self.schema
           ->(_dsl) {
             {

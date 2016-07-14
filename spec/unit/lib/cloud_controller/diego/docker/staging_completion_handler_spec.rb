@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'cloud_controller/diego/staging_guid'
 require 'cloud_controller/diego/docker/staging_completion_handler'
 
 module VCAP::CloudController
@@ -7,12 +6,15 @@ module VCAP::CloudController
     module Docker
       RSpec.describe StagingCompletionHandler do
         let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
-        let(:droplet) { DropletModel.make }
+        let(:app) { AppModel.make }
+        let(:package) { PackageModel.make(app: app) }
+        let!(:droplet) { DropletModel.make(app: app, package: package, state: 'PENDING') }
+        let(:runners) { instance_double(Runners) }
 
-        subject(:handler) { StagingCompletionHandler.new(droplet) }
+        subject(:handler) { StagingCompletionHandler.new(droplet, runners) }
 
         before do
-          allow(Steno).to receive(:logger).with('cc.docker.stager').and_return(logger)
+          allow(Steno).to receive(:logger).with('cc.stager').and_return(logger)
           allow(Loggregator).to receive(:emit_error)
         end
 
@@ -95,11 +97,50 @@ module VCAP::CloudController
                 handler.staging_complete(payload)
 
                 expect(logger).to have_received(:error).with(
-                  'diego.docker.staging.saving-staging-result-failed',
+                  'diego.staging.docker.saving-staging-result-failed',
                   staging_guid: droplet.guid,
                   response:     payload,
                   error:        'save-error',
                 )
+              end
+            end
+
+            context 'when a start is requested' do
+              let(:runner) { instance_double(Diego::Runner, start: nil) }
+              let!(:web_process) { App.make(app: app, type: 'web') }
+
+              before do
+                allow(runners).to receive(:runner_for_app).and_return(runner)
+              end
+
+              it 'assigns the current droplet' do
+                expect {
+                  handler.staging_complete(payload, true)
+                }.to change { app.reload.droplet }.to(droplet)
+              end
+
+              it 'runs the wep process of the app' do
+                handler.staging_complete(payload, true)
+
+                expect(runners).to have_received(:runner_for_app).with(web_process)
+                expect(runner).to have_received(:start)
+              end
+
+              context 'when this is not the most recent staging result' do
+                before do
+                  DropletModel.make(app: app, package: package)
+                end
+
+                it 'does not assign the current droplet' do
+                  expect {
+                    handler.staging_complete(payload, true)
+                  }.not_to change { app.reload.droplet }.from(nil)
+                end
+
+                it 'does not start the app' do
+                  handler.staging_complete(payload, true)
+                  expect(runner).not_to have_received(:start)
+                end
               end
             end
           end
@@ -149,7 +190,7 @@ module VCAP::CloudController
 
               it 'logs an error for the CF operator' do
                 expect(logger).to have_received(:error).with(
-                  'diego.docker.staging.success.invalid-message',
+                  'diego.staging.docker.success.invalid-message',
                   staging_guid: droplet.guid,
                   payload:      payload,
                   error:        '{ result => { execution_metadata => Missing key } }'
@@ -195,7 +236,7 @@ module VCAP::CloudController
                 }.to raise_error(CloudController::Errors::ApiError)
 
                 expect(logger).to have_received(:error).with(
-                  'diego.docker.staging.failure.invalid-message',
+                  'diego.staging.docker.failure.invalid-message',
                   staging_guid: droplet.guid,
                   payload:      payload,
                   error:        '{ error => { message => Missing key } }'
@@ -219,7 +260,7 @@ module VCAP::CloudController
                 handler.staging_complete(payload)
 
                 expect(logger).to have_received(:error).with(
-                  'diego.docker.staging.saving-staging-result-failed',
+                  'diego.staging.docker.saving-staging-result-failed',
                   staging_guid: droplet.guid,
                   response:     payload,
                   error:        'save-error',

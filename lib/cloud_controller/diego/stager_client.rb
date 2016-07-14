@@ -1,5 +1,3 @@
-require 'cloud_controller/diego/staging_guid'
-
 module VCAP::CloudController
   module Diego
     REQUEST_HEADERS = { 'Content-Type' => 'application/json' }.freeze

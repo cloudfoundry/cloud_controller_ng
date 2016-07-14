@@ -34,10 +34,10 @@ module VCAP::CloudController
     end
 
     def stager_for_package(package, lifecycle_type)
-      if package.app.processes.any? { |p| p.diego? }
-        Diego::Stager.new(package, lifecycle_type, @config)
-      else
+      if package.app.processes.any? { |p| p.dea? }
         Dea::Stager.new(package, @config, @message_bus, @dea_pool)
+      else
+        Diego::Stager.new(package, lifecycle_type, @config)
       end
     end
 

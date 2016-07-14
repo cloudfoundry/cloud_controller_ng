@@ -179,6 +179,9 @@ module VCAP::CloudController
     attr_accessor :last_stager_response
 
     alias_method :diego?, :diego
+    def dea?
+      !diego?
+    end
 
     # user_provided_ports method should be called to
     # get the value of ports stored in the database

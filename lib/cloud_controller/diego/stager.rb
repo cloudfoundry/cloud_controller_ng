@@ -16,8 +16,8 @@ module VCAP::CloudController
         raise e
       end
 
-      def staging_complete(droplet, staging_response)
-        completion_handler(droplet).staging_complete(staging_response)
+      def staging_complete(droplet, staging_response, with_start=false)
+        completion_handler(droplet).staging_complete(staging_response, with_start)
       end
 
       private

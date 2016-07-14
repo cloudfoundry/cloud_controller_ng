@@ -31,10 +31,11 @@ module VCAP::CloudController
       @actor_name              = actor_email
     end
 
-    def create_and_stage(package, lifecycle, message)
+    def create_and_stage(package, lifecycle, message, start_after_staging=false)
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
 
       staging_details = get_staging_details(package, lifecycle)
+      staging_details.start_after_staging = start_after_staging
 
       droplet = DropletModel.new({
         app_guid:              package.app.guid,

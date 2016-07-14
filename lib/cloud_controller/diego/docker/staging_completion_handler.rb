@@ -5,10 +5,8 @@ module VCAP::CloudController
   module Diego
     module Docker
       class StagingCompletionHandler < VCAP::CloudController::Diego::StagingCompletionHandler
-        def initialize(droplet)
-          @droplet       = droplet
-          @logger        = Steno.logger('cc.docker.stager')
-          @logger_prefix = 'diego.docker.staging.'
+        def logger_prefix
+          'diego.staging.docker.'
         end
 
         def self.schema
