@@ -3,16 +3,9 @@ require 'cloud_controller/diego/stager'
 require 'cloud_controller/diego/protocol'
 require 'cloud_controller/diego/buildpack/staging_completion_handler'
 require 'cloud_controller/diego/buildpack/lifecycle_protocol'
-require 'cloud_controller/diego/v3/buildpack/lifecycle_protocol'
-require 'cloud_controller/diego/v3/buildpack/staging_completion_handler'
-require 'cloud_controller/diego/v3/docker/lifecycle_protocol'
-require 'cloud_controller/diego/v3/docker/staging_completion_handler'
 require 'cloud_controller/diego/docker/lifecycle_protocol'
 require 'cloud_controller/diego/docker/staging_completion_handler'
 require 'cloud_controller/diego/egress_rules'
-require 'cloud_controller/diego/v3/stager'
-require 'cloud_controller/diego/v3/messenger'
-require 'cloud_controller/diego/v3/protocol/package_staging_protocol'
 
 module VCAP::CloudController
   class Stagers
@@ -42,7 +35,7 @@ module VCAP::CloudController
 
     def stager_for_package(package, lifecycle_type)
       if package.app.processes.any? { |p| p.diego? }
-        Diego::V3::Stager.new(package, lifecycle_type, @config)
+        Diego::Stager.new(package, lifecycle_type, @config)
       else
         Dea::Stager.new(package, @config, @message_bus, @dea_pool)
       end

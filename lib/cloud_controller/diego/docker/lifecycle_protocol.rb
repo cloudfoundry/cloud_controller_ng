@@ -5,17 +5,10 @@ module VCAP
     module Diego
       module Docker
         class LifecycleProtocol
-          def lifecycle_data(process)
-            lifecycle_data = LifecycleData.new
-            lifecycle_data.docker_image = process.docker_image
-            docker_credentials = process.docker_credentials_json
-            if docker_credentials
-              lifecycle_data.docker_login_server = docker_credentials['docker_login_server']
-              lifecycle_data.docker_user = docker_credentials['docker_user']
-              lifecycle_data.docker_password = docker_credentials['docker_password']
-              lifecycle_data.docker_email = docker_credentials['docker_email']
-            end
-            [Lifecycles::DOCKER, lifecycle_data.message]
+          def lifecycle_data(package, _)
+            lifecycle_data              = Diego::Docker::LifecycleData.new
+            lifecycle_data.docker_image = package.image
+            lifecycle_data.message
           end
 
           def desired_app_message(process)

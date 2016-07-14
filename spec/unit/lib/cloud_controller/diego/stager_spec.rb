@@ -1,54 +1,47 @@
 require 'spec_helper'
+require 'cloud_controller/diego/stager'
+require 'cloud_controller/diego/messenger'
+require 'cloud_controller/diego/buildpack/staging_completion_handler'
 
 module VCAP::CloudController
   module Diego
     RSpec.describe Stager do
-      let(:messenger) { instance_double(Messenger, send_desire_request: nil) }
-      let(:process) { AppFactory.make }
-      let(:config) { TestConfig.config }
+      subject(:stager) { Stager.new(package, lifecycle_type, config) }
 
-      subject(:stager) { Stager.new(process, config) }
+      let(:messenger) { instance_double(Diego::Messenger) }
+      let(:protocol) { instance_double(Diego::Protocol) }
+      let(:package) { PackageModel.make }
+      let(:config) { TestConfig.config }
+      let(:lifecycle_type) { 'buildpack' }
 
       before do
-        stager.messenger = messenger
+        allow(Diego::Protocol).to receive(:new).with(lifecycle_type).and_return(protocol)
+        allow(Diego::Messenger).to receive(:new).and_return(messenger)
       end
 
       it_behaves_like 'a stager'
 
       describe '#stage' do
+        let(:staging_memory_in_mb) { 1024 }
+        let(:staging_disk_in_mb) { 1024 }
+        let(:droplet) { DropletModel.make(environment_variables: environment_variables, package_guid: package.guid) }
+        let(:environment_variables) { { 'nightshade_vegetable' => 'potato' } }
+        let(:staging_details) do
+          details                       = VCAP::CloudController::Diego::StagingDetails.new
+          details.droplet               = droplet
+          details.environment_variables = environment_variables
+          details.staging_memory_in_mb  = staging_memory_in_mb
+          details.staging_disk_in_mb    = staging_disk_in_mb
+          details
+        end
+
         before do
           allow(messenger).to receive(:send_stage_request)
-          allow(messenger).to receive(:send_stop_staging_request)
         end
 
-        it 'notifies Diego that the process needs staging' do
-          expect(process).to receive(:mark_for_restaging)
-          expect(messenger).to receive(:send_stage_request).with(config)
-          stager.stage
-        end
-
-        context 'when there is a pending stage' do
-          context 'when a staging task id is nil' do
-            before do
-              process.staging_task_id = nil
-            end
-
-            it 'attempts to stop the outstanding stage request' do
-              expect(messenger).to_not receive(:send_stop_staging_request)
-              stager.stage
-            end
-          end
-
-          context 'when a staging task id is not nil' do
-            before do
-              process.staging_task_id = Sham.guid
-            end
-
-            it 'attempts to stop the outstanding stage request' do
-              expect(messenger).to receive(:send_stop_staging_request)
-              stager.stage
-            end
-          end
+        it 'notifies Diego that the package needs staging' do
+          expect(messenger).to receive(:send_stage_request).with(package, config, staging_details)
+          stager.stage(staging_details)
         end
 
         context 'when the stage fails' do
@@ -61,62 +54,47 @@ module VCAP::CloudController
             allow(stager).to receive(:staging_complete)
           end
 
-          it 'attempts to stop the outstanding stage request' do
-            expect { stager.stage }.to raise_error(CloudController::Errors::ApiError)
-            process.reload
-            expect(stager).to have_received(:staging_complete).with(StagingGuid.from_process(process), error)
+          it 'calls the completion handler with the error' do
+            expect {
+              stager.stage(staging_details)
+            }.to raise_error(CloudController::Errors::ApiError)
+            package.reload
+            expect(stager).to have_received(:staging_complete).with(droplet, error)
           end
         end
       end
 
       describe '#staging_complete' do
-        let(:staging_guid) { 'a-staging-guid' }
-        let(:staging_response) { { app_id: 'app-id' } }
-        let(:buildpack_completion_handler) { instance_double(Diego::Buildpack::StagingCompletionHandler, staging_complete: nil) }
-        let(:docker_completion_handler) { instance_double(Diego::Docker::StagingCompletionHandler, staging_complete: nil) }
+        let(:droplet) { instance_double(DropletModel) }
+        let(:staging_response) { {} }
+        let(:buildpack_completion_handler) { instance_double(Diego::Buildpack::StagingCompletionHandler) }
+        let(:docker_completion_handler) { instance_double(Diego::Docker::StagingCompletionHandler) }
 
         before do
-          expect(process).to receive(:docker?).and_return(docker)
-          allow(Diego::Buildpack::StagingCompletionHandler).to receive(:new).and_return(buildpack_completion_handler)
-          allow(Diego::Docker::StagingCompletionHandler).to receive(:new).and_return(docker_completion_handler)
-        end
-
-        context 'docker' do
-          let(:docker) { true }
-
-          it 'delegates to the staging completion handler' do
-            stager.staging_complete(staging_guid, staging_response)
-            expect(docker_completion_handler).to have_received(:staging_complete).with(staging_guid, staging_response)
-            expect(buildpack_completion_handler).not_to have_received(:staging_complete).with(staging_guid, staging_response)
-          end
+          allow(Diego::Buildpack::StagingCompletionHandler).to receive(:new).with(droplet).and_return(buildpack_completion_handler)
+          allow(Diego::Docker::StagingCompletionHandler).to receive(:new).with(droplet).and_return(docker_completion_handler)
+          allow(buildpack_completion_handler).to receive(:staging_complete)
+          allow(docker_completion_handler).to receive(:staging_complete)
         end
 
         context 'buildpack' do
-          let(:docker) { false }
+          let(:lifecycle_type) { 'buildpack' }
 
-          it 'delegates to the staging completion handler' do
-            stager.staging_complete(staging_guid, staging_response)
-            expect(docker_completion_handler).not_to have_received(:staging_complete).with(staging_guid, staging_response)
-            expect(buildpack_completion_handler).to have_received(:staging_complete).with(staging_guid, staging_response)
+          it 'delegates to a buildpack staging completion handler' do
+            stager.staging_complete(droplet, staging_response)
+            expect(buildpack_completion_handler).to have_received(:staging_complete).with(staging_response)
+            expect(docker_completion_handler).not_to have_received(:staging_complete)
           end
         end
-      end
 
-      describe '#stop_stage' do
-        let(:process) { AppFactory.make(package_state: 'PENDING') }
+        context 'docker' do
+          let(:lifecycle_type) { 'docker' }
 
-        it 'tells diego to stop staging the application' do
-          expect(messenger).to receive(:send_stop_staging_request)
-          stager.stop_stage
-        end
-      end
-
-      describe '#messenger' do
-        it 'creates a Diego::Messenger if not set' do
-          stager.messenger = nil
-          expected_messenger = double
-          allow(Diego::Messenger).to receive(:new).with(process).and_return(expected_messenger)
-          expect(stager.messenger).to eq(expected_messenger)
+          it 'delegates to a docker staging completion handler' do
+            stager.staging_complete(droplet, staging_response)
+            expect(buildpack_completion_handler).not_to have_received(:staging_complete)
+            expect(docker_completion_handler).to have_received(:staging_complete).with(staging_response)
+          end
         end
       end
     end

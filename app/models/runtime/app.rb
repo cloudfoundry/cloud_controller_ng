@@ -95,7 +95,6 @@ module VCAP::CloudController
     def package_state
       state = package.try(:state)
 
-      # TODO: this isn't really correct logic.  need to move droplets over and then we can get the right thing
       if state == PackageModel::FAILED_STATE || latest_droplet.try(:failed?)
         'FAILED'
       elsif state == 'READY' && current_droplet && current_droplet == latest_droplet
@@ -389,7 +388,7 @@ module VCAP::CloudController
     end
 
     def detected_start_command
-      current_droplet.try(:process_types).try(:[], 'web') || ''
+      current_droplet.try(:process_types).try(:[], self.type) || ''
     end
 
     def detected_buildpack_guid

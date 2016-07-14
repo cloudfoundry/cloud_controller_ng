@@ -1,7 +1,7 @@
 require 'cloud_controller/backends/staging_memory_calculator'
 require 'cloud_controller/backends/staging_disk_calculator'
 require 'cloud_controller/backends/staging_environment_builder'
-require 'cloud_controller/diego/v3/staging_details'
+require 'cloud_controller/diego/staging_details'
 require 'cloud_controller/diego/lifecycles/lifecycle_provider'
 require 'repositories/droplet_event_repository'
 
@@ -93,7 +93,7 @@ module VCAP::CloudController
         disk_limit,
         staging_message.environment_variables)
 
-      staging_details                       = VCAP::CloudController::Diego::V3::StagingDetails.new
+      staging_details                       = Diego::StagingDetails.new
       staging_details.staging_memory_in_mb  = memory_limit
       staging_details.staging_disk_in_mb    = disk_limit
       staging_details.environment_variables = environment_variables

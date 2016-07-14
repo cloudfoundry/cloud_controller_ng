@@ -55,7 +55,24 @@ module VCAP::CloudController
               end
             end
 
-            shared_examples_for 'it routes docker ports' do
+            describe 'docker ports' do
+              let(:parent_app) { AppModel.make(:docker, space: space) }
+              let(:app) { AppFactory.make(app: parent_app, diego: true) }
+              let(:droplet) do
+                DropletModel.make(
+                  :docker,
+                  state: DropletModel::STAGED_STATE,
+                  app: parent_app,
+                  execution_metadata: execution_metadata,
+                  docker_receipt_image: 'foo/bar'
+                )
+              end
+
+              before do
+                parent_app.update(droplet_guid: droplet.guid)
+                app.reload
+              end
+
               context 'when the app has no docker ports' do
                 let(:execution_metadata) { '{}' }
 
@@ -83,29 +100,6 @@ module VCAP::CloudController
                   expect(routing_info['http_routes']).to match_array expected_http
                 end
               end
-            end
-
-            context 'v2' do
-              let(:app) { AppFactory.make(space: space, diego: true, docker_image: 'foo/bar') }
-              let!(:droplet) { Droplet.make(app: app, execution_metadata: execution_metadata) }
-
-              before do
-                app.droplet_hash = droplet.droplet_hash
-                app.save
-              end
-
-              it_behaves_like 'it routes docker ports'
-            end
-
-            context 'v3' do
-              let(:app) { AppFactory.make(space: space, diego: true, docker_image: 'foo/bar') }
-              let!(:droplet) { DropletModel.make(:docker, execution_metadata: execution_metadata) }
-
-              before do
-                app.app = droplet.app
-              end
-
-              it_behaves_like 'it routes docker ports'
             end
           end
 
