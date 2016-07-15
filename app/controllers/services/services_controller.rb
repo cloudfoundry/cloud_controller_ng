@@ -6,7 +6,7 @@ module VCAP::CloudController
       to_many :service_plans
     end
 
-    query_parameters :active, :label, :provider, :service_broker_guid
+    query_parameters :active, :label, :provider, :service_broker_guid, :unique_id
 
     def self.dependencies
       [:services_event_repository]
