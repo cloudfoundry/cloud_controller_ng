@@ -18,4 +18,5 @@ function handle_local_blobstore() {
   echo "Preparing local buildpacks directory"
   mkdir -p <%= p("cc.buildpacks.fog_connection.local_root") %>
   <% end %>
+  : # this is here to prevent an empty function when not using fog
 }
