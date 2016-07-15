@@ -14,7 +14,7 @@ module CloudController
       end
 
       let(:connection) do
-        double('Fog::Storage', directories: directories)
+        double('Fog::Storage', directories: directories, service: Fog::Storage::AWS)
       end
 
       subject(:directory) do
@@ -30,8 +30,16 @@ module CloudController
 
       describe '#get' do
         it 'retrieves the directory' do
-          expect(directories).to receive(:get).with(directory_key, 'limit' => 1, max_keys: 1).and_return(fog_directory)
+          expect(directories).to receive(:get).with(directory_key, max_keys: 1).and_return(fog_directory)
           expect(directory.get).to eq(fog_directory)
+        end
+
+        context 'when provider is OpenStack' do
+          it 'adds the "limit" option (see: https://github.com/fog/fog-openstack/issues/51)' do
+            expect(connection).to receive(:service).and_return(Fog::Storage::OpenStack)
+            expect(directories).to receive(:get).with(directory_key, 'limit' => 1, max_keys: 1)
+            directory.get
+          end
         end
       end
     end

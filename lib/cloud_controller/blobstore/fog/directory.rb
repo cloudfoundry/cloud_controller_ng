@@ -11,7 +11,9 @@ module CloudController
       end
 
       def get
-        @connection.directories.get(@key, 'limit' => 1, max_keys: 1)
+        options = { max_keys: 1 }
+        options['limit'] = 1 if @connection.service == Fog::Storage::OpenStack
+        @connection.directories.get(@key, options)
       end
     end
   end
