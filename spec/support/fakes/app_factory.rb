@@ -10,6 +10,7 @@ module VCAP
         defaults   = { metadata: {} }
         attributes = defaults.merge(attributes)
 
+        parent_app = nil
         if parent_app_attributes.any?
           buildpack_keys = {}
 
@@ -22,25 +23,26 @@ module VCAP
             parent_app_attributes.delete(:stack)
           end
 
-          attributes[:app] = VCAP::CloudController::AppModel.make(parent_app_attributes)
-
-          attributes[:app].lifecycle_data.update(buildpack_keys) if buildpack_keys.any?
+          parent_app = VCAP::CloudController::AppModel.make(parent_app_attributes)
+          parent_app.lifecycle_data.update(buildpack_keys) if buildpack_keys.any?
+        else
+          parent_app = VCAP::CloudController::AppModel.make
         end
+        attributes[:app] = parent_app
 
         args << attributes
 
-        app = VCAP::CloudController::App.make(*args)
-
         package = if package_attributes.empty?
-                    VCAP::CloudController::PackageModel.make(app: app.app, state: PackageModel::READY_STATE, package_hash: Sham.guid)
+                    VCAP::CloudController::PackageModel.make(app: parent_app, state: PackageModel::READY_STATE, package_hash: Sham.guid)
                   else
-                    VCAP::CloudController::PackageModel.make(:docker, app: app.app, docker_image: package_attributes[:docker_image])
+                    VCAP::CloudController::PackageModel.make(:docker, app: parent_app, docker_image: package_attributes[:docker_image])
                   end
 
-        droplet = DropletModel.make(:staged, app: app.app, package: package)
-        app.app.update(droplet_guid: droplet.guid)
+        droplet = DropletModel.make(:staged, app: parent_app, package: package)
+        parent_app.update(droplet_guid: droplet.guid)
 
-        app.reload
+
+        VCAP::CloudController::App.make(*args)
       end
     end
   end

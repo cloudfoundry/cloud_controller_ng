@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:config_hash) { { staging: { timeout_in_seconds: 360 } } }
     let(:droplet_sha1) { nil }
     let(:app) do
-      App.make(
+      AppFactory.make(
         type:       'web',
         state:      'STARTED',
         instances:  1,
@@ -425,7 +425,7 @@ module VCAP::CloudController
     describe 'staging memory requirements' do
       context 'when the app memory requirement exceeds the staging memory requirement (1024)' do
         let(:app) do
-          App.make(
+          AppFactory.make(
             type:       'web',
             state:      'STARTED',
             instances:  1,
@@ -450,7 +450,7 @@ module VCAP::CloudController
 
     describe 'staging disk requirements' do
       let(:app) do
-        App.make(
+        AppFactory.make(
           type:       'web',
           state:      'STARTED',
           instances:  1,
@@ -495,7 +495,6 @@ module VCAP::CloudController
           it 'sets the app package state to pending before it tries to stage' do
             stage
 
-            expect(app.reload.staging_task_id).to eq(staging_task.task_id)
             expect(app.package_state).to eq('PENDING')
           end
         end
@@ -761,7 +760,7 @@ module VCAP::CloudController
           context 'when other staging has happened' do
             before do
               @before_staging_completion = -> {
-                app.update(staging_task_id: 'another-staging-task-id')
+                DropletModel.make(app: app.app, package: app.package)
               }
             end
 
@@ -784,7 +783,7 @@ module VCAP::CloudController
               }.to_not change {
                 app.refresh
                 app.droplet_hash
-              }.from(nil)
+              }.from(app.current_droplet.droplet_hash)
             end
 
             it 'does not save the detected buildpack' do

@@ -27,9 +27,6 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('StagingError', 'no available stagers') unless stager
         @stager_id = stager.dea_id
 
-        # Save the current staging task
-        @app.update(staging_task_id: task_id)
-
         # Attempt to stop any in-flight staging for this app
         @message_bus.publish('staging.stop', app_id: @app.guid)
 
@@ -205,7 +202,7 @@ module VCAP::CloudController
       end
 
       def check_task_id
-        if @app.staging_task_id != task_id
+        if @app.latest_droplet.guid != task_id
           raise CloudController::Errors::ApiError.new_from_details('StagingError', 'failed to stage application: another staging request was initiated')
         end
       end

@@ -224,6 +224,7 @@ Sequel.migration do
       drop_column :droplet_hash
       drop_column :package_pending_since
       drop_column :deleted_at
+      drop_column :staging_task_id
     end
   end
 end
