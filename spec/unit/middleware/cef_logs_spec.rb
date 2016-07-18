@@ -14,7 +14,7 @@ module CloudFoundry
           ip:            'ip',
           filtered_path: 'filtered_path',
           path:          'plain_path',
-          headers:       { 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip', },
+          headers:       { 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip, another_forwarded_ip' },
           authorization: true
         )
       end
@@ -54,13 +54,13 @@ module CloudFoundry
             'suser=zach-loves-cake suid=some-guid ' \
             'request=filtered_path ' \
             'requestMethod=request_method ' \
-            'src=ip ' \
+            'src=forwarded_ip ' \
             'dst=10.10.10.100 ' \
             'cs1Label=userAuthenticationMechanism cs1=oauth-access-token ' \
             "cs2Label=vcapRequestId cs2=#{request_id} " \
             'cs3Label=result cs3=success ' \
             'cs4Label=httpStatusCode cs4=200 ' \
-            'cs5Label=xForwardedFor cs5=forwarded_ip'
+            'cs5Label=xForwardedFor cs5=forwarded_ip, another_forwarded_ip'
           )
 
           Timecop.return
@@ -161,13 +161,13 @@ module CloudFoundry
             'suser=zach-loves-cake suid=some-guid ' \
             'request=filtered_path ' \
             'requestMethod=a|b ' \
-            'src=ip ' \
+            'src=forwarded_ip ' \
             'dst=10.10.10.100 ' \
             'cs1Label=userAuthenticationMechanism cs1=oauth-access-token ' \
             'cs2Label=vcapRequestId cs2=ID ' \
             'cs3Label=result cs3=success ' \
             'cs4Label=httpStatusCode cs4=200 ' \
-            'cs5Label=xForwardedFor cs5=forwarded_ip'
+            'cs5Label=xForwardedFor cs5=forwarded_ip, another_forwarded_ip'
           )
         end
 
@@ -185,13 +185,13 @@ module CloudFoundry
             'suser=zach-loves-cake suid=some-guid ' \
             'request=filtered_path ' \
             'requestMethod=a\\\\b ' \
-            'src=ip ' \
+            'src=forwarded_ip ' \
             'dst=10.10.10.100 ' \
             'cs1Label=userAuthenticationMechanism cs1=oauth-access-token ' \
             'cs2Label=vcapRequestId cs2=ID ' \
             'cs3Label=result cs3=success ' \
             'cs4Label=httpStatusCode cs4=200 ' \
-            'cs5Label=xForwardedFor cs5=forwarded_ip'
+            'cs5Label=xForwardedFor cs5=forwarded_ip, another_forwarded_ip'
           )
         end
 
@@ -208,13 +208,13 @@ module CloudFoundry
             'suser=pot\\\\ato suid=some-guid ' \
             'request=filtered_path ' \
             'requestMethod=request_method ' \
-            'src=ip ' \
+            'src=forwarded_ip ' \
             'dst=10.10.10.100 ' \
             'cs1Label=userAuthenticationMechanism cs1=oauth-access-token ' \
             'cs2Label=vcapRequestId cs2=ID ' \
             'cs3Label=result cs3=success ' \
             'cs4Label=httpStatusCode cs4=200 ' \
-            'cs5Label=xForwardedFor cs5=forwarded_ip'
+            'cs5Label=xForwardedFor cs5=forwarded_ip, another_forwarded_ip'
           )
         end
 
@@ -231,13 +231,13 @@ module CloudFoundry
             'suser=pot\=ato suid=some-guid ' \
             'request=filtered_path ' \
             'requestMethod=request_method ' \
-            'src=ip ' \
+            'src=forwarded_ip ' \
             'dst=10.10.10.100 ' \
             'cs1Label=userAuthenticationMechanism cs1=oauth-access-token ' \
             'cs2Label=vcapRequestId cs2=ID ' \
             'cs3Label=result cs3=success ' \
             'cs4Label=httpStatusCode cs4=200 ' \
-            'cs5Label=xForwardedFor cs5=forwarded_ip'
+            'cs5Label=xForwardedFor cs5=forwarded_ip, another_forwarded_ip'
           )
         end
       end
