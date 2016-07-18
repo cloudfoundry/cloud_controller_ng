@@ -1,10 +1,11 @@
 require 'presenters/system_env_presenter'
 require 'queries/v2/app_query'
+require 'actions/v2/app_stage'
 
 module VCAP::CloudController
   class AppsController < RestController::ModelController
     def self.dependencies
-      [:app_event_repository, :droplet_blobstore]
+      [:app_event_repository, :droplet_blobstore, :stagers]
     end
 
     define_attributes do
@@ -110,7 +111,8 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @app_event_repository = dependencies.fetch(:app_event_repository)
-      @blobstore = dependencies.fetch(:droplet_blobstore)
+      @blobstore            = dependencies.fetch(:droplet_blobstore)
+      @stagers              = dependencies.fetch(:stagers)
     end
 
     def delete(guid)
@@ -234,7 +236,7 @@ module VCAP::CloudController
             v3_app.lifecycle_data.stack = Stack.find(guid: request_attrs['stack_guid']).try(:name)
             app.mark_for_restaging
           end
-        elsif request_attrs.key?('docker_image')
+        elsif request_attrs.key?('docker_image') && !case_insensitive_equals(app.docker_image, request_attrs['docker_image'])
           create_message = PackageCreateMessage.new({ type: 'docker', app_guid: v3_app.guid, data: { image: request_attrs['docker_image'] } })
           creator        = PackageCreate.new(SecurityContext.current_user.guid, SecurityContext.current_user_email)
           creator.create(create_message)
@@ -259,8 +261,17 @@ module VCAP::CloudController
         app.save
         v3_app.save
         v3_app.lifecycle_data.save && validate_buildpack!(app.reload) if buildpack_type_requested
+        app.reload
 
         validate_access(:update, app, request_attrs)
+      end
+
+      if request_attrs.key?('state') && app.needs_staging?
+        V2::AppStage.new(
+          user:       SecurityContext.current_user,
+          user_email: SecurityContext.current_user_email,
+          stagers:    @stagers
+        ).stage(app)
       end
 
       after_update(app)
@@ -376,5 +387,9 @@ module VCAP::CloudController
 
     define_messages
     define_routes
+
+    def case_insensitive_equals(str1, str2)
+      str1.casecmp(str2) == 0
+    end
   end
 end

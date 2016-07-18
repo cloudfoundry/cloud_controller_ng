@@ -1,7 +1,9 @@
+require 'actions/v2/app_stage'
+
 module VCAP::CloudController
   class RestagesController < RestController::ModelController
     def self.dependencies
-      [:app_event_repository]
+      [:app_event_repository, :stagers]
     end
 
     path_base 'apps'
@@ -10,29 +12,40 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @app_event_repository = dependencies.fetch(:app_event_repository)
+      @stagers               = dependencies.fetch(:stagers)
     end
 
     post "#{path_guid}/restage", :restage
 
     def restage(guid)
-      app = find_guid_and_validate_access(:read, guid)
+      process = find_guid_and_validate_access(:read, guid)
 
       model.db.transaction do
-        app.lock!
+        process.app.lock!
+        process.lock!
 
-        if app.pending?
+        if process.pending?
           raise CloudController::Errors::ApiError.new_from_details('NotStaged')
         end
 
-        app.restage!
+        process.stop!
+        process.app.update(droplet_guid: nil)
+        process.reload
+        process.start!
       end
 
-      @app_event_repository.record_app_restage(app, SecurityContext.current_user.guid, SecurityContext.current_user_email)
+      V2::AppStage.new(
+        user:       SecurityContext.current_user,
+        user_email: SecurityContext.current_user_email,
+        stagers:    @stagers
+      ).stage(process)
+
+      @app_event_repository.record_app_restage(process, SecurityContext.current_user.guid, SecurityContext.current_user_email)
 
       [
         HTTP::CREATED,
-        { 'Location' => "#{self.class.path}/#{app.guid}" },
-        object_renderer.render_json(self.class, app, @opts)
+        { 'Location' => "#{self.class.path}/#{process.guid}" },
+        object_renderer.render_json(self.class, process, @opts)
       ]
     end
 

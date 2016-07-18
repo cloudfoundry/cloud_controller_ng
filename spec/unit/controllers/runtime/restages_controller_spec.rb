@@ -6,8 +6,7 @@ module VCAP::CloudController
     before { CloudController::DependencyLocator.instance.register(:app_event_repository, app_event_repository) }
 
     describe 'POST /v2/apps/:id/restage' do
-      let(:package_state) { 'STAGED' }
-      let!(:application) { AppFactory.make(package_hash: 'abc', package_state: package_state) }
+      let!(:application) { AppFactory.make }
 
       subject(:restage_request) { post "/v2/apps/#{application.guid}/restage", {} }
 
@@ -26,15 +25,25 @@ module VCAP::CloudController
 
       context 'as a developer' do
         let(:account) { make_developer_for_space(application.space) }
+        let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
+
+        before do
+          allow(V2::AppStage).to receive(:new).and_return(app_stage)
+        end
+
+        it 'removes the current droplet from the app' do
+          expect(application.current_droplet).not_to be_nil
+
+          restage_request
+          expect(last_response.status).to eq(201)
+
+          expect(application.reload.current_droplet).to be_nil
+        end
 
         it 'restages the app' do
-          allow_any_instance_of(VCAP::CloudController::RestagesController).to receive(:find_guid_and_validate_access).with(:read, application.guid).and_return(application)
-
-          allow(application).to receive(:restage!)
           restage_request
-
           expect(last_response.status).to eq(201)
-          expect(application).to have_received(:restage!)
+          expect(app_stage).to have_received(:stage).with(application)
         end
 
         it 'returns the application' do
@@ -45,8 +54,8 @@ module VCAP::CloudController
 
         context 'when the app is pending to be staged' do
           before do
-            application.package_state = 'PENDING'
-            application.save
+            PackageModel.make(app: application.app)
+            application.reload
           end
 
           it "returns '170002 NotStaged'" do
@@ -63,16 +72,13 @@ module VCAP::CloudController
             FeatureFlag.create(name: 'diego_docker', enabled: true)
           end
 
-          let!(:docker_app) do
-            AppFactory.make(package_hash: 'abc', docker_image: 'some_image', state: 'STARTED')
-          end
+          let!(:docker_app) { AppFactory.make(docker_image: 'some-image') }
 
           subject(:restage_request) { post("/v2/apps/#{docker_app.guid}/restage", {}) }
 
           context 'when there are validation errors' do
             before do
               allow_any_instance_of(VCAP::CloudController::RestagesController).to receive(:find_guid_and_validate_access).with(:read, docker_app.guid).and_return(docker_app)
-              allow(docker_app).to receive(:package_state).and_return('STAGED')
             end
 
             context 'when Docker is disabled' do
@@ -107,7 +113,7 @@ module VCAP::CloudController
 
           context 'when the restage fails due to an error' do
             before do
-              allow_any_instance_of(App).to receive(:restage!).and_raise('Error saving')
+              allow(app_stage).to receive(:stage).and_raise('Error staging')
             end
 
             it 'does not generate an audit.app.restage event' do

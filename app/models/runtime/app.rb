@@ -273,7 +273,7 @@ module VCAP::CloudController
 
     def before_save
       if needs_package_in_current_state? && !package_hash
-        # raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
+        raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
       end
 
       self.enable_ssh = Config.config[:allow_app_ssh_access] && space.allow_ssh if enable_ssh.nil?
@@ -542,13 +542,6 @@ module VCAP::CloudController
       routes.map(&:uri)
     end
 
-    def mark_as_staged
-      raise 'MARK AS STAGED'
-
-      self.package_state = 'STAGED'
-      self.package_pending_since = nil
-    end
-
     def mark_as_failed_to_stage(reason='StagingError')
       raise 'MARK AS FAILED TO STAGE'
 
@@ -564,13 +557,6 @@ module VCAP::CloudController
       self.package_pending_since = nil
       self.state = 'STOPPED' if diego?
       save
-    end
-
-    def mark_for_restaging
-      self.package_state = 'PENDING'
-      self.staging_failed_reason = nil
-      self.staging_failed_description = nil
-      self.package_pending_since = Sequel::CURRENT_TIMESTAMP if self.package_hash
     end
 
     def buildpack
@@ -598,13 +584,6 @@ module VCAP::CloudController
       Presenters::V3::CacheKeyPresenter.cache_key(guid: guid, stack_name: stack.name)
     end
 
-    def package_hash=(hash)
-      raise 'NO LONGER SETTING PACKAGE HASH'
-      super(hash)
-      mark_for_restaging if column_changed?(:package_hash)
-      self.package_updated_at = Sequel.datetime_class.now
-    end
-
     def start!
       self.state = 'STARTED'
       save
@@ -613,12 +592,6 @@ module VCAP::CloudController
     def stop!
       self.state = 'STOPPED'
       save
-    end
-
-    def restage!
-      stop!
-      mark_for_restaging
-      start!
     end
 
     # returns True if we need to update the DEA's with

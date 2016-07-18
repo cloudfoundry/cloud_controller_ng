@@ -57,10 +57,6 @@ module VCAP::CloudController
     describe '.updated' do
       subject { AppObserver.updated(app) }
 
-      before do
-        allow(AppObserverStagingHelper).to receive(:stage_app).and_return(nil)
-      end
-
       context 'when the app state is changed' do
         let(:previous_changes) { { state: 'original-state' } }
 
@@ -98,9 +94,8 @@ module VCAP::CloudController
           context 'when the app needs staging' do
             let(:app_needs_staging) { true }
 
-            it 'validates and stages the app' do
-              expect(stagers).to receive(:validate_app).with(app)
-              expect(AppObserverStagingHelper).to receive(:stage_app).with(app)
+            it 'does not start the app' do
+              expect(runner).to_not receive(:start)
               subject
             end
           end
@@ -153,9 +148,8 @@ module VCAP::CloudController
           context 'when the app needs staging' do
             let(:app_needs_staging) { true }
 
-            it 'validates and stages the app' do
-              expect(stagers).to receive(:validate_app).with(app)
-              expect(AppObserverStagingHelper).to receive(:stage_app).with(app)
+            it 'does not start the app' do
+              expect(runner).not_to receive(:start)
               subject
             end
           end
@@ -208,9 +202,8 @@ module VCAP::CloudController
           context 'when the app needs staging' do
             let(:app_needs_staging) { true }
 
-            it 'validates and stages the app' do
-              expect(stagers).to receive(:validate_app).with(app)
-              expect(AppObserverStagingHelper).to receive(:stage_app).with(app)
+            it 'does not start the app' do
+              expect(runner).not_to receive(:start)
               subject
             end
           end

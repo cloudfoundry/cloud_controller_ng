@@ -551,6 +551,7 @@ module VCAP::CloudController
 
       before do
         set_current_user(developer)
+        allow_any_instance_of(V2::AppStage).to receive(:stage).and_return(nil)
       end
 
       describe 'app_scaling feature flag' do
@@ -985,6 +986,86 @@ module VCAP::CloudController
 
           expect(app.reload.docker_image).to eq('repo/new-image')
           expect(app.package).not_to eq(original_package)
+        end
+
+        context 'when the docker image is requested but is not a change' do
+          it 'does not create a new package' do
+            app = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
+            original_package = app.package
+
+            expect(app.docker_image).not_to eq('repo/new-image')
+
+            set_current_user(admin_user, admin: true)
+
+            put "/v2/apps/#{app.guid}", MultiJson.dump({ docker_image: 'REPO/ORIGINAL-IMAGE' })
+
+            expect(app.reload.docker_image).to eq('repo/original-image')
+            expect(app.package).to eq(original_package)
+          end
+        end
+      end
+
+      describe 'staging' do
+        let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
+        let(:app_obj) { AppFactory.make }
+
+        before do
+          allow(V2::AppStage).to receive(:new).and_return(app_stage)
+          app_obj.update(state: 'STARTED')
+        end
+
+        context 'when a state change is requested' do
+          let(:req) { '{ "state": "STARTED" }' }
+
+          context 'when the app needs staging' do
+            before do
+              app_obj.app.update(droplet: nil)
+              app_obj.reload
+            end
+
+            it 'requests to be staged' do
+              put "/v2/apps/#{app_obj.guid}", req
+              expect(last_response.status).to eq(201)
+
+              expect(app_stage).to have_received(:stage)
+            end
+          end
+
+          context 'when the app does not need staging' do
+            it 'does not request to be staged' do
+              put "/v2/apps/#{app_obj.guid}", req
+              expect(last_response.status).to eq(201)
+
+              expect(app_stage).not_to have_received(:stage)
+            end
+          end
+        end
+
+        context 'when a state change is NOT requested' do
+          let(:req) { '{ "name": "some-name" }' }
+
+          context 'when the app needs staging' do
+            before do
+              app_obj.app.update(droplet: nil)
+              app_obj.reload
+            end
+
+            it 'does not request to be staged' do
+              put "/v2/apps/#{app_obj.guid}", req
+              expect(last_response.status).to eq(201)
+
+              expect(app_stage).not_to have_received(:stage)
+            end
+          end
+
+          context 'when the app does not need staging' do
+            it 'does not request to be staged' do
+              put "/v2/apps/#{app_obj.guid}", req
+              expect(last_response.status).to eq(201)
+
+              expect(app_stage).not_to have_received(:stage)
+            end
+          end
         end
       end
     end

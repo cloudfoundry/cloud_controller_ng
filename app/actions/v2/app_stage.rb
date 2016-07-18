@@ -1,11 +1,16 @@
 module VCAP::CloudController
-  module AppObserverStagingHelper
-    class << self
-      def stage_app(app)
-        droplet_creator = DropletCreate.new(
-          actor:       SecurityContext.current_user,
-          actor_email: SecurityContext.current_user_email
-        )
+  module V2
+    class AppStage
+      def initialize(user:, user_email:, stagers:)
+        @user       = user
+        @user_email = user_email
+        @stagers    = stagers
+      end
+
+      def stage(app)
+        @stagers.validate_app(app)
+
+        droplet_creator = DropletCreate.new(actor: @user, actor_email: @user_email)
 
         message = DropletCreateMessage.new({
           staging_memory_in_mb: app.memory,

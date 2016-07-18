@@ -1,5 +1,3 @@
-require 'cloud_controller/app_services/app_observer_staging_helper'
-
 module VCAP::CloudController
   module AppObserver
     class << self
@@ -43,12 +41,7 @@ module VCAP::CloudController
           return
         end
 
-        if app.needs_staging?
-          @stagers.validate_app(app)
-          AppObserverStagingHelper.stage_app(app)
-        else
-          @runners.runner_for_app(app).start
-        end
+        @runners.runner_for_app(app).start unless app.needs_staging?
       end
 
       def react_to_instances_change(app)

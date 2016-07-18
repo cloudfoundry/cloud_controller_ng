@@ -2,7 +2,7 @@ require 'repositories/droplet_event_repository'
 
 module VCAP::CloudController
   class DropletDelete
-    def initialize(actor_guid, actor_email, stagers)
+    def initialize(actor_guid, actor_email, stagers=CloudController::DependencyLocator.instance.stagers)
       @actor_guid = actor_guid
       @actor_name = actor_email
       @stagers    = stagers

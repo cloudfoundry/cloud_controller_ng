@@ -49,11 +49,9 @@ module VCAP::CloudController
     end
 
     def staging_in_progress?
-      droplets.each do |droplet|
-        return true if droplet.state == DropletModel::STAGING_STATE || droplet.state == DropletModel::PENDING_STATE
+      droplets.any? do |droplet|
+        droplet.state == DropletModel::STAGING_STATE || droplet.state == DropletModel::PENDING_STATE
       end
-
-      false
     end
 
     def docker?
