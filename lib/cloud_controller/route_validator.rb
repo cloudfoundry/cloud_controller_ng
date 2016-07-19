@@ -12,6 +12,7 @@ module VCAP::CloudController
     end
 
     def validate
+      validate_router_group
       if is_tcp_router_group?
         validate_host_not_included
         validate_path_not_included
@@ -31,12 +32,20 @@ module VCAP::CloudController
       routing_api_client
     end
 
+    def domain_has_router_group_guid?
+      !route.domain.nil? && route.domain.shared? && !route.domain.router_group_guid.nil?
+    end
+
     def is_tcp_router_group?
-      !route.domain.nil? && route.domain.shared? && !route.domain.router_group_guid.nil? && !router_group.nil? && router_group.type == 'tcp'
+      domain_has_router_group_guid? && !router_group.nil? && router_group.type == 'tcp'
     end
 
     def router_group
       @router_group ||= routing_api_client.router_group(route.domain.router_group_guid)
+    end
+
+    def validate_router_group
+      route.errors.add(:router_group, route.domain.router_group_guid.to_s) if domain_has_router_group_guid? && router_group.nil?
     end
 
     def validate_host_not_included

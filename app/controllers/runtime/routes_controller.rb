@@ -63,6 +63,10 @@ module VCAP::CloudController
         return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'For TCP routes you must specify a port or request a random one.')
       end
 
+      if e.errors.on(:router_group)
+        return CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', e.errors.on(:router_group))
+      end
+
       if e.errors.on(:port) == [:port_unavailable]
         return CloudController::Errors::ApiError.new_from_details('RouteInvalid',
                  'The requested port is not available for reservation. ' \

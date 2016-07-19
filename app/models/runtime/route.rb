@@ -248,7 +248,7 @@ module VCAP::CloudController
 
     def validate_domain
       errors.add(:domain, :invalid_relation) if !valid_domain
-      errors.add(:host, 'is required for shared-domains') if !valid_host_for_shared_domain
+      errors.add(:host, 'is required for shared-domains') if domain && domain.shared? && !domain.tcp? && host.blank?
     end
 
     def valid_domain
@@ -259,15 +259,6 @@ module VCAP::CloudController
 
       return false if space && !domain.usable_by_organization?(space.organization) # domain is not usable by the org
 
-      true
-    end
-
-    def domain_shared_and_empty_host_and_port?
-      domain && domain.shared? && (host.blank? && values[:port].blank?)
-    end
-
-    def valid_host_for_shared_domain
-      return false if domain_shared_and_empty_host_and_port?
       true
     end
 

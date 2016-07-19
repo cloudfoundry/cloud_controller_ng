@@ -610,6 +610,44 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the routing api experienced data loss of router groups' do
+          let(:shared_domain) { SharedDomain.make(router_group_guid: 'abc') }
+          let(:domain_guid) { shared_domain.guid }
+
+          before do
+            allow(routing_api_client).to receive(:router_group).and_return(nil)
+          end
+
+          context 'when host and port not provided' do
+            let(:req) { {
+              domain_guid: domain_guid,
+              space_guid: space.guid,
+            } }
+
+            it 'returns a 404' do
+              post '/v2/routes', MultiJson.dump(req)
+
+              expect(last_response).to have_status_code(404)
+              expect(last_response.body).to include 'router group could not be found'
+            end
+          end
+
+          context 'when host is provided' do
+            let(:req) { {
+              domain_guid: domain_guid,
+              space_guid: space.guid,
+              host: 'foo',
+            } }
+
+            it 'returns a 404' do
+              post '/v2/routes', MultiJson.dump(req)
+
+              expect(last_response).to have_status_code(404)
+              expect(last_response.body).to include 'router group could not be found'
+            end
+          end
+        end
+
         context 'when route_creation feature flag is disabled' do
           before do
             allow_any_instance_of(RouteValidator).to receive(:validate)

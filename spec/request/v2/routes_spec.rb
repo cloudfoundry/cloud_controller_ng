@@ -20,7 +20,7 @@ RSpec.describe 'Routes' do
 
   describe 'GET /v2/routes' do
     let!(:route) { VCAP::CloudController::Route.make(domain: domain, space: space) }
-    let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'tcp-group') }
+    let(:domain) { VCAP::CloudController::SharedDomain.make }
 
     it 'lists all routes' do
       get '/v2/routes', nil, headers_for(user)
@@ -98,7 +98,7 @@ RSpec.describe 'Routes' do
                   },
                   'entity' => {
                     'name'              => domain.name,
-                    'router_group_guid' => 'tcp-group',
+                    'router_group_guid' => nil,
                     'router_group_type' => nil
                   }
                 },
@@ -188,7 +188,7 @@ RSpec.describe 'Routes' do
     let!(:route) { VCAP::CloudController::Route.make(domain: domain, space: space) }
 
     context 'with a shared domain' do
-      let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'tcp-group') }
+      let(:domain) { VCAP::CloudController::SharedDomain.make }
 
       it 'maps domain_url to the shared domains controller' do
         get "/v2/routes/#{route.guid}", nil, headers_for(user)

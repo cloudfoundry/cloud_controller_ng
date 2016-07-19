@@ -173,6 +173,17 @@ module VCAP::CloudController
       end
     end
 
+    context 'when the routing api client does not know about router group' do
+      before do
+        allow(routing_api_client).to receive(:router_group).and_return(nil)
+      end
+
+      it 'add router_group error' do
+        validator.validate
+        expect(route.errors.on(:router_group)).to include('router-group-guid')
+      end
+    end
+
     context 'when the routing api client raises a UaaUnavailable error' do
       before do
         allow(routing_api_client).to receive(:router_group).
