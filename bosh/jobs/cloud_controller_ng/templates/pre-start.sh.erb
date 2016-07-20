@@ -36,9 +36,6 @@ function deny_overlapping_app_and_system_domains {
 }
 
 function setup_nginx_directories {
-  mkdir -p "/var/vcap/sys/run/nginx_cc"
-  chown -R vcap:vcap "/var/vcap/sys/run/nginx_cc"
-
   mkdir -p "/var/vcap/sys/log/nginx_cc"
   chown -R vcap:vcap "/var/vcap/sys/log/nginx_cc"
 
@@ -58,9 +55,6 @@ function setup_nginx_directories {
 }
 
 function setup_api_directories {
-  mkdir -p "/var/vcap/sys/run/cloud_controller_ng"
-  chown -R vcap:vcap "/var/vcap/sys/run/cloud_controller_ng"
-
   mkdir -p "/var/vcap/sys/log/cloud_controller_ng"
   chown -R vcap:vcap "/var/vcap/sys/log/cloud_controller_ng"
 

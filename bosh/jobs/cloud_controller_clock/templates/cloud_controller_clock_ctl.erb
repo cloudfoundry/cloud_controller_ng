@@ -24,8 +24,14 @@ source /var/vcap/packages/capi_utils/pid_utils.sh
 
 tee_output_to_sys_log_and_file "${LOG_DIR}" "$(basename "$0")"
 
+function setup_environment() {
+  mkdir -p "${RUN_DIR}"
+}
+
 case $1 in
 start)
+  setup_environment
+
   pid_guard "$PIDFILE" "Cloud controller clock"
 
   echo $$ > "$PIDFILE"
