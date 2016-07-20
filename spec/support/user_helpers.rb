@@ -14,7 +14,9 @@ module UserHelpers
     set_current_user(user, { admin: true }.merge(opts))
   end
 
+  # rubocop:disable all
   def set_current_user_as_admin_read_only(opts={})
+    # rubocop:enable all
     user = opts.delete(:user) || VCAP::CloudController::User.make
     set_current_user(user, { admin_read_only: true }.merge(opts))
   end
