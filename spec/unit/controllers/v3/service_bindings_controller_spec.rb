@@ -404,8 +404,27 @@ RSpec.describe ServiceBindingsController, type: :controller do
       let(:expected_service_binding_guids) do
         [allowed_binding_1, allowed_binding_2, allowed_binding_3, binding_in_unauthorized_space].map(&:guid)
       end
+
       before do
-        set_current_user_as_admin(user: user)
+        set_current_user_as_admin
+      end
+
+      it 'returns all service bindings' do
+        get :index
+
+        expect(response.status).to eq 200
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response_guids).to match_array(expected_service_binding_guids)
+      end
+    end
+
+    context 'admin read only' do
+      let(:expected_service_binding_guids) do
+        [allowed_binding_1, allowed_binding_2, allowed_binding_3, binding_in_unauthorized_space].map(&:guid)
+      end
+
+      before do
+        set_current_user_as_admin_read_only
       end
 
       it 'returns all service bindings' do

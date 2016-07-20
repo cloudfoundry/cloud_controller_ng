@@ -84,14 +84,48 @@ RSpec.describe ProcessesController, type: :controller do
       end
     end
 
-    it 'fails without read permissions scope on the auth token' do
-      set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
-      get :index
+    context 'when the user does not have read scope' do
+      before do
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+      end
 
-      expect(response.status).to eq(403)
-      expect(response.body).to include('NotAuthorized')
+      it 'returns 403 NotAuthorized' do
+        get :index
+
+        expect(response.status).to eq(403)
+        expect(response.body).to include('NotAuthorized')
+      end
     end
 
+    context 'admin types' do
+      let!(:process1) { VCAP::CloudController::ProcessModel.make(space: space) }
+      let!(:process2) { VCAP::CloudController::ProcessModel.make(space: space) }
+      let!(:process3) { VCAP::CloudController::ProcessModel.make }
+
+      context 'admin' do
+        before { set_current_user_as_admin }
+
+        it 'returns 200 and lists all processes' do
+          get :index
+
+          response_guids = parsed_body['resources'].map { |r| r['guid'] }
+          expect(response.status).to eq(200)
+          expect(response_guids).to match_array([process1.guid, process2.guid, process3.guid])
+        end
+      end
+
+      context 'read only admin' do
+        before { set_current_user_as_admin_read_only }
+
+        it 'returns 200 and lists all processes' do
+          get :index
+
+          response_guids = parsed_body['resources'].map { |r| r['guid'] }
+          expect(response.status).to eq(200)
+          expect(response_guids).to match_array([process1.guid, process2.guid, process3.guid])
+        end
+      end
+    end
     context 'when the request parameters are invalid' do
       context 'because there are unknown parameters' do
         let(:params) { { 'invalid' => 'thing', 'bad' => 'stuff' } }

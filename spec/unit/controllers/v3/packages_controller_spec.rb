@@ -476,6 +476,21 @@ RSpec.describe PackagesController, type: :controller do
       end
     end
 
+    context 'read only admin' do
+      before do
+        disallow_user_read_access(user, space: space)
+        allow(controller).to receive(:readable_space_guids).and_return([])
+        set_current_user_as_admin_read_only(user: user)
+      end
+
+      it 'lists all the packages' do
+        get :index
+
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response_guids).to match_array([user_package_1, user_package_2, admin_package].map(&:guid))
+      end
+    end
+
     context 'when pagination options are specified' do
       let(:page) { 1 }
       let(:per_page) { 1 }

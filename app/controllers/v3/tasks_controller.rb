@@ -20,7 +20,7 @@ class TasksController < ApplicationController
       app, dataset = TaskListFetcher.new.fetch_for_app(message: message)
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
-      dataset = if roles.admin?
+      dataset = if roles.admin? || roles.admin_read_only?
                   TaskListFetcher.new.fetch_all(message: message)
                 else
                   TaskListFetcher.new.fetch_for_spaces(message: message, space_guids: readable_space_guids)

@@ -413,7 +413,25 @@ RSpec.describe TasksController, type: :controller do
 
     context 'admin' do
       before do
-        set_current_user_as_admin(user: user)
+        set_current_user_as_admin
+      end
+
+      it 'returns a 200 and all tasks' do
+        task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
+        task_2 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
+        task_3 = VCAP::CloudController::TaskModel.make
+
+        get :index
+
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response.status).to eq(200)
+        expect(response_guids).to match_array([task_1, task_2, task_3].map(&:guid))
+      end
+    end
+
+    context 'admin read only' do
+      before do
+        set_current_user_as_admin_read_only
       end
 
       it 'returns a 200 and all tasks' do

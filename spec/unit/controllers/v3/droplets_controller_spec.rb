@@ -833,7 +833,22 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the user is an admin' do
         before do
+          disallow_user_read_access(user, space: space)
           set_current_user_as_admin(user: user)
+        end
+
+        it 'returns all droplets' do
+          get :index
+
+          response_guids = parsed_body['resources'].map { |r| r['guid'] }
+          expect(response_guids).to match_array([user_droplet_1, user_droplet_2, admin_droplet].map(&:guid))
+        end
+      end
+
+      context 'when the user is a read only admin' do
+        before do
+          disallow_user_read_access(user, space: space)
+          set_current_user_as_admin_read_only(user: user)
         end
 
         it 'returns all droplets' do

@@ -45,6 +45,30 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
     end
 
+    context 'read only admin' do
+      let!(:app_model_1) { VCAP::CloudController::AppModel.make }
+      let!(:app_model_2) { VCAP::CloudController::AppModel.make }
+      let!(:app_model_3) { VCAP::CloudController::AppModel.make }
+
+      before do
+        allow(controller).to receive(:readable_space_guids).and_return([])
+        disallow_user_read_access(user, space: space_1)
+        set_current_user_as_admin_read_only
+
+        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_3, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+      end
+
+      it 'fetches all the apps' do
+        get :index
+
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response.status).to eq(200)
+        expect(response_guids).to match_array([app_model_1, app_model_2, app_model_3].map(&:guid))
+      end
+    end
+
     context 'when the user does not have read scope' do
       before do
         set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
@@ -92,7 +116,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#show' do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let!(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }
     let(:user) { VCAP::CloudController::User.make }
 
