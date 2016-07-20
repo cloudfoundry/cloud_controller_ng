@@ -87,7 +87,6 @@ function setup_directories {
 }
 
 function perform_migration {
-  <% if spec.bootstrap %>
   pushd "${CC_PACKAGE_DIR}/cloud_controller_ng" > /dev/null
     chpst -u vcap:vcap bundle exec rake db:migrate
 
@@ -97,13 +96,9 @@ function perform_migration {
       exit $result
     fi
   popd > /dev/null
-  <% else %>
-  echo "Skipping migrations"
-  <% end %>
 }
 
 function seed_db {
-  <% if spec.bootstrap %>
   pushd "${CC_PACKAGE_DIR}/cloud_controller_ng" > /dev/null
     chpst -u vcap:vcap bundle exec rake db:seed
 
@@ -113,16 +108,17 @@ function seed_db {
       exit $result
     fi
   popd > /dev/null
-  <% else %>
-  echo "Skipping DB seeding"
-  <% end %>
 }
 
 function main {
   setup_directories
   deny_overlapping_app_and_system_domains
+  <% if spec.bootstrap && p('cc.run_prestart_migrations') %>
   perform_migration
   seed_db
+  <% else %>
+  echo "Skipping DB migrations and seeds"
+  <% end %>
 }
 
 main

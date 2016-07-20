@@ -64,6 +64,13 @@ case $1 in
 
     cd "${CC_PACKAGE_DIR}/cloud_controller_ng"
 
+    <% if spec.bootstrap && !p('cc.run_prestart_migrations') %>
+    echo 'Running migrations and seeds'
+    bundle exec rake db:migrate
+    bundle exec rake db:seed
+    echo 'Finished migrations and seeds'
+    <% end %>
+
     exec "${CC_PACKAGE_DIR}/cloud_controller_ng/bin/cloud_controller" \
       -c "$CLOUD_CONTROLLER_NG_CONFIG"
     ;;
