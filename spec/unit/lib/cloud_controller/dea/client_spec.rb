@@ -104,18 +104,18 @@ module VCAP::CloudController
 
       it 'sends a stage message to the dea' do
         stub_request(:post, post_url).with(body: /#{staging_msg}/, headers: { 'Content-Type' => 'application/json' }).to_return(status: [202, 'Accepted'])
-        expect(Dea::Client.stage(stager_url, staging_msg)).to be true
+        expect(Dea::Client.stage(stager_url, staging_msg)).to be 202
       end
 
       context 'when an error occurs' do
         context 'when we get a status of 404' do
-          it 'returns false' do
+          it 'returns 404' do
             stub_request(:post, post_url).with(body: /#{staging_msg}/, headers: { 'Content-Type' => 'application/json' }).to_return(status: [404, 'Not Found'])
-            expect(Dea::Client.stage(stager_url, staging_msg)).to be false
+            expect(Dea::Client.stage(stager_url, staging_msg)).to eq 404
           end
         end
 
-        context 'when we get a status other than 202 or 404' do
+        context 'when we get a status other than 202, 404 or 503' do
           it 'raises an error' do
             stub_request(:post, post_url).with(body: /#{staging_msg}/, headers: { 'Content-Type' => 'application/json' }).to_return(status: [500, 'Internal Server Error'])
             expect { Dea::Client.stage(stager_url, staging_msg) }.to raise_error CloudController::Errors::ApiError, /received 500 from #{post_url}/
@@ -126,6 +126,13 @@ module VCAP::CloudController
           it 'raises an appropriate error' do
             stub_request(:post, post_url).with(body: /#{staging_msg}/, headers: { 'Content-Type' => 'application/json' }).to_raise 'failed to connect'
             expect { Dea::Client.stage(stager_url, staging_msg) }.to raise_error CloudController::Errors::ApiError, /#{stager_url}.*failed to connect/
+          end
+        end
+
+        context 'when we get a 503' do
+          it 'returns a 503' do
+            stub_request(:post, post_url).with(body: /#{staging_msg}/, headers: { 'Content-Type' => 'application/json' }).to_return(status: [503, 'Service Unavailable'])
+            expect(Dea::Client.stage(stager_url, staging_msg)).to eq 503
           end
         end
       end

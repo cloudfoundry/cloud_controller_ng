@@ -47,8 +47,7 @@ module VCAP::CloudController
           begin
             response = @http_client.post("#{url}/v1/stage", header: { 'Content-Type' => 'application/json' }, body: MultiJson.dump(msg))
             status = response.status
-            return true if status == 202
-            return false if status == 404
+            return status if [202, 404, 503].include?(status)
           rescue => e
             raise ApiError.new_from_details('StagerError', "url: #{url}/v1/stage, error: #{e.message}")
           end

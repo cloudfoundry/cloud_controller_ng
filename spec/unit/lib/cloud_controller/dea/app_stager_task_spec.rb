@@ -95,7 +95,7 @@ module VCAP::CloudController
           expect(app).to receive(:update).with({ package_state: 'PENDING', staging_task_id: staging_task.task_id })
           expect(message_bus).to receive(:publish).with('staging.stop', { app_id: app.guid })
           expect(dea_pool).to receive(:reserve_app_memory).with(stager_id, app.memory)
-          expect(Dea::Client).to receive(:stage).with(dea_advertisement.url, staging_message).and_return(true)
+          expect(Dea::Client).to receive(:stage).with(dea_advertisement.url, staging_message).and_return(202)
           expect(message_bus).not_to receive(:publish).with('staging.my_stager.start', staging_task.staging_request)
           staging_task.stage
         end
@@ -103,7 +103,7 @@ module VCAP::CloudController
         context 'when staging is not supported' do
           it 'failsover to NATs' do
             expect(message_bus).to receive(:publish).with('staging.stop', { app_id: app.guid })
-            expect(Dea::Client).to receive(:stage).with(dea_advertisement.url, staging_message).and_return(false)
+            expect(Dea::Client).to receive(:stage).with(dea_advertisement.url, staging_message).and_return(404)
             expect(message_bus).to receive(:publish).with('staging.my_stager.start', staging_task.staging_request)
 
             stage
@@ -115,14 +115,24 @@ module VCAP::CloudController
 
           before do
             allow(staging_task).to receive(:logger).and_return(logger)
-            allow(Dea::Client).to receive(:stage).and_raise 'failure'
             allow(logger).to receive(:info)
           end
 
           it 'marks app as failed and raises an error' do
+            allow(Dea::Client).to receive(:stage).and_raise 'failure'
+
             expect(app).to receive(:mark_as_failed_to_stage).with('StagingError')
             expect(logger).to receive(:error).with(/failure/)
             expect { staging_task.stage }.to raise_error 'failure'
+          end
+
+          context 'when the dea chosen returns a 503' do
+            it 'retries to stage' do
+              expect(Dea::Client).to receive(:stage).and_return(503, 202)
+              expect(staging_task).to receive(:stage).twice.and_call_original
+
+              staging_task.stage
+            end
           end
         end
       end
