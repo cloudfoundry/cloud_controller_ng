@@ -14,6 +14,11 @@ module UserHelpers
     set_current_user(user, { admin: true }.merge(opts))
   end
 
+  def set_current_user_as_admin_read_only(opts={})
+    user = opts.delete(:user) || VCAP::CloudController::User.make
+    set_current_user(user, { admin_read_only: true }.merge(opts))
+  end
+
   def user_token(user, opts={})
     token_coder = CF::UAA::TokenCoder.new(audience_ids: TestConfig.config[:uaa][:resource_id],
                                           skey: TestConfig.config[:uaa][:symmetric_secret],
@@ -27,6 +32,10 @@ module UserHelpers
 
       if opts[:admin]
         scopes << 'cloud_controller.admin'
+      end
+
+      if opts[:admin_read_only]
+        scopes << 'cloud_controller.admin_read_only'
       end
 
       user_token = token_coder.encode(

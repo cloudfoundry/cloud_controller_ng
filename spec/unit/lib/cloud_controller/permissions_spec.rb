@@ -18,6 +18,13 @@ module VCAP::CloudController
           end
         end
 
+        context 'and the user is a read only admin' do
+          it 'returns true' do
+            set_current_user(user, { admin_read_only: true })
+            expect(permissions.can_read_from_space?(space_guid, org_guid)).to be true
+          end
+        end
+
         context 'and user is not an admin' do
           it 'return false' do
             set_current_user(user)

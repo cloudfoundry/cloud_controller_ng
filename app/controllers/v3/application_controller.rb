@@ -101,7 +101,9 @@ class ApplicationController < ActionController::Base
 
   def check_read_permissions!
     read_scope = SecurityContext.scopes.include?('cloud_controller.read')
-    raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !read_scope
+    admin_read_only_scope = SecurityContext.scopes.include?('cloud_controller.admin_read_only')
+
+    raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !read_scope && !admin_read_only_scope
   end
 
   def check_write_permissions!

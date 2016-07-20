@@ -21,7 +21,7 @@ class VCAP::CloudController::Permissions
   end
 
   def can_read_from_space?(space_guid, org_guid)
-    roles.admin? ||
+    roles.admin? || roles.admin_read_only? ||
       membership.has_any_roles?(ROLES_FOR_READING, space_guid, org_guid)
   end
 
