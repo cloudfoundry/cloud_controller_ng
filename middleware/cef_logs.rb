@@ -27,12 +27,12 @@ module CloudFoundry
           "suid=#{escape_extension(user_guid)} " \
           "request=#{escape_extension(request.filtered_path)} "\
           "requestMethod=#{escape_extension(request.method)} " \
-          "src=#{escape_extension(client_ip(request))} dst=#{@external_ip} " \
+          "src=#{escape_extension(request.ip)} dst=#{@external_ip} " \
           "cs1Label=userAuthenticationMechanism cs1=#{auth_method} " \
           "cs2Label=vcapRequestId cs2=#{escape_extension(env['cf.request_id'])} " \
           "cs3Label=result cs3=#{get_result(status)} " \
           "cs4Label=httpStatusCode cs4=#{status} " \
-          "cs5Label=xForwardedFor cs5=#{escape_extension(request.headers['HTTP_X_FORWARDED_FOR'])}" \
+          "cs5Label=xForwardedFor cs5=#{escape_extension(request.headers['HTTP_X_FORWARDED_FOR'])}"
         )
 
         [status, headers, body]
@@ -75,13 +75,6 @@ module CloudFoundry
       end
 
       private
-
-      # When the request is proxied by another
-      # server like HAProxy or Nginx, the IP address that made the original
-      # request will be put in an X-Forwarded-For header
-      def client_ip(request)
-        request.headers['HTTP_X_FORWARDED_FOR'].split(', ').first
-      end
 
       def escape_extension(text)
         return '' if text.nil?
