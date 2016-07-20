@@ -7,6 +7,7 @@ module CloudFoundry
       subject(:middleware) { described_class.new(app, logger, '10.10.10.100') }
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:logger) { double('logger', info: nil) }
+      let(:headers) { ActionDispatch::Http::Headers.new({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip, another_forwarded_ip' }) }
       let(:fake_request) do
         instance_double(
           ActionDispatch::Request,
@@ -14,7 +15,7 @@ module CloudFoundry
           ip:            'ip',
           filtered_path: 'filtered_path',
           path:          'plain_path',
-          headers:       { 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip', },
+          headers:       headers,
           authorization: true
         )
       end
@@ -54,16 +55,26 @@ module CloudFoundry
             'suser=zach-loves-cake suid=some-guid ' \
             'request=filtered_path ' \
             'requestMethod=request_method ' \
-            'src=ip ' \
+            'src=forwarded_ip ' \
             'dst=10.10.10.100 ' \
             'cs1Label=userAuthenticationMechanism cs1=oauth-access-token ' \
             "cs2Label=vcapRequestId cs2=#{request_id} " \
             'cs3Label=result cs3=success ' \
             'cs4Label=httpStatusCode cs4=200 ' \
-            'cs5Label=xForwardedFor cs5=forwarded_ip'
+            'cs5Label=xForwardedFor cs5=forwarded_ip, another_forwarded_ip'
           )
 
           Timecop.return
+        end
+
+        context 'when HTTP_X_FORWARDED_FOR is not present' do
+          let(:headers) { ActionDispatch::Http::Headers.new }
+
+          it 'does not raise' do
+            expect {
+              middleware.call(env)
+            }.not_to raise_error
+          end
         end
 
         context 'when using basic auth' do
@@ -161,13 +172,13 @@ module CloudFoundry
             'suser=zach-loves-cake suid=some-guid ' \
             'request=filtered_path ' \
             'requestMethod=a|b ' \
-            'src=ip ' \
+            'src=forwarded_ip ' \
             'dst=10.10.10.100 ' \
             'cs1Label=userAuthenticationMechanism cs1=oauth-access-token ' \
             'cs2Label=vcapRequestId cs2=ID ' \
             'cs3Label=result cs3=success ' \
             'cs4Label=httpStatusCode cs4=200 ' \
-            'cs5Label=xForwardedFor cs5=forwarded_ip'
+            'cs5Label=xForwardedFor cs5=forwarded_ip, another_forwarded_ip'
           )
         end
 
@@ -185,13 +196,13 @@ module CloudFoundry
             'suser=zach-loves-cake suid=some-guid ' \
             'request=filtered_path ' \
             'requestMethod=a\\\\b ' \
-            'src=ip ' \
+            'src=forwarded_ip ' \
             'dst=10.10.10.100 ' \
             'cs1Label=userAuthenticationMechanism cs1=oauth-access-token ' \
             'cs2Label=vcapRequestId cs2=ID ' \
             'cs3Label=result cs3=success ' \
             'cs4Label=httpStatusCode cs4=200 ' \
-            'cs5Label=xForwardedFor cs5=forwarded_ip'
+            'cs5Label=xForwardedFor cs5=forwarded_ip, another_forwarded_ip'
           )
         end
 
@@ -208,13 +219,13 @@ module CloudFoundry
             'suser=pot\\\\ato suid=some-guid ' \
             'request=filtered_path ' \
             'requestMethod=request_method ' \
-            'src=ip ' \
+            'src=forwarded_ip ' \
             'dst=10.10.10.100 ' \
             'cs1Label=userAuthenticationMechanism cs1=oauth-access-token ' \
             'cs2Label=vcapRequestId cs2=ID ' \
             'cs3Label=result cs3=success ' \
             'cs4Label=httpStatusCode cs4=200 ' \
-            'cs5Label=xForwardedFor cs5=forwarded_ip'
+            'cs5Label=xForwardedFor cs5=forwarded_ip, another_forwarded_ip'
           )
         end
 
@@ -231,13 +242,13 @@ module CloudFoundry
             'suser=pot\=ato suid=some-guid ' \
             'request=filtered_path ' \
             'requestMethod=request_method ' \
-            'src=ip ' \
+            'src=forwarded_ip ' \
             'dst=10.10.10.100 ' \
             'cs1Label=userAuthenticationMechanism cs1=oauth-access-token ' \
             'cs2Label=vcapRequestId cs2=ID ' \
             'cs3Label=result cs3=success ' \
             'cs4Label=httpStatusCode cs4=200 ' \
-            'cs5Label=xForwardedFor cs5=forwarded_ip'
+            'cs5Label=xForwardedFor cs5=forwarded_ip, another_forwarded_ip'
           )
         end
       end
