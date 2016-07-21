@@ -10,7 +10,7 @@ module VCAP::CloudController
           state:                              state_name || app.state,
           previous_state:                     app.initial_value(:state),
           package_state:                      app.package_state,
-          previous_package_state:             app.initial_value(:package_state),
+          previous_package_state:             'UNKNOWN',
           instance_count:                     app.instances,
           previous_instance_count:            app.initial_value(:instances),
           memory_in_mb_per_instance:          app.memory,
@@ -20,7 +20,7 @@ module VCAP::CloudController
           org_guid:                           app.space.organization_guid,
           space_guid:                         app.space_guid,
           space_name:                         app.space.name,
-          buildpack_guid:                     buildpack_guid_for_app(app),
+          buildpack_guid:                     app.detected_buildpack_guid,
           buildpack_name:                     buildpack_name_for_app(app),
           parent_app_guid:                    app.app.guid,
           parent_app_name:                    app.app.name,
@@ -29,22 +29,7 @@ module VCAP::CloudController
       end
 
       def buildpack_name_for_app(app)
-        # if !app.droplet.is_a?(DropletModel)
-          app.custom_buildpack_url || app.detected_buildpack_name
-        # else
-        #   process = app
-        #   droplet = process.app.droplet
-        #   return nil unless droplet.present?
-        #   return droplet.buildpack_receipt_buildpack if droplet.buildpack_receipt_buildpack.present?
-        #
-        #   if droplet.lifecycle_data && droplet.lifecycle_data.class::LIFECYCLE_TYPE != 'docker'
-        #     droplet.lifecycle_data.buildpack
-        #   end
-        # end
-      end
-
-      def buildpack_guid_for_app(app)
-        app.detected_buildpack_guid
+        app.custom_buildpack_url || app.detected_buildpack_name
       end
 
       def create_from_task(task, state)
@@ -104,31 +89,60 @@ module VCAP::CloudController
         AppUsageEvent.dataset.truncate
 
         column_map = {
-          app_name:                           "#{AppModel.table_name}__name".to_sym,
+          app_name:                           :parent_app__name,
           guid:                               "#{App.table_name}__guid".to_sym,
           app_guid:                           "#{App.table_name}__guid".to_sym,
           state:                              "#{App.table_name}__state".to_sym,
           previous_state:                     "#{App.table_name}__state".to_sym,
-          package_state:                      "#{App.table_name}__package_state".to_sym,
-          previous_package_state:             "#{App.table_name}__package_state".to_sym,
+          package_state:                      Sequel.case(
+            [
+              [{ latest_droplet__state: DropletModel::FAILED_STATE }, 'FAILED'],
+              [{ latest_droplet__state: DropletModel::STAGED_STATE, latest_droplet__guid: :current_droplet__guid }, 'STAGED'],
+              [{ latest_package__state: PackageModel::FAILED_STATE }, 'FAILED'],
+            ],
+            'PENDING'
+          ),
+          previous_package_state:             'UNKNOWN',
           instance_count:                     "#{App.table_name}__instances".to_sym,
           previous_instance_count:            "#{App.table_name}__instances".to_sym,
           memory_in_mb_per_instance:          "#{App.table_name}__memory".to_sym,
           previous_memory_in_mb_per_instance: "#{App.table_name}__memory".to_sym,
-          buildpack_guid:                     "#{App.table_name}__detected_buildpack_guid".to_sym,
-          buildpack_name:                     "#{App.table_name}__detected_buildpack_name".to_sym,
+          buildpack_guid:                     :current_droplet__buildpack_receipt_buildpack_guid,
+          buildpack_name:                     :current_droplet__buildpack_receipt_buildpack,
           space_guid:                         "#{Space.table_name}__guid".to_sym,
           space_name:                         "#{Space.table_name}__name".to_sym,
           org_guid:                           "#{Organization.table_name}__guid".to_sym,
           created_at:                         Sequel.datetime_class.now,
         }
 
-        usage_query = App.join(AppModel.table_name, guid: :app_guid).
-                      join(Space.table_name, guid: :space_guid).
-                      join(Organization.table_name, id: :organization_id).
-                      select(*column_map.values).
-                      where("#{App.table_name}__state".to_sym => 'STARTED').
-                      order("#{App.table_name}__id".to_sym)
+        latest_package_query = PackageModel.select(:app_guid).select_append { max(id).as(:id) }.group(:app_guid)
+        latest_droplet_query = DropletModel.select(:package_guid).select_append { max(id).as(:id) }.group(:package_guid)
+
+        usage_query =
+          App.
+          join(AppModel, { guid: :app_guid }, table_alias: :parent_app).
+          join(Space, guid: :space_guid).
+          join(Organization, id: :organization_id).
+          left_join(DropletModel, { guid: :parent_app__droplet_guid }, table_alias: :current_droplet).
+          left_join(
+            PackageModel,
+              {
+                guid: PackageModel.select(:guid).join(latest_package_query, { app_guid: :app_guid, id: :id }, table_alias: :b),
+                latest_package__app_guid: :parent_app__guid
+              },
+              table_alias: :latest_package
+            ).
+          left_join(
+            DropletModel,
+              {
+                guid: DropletModel.select(:guid).join(latest_droplet_query, { package_guid: :package_guid, id: :id }, table_alias: :b),
+                latest_droplet__package_guid: :latest_package__guid
+              },
+              table_alias: :latest_droplet
+            ).
+          select(*column_map.values).
+          where("#{App.table_name}__state".to_sym => 'STARTED').
+          order("#{App.table_name}__id".to_sym)
 
         AppUsageEvent.insert(column_map.keys, usage_query)
       end

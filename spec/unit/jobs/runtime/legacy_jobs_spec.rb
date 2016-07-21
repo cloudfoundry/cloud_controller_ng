@@ -16,11 +16,6 @@ RSpec.describe 'Legacy Jobs' do
     it { is_expected.to be_a(VCAP::CloudController::Jobs::Runtime::DropletDeletion) }
   end
 
-  describe ::DropletUploadJob do
-    subject { ::DropletUploadJob.new('/a/b', 'app_id') }
-    it { is_expected.to be_a(VCAP::CloudController::Jobs::Runtime::DropletUpload) }
-  end
-
   describe ::ModelDeletionJob do
     subject { ::ModelDeletionJob.new(VCAP::CloudController::Space, 'space-guid') }
     it { is_expected.to be_a(VCAP::CloudController::Jobs::Runtime::ModelDeletion) }

@@ -578,10 +578,13 @@ RSpec.describe DropletsController, type: :controller do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:space) { droplet.space }
+    let(:stagers) { instance_double(VCAP::CloudController::Stagers, stager_for_app: stager) }
+    let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stop_stage: nil) }
 
     before do
       allow_user_read_access(user, space: space)
       allow_user_write_access(user, space: space)
+      CloudController::DependencyLocator.instance.register(:stagers, stagers)
     end
 
     it 'returns a 204 NO CONTENT' do

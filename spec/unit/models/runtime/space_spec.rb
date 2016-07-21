@@ -454,15 +454,15 @@ module VCAP::CloudController
       let(:space_quota) { SpaceQuotaDefinition.make(memory_limit: 500) }
       let(:space) { Space.make(space_quota_definition: space_quota, organization: space_quota.organization) }
 
-      it 'returns true if there is enough memory remaining when no apps are running' do
+      it 'returns true if there is enough memory remaining when no processes are running' do
         AppFactory.make(space: space, memory: 50, instances: 1)
 
         expect(space.has_remaining_memory(500)).to eq(true)
         expect(space.has_remaining_memory(501)).to eq(false)
       end
 
-      it 'returns true if there is enough memory remaining when apps are consuming memory' do
-        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
+      it 'returns true if there is enough memory remaining when processes are consuming memory' do
+        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'other')
         AppFactory.make(space: space, memory: 50, instances: 1, state: 'STARTED')
 
         expect(space.has_remaining_memory(50)).to eq(true)

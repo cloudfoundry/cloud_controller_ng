@@ -39,7 +39,7 @@ module VCAP::CloudController
         rescue => e
           destination_droplet.db.transaction do
             destination_droplet.lock!
-            destination_droplet.error = "failed to copy - #{e.message}"
+            destination_droplet.error_description = "failed to copy - #{e.message}"
             destination_droplet.state = DropletModel::FAILED_STATE
             destination_droplet.save
           end

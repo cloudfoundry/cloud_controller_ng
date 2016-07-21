@@ -225,6 +225,8 @@ Sequel.migration do
       drop_column :package_pending_since
       drop_column :deleted_at
       drop_column :staging_task_id
+      drop_column :detected_buildpack_guid
+      drop_column :detected_buildpack_name
     end
   end
 end

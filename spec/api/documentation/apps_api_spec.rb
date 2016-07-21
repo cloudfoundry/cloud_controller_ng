@@ -268,7 +268,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   get '/v2/apps/:guid/instances' do
     include_context 'guid_parameter'
 
-    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED', package_hash: 'abc', package_state: 'STAGED') }
+    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED') }
 
     example 'Get the instance information for a STARTED App' do
       explanation <<-EOD
@@ -334,7 +334,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   get '/v2/apps/:guid/stats' do
     include_context 'guid_parameter'
 
-    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED', package_hash: 'abc') }
+    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED') }
 
     example 'Get detailed stats for a STARTED App' do
       explanation <<-EOD

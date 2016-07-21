@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'models/runtime/droplet_uploader'
 
 module VCAP::CloudController
   RSpec.describe DownloadDropletsController do

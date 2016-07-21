@@ -21,11 +21,7 @@ module VCAP::CloudController
 
         # this will force a query, may want to eager load processes in
         # AppFetcher
-        app.processes.each do |process|
-          process.update({
-            state: 'STOPPED',
-          })
-        end
+        app.processes.each { |process| process.update(state: 'STOPPED') }
       end
     rescue Sequel::ValidationFailed => e
       raise InvalidApp.new(e.message)

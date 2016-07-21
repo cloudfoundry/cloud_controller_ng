@@ -7,7 +7,8 @@ module VCAP::CloudController::Presenters::V3
       VCAP::CloudController::DropletModel.make(
         :buildpack,
         state:                 VCAP::CloudController::DropletModel::STAGED_STATE,
-        error:                 'example error',
+        error_id:              'FAILED',
+        error_description:     'things went all sorts of bad',
         process_types:         { 'web' => 'npm start', 'worker' => 'start worker' },
         environment_variables: { 'elastic' => 'runtime' },
         staging_memory_in_mb:  234,
@@ -32,13 +33,13 @@ module VCAP::CloudController::Presenters::V3
 
         it 'presents the droplet as a hash' do
           expect(result[:guid]).to eq(droplet.guid)
-          expect(result[:state]).to eq(droplet.state)
-          expect(result[:error]).to eq(droplet.error)
+          expect(result[:state]).to eq('STAGED')
+          expect(result[:error]).to eq('FAILED - things went all sorts of bad')
 
           expect(result[:lifecycle][:type]).to eq('buildpack')
           expect(result[:lifecycle][:data]['stack']).to eq('the-happiest-stack')
           expect(result[:lifecycle][:data]['buildpack']).to eq('the-happiest-buildpack')
-          expect(result[:environment_variables]).to eq(droplet.environment_variables)
+          expect(result[:environment_variables]).to eq({ 'elastic' => 'runtime' })
           expect(result[:staging_memory_in_mb]).to eq(234)
           expect(result[:staging_disk_in_mb]).to eq(934)
 

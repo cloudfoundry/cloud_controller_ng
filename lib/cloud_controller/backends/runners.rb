@@ -47,11 +47,11 @@ module VCAP::CloudController
 
     def diego_apps_cache_data(batch_size, last_id)
       diego_apps = App.
-        diego.
-        runnable.
-        where("#{App.table_name}.id > ?", last_id).
-        order("#{App.table_name}__id".to_sym).
-        limit(batch_size)
+                   diego.
+                   runnable.
+                   where("#{App.table_name}.id > ?", last_id).
+                   order("#{App.table_name}__id".to_sym).
+                   limit(batch_size)
 
       diego_apps = diego_apps.buildpack_type unless FeatureFlag.enabled?(:diego_docker)
 
@@ -65,22 +65,22 @@ module VCAP::CloudController
 
     def dea_apps(batch_size, last_id)
       query = App.select_all(App.table_name).
-        dea.
-        where("#{App.table_name}.id > ?", last_id).
-        order("#{App.table_name}__id".to_sym).
-        limit(batch_size)
+              dea.
+              where("#{App.table_name}.id > ?", last_id).
+              order("#{App.table_name}__id".to_sym).
+              limit(batch_size)
 
       query.all
     end
 
     def dea_apps_hm9k(batch_size, last_id)
       query = App.select_all(App.table_name).
-        runnable.
-        dea.
-        where("#{App.table_name}.id > ?", last_id).
-        order("#{App.table_name}__id".to_sym).
-        limit(batch_size).
-        eager(:current_droplet, package: :latest_droplet)
+              runnable.
+              dea.
+              where("#{App.table_name}.id > ?", last_id).
+              order("#{App.table_name}__id".to_sym).
+              limit(batch_size).
+              eager(:current_droplet, package: :latest_droplet)
 
       apps = query.all.reject { |a| a.package_state == 'FAILED' }
 

@@ -748,7 +748,7 @@ RSpec.describe 'Apps' do
         package_guid:                package_model.guid,
         buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-name',
-        error:                       'example error',
+        error_description: 'example error',
         environment_variables:       { 'cloud' => 'foundry' },
         execution_metadata: 'some-data',
         droplet_hash: 'shalalala',

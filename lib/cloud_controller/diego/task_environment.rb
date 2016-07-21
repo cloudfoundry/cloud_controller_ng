@@ -9,10 +9,10 @@ module VCAP::CloudController
       end
 
       def build(additional_variables={})
-        app_env              = @app.environment_variables || {}
+        app_env = @app.environment_variables || {}
         additional_variables ||= {}
 
-        vars_builder     = VCAP::VarsBuilder.new(
+        vars_builder = VCAP::VarsBuilder.new(
           @app,
           memory_limit:       @task.memory_in_mb,
           staging_disk_in_mb: default_disk_limit,

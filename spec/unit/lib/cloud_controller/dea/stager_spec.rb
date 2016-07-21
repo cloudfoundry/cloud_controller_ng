@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:runners) { instance_double(Runners) }
       let(:runner) { double(:Runner) }
       let(:stager_task) { instance_double(AppStagerTask) }
-      let(:staging_details) { instance_double(Diego::StagingDetails, droplet: process.latest_droplet)}
+      let(:staging_details) { instance_double(Diego::StagingDetails, droplet: process.latest_droplet) }
 
       let(:reply_json_error) { nil }
       let(:reply_error_info) { nil }

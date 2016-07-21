@@ -36,7 +36,7 @@ module VCAP::CloudController
           allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return('www.droplet.url')
           allow_any_instance_of(VCAP::CloudController::Diego::TaskProtocol).
             to receive(:envs_for_diego).
-              and_return(expected_envs)
+            and_return(expected_envs)
         end
 
         let(:expected_envs) { [{ 'name' => 'VCAP_APPLICATION', 'value' => 'utako' }, { 'name' => 'VCAP_SERVICES', 'value' => 'simon' }] }

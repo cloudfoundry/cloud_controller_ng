@@ -12,7 +12,7 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @app_event_repository = dependencies.fetch(:app_event_repository)
-      @stagers               = dependencies.fetch(:stagers)
+      @stagers = dependencies.fetch(:stagers)
     end
 
     post "#{path_guid}/restage", :restage

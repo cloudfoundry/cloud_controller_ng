@@ -5,7 +5,6 @@ module VCAP::CloudController::Diego
   RSpec.describe StagingRequest do
     let(:app) do
       VCAP::CloudController::AppFactory.make(
-        staging_task_id:  'staging-task-id',
         stack:            VCAP::CloudController::Stack.default,
         file_descriptors: 16384,
         memory:           1024,

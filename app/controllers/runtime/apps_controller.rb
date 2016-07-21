@@ -138,7 +138,7 @@ module VCAP::CloudController
     get '/v2/apps/:guid/droplet/download', :download_droplet
     def download_droplet(guid)
       app = find_guid_and_validate_access(:read, guid)
-      blob_dispatcher.send_or_redirect_blob(app.current_droplet.try(:blob))
+      blob_dispatcher.send_or_redirect(guid: app.current_droplet.try(:blobstore_key))
     rescue CloudController::Errors::BlobNotFound
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}")
     end
@@ -234,7 +234,8 @@ module VCAP::CloudController
 
           if request_attrs.key?('stack_guid')
             v3_app.lifecycle_data.stack = Stack.find(guid: request_attrs['stack_guid']).try(:name)
-            app.mark_for_restaging
+            v3_app.update(droplet: nil)
+            app.reload
           end
         elsif request_attrs.key?('docker_image') && !case_insensitive_equals(app.docker_image, request_attrs['docker_image'])
           create_message = PackageCreateMessage.new({ type: 'docker', app_guid: v3_app.guid, data: { image: request_attrs['docker_image'] } })
@@ -257,6 +258,8 @@ module VCAP::CloudController
         app.docker_credentials_json = request_attrs['docker_credentials_json'] if request_attrs.key?('docker_credentials_json')
         app.ports                   = request_attrs['ports'] if request_attrs.key?('ports')
         app.route_guids             = request_attrs['route_guids'] if request_attrs.key?('route_guids')
+
+        validate_package_is_uploaded!(app)
 
         app.save
         v3_app.save
@@ -335,6 +338,7 @@ module VCAP::CloudController
         )
 
         validate_buildpack!(app)
+        validate_package_is_uploaded!(app)
 
         app.save
 
@@ -390,6 +394,12 @@ module VCAP::CloudController
 
     def case_insensitive_equals(str1, str2)
       str1.casecmp(str2) == 0
+    end
+
+    def validate_package_is_uploaded!(app)
+      if app.needs_package_in_current_state? && !app.package_hash
+        raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
+      end
     end
   end
 end

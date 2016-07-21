@@ -86,7 +86,12 @@ module CloudController
           expect(uri.path).to eql "/staging/v3/droplets/#{droplet.guid}/download"
         end
 
-        context 'and the droplet does not exist' do
+        it 'returns nil when no droplet is requested' do
+          uri = url_generator.droplet_download_url(nil)
+          expect(uri).to be_nil
+        end
+
+        context 'when the droplet does not exist in the blobstore' do
           before { allow(droplet_blobstore).to receive_messages(exists?: false) }
 
           it 'returns nil' do

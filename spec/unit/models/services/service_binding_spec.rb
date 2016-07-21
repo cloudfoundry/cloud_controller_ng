@@ -190,21 +190,7 @@ module VCAP::CloudController
     end
 
     describe 'restaging' do
-      def fake_app_staging(app)
-        app.package_hash = 'abc'
-        app.add_new_droplet('def')
-        app.mark_as_staged
-        app.save
-        expect(app.needs_staging?).to eq(false)
-      end
-
-      let(:app) do
-        app = AppFactory.make
-        app.state = 'STARTED'
-        app.instances = 1
-        fake_app_staging(app)
-        app
-      end
+      let(:app) { AppFactory.make(state: 'STARTED', instances: 1) }
 
       let(:service_instance) { ManagedServiceInstance.make(space: app.space) }
 
@@ -216,28 +202,15 @@ module VCAP::CloudController
 
       it 'should not trigger restaging when directly destroying a binding' do
         binding = ServiceBinding.make(app: app, service_instance: service_instance)
-        app.refresh
-        fake_app_staging(app)
-        expect(app.needs_staging?).to be false
-
-        binding.destroy
-        app.refresh
-        expect(app.needs_staging?).to be false
+        expect { binding.destroy }.not_to change { app.refresh.needs_staging? }.from(false)
       end
 
       context 'when indirectly destroying a binding' do
         let(:binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
-        before do
-          app.refresh
-          fake_app_staging(app)
-          expect(app.needs_staging?).to be false
-        end
 
         it 'should not trigger restaging if the broker successfully unbinds' do
           stub_unbind(binding, status: 200)
-
-          app.remove_service_binding(binding)
-          expect(app.needs_staging?).to be false
+          expect { app.remove_service_binding(binding) }.not_to change { app.refresh.needs_staging? }.from(false)
         end
 
         it 'should raise a broker error if the broker cannot successfully unbind' do

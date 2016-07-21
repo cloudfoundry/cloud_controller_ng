@@ -30,7 +30,7 @@ module VCAP::CloudController
     serializes_via_json :process_types
 
     def error
-      e = [error_id, error_description].join(' - ')
+      e = [error_id, error_description].compact.join(' - ')
       e.blank? ? nil : e
     end
 

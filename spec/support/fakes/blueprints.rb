@@ -94,7 +94,7 @@ module VCAP::CloudController
     guid { Sham.guid }
     app { AppModel.make }
     name { Sham.name }
-    droplet { DropletModel.make(app_guid: app.guid) }
+    droplet { DropletModel.make(:staged, app: app) }
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::RUNNING_STATE }
     memory_in_mb { 256 }

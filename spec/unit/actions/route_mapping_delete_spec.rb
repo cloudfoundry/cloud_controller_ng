@@ -44,7 +44,6 @@ module VCAP::CloudController
 
         it 'notifies the dea if the process is started and staged' do
           expect(process.reload.routes).not_to be_empty
-          process.update(package_state: 'STAGED')
           process.update(state: 'STARTED')
           expect(Dea::Client).to receive(:update_uris).with(process)
           route_mapping_delete.delete(route_mapping)
@@ -54,7 +53,6 @@ module VCAP::CloudController
         it 'does not notify the dea if the process not started' do
           expect(process.reload.routes).not_to be_empty
           process.update(state: 'STOPPED')
-          process.update(package_state: 'STAGED')
           expect(Dea::Client).not_to receive(:update_uris).with(process)
           route_mapping_delete.delete(route_mapping)
           expect(process.reload.routes).to be_empty
@@ -63,7 +61,8 @@ module VCAP::CloudController
         it 'does not notify the dea if the process not staged' do
           expect(process.reload.routes).not_to be_empty
           process.update(state: 'STARTED')
-          process.update(package_state: 'PENDING')
+          process.current_droplet.destroy
+          process.reload
           expect(Dea::Client).not_to receive(:update_uris).with(process)
           route_mapping_delete.delete(route_mapping)
           expect(process.reload.routes).to be_empty

@@ -437,6 +437,22 @@ module VCAP::CloudController
           expect(package.image).to eq('some-image:latest')
         end
       end
+
+      context 'when starting an app without a package' do
+        it 'raises an error' do
+          request = {
+            name: 'maria',
+            space_guid: space.guid,
+            state: 'STARTED'
+          }
+
+          set_current_user(admin_user, admin: true)
+
+          post '/v2/apps', MultiJson.dump(request)
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to include('bits have not been uploaded')
+        end
+      end
     end
 
     describe 'docker image credentials' do
@@ -802,6 +818,7 @@ module VCAP::CloudController
         set_current_user(admin_user, admin: true)
 
         put "/v2/apps/#{v2_app.guid}", MultiJson.dump(request)
+        expect(last_response.status).to eq(201)
 
         v2_app.reload
         v3_app.reload
@@ -869,12 +886,7 @@ module VCAP::CloudController
         it 'changes the stack' do
           set_current_user(admin_user, admin: true)
 
-          app_obj = AppFactory.make(
-            package_hash:  'package-hash',
-            instances:     1,
-            droplet_hash:  'droplet-hash',
-            package_state: 'STAGED',
-            state:         'STARTED')
+          app_obj = AppFactory.make
 
           expect(app_obj.stack).not_to eq(new_stack)
 
@@ -904,9 +916,7 @@ module VCAP::CloudController
         end
 
         context 'when the app needs staged' do
-          let(:app_obj) do
-            App.make(state: 'STARTED')
-          end
+          let(:app_obj) { AppFactory.make(state: 'STARTED') }
 
           before do
             PackageModel.make(app: app_obj.app, package_hash: 'some-hash')
@@ -932,7 +942,6 @@ module VCAP::CloudController
           it 'does not mark the app for staging' do
             expect(app_obj.staged?).to be_falsey
             expect(app_obj.needs_staging?).to be_nil
-            expect(app_obj.package_pending_since).to be_nil
 
             put "/v2/apps/#{app_obj.guid}", MultiJson.dump({ stack_guid: new_stack.guid })
             expect(last_response.status).to eq(201)
@@ -940,7 +949,6 @@ module VCAP::CloudController
 
             expect(app_obj.staged?).to be_falsey
             expect(app_obj.needs_staging?).to be_nil
-            expect(app_obj.package_pending_since).to be_nil
           end
         end
       end
@@ -1066,6 +1074,16 @@ module VCAP::CloudController
               expect(app_stage).not_to have_received(:stage)
             end
           end
+        end
+      end
+
+      context 'when starting an app without a package' do
+        let(:app_obj) { App.make(instances: 1) }
+
+        it 'raises an error' do
+          put "/v2/apps/#{app_obj.guid}", MultiJson.dump({ state: 'STARTED' })
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to include('bits have not been uploaded')
         end
       end
     end
@@ -1524,9 +1542,9 @@ module VCAP::CloudController
 
       context 'when app will be staged', isolation: :truncation do
         let(:app_obj) do
-          AppFactory.make(state: 'STOPPED',
-                          droplet_hash: nil,
-                          instances: 1)
+          a = AppFactory.make(state: 'STOPPED', instances: 1)
+          a.current_droplet.destroy
+          a.reload
         end
         let(:stager_response) do
           Dea::StagingResponse.new('task_streaming_log_url' => 'streaming-log-url')
@@ -1580,8 +1598,7 @@ module VCAP::CloudController
       end
 
       it 'should return an error for an app without a droplet' do
-        app_obj.droplet_hash = nil
-        app_obj.save
+        app_obj.current_droplet.destroy
 
         get "/v2/apps/#{app_obj.guid}/droplet/download", MultiJson.dump({})
         expect(last_response.status).to eq(404)
@@ -1593,7 +1610,7 @@ module VCAP::CloudController
       let(:domain) do
         PrivateDomain.make(name: 'jesse.cloud', owning_organization: space.organization)
       end
-      let(:app_obj) { AppFactory.make(state: 'STARTED', package_state: 'STAGED') }
+      let(:app_obj) { AppFactory.make(state: 'STARTED') }
 
       before do
         FeatureFlag.create(name: 'diego_docker', enabled: true)
@@ -1621,7 +1638,6 @@ module VCAP::CloudController
         let(:docker_app) do
           AppFactory.make(
             state: 'STARTED',
-            package_state: 'STAGED',
             diego: true,
             docker_image: 'some-image',
           )
@@ -1843,7 +1859,7 @@ module VCAP::CloudController
 
     describe 'Validation messages' do
       let(:space) { app_obj.space }
-      let!(:app_obj) { App.make(state: 'STARTED') }
+      let!(:app_obj) { AppFactory.make(state: 'STARTED') }
 
       before do
         set_current_user(make_developer_for_space(space))

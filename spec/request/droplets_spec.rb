@@ -126,7 +126,7 @@ RSpec.describe 'Droplets' do
         package_guid:                package_model.guid,
         buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-name',
-        error:                       'example error',
+        error_description:                       'example error',
         environment_variables:       { 'cloud' => 'foundry' },
         execution_metadata: 'some-data',
         droplet_hash: 'shalalala',
@@ -214,7 +214,8 @@ RSpec.describe 'Droplets' do
         buildpack_receipt_stack_name:     'stack-1',
         environment_variables:            { 'yuu' => 'huuu' },
         staging_disk_in_mb:               235,
-        error:                            'example-error'
+        error_description:                'example-error',
+        state:                            VCAP::CloudController::DropletModel::STAGING_STATE
       )
     end
     let!(:droplet2) do
@@ -230,7 +231,7 @@ RSpec.describe 'Droplets' do
         staging_memory_in_mb:         123,
         staging_disk_in_mb:           456,
         execution_metadata:           'black-box-secrets',
-        error:                        'example-error'
+        error_description:                        'example-error'
       )
     end
 
@@ -430,6 +431,10 @@ RSpec.describe 'Droplets' do
   describe 'DELETE /v3/droplets/:guid' do
     let!(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, app_guid: app_model.guid) }
 
+    before do
+      stub_request(:delete, /#{TestConfig.config[:diego_stager_url]}/).to_return(status: 202)
+    end
+
     it 'deletes a droplet' do
       expect {
         delete "/v3/droplets/#{droplet.guid}", nil, developer_headers
@@ -458,7 +463,7 @@ RSpec.describe 'Droplets' do
         buildpack_receipt_stack_name:     'stack-1',
         environment_variables:            { 'yuu' => 'huuu' },
         staging_disk_in_mb:               235,
-        error:                            'example-error',
+        error_description:                            'example-error',
         state:                            VCAP::CloudController::DropletModel::PENDING_STATE,
       )
     end
@@ -475,7 +480,7 @@ RSpec.describe 'Droplets' do
         staging_memory_in_mb:         123,
         staging_disk_in_mb:           456,
         execution_metadata:           'black-box-secrets',
-        error:                        'example-error'
+        error_description:                        'example-error'
       )
     end
 
@@ -600,7 +605,7 @@ RSpec.describe 'Droplets' do
         buildpack_receipt_stack_name:     'stack-1',
         environment_variables:            { 'yuu' => 'huuu' },
         staging_disk_in_mb:               235,
-        error:                            'example-error',
+        error_description:                            'example-error',
         state:                            VCAP::CloudController::DropletModel::PENDING_STATE,
       )
     end
@@ -618,7 +623,7 @@ RSpec.describe 'Droplets' do
         staging_memory_in_mb:         123,
         staging_disk_in_mb:           456,
         execution_metadata:           'black-box-secrets',
-        error:                        'example-error'
+        error_description:                        'example-error'
       )
     end
 
@@ -734,7 +739,7 @@ RSpec.describe 'Droplets' do
         package_guid:                package_model.guid,
         buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-name',
-        error:                       nil,
+        error_description:                       nil,
         environment_variables:       { 'cloud' => 'foundry' },
         execution_metadata: 'some-data',
         droplet_hash: 'shalalala',

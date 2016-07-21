@@ -39,7 +39,7 @@ module VCAP::CloudController
             context 'when this is a docker process' do
               let(:process) do
                 AppFactory.make(
-                  :docker,
+                  docker_image:      'some-image',
                   command:           'start_me',
                   diego:             true,
                   type:              type,

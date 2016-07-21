@@ -47,7 +47,7 @@ class DropletsController < ApplicationController
 
     unauthorized! unless can_write?(space.guid)
 
-    droplet_deletor = DropletDelete.new(current_user.guid, current_user_email)
+    droplet_deletor = DropletDelete.new(current_user.guid, current_user_email, stagers)
     droplet_deletor.delete(droplet)
 
     head :no_content
@@ -103,6 +103,10 @@ class DropletsController < ApplicationController
   end
 
   private
+
+  def stagers
+    CloudController::DependencyLocator.instance.stagers
+  end
 
   def droplet_not_found!
     resource_not_found!(:droplet)

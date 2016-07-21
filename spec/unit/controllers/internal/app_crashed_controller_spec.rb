@@ -2,17 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe AppCrashedController do
-    let(:diego_app) do
-      AppFactory.make(
-        package_state: 'PENDING',
-        state: 'STARTED',
-        staging_task_id: 'task-1',
-        diego: true
-      )
-    end
-
+    let(:diego_app) { AppFactory.make(state: 'STARTED', diego: true) }
     let(:process_guid) { Diego::ProcessGuid.from(diego_app.guid, 'some-version-guid') }
-
     let(:url) { "/internal/apps/#{process_guid}/crashed" }
 
     let(:crashed_request) do
@@ -88,14 +79,7 @@ module VCAP::CloudController
     end
 
     context 'with a dea app' do
-      let(:dea_app) do
-        AppFactory.make.tap do |app|
-          app.package_state = 'PENDING'
-          app.state = 'STARTED'
-          app.staging_task_id = 'task-1'
-          app.save
-        end
-      end
+      let(:dea_app) { AppFactory.make(state: 'STARTED') }
 
       let(:process_guid) { Diego::ProcessGuid.from(dea_app.guid, 'some-version-guid') }
 

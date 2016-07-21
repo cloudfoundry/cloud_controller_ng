@@ -2,7 +2,6 @@ module VCAP::CloudController
   class DropletCopy
     CLONED_ATTRIBUTES = [
       :buildpack_receipt_buildpack_guid,
-      :detected_start_command,
       :salt,
       :process_types,
       :buildpack_receipt_buildpack,

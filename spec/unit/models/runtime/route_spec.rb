@@ -1061,8 +1061,8 @@ module VCAP::CloudController
     describe '#destroy' do
       it 'marks the apps routes as changed and sends an update to the dea' do
         space = Space.make
-        app1   = AppFactory.make(space: space, state: 'STARTED', package_state: 'STAGED')
-        app2   = AppFactory.make(space: space, state: 'STARTED', package_state: 'STAGED')
+        app1   = AppFactory.make(space: space, state: 'STARTED')
+        app2   = AppFactory.make(space: space, state: 'STARTED')
 
         route = Route.make(app_guids: [app1.guid, app2.guid], space: space)
 

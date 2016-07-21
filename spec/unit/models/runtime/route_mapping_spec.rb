@@ -163,7 +163,7 @@ module VCAP::CloudController
     end
 
     describe 'Docker mappings' do
-      let(:app_obj) { AppFactory.make(diego: true, docker_image: 'some-docker-image', package_state: 'PENDING') }
+      let(:app_obj) { AppFactory.make(diego: true, docker_image: 'some-docker-image') }
       let(:route) { Route.make(space: app_obj.space) }
 
       context 'when the app has no docker ports' do
@@ -183,15 +183,14 @@ module VCAP::CloudController
       context 'when the app has docker ports' do
         let(:app_obj) do
           app = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
-          app.add_droplet(Droplet.new(
-                            app: app,
-                            droplet_hash: 'the-droplet-hash',
-                            execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
-                          ))
-          app.droplet_hash = 'the-droplet-hash'
-          app
+          app.app.update(droplet: DropletModel.make(
+            :staged,
+            app:                app.app,
+            droplet_hash:       'the-droplet-hash',
+            execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
+          ))
+          app.reload
         end
-
         let(:mapping) { RouteMapping.new(app: app_obj, route: route) }
 
         it 'returns nil app_port' do

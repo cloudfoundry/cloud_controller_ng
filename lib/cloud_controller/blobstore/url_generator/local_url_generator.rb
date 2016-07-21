@@ -33,6 +33,7 @@ module CloudController
       end
 
       def droplet_download_url(droplet)
+        return nil unless droplet
         return nil unless @droplet_blobstore.exists?(droplet.blobstore_key)
 
         basic_auth_uri("/staging/v3/droplets/#{droplet.guid}/download")

@@ -26,15 +26,6 @@ module VCAP::CloudController
       expect(matching_validitor).to be_empty
     end
 
-it 'does' do
-  a = AppFactory.make
-
-  puts a.package.guid
-  z = App.where(guid: a.guid).eager(:current_droplet, package: :latest_droplet).all.first
-  puts z.package.guid
-
-end
-
     before do
       VCAP::CloudController::Seeds.create_seed_stacks
     end
@@ -80,20 +71,28 @@ end
 
     describe 'Associations' do
       it { is_expected.to have_timestamp_columns }
-      it { is_expected.to have_associated :droplets }
       it do
         is_expected.to have_associated :service_bindings, associated_instance: ->(app) {
-                                                                                 service_instance = ManagedServiceInstance.make(space: app.space)
-                                                                                 ServiceBinding.make(service_instance: service_instance, app: app)
-                                                                               }
+          service_instance = ManagedServiceInstance.make(space: app.space)
+          ServiceBinding.make(service_instance: service_instance, app: app)
+        }
       end
       it { is_expected.to have_associated :events, class: AppEvent }
       it { is_expected.to have_associated :routes, associated_instance: ->(app) { Route.make(space: app.space) } }
       it { is_expected.to have_associated :route_mappings, associated_instance: -> (app) { RouteMapping.make(app_id: app.id, route_id: Route.make(space: app.space).id) } }
 
+      it 'has a current_droplet from the parent app' do
+        parent_app = AppModel.make
+        droplet = DropletModel.make(app: parent_app, state: DropletModel::STAGED_STATE)
+        parent_app.update(droplet: droplet)
+        app = App.make(app: parent_app)
+
+        expect(app.current_droplet).to eq(parent_app.droplet)
+      end
+
       it 'has a space from the parent app' do
         parent_app = AppModel.make(space: space)
-        process = App.make
+        process    = App.make
         expect(process.space).not_to eq(space)
         process.update(app: parent_app)
         expect(process.reload.space).to eq(space)
@@ -101,14 +100,14 @@ end
 
       it 'has an organization from the parent app' do
         parent_app = AppModel.make(space: space)
-        process = App.make
+        process    = App.make
         expect(process.organization).not_to eq(org)
         process.update(app: parent_app).reload
         expect(process.organization).to eq(org)
       end
 
       it 'has a stack from the parent app' do
-        stack = Stack.make
+        stack      = Stack.make
         parent_app = AppModel.make(space: space)
         parent_app.lifecycle_data.update(stack: stack.name)
         process = App.make
@@ -386,7 +385,7 @@ end
           end
 
           let(:org) { Organization.make(quota_definition: quota) }
-          let(:space) { Space.make(organization: org, space_quota_definition: space_quota) }
+          let(:space) { Space.make(name: 'hi', organization: org, space_quota_definition: space_quota) }
           let(:parent_app) { AppModel.make(space: space) }
           subject!(:app) { AppFactory.make(app: parent_app, memory: 64, instances: 2, state: 'STARTED') }
 
@@ -424,7 +423,7 @@ end
 
           it 'should raise error when instance quota is exceeded' do
             quota.app_instance_limit = 4
-            quota.memory_limit = 512
+            quota.memory_limit       = 512
             quota.save
 
             app.instances = 5
@@ -433,7 +432,7 @@ end
 
           it 'should raise error when space instance quota is exceeded' do
             space_quota.app_instance_limit = 4
-            space_quota.memory_limit = 512
+            space_quota.memory_limit       = 512
             space_quota.save
             quota.memory_limit = 512
             quota.save
@@ -485,10 +484,10 @@ end
           it 'succeeds' do
             expect {
               AppFactory.make(docker_credentials_json: {
-                  'docker_user' => 'user',
-                  'docker_password' => 'password',
-                  'docker_email' => 'email',
-                })
+                'docker_user'     => 'user',
+                'docker_password' => 'password',
+                'docker_email'    => 'email',
+              })
             }.to_not raise_error
           end
         end
@@ -652,7 +651,7 @@ end
     describe '#stack' do
       it 'gets stack from the parent app' do
         desired_stack = Stack.make
-        app = App.make
+        app           = App.make
 
         expect(app.stack).not_to eq(desired_stack)
         app.app.lifecycle_data.update(stack: desired_stack.name)
@@ -677,131 +676,56 @@ end
       end
     end
 
-    describe 'current_droplet' do
-      context 'app is already staged' do
-        subject do
-          AppFactory.make(
-            instances: 1,
-            droplet_hash: 'droplet-hash')
-        end
-
-        it 'knows its current droplet' do
-          expect(subject.current_droplet).to be_instance_of(Droplet)
-          expect(subject.current_droplet.droplet_hash).to eq('droplet-hash')
-
-          new_droplet_hash = 'new droplet hash'
-          subject.add_new_droplet(new_droplet_hash)
-          expect(subject.reload.current_droplet.droplet_hash).to eq(new_droplet_hash)
-        end
-
-        context 'When it does not have a row in droplets table but has droplet hash column', droplet_cleanup: true do
-          before do
-            subject.droplet_hash = 'A-hash'
-            subject.save
-            subject.droplets_dataset.destroy
-          end
-
-          it 'knows its current droplet and persists it to the database' do
-            expect(subject.current_droplet).to be_instance_of(Droplet)
-            expect(subject.current_droplet.droplet_hash).to eq('A-hash')
-            expect(Droplet.find(droplet_hash: 'A-hash')).not_to be_nil
-          end
-        end
-
-        context 'When the droplet hash is nil' do
-          it 'should return nul' do
-            app_without_droplet = AppFactory.make(droplet_hash: nil)
-            expect(app_without_droplet.current_droplet).to be_nil
-          end
-        end
-      end
-    end
-
     describe '#execution_metadata' do
-      subject do
-        App.make
-      end
+      let(:parent_app) { AppModel.make }
+      let(:process) { App.make(app: parent_app) }
 
-      context 'v2' do
-        context 'when the app has a current droplet' do
-          before do
-            subject.add_droplet(Droplet.new(
-                                  app: subject,
-                                  droplet_hash: 'the-droplet-hash',
-                                  execution_metadata: 'some-staging-metadata',
-            ))
-            subject.droplet_hash = 'the-droplet-hash'
-          end
-
-          it "returns that droplet's staging metadata" do
-            expect(subject.execution_metadata).to eq('some-staging-metadata')
-          end
-        end
-
-        context 'when the app does not have a current droplet' do
-          it 'returns the empty string' do
-            expect(subject.current_droplet).to be_nil
-            expect(subject.execution_metadata).to eq('')
-          end
-        end
-      end
-
-      context 'v3' do
-        let(:v3_app) { AppModel.make }
-        let(:v2_app) do
-          AppFactory.make(
-            instances: 1,
-            app: v3_app
+      context 'when the app has a current droplet' do
+        let(:droplet) do
+          DropletModel.make(
+            app:                parent_app,
+            execution_metadata: 'some-other-metadata',
+            state:              VCAP::CloudController::DropletModel::STAGED_STATE
           )
         end
 
-        context 'when the app has a current droplet' do
-          let(:v3_droplet) do
-            DropletModel.make(
-              app: v3_app,
-              execution_metadata: 'some-other-metadata',
-              state: VCAP::CloudController::DropletModel::STAGED_STATE
-            )
-          end
-
-          before do
-            v3_app.droplet = v3_droplet
-            v3_app.save
-          end
-
-          it "returns that droplet's staging metadata" do
-            expect(v2_app.execution_metadata).to eq(v3_droplet.execution_metadata)
-          end
+        before do
+          parent_app.update(droplet: droplet)
         end
 
-        context 'when the app does not have a current droplet' do
-          it 'returns empty string' do
-            expect(v2_app.app.droplet).to be_nil
-            expect(v2_app.execution_metadata).to eq('')
-          end
+        it "returns that droplet's staging metadata" do
+          expect(process.execution_metadata).to eq(droplet.execution_metadata)
+        end
+      end
+
+      context 'when the app does not have a current droplet' do
+        it 'returns empty string' do
+          expect(process.current_droplet).to be_nil
+          expect(process.execution_metadata).to eq('')
         end
       end
     end
 
     describe '#detected_start_command' do
-      subject { App.make }
+      subject { AppFactory.make }
 
       context 'when the app has a current droplet' do
         before do
-          subject.add_droplet(Droplet.new(
-                                app: subject,
-                                droplet_hash: 'the-droplet-hash',
-                                detected_start_command: 'run-my-app',
-          ))
-          subject.droplet_hash = 'the-droplet-hash'
+          subject.current_droplet.update(process_types: { web: 'run-my-app' })
+          subject.reload
         end
 
-        it "returns that droplet's detected start command" do
+        it 'returns he web process type command from the droplet' do
           expect(subject.detected_start_command).to eq('run-my-app')
         end
       end
 
       context 'when the app does not have a current droplet' do
+        before do
+          subject.current_droplet.destroy
+          subject.reload
+        end
+
         it 'returns the empty string' do
           expect(subject.current_droplet).to be_nil
           expect(subject.detected_start_command).to eq('')
@@ -812,12 +736,12 @@ end
     describe 'bad relationships' do
       it 'should not associate an app with a route created on another space with a shared domain' do
         shared_domain = SharedDomain.make
-        app = AppFactory.make
+        app           = AppFactory.make
 
         other_space = Space.make(organization: app.space.organization)
-        route = Route.make(
-          host: Sham.host,
-          space: other_space,
+        route       = Route.make(
+          host:   Sham.host,
+          space:  other_space,
           domain: shared_domain
         )
 
@@ -859,13 +783,7 @@ end
             docker_email:        email
           }
         end
-        let(:app) do
-          AppFactory.make(
-            package_hash:            'deadbeef',
-            package_state:           'STAGED',
-            docker_credentials_json: docker_credentials,
-          )
-        end
+        let(:app) { AppFactory.make(docker_credentials_json: docker_credentials) }
 
         it 'does not mark an app for restage' do
           expect {
@@ -882,11 +800,11 @@ end
 
       context 'when there are database-like services' do
         before do
-          sql_service_plan = ServicePlan.make(service: Service.make(label: 'elephantsql-n/a'))
+          sql_service_plan     = ServicePlan.make(service: Service.make(label: 'elephantsql-n/a'))
           sql_service_instance = ManagedServiceInstance.make(space: space, service_plan: sql_service_plan, name: 'elephantsql-vip-uat')
           ServiceBinding.make(app: app, service_instance: sql_service_instance, credentials: { 'uri' => 'mysql://foo.com' })
 
-          banana_service_plan = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
+          banana_service_plan     = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
           banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
           ServiceBinding.make(app: app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
         end
@@ -898,11 +816,11 @@ end
 
       context 'when there are non-database-like services' do
         before do
-          banana_service_plan = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
+          banana_service_plan     = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
           banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
           ServiceBinding.make(app: app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
 
-          uncredentialed_service_plan = ServicePlan.make(service: Service.make(label: 'mysterious-n/a'))
+          uncredentialed_service_plan     = ServicePlan.make(service: Service.make(label: 'mysterious-n/a'))
           uncredentialed_service_instance = ManagedServiceInstance.make(space: space, service_plan: uncredentialed_service_plan, name: 'mysterious-mystery')
           ServiceBinding.make(app: app, service_instance: uncredentialed_service_instance, credentials: {})
         end
@@ -948,7 +866,7 @@ end
       end
 
       it 'saves the field as nil when overriding to empty string' do
-        app = AppFactory.make(command: 'echo hi')
+        app         = AppFactory.make(command: 'echo hi')
         app.command = ''
         app.save
         app.refresh
@@ -956,7 +874,7 @@ end
       end
 
       it 'saves the field as nil when set to nil' do
-        app = AppFactory.make(command: 'echo hi')
+        app         = AppFactory.make(command: 'echo hi')
         app.command = nil
         app.save
         app.refresh
@@ -964,7 +882,7 @@ end
       end
 
       it 'falls back to metadata value if command is not present' do
-        app = AppFactory.make(metadata: { command: 'echo hi' })
+        app         = AppFactory.make(metadata: { command: 'echo hi' })
         app.command = nil
         app.save
         app.refresh
@@ -1019,77 +937,6 @@ end
       end
     end
 
-    describe 'update_detected_buildpack' do
-      let(:app) { AppFactory.make }
-      let(:detect_output) { 'buildpack detect script output' }
-
-      context 'when detect output is available' do
-        it 'sets detected_buildpack with the output of the detect script' do
-          app.update_detected_buildpack(detect_output, nil)
-          expect(app.detected_buildpack).to eq(detect_output)
-        end
-      end
-
-      context 'when an admin buildpack is used for staging' do
-        let(:admin_buildpack) { Buildpack.make }
-        before do
-          app.app.lifecycle_data.update(buildpack: admin_buildpack.name)
-        end
-
-        it 'sets the buildpack guid of the buildpack used to stage when present' do
-          app.update_detected_buildpack(detect_output, admin_buildpack.key)
-          expect(app.detected_buildpack_guid).to eq(admin_buildpack.guid)
-        end
-
-        it 'sets the buildpack name to the admin buildpack used to stage' do
-          app.update_detected_buildpack(detect_output, admin_buildpack.key)
-          expect(app.detected_buildpack_name).to eq(admin_buildpack.name)
-        end
-      end
-
-      context 'when the buildpack key is missing (custom buildpack used)' do
-        let(:custom_buildpack_url) { 'https://example.com/repo.git' }
-        before do
-          app.app.lifecycle_data.update(buildpack: custom_buildpack_url)
-        end
-
-        it 'sets the buildpack name to the custom buildpack url when a buildpack key is missing' do
-          app.update_detected_buildpack(detect_output, nil)
-          expect(app.detected_buildpack_name).to eq(custom_buildpack_url)
-        end
-
-        it 'sets the buildpack guid to nil' do
-          app.update_detected_buildpack(detect_output, nil)
-          expect(app.detected_buildpack_guid).to be_nil
-        end
-      end
-
-      context 'when staging has completed' do
-        context 'and the app state remains STARTED' do
-          it 'creates an app usage event with BUILDPACK_SET as the state' do
-            app = AppFactory.make(state: 'STARTED')
-            expect {
-              app.update_detected_buildpack(detect_output, nil)
-            }.to change { AppUsageEvent.count }.by(1)
-            event = AppUsageEvent.last
-
-            expect(event.state).to eq('BUILDPACK_SET')
-            event.state = 'STARTED'
-            expect(event).to match_app(app)
-          end
-        end
-
-        context 'and the app state is no longer STARTED' do
-          it 'does ont create an app usage event' do
-            app = AppFactory.make(state: 'STOPPED')
-            expect {
-              app.update_detected_buildpack(detect_output, nil)
-            }.to_not change { AppUsageEvent.count }
-          end
-        end
-      end
-    end
-
     describe 'custom_buildpack_url' do
       let(:app) { App.make(app: parent_app) }
       context 'when a custom buildpack is associated with the app' do
@@ -1139,40 +986,19 @@ end
       end
     end
 
-    describe 'package_hash=' do
-      let(:app) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED') }
-
-      it 'should set the state to PENDING if the hash changes' do
-        app.package_hash = 'def'
-        expect(app.package_state).to eq('PENDING')
-        expect(app.package_hash).to eq('def')
-      end
-
-      it 'should set the package updated at to the current date' do
-        app.package_updated_at = nil
-        expect {
-          app.package_hash = 'def'
-        }.to change { app.package_updated_at }
-        expect(app.package_hash).to_not be_nil
-      end
-
-      it 'should not set the state to PENDING if the hash remains the same' do
-        app.package_hash = 'abc'
-        expect(app.package_state).to eq('STAGED')
-        expect(app.package_hash).to eq('abc')
-      end
-    end
-
     describe 'staged?' do
       let(:app) { AppFactory.make }
 
       it 'should return true if package_state is STAGED' do
-        app.package_state = 'STAGED'
+        expect(app.package_state).to eq('STAGED')
         expect(app.staged?).to be true
       end
 
       it 'should return false if package_state is PENDING' do
-        app.package_state = 'PENDING'
+        PackageModel.make(app: app.app)
+        app.reload
+
+        expect(app.package_state).to eq('PENDING')
         expect(app.staged?).to be false
       end
     end
@@ -1181,12 +1007,15 @@ end
       let(:app) { AppFactory.make }
 
       it 'should return true if package_state is PENDING' do
-        app.package_state = 'PENDING'
+        PackageModel.make(app: app.app)
+        app.reload
+
+        expect(app.package_state).to eq('PENDING')
         expect(app.pending?).to be true
       end
 
       it 'should return false if package_state is not PENDING' do
-        app.package_state = 'STARTED'
+        expect(app.package_state).to eq('STAGED')
         expect(app.pending?).to be false
       end
     end
@@ -1194,20 +1023,27 @@ end
     describe 'staging?' do
       let(:app) { AppFactory.make }
 
-      it 'should return true if package_state is PENDING and staging_task_id is not null' do
-        app.package_state = 'PENDING'
-        app.staging_task_id = 'some-non-null-value'
+      it 'should return true if the latest_droplet is PENDING' do
+        DropletModel.make(app: app.app, package: app.package, state: DropletModel::PENDING_STATE)
+        app.reload
         expect(app.staging?).to be true
       end
 
-      it 'should return false if package_state is not PENDING' do
-        app.package_state = 'STARTED'
-        app.staging_task_id = 'some-non-null-value'
+      it 'should return true if the latest_droplet is STAGING' do
+        DropletModel.make(app: app.app, package: app.package, state: DropletModel::STAGING_STATE)
+        app.reload
+        expect(app.staging?).to be true
+      end
+
+      it 'should return false if a new package has been uploaded but a droplet has not been created for it' do
+        PackageModel.make(app: app.app)
+        app.reload
         expect(app.staging?).to be false
       end
 
-      it 'should return false if staging_task_id is empty' do
-        app.package_state = 'PENDING'
+      it 'should return false if the latest_droplet is not PENDING or STAGING' do
+        DropletModel.make(app: app.app, package: app.package, state: DropletModel::STAGED_STATE)
+        app.reload
         expect(app.staging?).to be false
       end
     end
@@ -1215,13 +1051,19 @@ end
     describe 'failed?' do
       let(:app) { AppFactory.make }
 
-      it 'should return true if package_state is FAILED' do
-        app.package_state = 'FAILED'
+      it 'should return true if the latest_droplet is FAILED' do
+        app.latest_droplet.update(state: DropletModel::FAILED_STATE)
+        app.reload
+
+        expect(app.package_state).to eq('FAILED')
         expect(app.staging_failed?).to be true
       end
 
-      it 'should return false if package_state is not FAILED' do
-        app.package_state = 'STARTED'
+      it 'should return false if latest_droplet is not FAILED' do
+        app.latest_droplet.update(state: DropletModel::STAGED_STATE)
+        app.reload
+
+        expect(app.package_state).to eq('STAGED')
         expect(app.staging_failed?).to be false
       end
     end
@@ -1231,24 +1073,21 @@ end
 
       context 'when the app is started' do
         before do
-          app.state = 'STARTED'
-          app.instances = 1
+          app.update(state: 'STARTED', instances: 1)
         end
 
         it 'should return false if the package_hash is nil' do
-          app.package_hash = nil
-          expect(app.needs_staging?).to be nil
+          app.package.update(package_hash: nil)
+          expect(app.needs_staging?).to be_falsey
         end
 
         it 'should return true if PENDING is set' do
-          app.package_hash = 'abc'
-          app.package_state = 'PENDING'
-          expect(app.needs_staging?).to be true
+          PackageModel.make(app: app.app, package_hash: 'hash')
+          expect(app.reload.needs_staging?).to be true
         end
 
         it 'should return false if STAGING is set' do
-          app.package_hash = 'abc'
-          app.package_state = 'STAGED'
+          DropletModel.make(app: app.app, package: app.package, state: DropletModel::STAGING_STATE)
           expect(app.needs_staging?).to be false
         end
       end
@@ -1256,8 +1095,6 @@ end
       context 'when the app is not started' do
         before do
           app.state = 'STOPPED'
-          app.package_hash = 'abc'
-          app.package_state = 'PENDING'
         end
 
         it 'should return false' do
@@ -1267,9 +1104,7 @@ end
 
       context 'when the app has no instances' do
         before do
-          app.state = 'STARTED'
-          app.package_hash = 'abc'
-          app.package_state = 'PENDING'
+          app.state     = 'STARTED'
           app.instances = 0
         end
 
@@ -1469,16 +1304,6 @@ end
       end
     end
 
-    describe '#mark_as_staged' do
-      let(:app) { AppFactory.make }
-
-      it 'resets the package_pending_since timestamp' do
-        expect {
-          app.mark_as_staged
-        }.to change { app.package_pending_since }.from(kind_of(Time)).to(nil)
-      end
-    end
-
     describe '#mark_as_failed_to_stage' do
       let(:app) { AppFactory.make(state: 'STARTED') }
 
@@ -1563,77 +1388,9 @@ end
       end
     end
 
-    describe '#mark_for_restaging' do
-      let(:app) { AppFactory.make }
-
-      before do
-        app.package_state = 'FAILED'
-        app.staging_failed_reason = 'StagingError'
-        app.staging_failed_description = 'Failed to stage because of something very tragic'
-      end
-
-      it 'should set the package state pending' do
-        expect {
-          app.mark_for_restaging
-        }.to change { app.package_state }.to 'PENDING'
-      end
-
-      it 'should clear the staging failed reason' do
-        expect {
-          app.mark_for_restaging
-        }.to change { app.staging_failed_reason }.to nil
-      end
-
-      it 'should clear the staging failed description' do
-        expect {
-          app.mark_for_restaging
-        }.to change { app.staging_failed_description }.to nil
-      end
-
-      it 'updates the package_pending_since date to current' do
-        app.package_pending_since = nil
-        app.save
-        expect {
-          app.mark_for_restaging
-          app.save
-        }.to change { app.reload.package_pending_since }.from(nil).to(kind_of(Time))
-      end
-
-      context 'when there is no package' do
-        it 'does NOT update the package_pending_since date to current' do
-          app.update(package_pending_since: nil, package_hash: nil)
-          expect {
-            app.mark_for_restaging
-            app.save
-          }.not_to change { app.reload.package_pending_since }.from(nil)
-        end
-      end
-    end
-
-    describe '#restage!' do
-      let!(:app) { AppFactory.make(state: 'STARTED', package_state: 'STAGED') }
-
-      it 'stops the app, marks the app for restaging, and starts the app', isolation: :truncation do
-        count = 0
-        allow(AppObserver).to receive(:updated) do |observed_app|
-          if count == 0
-            expect(observed_app.state).to eq('STOPPED')
-          else
-            expect(observed_app.state).to eq('STARTED')
-            expect(observed_app.package_state).to eq('PENDING')
-          end
-          count += 1
-        end
-
-        expect(AppObserver).not_to have_received(:updated)
-        app.restage!
-        expect(AppObserver).to have_received(:updated).twice
-      end
-    end
-
     describe '#desired_instances' do
       before do
-        @app = App.new
+        @app           = App.new
         @app.instances = 10
       end
 
@@ -1660,9 +1417,9 @@ end
 
     describe 'uris' do
       it 'should return the fqdns and paths on the app' do
-        app = AppFactory.make(app: parent_app)
+        app    = AppFactory.make(app: parent_app)
         domain = PrivateDomain.make(name: 'mydomain.com', owning_organization: org)
-        route = Route.make(host: 'myhost', domain: domain, space: space, path: '/my%20path')
+        route  = Route.make(host: 'myhost', domain: domain, space: space, path: '/my%20path')
         app.add_route(route)
         expect(app.uris).to eq(['myhost.mydomain.com/my%20path'])
       end
@@ -1679,7 +1436,7 @@ end
         other_space = Space.make(organization: app.space.organization)
 
         route = Route.make(
-          space: other_space,
+          space:  other_space,
           domain: domain,
         )
 
@@ -1708,7 +1465,7 @@ end
         let(:domain) { PrivateDomain.make(name: 'mydomain.com', owning_organization: org) }
         let(:app) { AppFactory.make(app: parent_app, diego: diego?) }
         let(:route_with_service) do
-          route = Route.make(host: 'myhost', domain: domain, space: space, path: '/my%20path')
+          route            = Route.make(host: 'myhost', domain: domain, space: space, path: '/my%20path')
           service_instance = ManagedServiceInstance.make(:routing, space: space)
           RouteBinding.make(route: route, service_instance: service_instance)
           route
@@ -1979,10 +1736,10 @@ end
       context 'when a detected admin buildpack was used for staging' do
         it 'creates an AppUsageEvent that contains the detected buildpack guid' do
           buildpack = Buildpack.make
-          app = AppFactory.make(
-            state: 'STOPPED',
-            detected_buildpack: 'Admin buildpack detect string',
-            detected_buildpack_guid: buildpack.guid
+          app       = AppFactory.make(state: 'STOPPED')
+          app.current_droplet.update(
+            buildpack_receipt_buildpack:      'Admin buildpack detect string',
+            buildpack_receipt_buildpack_guid: buildpack.guid
           )
           expect {
             app.update(state: 'STARTED')
@@ -2012,7 +1769,7 @@ end
       context 'when the service broker can successfully delete service bindings' do
         it 'should destroy all dependent service bindings' do
           service_binding = ServiceBinding.make(
-            app: app,
+            app:              app,
             service_instance: ManagedServiceInstance.make(space: app.space)
           )
           stub_unbind(service_binding)
@@ -2026,7 +1783,7 @@ end
       context 'when the service broker cannot successfully delete service bindings' do
         it 'should raise an exception when it fails to delete service bindings' do
           service_binding = ServiceBinding.make(
-            app: app,
+            app:              app,
             service_instance: ManagedServiceInstance.make(:v2, space: app.space)
           )
           stub_unbind(service_binding, status: 500)
@@ -2043,8 +1800,8 @@ end
         expect {
           app.destroy
         }.to change {
-               AppEvent.where(id: app_event.id).count
-             }.from(1).to(0)
+          AppEvent.where(id: app_event.id).count
+        }.from(1).to(0)
       end
 
       it 'creates an AppUsageEvent when the app state is STARTED' do
@@ -2179,7 +1936,7 @@ end
 
         it 'updates the app version' do
           expect {
-            app.ports = [1111, 2222]
+            app.ports  = [1111, 2222]
             app.memory = 2048
             app.save
           }.to change(app, :version)
@@ -2210,13 +1967,11 @@ end
       context 'when tcp ports are saved in the droplet metadata' do
         let(:app) {
           app = AppFactory.make(diego: true, docker_image: 'some-docker-image')
-          app.add_droplet(Droplet.new(
-                            app:                app,
-                            droplet_hash:       'the-droplet-hash',
-                            execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
-          ))
-          app.droplet_hash = 'the-droplet-hash'
-          app
+          app.current_droplet.update(
+            droplet_hash:       'the-droplet-hash',
+            execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
+          )
+          app.reload
         }
 
         it 'returns an array of the tcp ports' do
@@ -2266,13 +2021,11 @@ end
           context 'when some tcp ports are exposed' do
             let(:app) {
               app = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
-              app.add_droplet(Droplet.new(
-                                app: app,
-                                droplet_hash: 'the-droplet-hash',
-                                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
-                              ))
-              app.droplet_hash = 'the-droplet-hash'
-              app
+              app.current_droplet.update(
+                droplet_hash:       'the-droplet-hash',
+                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
+              )
+              app.reload
             }
 
             it 'does not change ports' do
@@ -2299,12 +2052,13 @@ end
           context 'when no tcp ports are exposed' do
             it 'returns the ports that were specified during creation' do
               app = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
-              app.add_droplet(Droplet.new(
-                                app: app,
-                                droplet_hash: 'the-droplet-hash',
-                                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"udp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"udp"}]}',
-                              ))
-              app.droplet_hash = 'the-droplet-hash'
+
+              app.current_droplet.update(
+                droplet_hash:       'the-droplet-hash',
+                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"udp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"udp"}]}',
+              )
+              app.reload
+
               expect(app.ports).to be nil
               expect(app.user_provided_ports).to be_nil
             end
@@ -2313,12 +2067,12 @@ end
           context 'when execution metadata is malformed' do
             it 'returns the ports that were specified during creation' do
               app = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1, ports: [1111])
-              app.add_droplet(Droplet.new(
-                                app: app,
-                                droplet_hash: 'the-droplet-hash',
-                                execution_metadata: 'some-invalid-json',
-                              ))
-              app.droplet_hash = 'the-droplet-hash'
+              app.current_droplet.update(
+                droplet_hash:       'the-droplet-hash',
+                execution_metadata: 'some-invalid-json',
+              )
+              app.reload
+
               expect(app.user_provided_ports).to eq([1111])
               expect(app.ports).to eq([1111])
             end
@@ -2327,12 +2081,12 @@ end
           context 'when no ports are specified in the execution metadata' do
             it 'returns the default port' do
               app = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
-              app.add_droplet(Droplet.new(
-                                app: app,
-                                droplet_hash: 'the-droplet-hash',
-                                execution_metadata: '{"cmd":"run.sh"}',
-                              ))
-              app.droplet_hash = 'the-droplet-hash'
+              app.current_droplet.update(
+                droplet_hash:       'the-droplet-hash',
+                execution_metadata: '{"cmd":"run.sh"}',
+              )
+              app.reload
+
               expect(app.ports).to be nil
               expect(app.user_provided_ports).to be_nil
             end
@@ -2343,7 +2097,7 @@ end
       context 'buildpack app' do
         context 'when app is not staged' do
           it 'returns the ports that were specified during creation' do
-            app = App.make(diego: true, ports: [1025, 1026, 1027, 1028], package_state: 'PENDING')
+            app = App.make(diego: true, ports: [1025, 1026, 1027, 1028])
             expect(app.ports).to eq([1025, 1026, 1027, 1028])
             expect(app.user_provided_ports).to eq([1025, 1026, 1027, 1028])
           end
@@ -2360,13 +2114,13 @@ end
 
           context 'with execution_metadata' do
             it 'returns the ports that were specified during creation' do
-              app = App.make(diego: true, ports: [1025, 1026, 1027, 1028], instances: 1)
-              app.add_droplet(Droplet.new(
-                                app: app,
-                                droplet_hash: 'the-droplet-hash',
-                                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":8080, "Protocol":"tcp"}]}',
-                              ))
-              app.droplet_hash = 'the-droplet-hash'
+              app = AppFactory.make(diego: true, ports: [1025, 1026, 1027, 1028], instances: 1)
+              app.current_droplet.update(
+                droplet_hash:       'the-droplet-hash',
+                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":8080, "Protocol":"tcp"}]}',
+              )
+              app.reload
+
               expect(app.ports).to eq([1025, 1026, 1027, 1028])
               expect(app.user_provided_ports).to eq([1025, 1026, 1027, 1028])
             end
@@ -2542,25 +2296,6 @@ end
 
       it 'returns the parent app name' do
         expect(app.name).to eq('parent-app-name')
-      end
-    end
-
-    describe 'droplet' do
-      let!(:app) { AppFactory.make }
-
-      it 'returns the current_droplet' do
-        expect(app.droplet).to eq(app.current_droplet)
-      end
-
-      context 'when there is a v3 droplet' do
-        before do
-          app.app.droplet = DropletModel.make(app: app.app, state: 'STAGED')
-          app.app.save
-        end
-
-        it 'returns the v3 droplet' do
-          expect(app.droplet).to eq(app.app.droplet)
-        end
       end
     end
   end

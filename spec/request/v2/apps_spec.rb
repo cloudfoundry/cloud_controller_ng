@@ -11,8 +11,11 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v2/apps' do
     let!(:process) {
-      VCAP::CloudController::AppFactory.make(
-        app: VCAP::CloudController::AppModel.make(space: space, environment_variables: { 'RAILS_ENV' => 'staging' }),
+      VCAP::CloudController::AppFactory.make(:unstaged,
+        app:                     VCAP::CloudController::AppModel.make(
+          space:                 space,
+          environment_variables: { 'RAILS_ENV' => 'staging' }
+        ),
         command:                 'hello_world',
         docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' }
       )
@@ -35,7 +38,7 @@ RSpec.describe 'Apps' do
               'guid'       => process.guid,
               'url'        => "/v2/apps/#{process.guid}",
               'created_at' => iso8601,
-              'updated_at' => iso8601
+              'updated_at' => nil
             },
             'entity' => {
               'name'                       => process.name,
@@ -54,8 +57,8 @@ RSpec.describe 'Apps' do
               'command'                    => 'hello_world',
               'console'                    => false,
               'debug'                      => nil,
-              'staging_task_id'            => nil,
-              'package_state'              => 'PENDING',
+              'staging_task_id'            => process.latest_droplet.guid,
+              'package_state'              => 'STAGED',
               'health_check_type'          => 'port',
               'health_check_timeout'       => nil,
               'staging_failed_reason'      => nil,
@@ -99,7 +102,7 @@ RSpec.describe 'Apps' do
                 'guid'       => process.guid,
                 'url'        => "/v2/apps/#{process.guid}",
                 'created_at' => iso8601,
-                'updated_at' => iso8601
+                'updated_at' => nil
               },
               'entity' => {
                 'name'                       => process.name,
@@ -118,8 +121,8 @@ RSpec.describe 'Apps' do
                 'command'                    => 'hello_world',
                 'console'                    => false,
                 'debug'                      => nil,
-                'staging_task_id'            => nil,
-                'package_state'              => 'PENDING',
+                'staging_task_id'            => process.latest_droplet.guid,
+                'package_state'              => 'STAGED',
                 'health_check_type'          => 'port',
                 'health_check_timeout'       => nil,
                 'staging_failed_reason'      => nil,
@@ -266,7 +269,7 @@ RSpec.describe 'Apps' do
             'guid'       => process.guid,
             'url'        => "/v2/apps/#{process.guid}",
             'created_at' => iso8601,
-            'updated_at' => iso8601
+            'updated_at' => nil
           },
           'entity' => {
             'name'                       => 'app-name',
@@ -285,8 +288,8 @@ RSpec.describe 'Apps' do
             'command'                    => 'app-command',
             'console'                    => false,
             'debug'                      => nil,
-            'staging_task_id'            => nil,
-            'package_state'              => 'PENDING',
+            'staging_task_id'            => process.latest_droplet.guid,
+            'package_state'              => 'STAGED',
             'health_check_type'          => 'port',
             'health_check_timeout'       => nil,
             'staging_failed_reason'      => nil,
@@ -490,8 +493,8 @@ RSpec.describe 'Apps' do
             'command'                    => 'hello_world',
             'console'                    => false,
             'debug'                      => nil,
-            'staging_task_id'            => nil,
-            'package_state'              => 'PENDING',
+            'staging_task_id'            => process.latest_droplet.guid,
+            'package_state'              => 'STAGED',
             'health_check_type'          => 'port',
             'health_check_timeout'       => nil,
             'staging_failed_reason'      => nil,
@@ -567,8 +570,8 @@ RSpec.describe 'Apps' do
               'command'                    => nil,
               'console'                    => false,
               'debug'                      => nil,
-              'staging_task_id'            => nil,
-              'package_state'              => 'PENDING',
+              'staging_task_id'            => process.latest_droplet.guid,
+              'package_state'              => 'STAGED',
               'health_check_type'          => 'port',
               'health_check_timeout'       => nil,
               'staging_failed_reason'      => nil,
@@ -666,8 +669,8 @@ RSpec.describe 'Apps' do
           'command'                    => nil,
           'console'                    => false,
           'debug'                      => nil,
-          'staging_task_id'            => nil,
-          'package_state'              => 'PENDING',
+          'staging_task_id'            => process.latest_droplet.guid,
+          'package_state'              => 'STAGED',
           'health_check_type'          => 'port',
           'health_check_timeout'       => nil,
           'staging_failed_reason'      => nil,
@@ -825,7 +828,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v2/apps/:guid/instances' do
-    let!(:process) { VCAP::CloudController::AppFactory.make(diego: true, space: space, state: 'STARTED', package_state: 'STAGED', instances: 2) }
+    let!(:process) { VCAP::CloudController::AppFactory.make(diego: true, space: space, state: 'STARTED', instances: 2) }
     let(:tps_url) { "http://tps.service.cf.internal:1518/v1/actual_lrps/#{process.guid}-#{process.version}" }
     let(:instances) { [
       { process_guid: process.guid, instance_guid: 'instance-A', index: 0, state: 'RUNNING', uptime: 0 },
@@ -872,13 +875,13 @@ RSpec.describe 'Apps' do
   end
 
   describe 'POST /v2/apps/:guid/restage' do
-    let(:process) do
-      VCAP::CloudController::AppFactory.make(
-        name:          'maria',
-        space:         space,
-        package_state: 'STAGED',
-        diego:         true
-      )
+    let(:process) { VCAP::CloudController::AppFactory.make(name: 'maria', space: space, diego: true) }
+    let(:stager) { instance_double(VCAP::CloudController::Dea::Stager, stage: nil) }
+
+    before do
+      allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:validate_app)
+      allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:stager_for_app).and_return(stager)
+      VCAP::CloudController::Buildpack.make
     end
 
     it 'restages the app' do
@@ -913,7 +916,7 @@ RSpec.describe 'Apps' do
             'command'                    => nil,
             'console'                    => false,
             'debug'                      => nil,
-            'staging_task_id'            => nil,
+            'staging_task_id'            => process.latest_droplet.guid,
             'package_state'              => 'PENDING',
             'health_check_type'          => 'port',
             'health_check_timeout'       => nil,
@@ -1003,15 +1006,13 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v2/apps/:guid/droplet/download' do
     let(:process) { VCAP::CloudController::AppFactory.make(space: space) }
-    let(:blobstore) { CloudController::DependencyLocator.instance.droplet_blobstore }
 
     before do
       droplet_file = Tempfile.new(process.guid)
       droplet_file.write('droplet contents')
       droplet_file.close
 
-      droplet = CloudController::DropletUploader.new(process, blobstore)
-      droplet.upload(droplet_file.path)
+      VCAP::CloudController::Jobs::V3::DropletUpload.new(droplet_file.path, process.current_droplet.guid).perform
     end
 
     it 'redirects to a blobstore to download the droplet' do
@@ -1178,8 +1179,8 @@ RSpec.describe 'Apps' do
             'command'                    => nil,
             'console'                    => false,
             'debug'                      => nil,
-            'staging_task_id'            => nil,
-            'package_state'              => 'PENDING',
+            'staging_task_id'            => process.latest_droplet.guid,
+            'package_state'              => 'STAGED',
             'health_check_type'          => 'port',
             'health_check_timeout'       => nil,
             'staging_failed_reason'      => nil,

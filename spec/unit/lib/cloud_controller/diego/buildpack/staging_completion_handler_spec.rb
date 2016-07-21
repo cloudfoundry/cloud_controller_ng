@@ -69,7 +69,7 @@ module VCAP::CloudController
               it 'updates the droplet with the metadata' do
                 subject.staging_complete(success_response)
                 droplet.reload
-                data    = {
+                data = {
                   'web'      => 'start me',
                   'worker'   => 'hello',
                   'anything' => 'hi hi hi'

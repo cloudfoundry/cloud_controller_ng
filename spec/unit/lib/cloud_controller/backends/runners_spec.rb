@@ -74,7 +74,7 @@ module VCAP::CloudController
       let!(:dea_app) { AppFactory.make(state: 'STARTED') }
 
       it 'returns apps that have the desired data' do
-        last_app =  AppFactory.make(diego: true, state: 'STARTED', version: 'app-version-6')
+        last_app = AppFactory.make(diego: true, state: 'STARTED', version: 'app-version-6')
 
         apps = runners.diego_apps(100, 0)
 
@@ -103,7 +103,7 @@ module VCAP::CloudController
 
       it 'does not return unstaged apps' do
         unstaged_app = AppFactory.make(diego: true, state: 'STARTED')
-        unstaged_app.droplets.each(&:destroy)
+        unstaged_app.current_droplet.destroy
 
         batch = runners.diego_apps(100, 0)
 
@@ -134,7 +134,7 @@ module VCAP::CloudController
 
       it 'does not return unstaged apps' do
         unstaged_app = AppFactory.make(diego: true, state: 'STARTED')
-        unstaged_app.droplets.each(&:destroy)
+        unstaged_app.current_droplet.destroy
 
         batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(unstaged_app))
 
@@ -142,7 +142,7 @@ module VCAP::CloudController
       end
 
       it 'does not return apps that are stopped' do
-        stopped_app =  AppFactory.make(diego: true, state: 'STOPPED')
+        stopped_app = AppFactory.make(diego: true, state: 'STOPPED')
 
         batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(stopped_app))
 
@@ -212,7 +212,7 @@ module VCAP::CloudController
 
       it 'does not return unstaged apps' do
         unstaged_app = AppFactory.make(diego: true, state: 'STARTED')
-        unstaged_app.droplets.each(&:destroy)
+        unstaged_app.current_droplet.destroy
 
         batch   = runners.diego_apps_cache_data(100, 0)
         app_ids = batch.map { |data| data[0] }
@@ -287,7 +287,7 @@ module VCAP::CloudController
       let!(:dea_app5) { AppFactory.make(state: 'STARTED') }
 
       it 'returns apps that have the desired data' do
-        last_app =  AppFactory.make(state: 'STARTED')
+        last_app = AppFactory.make(state: 'STARTED')
 
         apps, _ = runners.dea_apps_hm9k(100, 0)
         expect(apps.count).to eq(6)

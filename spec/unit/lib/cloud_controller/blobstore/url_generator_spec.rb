@@ -62,7 +62,8 @@ module CloudController
 
           context 'when no droplet_hash' do
             before do
-              app.droplets.each(&:destroy)
+              app.current_droplet.destroy
+              app.reload
             end
 
             it 'returns nil if no droplet_hash' do
@@ -129,43 +130,18 @@ module CloudController
 
       context 'uploads' do
         describe 'droplets' do
-          let(:app) { double(:app) }
-
           it 'delegates to internal_url_generator when not local' do
             allow(upload_url_generator).to receive(:droplet_upload_url)
-            url_generator.droplet_upload_url(app)
-            expect(upload_url_generator).to have_received(:droplet_upload_url).with(app)
+            url_generator.droplet_upload_url('droplet-guid')
+            expect(upload_url_generator).to have_received(:droplet_upload_url).with('droplet-guid')
           end
         end
 
         describe 'buildpack cache' do
-          let(:app) { double(:app) }
-
           it 'delegates to internal_url_generator when not local' do
             allow(upload_url_generator).to receive(:buildpack_cache_upload_url)
-            url_generator.buildpack_cache_upload_url(app)
-            expect(upload_url_generator).to have_received(:buildpack_cache_upload_url).with(app)
-          end
-        end
-
-        describe 'v3 buildpack cache' do
-          let(:app_guid) { Sham.guid }
-          let(:stack) { Sham.name }
-
-          it 'delegates to internal_url_generator when not local' do
-            allow(upload_url_generator).to receive(:v3_app_buildpack_cache_upload_url)
-            url_generator.v3_app_buildpack_cache_upload_url(app_guid, stack)
-            expect(upload_url_generator).to have_received(:v3_app_buildpack_cache_upload_url).with(app_guid, stack)
-          end
-        end
-
-        describe 'v3 droplet' do
-          let(:droplet_guid) { Sham.guid }
-
-          it 'delegates to internal_url_generator when not local' do
-            allow(upload_url_generator).to receive(:package_droplet_upload_url)
-            url_generator.package_droplet_upload_url(droplet_guid)
-            expect(upload_url_generator).to have_received(:package_droplet_upload_url).with(droplet_guid)
+            url_generator.buildpack_cache_upload_url('app-guid', 'stack')
+            expect(upload_url_generator).to have_received(:buildpack_cache_upload_url).with('app-guid', 'stack')
           end
         end
       end

@@ -83,7 +83,8 @@ module VCAP::CloudController
             timeout:             90,
             lifecycle:           droplet.lifecycle_type,
             lifecycle_data:      { 'some' => 'data' },
-            completion_callback: "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}"
+            completion_callback: "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}" \
+                                   "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}"
           })
         end
       end
@@ -183,10 +184,9 @@ module VCAP::CloudController
           let(:ports) { nil }
 
           context 'when this is a docker app' do
-            let(:process) { AppFactory.make(:docker, diego: true, ports: ports, type: type) }
+            let(:process) { AppFactory.make(docker_image: 'docker/image', diego: true, ports: ports, type: type) }
 
             before do
-              allow(process).to receive(:docker_image).and_return('docker/image')
               allow(process).to receive(:docker_ports).and_return([123, 456])
             end
 

@@ -42,7 +42,7 @@ module VCAP::CloudController
         end
 
         it 'provides a docker lifecycle for docker apps' do
-          process = AppFactory.make(:docker)
+          process = AppFactory.make(docker_image: 'some-image')
 
           action.stage(process)
 

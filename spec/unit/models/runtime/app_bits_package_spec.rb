@@ -96,7 +96,7 @@ RSpec.describe AppBitsPackage do
     end
 
     context 'when the zip file uploaded is invalid' do
-      let(:uploaded_package_zip) { File.exs pand_path('../../../fixtures/bad.zip', File.dirname(__FILE__)) }
+      let(:uploaded_package_zip) { File.expand_path('../../../fixtures/bad.zip', File.dirname(__FILE__)) }
 
       it 'raises an informative error' do
         expect { packer.create_package_in_blobstore(package_guid, uploaded_package_zip, cached_files_fingerprints) }.to raise_error(CloudController::Errors::ApiError, /invalid/)

@@ -26,16 +26,14 @@ module VCAP::CloudController
         }
       end
 
-      def make_dea_app(package_state, app_state)
+      let(:v2_app) do
         AppFactory.make.tap do |app|
-          app.package_state = package_state
-          app.state = app_state
-          app.staging_task_id = Sham.guid
+          app.state = 'STOPPED'
+          DropletModel.make(app: app.app, package: app.package, state: DropletModel::PENDING_STATE)
           app.save
         end
       end
 
-      let(:v2_app) { make_dea_app('PENDING', 'STOPPED') }
       let(:app_guid) { v2_app.guid }
       let(:task_id) { v2_app.staging_task_id }
       let(:url) { "/internal/dea/staging/#{app_guid}/completed" }

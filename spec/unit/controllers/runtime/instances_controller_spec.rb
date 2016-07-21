@@ -35,7 +35,8 @@ module VCAP::CloudController
         end
 
         it "returns '170001 StagingError' when the app is failed to stage" do
-          @app.package.update(state: 'FAILED')
+          @app.latest_droplet.update(state: DropletModel::FAILED_STATE)
+          @app.reload
 
           get "/v2/apps/#{@app.guid}/instances"
 
@@ -44,7 +45,8 @@ module VCAP::CloudController
         end
 
         it "returns '170002 NotStaged' when the app is pending to be staged" do
-          @app.package.update(state: 'PENDING')
+          @app.current_droplet.destroy
+          @app.reload
 
           get "/v2/apps/#{@app.guid}/instances"
 
@@ -53,8 +55,8 @@ module VCAP::CloudController
         end
 
         it "returns '170003 NoAppDetectedError' when the app was not detected by a buildpack" do
-          @app.mark_as_failed_to_stage('NoAppDetectedError')
-          @app.save
+          @app.latest_droplet.update(state: DropletModel::FAILED_STATE, error_id: 'NoAppDetectedError')
+          @app.reload
 
           get "/v2/apps/#{@app.guid}/instances"
 
@@ -63,8 +65,8 @@ module VCAP::CloudController
         end
 
         it "returns '170004 BuildpackCompileFailed' when the app fails due in the buildpack compile phase" do
-          @app.mark_as_failed_to_stage('BuildpackCompileFailed')
-          @app.save
+          @app.latest_droplet.update(state: DropletModel::FAILED_STATE, error_id: 'BuildpackCompileFailed')
+          @app.reload
 
           get "/v2/apps/#{@app.guid}/instances"
 
@@ -73,8 +75,8 @@ module VCAP::CloudController
         end
 
         it "returns '170005 BuildpackReleaseFailed' when the app fails due in the buildpack compile phase" do
-          @app.mark_as_failed_to_stage('BuildpackReleaseFailed')
-          @app.save
+          @app.latest_droplet.update(state: DropletModel::FAILED_STATE, error_id: 'BuildpackReleaseFailed')
+          @app.reload
 
           get "/v2/apps/#{@app.guid}/instances"
 

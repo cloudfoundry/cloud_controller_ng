@@ -19,8 +19,8 @@ module VCAP::CloudController
     one_through_one :space, join_table: AppModel.table_name, left_key: :guid, left_primary_key: :app_guid, right_primary_key: :guid, right_key: :space_guid
 
     one_to_one :latest_droplet, class: 'VCAP::CloudController::DropletModel',
-      key: :package_guid, primary_key: :guid,
-      order: [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
+                                key: :package_guid, primary_key: :guid,
+                                order: [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
 
     def validate
       validates_includes PACKAGE_STATES, :state, allow_missing: true

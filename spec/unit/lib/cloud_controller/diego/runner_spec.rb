@@ -76,10 +76,11 @@ module VCAP::CloudController
         end
 
         context 'when an app is in staging status' do
-          let(:process) { AppFactory.make(state: 'STARTED', staging_task_id: 'some-id') }
+          let(:process) { AppFactory.make(state: 'STARTED') }
 
           before do
-            process.current_droplet.update(state: DropletModel::STAGING_STATE)
+            DropletModel.make(app: process.app, package: process.package, state: DropletModel::PENDING_STATE)
+            process.reload
           end
 
           it 'should not update routes' do

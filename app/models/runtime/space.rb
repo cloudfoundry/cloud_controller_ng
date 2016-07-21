@@ -203,7 +203,7 @@ module VCAP::CloudController
     end
 
     def started_app_memory
-      apps_dataset.where(state: 'STARTED').sum(Sequel.*(:memory, :instances)) || 0
+      processes_dataset.where(state: 'STARTED').sum(Sequel.*(:memory, :instances)) || 0
     end
 
     def running_and_pending_tasks_count

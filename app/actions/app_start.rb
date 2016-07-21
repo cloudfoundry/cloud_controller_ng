@@ -20,9 +20,8 @@ module VCAP::CloudController
           @user.guid,
           @user_email
         )
-        app.processes.each do |process|
-          process.update(state: 'STARTED')
-        end
+
+        app.processes.each { |process| process.update(state: 'STARTED') }
       end
     rescue Sequel::ValidationFailed => e
       raise InvalidApp.new(e.message)

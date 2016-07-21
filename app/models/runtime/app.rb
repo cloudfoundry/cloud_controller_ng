@@ -28,33 +28,40 @@ module VCAP::CloudController
     end
 
     DEFAULT_HTTP_PORT = 8080
-    DEFAULT_PORTS = [DEFAULT_HTTP_PORT].freeze
-
-    many_through_many :droplets, [[App.table_name, :id, :app_guid]],
-      class: 'VCAP::CloudController::DropletModel', right_primary_key: :app_guid
+    DEFAULT_PORTS     = [DEFAULT_HTTP_PORT].freeze
 
     one_to_many :service_bindings
     one_to_many :events, class: VCAP::CloudController::AppEvent
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
 
-    one_through_one :space, join_table: AppModel.table_name,
-                            left_primary_key: :app_guid, left_key: :guid,
-                            right_primary_key: :guid, right_key: :space_guid
+    one_through_one :space,
+      join_table:        AppModel.table_name,
+      left_primary_key:  :app_guid, left_key: :guid,
+      right_primary_key: :guid, right_key: :space_guid
 
-    one_through_one :stack, join_table: BuildpackLifecycleDataModel.table_name,
-                            left_primary_key: :app_guid, left_key: :app_guid,
-                            right_primary_key: :name, right_key: :stack,
-                            after_load: :convert_nil_to_default_stack
+    one_through_one :stack,
+      join_table:        BuildpackLifecycleDataModel.table_name,
+      left_primary_key:  :app_guid, left_key: :app_guid,
+      right_primary_key: :name, right_key: :stack,
+      after_load:        :convert_nil_to_default_stack
+
     def convert_nil_to_default_stack(stack)
       self.associations[:stack] = Stack.default unless stack
     end
 
-      one_through_one :package, class: 'VCAP::CloudController::PackageModel',
-                                join_table: AppModel.table_name,
-                                left_primary_key: :app_guid, left_key: :guid,
-                                right_primary_key: :app_guid, right_key: :guid,
-                                order: [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
+    one_through_one :package,
+      class:             'VCAP::CloudController::PackageModel',
+      join_table:        AppModel.table_name,
+      left_primary_key:  :app_guid, left_key: :guid,
+      right_primary_key: :app_guid, right_key: :guid,
+      order:             [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
 
+    one_through_one :latest_package,
+      class:             'VCAP::CloudController::PackageModel',
+      join_table:        AppModel.table_name,
+      left_primary_key:  :app_guid, left_key: :guid,
+      right_primary_key: :app_guid, right_key: :guid,
+      order:             [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
 
     dataset_module do
       def staged
@@ -62,7 +69,7 @@ module VCAP::CloudController
       end
 
       def runnable
-        staged.where("#{App.table_name}__state".to_sym => 'STARTED').where{instances > 0}
+        staged.where("#{App.table_name}__state".to_sym => 'STARTED').where { instances > 0 }
       end
 
       def diego
@@ -77,6 +84,72 @@ module VCAP::CloudController
         inner_join(BuildpackLifecycleDataModel.table_name, app_guid: :app_guid)
       end
     end
+
+    one_through_many :organization,
+      [
+        [App.table_name, :id, :app_guid],
+        [AppModel.table_name, :guid, :space_guid],
+        [:spaces, :guid, :organization_id]
+      ]
+
+    many_to_many :routes,
+      distinct:     true,
+      order:        Sequel.asc(:id),
+      before_add:   :validate_route,
+      after_add:    :handle_add_route,
+      after_remove: :handle_remove_route
+
+    one_through_one :current_droplet,
+      class:             '::VCAP::CloudController::DropletModel',
+      join_table:        AppModel.table_name,
+      left_primary_key:  :app_guid, left_key: :guid,
+      right_primary_key: :guid, right_key: :droplet_guid
+
+    one_to_many :route_mappings
+
+    add_association_dependencies routes: :nullify, events: :delete
+
+    export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
+                      :detected_buildpack, :detected_buildpack_guid, :environment_json, :memory, :instances, :disk_quota,
+                      :state, :version, :command, :console, :debug, :staging_task_id,
+                      :package_state, :health_check_type, :health_check_timeout,
+                      :staging_failed_reason, :staging_failed_description, :diego, :docker_image, :package_updated_at,
+                      :detected_start_command, :enable_ssh, :docker_credentials_json, :ports
+
+    import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
+      :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
+      :state, :command, :console, :debug, :staging_task_id,
+      :service_binding_guids, :route_guids, :health_check_type,
+      :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh,
+      :docker_credentials_json, :ports
+
+    serialize_attributes :json, :metadata
+    serialize_attributes :integer_array, :ports
+
+    encrypt :docker_credentials_json, salt: :docker_salt, column: :encrypted_docker_credentials_json
+    serializes_via_json :docker_credentials_json
+
+    APP_STATES             = %w(STOPPED STARTED).map(&:freeze).freeze
+    STAGING_FAILED_REASONS = %w(StagerError StagingError StagingTimeExpired NoAppDetectedError BuildpackCompileFailed
+                                BuildpackReleaseFailed InsufficientResources NoCompatibleCell).map(&:freeze).freeze
+    HEALTH_CHECK_TYPES     = %w(port none process).map(&:freeze).freeze
+
+    # marked as true on changing the associated routes, and reset by
+    # +Dea::Client.start+
+    attr_accessor :routes_changed
+
+    # Last staging response which will contain streaming log url
+    attr_accessor :last_stager_response
+
+    alias_method :diego?, :diego
+
+    def dea?
+      !diego?
+    end
+
+    # user_provided_ports method should be called to
+    # get the value of ports stored in the database
+    alias_method(:user_provided_ports, :ports)
 
     def latest_droplet
       package.try(:latest_droplet)
@@ -123,73 +196,6 @@ module VCAP::CloudController
     def detected_buildpack
       current_droplet.try(:buildpack_receipt_buildpack)
     end
-
-    one_through_many :organization,
-        [
-          [App.table_name, :id, :app_guid],
-          [AppModel.table_name, :guid, :space_guid],
-          [:spaces, :guid, :organization_id]
-        ]
-
-    many_to_many :routes,
-                 distinct: true,
-                 order: Sequel.asc(:id),
-                 before_add: :validate_route,
-                 after_add: :handle_add_route,
-                 after_remove: :handle_remove_route
-
-    one_through_one :current_droplet,
-      class:             '::VCAP::CloudController::DropletModel',
-      join_table:        AppModel.table_name,
-      left_primary_key:  :app_guid, left_key: :guid,
-      right_primary_key: :guid, right_key: :droplet_guid
-
-    one_to_many :route_mappings
-
-    add_association_dependencies routes: :nullify,
-      events: :delete
-      #droplets: :destroy
-
-    export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
-                      :detected_buildpack, :detected_buildpack_guid, :environment_json, :memory, :instances, :disk_quota,
-                      :state, :version, :command, :console, :debug, :staging_task_id,
-                      :package_state, :health_check_type, :health_check_timeout,
-                      :staging_failed_reason, :staging_failed_description, :diego, :docker_image, :package_updated_at,
-                      :detected_start_command, :enable_ssh, :docker_credentials_json, :ports
-
-    import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
-                      :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
-                      :state, :command, :console, :debug, :staging_task_id,
-                      :service_binding_guids, :route_guids, :health_check_type,
-                      :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh,
-                      :docker_credentials_json, :ports
-
-    serialize_attributes :json, :metadata
-    serialize_attributes :integer_array, :ports
-
-    encrypt :docker_credentials_json, salt: :docker_salt, column: :encrypted_docker_credentials_json
-    serializes_via_json :docker_credentials_json
-
-    APP_STATES = %w(STOPPED STARTED).map(&:freeze).freeze
-    STAGING_FAILED_REASONS = %w(StagerError StagingError StagingTimeExpired NoAppDetectedError BuildpackCompileFailed
-                                BuildpackReleaseFailed InsufficientResources NoCompatibleCell).map(&:freeze).freeze
-    HEALTH_CHECK_TYPES = %w(port none process).map(&:freeze).freeze
-
-    # marked as true on changing the associated routes, and reset by
-    # +Dea::Client.start+
-    attr_accessor :routes_changed
-
-    # Last staging response which will contain streaming log url
-    attr_accessor :last_stager_response
-
-    alias_method :diego?, :diego
-    def dea?
-      !diego?
-    end
-
-    # user_provided_ports method should be called to
-    # get the value of ports stored in the database
-    alias_method(:user_provided_ports, :ports)
 
     def copy_buildpack_errors
       bp = buildpack
@@ -276,16 +282,9 @@ module VCAP::CloudController
     end
 
     def before_save
-      if needs_package_in_current_state? && !package_hash
-        raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
-      end
-
       self.enable_ssh = Config.config[:allow_app_ssh_access] && space.allow_ssh if enable_ssh.nil?
-
       update_route_mappings_ports
-
       set_new_version if version_needs_to_be_updated?
-
       super
     end
 
@@ -302,31 +301,15 @@ module VCAP::CloudController
       # and that the system should converge on this new version.
 
       (column_changed?(:state) ||
-       column_changed?(:memory) ||
-       column_changed?(:health_check_type) ||
-       column_changed?(:enable_ssh) ||
-       @ports_changed_by_user
+        column_changed?(:memory) ||
+        column_changed?(:health_check_type) ||
+        column_changed?(:enable_ssh) ||
+        @ports_changed_by_user
       ) && started?
     end
 
     def set_new_version
       self.version = SecureRandom.uuid
-    end
-
-    def update_detected_buildpack(detect_output, detected_buildpack_key)
-      detected_admin_buildpack = Buildpack.find(key: detected_buildpack_key)
-      if detected_admin_buildpack
-        detected_buildpack_guid = detected_admin_buildpack.guid
-        detected_buildpack_name = detected_admin_buildpack.name
-      end
-
-      update(
-        detected_buildpack: detect_output,
-        detected_buildpack_guid: detected_buildpack_guid,
-        detected_buildpack_name: detected_buildpack_name || custom_buildpack_url
-      )
-
-      create_app_usage_buildpack_event
     end
 
     def needs_package_in_current_state?
@@ -381,6 +364,7 @@ module VCAP::CloudController
       result = metadata_without_command || self.metadata = {}
       command ? result.merge('command' => command) : result
     end
+
     alias_method_chain :metadata, :command
 
     def command_with_fallback
@@ -388,6 +372,7 @@ module VCAP::CloudController
       cmd = (cmd.nil? || cmd.empty?) ? nil : cmd
       cmd || metadata_without_command && metadata_without_command['command']
     end
+
     alias_method_chain :command, :fallback
 
     def execution_metadata
@@ -462,7 +447,7 @@ module VCAP::CloudController
     end
 
     def validate_route(route)
-      objection = CloudController::Errors::InvalidRouteRelation.new(route.guid)
+      objection               = CloudController::Errors::InvalidRouteRelation.new(route.guid)
       route_service_objection = CloudController::Errors::InvalidRouteRelation.new("#{route.guid} - Route services are only supported for apps on Diego")
 
       raise objection if route.nil?
@@ -524,7 +509,7 @@ module VCAP::CloudController
     end
 
     def staging?
-      pending? && staging_task_id.present?
+      pending? && !latest_droplet.nil? && [DropletModel::STAGING_STATE, DropletModel::PENDING_STATE].include?(latest_droplet.state)
     end
 
     def started?
@@ -549,17 +534,16 @@ module VCAP::CloudController
     def mark_as_failed_to_stage(reason='StagingError')
       raise 'MARK AS FAILED TO STAGE'
 
-
       unless STAGING_FAILED_REASONS.include?(reason)
         logger.warn("Invalid staging failure reason: #{reason}, provided for app #{self.guid}")
         reason = 'StagingError'
       end
 
-      self.package_state = 'FAILED'
-      self.staging_failed_reason = reason
+      self.package_state              = 'FAILED'
+      self.staging_failed_reason      = reason
       self.staging_failed_description = CloudController::Errors::ApiError.new_from_details(reason, 'staging failed').message
-      self.package_pending_since = nil
-      self.state = 'STOPPED' if diego?
+      self.package_pending_since      = nil
+      self.state                      = 'STOPPED' if diego?
       save
     end
 
@@ -654,7 +638,7 @@ module VCAP::CloudController
 
     def docker_ports
       exposed_ports = []
-      if !self.needs_staging? && !current_droplet.nil? && self.execution_metadata.present?
+      if !self.needs_staging? && current_droplet.present? && self.execution_metadata.present?
         begin
           metadata = JSON.parse(self.execution_metadata)
           unless metadata['ports'].nil?
@@ -699,7 +683,7 @@ module VCAP::CloudController
     # See:
     # https://github.com/jeremyevans/sequel/blob/7d6753da53196884e218a59a7dcd9a7803881b68/lib/sequel/model/base.rb#L1772-L1779
     def update_ports(new_ports)
-      self.ports = new_ports
+      self.ports   = new_ports
       self[:ports] = IntegerArraySerializer.serializer.call(self.ports)
     end
 
@@ -716,7 +700,7 @@ module VCAP::CloudController
 
     def mark_routes_changed
       routes_already_changed = @routes_changed
-      @routes_changed = true
+      @routes_changed        = true
 
       if diego?
         unless routes_already_changed

@@ -23,6 +23,10 @@ module VCAP::CloudController
         droplet_creator.create_and_stage(app.package, lifecycle, message, start_after_staging)
 
         app.last_stager_response = droplet_creator.staging_response
+
+      # TODO: make sure this is in the right place and add tests
+      rescue Diego::Runner::CannotCommunicateWithDiegoError => e
+        logger.error("failed communicating with diego backend: #{e.message}")
       end
     end
   end

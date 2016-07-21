@@ -18,7 +18,7 @@ module VCAP
               staging_details.package.app_guid,
               staging_details.lifecycle.staging_stack
             )
-            lifecycle_data.build_artifacts_cache_upload_uri   = @blobstore_url_generator.buildpack_cache_upload_url(
+            lifecycle_data.build_artifacts_cache_upload_uri = @blobstore_url_generator.buildpack_cache_upload_url(
               staging_details.package.app_guid,
               staging_details.lifecycle.staging_stack
             )

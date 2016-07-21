@@ -9,13 +9,8 @@ module VCAP::CloudController
 
     describe '#stop' do
       let(:app_model) { AppModel.make(desired_state: 'STARTED') }
-      let(:process1) { AppFactory.make(state: 'STARTED') }
-      let(:process2) { AppFactory.make(state: 'STARTED') }
-
-      before do
-        app_model.add_process_by_guid(process1.guid)
-        app_model.add_process_by_guid(process2.guid)
-      end
+      let!(:process1) { AppFactory.make(app: app_model, state: 'STARTED', type: 'this') }
+      let!(:process2) { AppFactory.make(app: app_model, state: 'STARTED', type: 'that') }
 
       it 'sets the desired state on the app' do
         app_stop.stop(app_model)

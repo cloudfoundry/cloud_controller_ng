@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       it 'updates existing processes' do
-        existing_process = AppFactory.make(type: 'other', command: 'old', app: app)
+        existing_process = App.make(type: 'other', command: 'old', app: app, metadata: {})
         expect {
           current_process_types.process_current_droplet(app)
         }.to change { existing_process.refresh.command }.from('old').to('stuff')
