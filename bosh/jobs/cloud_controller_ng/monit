@@ -59,6 +59,8 @@ check process nginx_cc
 check process nginx_newrelic_plugin
   with pidfile /var/vcap/sys/run/nginx_newrelic_plugin/nginx_newrelic_plugin.pid
   start program "/var/vcap/jobs/cloud_controller_ng/bin/nginx_newrelic_plugin_ctl start"
+      as uid vcap and gid vcap
   stop program "/var/vcap/jobs/cloud_controller_ng/bin/nginx_newrelic_plugin_ctl stop"
+      as uid vcap and gid vcap
   group vcap
 <% end %>

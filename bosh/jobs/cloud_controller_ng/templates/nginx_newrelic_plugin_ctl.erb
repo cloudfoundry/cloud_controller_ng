@@ -1,41 +1,34 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-RUN_DIR=/var/vcap/sys/run/nginx_newrelic_plugin
-LOG_DIR=/var/vcap/sys/log/nginx_newrelic_plugin
-PIDFILE=$RUN_DIR/nginx_newrelic_plugin.pid
-JOB_DIR=/var/vcap/jobs/cloud_controller_ng
-CONFIG_DIR=$JOB_DIR/config
-NGINX_NEWRELIC_PLUGIN_DIR=/var/vcap/packages/nginx_newrelic_plugin
+RUN_DIR="/var/vcap/sys/run/nginx_newrelic_plugin"
+LOG_DIR="/var/vcap/sys/log/nginx_newrelic_plugin"
+PIDFILE="${RUN_DIR}/nginx_newrelic_plugin.pid"
+JOB_DIR="/var/vcap/jobs/cloud_controller_ng"
+CONFIG_DIR="${JOB_DIR}/config"
+NGINX_NEWRELIC_PLUGIN_DIR="/var/vcap/packages/nginx_newrelic_plugin"
 
-source $JOB_DIR/bin/ruby_version.sh
-source /var/vcap/packages/capi_utils/syslog_utils.sh
-source /var/vcap/packages/capi_utils/pid_utils.sh
+source "${JOB_DIR}/bin/ruby_version.sh"
+source "/var/vcap/packages/capi_utils/syslog_utils.sh"
+source "/var/vcap/packages/capi_utils/pid_utils.sh"
 
 case $1 in
 
   start)
-    pid_guard $PIDFILE "Nginx Newrelic Plugin"
+    pid_guard "${PIDFILE}" "Nginx Newrelic Plugin"
 
-    mkdir -p $RUN_DIR
-    chown -R vcap:vcap $RUN_DIR
+    mkdir -p "${RUN_DIR}"
 
-    mkdir -p $LOG_DIR
-    chown -R vcap:vcap $LOG_DIR
+    echo $$ > "${PIDFILE}"
 
-    echo $$ > $PIDFILE
-
-    cp $CONFIG_DIR/newrelic_plugin.yml $NGINX_NEWRELIC_PLUGIN_DIR/config
-    chown -R vcap:vcap $NGINX_NEWRELIC_PLUGIN_DIR/config/newrelic_plugin.yml
-
-    cd $NGINX_NEWRELIC_PLUGIN_DIR
+    cd "${NGINX_NEWRELIC_PLUGIN_DIR}"
 
     tee_output_to_sys_log_and_file "${LOG_DIR}" "$(basename "$0")"
 
-    exec chpst -u vcap:vcap $NGINX_NEWRELIC_PLUGIN_DIR/newrelic_nginx_agent
+    ${NGINX_NEWRELIC_PLUGIN_DIR}/newrelic_nginx_agent
     ;;
 
   stop)
-    kill_and_wait $PIDFILE
+    kill_and_wait "${PIDFILE}"
 
     ;;
 

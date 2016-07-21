@@ -54,6 +54,14 @@ function setup_nginx_directories {
   chown vcap:vcap "/var/vcap/packages/nginx/logs/error.log"
 }
 
+function setup_nginx_plugin_directories {
+  mkdir -p "/var/vcap/sys/log/nginx_newrelic_plugin"
+  chown -R vcap:vcap "/var/vcap/sys/log/nginx_newrelic_plugin"
+
+  cp "/var/vcap/jobs/cloud_controller_ng/config/newrelic_plugin.yml" "/var/vcap/packages/nginx_newrelic_plugin/config"
+  chown -R vcap:vcap "/var/vcap/packages/nginx_newrelic_plugin/config/newrelic_plugin.yml"
+}
+
 function setup_api_directories {
   mkdir -p "/var/vcap/sys/log/cloud_controller_ng"
   chown -R vcap:vcap "/var/vcap/sys/log/cloud_controller_ng"
@@ -73,7 +81,8 @@ function setup_api_directories {
 function setup_directories {
   setup_api_directories
   setup_nginx_directories
-
+  setup_nginx_plugin_directories
+  
   <% if_p("cc.directories.diagnostics") do |diag_dir| %>
   mkdir -p "<%= diag_dir %>"
   chown vcap:vcap "<%= diag_dir %>"
