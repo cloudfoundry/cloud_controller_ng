@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     def read?(object)
       return @ok_read if instance_variable_defined?(:@ok_read)
-      @ok_read = (admin_user? || object_is_visible_to_user?(object, context.user))
+      @ok_read = (admin_user? || admin_read_only_user? || object_is_visible_to_user?(object, context.user))
     end
 
     def read_for_update?(object, params=nil)
@@ -41,7 +41,7 @@ module VCAP::CloudController
     # These methods should be called first to determine if the user's token has the appropriate scope for the operation
 
     def read_with_token?(_)
-      admin_user? || has_read_scope?
+      admin_user? || admin_read_only_user? || has_read_scope?
     end
 
     def create_with_token?(_)
@@ -94,6 +94,11 @@ module VCAP::CloudController
     def admin_user?
       return @admin_user if instance_variable_defined?(:@admin_user)
       @admin_user = context.roles.admin?
+    end
+
+    def admin_read_only_user?
+      return @admin_read_only_user if instance_variable_defined?(:@admin_read_only_user)
+      @admin_read_only_user = context.roles.admin_read_only?
     end
   end
 end

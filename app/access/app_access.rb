@@ -31,7 +31,7 @@ module VCAP::CloudController
     end
 
     def read_env?(app)
-      return true if admin_user?
+      return true if admin_user? || admin_read_only_user?
       app.space.has_developer?(context.user)
     end
 

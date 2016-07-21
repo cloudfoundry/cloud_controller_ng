@@ -37,6 +37,18 @@ module VCAP::CloudController
       end
     end
 
+    context 'admin read only' do
+      include_context :admin_read_only_setup
+
+      before { FeatureFlag.make(name: 'app_bits_upload', enabled: false) }
+
+      it_behaves_like :read_only_access
+
+      it 'does allows admin_read_only to :read_env' do
+        expect(subject).to allow_op_on_object(:read_env, object)
+      end
+    end
+
     context 'space developer' do
       before do
         org.add_user(user)

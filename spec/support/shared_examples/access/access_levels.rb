@@ -34,9 +34,23 @@ shared_examples :admin_full_access do
   it_behaves_like :full_access
 end
 
+shared_examples :admin_read_only_access do
+  include_context :admin_read_only_setup
+  it_behaves_like :read_only_access
+end
+
 shared_context :admin_setup do
   before do
     token = { 'scope' => [::VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] }
+    VCAP::CloudController::SecurityContext.set(user, token)
+  end
+
+  after { VCAP::CloudController::SecurityContext.clear }
+end
+
+shared_context :admin_read_only_setup do
+  before do
+    token = { 'scope' => [::VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_READ_ONLY_SCOPE] }
     VCAP::CloudController::SecurityContext.set(user, token)
   end
 
