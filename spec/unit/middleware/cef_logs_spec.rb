@@ -70,10 +70,12 @@ module CloudFoundry
         context 'when HTTP_X_FORWARDED_FOR is not present' do
           let(:headers) { ActionDispatch::Http::Headers.new }
 
-          it 'does not raise' do
+          it 'uses request.ip for src' do
             expect {
               middleware.call(env)
             }.not_to raise_error
+
+            expect(logger).to have_received(:info).with(/src=ip/)
           end
         end
 
