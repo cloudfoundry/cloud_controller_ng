@@ -149,7 +149,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
         audited_event VCAP::CloudController::Event.find(type: 'audit.app.create', actee: app_guid)
       end
 
-      example 'Creating a Docker App (experimental)' do
+      example 'Creating a Docker App' do
         space_guid = VCAP::CloudController::Space.make.guid
 
         data = required_fields.merge(space_guid: space_guid, name: 'docker_app', docker_image: 'cloudfoundry/diego-docker-app', diego: true)
