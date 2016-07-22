@@ -259,7 +259,8 @@ module VCAP::CloudController::RestController
 
     def enumerate_dataset
       qp = self.class.query_parameters
-      visible_objects = model.user_visible(VCAP::CloudController::SecurityContext.current_user, SecurityContext.admin?)
+      admin_override = SecurityContext.admin? || SecurityContext.admin_read_only?
+      visible_objects = model.user_visible(VCAP::CloudController::SecurityContext.current_user, admin_override)
       filtered_objects = filter_dataset(visible_objects)
       get_filtered_dataset_for_enumeration(model, filtered_objects, qp, @opts)
     end
