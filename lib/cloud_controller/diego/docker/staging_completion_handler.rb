@@ -27,10 +27,13 @@ module VCAP::CloudController
         private
 
         def save_staging_result(payload)
+          docker_image = payload.dig(:result, :lifecycle_metadata, :docker_image)
+
           droplet.class.db.transaction do
             droplet.lock!
-            droplet.process_types      = payload[:result][:process_types]
-            droplet.execution_metadata = payload[:result][:execution_metadata]
+            droplet.process_types        = payload[:result][:process_types]
+            droplet.execution_metadata   = payload[:result][:execution_metadata]
+            droplet.docker_receipt_image = docker_image unless docker_image.blank?
             droplet.mark_as_staged
             droplet.save_changes(raise_on_save_failure: true)
           end

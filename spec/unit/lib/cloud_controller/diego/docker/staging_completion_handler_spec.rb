@@ -143,6 +143,18 @@ module VCAP::CloudController
                 end
               end
             end
+
+            context 'when a docker_image is returned' do
+              let(:docker_image_name) { 'cached-docker-image' }
+
+              it 'records it on the droplet' do
+                expect {
+                  handler.staging_complete(payload)
+                }.to change {
+                  droplet.reload.docker_receipt_image
+                }.to('cached-docker-image')
+              end
+            end
           end
 
           context 'failure' do
