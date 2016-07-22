@@ -18,9 +18,6 @@ module VCAP::CloudController
 
     def start
       CLEANUPS.each { |c| @clock.schedule_cleanup(c[:name], c[:class], c[:time]) }
-
-      @clock.schedule_frequent_cleanup(:pending_packages, Jobs::Runtime::PendingPackagesCleanup)
-
       Clockwork.run
     end
   end

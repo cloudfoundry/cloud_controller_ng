@@ -27,12 +27,6 @@ module VCAP::CloudController
           expect(clock).to have_received(:schedule_cleanup).with(an_instance_of(Symbol), klass, an_instance_of(String))
         end
       end
-
-      it 'schedules the frequent cleanup' do
-        schedule.start
-
-        expect(clock).to have_received(:schedule_frequent_cleanup).with(:pending_packages, Jobs::Runtime::PendingPackagesCleanup)
-      end
     end
   end
 end
