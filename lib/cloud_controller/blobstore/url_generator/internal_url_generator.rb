@@ -69,8 +69,8 @@ module CloudController
       def url_for_blob(blob)
         blob.internal_download_url
       rescue SigningRequestError => e
-        logger.error("failed to get download url: #{e.message}")
-        return nil
+        logger.error("failed to get download url: #{e.message}, backtrace: #{e.backtrace}")
+        raise CloudController::Errors::ApiError.new_from_details('BlobstoreUnavailable')
       end
 
       def logger

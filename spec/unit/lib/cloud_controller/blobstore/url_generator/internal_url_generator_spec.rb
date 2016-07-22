@@ -71,8 +71,10 @@ module CloudController
             allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
           end
 
-          it 'returns nil' do
-            expect(url_generator.app_package_download_url(app)).to be_nil
+          it 'bubbles up an ApiError' do
+            expect {
+              url_generator.app_package_download_url(app)
+            }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
           end
         end
       end
@@ -98,8 +100,10 @@ module CloudController
             allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
           end
 
-          it 'returns nil' do
-            expect(url_generator.buildpack_cache_download_url(app)).to be_nil
+          it 'bubbles up an ApiError' do
+            expect {
+              url_generator.buildpack_cache_download_url(app)
+            }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
           end
         end
       end
@@ -127,8 +131,10 @@ module CloudController
             allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
           end
 
-          it 'returns nil' do
-            expect(url_generator.admin_buildpack_download_url(buildpack)).to be_nil
+          it 'bubbles up an ApiError' do
+            expect {
+              url_generator.admin_buildpack_download_url(buildpack)
+            }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
           end
         end
       end
@@ -159,8 +165,10 @@ module CloudController
             allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
           end
 
-          it 'returns nil' do
-            expect(url_generator.droplet_download_url(app)).to be_nil
+          it 'bubbles up an ApiError' do
+            expect {
+              url_generator.droplet_download_url(app)
+            }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
           end
         end
       end
@@ -189,8 +197,10 @@ module CloudController
               allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
             end
 
-            it 'returns nil' do
-              expect(url_generator.v3_droplet_download_url(droplet)).to be_nil
+            it 'bubbles up an ApiError' do
+              expect {
+                url_generator.v3_droplet_download_url(droplet)
+              }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
             end
           end
         end
@@ -219,8 +229,10 @@ module CloudController
               allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
             end
 
-            it 'returns nil' do
-              expect(url_generator.v3_app_buildpack_cache_download_url(app_model.guid, stack)).to be_nil
+            it 'bubbles up an ApiError' do
+              expect {
+                url_generator.v3_app_buildpack_cache_download_url(app_model.guid, stack)
+              }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
             end
           end
         end
@@ -246,8 +258,10 @@ module CloudController
               allow(blob).to receive(:internal_download_url).and_raise(SigningRequestError.new('failed to get signed url'))
             end
 
-            it 'returns nil' do
-              expect(url_generator.package_download_url(app)).to be_nil
+            it 'bubbles up an ApiError' do
+              expect {
+                url_generator.package_download_url(package)
+              }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
             end
           end
         end
