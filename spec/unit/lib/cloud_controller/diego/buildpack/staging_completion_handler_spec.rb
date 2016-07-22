@@ -263,6 +263,25 @@ module VCAP::CloudController
                 )
               end
             end
+
+            context 'when a start is requested' do
+              let!(:web_process) { App.make(app: app, type: 'web', state: 'STARTED') }
+
+              it 'stops the web process of the app' do
+                expect {
+                  subject.staging_complete(fail_response, true)
+                }.to change { web_process.reload.state }.to('STOPPED')
+              end
+
+              context 'when there is no web process for the app' do
+                let(:web_process) { nil }
+
+                it 'still marks the droplet as failed' do
+                  subject.staging_complete(fail_response, true)
+                  expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
+                end
+              end
+            end
           end
         end
       end

@@ -592,6 +592,10 @@ module VCAP::CloudController
           it 'marks the app as having failed to stage' do
             expect { ignore_staging_error { stage } }.to change { app.reload.staging_failed? }.to(true)
           end
+
+          it 'stops the app' do
+            expect { ignore_staging_error { stage } }.to change { app.reload.state }.to('STOPPED')
+          end
         end
 
         context 'when staging setup returned an error response' do
@@ -627,6 +631,10 @@ module VCAP::CloudController
 
           it 'marks the app as having failed to stage' do
             expect { ignore_staging_error { stage } }.to change { app.reload.staging_failed? }.to(true)
+          end
+
+          it 'stops the app' do
+            expect { ignore_staging_error { stage } }.to change { app.reload.state }.to('STOPPED')
           end
         end
 
@@ -870,6 +878,10 @@ module VCAP::CloudController
           it 'leaves the app with a generic staging failed reason' do
             expect { stage }.to change { app.reload.staging_failed_reason }.to('StagerError')
           end
+
+          it 'stops the app' do
+            expect { stage }.to change { app.reload.state }.to('STOPPED')
+          end
         end
 
         context 'when app staging returned an error response' do
@@ -910,6 +922,10 @@ module VCAP::CloudController
 
           it 'marks the app as having failed to stage' do
             expect { stage }.to change { app.reload.staging_failed? }.to(true)
+          end
+
+          it 'stops the app' do
+            expect { stage }.to change { app.reload.state }.to('STOPPED')
           end
 
           context 'when a staging error is present' do

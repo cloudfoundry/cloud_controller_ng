@@ -528,22 +528,6 @@ module VCAP::CloudController
       routes.map(&:uri)
     end
 
-    def mark_as_failed_to_stage(reason='StagingError')
-      raise 'MARK AS FAILED TO STAGE'
-
-      unless STAGING_FAILED_REASONS.include?(reason)
-        logger.warn("Invalid staging failure reason: #{reason}, provided for app #{self.guid}")
-        reason = 'StagingError'
-      end
-
-      self.package_state              = 'FAILED'
-      self.staging_failed_reason      = reason
-      self.staging_failed_description = CloudController::Errors::ApiError.new_from_details(reason, 'staging failed').message
-      self.package_pending_since      = nil
-      self.state                      = 'STOPPED' if diego?
-      save
-    end
-
     def buildpack
       if app && app.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
         return AutoDetectionBuildpack.new if app.lifecycle_data.buildpack.nil?

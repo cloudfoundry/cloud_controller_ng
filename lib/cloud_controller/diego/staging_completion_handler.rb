@@ -22,7 +22,7 @@ module VCAP::CloudController
         logger.info(logger_prefix + 'finished', response: payload)
 
         if payload[:error]
-          handle_failure(payload)
+          handle_failure(payload, with_start)
         else
           handle_success(payload, with_start)
         end
@@ -34,14 +34,14 @@ module VCAP::CloudController
 
       private
 
-      def handle_failure(payload)
+      def handle_failure(payload, with_start)
         begin
           error_parser.validate(payload)
         rescue Membrane::SchemaValidationError => e
           logger.error(logger_prefix + 'failure.invalid-message', staging_guid: droplet.guid, payload: payload, error: e.to_s)
 
           payload[:error] = { message: 'Malformed message from Diego stager', id: DEFAULT_STAGING_ERROR }
-          handle_failure(payload)
+          handle_failure(payload, with_start)
 
           raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', payload)
         end
@@ -50,6 +50,11 @@ module VCAP::CloudController
           droplet.class.db.transaction do
             droplet.lock!
             droplet.fail_to_stage!(payload[:error][:id])
+
+            if with_start && (process = droplet.app.web_process)
+              process.lock!
+              process.stop!
+            end
           end
         rescue => e
           logger.error(logger_prefix + 'saving-staging-result-failed', staging_guid: droplet.guid, response: payload, error: e.message)
@@ -66,14 +71,14 @@ module VCAP::CloudController
           logger.error(logger_prefix + 'success.invalid-message', staging_guid: droplet.guid, payload: payload, error: e.to_s)
 
           payload[:error] = { message: 'Malformed message from Diego stager', id: DEFAULT_STAGING_ERROR }
-          handle_failure(payload)
+          handle_failure(payload, with_start)
 
           raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', payload)
         end
 
         if payload[:result][:process_types].blank?
           payload[:error] = { message: 'No process types returned from stager', id: DEFAULT_STAGING_ERROR }
-          handle_failure(payload)
+          handle_failure(payload, with_start)
         else
           begin
             save_staging_result(payload)
