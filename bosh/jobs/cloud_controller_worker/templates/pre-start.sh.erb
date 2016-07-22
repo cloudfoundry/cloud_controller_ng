@@ -8,6 +8,9 @@ tee_output_to_sys_log "cloud_controller_worker.$(basename "$0")"
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 function setup_directories {
+  mkdir -p "/var/vcap/sys/run/cloud_controller_worker"
+  chown -R vcap:vcap "/var/vcap/sys/run/cloud_controller_worker"
+
   mkdir -p "/var/vcap/sys/log/cloud_controller_worker"
   chown -R vcap:vcap "/var/vcap/sys/log/cloud_controller_worker"
 }
