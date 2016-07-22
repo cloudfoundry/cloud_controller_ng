@@ -49,11 +49,7 @@ module VCAP::CloudController
         begin
           droplet.class.db.transaction do
             droplet.lock!
-
-            droplet.state             = DropletModel::FAILED_STATE
-            droplet.error_id          = payload[:error][:id]
-            droplet.error_description = payload[:error][:message]
-            droplet.save_changes(raise_on_save_failure: true)
+            droplet.fail_to_stage!(payload[:error][:id])
           end
         rescue => e
           logger.error(logger_prefix + 'saving-staging-result-failed', staging_guid: droplet.guid, response: payload, error: e.message)

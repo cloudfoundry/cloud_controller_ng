@@ -130,8 +130,6 @@ module VCAP::CloudController
     serializes_via_json :docker_credentials_json
 
     APP_STATES             = %w(STOPPED STARTED).map(&:freeze).freeze
-    STAGING_FAILED_REASONS = %w(StagerError StagingError StagingTimeExpired NoAppDetectedError BuildpackCompileFailed
-                                BuildpackReleaseFailed InsufficientResources NoCompatibleCell).map(&:freeze).freeze
     HEALTH_CHECK_TYPES     = %w(port none process).map(&:freeze).freeze
 
     # marked as true on changing the associated routes, and reset by
@@ -233,7 +231,6 @@ module VCAP::CloudController
       copy_buildpack_errors
 
       validates_includes APP_STATES, :state, allow_missing: true, message: 'must be one of ' + APP_STATES.join(', ')
-      validates_includes STAGING_FAILED_REASONS, :staging_failed_reason, allow_nil: true
       validates_includes HEALTH_CHECK_TYPES, :health_check_type, allow_missing: true, message: 'must be one of ' + HEALTH_CHECK_TYPES.join(', ')
 
       validate_health_check_type_and_port_presence_are_in_agreement

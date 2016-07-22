@@ -89,7 +89,7 @@ module VCAP::CloudController
                 it 'gracefully sets process_types to an empty hash, but mark the droplet as failed' do
                   subject.staging_complete(success_response)
                   expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
-                  expect(droplet.error).to eq('StagingError - No process types returned from stager')
+                  expect(droplet.error).to match(/StagingError/)
                 end
               end
 
@@ -220,7 +220,7 @@ module VCAP::CloudController
                 }.to raise_error(CloudController::Errors::ApiError)
 
                 expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
-                expect(droplet.error).to eq('StagingError - Malformed message from Diego stager')
+                expect(droplet.error).to match(/StagingError/)
               end
 
               it 'logs an error for the CF user' do

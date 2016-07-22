@@ -129,7 +129,7 @@ module VCAP::CloudController
         before do
           droplet_model.update(
             buildpack_receipt_buildpack_guid: old_buildpack.guid,
-            buildpack_receipt_buildpack: old_buildpack.name
+            buildpack_receipt_buildpack:      old_buildpack.name
           )
         end
 
@@ -138,6 +138,62 @@ module VCAP::CloudController
 
           expect(droplet_model.buildpack_receipt_buildpack_guid).to eq(old_buildpack.guid)
           expect(droplet_model.buildpack_receipt_buildpack).to eq(old_buildpack.name)
+        end
+      end
+    end
+
+    describe '#fail_to_stage!' do
+      subject(:droplet) { DropletModel.make(state: DropletModel::STAGING_STATE) }
+
+      it 'sets the state to FAILED' do
+        expect { droplet.fail_to_stage! }.to change { droplet.state }.to(DropletModel::FAILED_STATE)
+      end
+
+      context 'when a valid reason is specified' do
+        DropletModel::STAGING_FAILED_REASONS.each do |reason|
+          it 'sets the requested staging failed reason' do
+            expect {
+              droplet.fail_to_stage!(reason)
+            }.to change { droplet.error_id }.to(reason)
+          end
+        end
+      end
+
+      context 'when an unexpected reason is specifed' do
+        it 'should use the default, generic reason' do
+          expect {
+            droplet.fail_to_stage!('bogus')
+          }.to change { droplet.error_id }.to('StagingError')
+        end
+      end
+
+      context 'when a reason is not specified' do
+        it 'should use the default, generic reason' do
+          expect {
+            droplet.fail_to_stage!
+          }.to change { droplet.error_id }.to('StagingError')
+        end
+      end
+
+      describe 'setting staging_failed_description' do
+        it 'sets the staging_failed_description to the v2.yml description of the error type' do
+          expect {
+            droplet.fail_to_stage!('NoAppDetectedError')
+          }.to change { droplet.error_description }.to('An app was not successfully detected by any available buildpack')
+        end
+
+        it 'provides a string for interpolation on errors that require it' do
+          expect {
+            droplet.fail_to_stage!('StagingError')
+          }.to change { droplet.error_description }.to('Staging error: staging failed')
+        end
+
+        DropletModel::STAGING_FAILED_REASONS.each do |reason|
+          it "successfully sets staging_failed_description for reason: #{reason}" do
+            expect {
+              droplet.fail_to_stage!(reason)
+            }.to_not raise_error
+          end
         end
       end
     end

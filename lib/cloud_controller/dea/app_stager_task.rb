@@ -227,10 +227,7 @@ module VCAP::CloudController
       def staging_fail(error)
         @droplet.db.transaction do
           @droplet.lock!
-          @droplet.mark_as_failed
-          @droplet.error_id = error
-          @droplet.error_description = CloudController::Errors::ApiError.new_from_details(error, 'staging failed').message
-          @droplet.save_changes(raise_on_save_failure: true)
+          @droplet.fail_to_stage!(error)
         end
       end
 

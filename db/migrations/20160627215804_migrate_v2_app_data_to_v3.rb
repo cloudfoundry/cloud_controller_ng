@@ -227,6 +227,8 @@ Sequel.migration do
       drop_column :staging_task_id
       drop_column :detected_buildpack_guid
       drop_column :detected_buildpack_name
+      drop_column :staging_failed_reason
+      drop_column :staging_failed_description
     end
   end
 end
