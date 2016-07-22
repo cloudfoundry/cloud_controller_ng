@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe ServiceInstanceAccess, type: :access do
     subject(:access) { ServiceInstanceAccess.new(Security::AccessContext.new) }
-    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
+    let(:scopes) { ['cloud_controller.read', 'cloud_controller.write'] }
     let(:user) { VCAP::CloudController::User.make }
 
     let(:org) { VCAP::CloudController::Organization.make }
@@ -13,16 +13,15 @@ module VCAP::CloudController
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, active: service_plan_active) }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan, space: space) }
 
-    before do
-      SecurityContext.set(user, token)
-    end
+    before { set_current_user(user, scopes: scopes) }
 
-    after do
-      SecurityContext.clear
+    it_behaves_like :admin_read_only_access do
+      let(:object) { service_instance }
     end
 
     context 'admin' do
       include_context :admin_setup
+
       it_behaves_like :full_access do
         let(:object) { service_instance }
       end
@@ -259,7 +258,7 @@ module VCAP::CloudController
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
-      let(:token) { { 'scope' => [] } }
+      let(:scopes) { [] }
 
       it_behaves_like :no_access do
         let(:object) { service_instance }
@@ -275,8 +274,6 @@ module VCAP::CloudController
     end
 
     describe 'a user with full org and space permissions using a client with limited scope' do
-      let(:token) { { 'scope' => scope } }
-
       before do
         org.add_user(user)
         org.add_manager(user)
@@ -288,7 +285,7 @@ module VCAP::CloudController
       end
 
       context 'with only cloud_controller.read scope' do
-        let(:scope) { ['cloud_controller.read'] }
+        let(:scopes) { ['cloud_controller.read'] }
         it_behaves_like :read_only_access do
           let(:object) { service_instance }
         end
@@ -296,7 +293,7 @@ module VCAP::CloudController
       end
 
       context 'with only cloud_controller_service_permissions.read scope' do
-        let(:scope) { ['cloud_controller_service_permissions.read'] }
+        let(:scopes) { ['cloud_controller_service_permissions.read'] }
 
         it 'allows the user to read the permissions of the service instance' do
           expect(subject).to allow_op_on_object(:read_permissions, service_instance)
@@ -309,7 +306,7 @@ module VCAP::CloudController
       end
 
       context 'with no cloud_controller scopes' do
-        let(:scope) { [] }
+        let(:scopes) { [] }
 
         it_behaves_like :no_access do
           let(:object) { service_instance }

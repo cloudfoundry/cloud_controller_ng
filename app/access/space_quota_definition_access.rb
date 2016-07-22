@@ -19,7 +19,8 @@ module VCAP::CloudController
     end
 
     def read?(space_quota_definition, *_)
-      context.roles.admin? || (
+      context.roles.admin? ||
+        context.roles.admin_read_only? || (
         !context.user.nil? && (
           (context.user.managed_organizations.include? space_quota_definition.organization) ||
           ((context.user.managed_spaces & space_quota_definition.spaces).length > 0) ||

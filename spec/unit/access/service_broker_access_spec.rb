@@ -3,7 +3,6 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe ServiceBrokerAccess, type: :access do
     subject(:access) { ServiceBrokerAccess.new(Security::AccessContext.new) }
-    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
@@ -11,13 +10,9 @@ module VCAP::CloudController
     let(:object) { VCAP::CloudController::ServiceBroker.make }
     let(:broker_with_space) { VCAP::CloudController::ServiceBroker.make space: space }
 
-    before do
-      SecurityContext.set(user, token)
-    end
+    before { set_current_user(user) }
 
-    after do
-      SecurityContext.clear
-    end
+    it_behaves_like :admin_read_only_access
 
     context 'admin' do
       include_context :admin_setup

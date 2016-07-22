@@ -3,18 +3,13 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe SecurityGroupAccess, type: :access do
     subject(:access) { SecurityGroupAccess.new(Security::AccessContext.new) }
-    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
     let(:space) { Space.make }
     let(:user) { User.make }
     let(:object) { SecurityGroup.make(space_guids: [space.guid]) }
 
-    before do
-      SecurityContext.set(user, token)
-    end
+    before { set_current_user(user) }
 
-    after do
-      SecurityContext.clear
-    end
+    it_behaves_like :admin_read_only_access
 
     context 'admin' do
       it_should_behave_like :admin_full_access

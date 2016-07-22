@@ -20,6 +20,7 @@ module VCAP::CloudController
     end
 
     it_should_behave_like :admin_full_access
+    it_should_behave_like :admin_read_only_access
 
     context 'organization manager' do
       before { org.add_manager(user) }

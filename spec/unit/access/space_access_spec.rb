@@ -3,21 +3,16 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe SpaceAccess, type: :access do
     subject(:access) { SpaceAccess.new(Security::AccessContext.new) }
-    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
     let(:org) { VCAP::CloudController::Organization.make }
+    let(:user) { VCAP::CloudController::User.make }
+    let(:scopes) { nil }
+
     let(:object) { VCAP::CloudController::Space.make(organization: org) }
 
-    let(:user) { VCAP::CloudController::User.make }
+    before { set_current_user(user, scopes: scopes) }
 
-    before do
-      SecurityContext.set(user, token)
-    end
-
-    after do
-      SecurityContext.clear
-    end
-
-    it_should_behave_like :admin_full_access
+    it_behaves_like :admin_full_access
+    it_behaves_like :admin_read_only_access
 
     context 'as an organization manager' do
       before { org.add_manager(user) }
@@ -106,7 +101,7 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.write' do
-      let(:token) { { 'scope' => ['cloud_controller.read'] } }
+      let(:scopes) { ['cloud_controller.read'] }
 
       before do
         org.add_user(user)
@@ -122,7 +117,7 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.read' do
-      let(:token) { { 'scope' => [] } }
+      let(:scopes) { [] }
 
       before do
         org.add_user(user)

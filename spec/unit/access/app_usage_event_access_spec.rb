@@ -15,6 +15,8 @@ module VCAP::CloudController
       SecurityContext.clear
     end
 
+    it_behaves_like :admin_read_only_access
+
     context 'an admin' do
       include_context :admin_setup
       it_behaves_like :full_access

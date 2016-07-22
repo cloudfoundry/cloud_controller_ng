@@ -30,6 +30,14 @@ module VCAP::CloudController
         it_behaves_like :full_access
       end
 
+      context 'admin read only' do
+        include_context :admin_read_only_setup
+
+        before { FeatureFlag.make(name: 'private_domain_creation', enabled: false) }
+
+        it_behaves_like :read_only_access
+      end
+
       context 'organization manager' do
         before { org.add_manager(user) }
         it_behaves_like :full_access
@@ -118,6 +126,7 @@ module VCAP::CloudController
 
       it_behaves_like :admin_full_access
       it_behaves_like :read_only_access
+      it_behaves_like :admin_read_only_access
 
       context 'a user that isnt logged in (defensive)' do
         let(:user) { nil }
