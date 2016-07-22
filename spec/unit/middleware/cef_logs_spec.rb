@@ -77,6 +77,27 @@ module CloudFoundry
 
             expect(logger).to have_received(:info).with(/src=ip/)
           end
+
+          context 'when request.ip is an RFC1918 address' do
+            let(:env) do
+              {
+                'cf.request_id'      => 'ID',
+                'cf.user_guid'       => 'some-guid',
+                'cf.user_name'       => 'zach-loves-cake',
+                'HTTP_AUTHORIZATION' => 'bearer stubbed-user-and-id-token',
+                'REMOTE_ADDR'        => '10.0.0.1',
+                'REQUEST_METHOD'     => 'GET',
+              }
+            end
+            let!(:fake_request) do
+              ActionDispatch::Request.new(env)
+            end
+
+            it 'uses REMOTE_ADDR' do
+              middleware.call(env)
+              expect(logger).to have_received(:info).with(/src=10.0.0.1/)
+            end
+          end
         end
 
         context 'when using basic auth' do
