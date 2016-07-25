@@ -625,13 +625,13 @@ module VCAP::CloudController
                 port: 1234,
               } }
 
-              it 'returns a 404' do
-                post '/v2/routes', MultiJson.dump(req)
+            it 'returns a 404' do
+              post '/v2/routes', MultiJson.dump(req)
 
-                expect(last_response).to have_status_code(404)
-                expect(last_response.body).to include 'router group could not be found'
-              end
+              expect(last_response).to have_status_code(404)
+              expect(last_response.body).to include 'router group could not be found'
             end
+          end
 
           context 'when random port is provided' do
             let(:req) { {
