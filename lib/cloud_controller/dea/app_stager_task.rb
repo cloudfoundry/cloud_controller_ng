@@ -222,6 +222,8 @@ module VCAP::CloudController
           @droplet.app.droplet = @droplet
           @droplet.app.save
         end
+
+        BitsExpiration.new.expire_droplets!(@droplet.app)
       end
 
       def staging_fail(error)

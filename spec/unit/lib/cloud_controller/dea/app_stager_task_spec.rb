@@ -763,6 +763,11 @@ module VCAP::CloudController
               stage { |options| callback_options = options }
               expect(callback_options[:started_instances]).to equal(1)
             end
+
+            it 'expires old droplets' do
+              expect_any_instance_of(BitsExpiration).to receive(:expire_droplets!).with(app.app)
+              stage
+            end
           end
 
           context 'when other staging has happened' do
