@@ -4,10 +4,8 @@
 
 require 'jobs/runtime/blobstore_delete'
 require 'jobs/runtime/blobstore_upload'
-require 'jobs/runtime/droplet_deletion'
 require 'jobs/runtime/model_deletion'
 
 BlobstoreDelete = VCAP::CloudController::Jobs::Runtime::BlobstoreDelete
 BlobstoreUpload = VCAP::CloudController::Jobs::Runtime::BlobstoreUpload
-DropletDeletionJob = VCAP::CloudController::Jobs::Runtime::DropletDeletion
 ModelDeletionJob = VCAP::CloudController::Jobs::Runtime::ModelDeletion

@@ -9,7 +9,7 @@ module VCAP::CloudController
       AppFactory.make(name: 'app-name').tap do |app|
         app.state = state
         app.instances = instances
-        app.save
+        app.save.reload
       end
     end
     let(:changes) { { updated_at: [2.days.ago, app.updated_at] } }

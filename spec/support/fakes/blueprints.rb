@@ -114,11 +114,6 @@ module VCAP::CloudController
     name { Sham.domain }
   end
 
-  Droplet.blueprint do
-    app { App.make }
-    droplet_hash { Sham.guid }
-  end
-
   PrivateDomain.blueprint do
     name                { Sham.domain }
     owning_organization { Organization.make }

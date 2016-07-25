@@ -198,7 +198,7 @@ module VCAP::CloudController
       # undo happens in after_commit, which only runs if tests use a :truncation strategy instead of :transaction
       context 'when an error happens in AppObserver update' do
         it 'undoes previous changes', isolation: :truncation do
-          #use tap to ensure there is an updated_at
+          # use tap to ensure there is an updated_at
           app = AppFactory.make.tap do |a|
             a.instances = 1
             a.save.reload

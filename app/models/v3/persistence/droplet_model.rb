@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class DropletModel < Sequel::Model(:v3_droplets)
+  class DropletModel < Sequel::Model(:droplets)
     include Serializer
 
     DROPLET_STATES = [
