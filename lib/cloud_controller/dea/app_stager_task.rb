@@ -65,8 +65,12 @@ module VCAP::CloudController
       private
 
       def stage_with_http(url, msg)
-        success = Dea::Client.stage(url, msg)
-        stage_with_nats(msg) unless success
+        status = Dea::Client.stage(url, msg)
+        stage_with_nats(msg) if status == 404
+        if status == 503
+          logger.info('staging.http.stager-evacuating', app_guid: @app.guid, status: status)
+          stage { @completion_callback }
+        end
       rescue => e
         @app.mark_as_failed_to_stage('StagingError')
         logger.error e.message
