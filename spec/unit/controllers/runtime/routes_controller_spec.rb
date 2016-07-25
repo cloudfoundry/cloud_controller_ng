@@ -618,6 +618,35 @@ module VCAP::CloudController
             allow(routing_api_client).to receive(:router_group).and_return(nil)
           end
 
+          context 'when port is provided' do
+            let(:req) { {
+                domain_guid: shared_domain.guid,
+                space_guid: space.guid,
+                port: 1234,
+              } }
+
+              it 'returns a 404' do
+                post '/v2/routes', MultiJson.dump(req)
+
+                expect(last_response).to have_status_code(404)
+                expect(last_response.body).to include 'router group could not be found'
+              end
+            end
+
+          context 'when random port is provided' do
+            let(:req) { {
+              domain_guid: domain_guid,
+              space_guid: space.guid,
+            } }
+
+            it 'returns a 404' do
+              post '/v2/routes?generate_port=true', MultiJson.dump(req)
+
+              expect(last_response).to have_status_code(404)
+              expect(last_response.body).to include 'router group could not be found'
+            end
+          end
+
           context 'when host and port not provided' do
             let(:req) { {
               domain_guid: domain_guid,

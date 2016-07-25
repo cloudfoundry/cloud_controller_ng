@@ -55,16 +55,16 @@ module VCAP::CloudController
         return CloudController::Errors::ApiError.new_from_details('RoutePortTaken', port_taken_error_message)
       end
 
+      if e.errors.on(:router_group)
+        return CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', e.errors.on(:router_group))
+      end
+
       if e.errors.on(:port) == [:port_unsupported]
         return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.')
       end
 
       if e.errors.on(:port) == [:port_required]
         return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'For TCP routes you must specify a port or request a random one.')
-      end
-
-      if e.errors.on(:router_group)
-        return CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', e.errors.on(:router_group))
       end
 
       if e.errors.on(:port) == [:port_unavailable]
@@ -314,11 +314,14 @@ module VCAP::CloudController
     end
 
     def validated_router_group
-      @router_group ||= begin
-        routing_api_client.router_group(validated_domain.router_group_guid)
-      rescue RoutingApi::RoutingApiDisabled
-        raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
-      end
+      @router_group ||=
+        begin
+          router_group = routing_api_client.router_group(validated_domain.router_group_guid)
+          raise CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound',  "#{validated_domain.router_group_guid} could not be found") if router_group.nil?
+          router_group
+        rescue RoutingApi::RoutingApiDisabled
+          raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+        end
     end
 
     def validated_domain
