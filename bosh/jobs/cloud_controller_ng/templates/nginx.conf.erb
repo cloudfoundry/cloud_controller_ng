@@ -23,6 +23,17 @@ http {
 
   keepalive_timeout  75 20; #inherited from router
 
+  <% if_p("cc.nginx_rate_limit_general") do %>
+  limit_req_zone $http_authorization zone=all:10m rate=<%=p("cc.nginx_rate_limit_general")['limit'] %>;
+  <% end %>
+
+  <% if_p("cc.nginx_rate_limit_zones") do %>
+    <% p("cc.nginx_rate_limit_zones").each do |zone| %>
+  limit_req_zone $http_authorization zone=<%= zone['name'] %>:10m rate=<%= zone['limit'] %>;
+    <% end %>
+  <% end %>
+  limit_req_status 429;
+
   client_max_body_size <%= p("cc.client_max_body_size") %>; #already enforced upstream/but doesn't hurt.
 
   client_body_temp_path /var/vcap/data/nginx_cc/tmp/client_body_temp;
@@ -54,6 +65,18 @@ http {
       proxy_redirect              off;
       proxy_connect_timeout       10;
       proxy_pass                  http://cloud_controller;
+
+      <% if_p("cc.nginx_rate_limit_general") do %>
+      limit_req zone=all burst=<%= p("cc.nginx_rate_limit_general")['burst'] %> nodelay;
+      <% end %>
+
+      <% if_p("cc.nginx_rate_limit_zones") do %>
+        <% p("cc.nginx_rate_limit_zones").each do |zone| %>
+      location <%= zone['location'] %> {
+        limit_req zone=<%= zone['name'] %> burst=<%= zone['burst'] %> nodelay;
+      }
+        <% end %>
+      <% end %>
     }
 
 <% if p("cc.packages.blobstore_type").downcase == "fog" && p("cc.packages.fog_connection.provider", "").downcase == "local" %>
