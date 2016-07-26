@@ -95,7 +95,9 @@ module VCAP::CloudController
 
         context 'when instance reporter is unavailable' do
           before do
-            allow(instances_reporters).to receive(:stats_for_app).and_raise(CloudController::Errors::InstancesUnavailable.new(StandardError.new))
+            allow(instances_reporters).to receive(:stats_for_app).and_raise(
+              CloudController::Errors::InstancesUnavailable.new(
+                Net::HTTPError.new('Error: Could not connect to the remote server', nil)))
             set_current_user(@developer)
           end
 
@@ -106,6 +108,13 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(503)
             expect(last_response.body).to match('Stats unavailable: Stats server temporarily unavailable.')
+          end
+          it 'Includes the underlying error' do
+            @app.update(state: 'STARTED')
+
+            get "/v2/apps/#{@app.guid}/stats"
+
+            expect(last_response.body).to match('Could not connect to the remote server')
           end
         end
 
