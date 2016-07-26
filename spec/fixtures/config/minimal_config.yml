@@ -139,4 +139,3 @@ default_staging_security_groups:
 - defaults
 default_running_security_groups:
 - defaults
-

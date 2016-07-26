@@ -33,7 +33,7 @@ RSpec.describe CloudController::DependencyLocator do
 
     it 'creates blob store' do
       expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
-        with(options: config[:droplets], directory_key: 'key', resource_type: :droplets, bits_service_options: { enabled: false })
+        with(options: config[:droplets], directory_key: 'key', resource_type: :droplets)
       locator.droplet_blobstore
     end
 
@@ -50,7 +50,7 @@ RSpec.describe CloudController::DependencyLocator do
 
       it 'creates the client with the right arguments' do
         expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
-          with(options: config[:droplets], directory_key: 'key', resource_type: :droplets, bits_service_options: bits_service_config)
+          with(options: config[:droplets], directory_key: 'key', resource_type: :droplets)
         locator.droplet_blobstore
       end
     end
@@ -71,8 +71,7 @@ RSpec.describe CloudController::DependencyLocator do
         options: config[:droplets],
         directory_key: 'key',
         root_dir: 'buildpack_cache',
-        resource_type: :buildpack_cache,
-        bits_service_options: { enabled: false })
+        resource_type: :buildpack_cache)
       locator.buildpack_cache_blobstore
     end
 
@@ -89,7 +88,7 @@ RSpec.describe CloudController::DependencyLocator do
 
       it 'creates the client with the right arguments' do
         expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
-          with(options: config[:droplets], directory_key: 'key', root_dir: 'buildpack_cache', resource_type: :buildpack_cache, bits_service_options: bits_service_config)
+          with(options: config[:droplets], directory_key: 'key', root_dir: 'buildpack_cache', resource_type: :buildpack_cache)
         locator.buildpack_cache_blobstore
       end
     end
@@ -107,7 +106,7 @@ RSpec.describe CloudController::DependencyLocator do
 
     it 'creates blob store' do
       expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
-        with(options: config[:packages], directory_key: 'key', resource_type: :packages, bits_service_options: { enabled: false })
+        with(options: config[:packages], directory_key: 'key', resource_type: :packages)
       locator.package_blobstore
     end
 
@@ -123,7 +122,7 @@ RSpec.describe CloudController::DependencyLocator do
 
       it 'creates the client with the right arguments' do
         expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
-          with(options: config[:packages], directory_key: 'key', resource_type: :packages, bits_service_options: bits_service_config)
+          with(options: config[:packages], directory_key: 'key', resource_type: :packages)
         locator.package_blobstore
       end
     end

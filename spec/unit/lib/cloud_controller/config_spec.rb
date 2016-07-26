@@ -94,6 +94,10 @@ module VCAP::CloudController
         it 'sets a default value for the minimum number of candidate stagers' do
           expect(config[:minimum_candidate_stagers]).to eq(5)
         end
+
+        it 'sets a default value for the bits service' do
+          expect(config[:bits_service]).to eq({ enabled: false })
+        end
       end
 
       context 'when config values are provided' do
@@ -305,6 +309,7 @@ module VCAP::CloudController
             },
           },
 
+          bits_service: { enabled: false },
           reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat'),
         }
       end

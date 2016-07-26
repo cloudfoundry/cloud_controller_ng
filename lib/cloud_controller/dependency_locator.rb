@@ -81,8 +81,7 @@ module CloudController
       Blobstore::ClientProvider.provide(
         options: options,
         directory_key: options.fetch(:droplet_directory_key),
-        resource_type: :droplets,
-        bits_service_options: bits_service_options
+        resource_type: :droplets
       )
     end
 
@@ -93,8 +92,7 @@ module CloudController
         options: options,
         directory_key: options.fetch(:droplet_directory_key),
         root_dir: 'buildpack_cache',
-        resource_type: :buildpack_cache,
-        bits_service_options: bits_service_options
+        resource_type: :buildpack_cache
       )
     end
 
@@ -104,8 +102,7 @@ module CloudController
       Blobstore::ClientProvider.provide(
         options: options,
         directory_key: options.fetch(:app_package_directory_key),
-        resource_type: :packages,
-        bits_service_options: bits_service_options
+        resource_type: :packages
       )
     end
 
@@ -124,8 +121,7 @@ module CloudController
       Blobstore::ClientProvider.provide(
         options: options,
         directory_key: options.fetch(:buildpack_directory_key, 'cc-buildpacks'),
-        resource_type: :buildpacks,
-        bits_service_options: bits_service_options
+        resource_type: :buildpacks
       )
     end
 
@@ -237,7 +233,7 @@ module CloudController
     end
 
     def bits_service_options
-      @config[:bits_service] || { enabled: false }
+      @config[:bits_service]
     end
 
     def use_bits_service

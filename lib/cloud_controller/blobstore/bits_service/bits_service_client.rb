@@ -4,8 +4,10 @@ require 'cloud_controller/blobstore/bits_service/blob'
 module CloudController
   module Blobstore
     class BitsServiceClient
+      ResourceTypeNotPresent = Class.new(StandardError)
+
       def initialize(bits_service_options:, resource_type:)
-        raise StandardError 'Must specify resource type' unless resource_type.present?
+        raise ResourceTypeNotPresent.new('Must specify resource type') unless resource_type
 
         @resource_type = resource_type
         @resource_type_singular = @resource_type.to_s.singularize

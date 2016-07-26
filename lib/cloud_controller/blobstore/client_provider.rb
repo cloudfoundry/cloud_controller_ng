@@ -9,8 +9,10 @@ require 'cloud_controller/blobstore/safe_delete_client'
 module CloudController
   module Blobstore
     class ClientProvider
-      def self.provide(options:, directory_key:, root_dir: nil, resource_type: '', bits_service_options: {})
-        if bits_service_options[:enabled]
+      def self.provide(options:, directory_key:, root_dir: nil, resource_type: nil)
+        bits_service_options = VCAP::CloudController::Config.config[:bits_service]
+
+        if bits_service_options[:enabled] && resource_type
           provide_bits_service(bits_service_options, resource_type)
         elsif options[:blobstore_type].blank? || (options[:blobstore_type] == 'fog')
           provide_fog(options, directory_key, root_dir)
