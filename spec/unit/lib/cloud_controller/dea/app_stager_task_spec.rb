@@ -768,6 +768,12 @@ module VCAP::CloudController
               expect_any_instance_of(BitsExpiration).to receive(:expire_droplets!).with(app.app)
               stage
             end
+
+            it 'records a buildpack set event' do
+              expect {
+                stage
+              }.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.to(1).from(0)
+            end
           end
 
           context 'when other staging has happened' do

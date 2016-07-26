@@ -126,6 +126,12 @@ module VCAP::CloudController
                 expect(runner).to have_received(:start)
               end
 
+              it 'records a buildpack set event' do
+                expect {
+                  subject.staging_complete(payload, true)
+                }.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.to(1).from(0)
+              end
+
               context 'when this is not the most recent staging result' do
                 before do
                   DropletModel.make(app: app, package: package)
