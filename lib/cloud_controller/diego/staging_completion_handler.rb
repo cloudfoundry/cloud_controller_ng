@@ -97,9 +97,13 @@ module VCAP::CloudController
 
         app.db.transaction do
           app.lock!
-          web_process.lock!
+
           app.update(droplet: droplet)
-          Repositories::AppUsageEventRepository.new.create_from_app(web_process, 'BUILDPACK_SET')
+
+          app.processes.each do |p|
+            p.lock!
+            Repositories::AppUsageEventRepository.new.create_from_app(p, 'BUILDPACK_SET')
+          end
         end
 
         @runners.runner_for_app(web_process).start

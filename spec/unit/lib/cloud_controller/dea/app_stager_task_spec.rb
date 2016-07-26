@@ -769,10 +769,11 @@ module VCAP::CloudController
               stage
             end
 
-            it 'records a buildpack set event' do
+            it 'records a buildpack set event for each process' do
+              App.make(app: app.app, type: 'asdf')
               expect {
                 stage
-              }.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.to(1).from(0)
+              }.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.to(2).from(0)
             end
           end
 

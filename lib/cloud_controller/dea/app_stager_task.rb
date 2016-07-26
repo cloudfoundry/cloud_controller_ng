@@ -208,12 +208,9 @@ module VCAP::CloudController
       end
 
       def staging_completion(stager_response)
-        web_process = @droplet.app.web_process
-
         @droplet.db.transaction do
           @droplet.lock!
           @droplet.app.lock!
-          web_process.lock! if web_process
 
           @droplet.process_types               = { web: stager_response.detected_start_command }
           @droplet.execution_metadata          = stager_response.execution_metadata
@@ -224,7 +221,11 @@ module VCAP::CloudController
 
           @droplet.app.droplet = @droplet
           @droplet.app.save
-          Repositories::AppUsageEventRepository.new.create_from_app(web_process, 'BUILDPACK_SET') if web_process
+
+          @droplet.app.processes.each do |p|
+            p.lock!
+            Repositories::AppUsageEventRepository.new.create_from_app(p, 'BUILDPACK_SET')
+          end
         end
 
         BitsExpiration.new.expire_droplets!(@droplet.app)
