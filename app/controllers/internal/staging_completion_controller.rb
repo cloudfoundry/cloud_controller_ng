@@ -30,8 +30,6 @@ module VCAP::CloudController
       staging_response = read_body
       droplet = DropletModel.find(guid: staging_guid)
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found') if droplet.nil?
-      package = PackageModel.find(guid: droplet.package_guid)
-      raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found') if package.nil?
 
       begin
         stagers.stager_for_app(droplet.app).staging_complete(droplet, staging_response, params['start'] == 'true')

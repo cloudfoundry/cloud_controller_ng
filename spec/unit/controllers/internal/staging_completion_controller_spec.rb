@@ -59,19 +59,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the package does not exist' do
-        before do
-          droplet.package_guid = 'not-real'
-          droplet.save
-        end
-
-        it 'returns 404' do
-          post url, MultiJson.dump(staging_response)
-          expect(last_response.status).to eq(404)
-          expect(last_response.body).to match /Package not found/
-        end
-      end
-
       context 'when the start query param has a true value' do
         it 'requests staging_complete with start' do
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(droplet, staging_response, true)

@@ -24,18 +24,16 @@ module VCAP::CloudController
         @stagers = dependencies.fetch(:stagers)
       end
 
-      post '/internal/dea/staging/:app_guid/completed', :completed
+      post '/internal/dea/staging/:staging_guid/completed', :completed
 
-      def completed(app_guid)
+      def completed(staging_guid)
         staging_response = read_body
-
-        process = App.find(guid: app_guid)
-        raise CloudController::Errors::ApiError.new_from_details('NotFound') unless process
-
-        raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless process.staging_task_id == staging_response['task_id']
+        droplet = DropletModel.where(guid: staging_guid).eager(app: :web_process).all.first
+        raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found') if droplet.nil?
+        raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless droplet.app.web_process.try(:staging_task_id) == staging_response['task_id']
 
         begin
-          stagers.stager_for_app(process.app).staging_complete(nil, staging_response)
+          stagers.stager_for_app(droplet.app).staging_complete(droplet, staging_response)
         rescue CloudController::Errors::ApiError => api_err
           logger.error('dea.staging.completion-controller-error', error: api_err)
           raise CloudController::Errors::ApiError.new_from_details('ServerError', name: api_err.name, message: api_err.message) if api_err.name.eql? 'StagingError'

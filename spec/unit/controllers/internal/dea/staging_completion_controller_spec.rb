@@ -26,17 +26,12 @@ module VCAP::CloudController
         }
       end
 
-      let(:v2_app) do
-        AppFactory.make.tap do |app|
-          app.state = 'STOPPED'
-          DropletModel.make(app: app.app, package: app.package, state: DropletModel::PENDING_STATE)
-          app.save
-        end
-      end
+      let(:v2_app) { AppFactory.make(state: 'STOPPED') }
+      let(:droplet) { DropletModel.make(app: v2_app.app, package: v2_app.package, state: DropletModel::PENDING_STATE) }
 
-      let(:app_guid) { v2_app.guid }
+      let(:staging_guid) { droplet.guid }
       let(:task_id) { v2_app.staging_task_id }
-      let(:url) { "/internal/dea/staging/#{app_guid}/completed" }
+      let(:url) { "/internal/dea/staging/#{staging_guid}/completed" }
 
       before do
         @internal_user = 'internal_user'
@@ -85,8 +80,8 @@ module VCAP::CloudController
       end
 
       context 'with a valid app' do
-        it 'calls the stager with the staging guid and response' do
-          expect_any_instance_of(Dea::Stager).to receive(:staging_complete).with(nil, staging_response)
+        it 'calls the stager with the droplet and response' do
+          expect_any_instance_of(Dea::Stager).to receive(:staging_complete).with(droplet, staging_response)
 
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(200)
@@ -108,8 +103,8 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the app does not exist' do
-        before { v2_app.delete }
+      context 'when the droplet does not exist' do
+        before { droplet.delete }
 
         it 'fails with a 404' do
           post url, MultiJson.dump(staging_response)
