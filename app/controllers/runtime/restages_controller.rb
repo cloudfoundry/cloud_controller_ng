@@ -12,7 +12,7 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @app_event_repository = dependencies.fetch(:app_event_repository)
-      @stagers = dependencies.fetch(:stagers)
+      @stagers              = dependencies.fetch(:stagers)
     end
 
     post "#{path_guid}/restage", :restage
@@ -28,10 +28,9 @@ module VCAP::CloudController
           raise CloudController::Errors::ApiError.new_from_details('NotStaged')
         end
 
-        process.stop!
+        AppStop.new(SystemAuditUser, SystemAuditUser.email).stop(process.app)
         process.app.update(droplet_guid: nil)
-        process.reload
-        process.start!
+        AppStart.new(SystemAuditUser, SystemAuditUser.email).start(process.app)
       end
 
       V2::AppStage.new(
@@ -47,13 +46,11 @@ module VCAP::CloudController
         { 'Location' => "#{self.class.path}/#{process.guid}" },
         object_renderer.render_json(self.class, process, @opts)
       ]
-    end
-
-    def self.translate_validation_exception(e, attributes)
-      docker_errors = e.errors.on(:docker)
-      return CloudController::Errors::ApiError.new_from_details('DockerDisabled') if docker_errors
-
-      CloudController::Errors::ApiError.new_from_details('StagingError', e.errors.full_messages)
+    rescue AppStart::InvalidApp => e
+      raise CloudController::Errors::ApiError.new_from_details('DockerDisabled') if e.message =~ /docker_disabled/
+      raise CloudController::Errors::ApiError.new_from_details('StagingError', e.message)
+    rescue AppStop::InvalidApp => e
+      raise CloudController::Errors::ApiError.new_from_details('StagingError', e.message)
     end
   end
 end

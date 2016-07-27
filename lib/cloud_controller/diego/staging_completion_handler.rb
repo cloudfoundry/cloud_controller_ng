@@ -51,9 +51,8 @@ module VCAP::CloudController
             droplet.lock!
             droplet.fail_to_stage!(payload[:error][:id])
 
-            if with_start && (process = droplet.app.web_process)
-              process.lock!
-              process.stop!
+            if with_start
+              AppStop.new(SystemAuditUser, SystemAuditUser.email).stop(droplet.app)
             end
           end
         rescue => e

@@ -13,6 +13,9 @@ module VCAP
         parent_app = attributes[:app]
         unless parent_app
           parent_app_blueprint_type = package_attributes[:docker_image].present? ? :docker : nil
+          if attributes.key?(:state)
+            parent_app_attributes[:desired_state] = attributes[:state]
+          end
 
           if parent_app_attributes.any?
             buildpack_keys = {}

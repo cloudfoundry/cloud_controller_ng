@@ -247,7 +247,7 @@ module VCAP::CloudController
         app.memory                  = request_attrs['memory'] if request_attrs.key?('memory')
         app.instances               = request_attrs['instances'] if request_attrs.key?('instances')
         app.disk_quota              = request_attrs['disk_quota'] if request_attrs.key?('disk_quota')
-        app.state                   = request_attrs['state'] if request_attrs.key?('state')
+        app.state                   = request_attrs['state'] if request_attrs.key?('state') # this triggers model validations
         app.command                 = request_attrs['command'] if request_attrs.key?('command')
         app.console                 = request_attrs['console'] if request_attrs.key?('console')
         app.debug                   = request_attrs['debug'] if request_attrs.key?('debug')
@@ -264,8 +264,18 @@ module VCAP::CloudController
         app.save
         v3_app.save
         v3_app.lifecycle_data.save && validate_buildpack!(app.reload) if buildpack_type_requested
-        app.reload
+        v3_app.reload
 
+        if request_attrs.key?('state')
+          case request_attrs['state']
+          when 'STARTED'
+            AppStart.new(SecurityContext.current_user, SecurityContext.current_user_email).start(v3_app)
+          when 'STOPPED'
+            AppStop.new(SecurityContext.current_user, SecurityContext.current_user_email).stop(v3_app)
+          end
+        end
+
+        app.reload
         validate_access(:update, app, request_attrs)
       end
 

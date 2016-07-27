@@ -553,16 +553,6 @@ module VCAP::CloudController
       Presenters::V3::CacheKeyPresenter.cache_key(guid: guid, stack_name: stack.name)
     end
 
-    def start!
-      self.state = 'STARTED'
-      save
-    end
-
-    def stop!
-      self.state = 'STOPPED'
-      save
-    end
-
     # returns True if we need to update the DEA's with
     # associated URL's.
     # We also assume that the relevant methods in +Dea::Client+ will reset

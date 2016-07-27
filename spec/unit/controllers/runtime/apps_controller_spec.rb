@@ -1086,6 +1086,56 @@ module VCAP::CloudController
           expect(last_response.body).to include('bits have not been uploaded')
         end
       end
+
+      describe 'starting and stopping' do
+        let(:parent_app) { app_obj.app }
+        let(:app_obj) { AppFactory.make(instances: 1, state: state) }
+        let(:sibling) { App.make(instances: 1, state: state, app: parent_app, type: 'worker') }
+
+        context 'starting' do
+          let(:state) { 'STOPPED' }
+
+          it 'is reflected in the parent app and all sibling processes' do
+            expect(parent_app.desired_state).to eq('STOPPED')
+            expect(app_obj.state).to eq('STOPPED')
+            expect(sibling.state).to eq('STOPPED')
+
+            put "/v2/apps/#{app_obj.guid}", '{ "state": "STARTED" }'
+            expect(last_response.status).to eq(201)
+
+            expect(parent_app.reload.desired_state).to eq('STARTED')
+            expect(app_obj.reload.state).to eq('STARTED')
+            expect(sibling.reload.state).to eq('STARTED')
+          end
+        end
+
+        context 'stopping' do
+          let(:state) { 'STARTED' }
+
+          it 'is reflected in the parent app and all sibling processes' do
+            expect(parent_app.desired_state).to eq('STARTED')
+            expect(app_obj.state).to eq('STARTED')
+            expect(sibling.state).to eq('STARTED')
+
+            put "/v2/apps/#{app_obj.guid}", '{ "state": "STOPPED" }'
+            expect(last_response.status).to eq(201)
+
+            expect(parent_app.reload.desired_state).to eq('STOPPED')
+            expect(app_obj.reload.state).to eq('STOPPED')
+            expect(sibling.reload.state).to eq('STOPPED')
+          end
+        end
+
+        context 'invalid state' do
+          let(:state) { 'STOPPED' }
+
+          it 'raises an error' do
+            put "/v2/apps/#{app_obj.guid}", '{ "state": "ohio" }'
+            expect(last_response.status).to eq(400)
+            expect(last_response.body).to include('Invalid app state')
+          end
+        end
+      end
     end
 
     describe 'delete an app' do

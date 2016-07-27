@@ -5,7 +5,6 @@ module VCAP::CloudController
     def initialize(user, user_email)
       @user = user
       @user_email = user_email
-      @logger = Steno.logger('cc.action.app_stop')
     end
 
     def stop(app)
@@ -19,8 +18,6 @@ module VCAP::CloudController
           @user_email
         )
 
-        # this will force a query, may want to eager load processes in
-        # AppFetcher
         app.processes.each { |process| process.update(state: 'STOPPED') }
       end
     rescue Sequel::ValidationFailed => e

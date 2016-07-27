@@ -50,7 +50,6 @@ module VCAP::CloudController
         let!(:droplet) do
           DropletModel.make(
             app:          app_model,
-            # package:      package,
             state:        DropletModel::STAGED_STATE,
             droplet_hash: 'the-hash'
           )

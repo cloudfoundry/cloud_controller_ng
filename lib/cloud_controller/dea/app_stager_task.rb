@@ -234,9 +234,9 @@ module VCAP::CloudController
       def staging_fail(error)
         @droplet.db.transaction do
           @droplet.lock!
-          @app.lock!
           @droplet.fail_to_stage!(error)
-          @app.stop!
+
+          AppStop.new(SystemAuditUser, SystemAuditUser.email).stop(@droplet.app)
         end
       end
 

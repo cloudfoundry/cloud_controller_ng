@@ -137,7 +137,7 @@ module VCAP::CloudController
         context 'when the app is stopped' do
           before do
             set_current_user(@developer)
-            @app.stop!
+            @app.update(state: 'STOPPED')
           end
 
           it 'raises an error' do

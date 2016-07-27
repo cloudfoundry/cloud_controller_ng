@@ -1267,47 +1267,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#start!' do
-      let!(:app) { AppFactory.make }
-
-      before do
-        allow(AppObserver).to receive(:updated)
-      end
-
-      it 'should set the state to started' do
-        expect {
-          app.start!
-        }.to change { app.state }.to 'STARTED'
-      end
-
-      it 'saves the app to trigger the AppObserver', isolation: :truncation do
-        expect(AppObserver).not_to have_received(:updated).with(app)
-        app.start!
-        expect(AppObserver).to have_received(:updated).with(app)
-      end
-    end
-
-    describe '#stop!' do
-      let!(:app) { AppFactory.make }
-
-      before do
-        allow(AppObserver).to receive(:updated)
-        app.state = 'STARTED'
-      end
-
-      it 'sets the state to stopped' do
-        expect {
-          app.stop!
-        }.to change { app.state }.to 'STOPPED'
-      end
-
-      it 'saves the app to trigger the AppObserver', isolation: :truncation do
-        expect(AppObserver).not_to have_received(:updated).with(app)
-        app.stop!
-        expect(AppObserver).to have_received(:updated).with(app)
-      end
-    end
-
     describe '#desired_instances' do
       before do
         @app           = App.new
