@@ -240,6 +240,14 @@ module CloudController
       bits_service_options[:enabled]
     end
 
+    def packer_class
+      if use_bits_service
+        Jobs::Runtime::BitsServicePacker
+      else
+        Jobs::Runtime::AppBitsPacker
+      end
+    end
+
     private
 
     def create_paginated_collection_renderer(opts={})
