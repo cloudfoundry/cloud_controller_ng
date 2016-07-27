@@ -12,6 +12,8 @@ require 'cloud_controller/diego/tps_client'
 require 'cloud_controller/diego/messenger'
 require 'cloud_controller/blobstore/client_provider'
 require 'bits_service/resource_pool'
+require 'cloud_controller/resource_pool_wrapper'
+require 'cloud_controller/bits_service_resource_pool_wrapper'
 
 module CloudController
   class DependencyLocator
@@ -230,6 +232,14 @@ module CloudController
     def bits_service_resource_pool
       return nil unless use_bits_service
       BitsService::ResourcePool.new(endpoint: bits_service_options[:private_endpoint])
+    end
+
+    def resource_pool_wrapper
+      if bits_service_resource_pool
+        BitsServiceResourcePoolWrapper
+      else
+        ResourcePoolWrapper
+      end
     end
 
     def bits_service_options
