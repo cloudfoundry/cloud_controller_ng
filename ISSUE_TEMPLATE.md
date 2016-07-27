@@ -1,4 +1,4 @@
-Thanks for submitting an issue to `cloud_controller-ng`. We are always trying to improve! To help us, please fill out the following template.
+Thanks for submitting an issue to `cloud_controller_ng`. We are always trying to improve! To help us, please fill out the following template.
 
 ## Issue
 
