@@ -21,11 +21,6 @@ module VCAP::CloudController
         expect(app.reload.routes).to eq([route])
       end
 
-      it 'associates the route to the process' do
-        route_mapping_create.add
-        expect(process.reload.routes).to eq([route])
-      end
-
       describe 'recording events' do
         let(:event_repository) { double(Repositories::AppEventRepository) }
 
@@ -67,7 +62,7 @@ module VCAP::CloudController
             it 'raises' do
               expect {
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /8080 is not available/)
+              }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8080 is not available/)
             end
           end
 
@@ -94,7 +89,7 @@ module VCAP::CloudController
               it 'raises' do
                 expect {
                   route_mapping_create.add
-                }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /8080 is not available/)
+                }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8080 is not available/)
               end
             end
           end
@@ -121,7 +116,7 @@ module VCAP::CloudController
             it 'raises' do
               expect {
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /1234 is not available/)
+              }.to raise_error(RouteMappingCreate::UnavailableAppPort, /1234 is not available/)
             end
           end
 
@@ -131,7 +126,7 @@ module VCAP::CloudController
             it 'raises' do
               expect {
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /1234 is not available/)
+              }.to raise_error(RouteMappingCreate::UnavailableAppPort, /1234 is not available/)
             end
           end
 
@@ -168,7 +163,7 @@ module VCAP::CloudController
             it 'raises' do
               expect {
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /8080 is not available/)
+              }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8080 is not available/)
             end
           end
 
@@ -196,7 +191,7 @@ module VCAP::CloudController
               it 'raises' do
                 expect {
                   route_mapping_create.add
-                }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /8080 is not available/)
+                }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8080 is not available/)
               end
             end
           end
@@ -209,7 +204,7 @@ module VCAP::CloudController
             it 'raises' do
               expect {
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /8080 is not available/)
+              }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8080 is not available/)
             end
           end
 
@@ -218,7 +213,7 @@ module VCAP::CloudController
             it 'raises' do
               expect {
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /8080 is not available/)
+              }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8080 is not available/)
             end
           end
         end
@@ -230,7 +225,7 @@ module VCAP::CloudController
             it 'raises' do
               expect {
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /1234 is not available/)
+              }.to raise_error(RouteMappingCreate::UnavailableAppPort, /1234 is not available/)
             end
           end
 
@@ -239,7 +234,7 @@ module VCAP::CloudController
             it 'raises' do
               expect {
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /1234 is not available/)
+              }.to raise_error(RouteMappingCreate::UnavailableAppPort, /1234 is not available/)
             end
           end
         end
@@ -254,7 +249,7 @@ module VCAP::CloudController
           it 'does not allow for duplicate route association' do
             expect {
               route_mapping_create.add
-            }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /Duplicate Route Mapping/)
+            }.to raise_error(RouteMappingCreate::DuplicateRouteMapping, /Duplicate Route Mapping/)
             expect(app.reload.routes).to eq([route])
           end
         end

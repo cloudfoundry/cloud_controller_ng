@@ -1,6 +1,8 @@
 module VCAP::CloudController
   class RouteMappingCreate
     class InvalidRouteMapping < StandardError; end
+    class DuplicateRouteMapping < InvalidRouteMapping; end
+    class UnavailableAppPort < InvalidRouteMapping; end
 
     DUPLICATE_MESSAGE = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
     INVALID_SPACE_MESSAGE = 'the app and route must belong to the same space'.freeze
@@ -28,14 +30,6 @@ module VCAP::CloudController
       RouteMappingModel.db.transaction do
         route_mapping.save
 
-        if @process
-          RouteMapping.create(
-            app:      @process,
-            route:    @route,
-            app_port: @message.app_port
-          )
-        end
-
         app_event_repository.record_map_route(
           @app,
           @route,
@@ -49,7 +43,7 @@ module VCAP::CloudController
 
     rescue Sequel::ValidationFailed => e
       if e.errors && e.errors.on([:app_guid, :route_guid, :process_type, :app_port]) && e.errors.on([:app_guid, :route_guid, :process_type, :app_port]).include?(:unique)
-        raise InvalidRouteMapping.new(DUPLICATE_MESSAGE)
+        raise DuplicateRouteMapping.new(DUPLICATE_MESSAGE)
       end
 
       raise InvalidRouteMapping.new(e.message)
@@ -70,17 +64,17 @@ module VCAP::CloudController
 
     def validate_non_web_port!
       return if @process.type == 'web'
-      raise_unvailable_port! if @process.ports.blank?
-      raise_unvailable_port! unless @process.ports.include?(@message.app_port.to_i)
+      raise_unavailable_port! if @process.ports.blank?
+      raise_unavailable_port! unless @process.ports.include?(@message.app_port.to_i)
     end
 
     def validate_web_port!
       return unless @process.type == 'web'
 
       if @process.ports.nil?
-        raise_unvailable_port! unless @message.app_port.to_i == 8080
+        raise_unavailable_port! unless @message.app_port.to_i == 8080
       else
-        raise_unvailable_port! unless @process.ports.include?(@message.app_port.to_i)
+        raise_unavailable_port! unless @process.ports.include?(@message.app_port.to_i)
       end
     end
 
@@ -92,8 +86,8 @@ module VCAP::CloudController
       Repositories::AppEventRepository.new
     end
 
-    def raise_unvailable_port!
-      raise InvalidRouteMapping.new(UNAVAILABLE_APP_PORT_MESSAGE_FORMAT % @message.app_port)
+    def raise_unavailable_port!
+      raise UnavailableAppPort.new(UNAVAILABLE_APP_PORT_MESSAGE_FORMAT % @message.app_port)
     end
   end
 end

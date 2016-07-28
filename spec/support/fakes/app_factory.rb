@@ -37,6 +37,7 @@ module VCAP
           attributes[:app] = parent_app
         end
         attributes[:app] = parent_app
+        attributes[:guid] = parent_app.guid
 
         args << attributes
 

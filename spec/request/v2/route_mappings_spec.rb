@@ -128,7 +128,7 @@ RSpec.describe 'RouteMappings' do
   end
 
   describe 'POST /v2/route_mappings' do
-    let(:process) { VCAP::CloudController::AppFactory.make(space: space, diego: true) }
+    let(:process) { VCAP::CloudController::AppFactory.make(space: space, diego: true, ports: [9090]) }
     let(:route) { VCAP::CloudController::Route.make(space: space) }
 
     it 'creates a route mapping' do
@@ -143,7 +143,7 @@ RSpec.describe 'RouteMappings' do
       expect(last_response.status).to eq(201)
 
       parsed_response = MultiJson.load(last_response.body)
-      route_mapping   = VCAP::CloudController::RouteMapping.last
+      route_mapping   = VCAP::CloudController::RouteMappingModel.last
 
       expect(parsed_response).to be_a_response_like({
         'metadata' => {
@@ -164,6 +164,7 @@ RSpec.describe 'RouteMappings' do
       expect(route_mapping.app_guid).to eq(process.guid)
       expect(route_mapping.route_guid).to eq(route.guid)
       expect(route_mapping.app_port).to eq(9090)
+      expect(route_mapping.process_type).to eq('web')
 
       event = VCAP::CloudController::Event.last
       expect(event.type).to eq('audit.app.map-route')

@@ -445,7 +445,7 @@ module VCAP::CloudController
         let(:app_obj) { AppFactory.make(space: space) }
         let(:space) { route.space }
         let(:developer) { make_developer_for_space(space) }
-        let(:route_mapping) { RouteMapping.make(app_guid: app_obj.guid, route_guid: route.guid) }
+        let(:route_mapping) { RouteMappingModel.make(app: app_obj.app, route: route, process_type: app_obj.type) }
 
         before do
           set_current_user(developer)
