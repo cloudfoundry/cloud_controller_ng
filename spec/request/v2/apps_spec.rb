@@ -10,7 +10,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v2/apps' do
-    let!(:process) {
+    let!(:process) do
       VCAP::CloudController::AppFactory.make(:unstaged,
         app:                     VCAP::CloudController::AppModel.make(
           space:                 space,
@@ -19,7 +19,7 @@ RSpec.describe 'Apps' do
         command:                 'hello_world',
         docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' }
       )
-    }
+    end
 
     it 'lists all apps' do
       get '/v2/apps', nil, headers_for(user)
@@ -86,8 +86,10 @@ RSpec.describe 'Apps' do
 
     context 'with inline-relations-depth' do
       it 'includes related records' do
-        get '/v2/apps?inline-relations-depth=1', nil, headers_for(user)
+        route = VCAP::CloudController::Route.make(space: space)
+        process.add_route(route)
 
+        get '/v2/apps?inline-relations-depth=1', nil, headers_for(user)
         expect(last_response.status).to eq(200)
 
         parsed_response = MultiJson.load(last_response.body)
@@ -102,7 +104,7 @@ RSpec.describe 'Apps' do
                 'guid'       => process.guid,
                 'url'        => "/v2/apps/#{process.guid}",
                 'created_at' => iso8601,
-                'updated_at' => nil
+                'updated_at' => iso8601,
               },
               'entity' => {
                 'name'                       => process.name,
@@ -177,7 +179,28 @@ RSpec.describe 'Apps' do
                   }
                 },
                 'routes_url'                 => "/v2/apps/#{process.guid}/routes",
-                'routes'                     => [],
+                'routes'                     => [
+                  {
+                    'metadata' => {
+                      'guid' => route.guid,
+                      'url' => "/v2/routes/#{route.guid}",
+                      'created_at' => iso8601,
+                      'updated_at' => nil
+                    },
+                    'entity' => {
+                      'host' => route.host,
+                      'path' => '',
+                      'domain_guid' => route.domain.guid,
+                      'space_guid' => space.guid,
+                      'service_instance_guid' => nil,
+                      'port' => nil,
+                      'domain_url' => "/v2/private_domains/#{route.domain.guid}",
+                      'space_url' => "/v2/spaces/#{space.guid}",
+                      'apps_url' => "/v2/routes/#{route.guid}/apps",
+                      'route_mappings_url' => "/v2/routes/#{route.guid}/route_mappings"
+                    }
+                  }
+                ],
                 'events_url'                 => "/v2/apps/#{process.guid}/events",
                 'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
                 'service_bindings'           => [],
@@ -249,14 +272,14 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v2/apps/:guid' do
-    let!(:process) {
+    let!(:process) do
       VCAP::CloudController::AppFactory.make(
         space:                   space,
         name:                    'app-name',
         docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' },
         command:                 'app-command'
       )
-    }
+    end
 
     it 'displays the app' do
       get "/v2/apps/#{process.guid}", nil, headers_for(user)
