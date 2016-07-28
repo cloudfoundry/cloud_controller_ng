@@ -48,8 +48,8 @@ RSpec.describe ProcessesController, type: :controller do
         let(:params) { { 'page' => page, 'per_page' => per_page, app_guid: app.guid } }
 
         it 'paginates the response' do
-          VCAP::CloudController::ProcessModel.make(:process, app_guid: app.guid)
-          VCAP::CloudController::ProcessModel.make(:process, app_guid: app.guid)
+          VCAP::CloudController::ProcessModel.make(:process, app: app)
+          VCAP::CloudController::ProcessModel.make(:process, app: app)
 
           get :index, params
 
@@ -97,8 +97,8 @@ RSpec.describe ProcessesController, type: :controller do
     end
 
     context 'admin types' do
-      let!(:process1) { VCAP::CloudController::ProcessModel.make(space: space) }
-      let!(:process2) { VCAP::CloudController::ProcessModel.make(space: space) }
+      let!(:process1) { VCAP::CloudController::ProcessModel.make(app: app, type: 'salt') }
+      let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app, type: 'peppa') }
       let!(:process3) { VCAP::CloudController::ProcessModel.make }
 
       context 'admin' do
