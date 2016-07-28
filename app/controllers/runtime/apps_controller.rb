@@ -204,6 +204,7 @@ module VCAP::CloudController
       @app_event_repository.record_app_update(app, app.space, SecurityContext.current_user.guid, SecurityContext.current_user_email, request_attrs)
     end
 
+    # rubocop:disable MethodLength
     # rubocop:disable Metrics/CyclomaticComplexity
     def update(guid)
       json_msg = self.class::UpdateMessage.decode(body)
@@ -292,7 +293,9 @@ module VCAP::CloudController
       [HTTP::CREATED, object_renderer.render_json(self.class, app, @opts)]
     end
     # rubocop:enable Metrics/CyclomaticComplexity
+    # rubocop:enable MethodLength
 
+    # rubocop:disable MethodLength
     def create
       json_msg = self.class::CreateMessage.decode(body)
 
@@ -368,6 +371,7 @@ module VCAP::CloudController
         object_renderer.render_json(self.class, app, @opts)
       ]
     end
+    # rubocop:enable MethodLength
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
       AppQuery.filtered_dataset_from_query_params(model, ds, qp, opts)
