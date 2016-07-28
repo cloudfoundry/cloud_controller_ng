@@ -1,6 +1,4 @@
 require 'spec_helper'
-require 'bits_service/resource_pool'
-
 require 'securerandom'
 
 module BitsService

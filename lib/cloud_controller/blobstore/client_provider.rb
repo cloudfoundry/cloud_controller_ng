@@ -3,8 +3,8 @@ require 'cloud_controller/blobstore/retryable_client'
 require 'cloud_controller/blobstore/fog/fog_client'
 require 'cloud_controller/blobstore/fog/error_handling_client'
 require 'cloud_controller/blobstore/webdav/dav_client'
-require 'cloud_controller/blobstore/bits_service/bits_service_client'
 require 'cloud_controller/blobstore/safe_delete_client'
+require 'bits_service_client'
 
 module CloudController
   module Blobstore
@@ -50,7 +50,7 @@ module CloudController
         end
 
         def provide_bits_service(bits_service_options, resource_type)
-          client = BitsServiceClient.new(
+          client = BitsService::Client.new(
             bits_service_options: bits_service_options,
             resource_type: resource_type
           )

@@ -11,9 +11,10 @@ require 'cloud_controller/diego/stager_client'
 require 'cloud_controller/diego/tps_client'
 require 'cloud_controller/diego/messenger'
 require 'cloud_controller/blobstore/client_provider'
-require 'bits_service/resource_pool'
 require 'cloud_controller/resource_pool_wrapper'
 require 'cloud_controller/bits_service_resource_pool_wrapper'
+
+require 'bits_service_client'
 
 module CloudController
   class DependencyLocator
