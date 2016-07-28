@@ -52,7 +52,9 @@ module VCAP::CloudController
 
         optional(:instance_file_descriptor_limit) => Fixnum,
 
-        optional(:allow_debug) => bool,
+        optional(:bits_service) => {
+          enabled: bool,
+        },
 
         optional(:login) => {
           url: String
@@ -266,6 +268,12 @@ module VCAP::CloudController
         optional(:security_event_logging) => {
           enabled: bool
         },
+
+        optional(:bits_service) => {
+          enabled: bool,
+          optional(:public_endpoint) => String,
+          optional(:private_endpoint) => String
+        }
       }
     end
 
@@ -387,6 +395,7 @@ module VCAP::CloudController
         config[:packages][:max_valid_packages_stored] ||= 5
         config[:droplets][:max_staged_droplets_stored] ||= 5
         config[:minimum_candidate_stagers] = (config[:minimum_candidate_stagers] && config[:minimum_candidate_stagers] > 0) ? config[:minimum_candidate_stagers] : 5
+        config[:bits_service] ||= { enabled: false }
 
         unless config.key?(:users_can_select_backend)
           config[:users_can_select_backend] = true

@@ -878,6 +878,11 @@
   http_code: 400
   message: "Resource inside space %s must first be deleted, or specify recursive delete."
 
+290012:
+  name: BitsServiceError
+  http_code: 500
+  message: "The bits service returned an error: %s"
+
 300001:
   name: SecurityGroupInvalid
   http_code: 400

@@ -30,6 +30,11 @@ module VCAP::CloudController
         let(:headers) { admin_headers }
         let(:req_body) { { resources: '[]', application: valid_zip } }
 
+        it 'instantiates an AppBitsPacker job' do
+          expect(Jobs::Runtime::AppBitsPacker).to receive(:new).with(app_obj.guid, anything, [])
+          put "/v2/apps/#{app_obj.guid}/bits", req_body, headers
+        end
+
         it 'allows upload even if app_bits_upload flag is disabled' do
           FeatureFlag.make(name: 'app_bits_upload', enabled: false)
           make_request
@@ -349,6 +354,29 @@ module VCAP::CloudController
               end
             end
           end
+        end
+      end
+
+      context 'when bits service is enabled' do
+        let(:bits_service_config) do
+          {
+            bits_service: {
+              enabled: true,
+              public_endpoint: 'https://bits-service.example.com',
+              private_endpoint: 'https://bits-service.service.cf.internal'
+            }
+          }
+        end
+        let(:order) { [{ 'sha1' => 'abcde', 'fn' => 'app.rb' }] }
+        let(:req_body) { { resources: order.to_json, application: valid_zip } }
+
+        before do
+          TestConfig.override(bits_service_config)
+        end
+
+        it 'instantiates an BitsServicePacker job' do
+          expect(Jobs::Runtime::BitsServicePacker).to receive(:new).with(app_obj.guid, anything, order)
+          put "/v2/apps/#{app_obj.guid}/bits", req_body, admin_headers
         end
       end
     end

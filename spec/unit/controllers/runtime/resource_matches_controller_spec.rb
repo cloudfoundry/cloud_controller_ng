@@ -85,5 +85,53 @@ module VCAP::CloudController
         expect(decoded_response['description']).to match(/Feature Disabled/)
       end
     end
+
+    describe 'when bits-service flag is enabled' do
+      let(:bits_service_config) do
+        {
+          bits_service: {
+            enabled: true,
+            private_endpoint: 'https://bits-service.service.cf.internal'
+          }
+        }
+      end
+      let(:resources) { [{ 'sha1': '12345' }, { 'sha1': '56789' }] }
+
+      before do
+        TestConfig.override(bits_service_config)
+        set_current_user_as_admin
+      end
+
+      it 'forwards the request using the bits_service client' do
+        expect_any_instance_of(BitsService::ResourcePool).to receive(:matches).with(resources.to_json)
+        send(:put, '/v2/resource_match', resources.to_json)
+      end
+
+      it 'returns back the matches' do
+        allow_any_instance_of(BitsService::ResourcePool).to receive(:matches).
+          and_return(double(:response, code: 200, body: resources.to_json))
+
+        send(:put, '/v2/resource_match', resources.to_json)
+        expect(last_response.body).to eq(resources.to_json)
+      end
+
+      context 'when the bits_service response is not 200' do
+        before do
+          allow_any_instance_of(BitsService::ResourcePool).to receive(:matches).
+            and_raise(BitsService::Errors::Error, 'Failed in bits-service')
+        end
+
+        it 'retuns HTTP status 500' do
+          put '/v2/resource_match', '[]'
+          expect(last_response.status).to eq(500)
+        end
+
+        it 'returns an error description' do
+          put '/v2/resource_match', '[]'
+          error = JSON.parse(last_response.body)
+          expect(error['description']).to match(/Failed in bits-service/)
+        end
+      end
+    end
   end
 end

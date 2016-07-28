@@ -333,3 +333,10 @@ default_running_security_groups: <%= p("cc.default_running_security_groups").to_
 default_staging_security_groups: <%= p("cc.default_staging_security_groups").to_json %>
 
 system_hostnames: <%= p("cc.system_hostnames") %>
+
+bits_service:
+  enabled: <%= p("cc.bits_service.enabled") %>
+  <% if p("cc.bits_service.enabled") %>
+  public_endpoint: <%= p("cc.bits_service.public_endpoint") %>
+  private_endpoint: <%= p("cc.bits_service.private_endpoint") %>
+  <% end %>
