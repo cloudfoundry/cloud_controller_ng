@@ -106,9 +106,10 @@ module VCAP::CloudController
         relation_name = :managed_service_instances
       end
 
+      admin_override = SecurityContext.admin? || SecurityContext.admin_read_only?
       service_instances = Query.filtered_dataset_from_query_params(
         model_class,
-        space.user_visible_relationship_dataset(relation_name, SecurityContext.current_user, SecurityContext.admin?),
+        space.user_visible_relationship_dataset(relation_name, SecurityContext.current_user, admin_override),
         ServiceInstancesController.query_parameters,
         @opts)
       service_instances.filter(space: space)
