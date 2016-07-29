@@ -53,6 +53,7 @@ Sequel.migration do
     drop_table(:package_docker_data)
     drop_table(:v3_droplets)
 
+    run 'DELETE FROM droplets WHERE app_id IN (SELECT id FROM apps WHERE app_guid IS NOT NULL);'
     run 'DELETE FROM apps_routes WHERE app_id IN (SELECT id FROM apps WHERE app_guid IS NOT NULL);'
     run 'DELETE FROM apps WHERE app_guid IS NOT NULL OR deleted_at IS NOT NULL;'
     self[:route_mappings].truncate
