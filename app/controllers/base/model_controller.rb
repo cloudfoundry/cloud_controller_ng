@@ -189,7 +189,7 @@ module VCAP::CloudController::RestController
     # @param [String] other_guid The GUID of the object to be "verb"ed to the
     # relation.
     def do_related(verb, guid, name, other_guid, parent_model=model)
-      logger.debug "cc.association.#{verb}", guid: guid, assocation: name, other_guid: other_guid
+      logger.debug "cc.association.#{verb}", guid: guid, association: name, other_guid: other_guid
 
       singular_name = name.to_s.singularize
 

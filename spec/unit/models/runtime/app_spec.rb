@@ -120,8 +120,8 @@ module VCAP::CloudController
       context 'when an app has multiple ports bound to the same route' do
         let(:app) { AppFactory.make(diego: true, ports: [8080, 9090]) }
         let(:route) { Route.make(host: 'host2', space: app.space, path: '/my%20path') }
-        let!(:route_mapping1) { RouteMapping.make(app: app, route: route, app_port: 8080) }
-        let!(:route_mapping2) { RouteMapping.make(app: app, route: route, app_port: 9090) }
+        let!(:route_mapping1) { RouteMappingModel.make(app: app, route: route, app_port: 8080) }
+        let!(:route_mapping2) { RouteMappingModel.make(app: app, route: route, app_port: 9090) }
 
         it 'returns a single associated route' do
           expect(app.routes.size).to eq 1
@@ -1636,13 +1636,6 @@ module VCAP::CloudController
       it 'notifies the app observer', isolation: :truncation do
         expect(AppObserver).to receive(:deleted).with(app)
         app.destroy
-      end
-
-      it 'should nullify the routes' do
-        app.add_route(route)
-        expect {
-          app.destroy
-        }.to change { route.reload.apps.collect(&:guid) }.from([app.guid]).to([])
       end
 
       context 'when the service broker can successfully delete service bindings' do

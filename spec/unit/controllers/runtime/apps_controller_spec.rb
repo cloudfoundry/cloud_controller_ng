@@ -773,36 +773,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when associating with route' do
-        let(:space_quota) { SpaceQuotaDefinition.make(organization: app_obj.space.organization) }
-        let(:domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: 'guid_1') }
-        let(:route) { Route.make(space: app_obj.space, domain: domain, port: 9090, host: '') }
-
-        before do
-          allow_any_instance_of(RouteValidator).to receive(:validate)
-          app_obj.space.space_quota_definition = space_quota
-        end
-
-        it 'allows updating app' do
-          put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
-
-          expect(last_response).to have_status_code(201)
-          expect(app_obj.reload.routes.first).to eq(route)
-        end
-
-        context 'when routing api is not enabled' do
-          before do
-            TestConfig.override(routing_api: nil)
-          end
-
-          it 'returns 403' do
-            put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
-            expect(last_response).to have_status_code(403)
-            expect(decoded_response['description']).to include('Support for TCP routing is disabled')
-          end
-        end
-      end
-
       it 'updates the app' do
         v2_app = App.make
         v3_app = v2_app.app
@@ -1744,30 +1714,6 @@ module VCAP::CloudController
       end
     end
 
-    describe 'on route bind' do
-      context 'with a non-Diego app' do
-        let(:space) { route.space }
-        let(:app_obj) { AppFactory.make(diego: false, app: AppModel.make(space: space), state: 'STARTED') }
-        let(:user) { make_developer_for_space(space) }
-        let(:route_binding) { RouteBinding.make }
-        let(:service_instance) { route_binding.service_instance }
-        let(:route) { route_binding.route }
-
-        context 'and the route is already bound to a routing service' do
-          let(:decoded_response) { MultiJson.load(last_response.body) }
-
-          it 'fails to change the route' do
-            set_current_user(user)
-
-            put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
-
-            expect(decoded_response['description']).to match(/Invalid relation: The requested route relation is invalid: .* - Route services are only supported for apps on Diego/)
-            expect(last_response.status).to eq(400)
-          end
-        end
-      end
-    end
-
     describe 'on instance number change' do
       before do
         FeatureFlag.create(name: 'diego_docker', enabled: true)
@@ -2043,6 +1989,115 @@ module VCAP::CloudController
         get '/v2/apps'
         expect(decoded_response['total_results']).to eq(1)
         expect(decoded_response['resources'][0]['metadata']['guid']).to eq(web_app.guid)
+      end
+    end
+
+    describe 'PUT /v2/apps/:app_guid/routes/:route_guid' do
+      let(:app_obj) { AppFactory.make }
+      let(:route) { Route.make(space: app_obj.space) }
+      let(:developer) { make_developer_for_space(app_obj.space) }
+
+      before do
+        set_current_user(developer)
+      end
+
+      it 'adds the route to the app' do
+        expect(app_obj.reload.routes).to be_empty
+
+        put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
+
+        expect(last_response).to have_status_code(201)
+        expect(app_obj.reload.routes).to match_array([route])
+
+        route_mapping = RouteMappingModel.last
+        expect(route_mapping.app_port).to eq(8080)
+        expect(route_mapping.process_type).to eq('web')
+      end
+
+      context 'when the app does not exist' do
+        it 'returns 404' do
+          put "/v2/apps/not-real/routes/#{route.guid}", nil
+          expect(last_response).to have_status_code(404)
+          expect(last_response.body).to include('AppNotFound')
+        end
+      end
+
+      context 'when the route does not exist' do
+        it 'returns 404' do
+          put "/v2/apps/#{app_obj.guid}/routes/not-real", nil
+          expect(last_response).to have_status_code(404)
+          expect(last_response.body).to include('RouteNotFound')
+        end
+      end
+
+      context 'when the route is already mapped to the app' do
+        before do
+          RouteMappingModel.make(app: app_obj.app, route: route, process_type: app_obj.type)
+        end
+
+        it 'succeeds' do
+          expect(app_obj.reload.routes).to match_array([route])
+
+          put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
+          expect(last_response).to have_status_code(201)
+        end
+      end
+
+      context 'when the user is not a developer in the apps space' do
+        before do
+          set_current_user(User.make)
+        end
+
+        it 'returns 403' do
+          put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
+          expect(last_response).to have_status_code(403)
+        end
+      end
+
+      context 'when a route with a routing service is mapped to a non-diego app' do
+        let(:route_binding) { RouteBinding.make }
+        let(:route) { route_binding.route }
+        let(:app_obj) { AppFactory.make(space: route.space, diego: false) }
+
+        it 'fails to add the route' do
+          put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
+          expect(last_response.status).to eq(400)
+          expect(decoded_response['description']).to match(/Invalid relation: The requested route relation is invalid: .* - Route services are only supported for apps on Diego/)
+        end
+      end
+
+      describe 'routes from tcp router groups' do
+        let(:domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: 'guid_1') }
+        let(:route) { Route.make(space: app_obj.space, domain: domain, port: 9090, host: '') }
+
+        before do
+           allow_any_instance_of(RouteValidator).to receive(:validate)
+        end
+
+        it 'adds the route to the app' do
+          expect(app_obj.reload.routes).to be_empty
+
+          put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
+
+          expect(last_response).to have_status_code(201)
+          expect(app_obj.reload.routes).to match_array([route])
+
+          route_mapping = RouteMappingModel.last
+          expect(route_mapping.app_port).to eq(8080)
+          expect(route_mapping.process_type).to eq('web')
+        end
+
+        context 'when routing api is not enabled' do
+          before do
+            TestConfig.override(routing_api: nil)
+          end
+
+          it 'returns 403' do
+            put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
+            expect(last_response).to have_status_code(403)
+            expect(decoded_response['description']).to include('Support for TCP routing is disabled')
+          end
+        end
       end
     end
   end

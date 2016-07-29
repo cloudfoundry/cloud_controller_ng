@@ -15,6 +15,7 @@ module VCAP::CloudController
       end
 
       def add(request_attrs)
+        @process.validate_route(@route)
         validate_routing_api_enabled!
         validate_port!(request_attrs)
 

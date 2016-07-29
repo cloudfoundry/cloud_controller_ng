@@ -93,6 +93,9 @@ module VCAP::CloudController
       ]
 
     many_to_many :routes,
+      join_table: RouteMappingModel.table_name,
+      left_primary_key: [:app_guid, :type], left_key: [:app_guid, :process_type],
+      right_primary_key: :guid, right_key: :route_guid,
       distinct:     true,
       order:        Sequel.asc(:id),
       before_add:   :validate_route,
@@ -107,7 +110,7 @@ module VCAP::CloudController
 
     one_to_many :route_mappings
 
-    add_association_dependencies routes: :nullify, events: :delete
+    add_association_dependencies events: :delete
 
     export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
                       :detected_buildpack, :detected_buildpack_guid, :environment_json, :memory, :instances, :disk_quota,

@@ -32,7 +32,7 @@ module VCAP::CloudController
       to_one :space
       to_one :stack, optional_in: :create
 
-      to_many :routes,              exclude_in: [:create, :update]
+      to_many :routes,              exclude_in: [:create, :update], route_for: :get
       to_many :events,              exclude_in: [:create, :update], link_only: true
       to_many :service_bindings,    exclude_in: [:create, :update]
       to_many :route_mappings,      exclude_in: [:create, :update], link_only: true, route_for: :get
@@ -156,15 +156,6 @@ module VCAP::CloudController
       ignore_empty_ports! if ports == []
       if should_warn_about_changed_ports?(app.diego, updated_diego_flag, ports)
         add_warning('App ports have changed but are unknown. The app should now listen on the port specified by environment variable PORT.')
-      end
-      return if request_attrs['route'].blank?
-      route = Route.find(guid: request_attrs['route'])
-      begin
-        RouteMappingValidator.new(route, app).validate
-      rescue RouteMappingValidator::RouteInvalidError
-        raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', request_attrs['route_guid'])
-      rescue RouteMappingValidator::TcpRoutingDisabledError
-        raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
       end
     end
 
@@ -372,6 +363,32 @@ module VCAP::CloudController
       ]
     end
     # rubocop:enable MethodLength
+
+    put '/v2/apps/:app_guid/routes/:route_guid', :add_route
+    def add_route(app_guid, route_guid)
+      logger.debug "cc.association.add", guid: app_guid, association: 'routes', other_guid: route_guid
+      @request_attrs = { 'route' => route_guid, verb: 'add', relation: 'routes', related_guid: route_guid }
+
+      app = find_guid(app_guid, App)
+      validate_access(:read_related_object_for_update, app, request_attrs)
+
+      before_update(app)
+
+      route = Route.find(guid: request_attrs['route'])
+      raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', route_guid) unless route
+
+      begin
+        V2::RouteMappingCreate.new(SecurityContext.current_user, SecurityContext.current_user_email, route, app).add(request_attrs)
+      rescue RouteMappingCreate::DuplicateRouteMapping
+        # the route is already mapped, consider the request successful
+      rescue V2::RouteMappingCreate::TcpRoutingDisabledError
+        raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+      end
+
+      after_update(app)
+
+      [HTTP::CREATED, object_renderer.render_json(self.class, app, @opts)]
+    end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
       AppQuery.filtered_dataset_from_query_params(model, ds, qp, opts)
