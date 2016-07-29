@@ -1,6 +1,8 @@
 require 'presenters/message_bus/service_instance_presenter'
 
 class ServiceBindingPresenter
+  WHITELISTED_VOLUME_FIELDS = ['container_dir', 'mode', 'device_type']
+
   def initialize(service_binding, include_instance: false)
     @service_binding = service_binding
     @include_instance = include_instance
@@ -14,9 +16,8 @@ class ServiceBindingPresenter
 
   def self.censor_volume_mounts(volume_mounts)
     return [] unless volume_mounts.is_a?(Array)
-
     volume_mounts.map do |mount_info|
-      mount_info.reject { |k, _v| k == 'private' }
+      mount_info.reject { |k, _v| !WHITELISTED_VOLUME_FIELDS.include?(k) }
     end
   end
 

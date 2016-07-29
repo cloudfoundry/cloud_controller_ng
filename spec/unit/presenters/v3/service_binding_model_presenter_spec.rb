@@ -5,8 +5,8 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe ServiceBindingModelPresenter do
     let(:presenter) { ServiceBindingModelPresenter.new(service_binding) }
     let(:credentials) { { 'very-secret' => 'password' }.to_json }
-    let(:volume_mounts) { [{ 'not-secret' => 'normal stuff', 'private': { 'very-secret' => 'password' } }] }
-    let(:censored_volume_mounts) { [{ 'not-secret' => 'normal stuff' }] }
+    let(:volume_mounts) { [{ 'container_dir' => '/a/reasonable/path', 'device' => { 'very-secret' => 'password' } }] }
+    let(:censored_volume_mounts) { [{ 'container_dir' => '/a/reasonable/path' }] }
     let(:service_binding) { VCAP::CloudController::ServiceBindingModel.make(
       created_at: Time.at(1),
       updated_at: Time.at(2),
