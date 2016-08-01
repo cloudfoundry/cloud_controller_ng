@@ -394,6 +394,27 @@ module VCAP::CloudController
       [HTTP::CREATED, object_renderer.render_json(self.class, app, @opts)]
     end
 
+    delete '/v2/apps/:app_guid/routes/:route_guid', :remove_route
+    def remove_route(app_guid, route_guid)
+      logger.debug 'cc.association.remove', guid: app_guid, association: 'routes', other_guid: route_guid
+      @request_attrs = { 'route' => route_guid, verb: 'remove', relation: 'routes', related_guid: route_guid }
+
+      process = find_guid(app_guid, App)
+      validate_access(:can_remove_related_object, process, request_attrs)
+
+      before_update(process)
+
+      route = Route.find(guid: request_attrs['route'])
+      raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', route_guid) unless route
+
+      route_mapping = RouteMappingModel.find(app: process.app, route: route, process: process)
+      RouteMappingDelete.new(SecurityContext.current_user, SecurityContext.current_user_email).delete(route_mapping)
+
+      after_update(process)
+
+      [HTTP::NO_CONTENT]
+    end
+
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
       AppQuery.filtered_dataset_from_query_params(model, ds, qp, opts)
     end
