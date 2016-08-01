@@ -1415,5 +1415,68 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'DELETE /v2/routes/:guid/apps/:app_guid' do
+      let(:route) { Route.make }
+      let(:app_obj) { AppFactory.make(space: route.space) }
+      let(:developer) { make_developer_for_space(route.space) }
+      let!(:route_mapping) { RouteMappingModel.make(app: app_obj.app, route: route, process_type: app_obj.type) }
+
+      before do
+        allow(route_event_repository).to receive(:record_route_update)
+        set_current_user(developer)
+      end
+
+      it 'removes the association' do
+        expect(route.reload.apps).to match_array([app_obj])
+
+        delete "/v2/routes/#{route.guid}/apps/#{app_obj.guid}"
+        expect(last_response.status).to eq(204)
+
+        expect(route.reload.apps).to be_empty
+        expect(route_mapping.exists?).to be_falsey
+      end
+
+      context 'when the route does not exist' do
+        it 'returns a 404' do
+          delete "/v2/routes/bogus-guid/apps/#{app_obj.guid}"
+          expect(last_response.status).to eq(404)
+          expect(last_response.body).to include('RouteNotFound')
+        end
+      end
+
+      context 'when the app does not exist' do
+        it 'returns a 404' do
+          delete "/v2/routes/#{route.guid}/apps/whoops"
+          expect(last_response.status).to eq(404)
+          expect(last_response.body).to include('AppNotFound')
+        end
+      end
+
+      context 'when there is no route mapping' do
+        before { route_mapping.destroy }
+
+        it 'succeeds' do
+          expect(route.reload.apps).to match_array([])
+
+          delete "/v2/routes/#{route.guid}/apps/#{app_obj.guid}"
+          expect(last_response.status).to eq(204)
+
+          expect(route.reload.apps).to be_empty
+          expect(route_mapping.exists?).to be_falsey
+        end
+      end
+
+      context 'when the user is not a SpaceDeveloper' do
+        before do
+          set_current_user(User.make)
+        end
+
+        it 'returns 403' do
+          delete "/v2/routes/#{route.guid}/apps/#{app_obj.guid}"
+          expect(last_response).to have_status_code(403)
+        end
+      end
+    end
   end
 end

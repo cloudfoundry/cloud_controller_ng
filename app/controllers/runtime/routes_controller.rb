@@ -294,6 +294,27 @@ module VCAP::CloudController
       [HTTP::CREATED, object_renderer.render_json(self.class, route, @opts)]
     end
 
+    delete '/v2/routes/:route_guid/apps/:app_guid', :remove_app
+    def remove_app(route_guid, app_guid)
+      logger.debug 'cc.association.remove', guid: route_guid, association: 'apps', other_guid: app_guid
+      @request_attrs = { 'app' => app_guid, verb: 'remove', relation: 'apps', related_guid: app_guid }
+
+      route = find_guid(route_guid, Route)
+      validate_access(:can_remove_related_object, route, request_attrs)
+
+      before_update(route)
+
+      process = App.find(guid: request_attrs['app'])
+      raise CloudController::Errors::ApiError.new_from_details('AppNotFound', app_guid) unless process
+
+      route_mapping = RouteMappingModel.find(app: process.app, route: route, process: process)
+      RouteMappingDelete.new(SecurityContext.current_user, SecurityContext.current_user_email).delete(route_mapping)
+
+      after_update(route)
+
+      [HTTP::NO_CONTENT]
+    end
+
     define_messages
     define_routes
 
