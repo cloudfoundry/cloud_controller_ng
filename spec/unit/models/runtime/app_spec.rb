@@ -1299,7 +1299,7 @@ module VCAP::CloudController
         app    = AppFactory.make(app: parent_app)
         domain = PrivateDomain.make(name: 'mydomain.com', owning_organization: org)
         route  = Route.make(host: 'myhost', domain: domain, space: space, path: '/my%20path')
-        app.add_route(route)
+        RouteMappingModel.make(app: app.app, route: route, process_type: app.type)
         expect(app.uris).to eq(['myhost.mydomain.com/my%20path'])
       end
     end

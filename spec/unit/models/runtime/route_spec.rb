@@ -72,9 +72,35 @@ module VCAP::CloudController
     describe 'Associations' do
       it { is_expected.to have_associated :domain }
       it { is_expected.to have_associated :space, associated_instance: ->(route) { Space.make(organization: route.domain.owning_organization) } }
-      it { is_expected.to have_associated :apps, associated_instance: ->(route) { AppFactory.make(space: route.space) } }
       it { is_expected.to have_associated :route_mappings, associated_instance: ->(route) { RouteMappingModel.make(app: AppModel.make(space: route.space), route: route) } }
-      it { is_expected.to have_associated :app_route_mappings, associated_instance: ->(route) { RouteMapping.make(app: AppFactory.make(space: route.space), route: route) } }
+
+      describe 'apps association' do
+        let(:space) { Space.make }
+        let(:process) { AppFactory.make(space: space) }
+        let(:route) { Route.make(space: space) }
+
+        it 'associates apps through route mappings' do
+          RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+
+          expect(route.apps).to match_array([process])
+        end
+
+        it 'does not associate non-web v2 apps' do
+          non_web_process = AppFactory.make(type: 'other', space: space)
+
+          RouteMappingModel.make(app: process, route: route, process_type: process.type)
+          RouteMappingModel.make(app: non_web_process, route: route, process_type: non_web_process.type)
+
+          expect(route.apps).to match_array([process])
+        end
+
+        it 'returns a single app when an app is bound to multiple ports' do
+          RouteMappingModel.make(app: process, route: route, app_port: 8080)
+          RouteMappingModel.make(app: process, route: route, app_port: 9090)
+
+          expect(route.apps.length).to eq(1)
+        end
+      end
 
       context 'when bound to a service instance' do
         let(:route) { Route.make }
@@ -97,9 +123,9 @@ module VCAP::CloudController
           it 'fails when changing the space when there are apps mapped to it' do
             app = AppFactory.make
             route = Route.make(space: app.space, domain: SharedDomain.make)
-            app.add_route(route)
+            RouteMappingModel.make(app: app.app, route: route, process_type: app.type)
 
-            expect { route.space = Space.make }.to raise_error(Route::InvalidAppRelation)
+            expect { route.space = Space.make }.to raise_error(CloudController::Errors::InvalidAppRelation)
           end
         end
 
@@ -178,18 +204,6 @@ module VCAP::CloudController
           expect(mapping1.exists?).to be_falsey
           expect(mapping2.exists?).to be_falsey
         end
-      end
-
-      it 'does not associate non-web v2 apps' do
-        space = Space.make
-        app1 = AppFactory.make(type: 'web', space: space)
-        app2 = AppFactory.make(type: 'other', space: space)
-        route = Route.make(space: space)
-
-        app1.add_route(route)
-        app2.add_route(route)
-
-        expect(route.apps).to match_array([app1])
       end
     end
 
@@ -986,7 +1000,8 @@ module VCAP::CloudController
         let(:route) { Route.make(space: diego_app.space, domain: SharedDomain.make) }
 
         before do
-          diego_app.add_route(route)
+          RouteMappingModel.make(app: diego_app.app, route: route, process_type: diego_app.type)
+          route.reload
         end
 
         it 'returns true' do
@@ -997,7 +1012,7 @@ module VCAP::CloudController
           let(:non_diego_app) { AppFactory.make(diego: false, space: diego_app.space) }
 
           before do
-            non_diego_app.add_route(route)
+            RouteMappingModel.make(app: non_diego_app.app, route: route, process_type: non_diego_app.type)
           end
 
           it 'returns false' do
@@ -1015,14 +1030,6 @@ module VCAP::CloudController
       let(:space_b) { Space.make(organization: org) }
       let(:domain_b) { PrivateDomain.make(owning_organization: org) }
 
-      it 'should not associate with apps from a different space' do
-        route = Route.make(space: space_b, domain: domain_a)
-        app   = AppFactory.make(space: space_a)
-        expect {
-          route.add_app(app)
-        }.to raise_error Route::InvalidAppRelation
-      end
-
       it 'should not allow creation of a empty host on a shared domain' do
         shared_domain = SharedDomain.make
 
@@ -1033,28 +1040,6 @@ module VCAP::CloudController
             domain: shared_domain
           )
         }.to raise_error Sequel::ValidationFailed
-      end
-
-      context 'when docker is disabled' do
-        subject(:route) { Route.make(space: space_a, domain: domain_a) }
-
-        context 'when docker app is added to a route' do
-          before do
-            FeatureFlag.create(name: 'diego_docker', enabled: true)
-          end
-
-          let!(:docker_app) do
-            AppFactory.make(space: space_a, docker_image: 'some-image', state: 'STARTED')
-          end
-
-          before do
-            FeatureFlag.find(name: 'diego_docker').update(enabled: false)
-          end
-
-          it 'should associate with the docker app' do
-            expect { route.add_app(docker_app) }.not_to raise_error
-          end
-        end
       end
     end
 
@@ -1083,7 +1068,7 @@ module VCAP::CloudController
         let(:app) { AppFactory.make(space: route.space, diego: true) }
 
         before do
-          app.add_route(route)
+          RouteMappingModel.make(app: app.app, route: route, process_type: app.type)
           stub_unbind(route_binding)
         end
 
@@ -1125,57 +1110,6 @@ module VCAP::CloudController
           expect {
             route.add_app(app)
           }.to change { Event.count }.by(1)
-        end
-
-        context 'when a app is bound to multiple ports' do
-          let!(:route_mapping1) { RouteMapping.make(app: app, route: route, app_port: 8080) }
-          let!(:route_mapping2) { RouteMapping.make(app: app, route: route, app_port: 9090) }
-
-          it 'returns a single app association' do
-            expect(route.apps.length).to eq(1)
-          end
-        end
-
-        context 'when the app has user provided ports' do
-          let(:app) { App.make(diego: true, ports: [8998]) }
-          let(:route) { Route.make(space: app.space) }
-
-          before do
-            route.add_app(app)
-          end
-
-          it 'should save app_port to the route mappings' do
-            route_mapping = RouteMapping.last
-            expect(route_mapping.user_provided_app_port).to eq 8998
-          end
-        end
-
-        context 'when the app does not have user provided ports' do
-          let(:app) { App.make(diego: true) }
-          let(:route) { Route.make(space: app.space) }
-
-          before do
-            route.add_app(app)
-          end
-
-          it 'should not save app_port to the route mappings' do
-            route_mapping = RouteMapping.last
-            expect(route_mapping.user_provided_app_port).to be_nil
-          end
-        end
-
-        context 'when the app is a dea' do
-          let(:app) { App.make(diego: false) }
-          let(:route) { Route.make(space: app.space) }
-
-          before do
-            route.add_app(app)
-          end
-
-          it 'should not have an app_port' do
-            route_mapping = RouteMapping.last
-            expect(route_mapping.app_port).to be_nil
-          end
         end
       end
 

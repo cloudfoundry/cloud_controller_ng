@@ -42,8 +42,12 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('RoutePortNotEnabledOnApp')
     rescue V2::RouteMappingCreate::TcpRoutingDisabledError
       raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
-    rescue V2::RouteMappingCreate::DiegoRequiredError
+    rescue V2::RouteMappingCreate::RouteServiceNotSupportedError
+      raise CloudController::Errors::InvalidRelation.new('Route services are only supported for apps on Diego')
+    rescue V2::RouteMappingCreate::AppPortNotSupportedError
       raise CloudController::Errors::ApiError.new_from_details('AppPortMappingRequiresDiego')
+    rescue RouteMappingCreate::SpaceMismatch => e
+      raise CloudController::Errors::InvalidRelation.new(e.message)
     end
 
     def delete(guid)

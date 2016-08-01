@@ -44,7 +44,7 @@ module VCAP::CloudController
       if !self.user_provided_app_port && app.diego && app.user_provided_ports.present?
         self.app_port = app.user_provided_ports.first
       end
-      app.validate_route(route)
+      # app.validate_route(route)
       super
     end
 

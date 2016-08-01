@@ -109,7 +109,7 @@ module VCAP::CloudController
           {
             events:           [:get, :put, :delete],
             service_bindings: [:get, :put, :delete],
-            routes:           [:get, :put, :delete],
+            routes:           [:get],
             route_mappings:   [:get],
           })
       end
@@ -1993,9 +1993,10 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/apps/:app_guid/routes/:route_guid' do
-      let(:app_obj) { AppFactory.make }
-      let(:route) { Route.make(space: app_obj.space) }
-      let(:developer) { make_developer_for_space(app_obj.space) }
+      let(:space) { Space.make }
+      let(:app_obj) { AppFactory.make(space: space) }
+      let(:route) { Route.make(space: space) }
+      let(:developer) { make_developer_for_space(space) }
 
       before do
         set_current_user(developer)
@@ -2057,12 +2058,40 @@ module VCAP::CloudController
       context 'when a route with a routing service is mapped to a non-diego app' do
         let(:route_binding) { RouteBinding.make }
         let(:route) { route_binding.route }
-        let(:app_obj) { AppFactory.make(space: route.space, diego: false) }
+        let(:app_obj) { AppFactory.make(space: space, diego: false) }
+        let(:space) { route.space }
 
         it 'fails to add the route' do
           put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
           expect(last_response.status).to eq(400)
           expect(decoded_response['description']).to match(/Invalid relation: The requested route relation is invalid: .* - Route services are only supported for apps on Diego/)
+        end
+      end
+
+      context 'when the route is in a different space' do
+        let(:route) { Route.make }
+
+        it 'raises an error' do
+          expect(app_obj.reload.routes).to be_empty
+
+          put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to include('InvalidRelation')
+          expect(last_response.body).to include(route.guid)
+
+          expect(app_obj.reload.routes).to be_empty
+        end
+      end
+
+      context 'when the app is diego' do
+        let(:app_obj) { AppFactory.make(diego: true, space: route.space, ports: [9797, 7979]) }
+
+        it 'uses the first port for the app as the app_port' do
+          put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
+          expect(last_response.status).to eq(201)
+
+          mapping = RouteMappingModel.last
+          expect(mapping.app_port).to eq(9797)
         end
       end
 

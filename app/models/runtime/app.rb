@@ -2,7 +2,6 @@ require 'cloud_controller/app_observer'
 require 'cloud_controller/database_uri_generator'
 require 'cloud_controller/undo_app_changes'
 require 'cloud_controller/errors/application_missing'
-require 'cloud_controller/errors/invalid_route_relation'
 require 'repositories/app_usage_event_repository'
 require 'actions/services/service_binding_delete'
 require 'presenters/message_bus/service_binding_presenter'
@@ -97,10 +96,7 @@ module VCAP::CloudController
       left_primary_key: [:app_guid, :type], left_key: [:app_guid, :process_type],
       right_primary_key: :guid, right_key: :route_guid,
       distinct:     true,
-      order:        Sequel.asc(:id),
-      before_add:   :validate_route,
-      after_add:    :handle_add_route,
-      after_remove: :handle_remove_route
+      order:        Sequel.asc(:id)
 
     one_through_one :current_droplet,
       class:             '::VCAP::CloudController::DropletModel',
@@ -446,18 +442,6 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('SpaceInvalid', 'apps cannot be moved into different spaces') if column_changed?(:space_id) && !new?
     end
 
-    def validate_route(route)
-      objection               = CloudController::Errors::InvalidRouteRelation.new(route.guid)
-      route_service_objection = CloudController::Errors::InvalidRouteRelation.new("#{route.guid} - Route services are only supported for apps on Diego")
-
-      raise objection if route.nil?
-      raise objection if space.nil?
-      raise objection if route.space_id != space.id
-      raise route_service_objection if !route.route_service_url.nil? && !diego?
-
-      raise objection unless route.domain.usable_by_organization?(space.organization)
-    end
-
     def custom_buildpacks_enabled?
       !VCAP::CloudController::Config.config[:disable_custom_buildpacks]
     end
@@ -589,12 +573,6 @@ module VCAP::CloudController
     def handle_add_route(route)
       mark_routes_changed
       Repositories::AppEventRepository.new.record_map_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
-    end
-
-    # If you change this function, also change _add_app in route.rb
-    def _add_route(route, hash={})
-      port = self.user_provided_ports.first unless self.user_provided_ports.blank?
-      model.db[:apps_routes].insert(hash.merge(app_id: id, route_id: route.id, app_port: port, guid: SecureRandom.uuid))
     end
 
     def handle_remove_route(route)

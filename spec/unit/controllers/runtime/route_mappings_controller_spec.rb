@@ -96,9 +96,9 @@ module VCAP::CloudController
       end
 
       describe 'POST /v2/route_mappings' do
-        let(:route) { Route.make }
+        let(:space) { Space.make }
+        let(:route) { Route.make(space: space) }
         let(:app_obj) { AppFactory.make(space: space) }
-        let(:space) { route.space }
         let(:developer) { make_developer_for_space(space) }
 
         before do
@@ -366,6 +366,26 @@ module VCAP::CloudController
               expect(decoded_response['description']).to_not include('port')
             end
           end
+
+          context 'when a route bound to a service is specified' do
+            let(:route_binding) { RouteBinding.make }
+            let(:route) { route_binding.route }
+            let(:app_obj) { AppFactory.make(space: route.space, diego: false) }
+            let(:space) { route.space }
+            let(:body) do
+              {
+                app_guid: app_obj.guid,
+                route_guid: route.guid
+              }.to_json
+            end
+
+            it 'fails to add the route' do
+              post '/v2/route_mappings', body
+
+              expect(last_response.status).to eq(400)
+              expect(decoded_response['description']).to match(/Invalid relation: Route services are only supported for apps on Diego/)
+            end
+          end
         end
 
         context 'when the Routing API is not enabled' do
@@ -391,6 +411,27 @@ module VCAP::CloudController
             post '/v2/route_mappings', body
             expect(last_response).to have_status_code(403)
             expect(decoded_response['description']).to include('Support for TCP routing is disabled')
+          end
+        end
+
+        context 'when the app and route are in different spaces' do
+          let(:route) { Route.make }
+          let(:body) do
+            {
+              app_guid:   app_obj.guid,
+              route_guid: route.guid
+            }.to_json
+          end
+
+          it 'raises an error' do
+            expect(RouteMappingModel.count).to eq(0)
+
+            post '/v2/route_mappings', body
+            expect(last_response.status).to eq(400)
+            expect(last_response.body).to include('InvalidRelation')
+            expect(last_response.body).to include('must belong to the same space')
+
+            expect(RouteMappingModel.count).to eq(0)
           end
         end
       end

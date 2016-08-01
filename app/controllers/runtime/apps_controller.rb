@@ -383,6 +383,10 @@ module VCAP::CloudController
         # the route is already mapped, consider the request successful
       rescue V2::RouteMappingCreate::TcpRoutingDisabledError
         raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+      rescue V2::RouteMappingCreate::RouteServiceNotSupportedError
+        raise CloudController::Errors::InvalidRouteRelation.new("#{route.guid} - Route services are only supported for apps on Diego")
+      rescue RouteMappingCreate::SpaceMismatch
+        raise CloudController::Errors::InvalidRouteRelation.new(route.guid)
       end
 
       after_update(app)

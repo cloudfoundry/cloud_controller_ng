@@ -3,6 +3,7 @@ module VCAP::CloudController
     class InvalidRouteMapping < StandardError; end
     class DuplicateRouteMapping < InvalidRouteMapping; end
     class UnavailableAppPort < InvalidRouteMapping; end
+    class SpaceMismatch < InvalidRouteMapping; end
 
     DUPLICATE_MESSAGE = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
     INVALID_SPACE_MESSAGE = 'the app and route must belong to the same space'.freeze
@@ -79,7 +80,7 @@ module VCAP::CloudController
     end
 
     def validate_space!
-      raise InvalidRouteMapping.new(INVALID_SPACE_MESSAGE) unless @app.space.guid == @route.space.guid
+      raise SpaceMismatch.new(INVALID_SPACE_MESSAGE) unless @app.space.guid == @route.space.guid
     end
 
     def app_event_repository
