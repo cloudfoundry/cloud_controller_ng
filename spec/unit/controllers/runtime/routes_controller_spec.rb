@@ -1267,7 +1267,7 @@ module VCAP::CloudController
 
     describe 'PUT /v2/routes/:guid/apps/:app_guid' do
       let(:route) { Route.make }
-      let(:app_obj) { AppFactory.make(space: route.space)}
+      let(:app_obj) { AppFactory.make(space: route.space) }
       let(:developer) { make_developer_for_space(route.space) }
 
       before do

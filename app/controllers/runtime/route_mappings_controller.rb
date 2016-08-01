@@ -51,9 +51,14 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      route_mapping = find_guid_and_validate_access(:delete, guid)
+      route_mapping = RouteMappingModel.where(guid: guid).eager(:route, :process, app: :space).all.first
 
-      do_delete(route_mapping)
+      raise CloudController::Errors::ApiError.new_from_details('RouteMappingNotFound', guid) unless route_mapping
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(route_mapping.space.guid)
+
+      RouteMappingDelete.new(SecurityContext.current_user, SecurityContext.current_user_email).delete(route_mapping)
+
+      [HTTP::NO_CONTENT, nil]
     end
 
     define_messages

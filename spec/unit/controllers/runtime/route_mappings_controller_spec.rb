@@ -494,8 +494,8 @@ module VCAP::CloudController
 
         it 'deletes the route mapping' do
           delete "/v2/route_mappings/#{route_mapping.guid}"
-
           expect(last_response).to have_status_code(204)
+          expect(route_mapping.exists?).to be_falsey
         end
 
         it 'does not delete the associated app and route' do
@@ -504,6 +504,17 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(204)
           expect(route).to exist
           expect(app_obj).to exist
+        end
+
+        context 'when the user is not a SpaceDeveloper' do
+          before do
+            set_current_user(User.make)
+          end
+
+          it 'raises a 403' do
+            delete "/v2/route_mappings/#{route_mapping.guid}"
+            expect(last_response).to have_status_code(403)
+          end
         end
 
         context 'when the route mapping does not exist' do

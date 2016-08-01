@@ -32,10 +32,6 @@ module VCAP::CloudController
       context 'when a mapped process is present' do
         let(:process) { AppFactory.make(app: app, type: 'other') }
 
-        before do
-          process.add_route(route)
-        end
-
         it 'deletes the mapped route from the mapped process' do
           expect(process.reload.routes).not_to be_empty
           route_mapping_delete.delete(route_mapping)

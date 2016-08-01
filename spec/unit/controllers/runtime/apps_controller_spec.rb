@@ -2100,7 +2100,7 @@ module VCAP::CloudController
         let(:route) { Route.make(space: app_obj.space, domain: domain, port: 9090, host: '') }
 
         before do
-           allow_any_instance_of(RouteValidator).to receive(:validate)
+          allow_any_instance_of(RouteValidator).to receive(:validate)
         end
 
         it 'adds the route to the app' do

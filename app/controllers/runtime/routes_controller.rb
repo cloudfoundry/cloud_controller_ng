@@ -266,7 +266,7 @@ module VCAP::CloudController
 
     put '/v2/routes/:route_guid/apps/:app_guid', :add_app
     def add_app(route_guid, app_guid)
-      logger.debug "cc.association.add", guid: route_guid, association: 'apps', other_guid: app_guid
+      logger.debug 'cc.association.add', guid: route_guid, association: 'apps', other_guid: app_guid
       @request_attrs = { 'app' => app_guid, verb: 'add', relation: 'apps', related_guid: app_guid }
 
       route = find_guid(route_guid, Route)
