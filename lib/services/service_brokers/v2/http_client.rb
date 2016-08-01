@@ -144,7 +144,7 @@ module VCAP::Services
 
       def default_headers
         {
-          VCAP::Request::HEADER_BROKER_API_VERSION => '2.9',
+          VCAP::Request::HEADER_BROKER_API_VERSION => '2.10',
           VCAP::Request::HEADER_NAME => VCAP::Request.current_id,
           'Accept' => 'application/json',
           VCAP::Request::HEADER_API_INFO_LOCATION => "#{VCAP::CloudController::Config.config[:external_domain]}/v2/info"

@@ -1,7 +1,7 @@
 require 'presenters/message_bus/service_instance_presenter'
 
 class ServiceBindingPresenter
-  WHITELISTED_VOLUME_FIELDS = ['container_dir', 'mode', 'device_type']
+  WHITELISTED_VOLUME_FIELDS = ['container_dir', 'mode', 'device_type'].freeze
 
   def initialize(service_binding, include_instance: false)
     @service_binding = service_binding

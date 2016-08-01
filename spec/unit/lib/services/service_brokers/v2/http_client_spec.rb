@@ -42,7 +42,7 @@ module VCAP::Services::ServiceBrokers::V2
         make_request
         expect(a_request(http_method, full_url).
           with(query: hash_including({})).
-          with(headers: { 'X-Broker-Api-Version' => '2.9' })).
+          with(headers: { 'X-Broker-Api-Version' => '2.10' })).
           to have_been_made
       end
 
@@ -74,7 +74,7 @@ module VCAP::Services::ServiceBrokers::V2
         make_request
         expect(fake_logger).to have_received(:debug).with(match(%r{Accept"=>"application/json}))
         expect(fake_logger).to have_received(:debug).with(match(/X-VCAP-Request-ID"=>"[[:alnum:]-]+/))
-        expect(fake_logger).to have_received(:debug).with(match(/X-Broker-Api-Version"=>"2\.9/))
+        expect(fake_logger).to have_received(:debug).with(match(/X-Broker-Api-Version"=>"2\.10/))
         expect(fake_logger).to have_received(:debug).with(match(%r{X-Api-Info-Location"=>"api2\.vcap\.me/v2/info}))
       end
 
