@@ -157,6 +157,7 @@ module VCAP::CloudController
       let(:service_instance) { ManagedServiceInstance.make }
       let(:developer) { make_developer_for_space(service_instance.space) }
       let(:manager) { make_manager_for_space(service_instance.space) }
+      let(:admin_read_only) { set_current_user_as_admin_read_only(user: User.make) }
 
       before do
         last_operation = { state: 'in progress', description: '10%' }
@@ -205,6 +206,29 @@ module VCAP::CloudController
 
           service_instance.reload
           expect(service_instance.dashboard_url).to eq ''
+          expect(service_instance.last_operation.state).to eq 'in progress'
+          expect(service_instance.last_operation.guid).to eq @old_guid
+          expect(service_instance.last_operation.description).to eq '20%'
+        end
+      end
+
+      context 'admin_read_only' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(admin_read_only)
+        end
+
+        it 'updates the existing last_operation object and display the dashboard url' do
+          attrs = {
+            last_operation: {
+              state: 'in progress',
+              description: '20%'
+            },
+            dashboard_url: 'this.should.be.visible.com'
+          }
+          service_instance.save_and_update_operation(attrs)
+
+          service_instance.reload
+          expect(service_instance.dashboard_url).to eq 'this.should.be.visible.com'
           expect(service_instance.last_operation.state).to eq 'in progress'
           expect(service_instance.last_operation.guid).to eq @old_guid
           expect(service_instance.last_operation.description).to eq '20%'
