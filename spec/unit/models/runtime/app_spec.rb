@@ -662,6 +662,7 @@ module VCAP::CloudController
           :console,
           :debug,
           :detected_buildpack,
+          :detected_buildpack_guid,
           :detected_start_command,
           :diego,
           :disk_quota,

@@ -144,6 +144,7 @@ RSpec.describe 'Routes' do
                       'stack_guid'                 => process.stack.guid,
                       'buildpack'                  => nil,
                       'detected_buildpack'         => nil,
+                      'detected_buildpack_guid'    => nil,
                       'environment_json'           => nil,
                       'memory'                     => 1024,
                       'instances'                  => 1,

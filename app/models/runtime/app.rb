@@ -55,7 +55,7 @@ module VCAP::CloudController
     add_association_dependencies routes: :nullify, events: :delete, droplets: :destroy
 
     export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
-                      :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
+                      :detected_buildpack, :detected_buildpack_guid, :environment_json, :memory, :instances, :disk_quota,
                       :state, :version, :command, :console, :debug, :staging_task_id,
                       :package_state, :health_check_type, :health_check_timeout,
                       :staging_failed_reason, :staging_failed_description, :diego, :docker_image, :package_updated_at,

@@ -45,6 +45,7 @@ RSpec.describe 'Apps' do
               'stack_guid'                 => process.stack.guid,
               'buildpack'                  => nil,
               'detected_buildpack'         => nil,
+              'detected_buildpack_guid'    => nil,
               'environment_json'           => { 'RAILS_ENV' => 'staging' },
               'memory'                     => 1024,
               'instances'                  => 1,
@@ -108,6 +109,7 @@ RSpec.describe 'Apps' do
                 'stack_guid'                 => process.stack.guid,
                 'buildpack'                  => nil,
                 'detected_buildpack'         => nil,
+                'detected_buildpack_guid'    => nil,
                 'environment_json'           => { 'RAILS_ENV' => 'staging' },
                 'memory'                     => 1024,
                 'instances'                  => 1,
@@ -215,6 +217,7 @@ RSpec.describe 'Apps' do
             'stack_guid'                 => process.stack.guid,
             'buildpack'                  => nil,
             'detected_buildpack'         => nil,
+            'detected_buildpack_guid'    => nil,
             'environment_json'           => nil,
             'memory'                     => 1024,
             'instances'                  => 1,
@@ -279,6 +282,7 @@ RSpec.describe 'Apps' do
             'stack_guid'                 => process.stack.guid,
             'buildpack'                  => nil,
             'detected_buildpack'         => nil,
+            'detected_buildpack_guid'    => nil,
             'environment_json'           => {
 
             },
@@ -355,6 +359,7 @@ RSpec.describe 'Apps' do
             'stack_guid'                 => process.stack.guid,
             'buildpack'                  => nil,
             'detected_buildpack'         => nil,
+            'detected_buildpack_guid'    => nil,
             'environment_json'           => {
               'RAILS_ENV' => 'production'
             },
@@ -438,6 +443,7 @@ RSpec.describe 'Apps' do
           'stack_guid'                 => process.stack.guid,
           'buildpack'                  => nil,
           'detected_buildpack'         => nil,
+          'detected_buildpack_guid'    => nil,
           'environment_json'           => nil,
           'memory'                     => 1024,
           'instances'                  => 1,
@@ -697,6 +703,7 @@ RSpec.describe 'Apps' do
             'stack_guid'                 => process.stack.guid,
             'buildpack'                  => nil,
             'detected_buildpack'         => nil,
+            'detected_buildpack_guid'    => nil,
             'environment_json'           => nil,
             'memory'                     => 1024,
             'instances'                  => 1,
@@ -961,6 +968,7 @@ RSpec.describe 'Apps' do
             'stack_guid'                 => process.stack.guid,
             'buildpack'                  => nil,
             'detected_buildpack'         => nil,
+            'detected_buildpack_guid'    => nil,
             'environment_json'           => nil,
             'memory'                     => 1024,
             'instances'                  => 1,
