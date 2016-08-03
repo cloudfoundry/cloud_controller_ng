@@ -4,6 +4,13 @@ module VCAP::CloudController
   RSpec.describe BuildpackLifecycleDataModel do
     let(:buildpack_lifecycle_data_model) { BuildpackLifecycleDataModel.new }
 
+    it_behaves_like 'a model with an encrypted attribute' do
+      let(:value_to_encrypt) { 'https://acme-buildpack.com' }
+      let(:encrypted_attr) { :buildpack_without_serialization }
+      let(:storage_column) { :encrypted_buildpack }
+      let(:attr_salt) { :salt }
+    end
+
     describe '#stack' do
       it 'persists the stack' do
         buildpack_lifecycle_data_model.stack = 'cflinuxfs2'

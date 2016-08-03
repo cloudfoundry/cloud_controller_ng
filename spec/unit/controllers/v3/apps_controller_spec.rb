@@ -248,24 +248,6 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
 
       context 'buildpack' do
-        context 'when the requested buildpack is not a valid url and is not a known buildpack' do
-          let(:req_body) do
-            {
-              name:          'some-name',
-              relationships: { space: { guid: space.guid } },
-              lifecycle:     { type: 'buildpack', data: { buildpack: 'blawgow', stack: nil } }
-            }
-          end
-
-          it 'returns an UnprocessableEntity error' do
-            post :create, body: req_body
-
-            expect(response.status).to eq 422
-            expect(response.body).to include 'UnprocessableEntity'
-            expect(response.body).to include 'must be an existing admin buildpack or a valid git URI'
-          end
-        end
-
         context 'when the space developer requests lifecycle data' do
           context 'and leaves part of the data blank' do
             let(:req_body) do
@@ -285,6 +267,24 @@ RSpec.describe AppsV3Controller, type: :controller do
               expect(response.status).to eq 201
               expect(lifecycle_data['stack']).to eq 'cflinuxfs2'
               expect(lifecycle_data['buildpack']).to be_nil
+            end
+          end
+
+          context 'when the requested buildpack is not a valid url and is not a known buildpack' do
+            let(:req_body) do
+              {
+                name:          'some-name',
+                relationships: { space: { guid: space.guid } },
+                lifecycle:     { type: 'buildpack', data: { buildpack: 'blawgow', stack: nil } }
+              }
+            end
+
+            it 'returns an UnprocessableEntity error' do
+              post :create, body: req_body
+
+              expect(response.status).to eq 422
+              expect(response.body).to include 'UnprocessableEntity'
+              expect(response.body).to include 'must be an existing admin buildpack or a valid git URI'
             end
           end
 
