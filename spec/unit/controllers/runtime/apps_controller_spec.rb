@@ -1039,6 +1039,13 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
         end
 
+        it 'succeeds for admin_read_onlys' do
+          set_current_user_as_admin_read_only
+          get "/v2/apps/#{app_obj.guid}/env"
+
+          expect(last_response.status).to eq(200)
+        end
+
         context 'when the user is not a space developer' do
           before do
             set_current_user(auditor)

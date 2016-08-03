@@ -30,6 +30,8 @@ module VCAP::CloudController
       :unset_roles_by_username,
     ].freeze
 
+    ADMIN_READ_ONLY_SKIPPABLE = [:space_developer_env_var_visibility].freeze
+
     export_attributes :name, :enabled, :error_message
     import_attributes :name, :enabled, :error_message
 
@@ -44,6 +46,7 @@ module VCAP::CloudController
 
     def self.enabled?(feature_flag_name)
       return true if ADMIN_SKIPPABLE.include?(feature_flag_name) && admin?
+      return true if ADMIN_READ_ONLY_SKIPPABLE.include?(feature_flag_name) && admin_read_only?
       feature_flag = FeatureFlag.find(name: feature_flag_name.to_s)
       return feature_flag.enabled if feature_flag
       DEFAULT_FLAGS.fetch(feature_flag_name)
@@ -72,6 +75,10 @@ module VCAP::CloudController
 
     def self.admin?
       VCAP::CloudController::SecurityContext.admin?
+    end
+
+    def self.admin_read_only?
+      VCAP::CloudController::SecurityContext.admin_read_only?
     end
 
     private_class_method :admin?

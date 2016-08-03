@@ -1197,6 +1197,13 @@ RSpec.describe AppsV3Controller, type: :controller do
           expect(response.status).to eq(200)
         end
 
+        it 'succeeds for admins_read_only' do
+          set_current_user_as_admin_read_only(user: user)
+          get :show_environment, guid: app_model.guid
+
+          expect(response.status).to eq(200)
+        end
+
         context 'when user can not see secrets' do
           before do
             allow(controller).to receive(:can_see_secrets?).and_return(false)

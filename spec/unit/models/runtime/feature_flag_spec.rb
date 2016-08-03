@@ -150,6 +150,31 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when logged in as an admin read only' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:admin_read_only?).and_return(true)
+          stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', { normal: false, potato: false, tomato: false })
+          stub_const('VCAP::CloudController::FeatureFlag::ADMIN_READ_ONLY_SKIPPABLE', [:potato])
+          stub_const('VCAP::CloudController::FeatureFlag::ADMIN__SKIPPABLE', [:tomato])
+        end
+
+        context 'when flag is admin read only enabled' do
+          it 'is always enabled' do
+            FeatureFlag.create(name: 'potato', enabled: false)
+
+            expect(FeatureFlag.enabled?(:potato)).to eq(true)
+          end
+        end
+
+        context 'when flag is not admin read only enabled' do
+          it 'is false if the flag is disabled' do
+            FeatureFlag.create(name: 'normal', enabled: false)
+
+            expect(FeatureFlag.enabled?(:normal)).to eq(false)
+          end
+        end
+      end
     end
 
     describe '.raise_unless_enabled!' do
