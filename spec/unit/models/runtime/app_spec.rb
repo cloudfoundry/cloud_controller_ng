@@ -30,11 +30,22 @@ module VCAP::CloudController
       VCAP::CloudController::Seeds.create_seed_stacks
     end
 
-    it_behaves_like 'a model with an encrypted attribute' do
-      let(:value_to_encrypt) { '{"foo":"bar"}' }
-      let(:encrypted_attr) { :environment_json_without_serialization }
-      let(:storage_column) { :encrypted_environment_json }
-      let(:attr_salt) { :salt }
+    context 'environment json' do
+      it_behaves_like 'a model with an encrypted attribute' do
+        let(:value_to_encrypt) { '{"foo":"bar"}' }
+        let(:encrypted_attr) { :environment_json_without_serialization }
+        let(:storage_column) { :encrypted_environment_json }
+        let(:attr_salt) { :salt }
+      end
+    end
+
+    context 'buildpack' do
+      it_behaves_like 'a model with an encrypted attribute' do
+        let(:value_to_encrypt) { 'https://acme-buildpack.com' }
+        let(:encrypted_attr) { :buildpack_without_serialization }
+        let(:storage_column) { :encrypted_buildpack }
+        let(:attr_salt) { :buildpack_salt }
+      end
     end
 
     describe 'Creation' do

@@ -77,6 +77,7 @@ module VCAP::CloudController
 
     encrypt :environment_json, salt: :salt, column: :encrypted_environment_json
     encrypt :docker_credentials_json, salt: :docker_salt, column: :encrypted_docker_credentials_json
+    encrypt :buildpack, salt: :buildpack_salt, column: :encrypted_buildpack
 
     APP_STATES = %w(STOPPED STARTED).map(&:freeze).freeze
     PACKAGE_STATES = %w(PENDING STAGED FAILED).map(&:freeze).freeze
@@ -269,7 +270,7 @@ module VCAP::CloudController
     end
 
     def buildpack_changed?
-      column_changed?(:buildpack)
+      column_changed?(:encrypted_buildpack)
     end
 
     def desired_instances
@@ -361,6 +362,34 @@ module VCAP::CloudController
       MultiJson.load string
     end
     alias_method_chain :environment_json, 'serialization'
+
+    def buildpack_with_serialization=(buildpack_name)
+      self.admin_buildpack = nil
+      self.buildpack_without_serialization = nil
+
+      admin_buildpack = Buildpack.find(name: buildpack_name.to_s)
+
+      if admin_buildpack
+        self.admin_buildpack = admin_buildpack
+      elsif buildpack_name != '' # git url case
+
+        self.buildpack_without_serialization = buildpack_name
+      end
+    end
+    alias_method_chain :buildpack=, 'serialization'
+
+    def buildpack_with_serialization
+      string = buildpack_without_serialization
+
+      if admin_buildpack
+        return admin_buildpack
+      elsif string
+        return CustomBuildpack.new(string)
+      end
+
+      AutoDetectionBuildpack.new
+    end
+    alias_method_chain :buildpack, 'serialization'
 
     def docker?
       docker_image.present?
@@ -500,28 +529,6 @@ module VCAP::CloudController
       self.staging_failed_reason = nil
       self.staging_failed_description = nil
       self.package_pending_since = Sequel::CURRENT_TIMESTAMP
-    end
-
-    def buildpack
-      if admin_buildpack
-        return admin_buildpack
-      elsif super
-        return CustomBuildpack.new(super)
-      end
-
-      AutoDetectionBuildpack.new
-    end
-
-    def buildpack=(buildpack_name)
-      self.admin_buildpack = nil
-      super(nil)
-      admin_buildpack = Buildpack.find(name: buildpack_name.to_s)
-
-      if admin_buildpack
-        self.admin_buildpack = admin_buildpack
-      elsif buildpack_name != '' # git url case
-        super(buildpack_name)
-      end
     end
 
     def buildpack_specified?
