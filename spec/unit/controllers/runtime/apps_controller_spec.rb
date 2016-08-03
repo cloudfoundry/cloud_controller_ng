@@ -1154,27 +1154,35 @@ module VCAP::CloudController
 
       describe 'events' do
         it 'records an app delete-request' do
-          allow(app_event_repository).to receive(:record_app_delete_request).and_call_original
-
           delete_app
 
-          expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, app_obj.space, developer.guid, SecurityContext.current_user_email, false)
+          event = Event.find(type: 'audit.app.delete-request', actee_type: 'app')
+          expect(event.type).to eq('audit.app.delete-request')
+          expect(event.metadata).to eq({ 'request' => { 'recursive' => false } })
+          expect(event.actor).to eq(developer.guid)
+          expect(event.actor_type).to eq('user')
+          expect(event.actee).to eq(app_obj.guid)
+          expect(event.actee_type).to eq('app')
         end
 
         it 'records the recursive query parameter when recursive' do
-          allow(app_event_repository).to receive(:record_app_delete_request).and_call_original
-
           delete "/v2/apps/#{app_obj.guid}?recursive=true"
 
-          expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, app_obj.space, developer.guid, SecurityContext.current_user_email, true)
+          event = Event.find(type: 'audit.app.delete-request', actee_type: 'app')
+          expect(event.type).to eq('audit.app.delete-request')
+          expect(event.metadata).to eq({ 'request' => { 'recursive' => true } })
+          expect(event.actor).to eq(developer.guid)
+          expect(event.actor_type).to eq('user')
+          expect(event.actee).to eq(app_obj.guid)
+          expect(event.actee_type).to eq('app')
         end
 
         it 'does not record when the destroy fails' do
           allow_any_instance_of(App).to receive(:destroy).and_raise('Error saving')
-          allow(app_event_repository).to receive(:record_app_delete_request).and_call_original
 
           delete_app
-          expect(app_event_repository).not_to have_received(:record_app_delete_request)
+
+          expect(Event.where(type: 'audit.app.delete-request').count).to eq(0)
         end
       end
     end

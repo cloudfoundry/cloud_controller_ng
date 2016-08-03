@@ -131,7 +131,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     end
 
     def after_standard_model_delete(guid)
-      event = VCAP::CloudController::Event.find(type: 'audit.app.delete-request', actee: guid)
+      event = VCAP::CloudController::Event.find(type: 'audit.app.delete-request', actee: guid, actee_type: 'app')
       audited_event event
     end
 
