@@ -21,6 +21,7 @@ module VCAP::CloudController
         @droplet = droplet
 
         stager_task.handle_http_response(response) do |staging_result|
+          @process.reload
           @runners.runner_for_app(@process).start(staging_result)
         end
       end
