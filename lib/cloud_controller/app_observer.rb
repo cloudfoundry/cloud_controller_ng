@@ -27,12 +27,6 @@ module VCAP::CloudController
         end
       end
 
-      def routes_changed(app)
-        with_diego_communication_handling do
-          @runners.runner_for_app(app).update_routes if app.started? && app.active?
-        end
-      end
-
       private
 
       def react_to_state_change(app)

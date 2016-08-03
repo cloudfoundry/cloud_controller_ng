@@ -46,7 +46,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     field :services, 'List of services that are bound to the app'
 
     example 'Get App summary' do
-      app_obj.add_route(route1)
+      VCAP::CloudController::RouteMappingModel.make(app: app_obj.app, route: route1, process_type: app_obj.type)
       service_binding.save
       client.get "/v2/apps/#{app_obj.guid}/summary", {}, headers
 
@@ -86,7 +86,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
     field :services, 'List of services that are associated with the space'
 
     example 'Get Space summary' do
-      app_obj.add_route(route1)
+      VCAP::CloudController::RouteMappingModel.make(app: app_obj.app, route: route1, process_type: app_obj.type)
       service_binding.save
       client.get "/v2/spaces/#{space.guid}/summary", {}, headers
 

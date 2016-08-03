@@ -87,7 +87,7 @@ RSpec.describe 'Apps' do
     context 'with inline-relations-depth' do
       it 'includes related records' do
         route = VCAP::CloudController::Route.make(space: space)
-        process.add_route(route)
+        VCAP::CloudController::RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
 
         get '/v2/apps?inline-relations-depth=1', nil, headers_for(user)
         expect(last_response.status).to eq(200)
@@ -104,7 +104,7 @@ RSpec.describe 'Apps' do
                 'guid'       => process.guid,
                 'url'        => "/v2/apps/#{process.guid}",
                 'created_at' => iso8601,
-                'updated_at' => iso8601,
+                'updated_at' => nil,
               },
               'entity' => {
                 'name'                       => process.name,
@@ -722,8 +722,9 @@ RSpec.describe 'Apps' do
     end
 
     before do
-      VCAP::CloudController::RouteMapping.make(
-        app:   process,
+      VCAP::CloudController::RouteMappingModel.make(
+        app:   process.app,
+        process_type: process.type,
         route: VCAP::CloudController::Route.make(space: space, host: 'potato', domain: VCAP::CloudController::SharedDomain.first)
       )
 
@@ -1128,7 +1129,7 @@ RSpec.describe 'Apps' do
   describe 'GET /v2/apps/:guid/routes' do
     let!(:process) { VCAP::CloudController::AppFactory.make(space: space) }
     let!(:route) { VCAP::CloudController::Route.make(space: space, host: 'youdontknowme') }
-    let!(:route_mapping) { VCAP::CloudController::RouteMapping.make(app: process, route: route) }
+    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route) }
 
     it 'shows the routes associated with an app' do
       get "/v2/apps/#{process.guid}/routes", nil, headers_for(user)
@@ -1226,7 +1227,7 @@ RSpec.describe 'Apps' do
       )
 
       expect(process.routes).to include(route)
-      route_mapping = VCAP::CloudController::RouteMapping.find(app: process, route: route)
+      route_mapping = VCAP::CloudController::RouteMappingModel.find(app: process.app, route: route)
       expect(route_mapping).not_to be_nil
     end
   end
@@ -1235,8 +1236,8 @@ RSpec.describe 'Apps' do
     let!(:process) { VCAP::CloudController::AppFactory.make(space: space) }
     let!(:route1) { VCAP::CloudController::Route.make(space: space, host: 'youdontknowme') }
     let!(:route2) { VCAP::CloudController::Route.make(space: space, host: 'andyouneverwill') }
-    let!(:route_mapping1) { VCAP::CloudController::RouteMapping.make(app: process, route: route1) }
-    let!(:route_mapping2) { VCAP::CloudController::RouteMapping.make(app: process, route: route2) }
+    let!(:route_mapping1) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route1) }
+    let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route2) }
 
     it 'removes the associated route' do
       expect(process.routes).to include(route1)
@@ -1253,7 +1254,7 @@ RSpec.describe 'Apps' do
   describe 'GET /v2/apps/:guid/route_mappings' do
     let!(:process) { VCAP::CloudController::AppFactory.make(space: space) }
     let!(:route) { VCAP::CloudController::Route.make(space: space) }
-    let!(:route_mapping) { VCAP::CloudController::RouteMapping.make(app: process, route: route) }
+    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route) }
 
     it 'lists associated route_mappings' do
       get "/v2/apps/#{process.guid}/route_mappings", nil, headers_for(user)

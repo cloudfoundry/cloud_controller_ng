@@ -10,5 +10,9 @@ module VCAP::CloudController
     def validate
       validates_unique [:app_guid, :route_guid, :process_type, :app_port]
     end
+
+    def self.user_visibility_filter(user)
+      { space: Space.user_visible(user) }
+    end
   end
 end

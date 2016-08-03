@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class RouteMappingAccess < BaseAccess
+  class RouteMappingModelAccess < BaseAccess
     def create?(route_mapping, params=nil)
       return true if admin_user?
       return false if route_mapping.route.in_suspended_org?

@@ -15,8 +15,6 @@ module VCAP::CloudController
           instances_to_start = options[:instances_to_start] || @app.instances
           start_instances((@app.instances - instances_to_start)...@app.instances)
         end
-
-        @app.routes_changed = false
       end
 
       private

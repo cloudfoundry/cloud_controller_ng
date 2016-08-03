@@ -5,8 +5,8 @@ module VCAP::CloudController
     class UnavailableAppPort < InvalidRouteMapping; end
     class SpaceMismatch < InvalidRouteMapping; end
 
-    DUPLICATE_MESSAGE = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
-    INVALID_SPACE_MESSAGE = 'the app and route must belong to the same space'.freeze
+    DUPLICATE_MESSAGE                   = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
+    INVALID_SPACE_MESSAGE               = 'the app and route must belong to the same space'.freeze
     UNAVAILABLE_APP_PORT_MESSAGE_FORMAT = 'Port %s is not available on the app\'s process'.freeze
 
     def initialize(user, user_email, app, route, process, message)
@@ -28,8 +28,11 @@ module VCAP::CloudController
         app_port:     @message.app_port
       )
 
+      route_handler = ProcessRouteHandler.new(@process)
+
       RouteMappingModel.db.transaction do
         route_mapping.save
+        route_handler.update_route_information
 
         app_event_repository.record_map_route(
           @app,

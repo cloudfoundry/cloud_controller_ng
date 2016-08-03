@@ -12,7 +12,7 @@ RSpec.describe 'RouteMappings' do
   describe 'GET /v2/route_mappings/:guid' do
     let(:process) { VCAP::CloudController::AppFactory.make(space: space) }
     let(:route) { route_mapping.route }
-    let!(:route_mapping) { VCAP::CloudController::RouteMapping.make(app: process) }
+    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app) }
 
     it 'displays the route mapping' do
       get "/v2/route_mappings/#{route_mapping.guid}", nil, headers_for(user)
@@ -71,13 +71,13 @@ RSpec.describe 'RouteMappings' do
   describe 'GET /v2/route_mappings' do
     let(:process1) { VCAP::CloudController::AppFactory.make(space: space) }
     let(:route1) { route_mapping1.route }
-    let!(:route_mapping1) { VCAP::CloudController::RouteMapping.make(app: process1) }
+    let!(:route_mapping1) { VCAP::CloudController::RouteMappingModel.make(app: process1.app) }
 
     let(:process2) { VCAP::CloudController::AppFactory.make(space: space) }
     let(:route2) { route_mapping2.route }
-    let!(:route_mapping2) { VCAP::CloudController::RouteMapping.make(app: process2) }
+    let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: process2.app) }
 
-    let!(:route_mapping3) { VCAP::CloudController::RouteMapping.make }
+    let!(:route_mapping3) { VCAP::CloudController::RouteMappingModel.make }
 
     it 'lists all route mappings' do
       get '/v2/route_mappings', nil, headers_for(user)
@@ -168,6 +168,25 @@ RSpec.describe 'RouteMappings' do
 
       event = VCAP::CloudController::Event.last
       expect(event.type).to eq('audit.app.map-route')
+      expect(event.actee_type).to eq('app')
+      expect(event.actee).to eq(process.guid)
+      expect(event.metadata).to eq({ 'route_guid' => route.guid })
+    end
+  end
+
+  describe 'DELETE /V2/route_mappings' do
+    let(:process) { VCAP::CloudController::AppFactory.make(space: space, diego: true, ports: [9090]) }
+    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route) }
+
+    it 'deletes a route mapping' do
+      delete "/v2/route_mappings/#{route_mapping.guid}", nil, headers_for(user)
+      expect(last_response.status).to eq(204)
+
+      expect(route_mapping.exists?).to be_falsey
+
+      event = VCAP::CloudController::Event.last
+      expect(event.type).to eq('audit.app.unmap-route')
       expect(event.actee_type).to eq('app')
       expect(event.actee).to eq(process.guid)
       expect(event.metadata).to eq({ 'route_guid' => route.guid })

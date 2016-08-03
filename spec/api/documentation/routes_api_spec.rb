@@ -114,23 +114,20 @@ EOF
     include_context 'guid_field', required: true
 
     describe 'Apps' do
-      let!(:associated_app) { VCAP::CloudController::AppFactory.make(space: space, route_guids: [route.guid]) }
+      let!(:associated_app) { VCAP::CloudController::AppFactory.make(space: space) }
       let(:associated_app_guid) { associated_app.guid }
       let(:app_obj) { VCAP::CloudController::AppFactory.make(space: space) }
       let(:app_guid) { app_obj.guid }
+
+      before do
+        VCAP::CloudController::RouteMappingModel.make(app: app_obj.app, process_type: app_obj.type, route: route)
+      end
 
       parameter :app_guid, 'The guid of the app'
 
       standard_model_list :app, VCAP::CloudController::AppsController, outer_model: :route
       nested_model_associate :app, :route
       nested_model_remove :app, :route
-    end
-
-    describe 'Route Mappings' do
-      let(:app_obj) { VCAP::CloudController::AppFactory.make(space: space, diego: true) }
-      let!(:route_mapping) { VCAP::CloudController::RouteMapping.make(app: app_obj, route: route) }
-
-      standard_model_list :route_mapping, VCAP::CloudController::RouteMappingsController, outer_model: :route
     end
   end
 

@@ -60,7 +60,7 @@ RSpec.describe 'Routes' do
 
     context 'with inline-relations-depth' do
       let!(:process) { VCAP::CloudController::AppFactory.make(space: space) }
-      let!(:route_mapping) { VCAP::CloudController::RouteMapping.make(app: process, route: route) }
+      let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route) }
 
       it 'includes related records' do
         get '/v2/routes?inline-relations-depth=1', nil, headers_for(user)
@@ -129,14 +129,14 @@ RSpec.describe 'Routes' do
                     'security_groups_url'          => "/v2/spaces/#{space.guid}/security_groups"
                   }
                 },
-                'apps_url' => "/v2/routes/#{route.guid}/apps",
-                'apps' => [
+                'apps_url'              => "/v2/routes/#{route.guid}/apps",
+                'apps'                  => [
                   {
                     'metadata' => {
                       'guid'       => process.guid,
                       'url'        => "/v2/apps/#{process.guid}",
                       'created_at' => iso8601,
-                      'updated_at' => iso8601,
+                      'updated_at' => nil,
                     },
                     'entity' => {
                       'name'                       => process.name,
@@ -232,6 +232,44 @@ RSpec.describe 'Routes' do
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['entity']['domain_url']).to eq("/v2/private_domains/#{domain.guid}")
       end
+    end
+  end
+
+  describe 'GET /v2/routes/:guid/route_mappings' do
+    let(:process) { VCAP::CloudController::AppFactory.make(space: space) }
+    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
+
+    it 'lists associated route mappings' do
+      get "/v2/routes/#{route.guid}/route_mappings", nil, headers_for(user)
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'total_results' => 1,
+          'total_pages'   => 1,
+          'prev_url'      => nil,
+          'next_url'      => nil,
+          'resources'     => [
+            {
+              'metadata' => {
+                'guid'       => route_mapping.guid,
+                'url'        => "/v2/route_mappings/#{route_mapping.guid}",
+                'created_at' => iso8601,
+                'updated_at' => nil
+              },
+              'entity' => {
+                'app_port'   => nil,
+                'app_guid'   => process.guid,
+                'route_guid' => route.guid,
+                'app_url'    => "/v2/apps/#{process.guid}",
+                'route_url'  => "/v2/routes/#{route.guid}"
+              }
+            }
+          ]
+        }
+      )
     end
   end
 end

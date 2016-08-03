@@ -78,8 +78,27 @@ module VCAP::CloudController
         }
       end
       it { is_expected.to have_associated :events, class: AppEvent }
-      it { is_expected.to have_associated :routes, associated_instance: ->(app) { Route.make(space: app.space) } }
-      it { is_expected.to have_associated :route_mappings, associated_instance: -> (app) { RouteMapping.make(app_id: app.id, route_id: Route.make(space: app.space).id) } }
+      it 'has route_mappings' do
+        process = AppFactory.make
+        route1 = Route.make(space: process.space)
+        route2 = Route.make(space: process.space)
+
+        mapping1 = RouteMappingModel.make(app: process.app, route: route1, process_type: process.type)
+        mapping2 = RouteMappingModel.make(app: process.app, route: route2, process_type: process.type)
+
+        expect(process.reload.route_mappings).to match_array([mapping1, mapping2])
+      end
+
+      it 'has routes through route_mappings' do
+        process = AppFactory.make
+        route1 = Route.make(space: process.space)
+        route2 = Route.make(space: process.space)
+
+        RouteMappingModel.make(app: process.app, route: route1, process_type: process.type)
+        RouteMappingModel.make(app: process.app, route: route2, process_type: process.type)
+
+        expect(process.reload.routes).to match_array([route1, route2])
+      end
 
       it 'has a current_droplet from the parent app' do
         parent_app = AppModel.make
@@ -125,69 +144,6 @@ module VCAP::CloudController
 
         it 'returns a single associated route' do
           expect(app.routes.size).to eq 1
-        end
-      end
-
-      context 'when associating a route with a diego app' do
-        let(:app) { AppFactory.make(diego: true, ports: [9090, 7070]) }
-        let(:route) { Route.make(host: 'host2', space: app.space, path: '/my%20path') }
-
-        before do
-          app.add_route(route)
-        end
-
-        it 'maps the route to the first app port in the ports field of the app' do
-          expect(app.route_mappings.first.user_provided_app_port).to eq(9090)
-          expect(app.route_mappings.first.app_port).to eq(9090)
-        end
-      end
-
-      context 'when an app has no user provided ports' do
-        let(:app) { AppFactory.make(diego: true) }
-        let(:route) { Route.make(host: 'host2', space: app.space, path: '/my%20path') }
-
-        before do
-          app.add_route(route)
-        end
-
-        it 'does not save an app_port for the route mapping' do
-          expect(app.route_mappings.first.user_provided_app_port).to be_nil
-        end
-      end
-
-      context 'with Docker app' do
-        before do
-          FeatureFlag.create(name: 'diego_docker', enabled: true)
-        end
-
-        let!(:docker_app) do
-          AppFactory.make(app: parent_app, docker_image: 'some-image', state: 'STARTED')
-        end
-
-        context 'and Docker disabled' do
-          before do
-            FeatureFlag.find(name: 'diego_docker').update(enabled: false)
-          end
-
-          it 'should associate an app with a route' do
-            expect { docker_app.add_route(route) }.not_to raise_error
-          end
-        end
-      end
-
-      context 'with non-docker app' do
-        let(:non_docker_app) do
-          AppFactory.make(app: parent_app)
-        end
-
-        context 'and Docker disabled' do
-          before do
-            FeatureFlag.create(name: 'diego_docker', enabled: false)
-          end
-
-          it 'should associate an app with a route' do
-            expect { non_docker_app.add_route(route) }.not_to raise_error
-          end
         end
       end
     end
@@ -737,24 +693,6 @@ module VCAP::CloudController
       end
     end
 
-    describe 'bad relationships' do
-      it 'should not associate an app with a route created on another space with a shared domain' do
-        shared_domain = SharedDomain.make
-        app           = AppFactory.make
-
-        other_space = Space.make(organization: app.space.organization)
-        route       = Route.make(
-          host:   Sham.host,
-          space:  other_space,
-          domain: shared_domain
-        )
-
-        expect {
-          app.add_route(route)
-        }.to raise_error CloudController::Errors::InvalidRouteRelation
-      end
-    end
-
     describe '#environment_json' do
       let(:parent_app) { AppModel.make(environment_variables: { 'key' => 'value' }) }
       let!(:app) { App.make(app: parent_app) }
@@ -1231,34 +1169,6 @@ module VCAP::CloudController
           expect { app.update(instances: 8) }.to_not change(app, :version)
         end
 
-        context 'when adding and removing routes' do
-          let(:domain) do
-            PrivateDomain.make owning_organization: app.space.organization
-          end
-          let(:route) { Route.make domain: domain, space: app.space }
-
-          it "updates the app's version" do
-            expect { app.add_route(route) }.to change(app, :version)
-            expect { app.remove_route(route) }.to change(app, :version)
-          end
-
-          context 'audit events' do
-            let(:app_event_repository) { Repositories::AppEventRepository.new }
-
-            before do
-              allow(Repositories::AppEventRepository).to receive(:new).and_return(app_event_repository)
-            end
-
-            it 'creates audit events for both adding routes' do
-              expect(app_event_repository).to receive(:record_map_route).ordered.and_call_original
-              expect { app.add_route(route) }.to change { Event.count }.by(1)
-
-              expect(app_event_repository).to receive(:record_unmap_route).ordered.and_call_original
-              expect { app.remove_route(route) }.to change { Event.count }.by(1)
-            end
-          end
-        end
-
         it 'should update the version when changing enable_ssh' do
           expect {
             app.update(enable_ssh: !app.enable_ssh)
@@ -1301,75 +1211,6 @@ module VCAP::CloudController
         route  = Route.make(host: 'myhost', domain: domain, space: space, path: '/my%20path')
         RouteMappingModel.make(app: app.app, route: route, process_type: app.type)
         expect(app.uris).to eq(['myhost.mydomain.com/my%20path'])
-      end
-    end
-
-    describe '#validate_route' do
-      it 'should not associate an app with a route on a different space' do
-        app = AppFactory.make
-
-        domain = PrivateDomain.make(
-          owning_organization: app.space.organization
-        )
-
-        other_space = Space.make(organization: app.space.organization)
-
-        route = Route.make(
-          space:  other_space,
-          domain: domain,
-        )
-
-        expect {
-          app.add_route(route)
-        }.to raise_error(CloudController::Errors::InvalidRouteRelation, /The requested route relation is invalid/)
-      end
-
-      context 'adding routes to unsaved apps' do
-        it 'should set a route by guid on a new but unsaved app' do
-          app = App.new(app: parent_app)
-          app.add_route_by_guid(route.guid)
-          app.save
-          expect(app.routes).to eq([route])
-        end
-
-        it 'should not allow a route on a domain from another org' do
-          app = App.new(app: parent_app)
-          app.add_route_by_guid(Route.make.guid)
-          expect { app.save }.to raise_error(CloudController::Errors::InvalidRouteRelation)
-          expect(app.routes).to be_empty
-        end
-      end
-
-      context 'when the route is bound to a routing service' do
-        let(:domain) { PrivateDomain.make(name: 'mydomain.com', owning_organization: org) }
-        let(:app) { AppFactory.make(app: parent_app, diego: diego?) }
-        let(:route_with_service) do
-          route            = Route.make(host: 'myhost', domain: domain, space: space, path: '/my%20path')
-          service_instance = ManagedServiceInstance.make(:routing, space: space)
-          RouteBinding.make(route: route, service_instance: service_instance)
-          route
-        end
-
-        context 'and the app uses diego' do
-          let(:diego?) { true }
-          it 'does not raise an error' do
-            expect {
-              app.add_route_by_guid(route_with_service.guid)
-              app.save
-            }.not_to raise_error
-          end
-        end
-
-        context 'and the app does not use diego' do
-          let(:diego?) { false }
-          it 'to raise error' do
-            expect {
-              app.add_route_by_guid(route_with_service.guid)
-              app.save
-            }.to raise_error(CloudController::Errors::InvalidRouteRelation).
-              with_message("The requested route relation is invalid: #{route_with_service.guid} - Route services are only supported for apps on Diego")
-          end
-        end
       end
     end
 
@@ -1735,63 +1576,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when adding and removing routes', isolation: :truncation do
-        let(:domain) do
-          PrivateDomain.make owning_organization: subject.space.organization
-        end
-
-        let(:route) { Route.make domain: domain, space: subject.space }
-
-        before do
-          subject.diego = true
-          allow(AppObserver).to receive(:routes_changed).with(subject)
-          process_guid = Diego::ProcessGuid.from_process(subject)
-          stub_request(:delete, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}").to_return(status: 202)
-        end
-
-        it 'does not update the app version' do
-          expect { subject.add_route(route) }.to_not change(subject, :version)
-          expect { subject.remove_route(route) }.to_not change(subject, :version)
-        end
-
-        it 'updates the app updated_at' do
-          expect { subject.add_route(route) }.to change(subject, :updated_at)
-          expect { subject.remove_route(route) }.to change(subject, :updated_at)
-        end
-
-        it 'calls the app observer with the app' do
-          expect(AppObserver).to receive(:routes_changed).with(subject)
-          subject.add_route(route)
-        end
-
-        it 'calls the app observer when route_guids are updated' do
-          expect(AppObserver).to receive(:routes_changed).with(subject)
-
-          subject.route_guids = [route.guid]
-        end
-
-        context 'when modifying multiple routes at one time' do
-          let(:routes) { Array.new(3) { Route.make domain: domain, space: subject.space } }
-
-          before do
-            allow(AppObserver).to receive(:updated).with(subject)
-
-            subject.add_route(route)
-            subject.save
-          end
-
-          it 'calls the app observer once when multiple routes have changed' do
-            expect(AppObserver).to receive(:routes_changed).with(subject).once
-
-            App.db.transaction(savepoint: true) do
-              subject.route_guids = routes.collect(&:guid)
-              subject.remove_route(route)
-              subject.save
-            end
-          end
-        end
-      end
-
       context 'when updating app ports' do
         let!(:app) { AppFactory.make(diego: true, state: 'STARTED') }
 
@@ -1864,31 +1648,6 @@ module VCAP::CloudController
       end
 
       context 'docker app' do
-        context 'when app is not staged' do
-          let(:app) { App.make(:docker, diego: true) }
-
-          it 'does not save the ports to the database' do
-            expect(app.user_provided_ports).to be_nil
-          end
-
-          context 'when the app has a route' do
-            let(:route) { Route.make(space: app.space) }
-            before do
-              app.add_route(route)
-            end
-
-            it 'should not save app_port to the route mappings' do
-              route_mapping = RouteMapping.last
-              expect(route_mapping.user_provided_app_port).to be_nil
-            end
-
-            it 'returns nil app_port on the route mapping' do
-              route_mapping = RouteMapping.last
-              expect(route_mapping.app_port).to be nil
-            end
-          end
-        end
-
         context 'when app is staged' do
           context 'when some tcp ports are exposed' do
             let(:app) {
@@ -2004,8 +1763,8 @@ module VCAP::CloudController
         let(:app) { AppFactory.make(app: parent_app, state: 'STARTED', diego: true, ports: [8080, 2345]) }
         let(:route) { Route.make(host: 'host', space: app.space) }
         let(:route2) { Route.make(host: 'host', space: app.space) }
-        let!(:route_mapping_1) { RouteMapping.make(app: app, route: route) }
-        let!(:route_mapping_2) { RouteMapping.make(app: app, route: route2) }
+        let!(:route_mapping_1) { RouteMappingModel.make(app: parent_app, route: route, process_type: app.type) }
+        let!(:route_mapping_2) { RouteMappingModel.make(app: parent_app, route: route2, process_type: app.type) }
 
         before do
           app.diego = false
@@ -2040,17 +1799,9 @@ module VCAP::CloudController
           expect(app.save.reload.ports).to be_nil
         end
 
-        it 'should set route mappings app_port to nil' do
-          app.save
-          expect(route_mapping_1.reload.user_provided_app_port).to be_nil
-          expect(route_mapping_1.reload.app_port).to be_nil
-          expect(route_mapping_1.reload.user_provided_app_port).to be_nil
-          expect(route_mapping_2.reload.app_port).to be_nil
-        end
-
         context 'app with one or more routes and multiple ports' do
           before do
-            route_mapping_2.app_port = 2345
+            route_mapping_2.update(app_port: 2345)
           end
 
           it 'should raise an error' do
@@ -2058,106 +1809,6 @@ module VCAP::CloudController
               app.save
             }.to raise_error Sequel::ValidationFailed, /Multiple app ports not allowed/
           end
-        end
-      end
-
-      context 'switching from dea to diego' do
-        let(:app) { App.make(diego: false, app: parent_app) }
-        let(:route) { Route.make(host: 'host', space: space) }
-        let!(:route_mapping) { RouteMapping.make(app: app, route: route) }
-
-        context 'and no ports specified' do
-          before do
-            app.update_from_hash(diego: true)
-          end
-
-          it 'defaults to nil' do
-            expect(app.ports).to be nil
-            app.route_mappings.each do |rm|
-              expect(rm.user_provided_app_port).to be_nil
-              expect(rm.app_port).to be nil
-            end
-          end
-        end
-
-        context 'and ports are specified' do
-          before do
-            app.update_from_hash(diego: true, ports: [2345, 1298])
-          end
-
-          it 'uses the ports provided' do
-            expect(app.reload.ports).to eq [2345, 1298]
-            app.route_mappings.each do |rm|
-              expect(rm.user_provided_app_port).to eq 2345
-              expect(rm.app_port).to eq 2345
-            end
-          end
-        end
-      end
-
-      context 'when the app has a route mapping' do
-        context 'when adding a port' do
-          let(:app) { AppFactory.make(diego: true, ports: [7777]) }
-          let(:route) { Route.make(space: app.space) }
-
-          before do
-            RouteMapping.make(app: app, route: route, app_port: 7777)
-          end
-
-          it 'does not update route mappings' do
-            app.ports = [8888, 7777]
-            app.save
-            app.reload
-            expect(app.route_mappings.first.user_provided_app_port).to eq 7777
-          end
-        end
-
-        context 'and the port was originally unspecified' do
-          let(:app) { AppFactory.make(diego: true) }
-          let(:route) { Route.make(space: app.space) }
-
-          before do
-            route_mapping = RouteMapping.make(app: app, route: route)
-            expect(route_mapping.app_port).to be nil
-          end
-
-          context 'when updating with desired ports that include the default port' do
-            it 'favors the default port when updating the route mapping' do
-              expect {
-                app.ports = [7777, 8080]
-                app.save
-                app.reload
-              }.to change { app.route_mappings.map(&:user_provided_app_port) }.from([nil]).to([8080])
-            end
-          end
-
-          context 'when the desired ports do not include the default port' do
-            it 'it raises a validation error instead of changing route mapping ports' do
-              expect {
-                app.ports = [7777, 9090]
-                app.save
-                app.reload
-              }.to raise_error(Sequel::ValidationFailed)
-              expect(app.route_mappings.map(&:user_provided_app_port)).to eq([nil])
-            end
-          end
-        end
-      end
-
-      context 'when changing ports on a docker app' do
-        let(:app) { AppFactory.make(diego: true, docker_image: 'some-docker-image') }
-        let(:route) { Route.make(space: app.space) }
-
-        before do
-          RouteMapping.make(app: app, route: route)
-        end
-
-        it 'does not change route mappings associated with the app' do
-          expect {
-            app.ports = [7777, 8080]
-            app.save
-            app.reload
-          }.to_not change { app.route_mappings.map(&:user_provided_app_port) }
         end
       end
     end

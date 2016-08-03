@@ -28,6 +28,7 @@ module VCAP::CloudController
       end
 
       def update_routes
+        Client.update_uris(@app)
       end
 
       def desire_app_message

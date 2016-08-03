@@ -158,9 +158,7 @@ module VCAP::CloudController
           context 'when the route has an app', isolation: :truncation do
             before do
               app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
-              process_guid = Diego::ProcessGuid.from_process(app)
-              stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}").to_return(status: 202)
-              app.add_route route
+              RouteMappingModel.make(app: app.app, route: route, process_type: app.type)
             end
 
             it 'sends a message on to diego' do
@@ -174,7 +172,7 @@ module VCAP::CloudController
             context 'when the app does not use diego' do
               before do
                 non_diego_app = AppFactory.make(diego: false, space: route.space, state: 'STARTED')
-                non_diego_app.add_route(route)
+                RouteMappingModel.make(app: non_diego_app.app, route: route, process_type: non_diego_app.type)
               end
 
               it 'raises an error' do
@@ -350,15 +348,13 @@ module VCAP::CloudController
               allow(logger).to receive(:error)
 
               app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
-              @process_guid = Diego::ProcessGuid.from_process(app)
-              # required for add_route below
-              stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 202)
-              app.add_route route
+              RouteMappingModel.make(app: app.app, route: route, process_type: app.type)
 
+              process_guid = Diego::ProcessGuid.from_process(app)
               stub_request(:delete, service_binding_url_pattern).to_return(status: 200, body: {}.to_json)
 
               expect {
-                stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 500)
+                stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}").to_return(status: 500)
                 manager.create_route_service_instance_binding(route.guid, service_instance.guid, arbitrary_parameters, route_services_enabled)
               }.to raise_error(CloudController::Errors::ApiError, /desire app failed: 500/i)
             end
@@ -395,12 +391,10 @@ module VCAP::CloudController
           allow(access_validator).to receive(:validate_access).with(:update, anything).and_return(true)
 
           app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
-          @process_guid = Diego::ProcessGuid.from_process(app)
-          # required for add_route below
-          stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 202)
-          app.add_route route
+          RouteMappingModel.make(app: app.app, route: route, process_type: app.type)
 
-          stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 202)
+          process_guid = Diego::ProcessGuid.from_process(app)
+          stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}").to_return(status: 202)
         end
 
         it 'unbinds the route and service instance', isolation: :truncation do

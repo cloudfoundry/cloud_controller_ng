@@ -3,9 +3,9 @@ require 'actions/v2/route_mapping_create'
 module VCAP::CloudController
   class RouteMappingsController < RestController::ModelController
     define_attributes do
-      attribute :app_guid, String, exclude_in: [:update]
+      to_one :app, exclude_in: [:update], association_name: :process
       to_one :route, exclude_in: [:update]
-      attribute :app_port, Integer, default: nil
+      attribute :app_port, Integer, default: nil, exclude_in: [:update]
     end
 
     model_class_name :RouteMappingModel
@@ -59,6 +59,10 @@ module VCAP::CloudController
       RouteMappingDelete.new(SecurityContext.current_user, SecurityContext.current_user_email).delete(route_mapping)
 
       [HTTP::NO_CONTENT, nil]
+    end
+
+    def update(_guid)
+      [HTTP::NOT_FOUND]
     end
 
     define_messages

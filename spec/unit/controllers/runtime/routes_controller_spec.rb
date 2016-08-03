@@ -338,7 +338,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it do
-        expect(described_class).to have_nested_routes({ apps: [:get] })
+        expect(described_class).to have_nested_routes({ apps: [:get], route_mappings: [:get] })
       end
 
       context 'with Docker app' do
@@ -1055,7 +1055,7 @@ module VCAP::CloudController
       let(:space) { Space.make(organization: organization) }
       let(:route) { Route.make(domain: domain, space: space) }
       let(:app_obj) { AppFactory.make(space: route.space) }
-      let!(:app_route_mapping) { RouteMapping.make(route: route, app: app_obj) }
+      let!(:app_route_mapping) { RouteMappingModel.make(route: route, app: app_obj.app, process_type: app_obj.type) }
 
       before { set_current_user_as_admin }
 

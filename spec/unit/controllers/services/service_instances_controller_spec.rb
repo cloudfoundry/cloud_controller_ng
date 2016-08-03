@@ -2970,7 +2970,7 @@ module VCAP::CloudController
       context 'when the route is mapped to a diego app' do
         before do
           diego_app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
-          diego_app.add_route(route)
+          RouteMappingModel.make(app: diego_app.app, route: route, process_type: diego_app.type)
         end
 
         it 'successfully binds to the route' do
@@ -2981,7 +2981,7 @@ module VCAP::CloudController
         context 'and is mapped to another diego app as well' do
           before do
             another_diego_app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
-            another_diego_app.add_route(route)
+            RouteMappingModel.make(app: another_diego_app.app, route: route, process_type: another_diego_app.type)
           end
 
           it 'raises RouteServiceRequiresDiego' do
@@ -2995,7 +2995,7 @@ module VCAP::CloudController
       context 'when the route is mapped to a non-diego app' do
         before do
           app = AppFactory.make(diego: false, space: route.space, state: 'STARTED')
-          app.add_route(route)
+          RouteMappingModel.make(app: app.app, route: route, process_type: app.type)
         end
 
         it 'raises RouteServiceRequiresDiego' do
@@ -3009,7 +3009,7 @@ module VCAP::CloudController
         context 'and is mapped to a diego app' do
           before do
             diego_app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
-            diego_app.add_route(route)
+            RouteMappingModel.make(app: diego_app.app, route: route, process_type: diego_app.type)
           end
 
           it 'raises RouteServiceRequiresDiego' do

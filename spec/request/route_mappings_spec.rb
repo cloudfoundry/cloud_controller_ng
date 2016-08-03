@@ -189,14 +189,14 @@ RSpec.describe 'Route Mappings' do
   end
 
   describe 'GET /v3/route_mappings/:route_mapping_guid' do
-    let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'worker') }
+    let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'worker', app_port: 8888) }
 
     it 'retrieves the requests route mapping' do
       get "/v3/route_mappings/#{route_mapping.guid}", nil, developer_headers
 
       expected_response = {
         'guid'       => route_mapping.guid,
-        'app_port'   => 8080,
+        'app_port'   => 8888,
         'created_at' => iso8601,
         'updated_at' => nil,
 

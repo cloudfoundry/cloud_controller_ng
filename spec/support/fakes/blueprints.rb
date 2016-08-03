@@ -34,15 +34,13 @@ module VCAP::CloudController
   end
 
   AppModel.blueprint do
-    guid       { Sham.guid }
     name       { Sham.name }
     space      { Space.make }
     buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(app: object.save) }
   end
 
   AppModel.blueprint(:docker) do
-    guid       { Sham.guid }
-    name       { Sham.name }
+    name { Sham.name }
     space { Space.make }
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
   end
@@ -237,11 +235,6 @@ module VCAP::CloudController
     service_instance { ManagedServiceInstance.make(:routing) }
     route { Route.make space: service_instance.space }
     route_service_url { Sham.url }
-  end
-
-  RouteMapping.blueprint do
-    app { AppFactory.make }
-    route { Route.make(space: app.space) }
   end
 
   ServiceBinding.blueprint do

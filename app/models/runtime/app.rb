@@ -104,7 +104,7 @@ module VCAP::CloudController
       left_primary_key:  :app_guid, left_key: :guid,
       right_primary_key: :guid, right_key: :droplet_guid
 
-    one_to_many :route_mappings
+    one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', primary_key: [:app_guid, :type], key: [:app_guid, :process_type]
 
     add_association_dependencies events: :delete
 
@@ -128,12 +128,8 @@ module VCAP::CloudController
     encrypt :docker_credentials_json, salt: :docker_salt, column: :encrypted_docker_credentials_json
     serializes_via_json :docker_credentials_json
 
-    APP_STATES             = %w(STOPPED STARTED).map(&:freeze).freeze
-    HEALTH_CHECK_TYPES     = %w(port none process).map(&:freeze).freeze
-
-    # marked as true on changing the associated routes, and reset by
-    # +Dea::Client.start+
-    attr_accessor :routes_changed
+    APP_STATES         = %w(STOPPED STARTED).map(&:freeze).freeze
+    HEALTH_CHECK_TYPES = %w(port none process).map(&:freeze).freeze
 
     # Last staging response which will contain streaming log url
     attr_accessor :last_stager_response
@@ -279,7 +275,6 @@ module VCAP::CloudController
 
     def before_save
       self.enable_ssh = Config.config[:allow_app_ssh_access] && space.allow_ssh if enable_ssh.nil?
-      update_route_mappings_ports
       set_new_version if version_needs_to_be_updated?
       super
     end
@@ -472,7 +467,7 @@ module VCAP::CloudController
                     union(Space.join(:organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid)).select(:guid)
 
       {
-        app_guid: AppModel.where(space: space_guids.all).select(:guid)
+        "#{App.table_name}__app_guid".to_sym => AppModel.where(space: space_guids.all).select(:guid)
       }
     end
 
@@ -540,15 +535,6 @@ module VCAP::CloudController
       Presenters::V3::CacheKeyPresenter.cache_key(guid: guid, stack_name: stack.name)
     end
 
-    # returns True if we need to update the DEA's with
-    # associated URL's.
-    # We also assume that the relevant methods in +Dea::Client+ will reset
-    # this app's routes_changed state
-    # @return [Boolean, nil]
-    def dea_update_pending?
-      staged? && started? && @routes_changed
-    end
-
     def after_commit
       super
 
@@ -568,20 +554,6 @@ module VCAP::CloudController
                         %w(environment_json system_env_json docker_credentials_json)
                       end
       super(opts)
-    end
-
-    def handle_add_route(route)
-      mark_routes_changed
-      Repositories::AppEventRepository.new.record_map_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
-    end
-
-    def handle_remove_route(route)
-      mark_routes_changed
-      Repositories::AppEventRepository.new.record_unmap_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
-    end
-
-    def handle_update_route(route)
-      mark_routes_changed
     end
 
     def all_service_bindings
@@ -637,36 +609,6 @@ module VCAP::CloudController
     def update_ports(new_ports)
       self.ports   = new_ports
       self[:ports] = IntegerArraySerializer.serializer.call(self.ports)
-    end
-
-    def update_route_mappings_ports
-      if changed_from_diego_to_dea?
-        self.route_mappings_dataset.update(app_port: nil) unless self.route_mappings.nil?
-      elsif changed_from_dea_to_diego?
-        port = self.user_provided_ports.first if self.user_provided_ports.present?
-        self.route_mappings_dataset.update(app_port: port) if port.present?
-      elsif changed_from_default_ports? && self.route_mappings.present? && self.docker_image.blank?
-        self.route_mappings_dataset.update(app_port: DEFAULT_HTTP_PORT)
-      end
-    end
-
-    def mark_routes_changed
-      routes_already_changed = @routes_changed
-      @routes_changed        = true
-
-      if diego?
-        unless routes_already_changed
-          App.db.after_commit do
-            AppObserver.routes_changed(self)
-            @routes_changed = false
-          end
-          self.updated_at = Sequel::CURRENT_TIMESTAMP
-          save
-        end
-      else
-        set_new_version
-        save
-      end
     end
 
     def metadata_deserialized

@@ -596,27 +596,14 @@ module VCAP::CloudController
         let(:app_obj) { AppFactory.make(instances: 1, diego: false, type: 'web') }
         let(:developer) { make_developer_for_space(app_obj.space) }
         let(:route) { Route.make(space: app_obj.space) }
-        let(:route_mapping) { RouteMapping.make(app_id: app_obj.id, route_id: route.id) }
+        let(:route_mapping) { RouteMappingModel.make(app: app_obj.app, route: route) }
 
-        context 'when user does not specify any ports' do
-          it 'sets ports to 8080' do
-            expect(route_mapping.app_port).to be_nil
-            put "/v2/apps/#{app_obj.guid}", '{ "diego": true }'
-            expect(last_response.status).to eq(201)
-            expect(decoded_response['entity']['ports']).to match([8080])
-            expect(decoded_response['entity']['diego']).to be true
-          end
-        end
-
-        context 'when user specifies ports' do
-          it 'sets ports to user specified values' do
-            expect(route_mapping.app_port).to be_nil
-            put "/v2/apps/#{app_obj.guid}", '{ "diego": true, "ports": [9090,5222] }'
-            expect(last_response.status).to eq(201)
-            expect(decoded_response['entity']['ports']).to match([9090, 5222])
-            expect(decoded_response['entity']['diego']).to be true
-            expect(route_mapping.reload.app_port).to eq(9090)
-          end
+        it 'sets ports to 8080' do
+          expect(app_obj.ports).to be_nil
+          put "/v2/apps/#{app_obj.guid}", '{ "diego": true }'
+          expect(last_response.status).to eq(201)
+          expect(decoded_response['entity']['ports']).to match([8080])
+          expect(decoded_response['entity']['diego']).to be true
         end
       end
 
@@ -642,7 +629,7 @@ module VCAP::CloudController
         context 'when the app has existing custom ports' do
           let(:app_obj) { AppFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
           let(:route) { Route.make(space: app_obj.space) }
-          let(:route_mapping) { RouteMapping.make(app_id: app_obj.id, route_id: route.id) }
+          let(:route_mapping) { RouteMappingModel.make(app: app_obj.app, route: route) }
 
           it 'removes the app ports from the route mapping' do
             put "/v2/apps/#{app_obj.guid}", '{ "diego": false }'
@@ -655,8 +642,8 @@ module VCAP::CloudController
         context 'when the app is mapped to multiple ports' do
           let(:app_obj) { AppFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
           let(:route) { Route.make(space: app_obj.space) }
-          let!(:route_mapping_1) { RouteMapping.make(app: app_obj, route: route, app_port: 9090) }
-          let!(:route_mapping_2) { RouteMapping.make(app: app_obj, route: route, app_port: 5222) }
+          let!(:route_mapping_1) { RouteMappingModel.make(app: app_obj.app, route: route, app_port: 9090) }
+          let!(:route_mapping_2) { RouteMappingModel.make(app: app_obj.app, route: route, app_port: 5222) }
           let(:error_message) do
             'Multiple ports are supported for Diego only'
           end
@@ -710,8 +697,8 @@ module VCAP::CloudController
 
         context 'when updating an app with existing route mapping' do
           let(:route) { Route.make(space: app_obj.space) }
-          let!(:route_mapping) { RouteMapping.make(id: 1, app_id: app_obj.id, route_id: route.id, app_port: 9090) }
-          let!(:route_mapping2) { RouteMapping.make(id: 2, app_id: app_obj.id, route_id: route.id, app_port: 5222) }
+          let!(:route_mapping) { RouteMappingModel.make(app: app_obj.app, route: route, app_port: 9090) }
+          let!(:route_mapping2) { RouteMappingModel.make(app: app_obj.app, route: route, app_port: 5222) }
 
           context 'when new app ports contains all existing route port mappings' do
             it 'updates the ports' do
@@ -1196,7 +1183,7 @@ module VCAP::CloudController
       let!(:app_obj) { AppFactory.make(instances: 1, diego: true) }
       let!(:developer) { make_developer_for_space(app_obj.space) }
       let!(:route) { Route.make(space: app_obj.space) }
-      let!(:route_mapping) { RouteMapping.make(app_id: app_obj.id, route_id: route.id) }
+      let!(:route_mapping) { RouteMappingModel.make(app: app_obj.app, route: route, process_type: app_obj.type) }
 
       before do
         set_current_user(developer)
@@ -1625,7 +1612,7 @@ module VCAP::CloudController
       end
     end
 
-    describe 'on route change' do
+    describe 'on route change', isolation: :truncation do
       let(:space) { app_obj.space }
       let(:domain) do
         PrivateDomain.make(name: 'jesse.cloud', owning_organization: space.organization)
@@ -1664,6 +1651,7 @@ module VCAP::CloudController
         end
 
         before do
+          allow_any_instance_of(Diego::NsyncClient).to receive(:desire_app).and_return(nil)
           put "/v2/apps/#{docker_app.guid}/routes/#{pre_mapped_route.guid}", nil
         end
 
@@ -1689,11 +1677,12 @@ module VCAP::CloudController
       end
 
       it 'tells the dea client to update when we remove a url through PUT /v2/apps/:guid' do
-        bar_route = app_obj.add_route(
+        bar_route = Route.make(
           host: 'bar',
           space: space,
           domain: domain,
         )
+        RouteMappingModel.make(app: app_obj.app, route: bar_route, process_type: app_obj.type)
         new_route = Route.make(
           host: 'foo',
           space: space,

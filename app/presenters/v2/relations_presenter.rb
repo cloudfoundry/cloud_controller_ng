@@ -39,7 +39,8 @@ module CloudController
           (relationships || {}).each do |relationship_name, association|
             associated_model = get_associated_model_class_for(obj, association.association_name)
             next unless associated_model
-            associated_controller = VCAP::CloudController.controller_from_model_name(associated_model.name)
+            associated_controller = VCAP::CloudController.controller_from_relationship(association)
+            associated_controller ||= VCAP::CloudController.controller_from_model_name(associated_model.name)
             next unless associated_controller
             add_relationship_url_to_response(response, controller, associated_controller, relationship_name, association, obj)
             next if relationship_link_only?(association, associated_controller, relationship_name, opts, depth, parents)

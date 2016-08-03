@@ -18,4 +18,9 @@ module VCAP::CloudController
   def self.controller_from_name(name)
     VCAP::CloudController.const_get("#{name.to_s.pluralize.camelize}Controller")
   end
+
+  def self.controller_from_relationship(relationship)
+    return nil unless relationship.try(:association_controller).present?
+    VCAP::CloudController.const_get(relationship.association_controller)
+  end
 end

@@ -10,13 +10,7 @@ module VCAP::CloudController
       to_one :space
       to_one :service_instance, exclude_in: [:create, :update]
       to_many :apps, route_for: :get, exclude_in: [:create, :update]
-
-      # This to_many relationship is used only for the link, and explicitly sets
-      # the route_for to any empty array. This is used in relation with
-      # enumerate_route_mappings method to handle the route model already having
-      # a route_mappings association.
-      # to_many :route_mappings, link_only: true, exclude_in: [:create, :update],
-      #                          route_for: [], association_name: :route_mappings
+      to_many :route_mappings, link_only: true, exclude_in: [:create, :update], route_for: [:get], association_controller: :RouteMappingsController
     end
 
     query_parameters :host, :domain_guid, :organization_guid, :path, :port
@@ -199,46 +193,6 @@ module VCAP::CloudController
       else
         filtered_dataset
       end
-    end
-
-    # This method is an almost straight copy of
-    # ModelController#enumerate_related. The only difference is that this method
-    # needs control of the association_name used to lookup
-    # model/dataset/controller
-    get "#{path_guid}/route_mappings", :enumerate_route_mappings
-    def enumerate_route_mappings(guid)
-      path_name = :route_mappings
-      association_name = :app_route_mappings
-
-      obj = find_guid(guid)
-      validate_access(:read, obj)
-
-      associated_model = obj.class.association_reflection(association_name).associated_class
-
-      associated_controller = VCAP::CloudController.controller_from_model_name(associated_model)
-      associated_path = "#{self.class.url_for_guid(guid)}/#{path_name}"
-
-      validate_access(:index, associated_model, { related_obj: obj, related_model: model })
-
-      filtered_dataset =
-        Query.filtered_dataset_from_query_params(
-          associated_model,
-          obj.user_visible_relationship_dataset(association_name,
-                                                VCAP::CloudController::SecurityContext.current_user,
-                                                SecurityContext.admin?),
-                                                associated_controller.query_parameters,
-                                                @opts
-      )
-
-      associated_controller_instance = CloudController::ControllerFactory.new(@config, @logger, @env, @params, @body, @sinatra).create_controller(associated_controller)
-
-      associated_controller_instance.collection_renderer.render_json(
-        associated_controller,
-        filtered_dataset,
-        associated_path,
-        @opts,
-        {}
-      )
     end
 
     get "#{path}/reserved/domain/:domain_guid", :route_reserved

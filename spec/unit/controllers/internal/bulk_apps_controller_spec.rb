@@ -96,13 +96,14 @@ module VCAP::CloudController
               host: 'arsenio',
               domain: SharedDomain.make(name: 'lo-mein.com'),
             )
-            app.add_route(route1)
             route2 = Route.make(
               space: app.space,
               host: 'conan',
               domain: SharedDomain.make(name: 'doe-mane.com'),
             )
-            app.add_route(route2)
+
+            RouteMappingModel.make(app: app.app, route: route1, process_type: app.type)
+            RouteMappingModel.make(app: app.app, route: route2, process_type: app.type)
 
             app.version = 'app-version-6'
             app.save

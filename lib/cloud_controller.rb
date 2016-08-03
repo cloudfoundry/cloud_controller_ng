@@ -113,5 +113,6 @@ require 'cloud_controller/integer_array_serializer'
 require 'cloud_controller/port_generator'
 
 require 'cloud_controller/route_binding_message'
+require 'cloud_controller/process_route_handler'
 
 require 'services'

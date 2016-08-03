@@ -16,8 +16,8 @@ module VCAP::CloudController
           @app_b = AppFactory.make(space: @space_b)
           @route_a = Route.make(space: @space_a)
           @route_b = Route.make(space: @space_b)
-          @obj_a = RouteMapping.make(app_guid: @app_a.guid, route_guid: @route_a.guid)
-          @obj_b = RouteMapping.make(app_guid: @app_b.guid, route_guid: @route_b.guid)
+          @obj_a = RouteMappingModel.make(app_guid: @app_a.app.guid, route_guid: @route_a.guid, process_type: @app_a.type)
+          @obj_b = RouteMappingModel.make(app_guid: @app_b.app.guid, route_guid: @route_b.guid, process_type: @app_b.type)
         end
 
         describe 'Org Level Permissions' do
@@ -437,47 +437,11 @@ module VCAP::CloudController
       end
 
       describe 'PUT /v2/route_mappings/:guid' do
-        let(:route) { Route.make }
-        let(:app_obj) { AppFactory.make(space: space, ports: [8080, 9090], diego: true) }
-        let(:space) { route.space }
-        let(:route_mapping) { RouteMapping.make(app_guid: app_obj.guid, route_guid: route.guid) }
-        let(:space_developer) { make_developer_for_space(space) }
-
-        before do
-          set_current_user(space_developer)
-        end
-
-        context 'as SpaceDeveloper' do
-          it 'returns 201' do
-            put "/v2/route_mappings/#{route_mapping.guid}", '{ "app_port": 9090 }'
-            expect(last_response).to have_status_code(201)
-          end
-        end
-
-        context 'as SpaceDeveloper for another space' do
-          it 'returns 403' do
-            set_current_user(User.make)
-            put "/v2/route_mappings/#{route_mapping.guid}", '{ "app_port": 9090 }'
-            expect(last_response).to have_status_code(403)
-          end
-        end
-
-        context 'when updating app_guid and route_guid' do
-          let(:body) do
-            {
-                app_port: 9090,
-                app_guid: '123',
-                route_guid: '456'
-            }.to_json
-          end
-
-          it 'does not update non-updatable fields' do
-            put "/v2/route_mappings/#{route_mapping.guid}", body
-            expect(last_response).to have_status_code(201)
-            expect(decoded_response['entity']['app_port']).to eq 9090
-            expect(decoded_response['entity']['app_guid']).to eq app_obj.guid
-            expect(decoded_response['entity']['route_guid']).to eq route.guid
-          end
+        it 'does not have a route' do
+          set_current_user_as_admin
+          mapping = RouteMappingModel.make
+          put "/v2/route_mappings/#{mapping.guid}", '{"app_port": 34}'
+          expect(last_response).to have_status_code(404)
         end
       end
 

@@ -37,7 +37,7 @@ module VCAP
           attributes[:app] = parent_app
         end
         attributes[:app] = parent_app
-        attributes[:guid] = parent_app.guid
+        attributes[:guid] = parent_app.guid if attributes[:type] == 'web' || attributes[:type].nil?
 
         args << attributes
 

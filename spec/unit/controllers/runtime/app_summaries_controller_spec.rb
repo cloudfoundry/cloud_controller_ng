@@ -33,8 +33,8 @@ module VCAP::CloudController
         ServiceBinding.make(app: @app, service_instance: instance)
       end
 
-      @app.add_route(@route1)
-      @app.add_route(@route2)
+      RouteMappingModel.make(app: @app.app, route: @route1, process_type: @app.type)
+      RouteMappingModel.make(app: @app.app, route: @route2, process_type: @app.type)
 
       set_current_user_as_admin
     end

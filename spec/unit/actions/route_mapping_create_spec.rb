@@ -12,6 +12,11 @@ module VCAP::CloudController
     let(:ports) { [8888] }
     let(:requested_port) { 8888 }
     let(:message) { RouteMappingsCreateMessage.new({ app_port: requested_port, relationships: { process: { type: process_type } } }) }
+    let(:route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
+
+    before do
+      allow(ProcessRouteHandler).to receive(:new).and_return(route_handler)
+    end
 
     describe '#add' do
       let(:route) { Route.make(space: space) }
@@ -19,6 +24,11 @@ module VCAP::CloudController
       it 'associates the app to the route' do
         route_mapping_create.add
         expect(app.reload.routes).to eq([route])
+      end
+
+      it 'delegates to the route handler to update route information' do
+        route_mapping_create.add
+        expect(route_handler).to have_received(:update_route_information)
       end
 
       describe 'recording events' do

@@ -35,7 +35,7 @@ module VCAP::CloudController
       to_many :routes,              exclude_in: [:create, :update], route_for: :get
       to_many :events,              exclude_in: [:create, :update], link_only: true
       to_many :service_bindings,    exclude_in: [:create, :update]
-      to_many :route_mappings,      exclude_in: [:create, :update], link_only: true, route_for: :get
+      to_many :route_mappings,      exclude_in: [:create, :update], link_only: true, route_for: :get, association_controller: :RouteMappingsController
     end
 
     query_parameters :name, :space_guid, :organization_guid, :diego, :stack_guid
@@ -186,10 +186,6 @@ module VCAP::CloudController
       stager_response = app.last_stager_response
       if stager_response.respond_to?(:streaming_log_url) && stager_response.streaming_log_url
         set_header('X-App-Staging-Log', stager_response.streaming_log_url)
-      end
-
-      if app.dea_update_pending?
-        Dea::Client.update_uris(app)
       end
 
       @app_event_repository.record_app_update(app, app.space, SecurityContext.current_user.guid, SecurityContext.current_user_email, request_attrs)

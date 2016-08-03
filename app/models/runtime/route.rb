@@ -186,11 +186,7 @@ module VCAP::CloudController
       super
 
       loaded_apps.each do |app|
-        handle_remove_app(app)
-
-        if app.dea_update_pending?
-          Dea::Client.update_uris(app)
-        end
+        ProcessRouteHandler.new(app).notify_backend_of_route_update
       end
     end
 
@@ -200,14 +196,6 @@ module VCAP::CloudController
       validates_unique [:domain_id, :host], message: :host_and_domain_taken_different_space do |ds|
         ds.where(port: 0).exclude(space: space)
       end
-    end
-
-    # def handle_add_app(app)
-    #   app.handle_add_route(self)
-    # end
-    #
-    def handle_remove_app(app)
-      app.handle_remove_route(self)
     end
 
     def validate_host

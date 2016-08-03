@@ -120,6 +120,14 @@ module VCAP::CloudController
           expect(Client).to have_received(:stop_indices).with(app, [3])
         end
       end
+
+      describe '#update_routes' do
+        it 'delegates to dea client' do
+          allow(Dea::Client).to receive(:update_uris).and_return(nil)
+          runner.update_routes
+          expect(Dea::Client).to have_received(:update_uris).with(app)
+        end
+      end
     end
   end
 end

@@ -126,8 +126,8 @@ module VCAP::CloudController
           group.environment_json = running_env
           group.save
 
-          process.add_route(route_without_service)
-          process.add_route(route_with_service)
+          RouteMappingModel.make(app: process.app, route: route_without_service, process_type: process.type, app_port: 2222)
+          RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: 2222)
           process.current_droplet.execution_metadata = 'foobar'
 
           allow(egress_rules).to receive(:running).with(process).and_return(['running_egress_rule'])

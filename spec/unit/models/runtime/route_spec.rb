@@ -88,15 +88,15 @@ module VCAP::CloudController
         it 'does not associate non-web v2 apps' do
           non_web_process = AppFactory.make(type: 'other', space: space)
 
-          RouteMappingModel.make(app: process, route: route, process_type: process.type)
-          RouteMappingModel.make(app: non_web_process, route: route, process_type: non_web_process.type)
+          RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+          RouteMappingModel.make(app: non_web_process.app, route: route, process_type: non_web_process.type)
 
           expect(route.apps).to match_array([process])
         end
 
         it 'returns a single app when an app is bound to multiple ports' do
-          RouteMappingModel.make(app: process, route: route, app_port: 8080)
-          RouteMappingModel.make(app: process, route: route, app_port: 9090)
+          RouteMappingModel.make(app: process.app, route: route, app_port: 8080)
+          RouteMappingModel.make(app: process.app, route: route, app_port: 9090)
 
           expect(route.apps.length).to eq(1)
         end
@@ -1049,12 +1049,13 @@ module VCAP::CloudController
         app1   = AppFactory.make(space: space, state: 'STARTED')
         app2   = AppFactory.make(space: space, state: 'STARTED')
 
-        route = Route.make(app_guids: [app1.guid, app2.guid], space: space)
+        route = Route.make(space: space)
+        RouteMappingModel.make(app: app1.app, route: route, process_type: app1.type)
+        RouteMappingModel.make(app: app2.app, route: route, process_type: app2.type)
+        route.reload
 
         app1   = route.apps[0]
         app2   = route.apps[1]
-        expect(app1).to receive(:handle_remove_route).and_call_original
-        expect(app2).to receive(:handle_remove_route).and_call_original
 
         expect(Dea::Client).to receive(:update_uris).with(app1)
         expect(Dea::Client).to receive(:update_uris).with(app2)
@@ -1094,32 +1095,6 @@ module VCAP::CloudController
             expect(RouteBinding.find(guid: route_binding_guid)).to eq route_binding
             expect(app.reload.routes[0]).to eq route
           end
-        end
-      end
-    end
-
-    describe 'apps association' do
-      let(:route) { Route.make }
-      let!(:app) do
-        AppFactory.make({ space: route.space, diego: true, ports: [8080, 9090] })
-      end
-
-      describe 'when adding an app' do
-        it 'marks the apps routes as changed and creates an audit event' do
-          expect(app).to receive(:handle_add_route).and_call_original
-          expect {
-            route.add_app(app)
-          }.to change { Event.count }.by(1)
-        end
-      end
-
-      describe 'when removing an app' do
-        it 'marks the apps routes as changed and creates an audit event' do
-          route.add_app(app)
-          expect(app).to receive(:handle_remove_route).and_call_original
-          expect {
-            route.remove_app(app)
-          }.to change { Event.count }.by(1)
         end
       end
     end

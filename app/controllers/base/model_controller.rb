@@ -122,12 +122,16 @@ module VCAP::CloudController::RestController
       validate_access(:read, obj)
 
       associated_model = obj.class.association_reflection(name).associated_class
-
-      associated_controller = VCAP::CloudController.controller_from_model_name(associated_model)
+      validate_access(:index, associated_model, { related_obj: obj, related_model: model })
 
       associated_path = "#{self.class.url_for_guid(guid)}/#{name}"
 
-      validate_access(:index, associated_model, { related_obj: obj, related_model: model })
+      all_relationships = {}
+      [self.class.to_one_relationships, self.class.to_many_relationships].each do |rel|
+        all_relationships.merge!(rel) if rel && rel.any?
+      end
+      associated_controller = VCAP::CloudController.controller_from_relationship(all_relationships[name])
+      associated_controller ||= VCAP::CloudController.controller_from_model_name(associated_model)
 
       querier = associated_model == VCAP::CloudController::App ? AppQuery : Query
       admin_override = SecurityContext.admin? || SecurityContext.admin_read_only?
