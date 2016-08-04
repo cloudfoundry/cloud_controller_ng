@@ -88,6 +88,7 @@ RSpec.describe 'Apps' do
       it 'includes related records' do
         route = VCAP::CloudController::Route.make(space: space)
         VCAP::CloudController::RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+        service_binding = VCAP::CloudController::ServiceBinding.make(app: process, service_instance: VCAP::CloudController::ManagedServiceInstance.make(space: space))
 
         get '/v2/apps?inline-relations-depth=1', nil, headers_for(user)
         expect(last_response.status).to eq(200)
@@ -203,8 +204,29 @@ RSpec.describe 'Apps' do
                 ],
                 'events_url'                 => "/v2/apps/#{process.guid}/events",
                 'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
-                'service_bindings'           => [],
-                'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+                'service_bindings'           => [
+                  {
+                    'metadata' => {
+                      'guid'       => service_binding.guid,
+                      'url'        => "/v2/service_bindings/#{service_binding.guid}",
+                      'created_at' => iso8601,
+                      'updated_at' => nil
+                    },
+                    'entity' => {
+                      'app_guid'              => process.guid,
+                      'service_instance_guid' => service_binding.service_instance.guid,
+                      'credentials'           => service_binding.credentials,
+                      'binding_options'       => {},
+                      'gateway_data'          => nil,
+                      'gateway_name'          => '',
+                      'syslog_drain_url'      => nil,
+                      'volume_mounts'         => [],
+                      'app_url'               => "/v2/apps/#{process.guid}",
+                      'service_instance_url'  => "/v2/service_instances/#{service_binding.service_instance.guid}"
+                    }
+                  }
+                ],
+                'route_mappings_url' => "/v2/apps/#{process.guid}/route_mappings"
               }
             }]
           }
