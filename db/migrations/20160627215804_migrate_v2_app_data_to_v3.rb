@@ -77,8 +77,8 @@ Sequel.migration do
     ## Backfill apps table
     ###
     run <<-SQL
-        INSERT INTO apps (guid, name, salt, encrypted_environment_variables, created_at, updated_at, space_guid)
-        SELECT p.guid, p.name, p.salt, p.encrypted_environment_json, p.created_at, p.updated_at, s.guid
+        INSERT INTO apps (guid, name, salt, encrypted_environment_variables, created_at, updated_at, space_guid, desired_state)
+        SELECT p.guid, p.name, p.salt, p.encrypted_environment_json, p.created_at, p.updated_at, s.guid, p.state
         FROM processes as p, spaces as s
         WHERE p.space_id = s.id
         ORDER BY p.id
