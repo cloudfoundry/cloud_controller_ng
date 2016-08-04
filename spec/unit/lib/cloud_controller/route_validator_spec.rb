@@ -150,8 +150,6 @@ module VCAP::CloudController
         let(:router_group_type) { 'http' }
 
         it 'adds port_unsupported error to the route' do
-          # expect { validator.validate }.
-          #   to raise_error(RouteValidator::RouteInvalid, 'Port is supported for domains of TCP router groups only.')
           validator.validate
           expect(route.errors.on(:port)).to include(:port_unsupported)
         end
