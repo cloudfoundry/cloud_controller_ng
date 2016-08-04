@@ -43,20 +43,17 @@ Sequel.migration do
       drop_foreign_key [:stack_id], name: :fk_apps_stack_id
       drop_index [:name, :space_id], name: :apps_space_id_name_nd_idx
     end
-    alter_table(:route_mappings) do
-      drop_foreign_key [:app_guid]
-    end
     alter_table(:v3_service_bindings) do
       drop_foreign_key [:app_id]
     end
     drop_table(:tasks)
     drop_table(:package_docker_data)
     drop_table(:v3_droplets)
+    drop_table(:route_mappings)
 
     run 'DELETE FROM droplets WHERE app_id IN (SELECT id FROM apps WHERE app_guid IS NOT NULL);'
     run 'DELETE FROM apps_routes WHERE app_id IN (SELECT id FROM apps WHERE app_guid IS NOT NULL);'
     run 'DELETE FROM apps WHERE app_guid IS NOT NULL OR deleted_at IS NOT NULL;'
-    self[:route_mappings].truncate
     self[:packages].truncate
     self[:buildpack_lifecycle_data].truncate
     self[:v3_service_bindings].truncate
@@ -71,9 +68,6 @@ Sequel.migration do
     end
     alter_table(:packages) do
       add_foreign_key [:app_guid], :apps, key: :guid, name: :fk_packages_app_guid
-    end
-    alter_table(:route_mappings) do
-      add_foreign_key [:app_guid], :apps, key: :guid, name: :fk_route_mappings_app_guid
     end
     alter_table(:v3_service_bindings) do
       add_foreign_key [:app_id], :apps, key: :id, name: :fk_v3_service_bindings_app_id   # this is by id instead of guid
@@ -329,6 +323,64 @@ Sequel.migration do
       set_column_not_null :guid
       add_index :guid, unique: true, name: :buildpack_lifecycle_data_guid_index
     end
+
+    ####
+    ## Migrate route mappings
+    ####
+
+    collate_opts = {}
+    if self.class.name.match(/mysql/i)
+      collate_opts[:collate] = :utf8_bin
+    end
+
+    alter_table(:apps_routes) do
+      add_column :app_guid, String, collate_opts
+      add_column :route_guid, String, collate_opts
+      add_column :process_type, String
+      add_index :process_type, name: :route_mappings_process_type_index
+
+      drop_foreign_key [:route_id]
+      drop_foreign_key [:app_id]
+      drop_constraint :apps_routes_app_id_route_id_app_port_key, type: :unique
+    end
+
+    run <<-SQL
+      UPDATE apps_routes SET
+        app_guid = (SELECT processes.guid FROM processes WHERE processes.id=apps_routes.app_id),
+        route_guid = (SELECT routes.guid FROM routes WHERE routes.id=apps_routes.route_id),
+        process_type = 'web'
+    SQL
+
+    run <<-SQL
+      UPDATE apps_routes SET app_port=8080 WHERE app_port IS NULL
+    SQL
+
+    if self.class.name.match(/mysql/i)
+      run 'update apps_routes set guid=UUID() where guid is NULL;'
+    elsif self.class.name.match(/postgres/i)
+      run 'update apps_routes set guid=get_uuid() where guid is NULL;'
+    end
+
+    alter_table(:apps_routes) do
+      drop_column :route_id
+      drop_column :app_id
+
+      set_column_not_null(:app_guid)
+      set_column_not_null(:route_guid)
+      set_column_not_null(:guid)
+      set_column_default(:app_port, 8080)
+
+      # for mysql, which loses collation settings when setting not null constraint
+      set_column_type :app_guid, String, collate_opts
+      set_column_type :route_guid, String, collate_opts
+
+      add_foreign_key [:app_guid], :apps, key: :guid, name: :fk_route_mappings_app_guid
+      add_foreign_key [:route_guid], :routes, key: :guid, name: :fk_route_mappings_route_guid
+
+      add_unique_constraint [:app_guid, :route_guid, :process_type, :app_port], name: :route_mappings_app_guid_route_guid_process_type_app_port_key
+    end
+
+    rename_table :apps_routes, :route_mappings
 
     ####
     ## Remove columns that have moved to other tables
