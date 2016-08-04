@@ -28,18 +28,58 @@ module VCAP::CloudController
     end
 
     describe '#to_hash' do
-      let(:lifecycle_data) do
-        { buildpack: 'ruby', stack: 'cflinuxfs2' }
+      let(:expected_lifecycle_data) do
+        { buildpack: buildpack, stack: 'cflinuxfs2' }
       end
+      let(:buildpack) { 'ruby' }
+      let(:stack) { 'cflinuxfs2' }
 
       before do
-        buildpack_lifecycle_data_model.stack = 'cflinuxfs2'
-        buildpack_lifecycle_data_model.buildpack = 'ruby'
+        buildpack_lifecycle_data_model.stack = stack
+        buildpack_lifecycle_data_model.buildpack = buildpack
         buildpack_lifecycle_data_model.save
       end
 
       it 'returns the lifecycle data as a hash' do
-        expect(buildpack_lifecycle_data_model.to_hash).to eq lifecycle_data
+        expect(buildpack_lifecycle_data_model.to_hash).to eq expected_lifecycle_data
+      end
+
+      context 'when the user has not specified a buildpack' do
+        let(:buildpack) { nil }
+
+        it 'returns the lifecycle data as a hash' do
+          expect(buildpack_lifecycle_data_model.to_hash).to eq expected_lifecycle_data
+        end
+      end
+
+      context 'when the buildpack is an url' do
+        let(:buildpack) { 'https://github.com/puppychutes' }
+
+        it 'returns the lifecycle data as a hash' do
+          expect(buildpack_lifecycle_data_model.to_hash).to eq expected_lifecycle_data
+        end
+
+        context 'when the buildpack url has an username and password' do
+          let(:buildpack) { 'https://snoopy:peanuts@github.com/puppychutes' }
+          let(:expected_lifecycle_data) do
+            { buildpack: 'https://***:***@github.com/puppychutes', stack: 'cflinuxfs2' }
+          end
+
+          it 'obfuscates the username and password' do
+            expect(buildpack_lifecycle_data_model.to_hash).to eq expected_lifecycle_data
+          end
+        end
+
+        context 'when the buildpack url has a username' do
+          let(:buildpack) { 'https://woofers@github.com/puppychutes' }
+          let(:expected_lifecycle_data) do
+            { buildpack: 'https://***:***@github.com/puppychutes', stack: 'cflinuxfs2' }
+          end
+
+          it 'obfuscates the username and password' do
+            expect(buildpack_lifecycle_data_model.to_hash).to eq expected_lifecycle_data
+          end
+        end
       end
     end
 

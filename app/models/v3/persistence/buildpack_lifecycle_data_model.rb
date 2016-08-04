@@ -29,12 +29,27 @@ module VCAP::CloudController
     alias_method_chain :buildpack, 'serialization'
 
     def to_hash
-      { buildpack: buildpack, stack: stack }
+      { buildpack: obfuscate_buildpack(buildpack), stack: stack }
     end
 
     def validate
       return unless app_guid && droplet_guid
       errors.add(:lifecycle_data, 'Cannot be associated with both a droplet and an app')
+    end
+
+    private
+
+    def obfuscate_buildpack(buildpack)
+      return if buildpack.nil?
+
+      parsed_url = Addressable::URI.parse(buildpack)
+
+      if parsed_url.user
+        parsed_url.user = '***'
+        parsed_url.password = '***'
+      end
+
+      parsed_url.to_s
     end
   end
 end

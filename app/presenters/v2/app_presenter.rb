@@ -58,8 +58,8 @@ module CloudController
           parsed_url = Addressable::URI.parse(url)
 
           if parsed_url.user
-            parsed_url.user = "***"
-            parsed_url.password = "***"
+            parsed_url.user = '***'
+            parsed_url.password = '***'
           end
 
           parsed_url.to_s
