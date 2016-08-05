@@ -68,8 +68,6 @@ module VCAP::CloudController
                       :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh,
                       :docker_credentials_json, :ports
 
-    export_attributes_from_methods ports: :ports_with_defaults
-
     strip_attributes :name
 
     serialize_attributes :json, :metadata
@@ -672,10 +670,6 @@ module VCAP::CloudController
         end
       end
       exposed_ports
-    end
-
-    def ports_with_defaults
-      VCAP::CloudController::Diego::Protocol::OpenProcessPorts.new(self).to_a
     end
 
     private

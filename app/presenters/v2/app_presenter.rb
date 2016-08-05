@@ -36,7 +36,7 @@ module CloudController
             'detected_start_command'      => app.detected_start_command,
             'enable_ssh'                  => app.enable_ssh,
             'docker_credentials_json'     => redact(app.docker_credentials_json),
-            'ports'                       => app.ports_with_defaults,
+            'ports'                       => VCAP::CloudController::Diego::Protocol::OpenProcessPorts.new(app).to_a,
           }
 
           entity.merge!(RelationsPresenter.new.to_hash(controller, app, opts, depth, parents, orphans))
