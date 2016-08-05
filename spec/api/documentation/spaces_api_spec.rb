@@ -77,7 +77,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
           headers
 
         expect(status).to eq 201
-        standard_entity_response parsed_response, :space, name: new_name
+        standard_entity_response parsed_response, :space, expected_values: { name: new_name }
 
         audited_event VCAP::CloudController::Event.find(type: 'audit.space.update', actee: guid)
       end

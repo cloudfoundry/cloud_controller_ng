@@ -69,7 +69,7 @@ RSpec.resource 'Space Quota Definitions', type: [:api, :legacy_api] do
       expect(status).to eq(201)
       expect(parsed_response['entity']).to include('total_reserved_route_ports')
       expect(parsed_response['entity']).to include('total_routes')
-      standard_entity_response parsed_response, :space_quota_definition, name: 'new_name'
+      standard_entity_response parsed_response, :space_quota_definition, expected_values: { name: 'new_name' }
     end
   end
 

@@ -173,7 +173,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
         client.put "/v2/apps/#{guid}", MultiJson.dump(new_attributes, pretty: true), headers
         expect(status).to eq(201)
-        standard_entity_response parsed_response, :app, name: 'new_name'
+        standard_entity_response parsed_response, :app, expected_values: { name: 'new_name' }
       end
     end
   end
@@ -203,7 +203,10 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
           to_return(status: 200, body: '{}')
       end
 
-      standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController, outer_model: :app
+      standard_model_list :service_binding,
+        VCAP::CloudController::ServiceBindingsController,
+        outer_model:       :app,
+        export_attributes: [:app_guid, :service_instance_guid, :credentials, :binding_options, :gateway_data, :gateway_name, :syslog_drain_url, :volume_mounts]
 
       context 'has service binding guid param' do
         parameter :service_binding_guid, 'The guid of the service binding'

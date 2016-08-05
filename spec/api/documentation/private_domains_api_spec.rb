@@ -26,7 +26,7 @@ RSpec.resource 'Private Domains', type: [:api, :legacy_api] do
       include_context 'updatable_fields'
       example 'Create a Private Domain owned by the given Organization' do
         org_guid = VCAP::CloudController::Organization.make.guid
-        payload = MultiJson.dump(
+        payload  = MultiJson.dump(
           {
             name:                     'exmaple.com',
             owning_organization_guid: org_guid,
@@ -36,8 +36,10 @@ RSpec.resource 'Private Domains', type: [:api, :legacy_api] do
 
         expect(status).to eq 201
         standard_entity_response parsed_response, :private_domain,
-                                 name: 'exmaple.com',
-                                 owning_organization_guid: org_guid
+          expected_values: {
+            name:                     'exmaple.com',
+            owning_organization_guid: org_guid
+          }
       end
     end
 
@@ -63,7 +65,7 @@ RSpec.resource 'Private Domains', type: [:api, :legacy_api] do
           standard_entity_response(
             parsed_response['resources'].first,
             :private_domain,
-            name: 'my-domain.com')
+            expected_values: { name: 'my-domain.com' })
         end
       end
     end
@@ -74,7 +76,7 @@ RSpec.resource 'Private Domains', type: [:api, :legacy_api] do
 
     describe 'Shared Organizations' do
       before do
-        pd = VCAP::CloudController::PrivateDomain[guid: guid]
+        pd  = VCAP::CloudController::PrivateDomain[guid: guid]
         org = VCAP::CloudController::Organization.make
         org.add_private_domain(pd)
       end

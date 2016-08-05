@@ -6,7 +6,7 @@ module VCAP::CloudController
     define_attributes do
       to_one :app
       to_one :service_instance
-      attribute :binding_options, Hash, default: {}
+      attribute :binding_options, Hash, exclude_in: [:create, :update]
       attribute :parameters, Hash, default: nil
     end
 

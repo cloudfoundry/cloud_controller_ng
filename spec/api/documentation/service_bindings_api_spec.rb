@@ -19,8 +19,12 @@ RSpec.resource 'Service Bindings', type: [:api, :legacy_api] do
       to_return(status: 200, body: '{}')
   end
 
-  standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController
-  standard_model_get :service_binding, nested_associations: [:app, :service_instance]
+  standard_model_list :service_binding,
+    VCAP::CloudController::ServiceBindingsController,
+    export_attributes: [:app_guid, :service_instance_guid, :credentials, :binding_options, :gateway_data, :gateway_name, :syslog_drain_url, :volume_mounts]
+  standard_model_get :service_binding,
+    nested_associations: [:app, :service_instance],
+    export_attributes: [:app_guid, :service_instance_guid, :credentials, :binding_options, :gateway_data, :gateway_name, :syslog_drain_url, :volume_mounts]
   standard_model_delete :service_binding
 
   post '/v2/service_bindings' do

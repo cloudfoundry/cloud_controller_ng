@@ -42,7 +42,7 @@ RSpec.resource 'Shared Domains', type: [:api, :legacy_api] do
 
       expect(status).to eq 201
       standard_entity_response parsed_response, :shared_domain,
-                               name: 'example.com', router_group_guid: 'my-random-guid'
+        expected_values: { name: 'example.com', router_group_guid: 'my-random-guid' }
 
       domain_guid = parsed_response['metadata']['guid']
       domain = VCAP::CloudController::Domain.find(guid: domain_guid)
@@ -72,7 +72,7 @@ RSpec.resource 'Shared Domains', type: [:api, :legacy_api] do
         standard_entity_response(
           parsed_response['resources'].first,
           :shared_domain,
-          name: 'shared-domain.com')
+          expected_values: { name: 'shared-domain.com' })
       end
     end
   end

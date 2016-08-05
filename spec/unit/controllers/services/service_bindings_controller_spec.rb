@@ -10,7 +10,6 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(described_class).to have_creatable_attributes({
-          binding_options: { type: 'hash', default: {} },
           app_guid: { type: 'string', required: true },
           service_instance_guid: { type: 'string', required: true },
           parameters: { type: 'hash', required: false }
@@ -19,7 +18,6 @@ module VCAP::CloudController
 
       it do
         expect(described_class).to have_updatable_attributes({
-          binding_options: { type: 'hash' },
           app_guid: { type: 'string' },
           service_instance_guid: { type: 'string' },
           parameters: { type: 'hash', required: false }

@@ -48,7 +48,7 @@ RSpec.resource 'User Provided Service Instances', type: [:api, :legacy_api] do
 
         client.put "/v2/user_provided_service_instances/#{guid}", MultiJson.dump(request_hash, pretty: true), headers
         expect(status).to eq(201)
-        standard_entity_response parsed_response, :user_provided_service_instance, credentials: { 'somekey' => 'somenewvalue' }
+        standard_entity_response parsed_response, :user_provided_service_instance, expected_values: { credentials: { 'somekey' => 'somenewvalue' } }
       end
     end
   end
@@ -63,7 +63,8 @@ RSpec.resource 'User Provided Service Instances', type: [:api, :legacy_api] do
 
       standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController,
         outer_model: :user_provided_service_instance,
-        exclude_parameters: ['service_instance_guid']
+        exclude_parameters: ['service_instance_guid'],
+        export_attributes: [:app_guid, :service_instance_guid, :credentials, :binding_options, :gateway_data, :gateway_name, :syslog_drain_url, :volume_mounts]
     end
 
     describe 'Routes' do

@@ -8,11 +8,7 @@ module VCAP::Services
       let(:plan) { VCAP::CloudController::ServicePlan.make }
       let(:space) { VCAP::CloudController::Space.make }
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.new(service_plan: plan, space: space) }
-      let(:service_binding) do
-        VCAP::CloudController::ServiceBinding.make(
-          binding_options: { 'this' => 'that' }
-        )
-      end
+      let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
       let(:service_key) { VCAP::CloudController::ServiceKey.make }
       let(:name) { 'fake-name' }
 

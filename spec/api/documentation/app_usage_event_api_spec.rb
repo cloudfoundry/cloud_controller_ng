@@ -66,20 +66,22 @@ RSpec.resource 'App Usage Events', type: [:api, :legacy_api] do
         client.get "/v2/app_usage_events?results-per-page=1&after_guid=#{event1.guid}", {}, headers
         expect(status).to eq(200)
         standard_entity_response parsed_response['resources'][0], :app_usage_event,
-          state:                     event2.state,
-          package_state:             event2.package_state,
-          instance_count:            event2.instance_count,
-          memory_in_mb_per_instance: event2.memory_in_mb_per_instance,
-          app_guid:                  event2.app_guid,
-          app_name:                  event2.app_name,
-          space_guid:                event2.space_guid,
-          space_name:                event2.space_name,
-          org_guid:                  event2.org_guid,
-          parent_app_guid:           nil,
-          parent_app_name:           nil,
-          process_type:              'web',
-          task_guid:                 nil,
-          task_name:                 nil
+          expected_values: {
+            state:                     event2.state,
+            package_state:             event2.package_state,
+            instance_count:            event2.instance_count,
+            memory_in_mb_per_instance: event2.memory_in_mb_per_instance,
+            app_guid:                  event2.app_guid,
+            app_name:                  event2.app_name,
+            space_guid:                event2.space_guid,
+            space_name:                event2.space_name,
+            org_guid:                  event2.org_guid,
+            parent_app_guid:           nil,
+            parent_app_name:           nil,
+            process_type:              'web',
+            task_guid:                 nil,
+            task_name:                 nil
+          }
       end
     end
   end

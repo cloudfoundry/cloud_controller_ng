@@ -54,12 +54,7 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :app_guid, :service_instance_guid, :credentials, :binding_options,
-                                    :gateway_data, :gateway_name, :syslog_drain_url
-      }
-      it { is_expected.to import_attributes :app_guid, :service_instance_guid, :credentials,
-                                    :binding_options, :gateway_data, :syslog_drain_url
-      }
+      it { is_expected.to import_attributes :app_guid, :service_instance_guid, :credentials, :syslog_drain_url }
     end
 
     describe '#new' do
@@ -220,39 +215,6 @@ module VCAP::CloudController
             app.remove_service_binding(binding)
           }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
         end
-      end
-    end
-
-    describe '#to_hash' do
-      let(:binding) { ServiceBinding.make }
-      let(:developer) { make_developer_for_space(binding.service_instance.space) }
-      let(:auditor) { make_auditor_for_space(binding.service_instance.space) }
-      let(:user) { make_user_for_space(binding.service_instance.space) }
-      let(:manager) { make_manager_for_space(binding.service_instance.space) }
-
-      it 'does not redact creds for an admin' do
-        allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true)
-        expect(binding.to_hash['credentials']).not_to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
-      end
-
-      it 'does not redact creds for a space developer' do
-        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
-        expect(binding.to_hash['credentials']).not_to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
-      end
-
-      it 'redacts creds for a space auditor' do
-        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(auditor)
-        expect(binding.to_hash['credentials']).to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
-      end
-
-      it 'redacts creds for a space user' do
-        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(user)
-        expect(binding.to_hash['credentials']).to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
-      end
-
-      it 'redacts creds for a space manager' do
-        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(manager)
-        expect(binding.to_hash['credentials']).to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
       end
     end
 

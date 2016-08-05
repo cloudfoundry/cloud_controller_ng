@@ -60,7 +60,7 @@ DESC
 
         client.put "/v2/security_groups/#{guid}", MultiJson.dump(new_security_group, pretty: true), headers
         expect(status).to eq(201)
-        standard_entity_response parsed_response, :security_group, name: 'new_name', rules: []
+        standard_entity_response parsed_response, :security_group, expected_values: { name: 'new_name', rules: [] }
       end
     end
   end

@@ -1,26 +1,24 @@
 module VCAP::CloudController
   class ServiceBinding < Sequel::Model
+    include Serializer
+
     class InvalidAppAndServiceRelation < StandardError; end
+
+    plugin :after_initialize
 
     many_to_one :app
     many_to_one :service_instance
 
-    export_attributes :app_guid, :service_instance_guid, :credentials,
-                      :binding_options, :gateway_data, :gateway_name, :syslog_drain_url
-    export_attributes_from_methods volume_mounts: :censor_volume_mounts
+    encrypt :credentials, salt: :salt
+    serializes_via_json :credentials
 
-    import_attributes :app_guid, :service_instance_guid, :credentials,
-                      :binding_options, :gateway_data, :syslog_drain_url
+    encrypt :volume_mounts, salt: :volume_mounts_salt
+    serializes_via_json :volume_mounts
 
-    alias_attribute :broker_provided_id, :gateway_name
+    import_attributes :app_guid, :service_instance_guid, :credentials, :syslog_drain_url
 
     delegate :client, :service, :service_plan,
       to: :service_instance
-
-    plugin :after_initialize
-
-    encrypt :credentials, salt: :salt
-    encrypt :volume_mounts, salt: :volume_mounts_salt
 
     def validate
       validates_presence :app
@@ -51,11 +49,8 @@ module VCAP::CloudController
       errors.add(:service_instance, :invalid_relation) if service_change && service_change[0] != service_change[1]
     end
 
-    def to_hash(opts={})
-      if !VCAP::CloudController::SecurityContext.admin? && !app.space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
-        opts[:redact] = ['credentials']
-      end
-      super(opts)
+    def to_hash(_opts={})
+      { guid: guid }
     end
 
     def in_suspended_org?
@@ -75,69 +70,12 @@ module VCAP::CloudController
       { service_instance: ServiceInstance.user_visible(user) }
     end
 
-    def credentials_with_serialization=(val)
-      self.credentials_without_serialization = MultiJson.dump(val)
-    end
-    alias_method_chain :credentials=, 'serialization'
-
-    def credentials_with_serialization
-      string = credentials_without_serialization
-      return if string.blank?
-      MultiJson.load string
-    end
-    alias_method_chain :credentials, 'serialization'
-
-    def volume_mounts_with_serialization=(val)
-      self.volume_mounts_without_serialization = MultiJson.dump(val)
-    end
-    alias_method_chain :volume_mounts=, 'serialization'
-
-    def volume_mounts_with_serialization
-      string = volume_mounts_without_serialization
-      return if string.blank?
-      MultiJson.load string
-    end
-    alias_method_chain :volume_mounts, 'serialization'
-
-    def gateway_data=(val)
-      val = MultiJson.dump(val)
-      super(val)
-    end
-
-    def gateway_data
-      val = super
-      val = MultiJson.load(val) if val
-      val
-    end
-
     def required_parameters
       { app_guid: app_guid }
     end
 
     def logger
       @logger ||= Steno.logger('cc.models.service_binding')
-    end
-
-    DEFAULT_BINDING_OPTIONS = '{}'.freeze
-
-    def binding_options
-      MultiJson.load(super || DEFAULT_BINDING_OPTIONS)
-    end
-
-    def binding_options=(values)
-      super(MultiJson.dump(values))
-    end
-
-    def censor_volume_mounts
-      ServiceBindingPresenter.censor_volume_mounts(volume_mounts)
-    end
-
-    private
-
-    def safe_unbind
-      client.unbind(self)
-    rescue => unbind_e
-      logger.error "Unable to unbind #{self}: #{unbind_e}"
     end
   end
 end

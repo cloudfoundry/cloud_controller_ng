@@ -35,7 +35,7 @@ RSpec.resource 'Buildpacks', type: [:api, :legacy_api] do
       example 'Creates an admin Buildpack' do
         client.post '/v2/buildpacks', fields_json, headers
         expect(status).to eq 201
-        standard_entity_response parsed_response, :buildpack, name: 'Golang_buildpack'
+        standard_entity_response parsed_response, :buildpack, expected_values: { name: 'Golang_buildpack' }
       end
     end
 
@@ -53,7 +53,7 @@ RSpec.resource 'Buildpacks', type: [:api, :legacy_api] do
         expect {
           client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ position: 3 }, pretty: true), headers
           expect(status).to eq(201)
-          standard_entity_response parsed_response, :buildpack, position: 3
+          standard_entity_response parsed_response, :buildpack, expected_values: { position: 3 }
         }.to change {
           VCAP::CloudController::Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
         }.from(
@@ -67,7 +67,7 @@ RSpec.resource 'Buildpacks', type: [:api, :legacy_api] do
         expect {
           client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ enabled: false }, pretty: true), headers
           expect(status).to eq 201
-          standard_entity_response parsed_response, :buildpack, enabled: false
+          standard_entity_response parsed_response, :buildpack, expected_values: { enabled: false }
         }.to change {
           VCAP::CloudController::Buildpack.find(guid: guid).enabled
         }.from(true).to(false)
@@ -75,7 +75,7 @@ RSpec.resource 'Buildpacks', type: [:api, :legacy_api] do
         expect {
           client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ enabled: true }, pretty: true), headers
           expect(status).to eq 201
-          standard_entity_response parsed_response, :buildpack, enabled: true
+          standard_entity_response parsed_response, :buildpack, expected_values: { enabled: true }
         }.to change {
           VCAP::CloudController::Buildpack.find(guid: guid).enabled
         }.from(false).to(true)
@@ -85,7 +85,7 @@ RSpec.resource 'Buildpacks', type: [:api, :legacy_api] do
         expect {
           client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ locked: true }, pretty: true), headers
           expect(status).to eq 201
-          standard_entity_response parsed_response, :buildpack, locked: true
+          standard_entity_response parsed_response, :buildpack, expected_values: { locked: true }
         }.to change {
           VCAP::CloudController::Buildpack.find(guid: guid).locked
         }.from(false).to(true)
@@ -93,7 +93,7 @@ RSpec.resource 'Buildpacks', type: [:api, :legacy_api] do
         expect {
           client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ locked: false }, pretty: true), headers
           expect(status).to eq 201
-          standard_entity_response parsed_response, :buildpack, locked: false
+          standard_entity_response parsed_response, :buildpack, expected_values: { locked: false }
         }.to change {
           VCAP::CloudController::Buildpack.find(guid: guid).locked
         }.from(true).to(false)

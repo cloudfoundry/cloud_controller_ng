@@ -188,7 +188,10 @@ EOF
         VCAP::CloudController::ServiceBinding.make(service_instance: service_instance)
       end
 
-      standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController, outer_model: :service_instance
+      standard_model_list :service_binding,
+        VCAP::CloudController::ServiceBindingsController,
+        outer_model: :service_instance,
+        export_attributes: [:app_guid, :service_instance_guid, :credentials, :binding_options, :gateway_data, :gateway_name, :syslog_drain_url, :volume_mounts]
     end
 
     describe 'Routes' do

@@ -383,6 +383,17 @@ Sequel.migration do
     rename_table :apps_routes, :route_mappings
 
     ####
+    ## Migrate service bindings
+    ####
+
+    alter_table(:service_bindings) do
+      drop_column :gateway_name
+      drop_column :gateway_data
+      drop_column :configuration
+      drop_column :binding_options
+    end
+
+    ####
     ## Remove columns that have moved to other tables
     ####
 
