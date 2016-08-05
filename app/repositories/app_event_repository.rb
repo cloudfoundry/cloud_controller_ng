@@ -19,18 +19,20 @@ module VCAP::CloudController
       end
 
       def record_app_update(app, space, actor_guid, actor_name, request_attrs)
-        Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{app_audit_hash(request_attrs)})")
+        audit_hash = app_audit_hash(request_attrs)
+        Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{audit_hash})")
 
         actor    = { name: actor_name, guid: actor_guid, type: 'user' }
-        metadata = { request: app_audit_hash(request_attrs) }
+        metadata = { request: audit_hash }
         create_app_audit_event('audit.app.update', app, space, actor, metadata)
       end
 
       def record_app_map_droplet(app, space, actor_guid, actor_name, request_attrs)
-        Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{app_audit_hash(request_attrs)})")
+        audit_hash = app_audit_hash(request_attrs)
+        Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{audit_hash})")
 
         actor    = { name: actor_name, guid: actor_guid, type: 'user' }
-        metadata = { request: app_audit_hash(request_attrs) }
+        metadata = { request: audit_hash }
         create_app_audit_event('audit.app.droplet_mapped', app, space, actor, metadata)
       end
 
@@ -144,6 +146,17 @@ module VCAP::CloudController
         request_attrs.dup.tap do |changes|
           CENSORED_FIELDS.map(&:to_s).each do |censored|
             changes[censored] = CENSORED_MESSAGE if changes.key?(censored)
+          end
+
+          v2_buildpack = changes.key?('buildpack')
+          v3_buildpack = changes.key?('lifecycle') && changes['lifecycle'].key?('data') && changes['lifecycle']['data'].key?('buildpack')
+
+          if v2_buildpack
+            buildpack_attr = changes['buildpack']
+            changes['buildpack'] = CloudController::UrlSecretObfuscator.obfuscate(buildpack_attr) if buildpack_attr
+          elsif v3_buildpack
+            buildpack_attr = changes['lifecycle']['data']['buildpack']
+            changes['lifecycle']['data']['buildpack'] = CloudController::UrlSecretObfuscator.obfuscate(buildpack_attr) if buildpack_attr
           end
         end
       end

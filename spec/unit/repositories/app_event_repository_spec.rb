@@ -16,11 +16,11 @@ module VCAP::CloudController
             'state' => 'STOPPED',
             'environment_json' => { 'foo' => 1 },
             'docker_credentials_json' => {
-              'docker_login_server' => 'server',
-              'docker_user' => 'user',
-              'docker_password' => 'password',
-              'docker_email' => 'email'
-            }
+            'docker_login_server' => 'server',
+            'docker_user' => 'user',
+            'docker_password' => 'password',
+            'docker_email' => 'email'
+          },
           }
         end
 
@@ -31,12 +31,12 @@ module VCAP::CloudController
 
         it 'records the expected fields on the event and logs the evena' do
           expected_request_field = {
-           'name' => 'old',
-           'instances' => 1,
-           'memory' => 84,
-           'state' => 'STOPPED',
-           'environment_json' => 'PRIVATE DATA HIDDEN',
-           'docker_credentials_json' => 'PRIVATE DATA HIDDEN',
+            'name' => 'old',
+            'instances' => 1,
+            'memory' => 84,
+            'state' => 'STOPPED',
+            'environment_json' => 'PRIVATE DATA HIDDEN',
+            'docker_credentials_json' => 'PRIVATE DATA HIDDEN',
           }
 
           expect(Loggregator).to receive(:emit).with(app.guid, "Updated app with guid #{app.guid} (#{expected_request_field})")
@@ -66,11 +66,11 @@ module VCAP::CloudController
             'state' => 'STOPPED',
             'environment_json' => { 'super' => 'secret ' },
             'docker_credentials_json' => {
-              'docker_login_server' => 'server',
-              'docker_user' => 'user',
-              'docker_password' => 'password',
-              'docker_email' => 'email'
-            }
+            'docker_login_server' => 'server',
+            'docker_user' => 'user',
+            'docker_password' => 'password',
+            'docker_email' => 'email'
+          },
           }
         end
 
@@ -381,9 +381,77 @@ module VCAP::CloudController
         end
       end
 
+      context 'obfuscation' do
+        let(:space) { Space.make }
+        let(:user) { User.make }
+        let(:user_email) { 'user email' }
+
+        context 'v2' do
+          let(:attrs) { { 'buildpack' => buildpack } }
+          let(:app) { AppFactory.make(instances: 2, memory: 99, space: space) }
+
+          context 'when the buildpack is not nil' do
+            let (:buildpack) { 'schmython' }
+
+            it 'calls out to UrlSecretObfuscator' do
+              allow(CloudController::UrlSecretObfuscator).to receive(:obfuscate)
+              app_event_repository.record_app_update(app, space, user.guid, user_email, attrs)
+              expect(CloudController::UrlSecretObfuscator).to have_received(:obfuscate).exactly :once
+            end
+          end
+
+          context 'when the buildpack is nil' do
+            let(:buildpack) { nil }
+
+            it 'does nothing' do
+              event = app_event_repository.record_app_update(app, space, user.guid, user_email, attrs).reload
+
+              expect(event.metadata.fetch('request')).to eq('buildpack' => nil)
+            end
+          end
+        end
+
+        context 'v3' do
+          let(:app) { AppModel.make }
+          let(:buildpack) { 'schmython' }
+          let(:attrs) do
+            {
+              'lifecycle' => {
+                'type' => 'buildpack',
+                'data' => { 'buildpack' => buildpack }
+              }
+            }
+          end
+
+          context 'when the buildpack is not nil' do
+            it 'calls out to UrlSecretObfuscator' do
+              allow(CloudController::UrlSecretObfuscator).to receive(:obfuscate)
+              app_event_repository.record_app_update(app, space, user.guid, user_email, attrs)
+              expect(CloudController::UrlSecretObfuscator).to have_received(:obfuscate).exactly :once
+            end
+          end
+
+          context 'when the buildpack is nil' do
+            let(:buildpack) { nil }
+
+            it 'does nothing' do
+              event = app_event_repository.record_app_update(app, space, user.guid, user_email, attrs).reload
+
+              expected_request = {
+                'lifecycle' => {
+                  'type' => 'buildpack',
+                  'data' => { 'buildpack' => nil }
+                }
+              }
+              expect(event.metadata.fetch('request')).to eq expected_request
+            end
+          end
+        end
+      end
+
       context 'with a v3 app' do
         describe '#record_app_create' do
-          let(:app) { AppModel.make }
+          let(:app) { AppModel.make(:buildpack) }
           let(:user) { User.make }
           let(:request_attrs) do
             {
