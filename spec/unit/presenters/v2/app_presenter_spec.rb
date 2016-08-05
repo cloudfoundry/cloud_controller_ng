@@ -88,36 +88,12 @@ module CloudController::Presenters::V2
             expect(relations_presenter).to have_received(:to_hash).with(controller, app, opts, depth, parents, orphans)
           end
 
-          context 'obfuscation' do
-            context 'when the username and password are in the url' do
-              let(:buildpack) { 'https://amelialovescats:meowmeow@github.com/my-stuff&q=heart' }
+          it 'calls out to the UrlSecretObfuscator' do
+            allow(CloudController::UrlSecretObfuscator).to receive(:obfuscate)
 
-              it 'obfuscates the username and password' do
-                actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+            app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
 
-                expect(actual_entity_hash['buildpack']).to eq 'https://***:***@github.com/my-stuff&q=heart'
-              end
-            end
-
-            context 'when there is no password' do
-              let(:buildpack) { 'https://amelialovescats@github.com/my-stuff&q=heart' }
-
-              it 'obfuscates the username and password' do
-                actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
-
-                expect(actual_entity_hash['buildpack']).to eq 'https://***:***@github.com/my-stuff&q=heart'
-              end
-            end
-
-            context 'when the url has neither username nor credentials' do
-              let(:buildpack) { 'https://github.com/my-stuff&q=heart' }
-
-              it 'obfuscates nothing' do
-                actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
-
-                expect(actual_entity_hash['buildpack']).to eq 'https://github.com/my-stuff&q=heart'
-              end
-            end
+            expect(CloudController::UrlSecretObfuscator).to have_received(:obfuscate).exactly :once
           end
         end
 

@@ -48,21 +48,10 @@ module CloudController
 
         def buildpack_name_or_url(buildpack)
           if buildpack.class == VCAP::CloudController::CustomBuildpack
-            obfuscate_buildpack_url(buildpack.url)
+            CloudController::UrlSecretObfuscator.obfuscate(buildpack.url)
           elsif buildpack.class == VCAP::CloudController::Buildpack
             buildpack.name
           end
-        end
-
-        def obfuscate_buildpack_url(url)
-          parsed_url = Addressable::URI.parse(url)
-
-          if parsed_url.user
-            parsed_url.user = '***'
-            parsed_url.password = '***'
-          end
-
-          parsed_url.to_s
         end
 
         def admin_or_developer?(app)
