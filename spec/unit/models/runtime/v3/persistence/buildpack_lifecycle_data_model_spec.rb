@@ -59,26 +59,12 @@ module VCAP::CloudController
           expect(buildpack_lifecycle_data_model.to_hash).to eq expected_lifecycle_data
         end
 
-        context 'when the buildpack url has an username and password' do
-          let(:buildpack) { 'https://snoopy:peanuts@github.com/puppychutes' }
-          let(:expected_lifecycle_data) do
-            { buildpack: 'https://***:***@github.com/puppychutes', stack: 'cflinuxfs2' }
-          end
+        it 'calls out to UrlSecretObfuscator' do
+          allow(CloudController::UrlSecretObfuscator).to receive(:obfuscate)
 
-          it 'obfuscates the username and password' do
-            expect(buildpack_lifecycle_data_model.to_hash).to eq expected_lifecycle_data
-          end
-        end
+          buildpack_lifecycle_data_model.to_hash
 
-        context 'when the buildpack url has a username' do
-          let(:buildpack) { 'https://woofers@github.com/puppychutes' }
-          let(:expected_lifecycle_data) do
-            { buildpack: 'https://***:***@github.com/puppychutes', stack: 'cflinuxfs2' }
-          end
-
-          it 'obfuscates the username and password' do
-            expect(buildpack_lifecycle_data_model.to_hash).to eq expected_lifecycle_data
-          end
+          expect(CloudController::UrlSecretObfuscator).to have_received(:obfuscate).exactly :once
         end
       end
     end
