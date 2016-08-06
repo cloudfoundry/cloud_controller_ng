@@ -391,7 +391,7 @@ module VCAP::CloudController
           let(:app) { AppFactory.make(instances: 2, memory: 99, space: space) }
 
           context 'when the buildpack is not nil' do
-            let (:buildpack) { 'schmython' }
+            let(:buildpack) { 'schmython' }
 
             it 'calls out to UrlSecretObfuscator' do
               allow(CloudController::UrlSecretObfuscator).to receive(:obfuscate)
