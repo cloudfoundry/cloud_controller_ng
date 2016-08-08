@@ -66,7 +66,7 @@ RSpec.describe 'v3 service bindings' do
 
         expect(last_response.status).to eq(201)
         expect(parsed_response).to be_a_response_like(expected_response)
-        expect(VCAP::CloudController::ServiceBindingModel.find(guid: guid)).to be_present
+        expect(VCAP::CloudController::ServiceBinding.find(guid: guid)).to be_present
 
         event = VCAP::CloudController::Event.last
         expect(event.values).to match(
@@ -150,7 +150,7 @@ RSpec.describe 'v3 service bindings' do
 
         expect(last_response.status).to eq(201)
         expect(parsed_response).to be_a_response_like(expected_response)
-        expect(VCAP::CloudController::ServiceBindingModel.find(guid: guid)).to be_present
+        expect(VCAP::CloudController::ServiceBinding.find(guid: guid)).to be_present
       end
     end
   end

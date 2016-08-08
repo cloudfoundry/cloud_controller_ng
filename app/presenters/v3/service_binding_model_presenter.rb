@@ -33,10 +33,10 @@ module VCAP::CloudController
               href: "/v3/service_bindings/#{service_binding.guid}"
             },
             service_instance: {
-              href: "/v2/service_instances/#{service_binding.service_instance.guid}"
+              href: "/v2/service_instances/#{service_binding.service_instance_guid}"
             },
             app:              {
-              href: "/v3/apps/#{service_binding.app.guid}"
+              href: "/v3/apps/#{service_binding.app_guid}"
             },
           }
         end

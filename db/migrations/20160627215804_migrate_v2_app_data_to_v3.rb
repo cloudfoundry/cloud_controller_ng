@@ -391,6 +391,31 @@ Sequel.migration do
       drop_column :gateway_data
       drop_column :configuration
       drop_column :binding_options
+
+      add_column :app_guid, String
+      add_column :service_instance_guid, String
+      add_column :type, String
+
+      drop_foreign_key [:service_instance_id]
+      drop_foreign_key [:app_id]
+    end
+
+    # run <<-SQL
+    #   UPDATE service_bindings SET
+    #     app_guid = (SELECT processes.guid FROM processes WHERE processes.id=service_bindings.app_id),
+    #     service_instances_guid = (SELECT service_instances.guid FROM service_instances WHERE service_instances.id=service_bindings.service_instance_id),
+    #     type = 'app'
+    # SQL
+
+    alter_table(:service_bindings) do
+      drop_column :service_instance_id
+      drop_column :app_id
+
+      set_column_not_null(:app_guid)
+      set_column_not_null(:service_instance_guid)
+
+      add_foreign_key [:app_guid], :apps, key: :guid, name: :fk_service_bindings_app_guid
+      add_foreign_key [:service_instance_guid], :service_instances, key: :guid, name: :fk_service_bindings_service_instance_guid
     end
 
     ####

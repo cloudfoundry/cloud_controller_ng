@@ -4,45 +4,56 @@ require 'repositories/service_binding_event_repository'
 
 module VCAP::CloudController
   class ServiceBindingCreate
-    class ServiceInstanceNotBindable < StandardError; end
-    class ServiceBrokerInvalidSyslogDrainUrl < StandardError; end
     class InvalidServiceBinding < StandardError; end
-    class VolumeMountServiceDisabled < StandardError; end
+    class ServiceInstanceNotBindable < InvalidServiceBinding; end
+    class ServiceBrokerInvalidSyslogDrainUrl < InvalidServiceBinding; end
+    class VolumeMountServiceDisabled < InvalidServiceBinding; end
+    class SpaceMismatch < InvalidServiceBinding; end
 
     include VCAP::CloudController::LockCheck
 
     def initialize(user_guid, user_email)
-      @user_guid = user_guid
+      @user_guid  = user_guid
       @user_email = user_email
     end
 
-    def create(app_model, service_instance, message, volume_mount_services_enabled)
+    def create(app, service_instance, message, volume_mount_services_enabled)
       raise ServiceInstanceNotBindable unless service_instance.bindable?
-      service_binding = ServiceBindingModel.new(service_instance: service_instance,
-                                                app: app_model,
-                                                credentials: {},
-                                                type: message.type)
-      raise InvalidServiceBinding unless service_binding.valid?
       raise VolumeMountServiceDisabled if service_instance.volume_service? && !volume_mount_services_enabled
+      raise SpaceMismatch if service_instance.space_guid != app.space_guid
+      raise_if_locked(service_instance)
 
-      raise_if_locked(service_binding.service_instance)
+      binding = ServiceBinding.new(
+        service_instance: service_instance,
+        app:              app,
+        credentials:      {},
+        type:             message.type
+      )
+      raise InvalidServiceBinding unless binding.valid?
 
-      raw_attrs = service_instance.client.bind(service_binding, message.parameters)
-      attrs = raw_attrs.tap { |r| r.delete(:route_service_url) }
+      binding_result = request_binding_from_broker(service_instance, binding, message.parameters)
 
-      service_binding.set_all(attrs)
+      binding.set_all(binding_result)
 
       begin
-        service_binding.save
+        binding.save
 
-        Repositories::ServiceBindingEventRepository.record_create(service_binding, @user_guid, @user_email, message.audit_hash)
+        Repositories::ServiceBindingEventRepository.record_create(binding, @user_guid, @user_email, message.audit_hash)
       rescue => e
-        logger.error "Failed to save state of create for service binding #{service_binding.guid} with exception: #{e}"
-        mitigate_orphan(service_binding)
+        logger.error "Failed to save state of create for service binding #{binding.guid} with exception: #{e}"
+        mitigate_orphan(binding)
         raise e
       end
 
-      service_binding
+      binding
+    end
+
+    private
+
+    def request_binding_from_broker(instance, binding, parameters)
+      instance.client.bind(binding, parameters).tap do |response|
+        response.delete(:route_service_url)
+      end
     end
 
     def mitigate_orphan(binding)

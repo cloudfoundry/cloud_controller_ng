@@ -4,7 +4,7 @@ module VCAP::CloudController
     APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
 
     many_to_many :routes, join_table: :route_mappings, left_key: :app_guid, left_primary_key: :guid, right_primary_key: :guid, right_key: :route_guid
-    one_to_many :service_bindings, class: 'VCAP::CloudController::ServiceBindingModel', key: :app_id
+    one_to_many :service_bindings, key: :app_guid, primary_key: :guid
     one_to_many :tasks, class: 'VCAP::CloudController::TaskModel', key: :app_guid, primary_key: :guid
 
     many_to_one :space, class: 'VCAP::CloudController::Space', key: :space_guid, primary_key: :guid, without_guid_generation: true

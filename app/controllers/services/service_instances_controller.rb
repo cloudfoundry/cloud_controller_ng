@@ -15,7 +15,7 @@ module VCAP::CloudController
       attribute :tags, [String], default: []
       to_one :space
       to_one :service_plan
-      to_many :service_bindings
+      to_many :service_bindings, route_for: [:get], exclude_in: [:create, :update]
       to_many :service_keys
       to_many :routes, route_for: [:get, :put, :delete], exclude_in: [:create, :update]
     end

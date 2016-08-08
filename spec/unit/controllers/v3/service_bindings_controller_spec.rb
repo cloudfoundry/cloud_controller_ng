@@ -24,7 +24,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
       }.to_json
     end
     let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
-    let(:fake_service_binding) { VCAP::CloudController::ServiceBindingModel.new(service_instance: service_instance, guid: '') }
+    let(:fake_service_binding) { VCAP::CloudController::ServiceBinding.new(service_instance: service_instance, guid: '') }
     let(:opts) do
       {
         fake_service_binding: fake_service_binding,
@@ -273,7 +273,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
 
       context 'when attempting to bind and the service binding already exists' do
         before do
-          VCAP::CloudController::ServiceBindingModel.make(
+          VCAP::CloudController::ServiceBinding.make(
             service_instance: service_instance,
             app: app_model
           )

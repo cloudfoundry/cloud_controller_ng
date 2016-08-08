@@ -5,15 +5,27 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe 'Associations' do
-      it { is_expected.to have_associated :app, associated_instance: ->(binding) { AppFactory.make(space: binding.space) } }
+      it { is_expected.to have_associated :app, associated_instance: ->(binding) { AppModel.make(space: binding.space) } }
       it { is_expected.to have_associated :service_instance, associated_instance: ->(binding) { ServiceInstance.make(space: binding.space) } }
+
+      it 'has a v2 app through the v3 app' do
+        service_binding = ServiceBinding.make
+        app = service_binding.app
+
+        App.make(app: app, type: 'non-web')
+        expect(service_binding.reload.v2_app).to be_nil
+
+        web_process = App.make(app: app, type: 'web')
+        expect(service_binding.reload.v2_app.guid).to eq(web_process.guid)
+      end
     end
 
     describe 'Validations' do
       it { is_expected.to validate_presence :app }
       it { is_expected.to validate_presence :service_instance }
       it { is_expected.to validate_db_presence :credentials }
-      it { is_expected.to validate_uniqueness [:app_id, :service_instance_id] }
+      it { is_expected.to validate_uniqueness [:app_guid, :service_instance_guid] }
+      it { is_expected.to validate_presence [:type] }
 
       it 'validates max length of volume_mounts' do
         too_long = 'a' * (65_535 + 1)
@@ -49,6 +61,16 @@ module VCAP::CloudController
             binding.service_instance = ServiceInstance.make(space: binding.app.space)
             expect { binding.save }.to raise_error Sequel::ValidationFailed, /service_instance/
           end
+        end
+      end
+
+      context 'when the service instance and app are in different spaces' do
+        let(:app) { AppModel.make }
+        let(:service_instance) { ManagedServiceInstance.make }
+
+        it 'is not valid' do
+          expect { ServiceBinding.make(service_instance: service_instance, app: app)
+          }.to raise_error(Sequel::ValidationFailed, /service_instance space_mismatch/)
         end
       end
     end
@@ -94,31 +116,6 @@ module VCAP::CloudController
 
           let(:encrypted_attr) { :volume_mounts }
         end
-      end
-    end
-
-    describe 'bad relationships' do
-      before do
-        # since we don't set them, these will have different app spaces
-        @service_instance = ManagedServiceInstance.make
-        @app = AppFactory.make
-        @service_binding = ServiceBinding.make
-      end
-
-      it 'should not associate an app with a service from a different app space' do
-        expect {
-          service_binding = ServiceBinding.make
-          service_binding.app = @app
-          service_binding.save
-        }.to raise_error ServiceBinding::InvalidAppAndServiceRelation
-      end
-
-      it 'should not associate a service with an app from a different app space' do
-        expect {
-          service_binding = ServiceBinding.make
-          service_binding.service_instance = @service_instance
-          service_binding.save
-        }.to raise_error ServiceBinding::InvalidAppAndServiceRelation
       end
     end
 
@@ -185,34 +182,33 @@ module VCAP::CloudController
     end
 
     describe 'restaging' do
-      let(:app) { AppFactory.make(state: 'STARTED', instances: 1) }
-
-      let(:service_instance) { ManagedServiceInstance.make(space: app.space) }
+      let(:v2_app) { AppFactory.make(state: 'STARTED', instances: 1, type: 'web') }
+      let(:service_instance) { ManagedServiceInstance.make(space: v2_app.space) }
 
       it 'should not trigger restaging when creating a binding' do
-        ServiceBinding.make(app: app, service_instance: service_instance)
-        app.refresh
-        expect(app.needs_staging?).to be false
+        ServiceBinding.make(app: v2_app.app, service_instance: service_instance)
+        v2_app.refresh
+        expect(v2_app.needs_staging?).to be false
       end
 
       it 'should not trigger restaging when directly destroying a binding' do
-        binding = ServiceBinding.make(app: app, service_instance: service_instance)
-        expect { binding.destroy }.not_to change { app.refresh.needs_staging? }.from(false)
+        binding = ServiceBinding.make(app: v2_app.app, service_instance: service_instance)
+        expect { binding.destroy }.not_to change { v2_app.refresh.needs_staging? }.from(false)
       end
 
       context 'when indirectly destroying a binding' do
-        let(:binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
+        let(:binding) { ServiceBinding.make(app: v2_app.app, service_instance: service_instance) }
 
         it 'should not trigger restaging if the broker successfully unbinds' do
           stub_unbind(binding, status: 200)
-          expect { app.remove_service_binding(binding) }.not_to change { app.refresh.needs_staging? }.from(false)
+          expect { v2_app.app.remove_service_binding(binding) }.not_to change { v2_app.refresh.needs_staging? }.from(false)
         end
 
         it 'should raise a broker error if the broker cannot successfully unbind' do
           stub_unbind(binding, status: 500)
 
           expect {
-            app.remove_service_binding(binding)
+            v2_app.app.remove_service_binding(binding)
           }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
         end
       end

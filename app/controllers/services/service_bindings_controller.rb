@@ -4,7 +4,7 @@ require 'controllers/services/lifecycle/service_instance_binding_manager'
 module VCAP::CloudController
   class ServiceBindingsController < RestController::ModelController
     define_attributes do
-      to_one :app
+      to_one :app, association_controller: :AppsController, association_name: :v2_app
       to_one :service_instance
       attribute :binding_options, Hash, exclude_in: [:create, :update]
       attribute :parameters, Hash, default: nil
@@ -21,26 +21,43 @@ module VCAP::CloudController
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
       raise InvalidRequest unless request_attrs
 
-      service_instance_guid = request_attrs['service_instance_guid']
-      app_guid              = request_attrs['app_guid']
-      binding_attrs         = request_attrs.except('parameters')
-      arbitrary_parameters  = request_attrs['parameters']
+      # service_instance_guid = request_attrs['service_instance_guid']
+      # app_guid              = request_attrs['app_guid']
+      # binding_attrs         = request_attrs.except('parameters')
+      # arbitrary_parameters  = request_attrs['parameters']
+      #
+      # binding_manager = ServiceInstanceBindingManager.new(self, logger)
+      # service_binding = binding_manager.create_app_service_instance_binding(service_instance_guid, app_guid, binding_attrs, arbitrary_parameters, volume_services_enabled?)
 
-      binding_manager = ServiceInstanceBindingManager.new(self, logger)
-      service_binding = binding_manager.create_app_service_instance_binding(service_instance_guid, app_guid, binding_attrs, arbitrary_parameters, volume_services_enabled?)
+      message = ServiceBindingCreateMessage.new({
+        type: 'app',
+        relationships: {
+          app: { guid: request_attrs['app_guid'] },
+          service_instance: { guid: request_attrs['service_instance_guid'] }
+        },
+        data: {
+          parameters: request_attrs['parameters']
+        }
+      })
+
+      app, service_instance = ServiceBindingCreateFetcher.new.fetch(message.app_guid, message.service_instance_guid)
+      raise CloudController::Errors::ApiError.new_from_details('AppNotFound', @request_attrs['app_guid']) unless app
+      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', @request_attrs['service_instance_guid']) unless service_instance
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(app.space_guid)
+
+      service_binding = ServiceBindingCreate.new(SecurityContext.current_user.guid, SecurityContext.current_user_email).create(app, service_instance, message, volume_services_enabled?)
 
       [HTTP::CREATED,
        { 'Location' => "#{self.class.path}/#{service_binding.guid}" },
        object_renderer.render_json(self.class, service_binding, @opts)
       ]
-    rescue ServiceInstanceBindingManager::ServiceInstanceNotFound
-      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', @request_attrs['service_instance_guid'])
-    rescue ServiceInstanceBindingManager::ServiceInstanceNotBindable
+
+    rescue ServiceBindingCreate::ServiceInstanceNotBindable
       raise CloudController::Errors::ApiError.new_from_details('UnbindableService')
-    rescue ServiceInstanceBindingManager::AppNotFound
-      raise CloudController::Errors::ApiError.new_from_details('AppNotFound', @request_attrs['app_guid'])
-    rescue ServiceInstanceBindingManager::VolumeMountServiceDisabled
+    rescue ServiceBindingCreate::VolumeMountServiceDisabled
       raise CloudController::Errors::ApiError.new_from_details('VolumeMountServiceDisabled')
+    rescue ServiceBindingCreate::InvalidServiceBinding
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingAppServiceTaken', "#{app.guid} #{service_instance.guid}")
     end
 
     delete path_guid, :delete
@@ -59,16 +76,7 @@ module VCAP::CloudController
     end
 
     def self.translate_validation_exception(e, attributes)
-      unique_errors = e.errors.on([:app_id, :service_instance_id])
-      if unique_errors && unique_errors.include?(:unique)
-        CloudController::Errors::ApiError.new_from_details('ServiceBindingAppServiceTaken', "#{attributes['app_guid']} #{attributes['service_instance_guid']}")
-      elsif e.errors.on(:app) && e.errors.on(:app).include?(:presence)
-        CloudController::Errors::ApiError.new_from_details('AppNotFound', attributes['app_guid'])
-      elsif e.errors.on(:service_instance) && e.errors.on(:service_instance).include?(:presence)
-        CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', attributes['service_instance_guid'])
-      else
-        CloudController::Errors::ApiError.new_from_details('ServiceBindingInvalid', e.errors.full_messages)
-      end
+      CloudController::Errors::ApiError.new_from_details('ServiceBindingInvalid', e.errors.full_messages)
     end
 
     define_messages

@@ -8,8 +8,8 @@ module CloudController
 
         def entity_hash(controller, service_binding, opts, depth, parents, orphans=nil)
           {
-            'app_guid'              => service_binding.app.guid,
-            'service_instance_guid' => service_binding.service_instance.guid,
+            'app_guid'              => service_binding.app_guid,
+            'service_instance_guid' => service_binding.service_instance_guid,
             'credentials'           => redact_creds_if_necessary(service_binding),
             'binding_options'       => {},
             'gateway_data'          => nil,

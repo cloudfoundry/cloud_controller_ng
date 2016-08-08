@@ -29,7 +29,7 @@ module VCAP::CloudController
     DEFAULT_HTTP_PORT = 8080
     DEFAULT_PORTS     = [DEFAULT_HTTP_PORT].freeze
 
-    one_to_many :service_bindings
+    one_to_many :service_bindings, key: :app_guid, primary_key: :guid
     one_to_many :events, class: VCAP::CloudController::AppEvent
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
 

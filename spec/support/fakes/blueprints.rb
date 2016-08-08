@@ -238,10 +238,11 @@ module VCAP::CloudController
   end
 
   ServiceBinding.blueprint do
-    credentials       { Sham.service_credentials }
-    service_instance  { ManagedServiceInstance.make }
-    app               { AppFactory.make(space: service_instance.space) }
-    syslog_drain_url  { nil }
+    credentials { Sham.service_credentials }
+    service_instance { ManagedServiceInstance.make }
+    app { AppModel.make(space: service_instance.space) }
+    syslog_drain_url { nil }
+    type { 'app' }
   end
 
   ServiceBindingModel.blueprint do

@@ -14,10 +14,7 @@ class ServiceBindingsController < ApplicationController
     message = ServiceBindingCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    app_guid = params[:body]['relationships']['app']['guid']
-    service_instance_guid = params[:body]['relationships']['service_instance']['guid']
-
-    app, service_instance = ServiceBindingCreateFetcher.new.fetch(app_guid, service_instance_guid)
+    app, service_instance = ServiceBindingCreateFetcher.new.fetch(message.app_guid, message.service_instance_guid)
     app_not_found! unless app
     service_instance_not_found! unless service_instance
     unauthorized! unless can_write?(app.space.guid)
@@ -27,10 +24,10 @@ class ServiceBindingsController < ApplicationController
       render status: :created, json: Presenters::V3::ServiceBindingModelPresenter.new(service_binding)
     rescue ServiceBindingCreate::ServiceInstanceNotBindable
       raise CloudController::Errors::ApiError.new_from_details('UnbindableService')
-    rescue ServiceBindingCreate::InvalidServiceBinding
-      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingAppServiceTaken', "#{app.guid} #{service_instance.guid}")
     rescue ServiceBindingCreate::VolumeMountServiceDisabled
       raise CloudController::Errors::ApiError.new_from_details('VolumeMountServiceDisabled')
+    rescue ServiceBindingCreate::InvalidServiceBinding
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingAppServiceTaken', "#{app.guid} #{service_instance.guid}")
     end
   end
 

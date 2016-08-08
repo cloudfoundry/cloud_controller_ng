@@ -34,7 +34,7 @@ module VCAP::CloudController
 
       to_many :routes,              exclude_in: [:create, :update], route_for: :get
       to_many :events,              exclude_in: [:create, :update], link_only: true
-      to_many :service_bindings,    exclude_in: [:create, :update]
+      to_many :service_bindings,    exclude_in: [:create, :update], route_for: [:get, :delete]
       to_many :route_mappings,      exclude_in: [:create, :update], link_only: true, route_for: :get, association_controller: :RouteMappingsController
     end
 

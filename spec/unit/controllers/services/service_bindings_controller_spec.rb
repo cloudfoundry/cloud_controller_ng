@@ -288,17 +288,20 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the app is invalid' do
-          context 'because app_guid is invalid' do
-            let(:req) do
-              {
-                app_guid: 'THISISWRONG',
-                service_instance_guid: instance.guid
-              }.to_json
-            end
+        context 'when the app does not exist' do
+          it 'returns CF-AppNotFound' do
+            post '/v2/service_bindings', { app_guid: 'not-found', service_instance_guid: instance.guid }.to_json
+
+            hash_body = JSON.parse(last_response.body)
+            expect(hash_body['error_code']).to eq('CF-AppNotFound')
+            expect(last_response.status).to eq(404)
+          end
+
+          context 'because it maps to non-web process' do
+            let(:app_obj) { AppFactory.make(space: space, type: 'non-web') }
 
             it 'returns CF-AppNotFound' do
-              post '/v2/service_bindings', req
+              post '/v2/service_bindings', { app_guid: app_obj.guid, service_instance_guid: instance.guid }.to_json
 
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-AppNotFound')
@@ -307,22 +310,38 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the service instance is invalid' do
-          context 'because service_instance_guid is invalid' do
-            let(:req) do
-              {
-                app_guid: app_obj.guid,
-                service_instance_guid: 'THISISWRONG'
-              }.to_json
-            end
+        context 'when the service instance does not exist' do
+          let(:req) do
+            {
+              app_guid:              app_obj.guid,
+              service_instance_guid: 'THISISWRONG'
+            }.to_json
+          end
 
-            it 'returns CF-ServiceInstanceNotFound error' do
-              post '/v2/service_bindings', req
+          it 'returns CF-ServiceInstanceNotFound error' do
+            post '/v2/service_bindings', req
 
-              hash_body = JSON.parse(last_response.body)
-              expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
-              expect(last_response.status).to eq(404)
-            end
+            hash_body = JSON.parse(last_response.body)
+            expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
+            expect(last_response.status).to eq(404)
+          end
+        end
+
+        context 'when the user is not a SpaceDeveloper' do
+          let(:req) do
+            {
+              app_guid:              app_obj.guid,
+              service_instance_guid: instance.guid
+            }.to_json
+          end
+
+          before do
+            set_current_user(User.make)
+          end
+
+          it 'returns 403' do
+            post '/v2/service_bindings', req
+            expect(last_response.status).to eq(403)
           end
         end
 
@@ -424,6 +443,13 @@ module VCAP::CloudController
           end
 
           context 'when attempting to bind and the service binding already exists' do
+            let(:req) do
+              {
+                app_guid:              app_obj.guid,
+                service_instance_guid: instance.guid
+              }.to_json
+            end
+
             before do
               ServiceBinding.make(app: app_obj, service_instance: instance)
             end
