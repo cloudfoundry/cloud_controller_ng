@@ -70,6 +70,10 @@ module VCAP::CloudController
 
     private
 
+    def filter_dataset(dataset)
+      dataset.where("#{RouteMappingModel.table_name}__process_type".to_sym => 'web')
+    end
+
     def get_app_port(app_guid, app_port)
       if app_port.blank?
         app = App.find(guid: app_guid)

@@ -125,6 +125,17 @@ RSpec.describe 'RouteMappings' do
         }
       )
     end
+
+    it 'does not list mappings to non-web processes' do
+      non_web_process       = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
+      non_web_route_mapping = VCAP::CloudController::RouteMappingModel.make(app: non_web_process.app, process_type: non_web_process.type)
+
+      get '/v2/route_mappings', nil, headers_for(user)
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).not_to include(non_web_route_mapping.guid)
+    end
   end
 
   describe 'POST /v2/route_mappings' do
