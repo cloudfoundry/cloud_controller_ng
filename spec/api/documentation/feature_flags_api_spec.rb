@@ -331,6 +331,23 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
     end
   end
 
+  get '/v2/config/feature_flags/env_var_visibility' do
+    example 'Get the Environment Variable Visibility feature flag' do
+      explanation 'When enabled, all users can read environment variables.
+                   When disabled, only admin can read environment variables.'
+      client.get '/v2/config/feature_flags/env_var_visibility', {}, headers
+
+      expect(status).to eq(200)
+      expect(parsed_response).to eq(
+        {
+          'name'          => 'env_var_visibility',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/env_var_visibility'
+        })
+    end
+  end
+
   put '/v2/config/feature_flags/:name' do
     include_context 'name_parameter'
     include_context 'updatable_fields'
