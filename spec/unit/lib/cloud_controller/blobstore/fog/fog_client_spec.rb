@@ -446,7 +446,9 @@ module CloudController
             context 'when encryption type is specified' do
               it 'passes the encryption options to aws' do
                 client.cp_file_between_keys(src_key, dest_key)
-                expect(dest_file).to have_received(:save).with('x-amz-server-side-encryption' => 'my-algo')
+                options = { 'x-amz-server-side-encryption' => 'my-algo' }
+                expect(src_file).to have_received(:copy).with('a-directory-key', 'xy/z7/xyz789', options)
+                expect(dest_file).to have_received(:save).with(options)
               end
             end
 
@@ -455,7 +457,8 @@ module CloudController
 
               it 'passes the encryption options to aws' do
                 client.cp_file_between_keys(src_key, dest_key)
-                expect(dest_file).to have_received(:save).with(no_args)
+                expect(src_file).to have_received(:copy).with('a-directory-key', 'xy/z7/xyz789', {})
+                expect(dest_file).to have_received(:save).with({})
               end
             end
           end
