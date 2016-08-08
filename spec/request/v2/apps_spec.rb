@@ -84,6 +84,16 @@ RSpec.describe 'Apps' do
       )
     end
 
+    it 'does not list non-web processes' do
+      non_web_process = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
+
+      get '/v2/apps', nil, headers_for(user)
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).not_to include(non_web_process.guid)
+    end
+
     context 'with inline-relations-depth' do
       it 'includes related records' do
         route = VCAP::CloudController::Route.make(space: space)
@@ -357,6 +367,13 @@ RSpec.describe 'Apps' do
           }
         }
       )
+    end
+
+    it 'does not display non-web processes' do
+      non_web_process = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
+
+      get "/v2/apps/#{non_web_process.guid}", nil, headers_for(user)
+      expect(last_response.status).to eq(404)
     end
   end
 

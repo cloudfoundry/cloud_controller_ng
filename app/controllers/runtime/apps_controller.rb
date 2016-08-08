@@ -143,6 +143,13 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}")
     end
 
+    def read(guid)
+      obj = find_guid(guid)
+      raise CloudController::Errors::ApiError.new_from_details('AppNotFound', guid) if obj.type != 'web'
+      validate_access(:read, obj)
+      object_renderer.render_json(self.class, obj, @opts)
+    end
+
     private
 
     def blob_dispatcher
