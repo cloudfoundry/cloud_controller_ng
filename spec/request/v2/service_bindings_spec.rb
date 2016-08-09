@@ -78,6 +78,17 @@ RSpec.describe 'ServiceBindings' do
       )
     end
 
+    it 'does not list service bindings without web processes' do
+      non_web_process = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
+      non_displayed_binding = VCAP::CloudController::ServiceBinding.make(app: non_web_process.app, service_instance: service_instance)
+
+      get '/v2/service_bindings', nil, headers_for(user)
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).to_not include(non_displayed_binding.guid)
+    end
+
     describe 'inline-relations-depth=1' do
       let(:service_binding2) { nil }
 
@@ -200,7 +211,7 @@ RSpec.describe 'ServiceBindings' do
 
       it 'filters by service_instance_guid' do
         filtered_service_instance = VCAP::CloudController::ManagedServiceInstance.make(space: space)
-        filtered_service_binding  = VCAP::CloudController::ServiceBinding.make(service_instance: filtered_service_instance)
+        filtered_service_binding  = VCAP::CloudController::ServiceBinding.make(service_instance: filtered_service_instance, app: process1.app)
 
         get "/v2/service_bindings?q=service_instance_guid:#{filtered_service_instance.guid}", nil, headers_for(user)
         expect(last_response.status).to eq(200)
@@ -245,6 +256,14 @@ RSpec.describe 'ServiceBindings' do
           }
         }
       )
+    end
+
+    it 'does not display service bindings without a web process' do
+      non_web_process = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
+      non_displayed_binding = VCAP::CloudController::ServiceBinding.make(app: non_web_process.app, service_instance: service_instance)
+
+      get "/v2/service_bindings/#{non_displayed_binding.guid}", nil, headers_for(user)
+      expect(last_response.status).to eq(404)
     end
   end
 

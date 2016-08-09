@@ -10,10 +10,17 @@ module VCAP::CloudController
       attribute :parameters, Hash, default: nil
     end
 
-    get path,      :enumerate
-    get path_guid, :read
+    get path, :enumerate
 
     query_parameters :app_guid, :service_instance_guid
+
+    get path_guid, :read
+    def read(guid)
+      obj = find_guid(guid)
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless obj.v2_app.present?
+      validate_access(:read, obj)
+      object_renderer.render_json(self.class, obj, @opts)
+    end
 
     post path, :create
     def create
@@ -80,6 +87,10 @@ module VCAP::CloudController
     define_messages
 
     private
+
+    def filter_dataset(dataset)
+      dataset.select_all(ServiceBinding.table_name).join(App, app_guid: :app_guid, type: 'web')
+    end
 
     def volume_services_enabled?
       @config[:volume_services_enabled]
