@@ -492,7 +492,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
   end
 
   describe '#destroy' do
-    let(:service_binding) { VCAP::CloudController::ServiceBindingModel.make(syslog_drain_url: 'syslog://syslog-drain.com') }
+    let(:service_binding) { VCAP::CloudController::ServiceBinding.make(syslog_drain_url: 'syslog://syslog-drain.com') }
     let(:space) { service_binding.space }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 

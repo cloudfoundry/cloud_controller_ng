@@ -7,20 +7,20 @@ module VCAP::CloudController
     let(:user_guid) { 'user-guid' }
     let(:user_email) { 'user@example.com' }
 
-    describe '#synchronous_delete' do
-      let(:service_binding) { ServiceBindingModel.make }
+    describe '#delete_sync' do
+      let(:service_binding) { ServiceBinding.make }
 
       before do
         allow(service_binding.client).to receive(:unbind)
       end
 
       it 'deletes the service binding' do
-        service_binding_delete.synchronous_delete(service_binding)
+        service_binding_delete.delete_sync(service_binding)
         expect(service_binding.exists?).to be_falsey
       end
 
       it 'creates an audit.service_binding.delete event' do
-        service_binding_delete.synchronous_delete(service_binding)
+        service_binding_delete.delete_sync(service_binding)
 
         event = Event.last
         expect(event.type).to eq('audit.service_binding.delete')
@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       it 'asks the broker to unbind the instance' do
-        service_binding_delete.synchronous_delete(service_binding)
+        service_binding_delete.delete_sync(service_binding)
         expect(service_binding.client).to have_received(:unbind).with(service_binding)
       end
 
@@ -40,21 +40,40 @@ module VCAP::CloudController
 
         it 'raises an error' do
           expect {
-            service_binding_delete.synchronous_delete(service_binding)
-          }.to raise_error(ServiceBindingModelDelete::FailedToDelete, /operation in progress/)
+            service_binding_delete.delete_sync(service_binding)
+          }.to raise_error(ServiceBindingModelDelete::OperationInProgress, /operation in progress/)
         end
       end
 
       context 'when the service broker client raises an error' do
+        let(:error) { StandardError.new('kablooey') }
+
         before do
-          allow(service_binding.client).to receive(:unbind).and_raise(StandardError.new('kablooey'))
+          allow(service_binding.client).to receive(:unbind).and_raise(error)
         end
 
-        it 'raises an error' do
+        it 're-raises the same error' do
           expect {
-            service_binding_delete.synchronous_delete(service_binding)
-          }.to raise_error(ServiceBindingModelDelete::FailedToDelete, /kablooey/)
+            service_binding_delete.delete_sync(service_binding)
+          }.to raise_error(error)
         end
+      end
+    end
+
+    describe '#delte_async' do
+      let(:service_binding) { ServiceBinding.make }
+
+      before do
+        allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind)
+      end
+
+      it 'returns a delete job for the service binding' do
+        job = service_binding_delete.delete_async(service_binding)
+
+        expect(job).to be_a_fully_wrapped_job_of(Jobs::DeleteActionJob)
+        execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+        expect(service_binding.exists?).to be_falsey
       end
     end
   end

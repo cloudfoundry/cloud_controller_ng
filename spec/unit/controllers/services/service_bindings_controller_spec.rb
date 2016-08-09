@@ -611,7 +611,7 @@ module VCAP::CloudController
 
               delete "/v2/service_bindings/#{service_binding.guid}?async=true"
               expect(service_binding).not_to be_nil
-              expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::AuditEventJob
+              expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::DeleteActionJob
 
               expect(service_instance.refresh.last_operation).to be_nil
             end
@@ -638,7 +638,7 @@ module VCAP::CloudController
 
               delete "/v2/service_bindings/#{service_binding.guid}?async=true"
               expect(service_binding).not_to be_nil
-              expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::AuditEventJob
+              expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::DeleteActionJob
 
               expect(service_instance.refresh.last_operation.state).to eq 'succeeded'
               expect(service_instance.refresh.last_operation.type).to eq 'create'
@@ -679,6 +679,13 @@ module VCAP::CloudController
 
           delete "/v2/service_bindings/#{service_binding.guid}"
           expect(last_response).to have_status_code(403)
+        end
+      end
+
+      context 'when the service binding does not exist' do
+        it 'returns 404' do
+          delete '/v2/service_bindings/not-found'
+          expect(last_response).to have_status_code 404
         end
       end
     end

@@ -156,7 +156,7 @@ RSpec.describe 'v3 service bindings' do
   end
 
   describe 'DELETE /v3/service_bindings/:guid' do
-    let(:service_binding) { VCAP::CloudController::ServiceBindingModel.make(service_instance: service_instance) }
+    let(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance) }
 
     context 'managed service instance' do
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }

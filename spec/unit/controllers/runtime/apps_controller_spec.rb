@@ -108,7 +108,7 @@ module VCAP::CloudController
         expect(described_class).to have_nested_routes(
           {
             events:           [:get, :put, :delete],
-            service_bindings: [:get, :put, :delete],
+            service_bindings: [:get],
             routes:           [:get],
             route_mappings:   [:get],
           })
@@ -1123,7 +1123,7 @@ module VCAP::CloudController
       context 'non recursive deletion' do
         context 'with NON-empty service_binding association' do
           let!(:svc_instance) { ManagedServiceInstance.make(space: app_obj.space) }
-          let!(:service_binding) { ServiceBinding.make(app: app_obj, service_instance: svc_instance) }
+          let!(:service_binding) { ServiceBinding.make(app: app_obj.app, service_instance: svc_instance) }
           let(:guid_pattern) { '[[:alnum:]-]+' }
 
           before do
@@ -1300,7 +1300,7 @@ module VCAP::CloudController
 
         context 'when the user is space dev and has service instance bound to application' do
           let!(:service_instance) { ManagedServiceInstance.make(space: app_obj.space) }
-          let!(:service_binding) { ServiceBinding.make(app: app_obj, service_instance: service_instance) }
+          let!(:service_binding) { ServiceBinding.make(app: app_obj.app, service_instance: service_instance) }
 
           it 'returns system environment with VCAP_SERVICES' do
             get "/v2/apps/#{app_obj.guid}/env"
@@ -1368,7 +1368,7 @@ module VCAP::CloudController
           )
         end
         let!(:service_instance) { ManagedServiceInstance.make(space: app_obj.space) }
-        let!(:service_binding) { ServiceBinding.make(app: app_obj, service_instance: service_instance) }
+        let!(:service_binding) { ServiceBinding.make(app: app_obj.app, service_instance: service_instance) }
 
         context 'when the user is a space developer' do
           it 'returns non-redacted environment values' do
@@ -2183,6 +2183,55 @@ module VCAP::CloudController
 
         it 'returns 403' do
           delete "/v2/apps/#{app_obj.guid}/routes/#{route.guid}"
+          expect(last_response).to have_status_code(403)
+        end
+      end
+    end
+
+    describe 'DELETE /v2/apps/:app_guid/service_bindings/:service_binding_guid' do
+      let(:space) { Space.make }
+      let(:app_obj) { AppFactory.make(space: space) }
+      let(:instance) { ManagedServiceInstance.make(space: space) }
+      let!(:service_binding) { ServiceBinding.make(app: app_obj.app, service_instance: instance) }
+      let(:developer) { make_developer_for_space(space) }
+
+      before do
+        set_current_user(developer)
+        allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind)
+      end
+
+      it 'removes the association' do
+        expect(app_obj.reload.service_bindings).to match_array([service_binding])
+
+        delete "/v2/apps/#{app_obj.guid}/service_bindings/#{service_binding.guid}"
+        expect(last_response.status).to eq(204)
+
+        expect(app_obj.reload.service_bindings).to be_empty
+      end
+
+      context 'when the app does not exist' do
+        it 'returns 404' do
+          delete "/v2/apps/not-found/service_bindings/#{service_binding.guid}"
+          expect(last_response).to have_status_code(404)
+          expect(last_response.body).to include('AppNotFound')
+        end
+      end
+
+      context 'when the service binding does not exist' do
+        it 'returns 404' do
+          delete "/v2/apps/#{app_obj.guid}/service_bindings/not-found"
+          expect(last_response).to have_status_code(404)
+          expect(last_response.body).to include('ServiceBindingNotFound')
+        end
+      end
+
+      context 'when the user is not a developer in the apps space' do
+        before do
+          set_current_user(User.make)
+        end
+
+        it 'returns 403' do
+          delete "/v2/apps/#{app_obj.guid}/service_bindings/#{service_binding.guid}"
           expect(last_response).to have_status_code(403)
         end
       end

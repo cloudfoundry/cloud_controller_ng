@@ -34,7 +34,7 @@ class ServiceBindingsController < ApplicationController
   def show
     service_binding = VCAP::CloudController::ServiceBindingModel.find(guid: params[:guid])
 
-    service_binding_not_found! unless service_binding && can_read?(service_binding.space.guid, service_binding.space.organization.guid)
+    binding_not_found! unless service_binding && can_read?(service_binding.space.guid, service_binding.space.organization.guid)
     render status: :ok, json: Presenters::V3::ServiceBindingModelPresenter.new(service_binding, show_secrets: can_see_secrets?(service_binding.space))
   end
 
@@ -52,12 +52,12 @@ class ServiceBindingsController < ApplicationController
   end
 
   def destroy
-    service_binding = VCAP::CloudController::ServiceBindingModel.find(guid: params[:guid])
+    binding = VCAP::CloudController::ServiceBinding.where(guid: params[:guid]).eager(service_instance: { space: :organization }).all.first
 
-    service_binding_not_found! unless service_binding && can_read?(service_binding.space.guid, service_binding.space.organization.guid)
-    unauthorized! unless can_write?(service_binding.space.guid)
+    binding_not_found! unless binding && can_read?(binding.space.guid, binding.space.organization.guid)
+    unauthorized! unless can_write?(binding.space.guid)
 
-    ServiceBindingModelDelete.new(current_user.guid, current_user_email).synchronous_delete(service_binding)
+    ServiceBindingModelDelete.new(current_user.guid, current_user_email).delete_sync(binding)
 
     head :no_content
 
@@ -71,7 +71,7 @@ class ServiceBindingsController < ApplicationController
     resource_not_found!(:service_instance)
   end
 
-  def service_binding_not_found!
+  def binding_not_found!
     resource_not_found!(:service_binding)
   end
 

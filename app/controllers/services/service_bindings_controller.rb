@@ -21,14 +21,6 @@ module VCAP::CloudController
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
       raise InvalidRequest unless request_attrs
 
-      # service_instance_guid = request_attrs['service_instance_guid']
-      # app_guid              = request_attrs['app_guid']
-      # binding_attrs         = request_attrs.except('parameters')
-      # arbitrary_parameters  = request_attrs['parameters']
-      #
-      # binding_manager = ServiceInstanceBindingManager.new(self, logger)
-      # service_binding = binding_manager.create_app_service_instance_binding(service_instance_guid, app_guid, binding_attrs, arbitrary_parameters, volume_services_enabled?)
-
       message = ServiceBindingCreateMessage.new({
         type: 'app',
         relationships: {
@@ -45,7 +37,8 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', @request_attrs['service_instance_guid']) unless service_instance
       raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(app.space_guid)
 
-      service_binding = ServiceBindingCreate.new(SecurityContext.current_user.guid, SecurityContext.current_user_email).create(app, service_instance, message, volume_services_enabled?)
+      creator = ServiceBindingCreate.new(SecurityContext.current_user.guid, SecurityContext.current_user_email)
+      service_binding = creator.create(app, service_instance, message, volume_services_enabled?)
 
       [HTTP::CREATED,
        { 'Location' => "#{self.class.path}/#{service_binding.guid}" },
@@ -62,20 +55,25 @@ module VCAP::CloudController
 
     delete path_guid, :delete
     def delete(guid)
-      service_binding = find_guid_and_validate_access(:delete, guid, ServiceBinding)
-      raise_if_has_dependent_associations!(service_binding) if v2_api? && !recursive_delete?
+      binding = ServiceBinding.find(guid: guid)
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless binding
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(binding.space.guid)
 
-      binding_manager = ServiceInstanceBindingManager.new(self, logger)
-      delete_job = binding_manager.delete_service_instance_binding(service_binding, params)
+      deleter = ServiceBindingModelDelete.new(SecurityContext.current_user.guid, SecurityContext.current_user_email)
 
-      if delete_job
-        [HTTP::ACCEPTED, JobPresenter.new(delete_job).to_json]
+      if async?
+        job = deleter.delete_async(binding)
+        [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
       else
+        deleter.delete_sync(binding)
         [HTTP::NO_CONTENT, nil]
       end
+
+    rescue ServiceBindingModelDelete::OperationInProgress
+      raise CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', binding.service_instance.name)
     end
 
-    def self.translate_validation_exception(e, attributes)
+    def self.translate_validation_exception(e, _attributes)
       CloudController::Errors::ApiError.new_from_details('ServiceBindingInvalid', e.errors.full_messages)
     end
 

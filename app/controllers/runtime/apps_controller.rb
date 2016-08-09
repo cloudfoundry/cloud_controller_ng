@@ -34,7 +34,7 @@ module VCAP::CloudController
 
       to_many :routes,              exclude_in: [:create, :update], route_for: :get
       to_many :events,              exclude_in: [:create, :update], link_only: true
-      to_many :service_bindings,    exclude_in: [:create, :update], route_for: [:get, :delete]
+      to_many :service_bindings,    exclude_in: [:create, :update], route_for: [:get]
       to_many :route_mappings,      exclude_in: [:create, :update], link_only: true, route_for: :get, association_controller: :RouteMappingsController
     end
 
@@ -412,6 +412,26 @@ module VCAP::CloudController
 
       route_mapping = RouteMappingModel.find(app: process.app, route: route, process: process)
       RouteMappingDelete.new(SecurityContext.current_user, SecurityContext.current_user_email).delete(route_mapping)
+
+      after_update(process)
+
+      [HTTP::NO_CONTENT]
+    end
+
+    delete '/v2/apps/:app_guid/service_bindings/:service_binding_guid', :remove_service_binding
+    def remove_service_binding(app_guid, service_binding_guid)
+      logger.debug 'cc.association.remove', guid: app_guid, association: 'service_bindings', other_guid: service_binding_guid
+      @request_attrs = { 'service_binding' => service_binding_guid, verb: 'remove', relation: 'service_bindings', related_guid: service_binding_guid }
+
+      process = find_guid(app_guid, App)
+      validate_access(:can_remove_related_object, process, request_attrs)
+
+      before_update(process)
+
+      service_binding = ServiceBinding.find(guid: request_attrs['service_binding'])
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', service_binding_guid) unless service_binding
+
+      ServiceBindingModelDelete.new(SecurityContext.current_user.guid, SecurityContext.current_user_email).delete_sync(service_binding)
 
       after_update(process)
 
