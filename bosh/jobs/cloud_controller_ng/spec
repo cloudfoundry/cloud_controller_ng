@@ -31,6 +31,8 @@ templates:
   pre-start.sh.erb: bin/pre-start
   post-start.sh.erb: bin/post-start
   check_for_domain_overlap.rb: bin/check_for_domain_overlap.rb
+  migrate_db.sh.erb: bin/migrate_db
+  seed_db.sh.erb: bin/seed_db
 
 packages:
   - capi_utils

@@ -100,43 +100,13 @@ function setup_directories {
 
 function perform_migration {
   pushd "${CC_PACKAGE_DIR}/cloud_controller_ng" > /dev/null
-    set +e
-
-    echo "Running migrations"
-    chpst -u vcap:vcap bundle exec rake db:migrate
-    local result=$?
-
-    local counter=0
-    while [[ $counter -lt 2 && $result -ne 0 ]]; do
-      echo "Rerunning migrations"
-      sleep 5
-      ((counter++))
-      chpst -u vcap:vcap bundle exec rake db:migrate
-      result = $?
-    done
-
-    if [[ $result -ne 0 ]]; then
-      echo "Migrations failed"
-      exit $result
-    fi
-
-    set -e
+    chpst -u vcap:vcap "${SCRIPT_DIR}/migrate_db"
   popd > /dev/null
 }
 
 function seed_db {
   pushd "${CC_PACKAGE_DIR}/cloud_controller_ng" > /dev/null
-    set +e
-
-    chpst -u vcap:vcap bundle exec rake db:seed
-
-    result=$?
-    if [[ $result -ne 0 ]]; then
-      echo "DB seeding failed"
-      exit $result
-    fi
-
-    set -e
+    chpst -u vcap:vcap "${SCRIPT_DIR}/seed_db"
   popd > /dev/null
 }
 

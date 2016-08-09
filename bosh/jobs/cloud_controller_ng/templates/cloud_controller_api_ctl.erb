@@ -72,8 +72,8 @@ case $1 in
 
     <% if spec.bootstrap && !p('cc.run_prestart_migrations') %>
     echo 'Running migrations and seeds'
-    bundle exec rake db:migrate
-    bundle exec rake db:seed
+    $CC_JOB_DIR/bin/migrate_db
+    $CC_JOB_DIR/bin/seed_db
     echo 'Finished migrations and seeds'
     <% end %>
 
