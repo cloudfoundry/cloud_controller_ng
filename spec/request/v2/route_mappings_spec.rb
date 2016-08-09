@@ -36,6 +36,14 @@ RSpec.describe 'RouteMappings' do
       })
     end
 
+    it 'does not display route mappings without a web process' do
+      non_web_process = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
+      non_displayed_mapping = VCAP::CloudController::RouteMappingModel.make(app: non_web_process.app, route: route, process_type: non_web_process.type)
+
+      get "/v2/route_mappings/#{non_displayed_mapping.guid}", nil, headers_for(user)
+      expect(last_response.status).to eq(404)
+    end
+
     describe 'app_port' do
       context 'diego app' do
         before do
