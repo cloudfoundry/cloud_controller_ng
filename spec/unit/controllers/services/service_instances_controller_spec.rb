@@ -21,7 +21,6 @@ module VCAP::CloudController
           name: { type: 'string', required: true },
           space_guid: { type: 'string', required: true },
           service_plan_guid: { type: 'string', required: true },
-          service_binding_guids: { type: '[string]' },
           service_key_guids: { type: '[string]' },
           tags: { type: '[string]', default: [] },
           parameters: { type: 'hash', default: nil },
@@ -33,7 +32,6 @@ module VCAP::CloudController
           name: { type: 'string' },
           space_guid: { type: 'string' },
           service_plan_guid: { type: 'string' },
-          service_binding_guids: { type: '[string]' },
           service_key_guids: { type: '[string]' },
           tags: { type: '[string]' },
           parameters: { type: 'hash' },
@@ -263,7 +261,7 @@ module VCAP::CloudController
     describe 'Associations' do
       it do
         expect(described_class).to have_nested_routes(
-          service_bindings: [:get, :put, :delete],
+          service_bindings: [:get],
           service_keys: [:get, :put, :delete],
           routes: [:get, :put, :delete]
         )

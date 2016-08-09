@@ -10,7 +10,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
   let(:route1) { VCAP::CloudController::Route.make(space: space) }
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-  let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: service_instance) }
+  let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj.app, service_instance: service_instance) }
 
   authenticated_request
 
@@ -71,7 +71,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
   let(:route1) { VCAP::CloudController::Route.make(space: space) }
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-  let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: service_instance) }
+  let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj.app, service_instance: service_instance) }
 
   before do
     service_instance.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'create', state: 'succeeded')

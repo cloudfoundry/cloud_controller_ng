@@ -245,13 +245,6 @@ module VCAP::CloudController
     type { 'app' }
   end
 
-  ServiceBindingModel.blueprint do
-    credentials       { Sham.service_credentials }
-    service_instance  { ManagedServiceInstance.make }
-    app { AppModel.make(space_guid: service_instance.space.guid) }
-    type { 'app' }
-  end
-
   ServiceKey.blueprint do
     credentials       { Sham.service_credentials }
     service_instance  { ManagedServiceInstance.make }

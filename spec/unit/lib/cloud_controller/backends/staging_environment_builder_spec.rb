@@ -15,7 +15,7 @@ module VCAP::CloudController
       let(:service) { Service.make(label: 'elephantsql-n/a', provider: 'cool-provider') }
       let(:service_plan) { ServicePlan.make(service: service) }
       let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-vip-uat', tags: ['excellent']) }
-      let!(:service_binding) { ServiceBindingModel.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com') }
+      let!(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com') }
 
       before do
         staging_group = EnvironmentVariableGroup.staging

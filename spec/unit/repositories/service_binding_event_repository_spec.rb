@@ -6,7 +6,7 @@ module VCAP::CloudController
     RSpec.describe ServiceBindingEventRepository do
       let(:user_guid) { 'user-guid' }
       let(:user_email) { 'user@example.com' }
-      let(:service_binding) { ServiceBindingModel.make }
+      let(:service_binding) { ServiceBinding.make }
 
       describe '.record_create' do
         it 'creates an audit.service_binding.create event' do

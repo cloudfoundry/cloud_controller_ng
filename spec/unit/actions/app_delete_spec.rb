@@ -92,7 +92,7 @@ module VCAP::CloudController
       end
 
       context 'when the app has associated service bindings' do
-        let(:binding) { ServiceBindingModel.make }
+        let(:binding) { ServiceBinding.make }
         let(:app) { binding.app }
 
         it 'raises a meaningful error and does not delete the app' do

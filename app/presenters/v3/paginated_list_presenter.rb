@@ -5,7 +5,7 @@ require 'presenters/v3/package_presenter'
 require 'presenters/v3/pagination_presenter'
 require 'presenters/v3/process_presenter'
 require 'presenters/v3/route_mapping_presenter'
-require 'presenters/v3/service_binding_model_presenter'
+require 'presenters/v3/service_binding_presenter'
 require 'presenters/v3/task_presenter'
 
 module VCAP::CloudController
@@ -19,7 +19,7 @@ module VCAP::CloudController
           'IsolationSegmentModel' => VCAP::CloudController::Presenters::V3::IsolationSegmentPresenter,
           'PackageModel'          => VCAP::CloudController::Presenters::V3::PackagePresenter,
           'RouteMappingModel'     => VCAP::CloudController::Presenters::V3::RouteMappingPresenter,
-          'ServiceBindingModel'   => VCAP::CloudController::Presenters::V3::ServiceBindingModelPresenter,
+          'ServiceBinding'        => VCAP::CloudController::Presenters::V3::ServiceBindingPresenter,
           'TaskModel'             => VCAP::CloudController::Presenters::V3::TaskPresenter,
         }.freeze
 

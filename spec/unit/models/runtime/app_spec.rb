@@ -71,13 +71,16 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it { is_expected.to have_timestamp_columns }
-      it do
-        is_expected.to have_associated :service_bindings, associated_instance: ->(app) {
-          service_instance = ManagedServiceInstance.make(space: app.space)
-          ServiceBinding.make(service_instance: service_instance, app: app)
-        }
-      end
       it { is_expected.to have_associated :events, class: AppEvent }
+
+      it 'has service_bindings through the parent app' do
+        process = AppFactory.make(type: 'potato')
+        binding1 = ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space))
+        binding2 = ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space))
+
+        expect(process.reload.service_bindings).to match_array([binding1, binding2])
+      end
+
       it 'has route_mappings' do
         process = AppFactory.make
         route1 = Route.make(space: process.space)
@@ -744,15 +747,15 @@ module VCAP::CloudController
         before do
           sql_service_plan     = ServicePlan.make(service: Service.make(label: 'elephantsql-n/a'))
           sql_service_instance = ManagedServiceInstance.make(space: space, service_plan: sql_service_plan, name: 'elephantsql-vip-uat')
-          ServiceBinding.make(app: app, service_instance: sql_service_instance, credentials: { 'uri' => 'mysql://foo.com' })
+          ServiceBinding.make(app: parent_app, service_instance: sql_service_instance, credentials: { 'uri' => 'mysql://foo.com' })
 
           banana_service_plan     = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
           banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
-          ServiceBinding.make(app: app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
+          ServiceBinding.make(app: parent_app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
         end
 
         it 'returns database uri' do
-          expect(app.database_uri).to eq('mysql2://foo.com')
+          expect(app.reload.database_uri).to eq('mysql2://foo.com')
         end
       end
 
@@ -760,21 +763,21 @@ module VCAP::CloudController
         before do
           banana_service_plan     = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
           banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
-          ServiceBinding.make(app: app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
+          ServiceBinding.make(app: parent_app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
 
           uncredentialed_service_plan     = ServicePlan.make(service: Service.make(label: 'mysterious-n/a'))
           uncredentialed_service_instance = ManagedServiceInstance.make(space: space, service_plan: uncredentialed_service_plan, name: 'mysterious-mystery')
-          ServiceBinding.make(app: app, service_instance: uncredentialed_service_instance, credentials: {})
+          ServiceBinding.make(app: parent_app, service_instance: uncredentialed_service_instance, credentials: {})
         end
 
         it 'returns nil' do
-          expect(app.database_uri).to be_nil
+          expect(app.reload.database_uri).to be_nil
         end
       end
 
       context 'when there are no services' do
         it 'returns nil' do
-          expect(app.database_uri).to be_nil
+          expect(app.reload.database_uri).to be_nil
         end
       end
     end

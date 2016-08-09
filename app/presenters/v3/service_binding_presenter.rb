@@ -3,7 +3,7 @@ require 'presenters/v3/base_presenter'
 module VCAP::CloudController
   module Presenters
     module V3
-      class ServiceBindingModelPresenter < BasePresenter
+      class ServiceBindingPresenter < BasePresenter
         def to_hash
           {
             guid:       service_binding.guid,
@@ -22,7 +22,7 @@ module VCAP::CloudController
         end
 
         def present_service_binding
-          binding_hash               = ServiceBindingPresenter.new(service_binding).to_hash
+          binding_hash               = ::ServiceBindingPresenter.new(service_binding).to_hash
           binding_hash[:credentials] = redact_hash(binding_hash[:credentials])
           binding_hash
         end

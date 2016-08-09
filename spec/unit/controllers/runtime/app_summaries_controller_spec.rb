@@ -30,7 +30,7 @@ module VCAP::CloudController
           description: 'description goes here'
         )
         @services << instance
-        ServiceBinding.make(app: @app, service_instance: instance)
+        ServiceBinding.make(app: @app.app, service_instance: instance)
       end
 
       RouteMappingModel.make(app: @app.app, route: @route1, process_type: @app.type)

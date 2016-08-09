@@ -24,7 +24,7 @@ module VCAP::CloudController
           num_service_instances.times do
             instance = ManagedServiceInstance.make(space: app.space)
             binding = ServiceBinding.make(
-              app: app,
+              app: app.app,
               service_instance: instance
             )
             app.add_service_binding(binding)

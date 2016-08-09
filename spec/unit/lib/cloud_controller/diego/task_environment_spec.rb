@@ -11,7 +11,7 @@ module VCAP::CloudController::Diego
     let(:service) { VCAP::CloudController::Service.make(label: 'elephantsql-n/a', provider: 'cool-provider') }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-vip-uat', tags: ['excellent']) }
-    let!(:service_binding) { VCAP::CloudController::ServiceBindingModel.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com') }
+    let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com') }
 
     let(:expected_vcap_application) do
       {

@@ -10,8 +10,8 @@ module VCAP::CloudController
     describe '#fetch_all' do
       let(:service_instance_1) { ManagedServiceInstance.make }
       let(:service_instance_2) { ManagedServiceInstance.make }
-      let!(:service_binding_1) { ServiceBindingModel.make(service_instance: service_instance_1) }
-      let!(:service_binding_2) { ServiceBindingModel.make(service_instance: service_instance_2) }
+      let!(:service_binding_1) { ServiceBinding.make(service_instance: service_instance_1) }
+      let!(:service_binding_2) { ServiceBinding.make(service_instance: service_instance_2) }
 
       it 'returns a Sequel::Dataset' do
         results = fetcher.fetch_all
@@ -51,9 +51,9 @@ module VCAP::CloudController
       let(:service_instance_1) { ManagedServiceInstance.make(space: space_1) }
       let(:service_instance_2) { ManagedServiceInstance.make(space: space_2) }
 
-      let!(:service_binding_1) { ServiceBindingModel.make(app: app_model, service_instance: service_instance_1) }
-      let!(:service_binding_2) { ServiceBindingModel.make(app: app_model2, service_instance: service_instance_2) }
-      let!(:undesirable_service_binding) { ServiceBindingModel.make }
+      let!(:service_binding_1) { ServiceBinding.make(app: app_model, service_instance: service_instance_1) }
+      let!(:service_binding_2) { ServiceBinding.make(app: app_model2, service_instance: service_instance_2) }
+      let!(:undesirable_service_binding) { ServiceBinding.make }
 
       let(:space_1) { Space.make }
       let(:space_2) { Space.make }

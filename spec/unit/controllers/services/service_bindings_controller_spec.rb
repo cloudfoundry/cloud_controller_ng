@@ -71,14 +71,14 @@ module VCAP::CloudController
         @app_a = AppFactory.make(space: @space_a)
         @service_instance_a = ManagedServiceInstance.make(space: @space_a)
         @obj_a = ServiceBinding.make(
-          app: @app_a,
+          app: @app_a.app,
           service_instance: @service_instance_a
         )
 
         @app_b = AppFactory.make(space: @space_b)
         @service_instance_b = ManagedServiceInstance.make(space: @space_b)
         @obj_b = ServiceBinding.make(
-          app: @app_b,
+          app: @app_b.app,
           service_instance: @service_instance_b
         )
       end
@@ -451,7 +451,7 @@ module VCAP::CloudController
             end
 
             before do
-              ServiceBinding.make(app: app_obj, service_instance: instance)
+              ServiceBinding.make(app: app_obj.app, service_instance: instance)
             end
 
             it 'returns a ServiceBindingAppServiceTaken error' do

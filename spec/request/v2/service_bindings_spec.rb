@@ -14,10 +14,10 @@ RSpec.describe 'ServiceBindings' do
     let(:process1) { VCAP::CloudController::AppFactory.make(space: space) }
     let(:process2) { VCAP::CloudController::AppFactory.make(space: space) }
     let!(:service_binding1) do
-      VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process1, credentials: { secret: 'key' })
+      VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process1.app, credentials: { secret: 'key' })
     end
     let!(:service_binding2) do
-      VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process2, credentials: { top: 'secret' })
+      VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process2.app, credentials: { top: 'secret' })
     end
     let!(:service_binding3) { VCAP::CloudController::ServiceBinding.make }
 
@@ -215,7 +215,7 @@ RSpec.describe 'ServiceBindings' do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
     let(:process1) { VCAP::CloudController::AppFactory.make(space: space) }
     let!(:service_binding1) do
-      VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process1, credentials: { secret: 'key' })
+      VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process1.app, credentials: { secret: 'key' })
     end
 
     it 'displays the service binding' do

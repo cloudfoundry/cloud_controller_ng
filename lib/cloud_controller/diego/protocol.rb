@@ -65,7 +65,7 @@ module VCAP::CloudController
           'allow_ssh'                       => process.enable_ssh,
           'ports'                           => OpenProcessPorts.new(process).to_a,
           'network'                         => ContainerNetworkInfo.new(process).to_h,
-          'volume_mounts'                   => AppVolumeMounts.new(process)
+          'volume_mounts'                   => AppVolumeMounts.new(process.app)
         }.merge(LifecycleProtocol.protocol_for_type(process.app.lifecycle_type).desired_app_message(process))
       end
 

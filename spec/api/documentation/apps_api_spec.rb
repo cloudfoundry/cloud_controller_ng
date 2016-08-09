@@ -187,7 +187,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
       let(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance) }
       let(:service_binding_guid) { service_binding.guid }
-      let!(:associated_service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: associated_service_instance) }
+      let!(:associated_service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj.app, service_instance: associated_service_instance) }
       let(:associated_service_binding_guid) { associated_service_binding.guid }
 
       before do

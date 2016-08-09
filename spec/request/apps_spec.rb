@@ -435,7 +435,7 @@ RSpec.describe 'Apps' do
         name:  'si-name',
         tags:  ['50% off']
       )
-      VCAP::CloudController::ServiceBindingModel.make(
+      VCAP::CloudController::ServiceBinding.make(
         service_instance: service_instance,
         app:              app_model,
         syslog_drain_url: 'https://syslog.example.com/drain',

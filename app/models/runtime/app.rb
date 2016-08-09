@@ -29,9 +29,9 @@ module VCAP::CloudController
     DEFAULT_HTTP_PORT = 8080
     DEFAULT_PORTS     = [DEFAULT_HTTP_PORT].freeze
 
-    one_to_many :service_bindings, key: :app_guid, primary_key: :guid
-    one_to_many :events, class: VCAP::CloudController::AppEvent
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
+    one_to_many :service_bindings, key: :app_guid, primary_key: :app_guid
+    one_to_many :events, class: VCAP::CloudController::AppEvent
 
     one_through_one :space,
       join_table:        AppModel.table_name,
@@ -554,10 +554,6 @@ module VCAP::CloudController
                         %w(environment_json system_env_json docker_credentials_json)
                       end
       super(opts)
-    end
-
-    def all_service_bindings
-      service_bindings + (app ? app.service_bindings : [])
     end
 
     def docker_ports

@@ -6,7 +6,6 @@ require 'models/v3/persistence/package_model'
 require 'models/v3/persistence/droplet_model'
 require 'models/v3/persistence/buildpack_lifecycle_data_model'
 require 'models/v3/persistence/docker_lifecycle_data_model'
-require 'models/v3/persistence/service_binding_model'
 require 'models/v3/persistence/task_model'
 require 'models/v3/persistence/isolation_segment_model'
 

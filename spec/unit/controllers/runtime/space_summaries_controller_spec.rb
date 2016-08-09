@@ -13,8 +13,8 @@ module VCAP::CloudController
     let(:running_instances) { { app_obj.guid => 5 } }
 
     before do
-      ServiceBinding.make(app: app_obj, service_instance: first_service)
-      ServiceBinding.make(app: app_obj, service_instance: second_service)
+      ServiceBinding.make(app: app_obj.app, service_instance: first_service)
+      ServiceBinding.make(app: app_obj.app, service_instance: second_service)
 
       RouteMappingModel.make(app: app_obj.app, route: first_route, process_type: app_obj.type)
       RouteMappingModel.make(app: app_obj.app, route: second_route, process_type: app_obj.type)

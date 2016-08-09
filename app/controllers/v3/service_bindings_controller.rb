@@ -1,6 +1,6 @@
 require 'queries/service_binding_create_fetcher'
 require 'queries/service_binding_list_fetcher'
-require 'presenters/v3/service_binding_model_presenter'
+require 'presenters/v3/service_binding_presenter'
 require 'messages/service_binding_create_message'
 require 'messages/service_bindings_list_message'
 require 'actions/service_binding_create'
@@ -21,7 +21,7 @@ class ServiceBindingsController < ApplicationController
 
     begin
       service_binding = ServiceBindingCreate.new(current_user.guid, current_user_email).create(app, service_instance, message, volume_services_enabled?)
-      render status: :created, json: Presenters::V3::ServiceBindingModelPresenter.new(service_binding)
+      render status: :created, json: Presenters::V3::ServiceBindingPresenter.new(service_binding)
     rescue ServiceBindingCreate::ServiceInstanceNotBindable
       raise CloudController::Errors::ApiError.new_from_details('UnbindableService')
     rescue ServiceBindingCreate::VolumeMountServiceDisabled
@@ -32,10 +32,10 @@ class ServiceBindingsController < ApplicationController
   end
 
   def show
-    service_binding = VCAP::CloudController::ServiceBindingModel.find(guid: params[:guid])
+    service_binding = VCAP::CloudController::ServiceBinding.find(guid: params[:guid])
 
     binding_not_found! unless service_binding && can_read?(service_binding.space.guid, service_binding.space.organization.guid)
-    render status: :ok, json: Presenters::V3::ServiceBindingModelPresenter.new(service_binding, show_secrets: can_see_secrets?(service_binding.space))
+    render status: :ok, json: Presenters::V3::ServiceBindingPresenter.new(service_binding, show_secrets: can_see_secrets?(service_binding.space))
   end
 
   def index

@@ -1014,7 +1014,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       space           = VCAP::CloudController::Space.make
       instance        = VCAP::CloudController::ManagedServiceInstance.make(space: space)
       app             = VCAP::CloudController::AppFactory.make(space: space)
-      service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app)
+      service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app.app)
 
       service_event_repository.record_service_binding_event(:create, service_binding)
 
@@ -1041,7 +1041,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       space           = VCAP::CloudController::Space.make
       instance        = VCAP::CloudController::ManagedServiceInstance.make(space: space)
       app             = VCAP::CloudController::AppFactory.make(space: space)
-      service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app)
+      service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app.app)
 
       service_event_repository.record_service_binding_event(:delete, service_binding)
 

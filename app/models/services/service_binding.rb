@@ -36,6 +36,8 @@ module VCAP::CloudController
       validate_cannot_change_binding
 
       validates_max_length 65_535, :volume_mounts if volume_mounts.present?
+
+      errors.add(:app, :invalid_relation) unless app.is_a?(AppModel)
     end
 
     def validate_space_match

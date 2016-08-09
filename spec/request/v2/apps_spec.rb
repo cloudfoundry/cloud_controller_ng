@@ -98,7 +98,7 @@ RSpec.describe 'Apps' do
       it 'includes related records' do
         route = VCAP::CloudController::Route.make(space: space)
         VCAP::CloudController::RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
-        service_binding = VCAP::CloudController::ServiceBinding.make(app: process, service_instance: VCAP::CloudController::ManagedServiceInstance.make(space: space))
+        service_binding = VCAP::CloudController::ServiceBinding.make(app: process.app, service_instance: VCAP::CloudController::ManagedServiceInstance.make(space: space))
 
         get '/v2/apps?inline-relations-depth=1', nil, headers_for(user)
         expect(last_response.status).to eq(200)
@@ -1142,7 +1142,7 @@ RSpec.describe 'Apps' do
   describe 'DELETE /v2/apps/:guid/service_binding/:guid' do
     let!(:process) { VCAP::CloudController::AppFactory.make(space: space) }
     let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: process.space) }
-    let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process) }
+    let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process.app) }
 
     before do
       service_instance.add_service_binding(service_binding)
