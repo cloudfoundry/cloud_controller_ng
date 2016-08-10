@@ -89,18 +89,17 @@ module VCAP::CloudController
           expect(job.queue).to eq('cc-generic')
           expect(app.exists?).to be_falsey
         end
-      end
 
-      context 'when the app has associated service bindings' do
-        let(:binding) { ServiceBinding.make }
-        let(:app) { binding.app }
+        it 'deletes associated service bindings' do
+          allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind)
 
-        it 'raises a meaningful error and does not delete the app' do
+          binding = ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space))
+
           expect {
-            app_delete.delete(app)
-          }.to raise_error(AppDelete::InvalidDelete, 'Please delete the service_bindings associations for your apps.')
-
-          expect(app.exists?).to be_truthy
+            app_delete.delete(app_dataset)
+          }.to change { ServiceBinding.count }.by(-1)
+          expect(binding.exists?).to be_falsey
+          expect(app.exists?).to be_falsey
         end
       end
     end

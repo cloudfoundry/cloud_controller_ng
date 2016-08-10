@@ -82,5 +82,9 @@ module VCAP::CloudController
     def required_parameters
       { app_guid: app_guid }
     end
+
+    def unbind_from_broker
+      client.unbind(self)
+    end
   end
 end

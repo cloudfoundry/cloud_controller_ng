@@ -694,12 +694,13 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:managed_service_instance) { ManagedServiceInstance.make(space: space) }
       let(:user_provided_service_instance) { UserProvidedServiceInstance.make(space: space) }
+      let(:app_obj) { AppFactory.make(space: space) }
       let(:developer) { make_developer_for_space(space) }
 
       it 'returns both user provided and managed service instances' do
         set_current_user(developer)
-        ServiceBinding.make(service_instance: managed_service_instance)
-        ServiceBinding.make(service_instance: user_provided_service_instance)
+        ServiceBinding.make(service_instance: managed_service_instance, app: app_obj.app)
+        ServiceBinding.make(service_instance: user_provided_service_instance, app: app_obj.app)
 
         get '/v2/service_bindings?inline-relations-depth=1'
         expect(last_response.status).to eql(200)

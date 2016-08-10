@@ -57,11 +57,11 @@ class ServiceBindingsController < ApplicationController
     binding_not_found! unless binding && can_read?(binding.space.guid, binding.space.organization.guid)
     unauthorized! unless can_write?(binding.space.guid)
 
-    ServiceBindingModelDelete.new(current_user.guid, current_user_email).delete_sync(binding)
+    ServiceBindingDelete.new(current_user.guid, current_user_email).single_delete_sync(binding)
 
     head :no_content
 
-  rescue ServiceBindingModelDelete::FailedToDelete => e
+  rescue ServiceBindingDelete::FailedToDelete => e
     unprocessable!(e.message)
   end
 

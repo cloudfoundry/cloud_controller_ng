@@ -3,8 +3,6 @@ require 'cloud_controller/database_uri_generator'
 require 'cloud_controller/undo_app_changes'
 require 'cloud_controller/errors/application_missing'
 require 'repositories/app_usage_event_repository'
-require 'actions/services/service_binding_delete'
-require 'presenters/message_bus/service_binding_presenter'
 require 'presenters/v3/cache_key_presenter'
 
 require_relative 'buildpack'
@@ -30,7 +28,7 @@ module VCAP::CloudController
     DEFAULT_PORTS     = [DEFAULT_HTTP_PORT].freeze
 
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
-    one_to_many :service_bindings, key: :app_guid, primary_key: :app_guid
+    one_to_many :service_bindings, key: :app_guid, primary_key: :app_guid, without_guid_generation: true
     one_to_many :events, class: VCAP::CloudController::AppEvent
 
     one_through_one :space,
@@ -330,15 +328,7 @@ module VCAP::CloudController
     def before_destroy
       lock!
       self.state = 'STOPPED'
-
-      destroy_service_bindings
-
       super
-    end
-
-    def destroy_service_bindings
-      errors = ServiceBindingDelete.new.delete(self.service_bindings_dataset)
-      raise errors.first unless errors.empty?
     end
 
     def after_destroy
@@ -443,21 +433,6 @@ module VCAP::CloudController
 
     def max_app_disk_in_mb
       VCAP::CloudController::Config.config[:maximum_app_disk_in_mb]
-    end
-
-    # We need to overide this ourselves because we are really doing a
-    # many-to-many with ServiceInstances and want to remove the relationship
-    # to that when we remove the binding like sequel would do if the
-    # relationship was explicly defined as such.  However, since we need to
-    # annotate the join table with binding specific info, we manage the
-    # many_to_one and one_to_many sides of the relationship ourself.  If there
-    # is a sequel option that I couldn't see that provides this behavior, this
-    # method could be removed in the future.  Note, the sequel docs explicitly
-    # state that the correct way to overide the remove_bla functionality is to
-    # do so with the _ prefixed private method like we do here.
-    def _remove_service_binding(binding)
-      err = ServiceBindingDelete.new.delete([binding])
-      raise(err[0]) if !err.empty?
     end
 
     def self.user_visibility_filter(user)

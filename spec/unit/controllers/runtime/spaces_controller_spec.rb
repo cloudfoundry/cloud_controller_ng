@@ -662,8 +662,16 @@ module VCAP::CloudController
           expect(Space.find(guid: space.guid)).to be_nil
         end
 
-        it 'fails to delete spaces with v3 apps associated to it' do
-          AppModel.make(space_guid: space.guid)
+        it 'fails to delete spaces with apps associated to it' do
+          AppModel.make(space: space)
+          delete "/v2/spaces/#{space.guid}"
+
+          expect(last_response).to have_status_code(400)
+          expect(Space.find(guid: space.guid)).not_to be_nil
+        end
+
+        it 'fails to delete spaces with service_instances associated to it' do
+          ServiceInstance.make(space: space)
           delete "/v2/spaces/#{space.guid}"
 
           expect(last_response).to have_status_code(400)
@@ -783,7 +791,6 @@ module VCAP::CloudController
 
         describe 'deleting service instances' do
           let(:app_model) { AppModel.make(space: space) }
-
           let!(:service_instance_1) { ManagedServiceInstance.make(space_guid: space_guid) }
           let!(:service_instance_2) { ManagedServiceInstance.make(space_guid: space_guid) }
           let!(:service_instance_3) { ManagedServiceInstance.make(space_guid: space_guid) }

@@ -177,7 +177,7 @@ module VCAP::CloudController
     end
 
     def destroy_route_bindings
-      errors = ServiceBindingDelete.new.delete(self.route_binding_dataset)
+      errors = RouteBindingDelete.new.delete(self.route_binding_dataset)
       raise errors.first unless errors.empty?
     end
 

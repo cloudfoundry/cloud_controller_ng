@@ -1482,34 +1482,6 @@ module VCAP::CloudController
         app.destroy
       end
 
-      context 'when the service broker can successfully delete service bindings' do
-        it 'should destroy all dependent service bindings' do
-          service_binding = ServiceBinding.make(
-            app:              app,
-            service_instance: ManagedServiceInstance.make(space: app.space)
-          )
-          stub_unbind(service_binding)
-
-          expect {
-            app.destroy
-          }.to change { ServiceBinding.where(id: service_binding.id).count }.from(1).to(0)
-        end
-      end
-
-      context 'when the service broker cannot successfully delete service bindings' do
-        it 'should raise an exception when it fails to delete service bindings' do
-          service_binding = ServiceBinding.make(
-            app:              app,
-            service_instance: ManagedServiceInstance.make(:v2, space: app.space)
-          )
-          stub_unbind(service_binding, status: 500)
-
-          expect {
-            app.destroy
-          }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
-        end
-      end
-
       it 'should destroy all dependent crash events' do
         app_event = AppEvent.make(app: app)
 

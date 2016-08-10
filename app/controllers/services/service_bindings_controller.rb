@@ -66,18 +66,15 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless binding
       raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(binding.space.guid)
 
-      deleter = ServiceBindingModelDelete.new(SecurityContext.current_user.guid, SecurityContext.current_user_email)
+      deleter = ServiceBindingDelete.new(SecurityContext.current_user.guid, SecurityContext.current_user_email)
 
       if async?
-        job = deleter.delete_async(binding)
+        job = deleter.single_delete_async(binding)
         [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
       else
-        deleter.delete_sync(binding)
+        deleter.single_delete_sync(binding)
         [HTTP::NO_CONTENT, nil]
       end
-
-    rescue ServiceBindingModelDelete::OperationInProgress
-      raise CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', binding.service_instance.name)
     end
 
     def self.translate_validation_exception(e, _attributes)

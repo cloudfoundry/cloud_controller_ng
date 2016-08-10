@@ -1,5 +1,3 @@
-require 'actions/services/service_binding_delete'
-
 module VCAP::CloudController
   class ServiceInstanceBindingManager
     class ServiceInstanceNotFound < StandardError; end
@@ -97,7 +95,7 @@ module VCAP::CloudController
 
     def delete_route_binding(route_binding)
       route_binding.db.transaction do
-        errors = ServiceBindingDelete.new.delete [route_binding]
+        errors = RouteBindingDelete.new.delete [route_binding]
         unless errors.empty?
           @logger.error "Failed to delete binding with guid: #{route_binding.guid} with errors: #{errors.map(&:message).join(',')}"
           raise errors.first

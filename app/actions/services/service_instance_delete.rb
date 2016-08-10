@@ -1,4 +1,5 @@
-require 'actions/services/service_binding_delete'
+require 'actions/services/service_key_delete'
+require 'actions/services/route_binding_delete'
 require 'actions/services/locks/deleter_lock'
 
 module VCAP::CloudController
@@ -63,11 +64,14 @@ module VCAP::CloudController
 
     def delete_route_bindings(service_instance)
       route_bindings_dataset = RouteBinding.where(service_instance_id: service_instance.id)
-      ServiceBindingDelete.new.delete(route_bindings_dataset)
+      RouteBindingDelete.new.delete(route_bindings_dataset)
     end
 
     def delete_service_bindings(service_instance)
-      ServiceBindingDelete.new.delete(service_instance.service_bindings_dataset)
+      ServiceBindingDelete.new(
+        @event_repository.user.guid,
+        @event_repository.current_user_email
+      ).delete(service_instance.service_bindings)
     end
 
     def delete_service_keys(service_instance)

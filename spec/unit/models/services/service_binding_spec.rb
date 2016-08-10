@@ -195,23 +195,6 @@ module VCAP::CloudController
         binding = ServiceBinding.make(app: v2_app.app, service_instance: service_instance)
         expect { binding.destroy }.not_to change { v2_app.refresh.needs_staging? }.from(false)
       end
-
-      context 'when indirectly destroying a binding' do
-        let(:binding) { ServiceBinding.make(app: v2_app.app, service_instance: service_instance) }
-
-        it 'should not trigger restaging if the broker successfully unbinds' do
-          stub_unbind(binding, status: 200)
-          expect { v2_app.app.remove_service_binding(binding) }.not_to change { v2_app.refresh.needs_staging? }.from(false)
-        end
-
-        it 'should raise a broker error if the broker cannot successfully unbind' do
-          stub_unbind(binding, status: 500)
-
-          expect {
-            v2_app.app.remove_service_binding(binding)
-          }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
-        end
-      end
     end
 
     describe 'user_visibility_filter' do
