@@ -147,6 +147,68 @@ module VCAP::CloudController
             expect(last_response.body).to match("Could not fetch stats for stopped app: #{@app.name}")
           end
         end
+
+        context 'when the app is a diego app' do
+          let(:stats) do
+            {
+              state: 'RUNNING',
+              stats: {
+                name: 'foo',
+                uris: 'some-uris',
+                host: 'my-host',
+                port: 1234,
+                net_info: { 'foo' => 'bar' },
+                uptime: 1,
+                mem_quota: 1,
+                disk_quota: 2,
+                fds_quota: 3,
+                usage: {
+                  time: 4,
+                  cpu: 5,
+                  mem: 6,
+                  disk: 7,
+                }
+              }
+            }
+          end
+
+          it 'should return the stats without the net_info field' do
+            set_current_user(@developer)
+
+            @app.state = 'STARTED'
+            @app.instances = 1
+            @app.save
+
+            @app.refresh
+
+            expected = {
+              'state' => 'RUNNING',
+              'stats' => {
+                'name' => 'foo',
+                'uris' => 'some-uris',
+                'host' => 'my-host',
+                'port' => 1234,
+                'uptime' => 1,
+                'mem_quota' => 1,
+                'disk_quota' => 2,
+                'fds_quota' => 3,
+                'usage' => {
+                  'time' => 4,
+                  'cpu' => 5,
+                  'mem' => 6,
+                  'disk' => 7,
+                }
+              }
+            }
+
+            get "/v2/apps/#{@app.guid}/stats"
+
+            expect(last_response.status).to eq(200)
+            expect(MultiJson.load(last_response.body)).to eq(expected)
+            expect(instances_reporters).to have_received(:stats_for_app).with(
+              satisfy { |requested_app| requested_app.guid == @app.guid })
+          end
+        end
       end
 
       context 'when the client cannot see stats' do
