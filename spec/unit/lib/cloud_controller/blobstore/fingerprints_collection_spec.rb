@@ -102,6 +102,7 @@ module CloudController
                     fingerprint
                   }.to raise_error do |error|
                     expect(error.name).to eq 'AppResourcesFileModeInvalid'
+                    expect(error.message).to eq "The resource file mode is invalid: File mode '144' is invalid. Minimum file mode is '0600'"
                     expect(error.response_code).to eq 400
                   end
                 end
