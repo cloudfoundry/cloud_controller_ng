@@ -68,17 +68,16 @@ module VCAP::CloudController
 
     def validate_non_web_port!
       return if @process.type == 'web'
-      raise_unavailable_port! if @process.ports.blank?
-      raise_unavailable_port! unless @process.ports.include?(@message.app_port.to_i)
+      raise_unavailable_port! unless available_ports.present? && available_ports.include?(@message.app_port.to_i)
     end
 
     def validate_web_port!
       return unless @process.type == 'web'
 
-      if @process.ports.nil?
+      if available_ports.nil?
         raise_unavailable_port! unless @message.app_port.to_i == 8080
       else
-        raise_unavailable_port! unless @process.ports.include?(@message.app_port.to_i)
+        raise_unavailable_port! unless available_ports.include?(@message.app_port.to_i)
       end
     end
 
@@ -92,6 +91,10 @@ module VCAP::CloudController
 
     def raise_unavailable_port!
       raise UnavailableAppPort.new(UNAVAILABLE_APP_PORT_MESSAGE_FORMAT % @message.app_port)
+    end
+
+    def available_ports
+      @available_ports ||= Diego::Protocol::OpenProcessPorts.new(@process).to_a
     end
   end
 end

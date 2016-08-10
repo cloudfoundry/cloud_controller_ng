@@ -16,6 +16,7 @@ module VCAP::CloudController
 
     before do
       allow(ProcessRouteHandler).to receive(:new).and_return(route_handler)
+      allow_any_instance_of(Diego::Protocol::OpenProcessPorts).to receive(:to_a).and_return(ports)
     end
 
     describe '#add' do
