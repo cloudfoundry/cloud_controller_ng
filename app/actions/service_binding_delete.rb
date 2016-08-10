@@ -1,3 +1,5 @@
+require 'actions/services/locks/lock_check'
+
 module VCAP::CloudController
   class ServiceBindingDelete
     class FailedToDelete < StandardError; end
