@@ -585,6 +585,23 @@ properties:
     description: "The lowest severity nginx log level to capture in the error log."
     default: error
 
+  cc.nginx_rate_limit_general:
+    description: "The rate limiting and burst value to use for '/'"
+    example: |
+      limit: 100r/s
+      burst: 500
+  cc.nginx_rate_limit_zones:
+    description: "Array of zones to do rate limiting for. "
+    example: |
+      - name: apps
+        location: /v2/apps
+        limit: 10r/s
+        burst: 50
+      - name: spaces
+        location: ~ ^/v2/spaces/(.*)
+        limit: 10r/s
+        burst: 100
+
   cc.jobs.local.number_of_workers:
     default: 2
     description: "Number of local cloud_controller_worker workers"
