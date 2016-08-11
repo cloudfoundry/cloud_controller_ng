@@ -16,7 +16,7 @@ module VCAP
     private
 
     def fetch
-      @verification_key || @info.validation_key['value']
+      @verification_key.present? ? @verification_key : @info.validation_key['value']
     end
   end
 end

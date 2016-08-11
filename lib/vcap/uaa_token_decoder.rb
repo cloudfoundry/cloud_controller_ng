@@ -72,7 +72,8 @@ module VCAP
     end
 
     def asymmetric_key
-      info = CF::UAA::Info.new(config[:url])
+      public_url = config[:url].present? ? config[:url].gsub('https', 'http') : nil
+      info = CF::UAA::Info.new(public_url)
       @asymmetric_key ||= UaaVerificationKey.new(config[:verification_key], info)
     end
   end
