@@ -184,10 +184,6 @@ module VCAP::CloudController
       package.try(:image)
     end
 
-    def detected_buildpack
-      current_droplet.try(:buildpack_receipt_buildpack)
-    end
-
     def copy_buildpack_errors
       bp = buildpack
       return if bp.valid?
@@ -369,6 +365,10 @@ module VCAP::CloudController
     end
 
     def detected_buildpack_name
+      current_droplet.try(:buildpack_receipt_buildpack)
+    end
+
+    def detected_buildpack
       current_droplet.try(:buildpack_receipt_buildpack)
     end
 

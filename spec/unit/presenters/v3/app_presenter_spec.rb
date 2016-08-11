@@ -12,7 +12,7 @@ module VCAP::CloudController::Presenters::V3
 
     before do
       app.lifecycle_data.update(
-        buildpack: 'git://user@github.com:repo',
+        buildpack: 'git://user:pass@github.com/repo',
         stack: 'the-happiest-stack',
       )
     end
@@ -35,7 +35,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links]).to include(:stop)
         expect(result[:lifecycle][:type]).to eq('buildpack')
         expect(result[:lifecycle][:data][:stack]).to eq('the-happiest-stack')
-        expect(result[:lifecycle][:data][:buildpack]).to eq('git://user@github.com:repo')
+        expect(result[:lifecycle][:data][:buildpack]).to eq('git://***:***@github.com/repo')
       end
 
       context 'if there are no processes' do

@@ -261,6 +261,9 @@ module VCAP::CloudController
         v3_app.lifecycle_data.save && validate_buildpack!(app.reload) if buildpack_type_requested
         v3_app.reload
 
+        app.reload
+        validate_access(:update, app, request_attrs)
+
         if request_attrs.key?('state')
           case request_attrs['state']
           when 'STARTED'
@@ -269,9 +272,6 @@ module VCAP::CloudController
             AppStop.new(SecurityContext.current_user, SecurityContext.current_user_email).stop(v3_app)
           end
         end
-
-        app.reload
-        validate_access(:update, app, request_attrs)
       end
 
       if request_attrs.key?('state') && app.needs_staging?

@@ -14,7 +14,7 @@ Sequel.migration do
     generate_stop_events_query = <<-SQL
         INSERT INTO app_usage_events
           (guid, created_at, instance_count, memory_in_mb_per_instance, state, app_guid, app_name, space_guid, space_name, org_guid, buildpack_guid, buildpack_name, package_state, parent_app_name, parent_app_guid, process_type, task_guid, task_name, package_guid, previous_state, previous_package_state, previous_memory_in_mb_per_instance, previous_instance_count)
-        SELECT %s, now(), p.instances, p.memory, 'STOPPED', p.guid, p.name, s.guid, s.name, o.guid, d.buildpack_receipt_buildpack_guid, COALESCE(d.buildpack_receipt_buildpack, l.buildpack), p.package_state, a.name, a.guid, p.type, NULL, NULL, pkg.guid, 'STARTED', p.package_state, p.memory, p.instances
+        SELECT %s, now(), p.instances, p.memory, 'STOPPED', p.guid, p.name, s.guid, s.name, o.guid, d.buildpack_receipt_buildpack_guid, d.buildpack_receipt_buildpack, p.package_state, a.name, a.guid, p.type, NULL, NULL, pkg.guid, 'STARTED', p.package_state, p.memory, p.instances
           FROM apps as p
             INNER JOIN apps_v3 as a ON (a.guid=p.app_guid)
             INNER JOIN spaces as s ON (s.guid=a.space_guid)
@@ -55,6 +55,24 @@ Sequel.migration do
     self[:packages].truncate
     self[:buildpack_lifecycle_data].truncate
     self[:apps_v3].truncate
+
+    ####
+    ##  Migrate buildpack_lifecycle_data
+    ####
+
+    alter_table(:buildpack_lifecycle_data) do
+      add_column :encrypted_buildpack_url, String
+      add_column :encrypted_buildpack_url_salt, String
+      add_column :admin_buildpack_name, String
+      add_index :admin_buildpack_name
+
+      drop_column :encrypted_buildpack
+      drop_column :salt
+    end
+
+    ####
+    ## Migrate apps
+    ####
 
     rename_table :apps, :processes
     rename_table :apps_v3, :apps
@@ -99,22 +117,23 @@ Sequel.migration do
 
     run <<-SQL
         UPDATE buildpack_lifecycle_data
-        SET buildpack=(
-          SELECT buildpacks.name
-          FROM buildpacks
-            JOIN processes ON processes.admin_buildpack_id = buildpacks.id
-          WHERE processes.admin_buildpack_id IS NOT NULL AND processes.guid=buildpack_lifecycle_data.app_guid
-        )
-    SQL
-
-    run <<-SQL
-        UPDATE buildpack_lifecycle_data
-        SET buildpack=(
-          SELECT processes.buildpack
-          FROM processes
-          WHERE processes.admin_buildpack_id IS NULL AND processes.guid=buildpack_lifecycle_data.app_guid
-        )
-        WHERE buildpack IS NULL
+        SET
+          admin_buildpack_name=(
+            SELECT buildpacks.name
+            FROM buildpacks
+              JOIN processes ON processes.admin_buildpack_id = buildpacks.id
+            WHERE processes.admin_buildpack_id IS NOT NULL AND processes.guid=buildpack_lifecycle_data.app_guid
+          ),
+          encrypted_buildpack_url=(
+            SELECT processes.encrypted_buildpack
+            FROM processes
+            WHERE processes.admin_buildpack_id IS NULL AND processes.guid=buildpack_lifecycle_data.app_guid
+          ),
+          encrypted_buildpack_url_salt=(
+            SELECT processes.buildpack_salt
+            FROM processes
+            WHERE processes.admin_buildpack_id IS NULL AND processes.guid=buildpack_lifecycle_data.app_guid
+          )
     SQL
 
     #####
@@ -231,7 +250,7 @@ Sequel.migration do
       run postgres_convert_to_v3_droplets_query
     end
 
-    # add lifecycle data
+    # add lifecycle data to droplets
     run <<-SQL
       INSERT INTO buildpack_lifecycle_data (droplet_guid)
       SELECT droplets.guid
@@ -424,7 +443,8 @@ Sequel.migration do
       drop_column :name
       drop_column :encrypted_environment_json
       drop_column :salt
-      drop_column :buildpack
+      drop_column :encrypted_buildpack
+      drop_column :buildpack_salt
       drop_column :space_id
       drop_column :stack_id
       drop_column :admin_buildpack_id
