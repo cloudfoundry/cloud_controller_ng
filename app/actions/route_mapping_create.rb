@@ -74,9 +74,9 @@ module VCAP::CloudController
     def validate_web_port!
       return unless @process.type == 'web'
 
-      if available_ports.nil?
+      if @process.dea?
         raise_unavailable_port! unless @message.app_port.to_i == 8080
-      else
+      elsif !@process.docker?
         raise_unavailable_port! unless available_ports.include?(@message.app_port.to_i)
       end
     end
