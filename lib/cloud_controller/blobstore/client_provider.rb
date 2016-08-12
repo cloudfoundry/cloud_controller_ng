@@ -55,7 +55,8 @@ module CloudController
         def provide_bits_service(bits_service_options, resource_type)
           client = BitsService::Client.new(
             bits_service_options: bits_service_options,
-            resource_type: resource_type
+            resource_type: resource_type,
+            vcap_request_id: VCAP::Request.current_id,
           )
 
           Client.new(client)

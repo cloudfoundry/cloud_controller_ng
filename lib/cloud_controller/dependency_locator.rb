@@ -234,7 +234,11 @@ module CloudController
 
     def bits_service_resource_pool
       return nil unless use_bits_service
-      BitsService::ResourcePool.new(endpoint: bits_service_options[:private_endpoint])
+
+      BitsService::ResourcePool.new(
+        endpoint: bits_service_options[:private_endpoint],
+        request_timeout_in_seconds: @config[:request_timeout_in_seconds]
+      )
     end
 
     def resource_pool_wrapper
