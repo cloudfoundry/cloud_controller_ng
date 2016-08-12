@@ -64,7 +64,7 @@ Sequel.migration do
       add_column :encrypted_buildpack_url, String
       add_column :encrypted_buildpack_url_salt, String
       add_column :admin_buildpack_name, String
-      add_index :admin_buildpack_name
+      add_index :admin_buildpack_name, name: :buildpack_lifecycle_data_admin_buildpack_name_index
 
       drop_column :encrypted_buildpack
       drop_column :salt
@@ -78,7 +78,7 @@ Sequel.migration do
     rename_table :apps_v3, :apps
 
     alter_table(:processes) do
-      add_index :app_guid
+      add_index :app_guid, name: :processes_app_guid_index
       add_foreign_key [:app_guid], :apps, key: :guid, name: :fk_processes_app_guid
     end
     alter_table(:packages) do
