@@ -48,12 +48,14 @@ module VCAP::CloudController
 
           lifecycle_result = if droplet.lifecycle_type == Lifecycles::BUILDPACK
                                {
-                                 hash:
-                                 {
-                                 type:  DEFAULT_HASHING_ALGORITHM,
-                                 value: droplet.droplet_hash,
-                               },
-                                 buildpack: droplet.buildpack_receipt_buildpack,
+                                 hash:      {
+                                   type:  DEFAULT_HASHING_ALGORITHM,
+                                   value: droplet.droplet_hash,
+                                 },
+                                 buildpack: {
+                                   name:          droplet.buildpack_receipt_buildpack,
+                                   detect_output: droplet.buildpack_receipt_detect_output
+                                 },
                                  stack:     droplet.buildpack_receipt_stack_name,
                                }
                              elsif droplet.lifecycle_type == Lifecycles::DOCKER

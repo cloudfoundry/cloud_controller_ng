@@ -111,33 +111,29 @@ module VCAP::CloudController
       end
     end
 
-    describe '#update_buildpack_receipt' do
+    describe '#set_buildpack_receipt' do
       let!(:droplet_model) { DropletModel.make(state: 'STAGED') }
-      let(:buildpack) { Buildpack.make }
-      let(:buildpack_key) { buildpack.key }
 
-      it 'updates the buildpack receipt with the new buildpack and buildpack guid' do
-        droplet_model.update_buildpack_receipt(buildpack_key)
-        droplet_model.reload
-
-        expect(droplet_model.buildpack_receipt_buildpack_guid).to eq(buildpack.guid)
-        expect(droplet_model.buildpack_receipt_buildpack).to eq(buildpack.name)
+      it 'records the output of the detect script' do
+        droplet_model.set_buildpack_receipt(buildpack_key: nil, requested_buildpack: nil, detect_output: 'detect-output')
+        expect(droplet_model.buildpack_receipt_detect_output).to eq('detect-output')
       end
 
-      context 'when there is no detected buildpack' do
-        let(:old_buildpack) { Buildpack.make }
-        before do
-          droplet_model.update(
-            buildpack_receipt_buildpack_guid: old_buildpack.guid,
-            buildpack_receipt_buildpack:      old_buildpack.name
-          )
+      describe 'admin buildpack' do
+        let(:buildpack) { Buildpack.make }
+        let(:buildpack_key) { buildpack.key }
+
+        it 'records the admin buildpack info' do
+          droplet_model.set_buildpack_receipt(buildpack_key: buildpack_key, requested_buildpack: nil, detect_output: nil)
+          expect(droplet_model.buildpack_receipt_buildpack_guid).to eq(buildpack.guid)
+          expect(droplet_model.buildpack_receipt_buildpack).to eq(buildpack.name)
         end
+      end
 
-        it 'does not update the buildpack receipt' do
-          droplet_model.update_buildpack_receipt(nil)
-
-          expect(droplet_model.buildpack_receipt_buildpack_guid).to eq(old_buildpack.guid)
-          expect(droplet_model.buildpack_receipt_buildpack).to eq(old_buildpack.name)
+      describe 'custom buildpack' do
+        it 'records the custom buildpack info' do
+          droplet_model.set_buildpack_receipt(buildpack_key: nil, requested_buildpack: 'http://buildpack.example.com', detect_output: nil)
+          expect(droplet_model.buildpack_receipt_buildpack).to eq('http://buildpack.example.com')
         end
       end
     end

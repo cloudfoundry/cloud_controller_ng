@@ -212,11 +212,14 @@ module VCAP::CloudController
           @droplet.lock!
           @droplet.app.lock!
 
-          @droplet.process_types               = { web: stager_response.detected_start_command }
-          @droplet.execution_metadata          = stager_response.execution_metadata
-          @droplet.buildpack_receipt_buildpack = stager_response.detected_buildpack if stager_response.detected_buildpack
-          @droplet.update_buildpack_receipt(stager_response.buildpack_key) if stager_response.buildpack_key
           @droplet.mark_as_staged
+          @droplet.set_buildpack_receipt(
+            buildpack_key:       stager_response.buildpack_key,
+            detect_output:       stager_response.detected_buildpack,
+            requested_buildpack: @droplet.buildpack_lifecycle_data.buildpack
+          )
+          @droplet.process_types      = { web: stager_response.detected_start_command }
+          @droplet.execution_metadata = stager_response.execution_metadata
           @droplet.save_changes(raise_on_save_failure: true)
 
           @droplet.app.droplet = @droplet

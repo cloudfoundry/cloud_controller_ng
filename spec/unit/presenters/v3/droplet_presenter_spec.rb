@@ -24,10 +24,11 @@ module VCAP::CloudController::Presenters::V3
 
       context 'buildpack lifecycle' do
         before do
-          droplet.lifecycle_data.buildpack     = buildpack
-          droplet.lifecycle_data.stack         = 'the-happiest-stack'
-          droplet.buildpack_receipt_buildpack  = 'the-happiest-buildpack'
-          droplet.buildpack_receipt_stack_name = 'the-happiest-stack'
+          droplet.lifecycle_data.buildpack        = buildpack
+          droplet.lifecycle_data.stack            = 'the-happiest-stack'
+          droplet.buildpack_receipt_buildpack     = 'the-happiest-buildpack'
+          droplet.buildpack_receipt_detect_output = 'the-happiest-buildpack-detect-output'
+          droplet.buildpack_receipt_stack_name    = 'the-happiest-stack'
           droplet.save
         end
 
@@ -97,33 +98,34 @@ module VCAP::CloudController::Presenters::V3
 
           it 'has the correct result' do
             expect(result[:result][:hash]).to eq(type: 'sha1', value: nil)
-            expect(result[:result][:buildpack]).to eq('the-happiest-buildpack')
             expect(result[:result][:stack]).to eq('the-happiest-stack')
+            expect(result[:result][:buildpack][:name]).to eq('the-happiest-buildpack')
+            expect(result[:result][:buildpack][:detect_output]).to eq('the-happiest-buildpack-detect-output')
+          end
+        end
+
+        describe 'links' do
+          context 'when the buildpack is an admin buildpack' do
+            let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, buildpack_receipt_buildpack_guid: 'some-guid') }
+
+            it 'links to the buildpack' do
+              expect(result[:links][:buildpack][:href]).to eq('/v2/buildpacks/some-guid')
+            end
           end
 
-          describe 'links' do
-            context 'when the buildpack is an admin buildpack' do
-              let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, buildpack_receipt_buildpack_guid: 'some-guid') }
+          context 'when the buildpack is not an admin buildpack' do
+            let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack) }
 
-              it 'links to the buildpack' do
-                expect(result[:links][:buildpack][:href]).to eq('/v2/buildpacks/some-guid')
-              end
+            it 'links to nil' do
+              expect(result[:links][:buildpack]).to be_nil
             end
+          end
 
-            context 'when the buildpack is not an admin buildpack' do
-              let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack) }
+          context 'when there is no package guid' do
+            let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, package_guid: nil) }
 
-              it 'links to nil' do
-                expect(result[:links][:buildpack]).to be_nil
-              end
-            end
-
-            context 'when there is no package guid' do
-              let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, package_guid: nil) }
-
-              it 'links to nil' do
-                expect(result[:links][:package]).to be nil
-              end
+            it 'links to nil' do
+              expect(result[:links][:package]).to be nil
             end
           end
         end

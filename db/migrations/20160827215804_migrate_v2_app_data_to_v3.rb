@@ -176,6 +176,7 @@ Sequel.migration do
       add_column :buildpack_receipt_stack_name, String
       add_column :buildpack_receipt_buildpack, String
       add_column :buildpack_receipt_buildpack_guid, String
+      add_column :buildpack_receipt_detect_output, String
       add_column :docker_receipt_image, String
 
       add_column :package_guid, String
@@ -226,7 +227,10 @@ Sequel.migration do
           app_guid = v2_app.guid,
           package_guid = v2_app.guid,
           docker_receipt_image = droplets.cached_docker_image,
-          process_types = '{"web":"' || droplets.detected_start_command || '"}'
+          process_types = '{"web":"' || droplets.detected_start_command || '"}',
+          buildpack_receipt_buildpack = v2_app.detected_buildpack_name,
+          buildpack_receipt_buildpack_guid = v2_app.detected_buildpack_guid,
+          buildpack_receipt_detect_output = v2_app.detected_buildpack
         FROM processes AS v2_app
         WHERE v2_app.id = droplets.app_id
     SQL
@@ -241,7 +245,10 @@ Sequel.migration do
           droplets.app_guid = v2_app.guid,
           droplets.package_guid = v2_app.guid,
           droplets.docker_receipt_image = droplets.cached_docker_image,
-          droplets.process_types = CONCAT('{"web":"', droplets.detected_start_command, '"}')
+          droplets.process_types = CONCAT('{"web":"', droplets.detected_start_command, '"}'),
+          droplets.buildpack_receipt_buildpack = v2_app.detected_buildpack_name,
+          droplets.buildpack_receipt_buildpack_guid = v2_app.detected_buildpack_guid,
+          droplets.buildpack_receipt_detect_output = v2_app.detected_buildpack
     SQL
 
     if dbtype == 'mysql'

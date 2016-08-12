@@ -369,7 +369,7 @@ module VCAP::CloudController
     end
 
     def detected_buildpack
-      current_droplet.try(:buildpack_receipt_buildpack)
+      current_droplet.try(:buildpack_receipt_detect_output)
     end
 
     def staging_failed_reason

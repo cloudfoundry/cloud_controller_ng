@@ -40,7 +40,7 @@ module CloudController::Presenters::V2
           buildpack: buildpack
         )
         app.current_droplet.update(
-          buildpack_receipt_buildpack:      'detected buildpack',
+          buildpack_receipt_detect_output:  'detected buildpack',
           buildpack_receipt_buildpack_guid: 'i am a buildpack guid',
         )
         VCAP::CloudController::DropletModel.make(app: app.app, package: app.latest_package, error_description: 'because')

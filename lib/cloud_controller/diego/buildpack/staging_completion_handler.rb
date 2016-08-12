@@ -28,16 +28,17 @@ module VCAP::CloudController
 
         def save_staging_result(payload)
           lifecycle_data = payload[:result][:lifecycle_metadata]
-          buildpack_key  = lifecycle_data[:buildpack_key]
-          buildpack      = droplet.buildpack_lifecycle_data.buildpack if buildpack_key.blank?
 
           droplet.class.db.transaction do
             droplet.lock!
-            droplet.process_types               = payload[:result][:process_types]
-            droplet.execution_metadata          = payload[:result][:execution_metadata]
-            droplet.buildpack_receipt_buildpack = buildpack if buildpack
-            droplet.update_buildpack_receipt(buildpack_key) if buildpack_key
+            droplet.set_buildpack_receipt(
+              buildpack_key:       lifecycle_data[:buildpack_key],
+              detect_output:       lifecycle_data[:detected_buildpack],
+              requested_buildpack: droplet.buildpack_lifecycle_data.buildpack
+            )
             droplet.mark_as_staged
+            droplet.process_types      = payload[:result][:process_types]
+            droplet.execution_metadata = payload[:result][:execution_metadata]
             droplet.save_changes(raise_on_save_failure: true)
           end
         end

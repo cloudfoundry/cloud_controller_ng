@@ -735,7 +735,11 @@ module VCAP::CloudController
                 app.app.lifecycle_data.update(buildpack: admin_buildpack.name)
               end
 
-              it 'saves the detected buildpack guid' do
+              it 'saves the buildpack name' do
+                expect { stage }.to change { app.refresh.detected_buildpack_name }.from(nil)
+              end
+
+              it 'saves the buildpack guid' do
                 expect { stage }.to change { app.refresh.detected_buildpack_guid }.from(nil)
               end
             end
