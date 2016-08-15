@@ -18,28 +18,15 @@ module VCAP::CloudController
         let(:tmpdir) { '/tmp/special_temp' }
         let(:max_package_size) { 256 }
 
-        it 'creates an AppBitsPackage and performs' do
-          packer = instance_double(AppBitsPackage)
-          expect(AppBitsPackage).to receive(:new).and_return(packer)
-          expect(packer).to receive(:create_package_in_blobstore).with(package_guid, uploaded_path, an_instance_of(CloudController::Blobstore::FingerprintsCollection))
+        it 'creates an PackagePacker and performs' do
+          packer = instance_double(CloudController::PackagePacker::PackagePacker)
+          expect(CloudController::PackagePacker::PackagePacker).to receive(:new).with(package_guid, uploaded_path, fingerprints).and_return(packer)
+          expect(packer).to receive(:pack)
           job.perform
         end
 
         it 'knows its job name' do
           expect(job.job_name_in_configuration).to equal(:package_bits)
-        end
-
-        context 'when bits service is enabled' do
-          before do
-            TestConfig.config[:bits_service][:enabled] = true
-          end
-
-          it 'creates a BitsServicePacker and performs' do
-            packer = instance_double(Jobs::Runtime::BitsServicePacker)
-            expect(Jobs::Runtime::BitsServicePacker).to receive(:new).with(package_guid, uploaded_path, fingerprints).and_return(packer)
-            expect(packer).to receive(:perform)
-            job.perform
-          end
         end
       end
     end
