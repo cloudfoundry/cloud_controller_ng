@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 gem 'addressable'
-gem 'railties', '~>4.2.5.2'
+gem 'railties', '~>4.2.7.1'
 gem 'rake'
 
 # nats wants to lock us to an older version. we already use eventmachine 1.0.9, so do not want a downgrade.
@@ -31,9 +31,9 @@ gem 'thin', '~> 1.6.0'
 gem 'newrelic_rpm', '3.12.0.288'
 gem 'clockwork', require: false
 gem 'statsd-ruby'
-gem 'activemodel', '~> 4.2.5.2'
-gem 'actionpack', '~> 4.2.5.2'
-gem 'actionview', '~> 4.2.5.2'
+gem 'activemodel', '~> 4.2.7.1'
+gem 'actionpack', '~> 4.2.7.1'
+gem 'actionview', '~> 4.2.7.1'
 gem 'public_suffix'
 
 # Requiring this particular commit to get a fix to a race condition when subscribing before a connection is made.
