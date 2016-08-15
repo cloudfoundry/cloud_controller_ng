@@ -594,19 +594,6 @@ RSpec.describe 'Apps' do
               'uris'       => ['app_name.example.com'],
               'host'       => '10.0.0.1',
               'port'       => 61035,
-              'net_info'   => {
-                'address' => '10.244.16.10',
-                'ports'   => [
-                  {
-                    'container_port' => 8080,
-                    'host_port'      => 60002
-                  },
-                  {
-                    'container_port' => 2222,
-                    'host_port'      => 60003
-                  }
-                ]
-              },
               'uptime'     => 65007,
               'mem_quota'  => 536870912,
               'disk_quota' => 1073741824,

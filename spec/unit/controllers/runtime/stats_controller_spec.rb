@@ -15,7 +15,7 @@ module VCAP::CloudController
           {
             0 => {
               state: 'RUNNING',
-              stats: 'mock stats',
+              stats: {},
             },
             1 => {
               state: 'DOWN',
@@ -44,7 +44,7 @@ module VCAP::CloudController
             expected = {
               '0' => {
                 'state' => 'RUNNING',
-                'stats' => 'mock stats',
+                'stats' => {},
               },
               '1' => {
                 'state' => 'DOWN',
@@ -75,7 +75,7 @@ module VCAP::CloudController
             expected = {
               '0' => {
                 'state' => 'RUNNING',
-                'stats' => 'mock stats',
+                'stats' => {},
               },
               '1' => {
                 'state' => 'DOWN',
@@ -151,22 +151,24 @@ module VCAP::CloudController
         context 'when the app is a diego app' do
           let(:stats) do
             {
-              state: 'RUNNING',
-              stats: {
-                name: 'foo',
-                uris: 'some-uris',
-                host: 'my-host',
-                port: 1234,
-                net_info: { 'foo' => 'bar' },
-                uptime: 1,
-                mem_quota: 1,
-                disk_quota: 2,
-                fds_quota: 3,
-                usage: {
-                  time: 4,
-                  cpu: 5,
-                  mem: 6,
-                  disk: 7,
+              '0' => {
+                state: 'RUNNING',
+                stats: {
+                  name: 'foo',
+                  uris: 'some-uris',
+                  host: 'my-host',
+                  port: 1234,
+                  net_info: { 'foo' => 'bar' },
+                  uptime: 1,
+                  mem_quota: 1,
+                  disk_quota: 2,
+                  fds_quota: 3,
+                  usage: {
+                    time: 4,
+                    cpu: 5,
+                    mem: 6,
+                    disk: 7,
+                  }
                 }
               }
             }
@@ -182,21 +184,23 @@ module VCAP::CloudController
             @app.refresh
 
             expected = {
-              'state' => 'RUNNING',
-              'stats' => {
-                'name' => 'foo',
-                'uris' => 'some-uris',
-                'host' => 'my-host',
-                'port' => 1234,
-                'uptime' => 1,
-                'mem_quota' => 1,
-                'disk_quota' => 2,
-                'fds_quota' => 3,
-                'usage' => {
-                  'time' => 4,
-                  'cpu' => 5,
-                  'mem' => 6,
-                  'disk' => 7,
+               '0' => {
+                'state' => 'RUNNING',
+                'stats' => {
+                  'name' => 'foo',
+                  'uris' => 'some-uris',
+                  'host' => 'my-host',
+                  'port' => 1234,
+                  'uptime' => 1,
+                  'mem_quota' => 1,
+                  'disk_quota' => 2,
+                  'fds_quota' => 3,
+                  'usage' => {
+                    'time' => 4,
+                    'cpu' => 5,
+                    'mem' => 6,
+                    'disk' => 7,
+                  }
                 }
               }
             }
