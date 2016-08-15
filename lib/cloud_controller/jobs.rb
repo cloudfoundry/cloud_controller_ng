@@ -1,4 +1,5 @@
 require 'jobs/cc_job'
+require 'jobs/runtime/bits_service_packer'
 require 'jobs/runtime/app_events_cleanup'
 require 'jobs/runtime/app_usage_events_cleanup'
 require 'jobs/runtime/blobstore_delete'

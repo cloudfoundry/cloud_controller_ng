@@ -28,6 +28,19 @@ module VCAP::CloudController
         it 'knows its job name' do
           expect(job.job_name_in_configuration).to equal(:package_bits)
         end
+
+        context 'when bits service is enabled' do
+          before do
+            TestConfig.config[:bits_service][:enabled] = true
+          end
+
+          it 'creates a BitsServicePacker and performs' do
+            packer = instance_double(Jobs::Runtime::BitsServicePacker)
+            expect(Jobs::Runtime::BitsServicePacker).to receive(:new).with(package_guid, uploaded_path, fingerprints).and_return(packer)
+            expect(packer).to receive(:perform)
+            job.perform
+          end
+        end
       end
     end
   end
