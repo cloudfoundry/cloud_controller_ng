@@ -1,7 +1,7 @@
 require 'cloud_controller/dependency_locator'
 
 module CloudController
-  module PackagePacker
+  module Packager
     class BitsServicePacker
       def send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
         fingerprints_from_upload = upload_missing_entries(uploaded_files_path)

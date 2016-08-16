@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'cloud_controller/package_packer/local_bits_packer'
+require 'cloud_controller/packager/local_bits_packer'
 
-module CloudController::PackagePacker
+module CloudController::Packager
   RSpec.describe LocalBitsPacker do
     subject(:packer) { described_class.new }
 

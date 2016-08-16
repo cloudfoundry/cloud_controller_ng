@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'cloud_controller/package_packer/package_packer'
+require 'cloud_controller/packager/package_upload_handler'
 
-module CloudController::PackagePacker
-  RSpec.describe PackagePacker do
+module CloudController::Packager
+  RSpec.describe PackageUploadHandler do
     subject(:packer) { described_class.new(package.guid, uploaded_files_path, cached_files_fingerprints) }
 
     let(:package) { VCAP::CloudController::PackageModel.make(state: VCAP::CloudController::PackageModel::PENDING_STATE) }
@@ -60,7 +60,7 @@ module CloudController::PackagePacker
 
         it 'raises an error and removes the compressed path' do
           expect(FileUtils).to receive(:rm_f).with(uploaded_files_path)
-          expect { packer.pack }.to raise_error(PackagePacker::PackageNotFound)
+          expect { packer.pack }.to raise_error(PackageUploadHandler::PackageNotFound)
         end
       end
 

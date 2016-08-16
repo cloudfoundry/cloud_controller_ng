@@ -1,8 +1,8 @@
 require 'cloud_controller/dependency_locator'
 
 module CloudController
-  module PackagePacker
-    class PackagePacker
+  module Packager
+    class PackageUploadHandler
       class PackageNotFound < StandardError
       end
 

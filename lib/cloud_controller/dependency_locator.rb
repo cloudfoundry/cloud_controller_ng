@@ -13,8 +13,8 @@ require 'cloud_controller/diego/messenger'
 require 'cloud_controller/blobstore/client_provider'
 require 'cloud_controller/resource_pool_wrapper'
 require 'cloud_controller/bits_service_resource_pool_wrapper'
-require 'cloud_controller/package_packer/local_bits_packer'
-require 'cloud_controller/package_packer/bits_service_packer'
+require 'cloud_controller/packager/local_bits_packer'
+require 'cloud_controller/packager/bits_service_packer'
 
 require 'bits_service_client'
 
@@ -255,9 +255,9 @@ module CloudController
 
     def packer
       if use_bits_service
-        PackagePacker::BitsServicePacker.new
+        Packager::BitsServicePacker.new
       else
-        PackagePacker::LocalBitsPacker.new
+        Packager::LocalBitsPacker.new
       end
     end
 

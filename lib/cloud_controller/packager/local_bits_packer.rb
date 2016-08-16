@@ -3,7 +3,7 @@ require 'cloud_controller/blobstore/fingerprints_collection'
 require 'shellwords'
 
 module CloudController
-  module PackagePacker
+  module Packager
     class LocalBitsPacker
       def send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
         fingerprints_collection = CloudController::Blobstore::FingerprintsCollection.new(cached_files_fingerprints)

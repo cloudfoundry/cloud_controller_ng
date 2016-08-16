@@ -1,4 +1,4 @@
-require 'cloud_controller/package_packer/package_packer'
+require 'cloud_controller/packager/package_upload_handler'
 
 module VCAP::CloudController
   module Jobs
@@ -12,7 +12,7 @@ module VCAP::CloudController
 
         def perform
           Steno.logger('cc.background').info("Packing the app bits for package '#{@package_guid}'")
-          CloudController::PackagePacker::PackagePacker.new(@package_guid, @package_zip_path, @fingerprints).pack
+          CloudController::Packager::PackageUploadHandler.new(@package_guid, @package_zip_path, @fingerprints).pack
         end
 
         def job_name_in_configuration

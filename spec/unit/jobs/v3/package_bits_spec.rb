@@ -19,8 +19,8 @@ module VCAP::CloudController
         let(:max_package_size) { 256 }
 
         it 'creates an PackagePacker and performs' do
-          packer = instance_double(CloudController::PackagePacker::PackagePacker)
-          expect(CloudController::PackagePacker::PackagePacker).to receive(:new).with(package_guid, uploaded_path, fingerprints).and_return(packer)
+          packer = instance_double(CloudController::Packager::PackageUploadHandler)
+          expect(CloudController::Packager::PackageUploadHandler).to receive(:new).with(package_guid, uploaded_path, fingerprints).and_return(packer)
           expect(packer).to receive(:pack)
           job.perform
         end
