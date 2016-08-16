@@ -14,24 +14,26 @@ module VCAP::CloudController
         let(:multiple_volume_mounts) do
           [
             {
-              container_path: '/data/images',
-              mode:           'r',
-              private:        {
-                driver:   'cephfs',
-                group_id: 'abc',
-                config:   'something',
-              },
+                container_dir: '/data/images',
+                mode: 'r',
+                device_type: 'shared',
+                device: {
+                    driver: 'cephfs',
+                    volume_id: 'abc',
+                    mount_config: {
+                        key: 'value'
+                    }
+                }
             },
             {
-              container_path: '/data/scratch',
-              mode:           'rw',
-              private:        {
-                driver:   'localscratch',
-                group_id: '123',
-                config:   'something else',
-                tags:     { "iops": ['10k'] },
-                size_mb:  512,
-              }
+                container_dir: '/data/scratch',
+                mode: 'rw',
+                device_type: 'shared',
+                device: {
+                    driver: 'local',
+                    volume_id: 'def',
+                    mount_config: {}
+                }
             }
           ]
         end
@@ -39,13 +41,16 @@ module VCAP::CloudController
         let(:single_volume_mount) do
           [
             {
-              container_path: '/data/videos',
-              mode:           'wr',
-              private:        {
-                driver:   'cephfs',
-                group_id: '123',
-                config:   'something other'
-              }
+                container_dir: '/data/videos',
+                mode: 'rw',
+                device_type: 'shared',
+                device: {
+                    driver: 'local',
+                    volume_id: 'ghi',
+                    mount_config: {
+                        foo: 'bar'
+                    }
+                }
             }
           ]
         end
@@ -56,25 +61,40 @@ module VCAP::CloudController
 
           expect(mounts.as_json).to match_array([
             {
-              'driver'         => 'cephfs',
-              'volume_id'      => 'abc',
-              'container_path' => '/data/images',
-              'mode'           => 0,
-              'config'         => Base64.encode64('something')
+                'container_dir' => '/data/images',
+                'mode' => 'r',
+                'device_type' => 'shared',
+                'device' => {
+                    'driver' => 'cephfs',
+                    'volume_id' => 'abc',
+                    'mount_config' => {
+                        'key' => 'value',
+                    },
+                },
             },
             {
-              'driver'         => 'localscratch',
-              'volume_id'      => '123',
-              'container_path' => '/data/scratch',
-              'mode'           => 1,
-              'config'         => Base64.encode64('something else')
+                'container_dir' => '/data/scratch',
+                'mode' => 'rw',
+                'device_type' => 'shared',
+                'device' => {
+                    'driver' => 'local',
+                    'volume_id' => 'def',
+                    'mount_config' => {},
+                },
             },
             {
-              'driver'         => 'cephfs',
-              'volume_id'      => '123',
-              'container_path' => '/data/videos',
-              'mode'           => 1,
-              'config'         => Base64.encode64('something other')
+
+                'container_dir' => '/data/videos',
+                'mode' => 'rw',
+
+                'device_type' => 'shared',
+                'device' => {
+                  'driver' => 'local',
+                  'volume_id' => 'ghi',
+                  'mount_config' => {
+                      'foo' => 'bar',
+                  },
+                },
             }
           ])
         end
@@ -85,11 +105,17 @@ module VCAP::CloudController
 
           expect(mounts.as_json).to match_array([
             {
-              'driver'         => 'cephfs',
-              'volume_id'      => '123',
-              'container_path' => '/data/videos',
-              'mode'           => 1,
-              'config'         => Base64.encode64('something other')
+                'container_dir' => '/data/videos',
+                'mode' => 'rw',
+
+                'device_type' => 'shared',
+                'device' => {
+                    'driver' => 'local',
+                    'volume_id' => 'ghi',
+                    'mount_config' => {
+                        'foo' => 'bar',
+                    },
+                },
             }
           ])
         end

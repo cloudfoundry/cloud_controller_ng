@@ -307,24 +307,20 @@ module VCAP::CloudController
         binding = described_class.new
         binding.volume_mounts = [
           {
-            hash1: 'val1',
-            private: {
-              hash1_private: 'val1_private'
-            }
+            container_dir: 'val1',
+            mode: 'val2',
+            device_type: 'val3',
+            hash1_private: 'val1_private'
           },
           {
             hash2: 'val2',
-            private: {
-              hash2_private: 'val2_private'
-            }
+            hash2_private: 'val2_private'
           }
         ]
 
         expect(binding.censor_volume_mounts).to match_array(
-          [
-            { 'hash1' => 'val1' },
-            { 'hash2' => 'val2' }
-          ])
+          [{ 'container_dir' => 'val1', 'mode' => 'val2', 'device_type' => 'val3' }, {}]
+        )
       end
 
       it 'handles nil volume_mounts' do

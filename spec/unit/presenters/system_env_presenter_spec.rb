@@ -46,12 +46,25 @@ module VCAP::CloudController
                 app: app,
                 service_instance: service_instance,
                 syslog_drain_url: 'logs.go-here.com',
-                volume_mounts: [{ foo: 'bar', private: { stuff: 'stays private' } }]
+                volume_mounts: [{
+                                    container_dir: '/data/images',
+                                    mode: 'r',
+                                    device_type: 'shared',
+                                    device: {
+                                        driver: 'cephfs',
+                                        volume_id: 'abc',
+                                        mount_config: {
+                                            key: 'value'
+                                        }
+                                    }
+                                }]
               )
             end
 
             it 'includes only the public volume information' do
-              expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym][0].to_hash[:volume_mounts]).to eq(['foo' => 'bar'])
+              expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym][0].to_hash[:volume_mounts]).to eq(['container_dir' => '/data/images',
+                                                                                                                              'mode' => 'r',
+                                                                                                                              'device_type' => 'shared'])
             end
           end
 
