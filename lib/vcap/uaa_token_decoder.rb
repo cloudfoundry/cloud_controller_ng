@@ -72,7 +72,7 @@ module VCAP
     end
 
     def asymmetric_key
-      info = CF::UAA::Info.new(config[:url])
+      info = CF::UAA::Info.new(config[:url], {skip_ssl_validation: true})
       @asymmetric_key ||= UaaVerificationKey.new(config[:verification_key], info)
     end
   end
