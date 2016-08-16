@@ -84,6 +84,20 @@ module VCAP::CloudController
                   expect(Loggregator).to have_received(:emit_error).with(droplet.guid, /No process types returned from stager/)
                 end
               end
+
+              context 'when the droplet is already in a completed state' do
+                before do
+                  droplet.update(state: DropletModel::FAILED_STATE)
+                end
+
+                it 'does not update the droplet' do
+                  expect {
+                    subject.staging_complete(payload)
+                  }.to raise_error(CloudController::Errors::ApiError)
+
+                  expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
+                end
+              end
             end
 
             context 'when updating the droplet table fails' do

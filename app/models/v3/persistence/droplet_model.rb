@@ -9,7 +9,7 @@ module VCAP::CloudController
       STAGED_STATE  = 'STAGED'.freeze,
       EXPIRED_STATE = 'EXPIRED'.freeze,
     ].freeze
-    COMPLETED_STATES = [
+    FINAL_STATES = [
       FAILED_STATE,
       STAGED_STATE,
       EXPIRED_STATE
@@ -55,7 +55,7 @@ module VCAP::CloudController
 
     def after_destroy
       super
-      unless COMPLETED_STATES.include?(self.state)
+      unless in_final_state?
         app_usage_event_repository.create_from_droplet(self, 'STAGING_STOPPED')
       end
     end
@@ -114,6 +114,10 @@ module VCAP::CloudController
     def lifecycle_data
       return buildpack_lifecycle_data if buildpack_lifecycle_data
       DockerLifecycleDataModel.new
+    end
+
+    def in_final_state?
+      FINAL_STATES.include?(self.state)
     end
 
     private

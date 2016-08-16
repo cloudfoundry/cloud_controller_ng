@@ -43,7 +43,7 @@ module VCAP::CloudController
           payload[:error] = { message: 'Malformed message from Diego stager', id: DEFAULT_STAGING_ERROR }
           handle_failure(payload, with_start)
 
-          raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', payload)
+          raise CloudController::Errors::ApiError.new_from_details('InvalidRequest')
         end
 
         begin
@@ -72,8 +72,10 @@ module VCAP::CloudController
           payload[:error] = { message: 'Malformed message from Diego stager', id: DEFAULT_STAGING_ERROR }
           handle_failure(payload, with_start)
 
-          raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', payload)
+          raise CloudController::Errors::ApiError.new_from_details('InvalidRequest')
         end
+
+        raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') if droplet.in_final_state?
 
         if payload[:result][:process_types].blank?
           payload[:error] = { message: 'No process types returned from stager', id: DEFAULT_STAGING_ERROR }

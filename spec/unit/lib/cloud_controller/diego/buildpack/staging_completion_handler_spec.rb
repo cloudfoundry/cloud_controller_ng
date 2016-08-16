@@ -176,6 +176,20 @@ module VCAP::CloudController
                 end
               end
             end
+
+            context 'when the droplet is already in a completed state' do
+              before do
+                droplet.update(state: DropletModel::FAILED_STATE)
+              end
+
+              it 'does not update the droplet' do
+                expect {
+                  subject.staging_complete(success_response)
+                }.to raise_error(CloudController::Errors::ApiError)
+
+                expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
+              end
+            end
           end
 
           describe 'failure case' do
