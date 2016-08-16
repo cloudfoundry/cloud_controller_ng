@@ -160,11 +160,21 @@ module VCAP::CloudController
         context 'when DEA accepts http' do
           let(:to_uri) { "#{dea_http_uri}/v1/apps" }
 
+          before do
+            stub_request(:post, 'https://host:1234/v1/apps').to_return(status: 202)
+          end
+
           it 'sends the message to the correct uri' do
             expect(http_client).to receive(:post_async).with(to_uri, kind_of(Hash))
             expect(message_bus).to_not receive(:publish).with("dea.#{dea_http_id}.start", kind_of(Hash))
             stub_request(:post, to_uri).with(body: /\{.*\}/, headers: { 'Content-Type' => 'application/json' })
             Dea::Client.send_start(def_ad, message)
+          end
+
+          it 'returns the connection status from the callback' do
+            callback = Dea::Client.send_start(def_ad, message)
+
+            expect(callback.call).to eq(202)
           end
         end
 

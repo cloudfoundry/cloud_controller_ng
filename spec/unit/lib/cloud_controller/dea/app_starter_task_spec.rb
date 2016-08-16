@@ -137,7 +137,7 @@ module VCAP::CloudController
       context 'when the DEAs have insufficient capacity to start all of the instances' do
         before do
           app.instances = 4
-          allow(dea_pool).to receive(:find_dea).and_return(nil, nil, dea_ad, dea_ad)
+          allow(dea_pool).to receive(:find_dea).and_return(dea_ad, dea_ad, nil)
         end
 
         it 'starts instances for which capacity is available and raises an error' do
@@ -147,18 +147,38 @@ module VCAP::CloudController
           expect(Dea::Client).to receive(:send_start).with(
             dea_ad,
             hash_including(
-              index: 2,
+              index: 0,
             )
           ).ordered
 
           expect(Dea::Client).to receive(:send_start).with(
             dea_ad,
             hash_including(
-              index: 3,
+              index: 1,
             )
           ).ordered
 
           expect { subject.start }.to raise_error(CloudController::Errors::ApiError, 'One or more instances could not be started because of insufficient running resources.')
+        end
+
+        it 'does not retry the start requests' do
+          expect(subject).to receive(:attempt_start_for_indexes).once.and_call_original
+          expect { subject.start }.to raise_error(CloudController::Errors::ApiError)
+        end
+      end
+
+      context 'when the request return a 503' do
+        let(:fake_lambda) { double(:lambda) }
+
+        before do
+          allow(dea_pool).to receive(:find_dea).and_return(dea_ad)
+          allow(Dea::Client).to receive(:send_start).and_return(fake_lambda)
+          allow(fake_lambda).to receive(:call).and_return(503)
+        end
+
+        it 'retries starting the app instance' do
+          expect(subject).to receive(:attempt_start_for_indexes).exactly(3).times.and_call_original
+          subject.start
         end
       end
 
