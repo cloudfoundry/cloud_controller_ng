@@ -19,6 +19,7 @@ module VCAP::CloudController
     def start
       CLEANUPS.each { |c| @clock.schedule_cleanup(c[:name], c[:class], c[:time]) }
       @clock.schedule_frequent_cleanup(:pending_droplets, Jobs::Runtime::PendingDropletCleanup)
+      @clock.schedule_daily(:expired_blob_cleanup, Jobs::Runtime::ExpiredBlobCleanup, '00:00')
       Clockwork.run
     end
   end

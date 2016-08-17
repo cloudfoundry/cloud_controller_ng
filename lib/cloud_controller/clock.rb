@@ -28,5 +28,12 @@ module VCAP::CloudController
         Jobs::Enqueuer.new(job, queue: 'cc-generic').enqueue
       end
     end
+
+    def schedule_daily(name, klass, at)
+      Clockwork.every(1.day, "#{name}.cleanup.job", at: at) do |_|
+        @logger.info("Queueing #{klass} at #{Time.now.utc}")
+        Jobs::Enqueuer.new(klass.new, queue: 'cc-generic').enqueue
+      end
+    end
   end
 end

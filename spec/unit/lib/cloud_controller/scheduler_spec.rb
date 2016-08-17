@@ -6,7 +6,7 @@ module VCAP::CloudController
     describe '#start' do
       subject(:schedule) { Scheduler.new(config) }
 
-      let(:clock) { instance_double(Clock, schedule_cleanup: nil, schedule_frequent_cleanup: nil) }
+      let(:clock) { instance_double(Clock, schedule_cleanup: nil, schedule_frequent_cleanup: nil, schedule_daily: nil) }
       let(:config) { double }
 
       before do
