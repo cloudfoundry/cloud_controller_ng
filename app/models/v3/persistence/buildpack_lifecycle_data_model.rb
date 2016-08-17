@@ -22,7 +22,7 @@ module VCAP::CloudController
       self.buildpack_url = nil
       self.admin_buildpack_name = nil
 
-      if /\A#{URI.regexp}\Z/ =~ buildpack
+      if buildpack.is_uri?
         self.buildpack_url = buildpack
       else
         self.admin_buildpack_name = buildpack

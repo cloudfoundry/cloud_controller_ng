@@ -2,8 +2,6 @@ require 'cloud_controller/dea/client'
 
 module VCAP::CloudController
   class Route < Sequel::Model
-    ROUTE_REGEX = /\A#{URI.regexp}\Z/
-
     class InvalidDomainRelation < CloudController::Errors::InvalidRelation; end
     class InvalidOrganizationRelation < CloudController::Errors::InvalidRelation; end
     class DockerDisabled < CloudController::Errors::InvalidRelation; end
@@ -116,7 +114,7 @@ module VCAP::CloudController
     def validate_path
       return if path == ''
 
-      if !ROUTE_REGEX.match("pathcheck://#{host}#{path}")
+      if !"pathcheck://#{host}#{path}".is_uri?
         errors.add(:path, :invalid_path)
       end
 
