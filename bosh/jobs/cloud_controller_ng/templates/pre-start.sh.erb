@@ -16,25 +16,6 @@ export BUNDLE_GEMFILE="${CC_PACKAGE_DIR}/cloud_controller_ng/Gemfile"
 
 source "${SCRIPT_DIR}/ruby_version.sh"
 
-function deny_overlapping_app_and_system_domains {
-  app_domains=<%= p("app_domains").map { |domain|
-      if domain.is_a?(Hash)
-          domain['name']
-      else
-          domain
-      end
-  }.join(',') %>
-
-  system_domain="<%= p('system_domain') %>"
-
-  ruby "${SCRIPT_DIR}/check_for_domain_overlap.rb" "${system_domain}" "${app_domains[@]}"
-
-  overlap_result=$?
-  if [[ $overlap_result -ne 0 ]]; then
-    exit $overlap_result
-  fi
-}
-
 function setup_nginx_directories {
   mkdir -p "/var/vcap/sys/run/nginx_cc"
   chown -R vcap:vcap "/var/vcap/sys/run/nginx_cc"
@@ -112,7 +93,6 @@ function seed_db {
 
 function main {
   setup_directories
-  deny_overlapping_app_and_system_domains
   <% if spec.bootstrap && p('cc.run_prestart_migrations') %>
   perform_migration
   seed_db
