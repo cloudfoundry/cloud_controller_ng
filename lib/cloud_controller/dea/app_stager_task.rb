@@ -214,8 +214,8 @@ module VCAP::CloudController
 
           @droplet.mark_as_staged
           @droplet.set_buildpack_receipt(
-            buildpack_key:       stager_response.buildpack_key,
             detect_output:       stager_response.detected_buildpack,
+            buildpack_key:       stager_response.buildpack_key,
             requested_buildpack: @droplet.buildpack_lifecycle_data.buildpack
           )
           @droplet.process_types      = { web: stager_response.detected_start_command }

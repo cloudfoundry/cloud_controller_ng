@@ -60,13 +60,14 @@ module VCAP::CloudController
       end
     end
 
-    def set_buildpack_receipt(buildpack_key:, requested_buildpack:, detect_output:)
+    def set_buildpack_receipt(buildpack_key:, detect_output:, requested_buildpack:, buildpack_url: nil)
       self.buildpack_receipt_detect_output = detect_output
 
-      if buildpack_key.present?
-        admin_buildpack = Buildpack.find(key: buildpack_key)
+      if buildpack_key.present? && (admin_buildpack = Buildpack.find(key: buildpack_key))
         self.buildpack_receipt_buildpack_guid = admin_buildpack.guid
-        self.buildpack_receipt_buildpack = admin_buildpack.name
+        self.buildpack_receipt_buildpack      = admin_buildpack.name
+      elsif buildpack_url.present?
+        self.buildpack_receipt_buildpack = buildpack_url
       else
         self.buildpack_receipt_buildpack = requested_buildpack
       end

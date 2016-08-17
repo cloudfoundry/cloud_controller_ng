@@ -99,18 +99,33 @@ module VCAP::CloudController
                 end
               end
 
-              context 'when detected_buildpack is empty' do
-                before do
-                  droplet.buildpack_lifecycle_data = BuildpackLifecycleDataModel.make(buildpack: 'OG BP', stack: 'on stacks on stacks')
-                  droplet.save
+              describe 'recording buildpack receipt' do
+                it 'records detected_buildpack' do
+                  success_response[:result][:lifecycle_metadata][:detected_buildpack] = 'detect output'
+                  subject.staging_complete(success_response)
 
-                  success_response[:result][:lifecycle_metadata][:detected_buildpack] = ''
-                  success_response[:result][:lifecycle_metadata][:buildpack_key]      = ''
+                  expect(droplet.reload.buildpack_receipt_detect_output).to eq('detect output')
                 end
 
-                it 'uses the lifecycle data buildpack' do
-                  subject.staging_complete(success_response)
-                  expect(droplet.reload.buildpack_receipt_buildpack).to eq('OG BP')
+                context 'when the buildpack key is a url' do
+                  it 'records that as the buildpack' do
+                    success_response[:result][:lifecycle_metadata][:buildpack_key] = 'https://www.buildpack.com'
+                    subject.staging_complete(success_response)
+
+                    expect(droplet.reload.buildpack_receipt_buildpack).to eq('https://www.buildpack.com')
+                  end
+                end
+
+                context 'when the buildpack key is a key' do
+                  it 'records that as the buildpack' do
+                    admin_buildpack = VCAP::CloudController::Buildpack.make(name: 'woop', key: 'thismakey')
+
+                    success_response[:result][:lifecycle_metadata][:buildpack_key] = 'thismakey'
+                    subject.staging_complete(success_response)
+
+                    expect(droplet.reload.buildpack_receipt_buildpack).to eq('woop')
+                    expect(droplet.reload.buildpack_receipt_buildpack_guid).to eq(admin_buildpack.guid)
+                  end
                 end
               end
             end

@@ -28,11 +28,20 @@ module VCAP::CloudController
 
         def save_staging_result(payload)
           lifecycle_data = payload[:result][:lifecycle_metadata]
+          buildpack_key  = nil
+          buildpack_url  = nil
+
+          if lifecycle_data[:buildpack_key].is_uri?
+            buildpack_url = lifecycle_data[:buildpack_key]
+          else
+            buildpack_key = lifecycle_data[:buildpack_key]
+          end
 
           droplet.class.db.transaction do
             droplet.lock!
             droplet.set_buildpack_receipt(
-              buildpack_key:       lifecycle_data[:buildpack_key],
+              buildpack_key:       buildpack_key,
+              buildpack_url:       buildpack_url,
               detect_output:       lifecycle_data[:detected_buildpack],
               requested_buildpack: droplet.buildpack_lifecycle_data.buildpack
             )

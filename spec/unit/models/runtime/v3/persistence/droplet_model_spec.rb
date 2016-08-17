@@ -132,8 +132,15 @@ module VCAP::CloudController
 
       describe 'custom buildpack' do
         it 'records the custom buildpack info' do
-          droplet_model.set_buildpack_receipt(buildpack_key: nil, requested_buildpack: 'http://buildpack.example.com', detect_output: nil)
+          droplet_model.set_buildpack_receipt(buildpack_url: 'http://buildpack.example.com', buildpack_key: nil, requested_buildpack: nil, detect_output: nil)
           expect(droplet_model.buildpack_receipt_buildpack).to eq('http://buildpack.example.com')
+        end
+      end
+
+      describe 'unknown buildpack from response' do
+        it 'records the requested buildpack' do
+          droplet_model.set_buildpack_receipt(buildpack_key: nil, requested_buildpack: 'requested-buildpack', detect_output: nil)
+          expect(droplet_model.buildpack_receipt_buildpack).to eq('requested-buildpack')
         end
       end
     end
