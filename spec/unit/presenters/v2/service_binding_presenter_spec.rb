@@ -16,7 +16,7 @@ module CloudController::Presenters::V2
         set_current_user_as_admin
       end
 
-      let(:volume_mount) { [{ 'my-volume-mount' => 'mount' }] }
+      let(:volume_mount) { [{ 'container_dir' => 'mount' }] }
       let(:service_binding) do
         VCAP::CloudController::ServiceBinding.make(
           credentials:      { 'secret' => 'key' },
@@ -39,7 +39,7 @@ module CloudController::Presenters::V2
             'gateway_data'          => nil,
             'gateway_name'          => '',
             'syslog_drain_url'      => 'syslog://drain.example.com',
-            'volume_mounts'         => [{ 'my-volume-mount' => 'mount' }],
+            'volume_mounts'         => [{ 'container_dir' => 'mount' }],
             'relationship_url'      => 'http://relationship.example.com'
           }
         )
@@ -49,14 +49,22 @@ module CloudController::Presenters::V2
         context 'when they have a private key' do
           let(:volume_mount) do
             [
-              { 'my-volume-mount' => 'mount', 'private' => { 'secret-stuff' => 'secret-thing' } },
-              { 'other_mount' => 'mount', 'private' => { 'secret-stuff' => 'secret-thing' } },
+              {
+                'container_dir' => 'val1',
+                'mode'          => 'val2',
+                'device_type'   => 'val3',
+                'hash1_private' => 'val1_private'
+              },
+              {
+                'hash2'         => 'val2',
+                'hash2_private' => 'val2_private'
+              }
             ]
           end
 
-          it 'redacts "private" key' do
-            expect(subject.entity_hash(controller, service_binding, opts, depth, parents, orphans)['volume_mounts']).to eq(
-              [{ 'my-volume-mount' => 'mount' }, { 'other_mount' => 'mount' }]
+          it 'whitelists fields' do
+            expect(subject.entity_hash(controller, service_binding, opts, depth, parents, orphans)['volume_mounts']).to match_array(
+              [{ 'container_dir' => 'val1', 'mode' => 'val2', 'device_type' => 'val3' }, {}]
             )
           end
         end

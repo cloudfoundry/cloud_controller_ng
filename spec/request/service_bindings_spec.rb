@@ -375,19 +375,19 @@ RSpec.describe 'v3 service bindings' do
         let(:app_model2) { VCAP::CloudController::AppModel.make(space: space) }
         let!(:another_apps_service_binding) do
           VCAP::CloudController::ServiceBinding.make(service_instance: service_instance1,
-                                                          app: app_model2,
-                                                          credentials: { 'utako' => 'secret' },
-                                                          syslog_drain_url: 'syslog://example.com',
-                                                          volume_mounts:    [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }],
+                                                     app: app_model2,
+                                                     credentials: { 'utako' => 'secret' },
+                                                     syslog_drain_url: 'syslog://example.com',
+                                                     volume_mounts:    [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }],
                                                          )
         end
         let(:app_model3) { VCAP::CloudController::AppModel.make(space: space) }
         let!(:another_apps_service_binding2) do
           VCAP::CloudController::ServiceBinding.make(service_instance: service_instance1,
-                                                          app: app_model3,
-                                                          credentials: { 'amelia' => 'apples' },
-                                                          syslog_drain_url: 'www.neopets.com',
-                                                          volume_mounts:    [{ 'stuff2' => 'thing2', 'container_dir' => 'some-path' }],
+                                                     app: app_model3,
+                                                     credentials: { 'amelia' => 'apples' },
+                                                     syslog_drain_url: 'www.neopets.com',
+                                                     volume_mounts:    [{ 'stuff2' => 'thing2', 'container_dir' => 'some-path' }],
                                                          )
         end
 

@@ -277,7 +277,7 @@ RSpec.describe 'ServiceBindings' do
         fb                  = FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
         fb.credentials      = { 'username' => 'managed_username' }
         fb.syslog_drain_url = 'syslog://mydrain.example.com'
-        fb.volume_mounts    = [{ 'stuff' => 'thing', 'private' => { 'secret-stuff' => 'secret-thing' } }]
+        fb.volume_mounts    = [{ 'container_dir' => 'mount', 'private' => 'secret-thing' }]
         fb
       end
     end
@@ -311,7 +311,7 @@ RSpec.describe 'ServiceBindings' do
             'gateway_data'          => nil,
             'gateway_name'          => '',
             'syslog_drain_url'      => 'syslog://mydrain.example.com',
-            'volume_mounts'         => [{ 'stuff' => 'thing' }],
+            'volume_mounts'         => [{ 'container_dir' => 'mount' }],
             'app_url'               => "/v2/apps/#{process.guid}",
             'service_instance_url'  => "/v2/service_instances/#{service_instance.guid}"
           }
