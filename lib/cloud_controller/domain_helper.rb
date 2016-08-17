@@ -11,7 +11,7 @@ module CloudController
     end
 
     def self.is_sub_domain?(domain:, test_domains:)
-      return false if test_domains.length == 1 && domain == test_domains.first
+      return true if test_domains.length == 1 && domain == test_domains.first
       test_domains.any? do |test_domain|
         if test_domain != domain
           intermediate_domains(test_domain).include?(domain)

@@ -167,7 +167,7 @@ module VCAP::CloudController
       let(:config) do
         {
           app_domains: app_domains,
-          system_domain: 'system.example.com',
+          system_domain: system_domain,
           system_domain_organization: 'the-system-org',
           quota_definitions: {
             'default' => {
@@ -181,6 +181,7 @@ module VCAP::CloudController
         }
       end
       let(:system_org) { Organization.find(name: 'the-system-org') }
+      let(:system_domain) { 'system.example.com' }
 
       before do
         Domain.dataset.destroy
@@ -191,11 +192,12 @@ module VCAP::CloudController
       end
 
       context 'when the app domains do not include the system domain' do
-        let(:app_domains) { ['app.example.com'] }
+        let(:app_domains) { ['app.some-other-domain.com'] }
 
-        it 'makes a shared domain for each app domain, including the system domain' do
+        it 'makes a shared domain for each app domain, and a private domain for the system domain' do
           Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
-          expect(Domain.shared_domains.map(&:name)).to eq(['app.example.com'])
+          expect(Domain.shared_domains.map(&:name)).to eq(['app.some-other-domain.com'])
+          expect(Domain.private_domains.map(&:name)).to eq(['system.example.com'])
         end
 
         it 'raises if the system org is not specified' do
@@ -221,67 +223,107 @@ module VCAP::CloudController
           )
           Seeds.create_seed_domains(config, system_org)
         end
-      end
 
-      context 'when the app domains include the system domain' do
-        let(:app_domains) { ['app.example.com'] }
+        context 'when the app domains include a subdomain of the system domain' do
+          let(:app_domains) { ['app.example.com'] }
+          let(:system_domain) { 'example.com' }
 
-        before do
-          config[:app_domains] << config[:system_domain]
+          it 'adds both as shared domains' do
+            Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
+            expect(Domain.shared_domains.map(&:name)).to eq(['app.example.com', 'example.com'])
+            expect(Domain.private_domains.map(&:name)).to eq([])
+          end
         end
 
-        it 'makes a shared domain for each app domain, including the system domain' do
-          Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
-          expect(Domain.shared_domains.map(&:name)).to eq(config[:app_domains])
-        end
-      end
+        context 'when the system domain already exists as a shared domain' do
+          let(:app_domains) { ['app.example.com'] }
+          let(:system_domain) { 'system.example.com' }
 
-      context 'when a router group name is specified' do
-        let(:client) { instance_double(VCAP::CloudController::RoutingApi::Client, enabled?: true) }
-        let(:app_domains) { [{ 'name' => 'app.example.com', 'router_group_name' => 'default-tcp' }] }
+          before do
+            SharedDomain.make(name: 'system.example.com')
+          end
 
-        before do
-          locator = CloudController::DependencyLocator.instance
-          allow(locator).to receive(:routing_api_client).and_return(client)
-          allow(client).to receive(:router_group_guid).with('default-tcp').and_return('some-router-guid')
-        end
-
-        it 'seeds the shared domains with the router group guid' do
-          Seeds.create_seed_domains(config, system_org)
-          expect(Domain.shared_domains.map(&:name)).to eq(['app.example.com'])
-          expect(Domain.shared_domains.map(&:router_group_guid)).to eq(['some-router-guid'])
-        end
-      end
-
-      context 'when a nonexistent router group name is specified' do
-        let(:app_domains) { [{ 'name' => 'app.example.com', 'router_group_name' => 'not-there' }] }
-        let(:client) { instance_double(VCAP::CloudController::RoutingApi::Client, enabled?: true) }
-        before do
-          locator = CloudController::DependencyLocator.instance
-          allow(locator).to receive(:routing_api_client).and_return(client)
-          allow(client).to receive(:router_group_guid).and_return(nil)
+          it 'that shared domain is not modified' do
+            Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
+            expect(Domain.shared_domains.map(&:name)).to match_array(['app.example.com', 'system.example.com'])
+            expect(Domain.private_domains.map(&:name)).to eq([])
+          end
         end
 
-        it 'raises and error' do
-          expect {
+        context 'when the app domain is one of the system hostnames + system domain' do
+          let(:app_domains) { ['uaa.example.com'] }
+          let(:system_domain) { 'example.com' }
+
+          before do
+            Config.config[:system_hostnames]  = ["api", "uaa"]
+            SharedDomain.make(name: 'example.com')
+          end
+
+          it 'returns an error about app domain overlapping with system hostnames' do
+            expect { Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org')) }.to raise_error(RuntimeError, /App domain cannot overlap with reserved system hostnames/)
+          end
+        end
+
+        context 'when the app domains include the system domain' do
+          let(:app_domains) { ['app.example.com'] }
+
+          before do
+            config[:app_domains] << config[:system_domain]
+          end
+
+          it 'makes a shared domain for each app domain, including the system domain' do
+            Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
+            expect(Domain.shared_domains.map(&:name)).to eq(config[:app_domains])
+          end
+        end
+
+        context 'when a router group name is specified' do
+          let(:client) { instance_double(VCAP::CloudController::RoutingApi::Client, enabled?: true) }
+          let(:app_domains) { [{'name' => 'app.example.com', 'router_group_name' => 'default-tcp'}] }
+
+          before do
+            locator = CloudController::DependencyLocator.instance
+            allow(locator).to receive(:routing_api_client).and_return(client)
+            allow(client).to receive(:router_group_guid).with('default-tcp').and_return('some-router-guid')
+          end
+
+          it 'seeds the shared domains with the router group guid' do
             Seeds.create_seed_domains(config, system_org)
-          }.to raise_error('Unknown router_group_name specified: not-there')
-        end
-      end
-
-      context 'when routing api is disabled' do
-        let(:disabled_client) { RoutingApi::DisabledClient.new }
-        let(:app_domains) { [{ 'name' => 'app.example.com', 'router_group_name' => 'default-tcp' }] }
-
-        before do
-          locator = CloudController::DependencyLocator.instance
-          allow(locator).to receive(:routing_api_client).and_return(disabled_client)
+            expect(Domain.shared_domains.map(&:name)).to eq(['app.example.com'])
+            expect(Domain.shared_domains.map(&:router_group_guid)).to eq(['some-router-guid'])
+          end
         end
 
-        it 'raises an error' do
-          expect {
-            Seeds.create_seed_domains(config, system_org)
-          }.to raise_error(RoutingApi::RoutingApiDisabled)
+        context 'when a nonexistent router group name is specified' do
+          let(:app_domains) { [{'name' => 'app.example.com', 'router_group_name' => 'not-there'}] }
+          let(:client) { instance_double(VCAP::CloudController::RoutingApi::Client, enabled?: true) }
+          before do
+            locator = CloudController::DependencyLocator.instance
+            allow(locator).to receive(:routing_api_client).and_return(client)
+            allow(client).to receive(:router_group_guid).and_return(nil)
+          end
+
+          it 'raises and error' do
+            expect {
+              Seeds.create_seed_domains(config, system_org)
+            }.to raise_error('Unknown router_group_name specified: not-there')
+          end
+        end
+
+        context 'when routing api is disabled' do
+          let(:disabled_client) { RoutingApi::DisabledClient.new }
+          let(:app_domains) { [{'name' => 'app.example.com', 'router_group_name' => 'default-tcp'}] }
+
+          before do
+            locator = CloudController::DependencyLocator.instance
+            allow(locator).to receive(:routing_api_client).and_return(disabled_client)
+          end
+
+          it 'raises an error' do
+            expect {
+              Seeds.create_seed_domains(config, system_org)
+            }.to raise_error(RoutingApi::RoutingApiDisabled)
+          end
         end
       end
     end
