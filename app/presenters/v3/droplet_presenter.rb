@@ -44,7 +44,7 @@ module VCAP::CloudController
         end
 
         def result_for_lifecycle
-          return nil unless DropletModel::COMPLETED_STATES.include?(droplet.state)
+          return nil unless droplet.in_final_state?
 
           lifecycle_result = if droplet.lifecycle_type == Lifecycles::BUILDPACK
                                {

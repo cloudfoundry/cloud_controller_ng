@@ -35,7 +35,7 @@ module VCAP::CloudController
     private
 
     def fire_and_forget_staging_cancel(droplet)
-      return if DropletModel::COMPLETED_STATES.include?(droplet.state)
+      return if droplet.in_final_state?
       @stagers.stager_for_app(droplet.app).stop_stage(droplet.guid)
     rescue => e
       logger.error("failed to request staging cancelation for droplet: #{droplet.guid}, error: #{e.message}")

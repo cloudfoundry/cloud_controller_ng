@@ -103,13 +103,6 @@ module VCAP::CloudController
             expect(last_response.body).to match /MessageParseError/
           end
         end
-
-        it 'expires any old droplets' do
-          allow_any_instance_of(Diego::Stager).to receive(:staging_complete)
-          allow(Config).to receive(:config) { {} }
-          expect_any_instance_of(BitsExpiration).to receive(:expire_droplets!)
-          post url, MultiJson.dump(staging_response)
-        end
       end
     end
   end

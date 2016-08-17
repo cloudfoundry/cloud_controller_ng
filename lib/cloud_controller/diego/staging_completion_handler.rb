@@ -87,6 +87,8 @@ module VCAP::CloudController
           rescue => e
             logger.error(logger_prefix + 'saving-staging-result-failed', staging_guid: droplet.guid, response: payload, error: e.message)
           end
+
+          BitsExpiration.new.expire_droplets!(droplet.app)
         end
       end
 

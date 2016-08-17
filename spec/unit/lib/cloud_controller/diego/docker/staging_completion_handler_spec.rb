@@ -42,6 +42,11 @@ module VCAP::CloudController
               }.from(false).to(true)
             end
 
+            it 'expires any old droplets' do
+              expect_any_instance_of(BitsExpiration).to receive(:expire_droplets!)
+              subject.staging_complete(payload)
+            end
+
             context 'when staging result is returned' do
               before do
                 payload[:result][:process_types] = {

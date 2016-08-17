@@ -82,6 +82,11 @@ module VCAP::CloudController
                 expect(droplet.buildpack_receipt_detect_output).to eq('INTERCAL')
               end
 
+              it 'expires any old droplets' do
+                expect_any_instance_of(BitsExpiration).to receive(:expire_droplets!)
+                subject.staging_complete(success_response)
+              end
+
               context 'when process_types is empty' do
                 before do
                   success_response[:result][:process_types] = nil

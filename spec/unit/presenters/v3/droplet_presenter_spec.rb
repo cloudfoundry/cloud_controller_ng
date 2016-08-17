@@ -73,9 +73,9 @@ module VCAP::CloudController::Presenters::V3
         end
 
         describe 'result' do
-          context 'when droplet is in a "complete" state' do
+          context 'when droplet is in a "final" state' do
             before do
-              droplet.state = VCAP::CloudController::DropletModel::COMPLETED_STATES.first
+              droplet.state = VCAP::CloudController::DropletModel::FINAL_STATES.first
               droplet.save
             end
 
