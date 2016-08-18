@@ -117,7 +117,7 @@ module VCAP::CloudController
         end
 
         it 'is not valid' do
-          message = AppCreateMessage.new(params)
+          message = TaskCreateMessage.new(params)
 
           expect(message).not_to be_valid
           expect(message.errors_on(:environment_variables)).to include('must be a hash')
