@@ -15,7 +15,7 @@ RSpec.describe 'v3 service bindings' do
           fb                  = FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
           fb.credentials      = { 'username' => 'managed_username' }
           fb.syslog_drain_url = 'syslog://mydrain.example.com'
-          fb.volume_mounts    = [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }]
+          fb.volume_mounts    = [{ 'driver' => 'a', 'container_dir' => 'a', 'mode' => 'rw', 'device_type' => 'shared', 'device' => { 'volume_id' => 'a' } }]
           fb
         end
       end
@@ -45,7 +45,9 @@ RSpec.describe 'v3 service bindings' do
             'syslog_drain_url' => 'syslog://mydrain.example.com',
             'volume_mounts' => [
               {
-                'container_dir' => 'some-path',
+                'device_type' => 'shared',
+                'container_dir' => 'a',
+                'mode' => 'rw'
               }
             ]
           },
@@ -225,7 +227,7 @@ RSpec.describe 'v3 service bindings' do
         app:              app_model,
         credentials:      { 'username' => 'managed_username' },
         syslog_drain_url: 'syslog://mydrain.example.com',
-        volume_mounts:    [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }],
+        volume_mounts:    [{ 'driver' => 'a', 'container_dir' => 'a', 'mode' => 'rw', 'device_type' => 'shared', 'device' => { 'volume_id' => 'a' } }],
       )
     end
 
@@ -242,7 +244,11 @@ RSpec.describe 'v3 service bindings' do
             'username' => 'managed_username'
           },
           'syslog_drain_url' => 'syslog://mydrain.example.com',
-          'volume_mounts' => [{ 'container_dir' => 'some-path' }]
+          'volume_mounts' => [{
+            'device_type' => 'shared',
+            'container_dir' => 'a',
+            'mode' => 'rw'
+          }]
         },
         'created_at' => iso8601,
         'updated_at' => nil,
@@ -286,7 +292,7 @@ RSpec.describe 'v3 service bindings' do
       app:              app_model,
       credentials:      { 'binding1' => 'shtuff' },
       syslog_drain_url: 'syslog://binding1.example.com',
-      volume_mounts:    [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }],
+      volume_mounts:    [],
     )
     }
     let!(:service_binding2) { VCAP::CloudController::ServiceBindingModel.make(
@@ -294,7 +300,7 @@ RSpec.describe 'v3 service bindings' do
       app:              app_model,
       credentials:      { 'binding2' => 'things' },
       syslog_drain_url: 'syslog://binding2.example.com',
-      volume_mounts:    [{ 'stuff2' => 'thing2', 'container_dir' => 'some-path' }],
+      volume_mounts:    [],
     )
     }
 
@@ -321,7 +327,7 @@ RSpec.describe 'v3 service bindings' do
                 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
               },
               'syslog_drain_url' => 'syslog://binding1.example.com',
-              'volume_mounts' => [{ 'container_dir' => 'some-path' }]
+              'volume_mounts' => []
             },
             'created_at' => iso8601,
             'updated_at' => nil,
@@ -345,7 +351,7 @@ RSpec.describe 'v3 service bindings' do
                 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
               },
               'syslog_drain_url' => 'syslog://binding2.example.com',
-              'volume_mounts' => [{ 'container_dir' => 'some-path' }]
+              'volume_mounts' => []
             },
             'created_at' => iso8601,
             'updated_at' => nil,
@@ -378,7 +384,7 @@ RSpec.describe 'v3 service bindings' do
                                                           app: app_model2,
                                                           credentials: { 'utako' => 'secret' },
                                                           syslog_drain_url: 'syslog://example.com',
-                                                          volume_mounts:    [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }],
+                                                          volume_mounts:    [],
                                                          )
         end
         let(:app_model3) { VCAP::CloudController::AppModel.make(space: space) }
@@ -387,7 +393,7 @@ RSpec.describe 'v3 service bindings' do
                                                           app: app_model3,
                                                           credentials: { 'amelia' => 'apples' },
                                                           syslog_drain_url: 'www.neopets.com',
-                                                          volume_mounts:    [{ 'stuff2' => 'thing2', 'container_dir' => 'some-path' }],
+                                                          volume_mounts:    [],
                                                          )
         end
 

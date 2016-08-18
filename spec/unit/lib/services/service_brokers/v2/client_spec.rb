@@ -980,7 +980,14 @@ module VCAP::Services::ServiceBrokers::V2
 
         let(:response_data) do
           {
-            'volume_mounts' => [{ 'mount' => 'olympus' }, { 'mount' => 'everest' }]
+            'volume_mounts' => [
+              { 'device_type' => 'none',
+                'device' => { 'volume_id' => 'none', 'mount_config' => { 'key' => 'val' } },
+                'mode' => 'none',
+                'container_dir' => 'none',
+                'driver' => 'none'
+              }
+            ]
           }
         end
 
@@ -990,7 +997,7 @@ module VCAP::Services::ServiceBrokers::V2
           binding.set_all(attributes)
           binding.save
 
-          expect(binding.volume_mounts).to match_array([{ 'mount' => 'olympus' }, { 'mount' => 'everest' }])
+          expect(binding.volume_mounts).to match_array(response_data['volume_mounts'])
         end
 
         context 'when the volume mounts cause an error to be raised' do

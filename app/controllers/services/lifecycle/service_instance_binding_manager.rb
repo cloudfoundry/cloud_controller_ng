@@ -12,6 +12,7 @@ module VCAP::CloudController
     class AppNotFound < StandardError; end
     class RouteServiceDisabled < StandardError; end
     class VolumeMountServiceDisabled < StandardError; end
+    class InvalidVolumeMount < StandardError; end
 
     include VCAP::CloudController::LockCheck
 
@@ -97,6 +98,7 @@ module VCAP::CloudController
       rescue => e
         @logger.error "Failed to save state of create for service binding #{service_binding.guid} with exception: #{e}"
         mitigate_orphan(service_binding)
+        raise InvalidVolumeMount if e.instance_of?(ServiceBinding::InvalidVolumeMount)
         raise e
       end
 

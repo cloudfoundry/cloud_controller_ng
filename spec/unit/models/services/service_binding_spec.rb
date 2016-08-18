@@ -15,13 +15,67 @@ module VCAP::CloudController
       it { is_expected.to validate_db_presence :credentials }
       it { is_expected.to validate_uniqueness [:app_id, :service_instance_id] }
 
-      it 'validates max length of volume_mounts' do
-        too_long = 'a' * (65_535 + 1)
+      it 'validates max length of volume_mounts', focus: true do
+        too_long = 'a' * 65_535
+        bad_mount = '[{"driver":"foo", "container_dir":"/", "mode":"rw", "device_type":"shared", "device":{"volume_id":"a", "mount_config":{"a":"' +
+            too_long + '"}}}]'
 
         binding = ServiceBinding.make
-        binding.volume_mounts = too_long
+        binding.volume_mounts = bad_mount
 
         expect { binding.save }.to raise_error(Sequel::ValidationFailed, /volume_mounts max_length/)
+      end
+
+      def verify_mount_option(bad_mount, exception, content)
+        binding = ServiceBinding.make
+        binding.volume_mounts = bad_mount
+        expect { binding.save }.to raise_error(exception, content)
+      end
+
+      it 'validates that volume_mounts have a device type' do
+        bad_mount = '[{"driver":"foo", "container_dir":"/", "mode":"rw", "device":{"volume_id":"a", "mount_config":{}}}]'
+
+        verify_mount_option(bad_mount, ServiceBinding::InvalidVolumeMount, /device_type/)
+      end
+      it 'validates that volume_mounts have a device' do
+        bad_mount = '[{"driver":"foo", "container_dir":"/", "device_type":"shared", "mode":"rw"}]'
+
+        verify_mount_option(bad_mount, ServiceBinding::InvalidVolumeMount, /'device'/)
+      end
+      it 'validates that volume_mounts have a mode' do
+        bad_mount = '[{"driver":"foo", "container_dir":"/", "device_type":"shared", "device":{"volume_id":"a", "mount_config":{}}}]'
+
+        verify_mount_option(bad_mount, ServiceBinding::InvalidVolumeMount, /mode/)
+      end
+      it 'validates that volume_mounts have a container_dir' do
+        bad_mount = '[{"driver":"foo", "device_type":"shared", "mode":"rw", "device":{"volume_id":"a", "mount_config":{}}}]'
+
+        verify_mount_option(bad_mount, ServiceBinding::InvalidVolumeMount, /container_dir/)
+      end
+      it 'validates that volume_mounts have a driver' do
+        bad_mount = '[{"container_dir":"/", "device_type":"shared", "mode":"rw", "device":{"volume_id":"a", "mount_config":{}}}]'
+
+        verify_mount_option(bad_mount, ServiceBinding::InvalidVolumeMount, /driver/)
+      end
+      it 'validates that volume_mounts is an array' do
+        bad_mount = '{"driver":"foo", "container_dir":"/", "device_type":"shared", "mode":"rw", "device":{"volume_id":"a", "mount_config":{}}}'
+
+        verify_mount_option(bad_mount, ServiceBinding::InvalidVolumeMount, /must be an Array/)
+      end
+      it 'validates that volume_mounts elements are json objects' do
+        bad_mount = '[{"driver":"foo", "container_dir":"/", "device_type":"shared", "mode":"rw", "device":{"volume_id":"a", "mount_config":{}}}, "extra junk"]'
+
+        verify_mount_option(bad_mount, ServiceBinding::InvalidVolumeMount, /must be an object/)
+      end
+      it 'validates that volume_mounts.device elements are json objects' do
+        bad_mount = '[{"driver":"foo", "container_dir":"/", "device_type":"shared", "mode":"rw", "device":"junk"}]'
+
+        verify_mount_option(bad_mount, ServiceBinding::InvalidVolumeMount, /must be an object/)
+      end
+      it 'validates that volume_mounts.device.mount_config elements are json objects' do
+        bad_mount = '[{"driver":"foo", "container_dir":"/", "device_type":"shared", "mode":"rw", "device":{"volume_id":"a", "mount_config":["junk"]}}]'
+
+        verify_mount_option(bad_mount, ServiceBinding::InvalidVolumeMount, /must be an object/)
       end
 
       describe 'changing the binding after creation' do
@@ -55,10 +109,10 @@ module VCAP::CloudController
 
     describe 'Serialization' do
       it { is_expected.to export_attributes :app_guid, :service_instance_guid, :credentials, :binding_options,
-                                    :gateway_data, :gateway_name, :syslog_drain_url
+                                            :gateway_data, :gateway_name, :syslog_drain_url
       }
       it { is_expected.to import_attributes :app_guid, :service_instance_guid, :credentials,
-                                    :binding_options, :gateway_data, :syslog_drain_url
+                                            :binding_options, :gateway_data, :syslog_drain_url
       }
     end
 
@@ -129,7 +183,7 @@ module VCAP::CloudController
 
     describe '#in_suspended_org?' do
       let(:app) { VCAP::CloudController::App.make }
-      subject(:service_binding) {  VCAP::CloudController::ServiceBinding.new(app: app) }
+      subject(:service_binding) { VCAP::CloudController::ServiceBinding.new(app: app) }
 
       context 'when in a suspended organization' do
         before { allow(app).to receive(:in_suspended_org?).and_return(true) }

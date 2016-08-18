@@ -519,6 +519,18 @@ module VCAP::CloudController
               expect(orphan_mitigation_job).to be_a_fully_wrapped_job_of Jobs::Services::DeleteOrphanedBinding
             end
           end
+
+          context 'when the broker returns a volume_mount that is poorly formatted' do
+            let(:instance) { ManagedServiceInstance.make(:volume_mount, space: space) }
+            let(:bind_body) { { 'volume_mounts' => [{ 'thing': 'other thing' }] } }
+
+            it 'returns CF-InvalidVolumeMount' do
+              make_request
+              expect(last_response).to have_status_code 502
+              expect(decoded_response['error_code']).to eq 'CF-InvalidVolumeMount'
+              post '/v2/service_bindings', req.to_json
+            end
+          end
         end
       end
     end

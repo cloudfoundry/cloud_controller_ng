@@ -41,6 +41,8 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', @request_attrs['app_guid'])
     rescue ServiceInstanceBindingManager::VolumeMountServiceDisabled
       raise CloudController::Errors::ApiError.new_from_details('VolumeMountServiceDisabled')
+    rescue ServiceInstanceBindingManager::InvalidVolumeMount
+      raise CloudController::Errors::ApiError.new_from_details('InvalidVolumeMount')
     end
 
     delete path_guid, :delete

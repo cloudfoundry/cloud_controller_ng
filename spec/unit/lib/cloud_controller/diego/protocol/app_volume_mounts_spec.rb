@@ -17,8 +17,8 @@ module VCAP::CloudController
                 container_dir: '/data/images',
                 mode: 'r',
                 device_type: 'shared',
+                driver: 'cephfs',
                 device: {
-                    driver: 'cephfs',
                     volume_id: 'abc',
                     mount_config: {
                         key: 'value'
@@ -29,8 +29,8 @@ module VCAP::CloudController
                 container_dir: '/data/scratch',
                 mode: 'rw',
                 device_type: 'shared',
+                driver: 'local',
                 device: {
-                    driver: 'local',
                     volume_id: 'def',
                     mount_config: {}
                 }
@@ -44,8 +44,8 @@ module VCAP::CloudController
                 container_dir: '/data/videos',
                 mode: 'rw',
                 device_type: 'shared',
+                driver: 'local',
                 device: {
-                    driver: 'local',
                     volume_id: 'ghi',
                     mount_config: {
                         foo: 'bar'
@@ -64,8 +64,8 @@ module VCAP::CloudController
                 'container_dir' => '/data/images',
                 'mode' => 'r',
                 'device_type' => 'shared',
+                'driver' => 'cephfs',
                 'device' => {
-                    'driver' => 'cephfs',
                     'volume_id' => 'abc',
                     'mount_config' => {
                         'key' => 'value',
@@ -76,8 +76,8 @@ module VCAP::CloudController
                 'container_dir' => '/data/scratch',
                 'mode' => 'rw',
                 'device_type' => 'shared',
+                'driver' => 'local',
                 'device' => {
-                    'driver' => 'local',
                     'volume_id' => 'def',
                     'mount_config' => {},
                 },
@@ -88,8 +88,8 @@ module VCAP::CloudController
                 'mode' => 'rw',
 
                 'device_type' => 'shared',
+                'driver' => 'local',
                 'device' => {
-                  'driver' => 'local',
                   'volume_id' => 'ghi',
                   'mount_config' => {
                       'foo' => 'bar',
@@ -109,8 +109,8 @@ module VCAP::CloudController
                 'mode' => 'rw',
 
                 'device_type' => 'shared',
+                'driver' => 'local',
                 'device' => {
-                    'driver' => 'local',
                     'volume_id' => 'ghi',
                     'mount_config' => {
                         'foo' => 'bar',

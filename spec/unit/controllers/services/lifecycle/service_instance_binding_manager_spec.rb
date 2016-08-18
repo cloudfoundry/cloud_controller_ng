@@ -612,7 +612,9 @@ module VCAP::CloudController
         let(:volume_mount_services_enabled) { true }
 
         before do
-          stub_bind(service_instance, body: { volume_mounts: [{ "thing": 'other thing' }] }.to_json)
+          stub_bind(service_instance, body: { volume_mounts: [
+            { 'device_type': 'none', 'device': { 'volume_id': 'none', 'mount_config': { 'key': 'val' } }, 'mode': 'none', 'container_dir': 'none', 'driver': 'none' }
+          ] }.to_json)
           stub_unbind_for_instance(service_instance)
         end
 
@@ -622,6 +624,23 @@ module VCAP::CloudController
           }.to raise_error do |e|
             expect(e).to be_a(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerInvalidVolumeMounts)
             expect(e.message).to include('not registered as a volume mount service')
+          end
+          expect(ServiceBinding.count).to eq(0)
+        end
+
+        it 'raises an error for volume_mounts that are poorly formatted' do
+          stub_bind(service_instance, body: { volume_mounts: [
+            { 'device_type': 'none', 'device': 'foo', 'mode': 'none', 'container_dir': 'none', 'driver': 'none' }
+          ] }.to_json)
+          stub_unbind_for_instance(service_instance)
+
+          service_instance.service.requires = ['volume_mount']
+          service_instance.service.save
+
+          expect {
+            manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
+          }.to raise_error do |e|
+            expect(e.message).to include("required field 'device' must be an object but is")
           end
           expect(ServiceBinding.count).to eq(0)
         end
