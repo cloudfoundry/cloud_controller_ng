@@ -255,12 +255,13 @@ module VCAP::CloudController
           let(:system_domain) { 'example.com' }
 
           before do
-            Config.config[:system_hostnames]  = ["api", "uaa"]
+            Config.config[:system_hostnames] = ['api', 'uaa']
             SharedDomain.make(name: 'example.com')
           end
 
           it 'returns an error about app domain overlapping with system hostnames' do
-            expect { Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org')) }.to raise_error(RuntimeError, /App domain cannot overlap with reserved system hostnames/)
+            expect { Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org')) }
+              .to raise_error(RuntimeError, /App domain cannot overlap with reserved system hostnames/)
           end
         end
 
@@ -279,7 +280,7 @@ module VCAP::CloudController
 
         context 'when a router group name is specified' do
           let(:client) { instance_double(VCAP::CloudController::RoutingApi::Client, enabled?: true) }
-          let(:app_domains) { [{'name' => 'app.example.com', 'router_group_name' => 'default-tcp'}] }
+          let(:app_domains) { [{ 'name' => 'app.example.com', 'router_group_name' => 'default-tcp' }] }
 
           before do
             locator = CloudController::DependencyLocator.instance
@@ -295,7 +296,7 @@ module VCAP::CloudController
         end
 
         context 'when a nonexistent router group name is specified' do
-          let(:app_domains) { [{'name' => 'app.example.com', 'router_group_name' => 'not-there'}] }
+          let(:app_domains) { [{ 'name' => 'app.example.com', 'router_group_name' => 'not-there' }] }
           let(:client) { instance_double(VCAP::CloudController::RoutingApi::Client, enabled?: true) }
           before do
             locator = CloudController::DependencyLocator.instance
@@ -312,7 +313,7 @@ module VCAP::CloudController
 
         context 'when routing api is disabled' do
           let(:disabled_client) { RoutingApi::DisabledClient.new }
-          let(:app_domains) { [{'name' => 'app.example.com', 'router_group_name' => 'default-tcp'}] }
+          let(:app_domains) { [{ 'name' => 'app.example.com', 'router_group_name' => 'default-tcp' }] }
 
           before do
             locator = CloudController::DependencyLocator.instance

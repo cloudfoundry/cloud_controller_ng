@@ -64,14 +64,14 @@ module VCAP::CloudController
           SharedDomain.find_or_create(domain_name, router_group_guid)
         end
 
-        if CloudController::DomainHelper.is_sub_domain?(domain: system_domain, test_domains: domains.map {|domain_hash| domain_hash['name'] } )
-          for hostnames in Config.config[:system_hostnames]
+        if CloudController::DomainHelper.is_sub_domain?(domain: system_domain, test_domains: domains.map { |domain_hash| domain_hash['name'] })
+          Config.config[:system_hostnames].each do |hostnames|
             domains.each do |app_domain|
-              raise "App domain cannot overlap with reserved system hostnames" if hostnames+'.'+system_domain == app_domain['name']
+              raise 'App domain cannot overlap with reserved system hostnames' if hostnames + '.' + system_domain == app_domain['name']
             end
           end
 
-          router_group_guid = find_routing_guid({'name' => system_domain})
+          router_group_guid = find_routing_guid({ 'name' => system_domain })
           SharedDomain.find_or_create(system_domain, router_group_guid)
         else
           raise 'A system_domain_organization must be provided if the system_domain is not shared with (in the list of) app_domains' unless system_org
@@ -83,7 +83,7 @@ module VCAP::CloudController
               Steno.logger('cc.seeds').warn('seeds.system-domain.collision', organization: domain.owning_organization)
             end
           else
-            PrivateDomain.create({owning_organization: system_org, name: system_domain})
+            PrivateDomain.create({ owning_organization: system_org, name: system_domain })
           end
         end
       end
@@ -94,8 +94,6 @@ module VCAP::CloudController
           router_group_guid = routing_api_client.router_group_guid(router_group_name)
           raise "Unknown router_group_name specified: #{router_group_name}" if router_group_guid.nil?
           router_group_guid
-        else
-          nil
         end
       end
 
