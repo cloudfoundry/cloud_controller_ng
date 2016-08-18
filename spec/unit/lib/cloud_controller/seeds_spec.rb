@@ -260,8 +260,8 @@ module VCAP::CloudController
           end
 
           it 'returns an error about app domain overlapping with system hostnames' do
-            expect { Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org')) }
-              .to raise_error(RuntimeError, /App domain cannot overlap with reserved system hostnames/)
+            expect { Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org')) }.
+              to raise_error(RuntimeError, /App domain cannot overlap with reserved system hostnames/)
           end
         end
 
