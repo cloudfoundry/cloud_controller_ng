@@ -6,10 +6,10 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/cf-uaa-lib.git
-  revision: b1e11235dc6cd7d8d4680e005526de37201305ea
-  ref: b1e11235dc6cd7d8d4680e005526de37201305ea
+  revision: db8fe11b56a1d008131a7d757b49c8a00242b9ab
+  ref: db8fe11b56a1d008131a7d757b49c8a00242b9ab
   specs:
-    cf-uaa-lib (3.1.0)
+    cf-uaa-lib (3.6.0)
       multi_json
 
 GIT
@@ -434,7 +434,7 @@ DEPENDENCIES
   bits_service_client!
   byebug
   cf-message-bus (~> 0.3.0)
-  cf-uaa-lib (~> 3.1.0)!
+  cf-uaa-lib!
   clockwork
   cloudfront-signer
   codeclimate-test-reporter

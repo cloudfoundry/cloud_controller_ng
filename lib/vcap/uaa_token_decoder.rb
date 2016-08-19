@@ -48,14 +48,21 @@ module VCAP
 
     def decode_token_with_asymmetric_key(auth_token)
       tries = 2
-      begin
+      last_error = nil
+      while tries > 0 do
         tries -= 1
-        decode_token_with_key(auth_token, pkey: asymmetric_key.value)
-      rescue CF::UAA::InvalidSignature
+        asymmetric_key.value.each do |key|
+          begin
+            return decode_token_with_key(auth_token, pkey: key)
+          rescue CF::UAA::InvalidSignature => e
+            last_error = e
+          end
+        end
         asymmetric_key.refresh
-        tries > 0 ? retry : raise
       end
+      raise last_error
     end
+
 
     def decode_token_with_key(auth_token, options)
       options = { audience_ids: config[:resource_id] }.merge(options)
@@ -72,8 +79,8 @@ module VCAP
     end
 
     def asymmetric_key
-      info = CF::UAA::Info.new(config[:url], {skip_ssl_validation: true})
-      @asymmetric_key ||= UaaVerificationKey.new(config[:verification_key], info)
+      info = CF::UAA::Info.new(config[:url], { skip_ssl_validation: true })
+      @asymmetric_key ||= UaaVerificationKeys.new(config[:verification_key], info)
     end
   end
 end
