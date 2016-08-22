@@ -13,6 +13,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:name]).to eq(label.name)
         expect(result[:created_at]).to eq(label.created_at)
         expect(result[:updated_at]).to eq(label.updated_at)
+        expect(result[:links]).to include(:self)
       end
     end
   end
