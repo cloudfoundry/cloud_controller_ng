@@ -42,6 +42,20 @@ class IsolationSegmentsController < ApplicationController
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset, '/v3/isolation_segments', message)
   end
 
+  def destroy
+    unauthorized! unless roles.admin?
+
+    isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
+    resource_not_found!(:isolation_segment) unless isolation_segment_model
+
+    isolation_segment_model.db.transaction do
+      isolation_segment_model.lock!
+      isolation_segment_model.destroy
+    end
+
+    head :no_content
+  end
+
   private
 
     def filter(message, dataset)

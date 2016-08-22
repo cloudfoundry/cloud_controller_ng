@@ -184,4 +184,44 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       end
     end
   end
+
+  describe '#destroy' do
+    let(:isolation_segment_model1) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:isolation_segment_model2) { VCAP::CloudController::IsolationSegmentModel.make }
+
+    context 'when the user is admin' do
+      before do
+        set_current_user_as_admin
+      end
+
+      context 'when the isolation segment exists' do
+        it 'returns a 204 and deletes only the specified isolation segment' do
+          delete :destroy, guid: isolation_segment_model1.guid
+
+          expect(response.status).to eq 204
+          expect{ isolation_segment_model1.reload }.to raise_error(Sequel::Error, 'Record not found')
+          expect{ isolation_segment_model2.reload }.to_not raise_error
+        end
+      end
+
+      context 'when the isolation segment does not exist' do
+        it 'returns a 404 not found' do
+          delete :destroy, guid: 'nonexistent-guid'
+
+          expect(response.status).to eq 404
+        end
+      end
+    end
+
+    context 'when the user is not admin' do
+      before do
+        allow_user_write_access(user, space: space)
+      end
+
+      it 'returns a 403' do
+        delete :destroy, guid: isolation_segment_model1.guid
+        expect(response.status).to eq 403
+      end
+    end
+  end
 end

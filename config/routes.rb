@@ -62,6 +62,7 @@ Rails.application.routes.draw do
   post '/isolation_segments', to: 'isolation_segments#create'
   get '/isolation_segments', to: 'isolation_segments#index'
   get '/isolation_segments/:guid', to: 'isolation_segments#show'
+  delete '/isolation_segments/:guid', to: 'isolation_segments#destroy'
 
   # service_bindings
   post '/service_bindings', to: 'service_bindings#create'
