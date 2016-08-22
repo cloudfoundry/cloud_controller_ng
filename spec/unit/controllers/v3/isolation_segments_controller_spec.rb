@@ -185,6 +185,79 @@ RSpec.describe IsolationSegmentsController, type: :controller do
     end
   end
 
+  describe '#update' do
+    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make(name: 'orig-name') }
+    let(:new_name) { 'new-name' }
+    let(:req_body) { { name: new_name } }
+
+    context 'when the user is admin' do
+      before do
+        set_current_user_as_admin
+      end
+
+      context 'when the isolation segment exists' do
+        it 'returns a 200 and the entity information with the updated name' do
+          put :update, guid: isolation_segment_model.guid, body: req_body
+
+          expect(response.status).to eq 200
+          expect(parsed_body['guid']).to eq(isolation_segment_model.guid)
+          expect(parsed_body['name']).to eq(new_name)
+          expect(parsed_body['links']['self']['href']).to eq("/v3/isolation_segments/#{isolation_segment_model.guid}")
+        end
+
+        context 'with a non-unique name' do
+          let(:another_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'i_am_unique') }
+          let(:req_body) { { name: another_segment.name } }
+
+          it 'returns a 422' do
+            put :update, guid: isolation_segment_model.guid, body: req_body
+
+            expect(response.status).to eq 422
+          end
+        end
+
+        context 'with an empty name' do
+          let(:another_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'name') }
+          let(:req_body) { { name: '' } }
+
+          it 'returns a 422' do
+            put :update, guid: isolation_segment_model.guid, body: req_body
+
+            expect(response.status).to eq 422
+          end
+        end
+
+        context 'with an invalid request body' do
+          let(:req_body) { { bork: 'some-name' } }
+
+          it 'returns a 422' do
+            post :create, body: req_body
+            expect(response.status).to eq 422
+          end
+        end
+      end
+
+      context 'when the isolation segment does not exist' do
+        it 'returns a 404' do
+          put :update, guid: 'nonexistent-guid', body: req_body
+
+          expect(response.status).to eq 404
+        end
+      end
+    end
+
+    context 'when the user is not admin' do
+      before do
+        allow_user_write_access(user, space: space)
+      end
+
+      it 'returns a 403' do
+        put :update, guid: isolation_segment_model.guid, body: req_body
+        expect(response.status).to eq 403
+      end
+    end
+  end
+
   describe '#destroy' do
     let(:isolation_segment_model1) { VCAP::CloudController::IsolationSegmentModel.make }
     let(:isolation_segment_model2) { VCAP::CloudController::IsolationSegmentModel.make }
@@ -199,8 +272,8 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           delete :destroy, guid: isolation_segment_model1.guid
 
           expect(response.status).to eq 204
-          expect{ isolation_segment_model1.reload }.to raise_error(Sequel::Error, 'Record not found')
-          expect{ isolation_segment_model2.reload }.to_not raise_error
+          expect { isolation_segment_model1.reload }.to raise_error(Sequel::Error, 'Record not found')
+          expect { isolation_segment_model2.reload }.to_not raise_error
         end
       end
 

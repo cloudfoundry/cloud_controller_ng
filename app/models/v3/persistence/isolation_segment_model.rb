@@ -4,7 +4,7 @@ module VCAP::CloudController
     ISOLATION_SEGMENT_MODEL_REGEX = /\A[[:print:]]+\Z/
 
     def validate
-      validates_format ISOLATION_SEGMENT_MODEL_REGEX, :name
+      validates_format ISOLATION_SEGMENT_MODEL_REGEX, :name, message: Sequel.lit('isolation segment names can only contain non-blank unicode characters')
 
       validates_unique [:name], message: Sequel.lit('isolation segment names are case insensitive and must be unique')
     end

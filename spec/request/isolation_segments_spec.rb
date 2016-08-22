@@ -73,7 +73,7 @@ RSpec.describe 'IsolationSegmentModels' do
       expect(last_response.status).to eq(200)
 
       expected_response = {
-        'pagination'  => {
+        'pagination' => {
           'total_results' =>  6,
           'total_pages'   =>  3,
           'first'         =>  { 'href' => '/v3/isolation_segments?page=1&per_page=2' },
@@ -81,10 +81,10 @@ RSpec.describe 'IsolationSegmentModels' do
           'next'          =>  { 'href' => '/v3/isolation_segments?page=2&per_page=2' },
           'previous'      =>  nil
         },
-        'resources'   =>  [
+        'resources' => [
           {
-            'guid'        =>  "#{models[0].guid}",
-            'name'        =>  "#{models[0].name}",
+            'guid'        =>  models[0].guid.to_s,
+            'name'        =>  models[0].name.to_s,
             'created_at'  =>  iso8601,
             'updated_at'  =>  nil,
             'links'       =>  {
@@ -92,8 +92,8 @@ RSpec.describe 'IsolationSegmentModels' do
             }
           },
           {
-            'guid'        =>  "#{models[1].guid}",
-            'name'        =>  "#{models[1].name}",
+            'guid'        =>  models[1].guid.to_s,
+            'name'        =>  models[1].name.to_s,
             'created_at'  =>  iso8601,
             'updated_at'  =>  nil,
             'links'       =>  {
@@ -142,6 +142,32 @@ RSpec.describe 'IsolationSegmentModels' do
       expect(last_response.status).to eq(200)
       expect(parsed_response['resources'].map { |r| r['name'] }).to eq([models[3].name, models[5].name])
       expect(parsed_response['pagination']).to eq(expected_pagination)
+    end
+  end
+
+  describe 'PUT /v3/isolation_segments/:guid' do
+    it 'updates the specified isolation segment' do
+      isolation_segment_model = VCAP::CloudController::IsolationSegmentModel.make(name: 'my_segment')
+
+      update_request = {
+        name:                  'your_segment'
+      }
+
+      expected_response = {
+        'name'       => 'your_segment',
+        'guid'       => isolation_segment_model.guid,
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+        'links'      => {
+          'self' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}" }
+        }
+      }
+
+      put "/v3/isolation_segments/#{isolation_segment_model.guid}", update_request, user_header
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 

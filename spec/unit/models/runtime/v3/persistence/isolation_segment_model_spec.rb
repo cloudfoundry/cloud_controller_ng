@@ -8,13 +8,13 @@ module VCAP::CloudController
       it 'requires a name' do
         expect {
           IsolationSegmentModel.make(name: nil)
-        }.to raise_error(Sequel::ValidationFailed)
+        }.to raise_error(Sequel::ValidationFailed, 'isolation segment names can only contain non-blank unicode characters')
       end
 
       it 'requires a non blank name' do
         expect {
           IsolationSegmentModel.make(name: '')
-        }.to raise_error(Sequel::ValidationFailed)
+        }.to raise_error(Sequel::ValidationFailed, 'isolation segment names can only contain non-blank unicode characters')
       end
 
       it 'requires a unique name' do
