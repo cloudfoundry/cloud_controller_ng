@@ -28,6 +28,11 @@ Sham.define do
 end
 
 module VCAP::CloudController
+  IsolationSegmentModel.blueprint do
+    guid { Sham.guid }
+    name { Sham.name }
+  end
+
   AppModel.blueprint do
     guid       { Sham.guid }
     name       { Sham.name }

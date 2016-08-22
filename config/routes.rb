@@ -58,6 +58,9 @@ Rails.application.routes.draw do
   post '/apps/:app_guid/tasks', to: 'tasks#create'
   get '/apps/:app_guid/tasks', to: 'tasks#index'
 
+  # isolation_segments
+  post '/isolation_segments', to: 'isolation_segments#create'
+
   # service_bindings
   post '/service_bindings', to: 'service_bindings#create'
   get '/service_bindings/:guid', to: 'service_bindings#show'
