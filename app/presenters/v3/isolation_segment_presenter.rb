@@ -6,16 +6,16 @@ module VCAP::CloudController
       class IsolationSegmentPresenter < BasePresenter
         def to_hash
           {
-            guid: label.guid,
-            name: label.name,
-            created_at: label.created_at,
-            updated_at: label.updated_at
+            guid: isolation_segment.guid,
+            name: isolation_segment.name,
+            created_at: isolation_segment.created_at,
+            updated_at: isolation_segment.updated_at
           }
         end
 
         private
 
-        def label
+        def isolation_segment
           @resource
         end
       end

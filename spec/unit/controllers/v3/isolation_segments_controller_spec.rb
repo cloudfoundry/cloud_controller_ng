@@ -15,7 +15,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         set_current_user_as_admin
       end
 
-      it 'returns a 201 Created  and the label' do
+      it 'returns a 201 Created  and the isolation segment' do
         post :create, body: req_body
 
         expect(response.status).to eq 201
