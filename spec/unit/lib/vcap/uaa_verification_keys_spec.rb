@@ -14,12 +14,12 @@ module VCAP
     describe '#value' do
       context 'when verification key is nil' do
         before { config_hash[:verification_key] = nil }
-        before { allow(uaa_info).to receive_messages(validation_keys_hash: {'key-name' => { 'value' => 'value-from-uaa' }}) }
+        before { allow(uaa_info).to receive_messages(validation_keys_hash: { 'key-name' => { 'value' => 'value-from-uaa' } }) }
 
         context 'when key was never fetched' do
           it 'is fetched' do
             expect(uaa_info).to receive(:validation_keys_hash)
-            expect(subject.value).to eq (['value-from-uaa'])
+            expect(subject.value).to eq ['value-from-uaa']
           end
         end
 
@@ -38,7 +38,7 @@ module VCAP
 
       context 'when verification key is an empty string' do
         before { config_hash[:verification_key] = '' }
-        before { allow(uaa_info).to receive_messages(validation_keys_hash: {'key-name' => { 'value' => 'value-from-uaa' }}) }
+        before { allow(uaa_info).to receive_messages(validation_keys_hash: { 'key-name' => { 'value' => 'value-from-uaa' } }) }
 
         context 'when key was never fetched' do
           it 'is fetched' do
@@ -64,7 +64,7 @@ module VCAP
     describe '#refresh' do
       context 'when config does not specify verification key' do
         before { config_hash[:verification_key] = nil }
-        before { allow(uaa_info).to receive_messages(validation_keys_hash: {'key-name' => { 'value' => 'value-from-uaa' }}) }
+        before { allow(uaa_info).to receive_messages(validation_keys_hash: { 'key-name' => { 'value' => 'value-from-uaa' } }) }
 
         context 'when key was never fetched' do
           it 'is fetched' do
