@@ -317,7 +317,7 @@ module VCAP::CloudController
       @router_group ||=
         begin
           router_group = routing_api_client.router_group(validated_domain.router_group_guid)
-          raise CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', "#{validated_domain.router_group_guid} could not be found") if router_group.nil?
+          raise CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', validated_domain.router_group_guid.to_s) if router_group.nil?
           router_group
         rescue RoutingApi::RoutingApiDisabled
           raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')

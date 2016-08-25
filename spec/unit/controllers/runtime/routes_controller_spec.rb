@@ -629,7 +629,7 @@ module VCAP::CloudController
               post '/v2/routes', MultiJson.dump(req)
 
               expect(last_response).to have_status_code(404)
-              expect(last_response.body).to include 'router group could not be found'
+              expect(last_response.body).to include '"The router group could not be found: abc"'
             end
           end
 
@@ -643,7 +643,7 @@ module VCAP::CloudController
               post '/v2/routes?generate_port=true', MultiJson.dump(req)
 
               expect(last_response).to have_status_code(404)
-              expect(last_response.body).to include 'router group could not be found'
+              expect(last_response.body).to include '"The router group could not be found: abc"'
             end
           end
 
@@ -657,7 +657,7 @@ module VCAP::CloudController
               post '/v2/routes', MultiJson.dump(req)
 
               expect(last_response).to have_status_code(404)
-              expect(last_response.body).to include 'router group could not be found'
+              expect(last_response.body).to include '"The router group could not be found: abc"'
             end
           end
 
@@ -672,7 +672,7 @@ module VCAP::CloudController
               post '/v2/routes', MultiJson.dump(req)
 
               expect(last_response).to have_status_code(404)
-              expect(last_response.body).to include 'router group could not be found'
+              expect(last_response.body).to include '"The router group could not be found: abc"'
             end
           end
         end
