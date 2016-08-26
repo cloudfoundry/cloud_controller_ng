@@ -23,6 +23,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
       field :security_group_guids, 'The list of the associated security groups'
       field :space_quota_definition_guid, 'The guid of the associated space quota definition'
       field :allow_ssh, 'Whether or not Space Developers can enable ssh on apps in the space'
+      field :isolation_segment_guid, 'The guid for the isolation segment', experimental: true
     end
 
     shared_context 'updatable_fields' do |opts|
@@ -34,6 +35,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
       field :domain_guids, 'The list of the associated domains'
       field :security_group_guids, 'The list of the associated security groups'
       field :allow_ssh, 'Whether or not Space Developers can enable ssh on apps in the space'
+      field :isolation_segment_guid, 'The guid for the isolation segment', experimental: true
     end
 
     standard_model_list :space, VCAP::CloudController::SpacesController do

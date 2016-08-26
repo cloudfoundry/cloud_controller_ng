@@ -1,5 +1,4 @@
 require 'spec_helper'
-
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::SpacesController do
     let(:organization_one) { Organization.make }
@@ -10,6 +9,7 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:organization_guid) }
       it { expect(described_class).to be_queryable_by(:developer_guid) }
       it { expect(described_class).to be_queryable_by(:app_guid) }
+      it { expect(described_class).to be_queryable_by(:isolation_segment_guid) }
     end
 
     describe 'Attributes' do
@@ -17,6 +17,7 @@ module VCAP::CloudController
         expect(described_class).to have_creatable_attributes({
           name:                   { type: 'string', required: true },
           allow_ssh:              { type: 'bool', default: true },
+          isolation_segment_guid: { type: 'string', default: nil, required: false },
           organization_guid:      { type: 'string', required: true },
           developer_guids:        { type: '[string]' },
           manager_guids:          { type: '[string]' },
@@ -32,6 +33,7 @@ module VCAP::CloudController
         expect(described_class).to have_updatable_attributes({
           name:                   { type: 'string' },
           allow_ssh:              { type: 'bool' },
+          isolation_segment_guid: { type: 'string', required: false },
           organization_guid:      { type: 'string' },
           developer_guids:        { type: '[string]' },
           manager_guids:          { type: '[string]' },

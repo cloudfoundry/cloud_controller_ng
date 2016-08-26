@@ -2,6 +2,7 @@ require 'messages/isolation_segment_create_message'
 require 'messages/isolation_segment_update_message'
 require 'messages/isolation_segments_list_message'
 require 'presenters/v3/isolation_segment_presenter'
+require 'queries/isolation_segment_list_fetcher'
 
 class IsolationSegmentsController < ApplicationController
   def create
@@ -23,22 +24,28 @@ class IsolationSegmentsController < ApplicationController
   end
 
   def show
-    unauthorized! unless roles.admin?
-
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
     resource_not_found!(:isolation_segment) unless isolation_segment_model
+
+    unauthorized! unless roles.admin? || isolation_segment_model.spaces.any? do |space|
+      can_read?(space.guid, space.organization.guid)
+    end
 
     render status: :ok, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
   end
 
   def index
-    unauthorized! unless roles.admin?
-
     message = IsolationSegmentsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
     invalid_param!(message.pagination_options.errors.full_messages) unless message.pagination_options.valid?
 
-    dataset = filter(message, IsolationSegmentModel.dataset)
+    fetcher = IsolationSegmentListFetcher.new(message: message)
+
+    dataset = if roles.admin? || roles.admin_read_only?
+                fetcher.fetch_all
+              else
+                fetcher.fetch_for_spaces(space_guids: readable_space_guids)
+              end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset, '/v3/isolation_segments', message)
   end

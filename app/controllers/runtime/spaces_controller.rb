@@ -10,6 +10,7 @@ module VCAP::CloudController
     define_attributes do
       attribute :name, String
       attribute :allow_ssh, Message::Boolean, default: true
+      attribute :isolation_segment_guid, String, default: nil, optional_in: [:create, :update]
 
       to_one :organization
       to_many :developers
@@ -25,7 +26,7 @@ module VCAP::CloudController
       to_one :space_quota_definition, optional_in: [:create], exclude_in: [:update]
     end
 
-    query_parameters :name, :organization_guid, :developer_guid, :app_guid
+    query_parameters :name, :organization_guid, :developer_guid, :app_guid, :isolation_segment_guid
     sortable_parameters :id, :name
 
     deprecated_endpoint "#{path_guid}/domains"

@@ -21,8 +21,9 @@ module VCAP::CloudController
         end
 
         def build_links
-          links = {
-            self:      { href: "/v3/isolation_segments/#{isolation_segment.guid}" },
+          {
+            self:   { href: "/v3/isolation_segments/#{isolation_segment.guid}" },
+            spaces: { href: "/v2/spaces?q=isolation_segment_guid:#{isolation_segment.guid}" },
           }
         end
       end

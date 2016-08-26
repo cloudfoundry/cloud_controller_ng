@@ -68,6 +68,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :default_users, class: User }
       it { is_expected.to have_associated :domains, class: SharedDomain }
       it { is_expected.to have_associated :space_quota_definition, associated_instance: ->(space) { SpaceQuotaDefinition.make(organization: space.organization) } }
+      it { is_expected.to have_associated :isolation_segment_model, class: IsolationSegmentModel }
 
       describe 'space_quota_definition' do
         subject(:space) { Space.make }
@@ -249,7 +250,7 @@ module VCAP::CloudController
 
     describe 'Serialization' do
       it { is_expected.to export_attributes :name, :organization_guid, :space_quota_definition_guid, :allow_ssh }
-      it { is_expected.to import_attributes :name, :organization_guid, :developer_guids, :manager_guids,
+      it { is_expected.to import_attributes :name, :organization_guid, :developer_guids, :manager_guids, :isolation_segment_guid,
         :auditor_guids, :security_group_guids, :space_quota_definition_guid, :allow_ssh
       }
     end

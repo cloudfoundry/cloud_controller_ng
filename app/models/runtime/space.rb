@@ -9,6 +9,10 @@ module VCAP::CloudController
 
     SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
 
+    many_to_one :isolation_segment_model,
+       primary_key: :guid,
+       key: :isolation_segment_guid
+
     define_user_group :developers, reciprocal: :spaces, before_add: :validate_developer
     define_user_group :managers, reciprocal: :managed_spaces, before_add: :validate_manager
     define_user_group :auditors, reciprocal: :audited_spaces, before_add: :validate_auditor
@@ -86,7 +90,7 @@ module VCAP::CloudController
 
     export_attributes :name, :organization_guid, :space_quota_definition_guid, :allow_ssh
 
-    import_attributes :name, :organization_guid, :developer_guids, :allow_ssh,
+    import_attributes :name, :organization_guid, :developer_guids, :allow_ssh, :isolation_segment_guid,
       :manager_guids, :auditor_guids, :security_group_guids, :space_quota_definition_guid
 
     strip_attributes :name

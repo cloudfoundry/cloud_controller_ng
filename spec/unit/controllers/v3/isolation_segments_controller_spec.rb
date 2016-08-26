@@ -75,6 +75,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(parsed_body['guid']).to eq(isolation_segment.guid)
           expect(parsed_body['name']).to eq(isolation_segment.name)
           expect(parsed_body['links']['self']['href']).to eq("/v3/isolation_segments/#{isolation_segment.guid}")
+          expect(parsed_body['links']['spaces']['href']).to eq("/v2/spaces?q=isolation_segment_guid:#{isolation_segment.guid}")
         end
       end
 
@@ -87,19 +88,119 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       end
     end
 
-    context 'when the user is not admin' do
-      before do
-        allow_user_write_access(user, space: space)
+    context 'when the user is not an admin' do
+      context 'and the user is a organization developer' do
       end
 
-      it 'returns a 403' do
-        get :show, guid: isolation_segment.guid
-        expect(response.status).to eq 403
+      context 'and the user is registered to a space' do
+        before do
+          allow_user_read_access(user, space: space)
+          stub_readable_space_guids_for(user, space)
+        end
+
+        context 'and the space is associated to an isolation segment' do
+          before do
+            isolation_segment.add_space(space)
+          end
+
+          it 'allows the user to see the isolation segment' do
+            get :show, guid: isolation_segment.guid
+
+            expect(response.status).to eq 200
+            expect(parsed_body['guid']).to eq(isolation_segment.guid)
+            expect(parsed_body['name']).to eq(isolation_segment.name)
+            expect(parsed_body['links']['self']['href']).to eq("/v3/isolation_segments/#{isolation_segment.guid}")
+            expect(parsed_body['links']['spaces']['href']).to eq("/v2/spaces?q=isolation_segment_guid:#{isolation_segment.guid}")
+          end
+        end
+      end
+
+      context 'and the user is not registered to any space associated with the isolation segment' do
+        let(:other_space) { VCAP::CloudController::Space.make }
+
+        before do
+          allow_user_read_access(user, space: other_space)
+          stub_readable_space_guids_for(user, other_space)
+        end
+
+        it 'returns a 403' do
+          get :show, guid: isolation_segment.guid
+
+          expect(response.status).to eq 403
+        end
       end
     end
   end
 
   describe '#index' do
+    let(:space) { VCAP::CloudController::Space.make }
+
+    before do
+      allow_user_read_access(user, space: space)
+    end
+
+    context 'when using query params' do
+      context 'with invalid param format' do
+        it 'returns a 400' do
+          get :index, order_by: '^=%'
+
+          expect(response.status).to eq 400
+          expect(response.body).to include 'BadQueryParameter'
+          expect(response.body).to include("Order by can only be 'created_at' or 'updated_at'")
+        end
+      end
+
+      context 'with a parameter value outside the allowed values' do
+        it 'returns a 400 and a list of allowed values' do
+          get :index, order_by: 'name'
+
+          expect(response.status).to eq 400
+          expect(response.body).to include 'BadQueryParameter'
+          expect(response.body).to include("Order by can only be 'created_at' or 'updated_at'")
+        end
+      end
+
+      context 'with an unknown query param' do
+        it 'returns 400 and a list of the unknown params' do
+          get :index, meow: 'woof', kaplow: 'zoom'
+
+          expect(response.status).to eq 400
+          expect(response.body).to include 'BadQueryParameter'
+          expect(response.body).to include("Unknown query parameter(s): 'meow', 'kaplow'")
+        end
+      end
+
+      context 'with invalid pagination params' do
+        it 'returns 400 and the allowed param range' do
+          get :index, per_page: 99999999999999999
+
+          expect(response.status).to eq 400
+          expect(response.body).to include 'BadQueryParameter'
+          expect(response.body).to include 'Per page must be between'
+        end
+      end
+    end
+
+    context 'the user has access to a space associated with an isolation segment' do
+      let!(:isolation_segment1) { VCAP::CloudController::IsolationSegmentModel.make }
+      let!(:isolation_segment2) { VCAP::CloudController::IsolationSegmentModel.make }
+
+      before do
+        isolation_segment1.add_space(space)
+        stub_readable_space_guids_for(user, space)
+      end
+
+      it 'shows the segment associated with the space' do
+        get :index
+
+        expect(response.status).to eq 200
+
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response_guids).to include(isolation_segment1.guid)
+        expect(response_guids).to_not include(isolation_segment2.guid)
+      end
+    end
+
     context 'when the user is an admin' do
       before do
         set_current_user_as_admin
@@ -128,59 +229,6 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(response.status).to eq(200)
           expect(response_guids.length).to eq(0)
         end
-      end
-
-      context 'when using query params' do
-        context 'with invalid param format' do
-          it 'returns a 400' do
-            get :index, order_by: '^=%'
-
-            expect(response.status).to eq 400
-            expect(response.body).to include 'BadQueryParameter'
-            expect(response.body).to include("Order by can only be 'created_at' or 'updated_at'")
-          end
-        end
-
-        context 'with a parameter value outside the allowed values' do
-          it 'returns a 400 and a list of allowed values' do
-            get :index, order_by: 'name'
-
-            expect(response.status).to eq 400
-            expect(response.body).to include 'BadQueryParameter'
-            expect(response.body).to include("Order by can only be 'created_at' or 'updated_at'")
-          end
-        end
-
-        context 'with an unknown query param' do
-          it 'returns 400 and a list of the unknown params' do
-            get :index, meow: 'woof', kaplow: 'zoom'
-
-            expect(response.status).to eq 400
-            expect(response.body).to include 'BadQueryParameter'
-            expect(response.body).to include("Unknown query parameter(s): 'meow', 'kaplow'")
-          end
-        end
-
-        context 'with invalid pagination params' do
-          it 'returns 400 and the allowed param range' do
-            get :index, per_page: 99999999999999999
-
-            expect(response.status).to eq 400
-            expect(response.body).to include 'BadQueryParameter'
-            expect(response.body).to include 'Per page must be between'
-          end
-        end
-      end
-    end
-
-    context 'when the user is not admin' do
-      before do
-        allow_user_write_access(user, space: space)
-      end
-
-      it 'returns a 403' do
-        get :index
-        expect(response.status).to eq 403
       end
     end
   end
