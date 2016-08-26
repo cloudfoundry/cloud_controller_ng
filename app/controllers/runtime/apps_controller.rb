@@ -1,6 +1,8 @@
 require 'presenters/system_env_presenter'
 require 'queries/v2/app_query'
 require 'actions/v2/app_stage'
+require 'actions/v2/app_create'
+require 'actions/v2/app_update'
 
 module VCAP::CloudController
   class AppsController < RestController::ModelController
@@ -198,174 +200,57 @@ module VCAP::CloudController
       @app_event_repository.record_app_update(app, app.space, SecurityContext.current_user.guid, SecurityContext.current_user_email, request_attrs)
     end
 
-    # rubocop:disable MethodLength
-    # rubocop:disable Metrics/CyclomaticComplexity
     def update(guid)
-      json_msg = self.class::UpdateMessage.decode(body)
+      json_msg       = self.class::UpdateMessage.decode(body)
       @request_attrs = json_msg.extract(stringify_keys: true)
       logger.debug 'cc.update', guid: guid, attributes: redact_attributes(:update, request_attrs)
       raise InvalidRequest unless request_attrs
 
-      app = find_guid(guid)
-      v3_app = app.app
+      process = find_guid(guid)
+      app     = process.app
 
-      before_update(app)
+      before_update(process)
 
-      model.db.transaction do
-        app.lock!
-        v3_app.lock!
+      updater = V2::AppUpdate.new(
+        user:             SecurityContext.current_user,
+        user_email:       SecurityContext.current_user_email,
+        access_validator: self,
+        stagers:          @stagers
+      )
+      updater.update(app, process, request_attrs)
 
-        validate_access(:read_for_update, app, request_attrs)
-        validate_not_changing_lifecycle_type!(app, request_attrs)
+      after_update(process)
 
-        buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
-
-        v3_app.name = request_attrs['name'] if request_attrs.key?('name')
-        v3_app.space_guid = request_attrs['space_guid'] if request_attrs.key?('space_guid')
-        v3_app.environment_variables = request_attrs['environment_json'] if request_attrs.key?('environment_json')
-
-        if buildpack_type_requested
-          v3_app.lifecycle_data.buildpack = request_attrs['buildpack'] if request_attrs.key?('buildpack')
-
-          if request_attrs.key?('stack_guid')
-            v3_app.lifecycle_data.stack = Stack.find(guid: request_attrs['stack_guid']).try(:name)
-            v3_app.update(droplet: nil)
-            app.reload
-          end
-        elsif request_attrs.key?('docker_image') && !case_insensitive_equals(app.docker_image, request_attrs['docker_image'])
-          create_message = PackageCreateMessage.new({ type: 'docker', app_guid: v3_app.guid, data: { image: request_attrs['docker_image'] } })
-          creator        = PackageCreate.new(SecurityContext.current_user.guid, SecurityContext.current_user_email)
-          creator.create(create_message)
-        end
-
-        app.production              = request_attrs['production'] if request_attrs.key?('production')
-        app.memory                  = request_attrs['memory'] if request_attrs.key?('memory')
-        app.instances               = request_attrs['instances'] if request_attrs.key?('instances')
-        app.disk_quota              = request_attrs['disk_quota'] if request_attrs.key?('disk_quota')
-        app.state                   = request_attrs['state'] if request_attrs.key?('state') # this triggers model validations
-        app.command                 = request_attrs['command'] if request_attrs.key?('command')
-        app.console                 = request_attrs['console'] if request_attrs.key?('console')
-        app.debug                   = request_attrs['debug'] if request_attrs.key?('debug')
-        app.health_check_type       = request_attrs['health_check_type'] if request_attrs.key?('health_check_type')
-        app.health_check_timeout    = request_attrs['health_check_timeout'] if request_attrs.key?('health_check_timeout')
-        app.diego                   = request_attrs['diego'] if request_attrs.key?('diego')
-        app.enable_ssh              = request_attrs['enable_ssh'] if request_attrs.key?('enable_ssh')
-        app.docker_credentials_json = request_attrs['docker_credentials_json'] if request_attrs.key?('docker_credentials_json')
-        app.ports                   = request_attrs['ports'] if request_attrs.key?('ports')
-        app.route_guids             = request_attrs['route_guids'] if request_attrs.key?('route_guids')
-
-        validate_package_is_uploaded!(app)
-
-        app.save
-        v3_app.save
-        v3_app.lifecycle_data.save && validate_buildpack!(app.reload) if buildpack_type_requested
-        v3_app.reload
-
-        app.reload
-        validate_access(:update, app, request_attrs)
-
-        if request_attrs.key?('state')
-          case request_attrs['state']
-          when 'STARTED'
-            AppStart.new(SecurityContext.current_user, SecurityContext.current_user_email).start(v3_app)
-          when 'STOPPED'
-            AppStop.new(SecurityContext.current_user, SecurityContext.current_user_email).stop(v3_app)
-          end
-        end
-      end
-
-      if request_attrs.key?('state') && app.needs_staging?
-        V2::AppStage.new(
-          user:       SecurityContext.current_user,
-          user_email: SecurityContext.current_user_email,
-          stagers:    @stagers
-        ).stage(app)
-      end
-
-      after_update(app)
-
-      [HTTP::CREATED, object_renderer.render_json(self.class, app, @opts)]
+      [HTTP::CREATED, object_renderer.render_json(self.class, process, @opts)]
     end
-    # rubocop:enable Metrics/CyclomaticComplexity
-    # rubocop:enable MethodLength
 
-    # rubocop:disable MethodLength
     def create
-      json_msg = self.class::CreateMessage.decode(body)
-
-      @request_attrs = json_msg.extract(stringify_keys: true)
-
+      @request_attrs = self.class::CreateMessage.decode(body).extract(stringify_keys: true)
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: redact_attributes(:create, request_attrs)
 
       space = VCAP::CloudController::Space[guid: request_attrs['space_guid']]
       verify_enable_ssh(space)
 
-      app = nil
-      model.db.transaction do
-        v3_app = AppModel.create(
-          name:                  request_attrs['name'],
-          space_guid:            request_attrs['space_guid'],
-          environment_variables: request_attrs['environment_json'],
-        )
-
-        buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
-        if buildpack_type_requested || !request_attrs.key?('docker_image')
-          stack = request_attrs['stack_guid'] ? Stack.find(guid: request_attrs['stack_guid']) : Stack.default
-          v3_app.buildpack_lifecycle_data = BuildpackLifecycleDataModel.new(
-            buildpack: request_attrs['buildpack'],
-            stack:     stack.try(:name),
-          )
-          v3_app.save
-        end
-
-        if request_attrs.key?('docker_image')
-          create_message = PackageCreateMessage.new({ type: 'docker', app_guid: v3_app.guid, data: { image: request_attrs['docker_image'] } })
-          creator        = PackageCreate.new(SecurityContext.current_user.guid, SecurityContext.current_user_email)
-          creator.create(create_message)
-        end
-
-        app = App.new(
-          guid:                    v3_app.guid,
-          production:              request_attrs['production'],
-          memory:                  request_attrs['memory'],
-          instances:               request_attrs['instances'],
-          disk_quota:              request_attrs['disk_quota'],
-          state:                   request_attrs['state'],
-          command:                 request_attrs['command'],
-          console:                 request_attrs['console'],
-          debug:                   request_attrs['debug'],
-          health_check_type:       request_attrs['health_check_type'],
-          health_check_timeout:    request_attrs['health_check_timeout'],
-          diego:                   request_attrs['diego'],
-          enable_ssh:              request_attrs['enable_ssh'],
-          docker_credentials_json: request_attrs['docker_credentials_json'],
-          ports:                   request_attrs['ports'],
-          route_guids:             request_attrs['route_guids'],
-          app:                     v3_app
-        )
-
-        validate_buildpack!(app)
-        validate_package_is_uploaded!(app)
-
-        app.save
-
-        validate_access(:create, app, request_attrs)
-      end
+      creator = V2::AppCreate.new(
+        user_guid:        SecurityContext.current_user.guid,
+        user_email:       SecurityContext.current_user_email,
+        access_validator: self
+      )
+      process = creator.create(request_attrs)
 
       @app_event_repository.record_app_create(
-        app,
-        app.space,
+        process,
+        process.space,
         SecurityContext.current_user.guid,
         SecurityContext.current_user_email,
         request_attrs)
 
       [
         HTTP::CREATED,
-        { 'Location' => "#{self.class.path}/#{app.guid}" },
-        object_renderer.render_json(self.class, app, @opts)
+        { 'Location' => "#{self.class.path}/#{process.guid}" },
+        object_renderer.render_json(self.class, process, @opts)
       ]
     end
-    # rubocop:enable MethodLength
 
     put '/v2/apps/:app_guid/routes/:route_guid', :add_route
     def add_route(app_guid, route_guid)
@@ -446,39 +331,7 @@ module VCAP::CloudController
       dataset.where(type: 'web')
     end
 
-    def validate_buildpack!(app)
-      if app.buildpack.custom? && custom_buildpacks_disabled?
-        raise CloudController::Errors::ApiError.new_from_details('AppInvalid', 'custom buildpacks are disabled')
-      end
-    end
-
-    def custom_buildpacks_disabled?
-      VCAP::CloudController::Config.config[:disable_custom_buildpacks]
-    end
-
-    def validate_not_changing_lifecycle_type!(app, request_attrs)
-      buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
-      docker_type_requested = request_attrs.key?('docker_image')
-
-      type_is_docker = app.app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
-      type_is_buildpack = !type_is_docker
-
-      if (type_is_docker && buildpack_type_requested) || (type_is_buildpack && docker_type_requested)
-        raise CloudController::Errors::ApiError.new_from_details('AppInvalid', 'Lifecycle type cannot be changed')
-      end
-    end
-
     define_messages
     define_routes
-
-    def case_insensitive_equals(str1, str2)
-      str1.casecmp(str2) == 0
-    end
-
-    def validate_package_is_uploaded!(app)
-      if app.needs_package_in_current_state? && !app.package_hash
-        raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
-      end
-    end
   end
 end
