@@ -195,6 +195,19 @@ module VCAP::CloudController
       end
     end
 
+    delete '/v2/spaces/:guid/isolation_segment', :delete_isolation_segment
+    def delete_isolation_segment(guid)
+      space = find_guid_and_validate_access(:update, guid)
+
+      space.db.transaction do
+        space.lock!
+        space.update(isolation_segment_guid: nil)
+        space.save
+      end
+
+      [HTTP::OK, object_renderer.render_json(self.class, space, @opts)]
+    end
+
     private
 
     def after_create(space)

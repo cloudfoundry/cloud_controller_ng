@@ -1254,6 +1254,127 @@ module VCAP::CloudController
       end
     end
 
+    describe 'DELETE /v2/spaces/:guid/isolation_segment' do
+      let(:user) { set_current_user(User.make) }
+      let(:isolation_segment_model) { IsolationSegmentModel.make }
+      let(:space) { Space.make }
+
+      context 'when the space is not associated to an isolation segment' do
+        context 'as an admin who is not a manager' do
+          before do
+            set_current_user_as_admin
+          end
+
+          it 'successfully removes the isolation segment' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 200
+          end
+        end
+
+        context 'as a developer' do
+          before do
+            space.organization.add_user(user)
+            space.add_developer(user)
+          end
+
+          it 'fails with a 403' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 403
+          end
+        end
+
+        context 'as a space manager' do
+          before do
+            space.organization.add_user(user)
+            space.add_manager(user)
+          end
+
+          it 'successfully removes the isolation segment' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 200
+          end
+        end
+
+        context 'as an auditor' do
+          before do
+            space.organization.add_user(user)
+            space.add_auditor(user)
+          end
+
+          it 'fails with a 403' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 403
+          end
+        end
+      end
+
+      context 'when a space is associated with an isolation segment' do
+        before do
+          space.isolation_segment_guid = isolation_segment_model.guid
+          space.save
+        end
+
+        context 'as an admin who is not a manager' do
+          before do
+            set_current_user_as_admin
+          end
+
+          it 'successfully removes the isolation segment' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 200
+
+            space.reload
+            expect(space.isolation_segment_model).to be_nil
+          end
+        end
+
+        context 'as a developer' do
+          before do
+            space.organization.add_user(user)
+            space.add_developer(user)
+          end
+
+          it 'fails with a 403' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 403
+
+            space.reload
+            expect(space.isolation_segment_model).to eq(isolation_segment_model)
+          end
+        end
+
+        context 'as a space manager' do
+          before do
+            space.organization.add_user(user)
+            space.add_manager(user)
+          end
+
+          it 'successfully removes the isolation segment' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 200
+
+            space.reload
+            expect(space.isolation_segment_model).to be_nil
+          end
+        end
+
+        context 'as an auditor' do
+          before do
+            space.organization.add_user(user)
+            space.add_auditor(user)
+          end
+
+          it 'fails with a 403' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 403
+
+            space.reload
+            expect(space.isolation_segment_model).to eq(isolation_segment_model)
+          end
+        end
+      end
+    end
+
     describe 'adding user roles by username' do
       [:manager, :developer, :auditor].each do |role|
         plural_role = role.to_s.pluralize

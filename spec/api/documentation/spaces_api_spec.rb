@@ -347,5 +347,22 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
         nested_model_remove :security_group, :space
       end
     end
+
+    describe 'Isolation Segments (experimental)' do
+      let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+
+      before do
+        space.isolation_segment_guid = isolation_segment_model.guid
+      end
+
+      delete '/v2/spaces/:guid/isolation_segment (experimental)' do
+        example 'Remove the associated Isolation Segment from the Space (experimental)' do
+          client.delete "/v2/spaces/#{space.guid}/isolation_segment", {}, headers
+          expect(status).to eq(200)
+
+          standard_entity_response parsed_response, :space
+        end
+      end
+    end
   end
 end
