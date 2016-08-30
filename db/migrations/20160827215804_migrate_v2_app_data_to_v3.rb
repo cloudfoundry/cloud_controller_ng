@@ -372,7 +372,7 @@ Sequel.migration do
     SQL
 
     run <<-SQL
-      UPDATE apps_routes SET app_port=8080 WHERE app_port IS NULL
+      UPDATE apps_routes SET app_port=8080 WHERE app_port IS NULL AND EXISTS (SELECT 1 FROM processes WHERE processes.docker_image IS NULL AND processes.id = apps_routes.app_id)
     SQL
 
     if self.class.name.match(/mysql/i)
@@ -388,7 +388,6 @@ Sequel.migration do
       set_column_not_null(:app_guid)
       set_column_not_null(:route_guid)
       set_column_not_null(:guid)
-      set_column_default(:app_port, 8080)
 
       # for mysql, which loses collation settings when setting not null constraint
       set_column_type :app_guid, String, collate_opts

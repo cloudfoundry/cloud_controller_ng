@@ -99,7 +99,7 @@ RSpec.describe 'Route Mappings' do
         'resources' => [
           {
             'guid'       => route_mapping1.guid,
-            'app_port'   => 8080,
+            'app_port'   => nil,
             'created_at' => iso8601,
             'updated_at' => nil,
 
@@ -112,7 +112,7 @@ RSpec.describe 'Route Mappings' do
           },
           {
             'guid'       => route_mapping2.guid,
-            'app_port'   => 8080,
+            'app_port'   => nil,
             'created_at' => iso8601,
             'updated_at' => nil,
 
@@ -266,7 +266,7 @@ RSpec.describe 'Route Mappings' do
         'resources' => [
           {
             'guid'       => route_mapping1.guid,
-            'app_port'   => 8080,
+            'app_port'   => nil,
             'created_at' => iso8601,
             'updated_at' => nil,
 
@@ -279,7 +279,7 @@ RSpec.describe 'Route Mappings' do
           },
           {
             'guid'       => route_mapping2.guid,
-            'app_port'   => 8080,
+            'app_port'   => nil,
             'created_at' => iso8601,
             'updated_at' => nil,
 

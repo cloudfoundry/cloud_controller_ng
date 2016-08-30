@@ -8,6 +8,7 @@ module VCAP::CloudController
     DUPLICATE_MESSAGE                   = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
     INVALID_SPACE_MESSAGE               = 'the app and route must belong to the same space'.freeze
     UNAVAILABLE_APP_PORT_MESSAGE_FORMAT = 'Port %s is not available on the app\'s process'.freeze
+    NO_PORT_REQUESTED                   = 'Port must be specified when mapping to a non-web process'.freeze
 
     def initialize(user, user_email, app, route, process, message)
       @user       = user
@@ -25,7 +26,7 @@ module VCAP::CloudController
         app:          @app,
         route:        @route,
         process_type: @message.process_type,
-        app_port:     @message.app_port
+        app_port:     port_with_defaults
       )
 
       route_handler = ProcessRouteHandler.new(@process)
@@ -55,6 +56,12 @@ module VCAP::CloudController
 
     private
 
+    def port_with_defaults
+      port = @message.app_port
+      port ||= App::DEFAULT_HTTP_PORT if !@app.docker?
+      port
+    end
+
     def validate!
       validate_space!
       validate_available_port!
@@ -68,15 +75,18 @@ module VCAP::CloudController
 
     def validate_non_web_port!
       return if @process.type == 'web'
+      raise InvalidRouteMapping.new(NO_PORT_REQUESTED) if @message.app_port.nil?
       raise_unavailable_port! unless available_ports.present? && available_ports.include?(@message.app_port.to_i)
     end
 
     def validate_web_port!
       return unless @process.type == 'web'
+      return if @message.app_port.nil?
+      return if @process.docker?
 
       if @process.dea?
-        raise_unavailable_port! unless @message.app_port.to_i == 8080
-      elsif !@process.docker?
+        raise_unavailable_port!
+      else
         raise_unavailable_port! unless available_ports.include?(@message.app_port.to_i)
       end
     end
