@@ -308,12 +308,10 @@ RSpec.describe DropletsController, type: :controller do
           allow(droplet_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::DropletCreate::SpaceQuotaExceeded)
         end
 
-        it 'returns 400 UnableToPerform' do
+        it 'returns 422 Unprocessable' do
           post :create, package_guid: package.guid
 
-          expect(response.status).to eq(400)
-          expect(response.body).to include('UnableToPerform')
-          expect(response.body).to include('Staging request')
+          expect(response.status).to eq(422)
           expect(response.body).to include("space's memory limit exceeded")
         end
       end
@@ -323,12 +321,10 @@ RSpec.describe DropletsController, type: :controller do
           allow(droplet_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::DropletCreate::OrgQuotaExceeded)
         end
 
-        it 'returns 400 UnableToPerform' do
+        it 'returns 422 Unprocessable' do
           post :create, package_guid: package.guid
 
-          expect(response.status).to eq(400)
-          expect(response.body).to include('UnableToPerform')
-          expect(response.body).to include('Staging request')
+          expect(response.status).to eq(422)
           expect(response.body).to include("organization's memory limit exceeded")
         end
       end
@@ -338,12 +334,10 @@ RSpec.describe DropletsController, type: :controller do
           allow(droplet_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::DropletCreate::DiskLimitExceeded)
         end
 
-        it 'returns 400 UnableToPerform' do
+        it 'returns 422 Unprocessable' do
           post :create, package_guid: package.guid
 
-          expect(response.status).to eq(400)
-          expect(response.body).to include('UnableToPerform')
-          expect(response.body).to include('Staging request')
+          expect(response.status).to eq(422)
           expect(response.body).to include('disk limit exceeded')
         end
       end
@@ -483,15 +477,16 @@ RSpec.describe DropletsController, type: :controller do
       end
     end
 
-    context 'when the source droplet is not STAGED' do
-      let(:state) { 'STAGING' }
+    context 'when the action raises errors' do
+      before do
+        allow_any_instance_of(VCAP::CloudController::DropletCopy).to receive(:copy).and_raise(VCAP::CloudController::DropletCopy::InvalidCopyError.new('boom'))
+      end
 
-      it 'returns an invalid request error ' do
+      it 'returns an error ' do
         post :copy, guid: source_droplet_guid, body: req_body
 
-        expect(response.status).to eq(400)
-        expect(response.body).to include 'UnableToPerform'
-        expect(response.body).to include 'source droplet is not staged'
+        expect(response.status).to eq(422)
+        expect(response.body).to include('boom')
       end
     end
 

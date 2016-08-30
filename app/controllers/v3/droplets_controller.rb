@@ -59,7 +59,6 @@ class DropletsController < ApplicationController
 
     source_droplet = DropletModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
     droplet_not_found! unless source_droplet && can_read?(source_droplet.space.guid, source_droplet.space.organization.guid)
-    unable_to_perform!('Droplet copy', 'source droplet is not staged') unless source_droplet.staged?
 
     destination_app = AppModel.where(guid: message.app_guid).eager(:space, :organization).all.first
     app_not_found! unless destination_app && can_read?(destination_app.space.guid, destination_app.organization.guid)
@@ -68,6 +67,8 @@ class DropletsController < ApplicationController
     droplet = DropletCopy.new(source_droplet).copy(destination_app, current_user.guid, current_user_email)
 
     render status: :created, json: Presenters::V3::DropletPresenter.new(droplet)
+  rescue DropletCopy::InvalidCopyError => e
+    unprocessable!(e.message)
   end
 
   def create
@@ -95,11 +96,11 @@ class DropletsController < ApplicationController
   rescue DropletCreate::InvalidPackage => e
     invalid_request!(e.message)
   rescue DropletCreate::SpaceQuotaExceeded
-    unable_to_perform!('Staging request', "space's memory limit exceeded")
+    unprocessable!("space's memory limit exceeded")
   rescue DropletCreate::OrgQuotaExceeded
-    unable_to_perform!('Staging request', "organization's memory limit exceeded")
+    unprocessable!("organization's memory limit exceeded")
   rescue DropletCreate::DiskLimitExceeded
-    unable_to_perform!('Staging request', 'disk limit exceeded')
+    unprocessable!('disk limit exceeded')
   end
 
   private
@@ -118,9 +119,5 @@ class DropletsController < ApplicationController
 
   def staging_in_progress!
     raise CloudController::Errors::ApiError.new_from_details('StagingInProgress')
-  end
-
-  def unable_to_perform!(operation, message)
-    raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation, message)
   end
 end

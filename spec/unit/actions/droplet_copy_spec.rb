@@ -14,7 +14,7 @@ module VCAP::CloudController
         droplet_hash:          'abcdef',
         process_types:         { web: 'bundle exec rails s' },
         environment_variables: { 'THING' => 'STUFF' },
-        state:                 VCAP::CloudController::DropletModel::STAGING_STATE)
+        state:                 VCAP::CloudController::DropletModel::STAGED_STATE)
     end
 
     describe '#copy' do
@@ -53,6 +53,18 @@ module VCAP::CloudController
         )
 
         droplet_copy.copy(target_app, 'user-guid', 'user-email')
+      end
+
+      context 'when the source droplet is not STAGED' do
+        before do
+          source_droplet.update(state: DropletModel::FAILED_STATE)
+        end
+
+        it 'raises' do
+          expect {
+            droplet_copy.copy(target_app, 'user-guid', 'user-email')
+          }.to raise_error(/source droplet is not staged/)
+        end
       end
 
       context 'when lifecycle is buildpack' do
@@ -99,7 +111,7 @@ module VCAP::CloudController
           expect(copied_droplet).to be_docker
           expect(copied_droplet.guid).to_not eq(source_droplet.guid)
           expect(copied_droplet.docker_receipt_image).to eq('urvashi/reddy')
-          expect(copied_droplet.state).to eq(VCAP::CloudController::DropletModel::STAGING_STATE)
+          expect(copied_droplet.state).to eq(VCAP::CloudController::DropletModel::STAGED_STATE)
         end
       end
     end
