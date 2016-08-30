@@ -40,7 +40,7 @@ module VCAP::CloudController
         describe '#staging_complete' do
           let(:app) { AppModel.make }
           let(:package) { PackageModel.make(app: app) }
-          let!(:droplet) { DropletModel.make(app: app, package: package, state: 'PENDING') }
+          let!(:droplet) { DropletModel.make(app: app, package: package, state: DropletModel::STAGING_STATE) }
           let(:staging_guid) { droplet.guid }
 
           before do

@@ -78,7 +78,7 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'includes a link to the droplets if present' do
-            VCAP::CloudController::DropletModel.make(app: app, state: 'PENDING')
+            VCAP::CloudController::DropletModel.make(app: app, state: VCAP::CloudController::DropletModel::STAGING_STATE)
             expect(result[:links][:droplets][:href]).to eq("/v3/apps/#{app.guid}/droplets")
           end
         end

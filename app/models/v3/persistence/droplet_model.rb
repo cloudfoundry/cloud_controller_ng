@@ -3,7 +3,6 @@ module VCAP::CloudController
     include Serializer
 
     DROPLET_STATES = [
-      PENDING_STATE = 'PENDING'.freeze,
       STAGING_STATE = 'STAGING'.freeze,
       FAILED_STATE  = 'FAILED'.freeze,
       STAGED_STATE  = 'STAGED'.freeze,
@@ -84,6 +83,10 @@ module VCAP::CloudController
 
     def docker?
       lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
+    end
+
+    def staging?
+      self.state == STAGING_STATE
     end
 
     def failed?

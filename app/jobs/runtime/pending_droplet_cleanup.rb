@@ -12,7 +12,7 @@ module VCAP::CloudController
 
         def perform
           DropletModel.
-            where(state: [DropletModel::PENDING_STATE, DropletModel::STAGING_STATE]).
+            where(state: DropletModel::STAGING_STATE).
             where(updated_at_past_threshold | (created_at_past_threshold & { updated_at: nil })).
             update(
               state:      DropletModel::FAILED_STATE,

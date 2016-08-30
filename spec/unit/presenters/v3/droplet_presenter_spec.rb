@@ -87,7 +87,7 @@ module VCAP::CloudController::Presenters::V3
 
           context 'when droplet is NOT in a "complete" state' do
             before do
-              droplet.state = VCAP::CloudController::DropletModel::PENDING_STATE
+              droplet.state = VCAP::CloudController::DropletModel::STAGING_STATE
               droplet.save
             end
 

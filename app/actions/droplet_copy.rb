@@ -17,7 +17,7 @@ module VCAP::CloudController
     end
 
     def copy(destination_app, user_guid, user_email)
-      new_droplet = DropletModel.new(state: DropletModel::PENDING_STATE, app: destination_app)
+      new_droplet = DropletModel.new(state: DropletModel::STAGING_STATE, app: destination_app)
 
       # Needed to execute serializers and deserializers correctly on source and destination models
       CLONED_ATTRIBUTES.each do |attr|

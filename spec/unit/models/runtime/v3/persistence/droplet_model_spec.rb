@@ -35,7 +35,7 @@ module VCAP::CloudController
       end
 
       context 'when the droplet has not been staged' do
-        let!(:droplet_model) { DropletModel.make(state: 'PENDING') }
+        let!(:droplet_model) { DropletModel.make(state: 'STAGING') }
 
         it 'returns false' do
           expect(droplet_model.staged?).to be false
@@ -203,7 +203,7 @@ module VCAP::CloudController
 
     describe 'usage events' do
       it 'ensures we have coverage for all states' do
-        expect(DropletModel::DROPLET_STATES.count).to eq(5), 'After adding a new state, tests for app usage event coverage should be added.'
+        expect(DropletModel::DROPLET_STATES.count).to eq(4), 'After adding a new state, tests for app usage event coverage should be added.'
       end
 
       context 'when creating a droplet' do
@@ -219,31 +219,9 @@ module VCAP::CloudController
       context 'when updating a droplet' do
         let!(:droplet) { DropletModel.make(state: initial_state) }
 
-        context 'when state is PENDING' do
-          let(:initial_state) { DropletModel::STAGING_STATE }
-
-          it 'records no usage event' do
-            expect {
-              droplet.state = DropletModel::PENDING_STATE
-              droplet.save
-            }.not_to change { AppUsageEvent.count }
-          end
-        end
-
-        context 'when state is STAGING' do
-          let(:initial_state) { DropletModel::PENDING_STATE }
-
-          it 'records no usage event' do
-            expect {
-              droplet.state = DropletModel::STAGING_STATE
-              droplet.save
-            }.not_to change { AppUsageEvent.count }
-          end
-        end
-
         context 'when state is FAILED' do
           context 'changing from a different state' do
-            let(:initial_state) { DropletModel::PENDING_STATE }
+            let(:initial_state) { DropletModel::STAGING_STATE }
 
             it 'records a STAGING_STOPPED event ' do
               expect {
@@ -269,7 +247,7 @@ module VCAP::CloudController
 
         context 'when state is STAGED' do
           context 'changing from a different state' do
-            let(:initial_state) { DropletModel::PENDING_STATE }
+            let(:initial_state) { DropletModel::STAGING_STATE }
 
             it 'records a STAGING_STOPPED event ' do
               expect {
@@ -309,7 +287,7 @@ module VCAP::CloudController
         let!(:droplet) { DropletModel.make(state: state) }
 
         context 'when state is PENDING' do
-          let(:state) { DropletModel::PENDING_STATE }
+          let(:state) { DropletModel::STAGING_STATE }
 
           it 'records a STAGING_STOPPED event ' do
             expect {

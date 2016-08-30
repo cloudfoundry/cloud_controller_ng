@@ -25,7 +25,7 @@ module VCAP::CloudController
       let(:url) { "/internal/v3/staging/#{staging_guid}/droplet_completed" }
       let(:staged_app) { AppModel.make }
       let(:package) { PackageModel.make(state: 'READY', app_guid: staged_app.guid) }
-      let(:droplet) { DropletModel.make(package_guid: package.guid, app_guid: staged_app.guid, state: 'PENDING') }
+      let(:droplet) { DropletModel.make(package_guid: package.guid, app_guid: staged_app.guid, state: DropletModel::STAGING_STATE) }
       let(:staging_guid) { droplet.guid }
 
       before do

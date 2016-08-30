@@ -59,7 +59,7 @@ RSpec.describe 'Droplets' do
 
       expected_response = {
         'guid'                  => created_droplet.guid,
-        'state'                 => 'PENDING',
+        'state'                 => 'STAGING',
         'error'                 => nil,
         'lifecycle'             => {
           'type' => 'buildpack',
@@ -330,19 +330,19 @@ RSpec.describe 'Droplets' do
       let(:space2) { VCAP::CloudController::Space.make }
       let(:app_model2) { VCAP::CloudController::AppModel.make(space: space) }
       let(:app_model3) { VCAP::CloudController::AppModel.make(space: space2) }
-      let!(:droplet3) { VCAP::CloudController::DropletModel.make(app: app_model2, state: VCAP::CloudController::DropletModel::PENDING_STATE) }
-      let!(:droplet4) { VCAP::CloudController::DropletModel.make(app: app_model3, state: VCAP::CloudController::DropletModel::PENDING_STATE) }
+      let!(:droplet3) { VCAP::CloudController::DropletModel.make(app: app_model2, state: VCAP::CloudController::DropletModel::FAILED_STATE) }
+      let!(:droplet4) { VCAP::CloudController::DropletModel.make(app: app_model3, state: VCAP::CloudController::DropletModel::FAILED_STATE) }
 
       it 'filters by states' do
-        get '/v3/droplets?states=STAGED,PENDING', nil, developer_headers
+        get '/v3/droplets?states=STAGED,FAILED', nil, developer_headers
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 2,
             'total_pages'   => 1,
-            'first'         => { 'href' => '/v3/droplets?page=1&per_page=50&states=STAGED%2CPENDING' },
-            'last'          => { 'href' => '/v3/droplets?page=1&per_page=50&states=STAGED%2CPENDING' },
+            'first'         => { 'href' => '/v3/droplets?page=1&per_page=50&states=STAGED%2CFAILED' },
+            'last'          => { 'href' => '/v3/droplets?page=1&per_page=50&states=STAGED%2CFAILED' },
             'next'          => nil,
             'previous'      => nil,
           })
@@ -464,7 +464,7 @@ RSpec.describe 'Droplets' do
         environment_variables:            { 'yuu' => 'huuu' },
         staging_disk_in_mb:               235,
         error_description:                            'example-error',
-        state:                            VCAP::CloudController::DropletModel::PENDING_STATE,
+        state:                            VCAP::CloudController::DropletModel::STAGING_STATE,
       )
     end
     let!(:droplet2) do
@@ -558,7 +558,7 @@ RSpec.describe 'Droplets' do
           },
           {
             'guid'                  => droplet1.guid,
-            'state'                 => VCAP::CloudController::DropletModel::PENDING_STATE,
+            'state'                 => VCAP::CloudController::DropletModel::STAGING_STATE,
             'error'                 => 'example-error',
             'lifecycle'             => {
               'type' => 'buildpack',
@@ -606,7 +606,7 @@ RSpec.describe 'Droplets' do
         environment_variables:            { 'yuu' => 'huuu' },
         staging_disk_in_mb:               235,
         error_description:                            'example-error',
-        state:                            VCAP::CloudController::DropletModel::PENDING_STATE,
+        state:                            VCAP::CloudController::DropletModel::STAGING_STATE,
       )
     end
 
@@ -701,7 +701,7 @@ RSpec.describe 'Droplets' do
           },
           {
             'guid'                  => droplet1.guid,
-            'state'                 => VCAP::CloudController::DropletModel::PENDING_STATE,
+            'state'                 => VCAP::CloudController::DropletModel::STAGING_STATE,
             'error'                 => 'example-error',
             'lifecycle'             => {
               'type' => 'buildpack',
@@ -768,7 +768,7 @@ RSpec.describe 'Droplets' do
       expect(last_response.status).to eq(201)
       expect(parsed_response).to be_a_response_like({
         'guid'                  => copied_droplet.guid,
-        'state'                 => VCAP::CloudController::DropletModel::PENDING_STATE,
+        'state'                 => VCAP::CloudController::DropletModel::STAGING_STATE,
         'error'                 => nil,
         'lifecycle'             => {
           'type' => 'buildpack',

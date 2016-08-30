@@ -85,7 +85,7 @@ module VCAP::CloudController
             droplet = action.create_and_stage(package, lifecycle, staging_message)
           }.to change { DropletModel.count }.by(1)
 
-          expect(droplet.state).to eq(DropletModel::PENDING_STATE)
+          expect(droplet.state).to eq(DropletModel::STAGING_STATE)
           expect(droplet.lifecycle_data.to_hash).to eq(lifecycle_data)
           expect(droplet.package_guid).to eq(package.guid)
           expect(droplet.app_guid).to eq(app.guid)

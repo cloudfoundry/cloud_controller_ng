@@ -463,7 +463,7 @@ module VCAP::CloudController
     end
 
     def staging?
-      pending? && !latest_droplet.nil? && [DropletModel::STAGING_STATE, DropletModel::PENDING_STATE].include?(latest_droplet.state)
+      pending? && !latest_droplet.nil? && latest_droplet.staging?
     end
 
     def started?

@@ -968,12 +968,6 @@ module VCAP::CloudController
     describe 'staging?' do
       let(:app) { AppFactory.make }
 
-      it 'should return true if the latest_droplet is PENDING' do
-        DropletModel.make(app: app.app, package: app.package, state: DropletModel::PENDING_STATE)
-        app.reload
-        expect(app.staging?).to be true
-      end
-
       it 'should return true if the latest_droplet is STAGING' do
         DropletModel.make(app: app.app, package: app.package, state: DropletModel::STAGING_STATE)
         app.reload
@@ -986,7 +980,7 @@ module VCAP::CloudController
         expect(app.staging?).to be false
       end
 
-      it 'should return false if the latest_droplet is not PENDING or STAGING' do
+      it 'should return false if the latest_droplet is not STAGING' do
         DropletModel.make(app: app.app, package: app.package, state: DropletModel::STAGED_STATE)
         app.reload
         expect(app.staging?).to be false

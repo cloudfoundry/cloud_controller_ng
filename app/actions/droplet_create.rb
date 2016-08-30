@@ -40,7 +40,7 @@ module VCAP::CloudController
       droplet = DropletModel.new({
         app_guid:              package.app.guid,
         package_guid:          package.guid,
-        state:                 DropletModel::PENDING_STATE,
+        state:                 DropletModel::STAGING_STATE,
         environment_variables: staging_details.environment_variables,
         staging_memory_in_mb:  staging_details.staging_memory_in_mb,
         staging_disk_in_mb:    staging_details.staging_disk_in_mb

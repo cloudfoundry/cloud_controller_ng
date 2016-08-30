@@ -12,7 +12,7 @@ module VCAP::CloudController
                                                   directory_key: 'droplet')
       end
       let(:source_droplet) { DropletModel.make(:buildpack, droplet_hash: 'abcdef1234', state: DropletModel::STAGED_STATE) }
-      let(:destination_droplet) { DropletModel.make(:buildpack, droplet_hash: nil, state: DropletModel::PENDING_STATE) }
+      let(:destination_droplet) { DropletModel.make(:buildpack, droplet_hash: nil, state: DropletModel::STAGING_STATE) }
 
       before do
         Fog.unmock!

@@ -17,7 +17,7 @@ module VCAP::CloudController
         let(:non_expired_time) { Time.now.utc - staging_timeout - 1.minute }
 
         context 'with droplets which have been pending for too long' do
-          let!(:droplet1) { DropletModel.make(state: DropletModel::PENDING_STATE) }
+          let!(:droplet1) { DropletModel.make(state: DropletModel::STAGING_STATE) }
           let!(:droplet2) { DropletModel.make(state: DropletModel::STAGING_STATE) }
 
           before do
@@ -45,7 +45,7 @@ module VCAP::CloudController
         end
 
         context 'with droplets which are pending or staging but have "NULL" updated_at' do
-          let!(:droplet1) { DropletModel.make(state: DropletModel::PENDING_STATE) }
+          let!(:droplet1) { DropletModel.make(state: DropletModel::STAGING_STATE) }
           let!(:droplet2) { DropletModel.make(state: DropletModel::STAGING_STATE) }
           let(:null_timestamp) do
             if droplet1.db.database_type == :postgres
@@ -71,7 +71,7 @@ module VCAP::CloudController
         end
 
         it 'ignores droplets that have not been pending for too long' do
-          droplet1 = DropletModel.make(state: DropletModel::PENDING_STATE)
+          droplet1 = DropletModel.make(state: DropletModel::STAGING_STATE)
           droplet2 = DropletModel.make(state: DropletModel::STAGING_STATE)
           droplet1.this.update(updated_at: non_expired_time)
           droplet2.this.update(updated_at: non_expired_time)

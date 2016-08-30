@@ -15,14 +15,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when a droplet is in pending state' do
-        let!(:droplet) { DropletModel.make(app_guid: app_model.guid, state: DropletModel::PENDING_STATE) }
-
-        it 'returns true' do
-          expect(app_model.staging_in_progress?).to eq(true)
-        end
-      end
-
       context 'when a droplet is not in neither pending or staging state' do
         let!(:droplet) { DropletModel.make(app_guid: app_model.guid, state: DropletModel::STAGED_STATE) }
 

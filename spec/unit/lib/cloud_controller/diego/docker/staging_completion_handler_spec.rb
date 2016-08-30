@@ -8,7 +8,7 @@ module VCAP::CloudController
         let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
         let(:app) { AppModel.make }
         let(:package) { PackageModel.make(app: app) }
-        let!(:droplet) { DropletModel.make(app: app, package: package, state: 'PENDING') }
+        let!(:droplet) { DropletModel.make(app: app, package: package, state: DropletModel::STAGING_STATE) }
         let(:runners) { instance_double(Runners) }
 
         subject(:handler) { StagingCompletionHandler.new(droplet, runners) }

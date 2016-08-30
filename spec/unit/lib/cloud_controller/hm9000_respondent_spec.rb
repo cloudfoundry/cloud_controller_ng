@@ -235,9 +235,9 @@ module VCAP::CloudController
                   end
                 end
 
-                context 'but the package is pending staging' do
+                context 'but the package is staging' do
                   before do
-                    DropletModel.make(app: app.app, package: app.package, state: DropletModel::PENDING_STATE)
+                    DropletModel.make(app: app.app, package: app.package, state: DropletModel::STAGING_STATE)
                     app.reload
                   end
 
