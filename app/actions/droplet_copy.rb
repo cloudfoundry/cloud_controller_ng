@@ -21,7 +21,7 @@ module VCAP::CloudController
     def copy(destination_app, user_guid, user_email)
       raise InvalidCopyError.new('source droplet is not staged') unless @source_droplet.staged?
 
-      new_droplet = DropletModel.new(state: DropletModel::STAGING_STATE, app: destination_app)
+      new_droplet = DropletModel.new(state: DropletModel::COPYING_STATE, app: destination_app)
 
       # Needed to execute serializers and deserializers correctly on source and destination models
       CLONED_ATTRIBUTES.each do |attr|

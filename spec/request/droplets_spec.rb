@@ -768,7 +768,7 @@ RSpec.describe 'Droplets' do
       expect(last_response.status).to eq(201)
       expect(parsed_response).to be_a_response_like({
         'guid'                  => copied_droplet.guid,
-        'state'                 => VCAP::CloudController::DropletModel::STAGING_STATE,
+        'state'                 => VCAP::CloudController::DropletModel::COPYING_STATE,
         'error'                 => nil,
         'lifecycle'             => {
           'type' => 'buildpack',

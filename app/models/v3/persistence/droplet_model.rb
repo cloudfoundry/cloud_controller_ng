@@ -4,6 +4,7 @@ module VCAP::CloudController
 
     DROPLET_STATES = [
       STAGING_STATE = 'STAGING'.freeze,
+      COPYING_STATE = 'COPYING'.freeze,
       FAILED_STATE  = 'FAILED'.freeze,
       STAGED_STATE  = 'STAGED'.freeze,
       EXPIRED_STATE = 'EXPIRED'.freeze,
@@ -42,7 +43,9 @@ module VCAP::CloudController
 
     def after_create
       super
-      app_usage_event_repository.create_from_droplet(self, 'STAGING_STARTED')
+      unless copying?
+        app_usage_event_repository.create_from_droplet(self, 'STAGING_STARTED')
+      end
     end
 
     def after_update
@@ -54,7 +57,7 @@ module VCAP::CloudController
 
     def after_destroy
       super
-      unless in_final_state?
+      unless in_final_state? || copying?
         app_usage_event_repository.create_from_droplet(self, 'STAGING_STOPPED')
       end
     end
@@ -95,6 +98,10 @@ module VCAP::CloudController
 
     def staged?
       self.state == STAGED_STATE
+    end
+
+    def copying?
+      self.state == COPYING_STATE
     end
 
     def mark_as_staged

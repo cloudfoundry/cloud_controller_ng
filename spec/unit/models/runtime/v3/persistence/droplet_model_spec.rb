@@ -203,7 +203,7 @@ module VCAP::CloudController
 
     describe 'usage events' do
       it 'ensures we have coverage for all states' do
-        expect(DropletModel::DROPLET_STATES.count).to eq(4), 'After adding a new state, tests for app usage event coverage should be added.'
+        expect(DropletModel::DROPLET_STATES.count).to eq(5), 'After adding a new state, tests for app usage event coverage should be added.'
       end
 
       context 'when creating a droplet' do
@@ -213,6 +213,14 @@ module VCAP::CloudController
           }.to change { AppUsageEvent.count }.by(1)
 
           expect(AppUsageEvent.last.state).to eq('STAGING_STARTED')
+        end
+
+        context 'when state is COPYING' do
+          it 'does not record an event' do
+            expect {
+              DropletModel.new(state: DropletModel::COPYING_STATE).save
+            }.not_to change { AppUsageEvent.count }.from(0)
+          end
         end
       end
 
@@ -286,15 +294,13 @@ module VCAP::CloudController
       context 'when deleting a droplet' do
         let!(:droplet) { DropletModel.make(state: state) }
 
-        context 'when state is PENDING' do
-          let(:state) { DropletModel::STAGING_STATE }
+        context 'when state is COPYING' do
+          let(:state) { DropletModel::COPYING_STATE }
 
-          it 'records a STAGING_STOPPED event ' do
+          it 'records no usage event' do
             expect {
               droplet.destroy
-            }.to change { AppUsageEvent.count }.by(1)
-
-            expect(AppUsageEvent.last.state).to eq('STAGING_STOPPED')
+            }.not_to change { AppUsageEvent.count }
           end
         end
 

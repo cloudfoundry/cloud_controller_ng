@@ -25,7 +25,7 @@ module VCAP::CloudController
 
         copied_droplet = DropletModel.last
 
-        expect(copied_droplet.state).to eq DropletModel::STAGING_STATE
+        expect(copied_droplet.state).to eq DropletModel::COPYING_STATE
         expect(copied_droplet.buildpack_receipt_buildpack_guid).to eq source_droplet.buildpack_receipt_buildpack_guid
         expect(copied_droplet.droplet_hash).to be nil
         expect(copied_droplet.environment_variables).to eq(nil)
