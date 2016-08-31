@@ -23,6 +23,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
       field :security_group_guids, 'The list of the associated security groups'
       field :space_quota_definition_guid, 'The guid of the associated space quota definition'
       field :allow_ssh, 'Whether or not Space Developers can enable ssh on apps in the space'
+      field :isolation_segment_guid, 'The guid for the isolation segment', experimental: true
     end
 
     shared_context 'updatable_fields' do |opts|
@@ -34,6 +35,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
       field :domain_guids, 'The list of the associated domains'
       field :security_group_guids, 'The list of the associated security groups'
       field :allow_ssh, 'Whether or not Space Developers can enable ssh on apps in the space'
+      field :isolation_segment_guid, 'The guid for the isolation segment', experimental: true
     end
 
     standard_model_list :space, VCAP::CloudController::SpacesController do
@@ -343,6 +345,23 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
 
         nested_model_associate :security_group, :space
         nested_model_remove :security_group, :space
+      end
+    end
+
+    describe 'Isolation Segments (experimental)' do
+      let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+
+      before do
+        space.isolation_segment_guid = isolation_segment_model.guid
+      end
+
+      delete '/v2/spaces/:guid/isolation_segment (experimental)' do
+        example 'Remove the associated Isolation Segment from the Space (experimental)' do
+          client.delete "/v2/spaces/#{space.guid}/isolation_segment", {}, headers
+          expect(status).to eq(200)
+
+          standard_entity_response parsed_response, :space
+        end
       end
     end
   end

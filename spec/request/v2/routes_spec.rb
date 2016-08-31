@@ -111,27 +111,28 @@ RSpec.describe 'Routes' do
                     'updated_at' => nil
                   },
                   'entity' => {
-                    'name'                        => space.name,
-                    'organization_guid'           => space.organization.guid.to_s,
-                    'space_quota_definition_guid' => nil,
-                    'allow_ssh'                   => true,
-                    'organization_url'            => "/v2/organizations/#{space.organization.guid}",
-                    'developers_url'              => "/v2/spaces/#{space.guid}/developers",
-                    'managers_url'                => "/v2/spaces/#{space.guid}/managers",
-                    'auditors_url'                => "/v2/spaces/#{space.guid}/auditors",
-                    'apps_url'                    => "/v2/spaces/#{space.guid}/apps",
-                    'routes_url'                  => "/v2/spaces/#{space.guid}/routes",
-                    'domains_url'                 => "/v2/spaces/#{space.guid}/domains",
-                    'service_instances_url'       => "/v2/spaces/#{space.guid}/service_instances",
-                    'app_events_url'              => "/v2/spaces/#{space.guid}/app_events",
-                    'events_url'                  => "/v2/spaces/#{space.guid}/events",
-                    'security_groups_url'         => "/v2/spaces/#{space.guid}/security_groups"
+                    'name'                         => space.name,
+                    'organization_guid'            => space.organization.guid.to_s,
+                    'space_quota_definition_guid'  => nil,
+                    'isolation_segment_guid'       => nil,
+                    'allow_ssh'                    => true,
+                    'organization_url'             => "/v2/organizations/#{space.organization.guid}",
+                    'developers_url'               => "/v2/spaces/#{space.guid}/developers",
+                    'managers_url'                 => "/v2/spaces/#{space.guid}/managers",
+                    'auditors_url'                 => "/v2/spaces/#{space.guid}/auditors",
+                    'apps_url'                     => "/v2/spaces/#{space.guid}/apps",
+                    'routes_url'                   => "/v2/spaces/#{space.guid}/routes",
+                    'domains_url'                  => "/v2/spaces/#{space.guid}/domains",
+                    'service_instances_url'        => "/v2/spaces/#{space.guid}/service_instances",
+                    'app_events_url'               => "/v2/spaces/#{space.guid}/app_events",
+                    'events_url'                   => "/v2/spaces/#{space.guid}/events",
+                    'security_groups_url'          => "/v2/spaces/#{space.guid}/security_groups"
                   }
                 },
                 'apps_url' => "/v2/routes/#{route.guid}/apps",
                 'apps' => [
                   {
-                    'metadata' =>                    {
+                    'metadata' => {
                       'guid'       => process.guid,
                       'url'        => "/v2/apps/#{process.guid}",
                       'created_at' => iso8601,

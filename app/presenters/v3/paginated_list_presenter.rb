@@ -1,5 +1,6 @@
 require 'presenters/v3/app_presenter'
 require 'presenters/v3/droplet_presenter'
+require 'presenters/v3/isolation_segment_presenter'
 require 'presenters/v3/package_presenter'
 require 'presenters/v3/pagination_presenter'
 require 'presenters/v3/process_presenter'
@@ -12,13 +13,14 @@ module VCAP::CloudController
     module V3
       class PaginatedListPresenter
         PRESENTERS = {
-          'App'                 => VCAP::CloudController::Presenters::V3::ProcessPresenter,
-          'AppModel'            => VCAP::CloudController::Presenters::V3::AppPresenter,
-          'DropletModel'        => VCAP::CloudController::Presenters::V3::DropletPresenter,
-          'PackageModel'        => VCAP::CloudController::Presenters::V3::PackagePresenter,
-          'RouteMappingModel'   => VCAP::CloudController::Presenters::V3::RouteMappingPresenter,
-          'ServiceBindingModel' => VCAP::CloudController::Presenters::V3::ServiceBindingModelPresenter,
-          'TaskModel'           => VCAP::CloudController::Presenters::V3::TaskPresenter,
+          'App'                   => VCAP::CloudController::Presenters::V3::ProcessPresenter,
+          'AppModel'              => VCAP::CloudController::Presenters::V3::AppPresenter,
+          'DropletModel'          => VCAP::CloudController::Presenters::V3::DropletPresenter,
+          'IsolationSegmentModel' => VCAP::CloudController::Presenters::V3::IsolationSegmentPresenter,
+          'PackageModel'          => VCAP::CloudController::Presenters::V3::PackagePresenter,
+          'RouteMappingModel'     => VCAP::CloudController::Presenters::V3::RouteMappingPresenter,
+          'ServiceBindingModel'   => VCAP::CloudController::Presenters::V3::ServiceBindingModelPresenter,
+          'TaskModel'             => VCAP::CloudController::Presenters::V3::TaskPresenter,
         }.freeze
 
         def initialize(dataset, base_url, message=nil)

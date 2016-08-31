@@ -4,17 +4,63 @@ module VCAP::CloudController
   RSpec.describe IsolationSegmentModel do
     let(:isolation_segment) { IsolationSegmentModel.make }
 
+    describe 'associations' do
+      describe 'spaces' do
+        let(:space_1) { Space.make }
+        let(:space_2) { Space.make }
+
+        it 'one isolation_segment can reference a single spaces' do
+          isolation_segment.add_space(space_1)
+
+          expect(isolation_segment.spaces).to include(space_1)
+          expect(space_1.isolation_segment_model).to eq isolation_segment
+        end
+
+        it 'one isolation_segment can reference multiple spaces' do
+          isolation_segment.add_space(space_1)
+          isolation_segment.add_space(space_2)
+
+          expect(isolation_segment.spaces).to include(space_1, space_2)
+          expect(space_1.isolation_segment_model).to eq isolation_segment
+          expect(space_2.isolation_segment_model).to eq isolation_segment
+        end
+
+        it 'multiple isolation_segments cannot refernece the same space' do
+          isolation_segment_2 = IsolationSegmentModel.make
+
+          isolation_segment.add_space(space_1)
+          isolation_segment_2.add_space(space_1)
+
+          expect(isolation_segment.spaces).to be_empty
+          expect(isolation_segment_2.spaces).to include(space_1)
+        end
+
+        context 'removing spaces from isolation segments' do
+          it 'properly removes the associations' do
+            isolation_segment.add_space(space_1)
+            space_1.reload
+
+            isolation_segment.remove_space(space_1)
+            isolation_segment.reload
+
+            expect(isolation_segment.spaces).to be_empty
+            expect(space_1.isolation_segment_model).to be_nil
+          end
+        end
+      end
+    end
+
     describe 'validations' do
       it 'requires a name' do
         expect {
           IsolationSegmentModel.make(name: nil)
-        }.to raise_error(Sequel::ValidationFailed)
+        }.to raise_error(Sequel::ValidationFailed, 'isolation segment names can only contain non-blank unicode characters')
       end
 
       it 'requires a non blank name' do
         expect {
           IsolationSegmentModel.make(name: '')
-        }.to raise_error(Sequel::ValidationFailed)
+        }.to raise_error(Sequel::ValidationFailed, 'isolation segment names can only contain non-blank unicode characters')
       end
 
       it 'requires a unique name' do

@@ -1,5 +1,4 @@
 require 'spec_helper'
-
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::SpacesController do
     let(:organization_one) { Organization.make }
@@ -10,6 +9,7 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:organization_guid) }
       it { expect(described_class).to be_queryable_by(:developer_guid) }
       it { expect(described_class).to be_queryable_by(:app_guid) }
+      it { expect(described_class).to be_queryable_by(:isolation_segment_guid) }
     end
 
     describe 'Attributes' do
@@ -17,6 +17,7 @@ module VCAP::CloudController
         expect(described_class).to have_creatable_attributes({
           name:                   { type: 'string', required: true },
           allow_ssh:              { type: 'bool', default: true },
+          isolation_segment_guid: { type: 'string', default: nil, required: false },
           organization_guid:      { type: 'string', required: true },
           developer_guids:        { type: '[string]' },
           manager_guids:          { type: '[string]' },
@@ -32,6 +33,7 @@ module VCAP::CloudController
         expect(described_class).to have_updatable_attributes({
           name:                   { type: 'string' },
           allow_ssh:              { type: 'bool' },
+          isolation_segment_guid: { type: 'string', required: false },
           organization_guid:      { type: 'string' },
           developer_guids:        { type: '[string]' },
           manager_guids:          { type: '[string]' },
@@ -1247,6 +1249,127 @@ module VCAP::CloudController
             delete "/v2/spaces/#{space.guid}/auditors/#{auditor2.guid}"
             expect(last_response).to have_status_code(403)
             expect(decoded_response['code']).to eq(10003)
+          end
+        end
+      end
+    end
+
+    describe 'DELETE /v2/spaces/:guid/isolation_segment' do
+      let(:user) { set_current_user(User.make) }
+      let(:isolation_segment_model) { IsolationSegmentModel.make }
+      let(:space) { Space.make }
+
+      context 'when the space is not associated to an isolation segment' do
+        context 'as an admin who is not a manager' do
+          before do
+            set_current_user_as_admin
+          end
+
+          it 'successfully removes the isolation segment' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 200
+          end
+        end
+
+        context 'as a developer' do
+          before do
+            space.organization.add_user(user)
+            space.add_developer(user)
+          end
+
+          it 'fails with a 403' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 403
+          end
+        end
+
+        context 'as a space manager' do
+          before do
+            space.organization.add_user(user)
+            space.add_manager(user)
+          end
+
+          it 'successfully removes the isolation segment' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 200
+          end
+        end
+
+        context 'as an auditor' do
+          before do
+            space.organization.add_user(user)
+            space.add_auditor(user)
+          end
+
+          it 'fails with a 403' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 403
+          end
+        end
+      end
+
+      context 'when a space is associated with an isolation segment' do
+        before do
+          space.isolation_segment_guid = isolation_segment_model.guid
+          space.save
+        end
+
+        context 'as an admin who is not a manager' do
+          before do
+            set_current_user_as_admin
+          end
+
+          it 'successfully removes the isolation segment' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 200
+
+            space.reload
+            expect(space.isolation_segment_model).to be_nil
+          end
+        end
+
+        context 'as a developer' do
+          before do
+            space.organization.add_user(user)
+            space.add_developer(user)
+          end
+
+          it 'fails with a 403' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 403
+
+            space.reload
+            expect(space.isolation_segment_model).to eq(isolation_segment_model)
+          end
+        end
+
+        context 'as a space manager' do
+          before do
+            space.organization.add_user(user)
+            space.add_manager(user)
+          end
+
+          it 'successfully removes the isolation segment' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 200
+
+            space.reload
+            expect(space.isolation_segment_model).to be_nil
+          end
+        end
+
+        context 'as an auditor' do
+          before do
+            space.organization.add_user(user)
+            space.add_auditor(user)
+          end
+
+          it 'fails with a 403' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 403
+
+            space.reload
+            expect(space.isolation_segment_model).to eq(isolation_segment_model)
           end
         end
       end

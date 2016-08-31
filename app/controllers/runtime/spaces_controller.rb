@@ -10,6 +10,7 @@ module VCAP::CloudController
     define_attributes do
       attribute :name, String
       attribute :allow_ssh, Message::Boolean, default: true
+      attribute :isolation_segment_guid, String, default: nil, optional_in: [:create, :update]
 
       to_one :organization
       to_many :developers
@@ -25,7 +26,7 @@ module VCAP::CloudController
       to_one :space_quota_definition, optional_in: [:create], exclude_in: [:update]
     end
 
-    query_parameters :name, :organization_guid, :developer_guid, :app_guid
+    query_parameters :name, :organization_guid, :developer_guid, :app_guid, :isolation_segment_guid
     sortable_parameters :id, :name
 
     deprecated_endpoint "#{path_guid}/domains"
@@ -192,6 +193,19 @@ module VCAP::CloudController
 
         [HTTP::OK, object_renderer.render_json(self.class, space, @opts)]
       end
+    end
+
+    delete '/v2/spaces/:guid/isolation_segment', :delete_isolation_segment
+    def delete_isolation_segment(guid)
+      space = find_guid_and_validate_access(:update, guid)
+
+      space.db.transaction do
+        space.lock!
+        space.update(isolation_segment_guid: nil)
+        space.save
+      end
+
+      [HTTP::OK, object_renderer.render_json(self.class, space, @opts)]
     end
 
     private
