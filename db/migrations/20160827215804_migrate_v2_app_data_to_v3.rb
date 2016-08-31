@@ -203,13 +203,13 @@ Sequel.migration do
       DELETE FROM droplets
       USING droplets as d
         JOIN processes ON processes.id = d.app_id
-      WHERE droplets.id = d.id AND processes.droplet_hash <> d.droplet_hash
+      WHERE droplets.id = d.id AND (processes.droplet_hash <> d.droplet_hash OR processes.droplet_hash IS NULL)
     SQL
 
     mysql_prune_droplets_query = <<-SQL
       DELETE droplets FROM droplets
         JOIN processes ON processes.id = droplets.app_id
-      WHERE processes.droplet_hash <> droplets.droplet_hash
+      WHERE processes.droplet_hash <> droplets.droplet_hash OR processes.droplet_hash IS NULL
     SQL
 
     if dbtype == 'mysql'
