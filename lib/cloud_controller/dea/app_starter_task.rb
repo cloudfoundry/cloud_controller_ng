@@ -25,28 +25,41 @@ module VCAP::CloudController
 
       def start_instances(indices)
         indices = Array(indices)
-        insufficient_resources_error = false
-        indices.each_slice(5) do |slice|
-          begin
-            callbacks = []
-            slice.each do |idx|
-              begin
-                callback = start_instance_at_index(idx)
-                callbacks << callback if callback
-              rescue CloudController::Errors::ApiError => e
-                if e.name == 'InsufficientRunningResourcesAvailable'
-                  insufficient_resources_error = true
-                else
-                  raise e
-                end
-              end
-            end
-          ensure
-            callbacks.each(&:call)
+
+        begin
+          indices.each_slice(5) do |indexes|
+            attempt_start_for_indexes(indexes, 1)
+          end
+        rescue CloudController::Errors::ApiError => e
+          if e.name == 'InsufficientRunningResourcesAvailable'
+            raise CloudController::Errors::ApiError.new_from_details('InsufficientRunningResourcesAvailable')
+          else
+            raise e
           end
         end
+      end
 
-        raise CloudController::Errors::ApiError.new_from_details('InsufficientRunningResourcesAvailable') if insufficient_resources_error
+      def attempt_start_for_indexes(indexes, attempt)
+        callbacks = []
+        retry_indexes = []
+
+        begin
+          indexes.each do |idx|
+            callback = start_instance_at_index(idx)
+            callbacks << { callback: callback, index: idx } if callback
+          end
+        ensure
+          callbacks.each do |cb|
+            status = cb[:callback].call
+            if status == 503
+              retry_indexes << cb[:index]
+            end
+          end
+
+          attempt += 1
+          logger.warn 'dea-client.attempt-start-for-indexes', attempt: attempt
+          attempt_start_for_indexes(retry_indexes, attempt) unless retry_indexes.empty? || attempt > 3
+        end
       end
 
       def start_instance_at_index(index)
