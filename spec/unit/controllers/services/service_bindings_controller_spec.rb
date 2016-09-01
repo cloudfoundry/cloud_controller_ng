@@ -240,8 +240,12 @@ module VCAP::CloudController
 
           expect(event.metadata).to include({
             'request' => {
-              'service_instance_guid' => req[:service_instance_guid],
-              'app_guid' => req[:app_guid]
+              'type'          => 'app',
+              'relationships' => {
+                'app'              => { 'guid' => req[:app_guid] },
+                'service_instance' => { 'guid' => req[:service_instance_guid] }
+              },
+              'data' => 'PRIVATE DATA HIDDEN'
             }
           })
         end
@@ -586,9 +590,7 @@ module VCAP::CloudController
         expect(event.space_guid).to eq(space.guid)
         expect(event.organization_guid).to eq(space.organization.guid)
 
-        expect(event.metadata).to include({
-          'request' => {}
-        })
+        expect(event.metadata).to include({})
       end
 
       describe 'locking the service instance of the binding' do

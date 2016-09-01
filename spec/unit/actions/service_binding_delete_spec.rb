@@ -25,7 +25,7 @@ module VCAP::CloudController
         event = Event.last
         expect(event.type).to eq('audit.service_binding.delete')
         expect(event.actee).to eq(service_binding.guid)
-        expect(event.actee_type).to eq('v3-service-binding')
+        expect(event.actee_type).to eq('service_binding')
       end
 
       it 'asks the broker to unbind the instance' do

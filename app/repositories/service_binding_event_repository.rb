@@ -33,7 +33,7 @@ module VCAP::CloudController
             actor_type:        'user',
             actor_name:        user_email,
             actee:             service_binding.guid,
-            actee_type:        'v3-service-binding',
+            actee_type:        'service_binding',
             actee_name:        '',
             space_guid:        service_binding.space.guid,
             organization_guid: service_binding.space.organization.guid,

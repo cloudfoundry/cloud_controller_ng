@@ -55,7 +55,7 @@ module VCAP::CloudController
         event = Event.last
         expect(event.type).to eq('audit.service_binding.create')
         expect(event.actee).to eq(service_binding.guid)
-        expect(event.actee_type).to eq('v3-service-binding')
+        expect(event.actee_type).to eq('service_binding')
       end
 
       context 'when the instance has another operation in progress' do

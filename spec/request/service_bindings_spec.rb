@@ -73,7 +73,7 @@ RSpec.describe 'v3 service bindings' do
           hash_including({
             type:              'audit.service_binding.create',
             actee:             guid,
-            actee_type:        'v3-service-binding',
+            actee_type:        'service_binding',
             actee_name:        '',
             actor:             user.guid,
             actor_type:        'user',
@@ -178,7 +178,7 @@ RSpec.describe 'v3 service bindings' do
           hash_including({
             type:              'audit.service_binding.delete',
             actee:             service_binding.guid,
-            actee_type:        'v3-service-binding',
+            actee_type:        'service_binding',
             actee_name:        '',
             actor:             user.guid,
             actor_type:        'user',
@@ -204,7 +204,7 @@ RSpec.describe 'v3 service bindings' do
           hash_including({
             type:              'audit.service_binding.delete',
             actee:             service_binding.guid,
-            actee_type:        'v3-service-binding',
+            actee_type:        'service_binding',
             actee_name:        '',
             actor:             user.guid,
             actor_type:        'user',

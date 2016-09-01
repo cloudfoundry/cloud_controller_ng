@@ -324,8 +324,12 @@ RSpec.describe 'ServiceBindings' do
       expect(event.actee_type).to eq('service_binding')
       expect(event.metadata).to match({
         'request' => {
-          'service_instance_guid' => service_instance.guid,
-          'app_guid'              => process.guid
+          'type'          => 'app',
+          'relationships' => {
+            'app'              => { 'guid' => process.guid },
+            'service_instance' => { 'guid' => service_instance.guid }
+          },
+          'data' => 'PRIVATE DATA HIDDEN'
         }
       })
     end
@@ -350,7 +354,7 @@ RSpec.describe 'ServiceBindings' do
       expect(event.type).to eq('audit.service_binding.delete')
       expect(event.actee).to eq(service_binding.guid)
       expect(event.actee_type).to eq('service_binding')
-      expect(event.metadata).to match({ 'request' => {} })
+      expect(event.metadata).to match({})
     end
   end
 end
