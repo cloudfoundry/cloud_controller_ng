@@ -28,16 +28,12 @@ module VCAP::CloudController
           raise CloudController::Errors::ApiError.new_from_details('NotStaged')
         end
 
-        AppStop.new(SystemAuditUser, SystemAuditUser.email).stop(process.app)
+        AppStop.stop_without_event(process.app)
         process.app.update(droplet_guid: nil)
-        AppStart.new(SystemAuditUser, SystemAuditUser.email).start(process.app)
+        AppStart.start_without_event(process.app)
       end
 
-      V2::AppStage.new(
-        user:       SecurityContext.current_user,
-        user_email: SecurityContext.current_user_email,
-        stagers:    @stagers
-      ).stage(process)
+      V2::AppStage.new(stagers: @stagers).stage(process)
 
       @app_event_repository.record_app_restage(process, SecurityContext.current_user.guid, SecurityContext.current_user_email)
 

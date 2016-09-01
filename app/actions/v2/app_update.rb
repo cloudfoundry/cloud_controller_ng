@@ -76,11 +76,7 @@ module VCAP::CloudController
 
       def stage_if_necessary(process, request_attrs)
         if request_attrs.key?('state') && process.needs_staging?
-          V2::AppStage.new(
-            user:       @user,
-            user_email: @user_email,
-            stagers:    @stagers
-          ).stage(process)
+          V2::AppStage.new(stagers: @stagers).stage(process)
         end
       end
 
@@ -88,9 +84,9 @@ module VCAP::CloudController
         if request_attrs.key?('state')
           case request_attrs['state']
           when 'STARTED'
-            AppStart.new(@user, @user_email).start(app)
+            AppStart.start_without_event(app)
           when 'STOPPED'
-            AppStop.new(@user, @user_email).stop(app)
+            AppStop.stop_without_event(app)
           end
         end
       end

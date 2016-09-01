@@ -88,9 +88,13 @@ class DropletsController < ApplicationController
     lifecycle = LifecycleProvider.provide(package, staging_message)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
-    droplet_creator = DropletCreate.new(actor: current_user,
-                                        actor_email: current_user_email)
-    droplet = droplet_creator.create_and_stage(package, lifecycle, staging_message)
+    droplet = DropletCreate.new.create_and_stage(
+      package:    package,
+      lifecycle:  lifecycle,
+      message:    staging_message,
+      user:       current_user,
+      user_email: current_user_email
+    )
 
     render status: :created, json: Presenters::V3::DropletPresenter.new(droplet)
   rescue DropletCreate::InvalidPackage => e

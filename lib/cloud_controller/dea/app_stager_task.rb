@@ -239,7 +239,7 @@ module VCAP::CloudController
           @droplet.lock!
           @droplet.fail_to_stage!(error)
 
-          AppStop.new(SystemAuditUser, SystemAuditUser.email).stop(@droplet.app)
+          AppStop.stop_without_event(@droplet.app)
         end
       end
 

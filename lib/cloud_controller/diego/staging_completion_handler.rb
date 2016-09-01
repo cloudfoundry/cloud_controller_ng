@@ -52,7 +52,7 @@ module VCAP::CloudController
             droplet.fail_to_stage!(payload[:error][:id])
 
             if with_start
-              AppStop.new(SystemAuditUser, SystemAuditUser.email).stop(droplet.app)
+              AppStop.stop_without_event(droplet.app)
             end
           end
         rescue => e

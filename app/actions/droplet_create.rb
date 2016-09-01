@@ -20,18 +20,14 @@ module VCAP::CloudController
 
     def initialize(memory_limit_calculator=StagingMemoryCalculator.new,
       disk_limit_calculator=StagingDiskCalculator.new,
-      environment_presenter=StagingEnvironmentBuilder.new,
-      actor:,
-      actor_email:)
+      environment_presenter=StagingEnvironmentBuilder.new)
 
       @memory_limit_calculator = memory_limit_calculator
       @disk_limit_calculator   = disk_limit_calculator
       @environment_builder     = environment_presenter
-      @actor                   = actor
-      @actor_name              = actor_email
     end
 
-    def create_and_stage(package, lifecycle, message, start_after_staging=false)
+    def create_and_stage(package:, lifecycle:, message:, user:, user_email:, start_after_staging: false, record_event: true)
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
 
       staging_details                     = get_staging_details(package, lifecycle)
@@ -51,15 +47,7 @@ module VCAP::CloudController
         staging_details.droplet = droplet
         lifecycle.create_lifecycle_data_model(droplet)
 
-        Repositories::DropletEventRepository.record_create_by_staging(
-          droplet,
-          @actor,
-          @actor_name,
-          message.audit_hash,
-          package.app.name,
-          package.app.space_guid,
-          package.app.space.organization_guid
-        )
+        record_audit_event(droplet, message, package, user, user_email) if record_event
       end
 
       load_association(droplet)
@@ -73,7 +61,23 @@ module VCAP::CloudController
       droplet
     end
 
+    def create_and_stage_without_event(package:, lifecycle:, message:, start_after_staging: false)
+      create_and_stage(package: package, lifecycle: lifecycle, message: message, user: nil, user_email: nil, start_after_staging: start_after_staging, record_event: false)
+    end
+
     private
+
+    def record_audit_event(droplet, message, package, user, user_email)
+      Repositories::DropletEventRepository.record_create_by_staging(
+        droplet,
+        user,
+        user_email,
+        message.audit_hash,
+        package.app.name,
+        package.app.space_guid,
+        package.app.space.organization_guid
+      )
+    end
 
     def load_association(droplet)
       droplet.reload

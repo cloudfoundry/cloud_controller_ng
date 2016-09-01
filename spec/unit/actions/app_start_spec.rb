@@ -3,38 +3,37 @@ require 'actions/app_start'
 
 module VCAP::CloudController
   RSpec.describe AppStart do
-    let(:user) { double(:user, guid: '7') }
+    let(:user_guid) { 'some-guid' }
     let(:user_email) { '1@2.3' }
-    let(:app_start) { AppStart.new(user, user_email) }
 
     describe '#start' do
       let(:environment_variables) { { 'FOO' => 'bar' } }
 
       context 'when the app has a docker lifecycle' do
-        let(:app_model) do
+        let(:app) do
           AppModel.make(
             :docker,
             desired_state:         'STOPPED',
             environment_variables: environment_variables
           )
         end
-        let(:package) { PackageModel.make(:docker, app: app_model, state: PackageModel::READY_STATE) }
-        let!(:droplet) { DropletModel.make(:docker, app: app_model, package: package, state: DropletModel::STAGED_STATE, docker_receipt_image: package.image) }
-        let!(:process1) { App.make(:process, state: 'STOPPED', app: app_model) }
-        let!(:process2) { App.make(:process, state: 'STOPPED', app: app_model) }
+        let(:package) { PackageModel.make(:docker, app: app, state: PackageModel::READY_STATE) }
+        let!(:droplet) { DropletModel.make(:docker, app: app, package: package, state: DropletModel::STAGED_STATE, docker_receipt_image: package.image) }
+        let!(:process1) { App.make(:process, state: 'STOPPED', app: app) }
+        let!(:process2) { App.make(:process, state: 'STOPPED', app: app) }
 
         before do
-          app_model.update(droplet: droplet)
+          app.update(droplet: droplet)
           VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
         end
 
         it 'starts the app' do
-          app_start.start(app_model)
-          expect(app_model.desired_state).to eq('STARTED')
+          described_class.start(app: app, user_guid: user_guid, user_email: user_email)
+          expect(app.desired_state).to eq('STARTED')
         end
 
         it 'sets the docker image on the process' do
-          app_start.start(app_model)
+          described_class.start(app: app, user_guid: user_guid, user_email: user_email)
 
           process1.reload
           expect(process1.docker_image).to eq(droplet.docker_receipt_image)
@@ -42,38 +41,38 @@ module VCAP::CloudController
       end
 
       context 'when the app has a buildpack lifecycle' do
-        let(:app_model) do
+        let(:app) do
           AppModel.make(:buildpack,
             desired_state:         'STOPPED',
             environment_variables: environment_variables)
         end
         let!(:droplet) do
           DropletModel.make(
-            app:          app_model,
+            app:          app,
             state:        DropletModel::STAGED_STATE,
             droplet_hash: 'the-hash'
           )
         end
-        let!(:process1) { App.make(:process, state: 'STOPPED', app: app_model) }
-        let!(:process2) { App.make(:process, state: 'STOPPED', app: app_model) }
+        let!(:process1) { App.make(:process, state: 'STOPPED', app: app) }
+        let!(:process2) { App.make(:process, state: 'STOPPED', app: app) }
 
         before do
-          app_model.update(droplet: droplet)
+          app.update(droplet: droplet)
         end
 
         it 'sets the desired state on the app' do
-          app_start.start(app_model)
-          expect(app_model.desired_state).to eq('STARTED')
+          described_class.start(app: app, user_guid: user_guid, user_email: user_email)
+          expect(app.desired_state).to eq('STARTED')
         end
 
         it 'creates an audit event' do
           expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_start).with(
-            app_model,
-            user.guid,
+            app,
+            user_guid,
             user_email
           )
 
-          app_start.start(app_model)
+          described_class.start(app: app, user_guid: user_guid, user_email: user_email)
         end
 
         context 'when the app is invalid' do
@@ -83,7 +82,7 @@ module VCAP::CloudController
 
           it 'raises a InvalidApp exception' do
             expect {
-              app_start.start(app_model)
+              described_class.start(app: app, user_guid: user_guid, user_email: user_email)
             }.to raise_error(AppStart::InvalidApp, 'some message')
           end
         end
@@ -91,15 +90,15 @@ module VCAP::CloudController
         context 'and the droplet has a package' do
           let!(:droplet) do
             DropletModel.make(
-              app:     app_model,
+              app:     app,
               package: package,
               state:   DropletModel::STAGED_STATE,
             )
           end
-          let(:package) { PackageModel.make(app: app_model, package_hash: 'some-awesome-thing', state: PackageModel::READY_STATE) }
+          let(:package) { PackageModel.make(app: app, package_hash: 'some-awesome-thing', state: PackageModel::READY_STATE) }
 
           it 'sets the package hash correctly on the process' do
-            app_start.start(app_model)
+            described_class.start(app: app, user_guid: user_guid, user_email: user_email)
 
             process1.reload
             expect(process1.package_hash).to eq(package.package_hash)
@@ -109,6 +108,20 @@ module VCAP::CloudController
             expect(process2.package_hash).to eq(package.package_hash)
             expect(process2.package_state).to eq('STAGED')
           end
+        end
+      end
+
+      describe '#start_without_event' do
+        let(:app) { AppModel.make(:buildpack, desired_state: 'STOPPED') }
+
+        it 'sets the desired state on the app' do
+          described_class.start_without_event(app)
+          expect(app.desired_state).to eq('STARTED')
+        end
+
+        it 'does not create an audit event' do
+          expect_any_instance_of(Repositories::AppEventRepository).not_to receive(:record_app_start)
+          described_class.start_without_event(app)
         end
       end
     end
