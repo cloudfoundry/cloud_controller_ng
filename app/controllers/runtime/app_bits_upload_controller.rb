@@ -2,6 +2,15 @@ require 'presenters/api/job_presenter'
 
 module VCAP::CloudController
   class AppBitsUploadController < RestController::ModelController
+    def self.dependencies
+      [:app_event_repository]
+    end
+
+    def inject_dependencies(dependencies)
+      super
+      @app_event_repository = dependencies.fetch(:app_event_repository)
+    end
+
     path_base 'apps'
     model_class_name :App
 
@@ -59,8 +68,11 @@ module VCAP::CloudController
       src_app  = find_guid_and_validate_access(:upload, source_app_guid)
       dest_app = find_guid_and_validate_access(:upload, dest_app_guid)
 
-      copier = PackageCopy.new(SecurityContext.current_user.guid, SecurityContext.current_user_email)
-      copier.copy(dest_app.app.guid, src_app.package)
+      copier = PackageCopy.new
+      copier.copy_without_event(dest_app.app.guid, src_app.package)
+
+      @app_event_repository.record_src_copy_bits(dest_app, src_app, SecurityContext.current_user.guid, SecurityContext.current_user_email)
+      @app_event_repository.record_dest_copy_bits(dest_app, src_app, SecurityContext.current_user.guid, SecurityContext.current_user_email)
 
       [HTTP::CREATED, JobPresenter.new(copier.enqueued_job).to_json]
     end

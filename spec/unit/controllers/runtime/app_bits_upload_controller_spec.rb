@@ -430,6 +430,20 @@ module VCAP::CloudController
           expect(decoded_response).to eq(expected_response)
         end
 
+        it 'records audit events on the source and destination apps' do
+          expect {
+            post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, admin_headers
+          }.to change {
+            Event.count
+          }.by(2)
+
+          source_event = Event.find(actee: src_app.guid)
+          dest_event = Event.find(actee: dest_app.guid)
+
+          expect(source_event.type).to eq('audit.app.copy-bits')
+          expect(dest_event.type).to eq('audit.app.copy-bits')
+        end
+
         context 'validation permissions' do
           it 'allows an admin' do
             stub_const('VCAP::CloudController::Jobs::Runtime::AppBitsCopier', FakeCopier)

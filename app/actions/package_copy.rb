@@ -6,12 +6,7 @@ module VCAP::CloudController
 
     attr_reader :enqueued_job
 
-    def initialize(user_guid, user_email)
-      @user_guid = user_guid
-      @user_email = user_email
-    end
-
-    def copy(destination_app_guid, source_package)
+    def copy(destination_app_guid:, source_package:, user_guid:, user_email:, record_event: true)
       raise InvalidPackage.new('Source and destination app cannot be the same') if destination_app_guid == source_package.app_guid
       logger.info("copying package #{source_package.guid} to app #{destination_app_guid}")
 
@@ -31,11 +26,7 @@ module VCAP::CloudController
           ).enqueue
         end
 
-        Repositories::PackageEventRepository.record_app_package_copy(
-          package,
-          @user_guid,
-          @user_email,
-          source_package.guid)
+        record_audit_event(package, source_package, user_guid, user_email) if record_event
       end
 
       return package
@@ -43,7 +34,19 @@ module VCAP::CloudController
       raise InvalidPackage.new(e.message)
     end
 
+    def copy_without_event(destination_app_guid, source_package)
+      copy(destination_app_guid: destination_app_guid, source_package: source_package, user_guid: nil, user_email: nil, record_event: false)
+    end
+
     private
+
+    def record_audit_event(package, source_package, user_guid, user_email)
+      Repositories::PackageEventRepository.record_app_package_copy(
+        package,
+        user_guid,
+        user_email,
+        source_package.guid)
+    end
 
     def logger
       @logger ||= Steno.logger('cc.action.package_copy')
