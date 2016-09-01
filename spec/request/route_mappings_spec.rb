@@ -62,7 +62,7 @@ RSpec.describe 'Route Mappings' do
       expect(event.values).to include({
         type:              'audit.app.map-route',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        app_model.name,
         actor:             developer.guid,
         actor_type:        'user',
@@ -231,7 +231,7 @@ RSpec.describe 'Route Mappings' do
       expect(event.values).to include({
         type:              'audit.app.unmap-route',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        app_model.name,
         actor:             developer.guid,
         actor_type:        'user',

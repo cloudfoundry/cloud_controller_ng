@@ -37,7 +37,7 @@ RSpec.describe 'RouteMappings' do
     end
 
     it 'does not display route mappings without a web process' do
-      non_web_process = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
+      non_web_process       = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
       non_displayed_mapping = VCAP::CloudController::RouteMappingModel.make(app: non_web_process.app, route: route, process_type: non_web_process.type)
 
       get "/v2/route_mappings/#{non_displayed_mapping.guid}", nil, headers_for(user)
@@ -189,7 +189,7 @@ RSpec.describe 'RouteMappings' do
       expect(event.type).to eq('audit.app.map-route')
       expect(event.actee_type).to eq('app')
       expect(event.actee).to eq(process.guid)
-      expect(event.metadata).to eq({ 'route_guid' => route.guid })
+      expect(event.metadata).to eq({ 'route_guid' => route.guid, 'app_port' => 9090, 'route_mapping_guid' => route_mapping.guid, 'process_type' => 'web' })
     end
   end
 
@@ -208,7 +208,7 @@ RSpec.describe 'RouteMappings' do
       expect(event.type).to eq('audit.app.unmap-route')
       expect(event.actee_type).to eq('app')
       expect(event.actee).to eq(process.guid)
-      expect(event.metadata).to eq({ 'route_guid' => route.guid })
+      expect(event.metadata).to eq({ 'route_guid' => route.guid, 'route_mapping_guid' => route_mapping.guid, 'process_type' => 'web' })
     end
   end
 end

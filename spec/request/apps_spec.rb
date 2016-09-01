@@ -68,7 +68,7 @@ RSpec.describe 'Apps' do
       expect(event.values).to include({
         type:              'audit.app.create',
         actee:             created_app.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
@@ -132,7 +132,7 @@ RSpec.describe 'Apps' do
         expect(event.values).to include({
           type:              'audit.app.create',
           actee:             created_app.guid,
-          actee_type:        'v3-app',
+          actee_type:        'app',
           actee_name:        'my_app',
           actor:             user.guid,
           actor_type:        'user',
@@ -514,7 +514,7 @@ RSpec.describe 'Apps' do
       expect(event.values).to include({
         type:              'audit.app.delete-request',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'app_name',
         actor:             user.guid,
         actor_type:        'user',
@@ -587,7 +587,7 @@ RSpec.describe 'Apps' do
       expect(event.values).to include({
         type:              'audit.app.update',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'new-name',
         actor:             user.guid,
         actor_type:        'user',
@@ -659,7 +659,7 @@ RSpec.describe 'Apps' do
       expect(event.values).to include({
         type:              'audit.app.start',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'app-name',
         actor:             user.guid,
         actor_type:        'user',
@@ -727,7 +727,7 @@ RSpec.describe 'Apps' do
       expect(event.values).to include({
         type:              'audit.app.stop',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'app-name',
         actor:             user.guid,
         actor_type:        'user',
@@ -870,7 +870,7 @@ RSpec.describe 'Apps' do
       expect(droplet_event.values).to include({
         type:              'audit.app.droplet_mapped',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
@@ -907,7 +907,7 @@ RSpec.describe 'Apps' do
       expect(web_process_event.values).to include({
         type:              'audit.app.process.create',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
@@ -920,7 +920,7 @@ RSpec.describe 'Apps' do
       expect(other_process_event.values).to include({
         type:              'audit.app.process.create',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
@@ -953,7 +953,7 @@ RSpec.describe 'Apps' do
       expect(update_event.values).to include({
         type:              'audit.app.process.update',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
@@ -992,7 +992,7 @@ RSpec.describe 'Apps' do
       expect(delete_event.values).to include({
         type:              'audit.app.process.delete',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',

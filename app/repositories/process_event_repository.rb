@@ -105,7 +105,7 @@ module VCAP::CloudController
           Event.create(
             type:       type,
             actee:      app.guid,
-            actee_type: 'v3-app',
+            actee_type: 'app',
             actee_name: app.name,
             actor:      actor_guid,
             actor_type: actor_type,

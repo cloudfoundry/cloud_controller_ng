@@ -45,14 +45,14 @@ module VCAP::CloudController
       end
 
       def record_app_start(app, actor_guid, actor_name)
-        Loggregator.emit(app.guid, "Starting v3-app with guid #{app.guid}")
+        Loggregator.emit(app.guid, "Starting app with guid #{app.guid}")
 
         actor = { name: actor_name, guid: actor_guid, type: 'user' }
         create_app_audit_event('audit.app.start', app, app.space, actor, nil)
       end
 
       def record_app_stop(app, actor_guid, actor_name)
-        Loggregator.emit(app.guid, "Stopping v3-app with guid #{app.guid}")
+        Loggregator.emit(app.guid, "Stopping app with guid #{app.guid}")
 
         actor = { name: actor_name, guid: actor_guid, type: 'user' }
         create_app_audit_event('audit.app.stop', app, app.space, actor, nil)
@@ -125,21 +125,13 @@ module VCAP::CloudController
           type:       type,
           timestamp:  Sequel::CURRENT_TIMESTAMP,
           actee:      app.guid,
-          actee_type: actee_type(app),
+          actee_type: 'app',
           actee_name: app.name,
           actor:      actor[:guid],
           actor_type: actor[:type],
           actor_name: actor[:name],
           metadata:   metadata
         )
-      end
-
-      def actee_type(actee)
-        if actee.is_a? AppModel
-          'v3-app'
-        else
-          'app'
-        end
       end
 
       def app_audit_hash(request_attrs)

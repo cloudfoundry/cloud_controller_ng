@@ -152,7 +152,7 @@ module VCAP::CloudController
           expect(event.actor_name).to eq(user_email)
           expect(event.type).to eq('audit.app.droplet_mapped')
           expect(event.actee).to eq(app.guid)
-          expect(event.actee_type).to eq('v3-app')
+          expect(event.actee_type).to eq('app')
           expect(event.actee_name).to eq(app.name)
           expect(event.metadata).to eq({ 'request' => { 'a' => 1 } })
         end
@@ -466,7 +466,7 @@ module VCAP::CloudController
             event.reload
 
             expect(event.type).to eq('audit.app.create')
-            expect(event.actee_type).to eq('v3-app')
+            expect(event.actee_type).to eq('app')
             request = event.metadata.fetch('request')
             expect(request).to eq(
               'name' => 'new',
@@ -491,7 +491,7 @@ module VCAP::CloudController
             expect(event.actor_name).to eq(email)
 
             expect(event.actee).to eq(app.guid)
-            expect(event.actee_type).to eq('v3-app')
+            expect(event.actee_type).to eq('app')
 
             expect(event.space).to eq(app.space)
             expect(event.space_guid).to eq(app.space.guid)
@@ -513,7 +513,7 @@ module VCAP::CloudController
             expect(event.actor_name).to eq(email)
 
             expect(event.actee).to eq(app.guid)
-            expect(event.actee_type).to eq('v3-app')
+            expect(event.actee_type).to eq('app')
 
             expect(event.space).to eq(app.space)
             expect(event.space_guid).to eq(app.space.guid)

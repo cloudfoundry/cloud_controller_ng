@@ -106,7 +106,7 @@ RSpec.describe 'Droplets' do
       expect(event.values).to include(
         type:              'audit.app.droplet.create',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my-app',
         actor:             developer.guid,
         actor_type:        'user',

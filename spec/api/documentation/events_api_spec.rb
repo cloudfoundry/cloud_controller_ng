@@ -70,10 +70,8 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
   ).sort.freeze
 
   ACTEE_TYPES = [
-    'v3-app (experimental)',
     'app',
     'route',
-    'v3-service-binding (experimental)',
     'service_plan_visibility',
     'service_broker',
     'service',
@@ -223,7 +221,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         actor_type: 'user',
         actor:      test_user.guid,
         actor_name: test_user_email,
-        actee_type: 'v3-app',
+        actee_type: 'app',
         actee:      test_v3app.guid,
         actee_name: test_v3app.name,
         space_guid: test_v3app.space.guid,
@@ -240,7 +238,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         actor_type: 'user',
         actor:      test_user.guid,
         actor_name: test_user_email,
-        actee_type: 'v3-app',
+        actee_type: 'app',
         actee:      test_v3app.guid,
         actee_name: test_v3app.name,
         space_guid: test_v3app.space.guid,

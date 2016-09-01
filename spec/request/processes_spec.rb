@@ -488,7 +488,7 @@ RSpec.describe 'Processes' do
       expect(event.values).to include({
         type:              'audit.app.process.update',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             developer.guid,
         actor_type:        'user',
@@ -573,7 +573,7 @@ RSpec.describe 'Processes' do
       expect(process_event.values).to include({
         type:              'audit.app.process.scale',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             developer.guid,
         actor_type:        'user',
@@ -608,7 +608,7 @@ RSpec.describe 'Processes' do
       expect(process_event.values).to include({
         type:              'audit.app.process.terminate_instance',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             developer.guid,
         actor_type:        'user',
@@ -986,7 +986,7 @@ RSpec.describe 'Processes' do
       expect(process_event.values).to include({
         type:              'audit.app.process.scale',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             developer.guid,
         actor_type:        'user',
@@ -1021,7 +1021,7 @@ RSpec.describe 'Processes' do
       expect(process_event.values).to include({
         type:              'audit.app.process.terminate_instance',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             developer.guid,
         actor_type:        'user',

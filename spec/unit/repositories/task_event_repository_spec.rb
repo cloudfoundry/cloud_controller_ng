@@ -19,7 +19,7 @@ module VCAP
             expect(event.actor_type).to eq('user')
             expect(event.actor_name).to eq(user_email)
             expect(event.actee).to eq(task.app.guid)
-            expect(event.actee_type).to eq('v3-app')
+            expect(event.actee_type).to eq('app')
             expect(event.actee_name).to eq(task.app.name)
             expect(event.metadata[:task_guid]).to eq(task.guid)
             expect(event.metadata[:request]).to eq(
@@ -44,7 +44,7 @@ module VCAP
             expect(event.actor_type).to eq('user')
             expect(event.actor_name).to eq(user_email)
             expect(event.actee).to eq(task.app.guid)
-            expect(event.actee_type).to eq('v3-app')
+            expect(event.actee_type).to eq('app')
             expect(event.actee_name).to eq(task.app.name)
             expect(event.metadata[:task_guid]).to eq(task.guid)
             expect(event.metadata[:request]).to eq(
