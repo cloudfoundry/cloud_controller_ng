@@ -1,9 +1,7 @@
 module VCAP::CloudController
   module V2
     class AppUpdate
-      def initialize(user:, user_email:, access_validator:, stagers:)
-        @user             = user
-        @user_email       = user_email
+      def initialize(access_validator:, stagers:)
         @access_validator = access_validator
         @stagers          = stagers
       end
@@ -69,8 +67,7 @@ module VCAP::CloudController
 
         elsif docker_type_requested && !case_insensitive_equals(process.docker_image, request_attrs['docker_image'])
           create_message = PackageCreateMessage.new({ type: 'docker', app_guid: app.guid, data: { image: request_attrs['docker_image'] } })
-          creator        = PackageCreate.new(@user.guid, @user_email)
-          creator.create(create_message)
+          PackageCreate.create_without_event(create_message)
         end
       end
 

@@ -47,7 +47,13 @@ class PackagesController < ApplicationController
     bits_already_uploaded! if package.state != PackageModel::CREATED_STATE
 
     begin
-      PackageUpload.new(current_user.guid, current_user_email).upload_async(message, package, configuration)
+      PackageUpload.new.upload_async(
+        message:    message,
+        package:    package,
+        config:     configuration,
+        user_guid:  current_user.guid,
+        user_email: current_user_email
+      )
     rescue PackageUpload::InvalidPackage => e
       unprocessable!(e.message)
     end
@@ -105,7 +111,7 @@ class PackagesController < ApplicationController
     app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     unauthorized! unless can_write?(app.space.guid)
 
-    package = PackageCreate.new(current_user.guid, current_user_email).create(message)
+    package = PackageCreate.create(message: message, user_guid: current_user.guid, user_email: current_user_email)
 
     render status: :created, json: Presenters::V3::PackagePresenter.new(package)
   rescue PackageCreate::InvalidPackage => e

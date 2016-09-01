@@ -211,12 +211,7 @@ module VCAP::CloudController
 
       before_update(process)
 
-      updater = V2::AppUpdate.new(
-        user:             SecurityContext.current_user,
-        user_email:       SecurityContext.current_user_email,
-        access_validator: self,
-        stagers:          @stagers
-      )
+      updater = V2::AppUpdate.new(access_validator: self, stagers: @stagers)
       updater.update(app, process, request_attrs)
 
       after_update(process)
@@ -231,11 +226,7 @@ module VCAP::CloudController
       space = VCAP::CloudController::Space[guid: request_attrs['space_guid']]
       verify_enable_ssh(space)
 
-      creator = V2::AppCreate.new(
-        user_guid:        SecurityContext.current_user.guid,
-        user_email:       SecurityContext.current_user_email,
-        access_validator: self
-      )
+      creator = V2::AppCreate.new(access_validator: self)
       process = creator.create(request_attrs)
 
       @app_event_repository.record_app_create(

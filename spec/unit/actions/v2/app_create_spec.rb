@@ -3,16 +3,9 @@ require 'actions/v2/app_create'
 
 module VCAP::CloudController
   RSpec.describe V2::AppCreate do
-    let(:user) { User.make }
     let(:space) { Space.make }
     let(:access_validator) { double('access_validator', validate_access: true) }
-    subject(:app_create) do
-      described_class.new(
-        user_guid:        user.guid,
-        user_email:       'user_email',
-        access_validator: access_validator
-      )
-    end
+    subject(:app_create) { described_class.new(access_validator: access_validator) }
 
     describe 'create' do
       it 'creates the app' do

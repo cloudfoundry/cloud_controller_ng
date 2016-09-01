@@ -1,9 +1,7 @@
 module VCAP::CloudController
   module V2
     class AppCreate
-      def initialize(user_guid:, user_email:, access_validator:)
-        @user_guid        = user_guid
-        @user_email       = user_email
+      def initialize(access_validator:)
         @access_validator = access_validator
       end
 
@@ -58,7 +56,7 @@ module VCAP::CloudController
 
         if docker_type_requested
           create_message = PackageCreateMessage.new({ type: 'docker', app_guid: app.guid, data: { image: request_attrs['docker_image'] } })
-          PackageCreate.new(@user_guid, @user_email).create(create_message)
+          PackageCreate.create_without_event(create_message)
         elsif buildpack_type_requested || !docker_type_requested
           app.buildpack_lifecycle_data = BuildpackLifecycleDataModel.new(
             buildpack: request_attrs['buildpack'],

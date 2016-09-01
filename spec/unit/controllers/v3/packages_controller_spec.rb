@@ -605,7 +605,7 @@ RSpec.describe PackagesController, type: :controller do
 
         context 'when the package is invalid' do
           before do
-            allow_any_instance_of(VCAP::CloudController::PackageCreate).to receive(:create).and_raise(VCAP::CloudController::PackageCreate::InvalidPackage.new('err'))
+            allow(VCAP::CloudController::PackageCreate).to receive(:create).and_raise(VCAP::CloudController::PackageCreate::InvalidPackage.new('err'))
           end
 
           it 'returns 422' do

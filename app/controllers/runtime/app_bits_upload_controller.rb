@@ -20,10 +20,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'cannot upload bits to a docker app') if app.docker?
 
       create_message = PackageCreateMessage.new({ type: 'bits', app_guid: app.app.guid })
-      creator        = PackageCreate.new(SecurityContext.current_user.guid, SecurityContext.current_user_email)
-      uploader       = PackageUpload.new(SecurityContext.current_user.guid, SecurityContext.current_user_email)
-
-      package = creator.create(create_message)
+      package = PackageCreate.create_without_event(create_message)
 
       unless params['resources']
         missing_resources_message = 'missing :resources'
@@ -37,12 +34,17 @@ module VCAP::CloudController
         bits_name:        upload_handler.uploaded_filename(params, 'application'),
         cached_resources: json_param('resources')
       })
+      uploader = PackageUpload.new
 
       if async?
-        enqueued_job = uploader.upload_async(upload_message, package, config)
+        enqueued_job = uploader.upload_async_without_event(
+          message:    upload_message,
+          package:    package,
+          config:     config,
+        )
         [HTTP::CREATED, JobPresenter.new(enqueued_job).to_json]
       else
-        uploader.upload_sync(upload_message, package)
+        uploader.upload_sync_without_event(upload_message, package)
         [HTTP::CREATED, '{}']
       end
     end
