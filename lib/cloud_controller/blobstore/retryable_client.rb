@@ -13,7 +13,13 @@ module CloudController
       end
 
       def exists?(key)
-        @wrapped_client.exists?(key)
+        with_retries(__method__.to_s, {
+          args: {
+            key: key,
+          }
+        }) do
+          @wrapped_client.exists?(key)
+        end
       end
 
       def download_from_blobstore(source_key, destination_path, mode: nil)

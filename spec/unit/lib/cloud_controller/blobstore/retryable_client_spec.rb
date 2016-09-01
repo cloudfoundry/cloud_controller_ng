@@ -33,6 +33,19 @@ module CloudController
       describe 'retries' do
         let(:wrapped_client) { instance_double(NullClient) }
 
+        context '#exists?' do
+          let(:key) { 'some-key' }
+          before { allow(wrapped_client).to receive(:exists?).and_raise(RetryableError) }
+
+          it 'retries the operation' do
+            expect {
+              client.exists?(key)
+            }.to raise_error RetryableError
+
+            expect(wrapped_client).to have_received(:exists?).with(key).exactly(num_retries).times
+          end
+        end
+
         context '#download_from_blobstore' do
           let(:source_key) { 'some-key' }
           let(:destination_path) { 'some-path' }
