@@ -15,7 +15,7 @@ module CloudController
             'allow_ssh'                   => space.allow_ssh,
           }
 
-          entity['isolation_segment_url'] = "/v3/isolation_segment/#{space.isolation_segment_guid}" unless space.isolation_segment_guid.nil?
+          entity['isolation_segment_url'] = "/v3/isolation_segments/#{space.isolation_segment_guid}" unless space.isolation_segment_guid.nil?
 
           entity.merge!(RelationsPresenter.new.to_hash(controller, space, opts, depth, parents, orphans))
 

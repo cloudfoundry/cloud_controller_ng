@@ -208,6 +208,15 @@ module VCAP::CloudController
       [HTTP::OK, object_renderer.render_json(self.class, space, @opts)]
     end
 
+    def before_update(obj)
+      if request_attrs['isolation_segment_guid']
+        isolation_segment = IsolationSegmentModel[guid: request_attrs['isolation_segment_guid']]
+        raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', "Could not find Isolation Segment with guid: #{request_attrs['isolation_segment_guid']}") unless isolation_segment
+      end
+
+      super(obj)
+    end
+
     private
 
     def after_create(space)

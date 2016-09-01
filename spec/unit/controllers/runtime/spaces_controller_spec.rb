@@ -1254,6 +1254,26 @@ module VCAP::CloudController
       end
     end
 
+    describe 'PUT /v2/spaces/:guid' do
+      let(:isolation_segment_model) { IsolationSegmentModel.make }
+      let(:space) { Space.make }
+
+      context 'associating an isolation_segment' do
+        before do
+          set_current_user_as_admin
+        end
+
+        context 'when the specified segment does not exist' do
+          it 'returns a 400 and a CF-InvalidRelation error' do
+            put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
+
+            expect(last_response.status).to eq 400
+            expect(decoded_response['error_code']).to eq 'CF-InvalidRelation'
+          end
+        end
+      end
+    end
+
     describe 'DELETE /v2/spaces/:guid/isolation_segment' do
       let(:user) { set_current_user(User.make) }
       let(:isolation_segment_model) { IsolationSegmentModel.make }

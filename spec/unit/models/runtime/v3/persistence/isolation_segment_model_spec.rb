@@ -109,5 +109,13 @@ module VCAP::CloudController
         }.to raise_error(Sequel::ValidationFailed)
       end
     end
+
+    describe '#before_destroy' do
+      let!(:space) { Space.make(isolation_segment_guid: isolation_segment.guid) }
+
+      it 'raises an error if there are still spaces associated' do
+        expect { isolation_segment.destroy }.to raise_error(CloudController::Errors::ApiError, /Please delete the space associations for your isolation segment/)
+      end
+    end
   end
 end

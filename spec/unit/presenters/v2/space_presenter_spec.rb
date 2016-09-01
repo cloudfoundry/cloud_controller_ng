@@ -38,7 +38,7 @@ module CloudController::Presenters::V2
             'isolation_segment_guid' => isolation_segment_model.guid,
             'allow_ssh'                   => space.allow_ssh,
             'relationship_key'            => 'relationship_value',
-            'isolation_segment_url' => "/v3/isolation_segment/#{isolation_segment_model.guid}"
+            'isolation_segment_url' => "/v3/isolation_segments/#{isolation_segment_model.guid}"
           }
 
           actual_entity_hash = space_presenter.entity_hash(controller, space, opts, depth, parents, orphans)
