@@ -33,7 +33,7 @@ Sequel.migration do
 
   down do
     alter_table(:buildpack_lifecycle_data) do
-      add_column :buildpack
+      add_column :buildpack, String, default: nil
     end
 
     self[:buildpack_lifecycle_data].each do |row|
@@ -47,7 +47,7 @@ Sequel.migration do
     end
 
     alter_table(:apps) do
-      add_column :buildpack
+      add_column :buildpack, String, default: nil
     end
 
     self[:apps].each do |row|
