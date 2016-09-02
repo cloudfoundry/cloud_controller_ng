@@ -197,7 +197,9 @@ module VCAP::CloudController
 
     delete '/v2/spaces/:guid/isolation_segment', :delete_isolation_segment
     def delete_isolation_segment(guid)
-      space = find_guid_and_validate_access(:update, guid)
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless SecurityContext.admin?
+
+      space = find_guid(guid)
 
       space.db.transaction do
         space.lock!
@@ -210,8 +212,11 @@ module VCAP::CloudController
 
     def before_update(obj)
       if request_attrs['isolation_segment_guid']
+        raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless SecurityContext.admin?
+
         isolation_segment = IsolationSegmentModel[guid: request_attrs['isolation_segment_guid']]
-        raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', "Could not find Isolation Segment with guid: #{request_attrs['isolation_segment_guid']}") unless isolation_segment
+        raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
+                "Could not find Isolation Segment with guid: #{request_attrs['isolation_segment_guid']}") unless isolation_segment
       end
 
       super(obj)
