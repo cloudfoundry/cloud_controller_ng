@@ -88,6 +88,11 @@
   http_code: 429
   message: "Rate Limit Exceeded"
 
+10014:
+  name: MethodNotAllowed
+  http_code: 405
+  message: "Method %s not allowed for %s"
+
 20001:
   name: UserInvalid
   http_code: 400

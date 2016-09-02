@@ -226,6 +226,14 @@ properties:
     default: 180
     description: "Maximum health check timeout (in seconds) that can be set for the app"
 
+  cc.shared_isolation_segment_name:
+    default: "shared"
+    description: |
+      Name of the shared isolation segment created at startup.
+      This field can be updated, but subject to the following caveat:
+         Using the name of an existing IS other than the default one will cause a deployment to fail.
+         To recover, redeploy using the old (current) name of the previous Isolation Segment.
+
   cc.stacks:
     default:
       - name: "cflinuxfs2"

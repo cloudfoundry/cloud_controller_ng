@@ -53,6 +53,8 @@ class IsolationSegmentsController < ApplicationController
   def destroy
     unauthorized! unless roles.admin?
 
+    method_not_allowed!('DELETE', 'the shared isolation segment') if params[:guid].eql?(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
+
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
     resource_not_found!(:isolation_segment) unless isolation_segment_model
 
@@ -66,6 +68,8 @@ class IsolationSegmentsController < ApplicationController
 
   def update
     unauthorized! unless roles.admin?
+
+    method_not_allowed!('PUT', 'the shared isolation segment') if params[:guid].eql?(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
 
     message = IsolationSegmentCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?

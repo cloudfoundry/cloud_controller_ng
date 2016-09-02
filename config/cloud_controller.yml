@@ -51,6 +51,8 @@ maximum_app_disk_in_mb: 2048
 broker_client_default_async_poll_interval_seconds: 60
 broker_client_max_async_poll_duration_minutes: 10080
 
+shared_isolation_segment_name: 'shared'
+
 info:
   name: "vcap"
   build: "2222"
