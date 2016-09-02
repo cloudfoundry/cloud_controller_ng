@@ -59,19 +59,6 @@ module VCAP
           end
         end
       end
-
-      context 'when key was fetched more than 30 seconds ago' do
-        before { allow(uaa_info).to receive_messages(validation_keys_hash: { 'key-name' => { 'value' => 'value-from-uaa' } }) }
-
-        it 're-fetches the key' do
-          Timecop.freeze do
-            subject.value
-            Timecop.travel(40)
-            subject.value
-          end
-          expect(uaa_info).to have_received(:validation_keys_hash).twice
-        end
-      end
     end
 
     describe '#refresh' do
