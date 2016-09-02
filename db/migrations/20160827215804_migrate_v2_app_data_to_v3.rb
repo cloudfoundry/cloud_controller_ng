@@ -1,6 +1,10 @@
 Sequel.migration do
+  transaction
+
   up do
+    collate_opts = {}
     dbtype = if self.class.name.match(/mysql/i)
+               collate_opts[:collate] = :utf8_bin
                'mysql'
              elsif self.class.name.match(/postgres/i)
                'postgres'
@@ -9,20 +13,20 @@ Sequel.migration do
              end
 
     ####
-    ##  App usage events
+    ##  App usage events - Insert STOP events for v3 created processes that will be removed
     ####
     generate_stop_events_query = <<-SQL
-        INSERT INTO app_usage_events
-          (guid, created_at, instance_count, memory_in_mb_per_instance, state, app_guid, app_name, space_guid, space_name, org_guid, buildpack_guid, buildpack_name, package_state, parent_app_name, parent_app_guid, process_type, task_guid, task_name, package_guid, previous_state, previous_package_state, previous_memory_in_mb_per_instance, previous_instance_count)
-        SELECT %s, now(), p.instances, p.memory, 'STOPPED', p.guid, p.name, s.guid, s.name, o.guid, d.buildpack_receipt_buildpack_guid, d.buildpack_receipt_buildpack, p.package_state, a.name, a.guid, p.type, NULL, NULL, pkg.guid, 'STARTED', p.package_state, p.memory, p.instances
-          FROM apps as p
-            INNER JOIN apps_v3 as a ON (a.guid=p.app_guid)
-            INNER JOIN spaces as s ON (s.guid=a.space_guid)
-            INNER JOIN organizations as o ON (o.id=s.organization_id)
-            INNER JOIN packages as pkg ON (a.guid=pkg.app_guid)
-            INNER JOIN v3_droplets as d ON (a.guid=d.app_guid)
-            INNER JOIN buildpack_lifecycle_data as l ON (d.guid=l.droplet_guid)
-          WHERE p.state='STARTED'
+      INSERT INTO app_usage_events
+        (guid, created_at, instance_count, memory_in_mb_per_instance, state, app_guid, app_name, space_guid, space_name, org_guid, buildpack_guid, buildpack_name, package_state, parent_app_name, parent_app_guid, process_type, task_guid, task_name, package_guid, previous_state, previous_package_state, previous_memory_in_mb_per_instance, previous_instance_count)
+      SELECT %s, now(), p.instances, p.memory, 'STOPPED', p.guid, p.name, s.guid, s.name, o.guid, d.buildpack_receipt_buildpack_guid, d.buildpack_receipt_buildpack, p.package_state, a.name, a.guid, p.type, NULL, NULL, pkg.guid, 'STARTED', p.package_state, p.memory, p.instances
+        FROM apps as p
+          INNER JOIN apps_v3 as a ON (a.guid=p.app_guid)
+          INNER JOIN spaces as s ON (s.guid=a.space_guid)
+          INNER JOIN organizations as o ON (o.id=s.organization_id)
+          INNER JOIN packages as pkg ON (a.guid=pkg.app_guid)
+          INNER JOIN v3_droplets as d ON (a.guid=d.app_guid)
+          INNER JOIN buildpack_lifecycle_data as l ON (d.guid=l.droplet_guid)
+        WHERE p.state='STARTED'
     SQL
     if dbtype == 'mysql'
       run generate_stop_events_query % 'UUID()'
@@ -31,8 +35,9 @@ Sequel.migration do
     end
 
     ###
-    ##  V3 data removal
+    ##  remove V3 data
     ###
+
     alter_table(:packages) do
       drop_foreign_key [:app_guid]
     end
@@ -57,7 +62,7 @@ Sequel.migration do
     self[:apps_v3].truncate
 
     ####
-    ##  Migrate buildpack_lifecycle_data
+    ##  Alter tables to match v3 format
     ####
 
     alter_table(:buildpack_lifecycle_data) do
@@ -68,11 +73,10 @@ Sequel.migration do
 
       drop_column :encrypted_buildpack
       drop_column :salt
-    end
 
-    ####
-    ## Migrate apps
-    ####
+      drop_index(:guid)
+      set_column_allow_null(:guid)
+    end
 
     rename_table :apps, :processes
     rename_table :apps_v3, :apps
@@ -81,86 +85,13 @@ Sequel.migration do
       add_index :app_guid, name: :processes_app_guid_index
       add_foreign_key [:app_guid], :apps, key: :guid, name: :fk_processes_app_guid
     end
+
     alter_table(:packages) do
       add_foreign_key [:app_guid], :apps, key: :guid, name: :fk_packages_app_guid
-    end
 
-    ####
-    ## Backfill apps table
-    ###
-    run <<-SQL
-        INSERT INTO apps (guid, name, salt, encrypted_environment_variables, created_at, updated_at, space_guid, desired_state)
-        SELECT p.guid, p.name, p.salt, p.encrypted_environment_json, p.created_at, p.updated_at, s.guid, p.state
-        FROM processes as p, spaces as s
-        WHERE p.space_id = s.id
-        ORDER BY p.id
-    SQL
-
-    run <<-SQL
-        UPDATE processes SET app_guid=guid
-    SQL
-
-    #####
-    ## App Lifecycle
-    ####
-    alter_table(:buildpack_lifecycle_data) do
-      drop_index(:guid)
-      set_column_allow_null(:guid)
-    end
-
-    run <<-SQL
-        INSERT INTO buildpack_lifecycle_data (app_guid, stack)
-        SELECT processes.guid, stacks.name
-        FROM processes, stacks
-        WHERE docker_image is NULL AND stacks.id = processes.stack_id
-    SQL
-
-    run <<-SQL
-        UPDATE buildpack_lifecycle_data
-        SET
-          admin_buildpack_name=(
-            SELECT buildpacks.name
-            FROM buildpacks
-              JOIN processes ON processes.admin_buildpack_id = buildpacks.id
-            WHERE processes.admin_buildpack_id IS NOT NULL AND processes.guid=buildpack_lifecycle_data.app_guid
-          ),
-          encrypted_buildpack_url=(
-            SELECT processes.encrypted_buildpack
-            FROM processes
-            WHERE processes.admin_buildpack_id IS NULL AND processes.guid=buildpack_lifecycle_data.app_guid
-          ),
-          encrypted_buildpack_url_salt=(
-            SELECT processes.buildpack_salt
-            FROM processes
-            WHERE processes.admin_buildpack_id IS NULL AND processes.guid=buildpack_lifecycle_data.app_guid
-          )
-    SQL
-
-    #####
-    ## Backfill packages
-    ####
-    alter_table(:packages) do
       drop_column :url
       add_column :docker_image, String, type: :text
     end
-
-    run <<-SQL
-      INSERT INTO packages (guid, type, package_hash, state, error, app_guid)
-      SELECT guid, 'bits', package_hash, 'READY', NULL, guid
-        FROM processes
-      WHERE package_hash IS NOT NULL AND docker_image IS NULL
-    SQL
-
-    run <<-SQL
-      INSERT INTO packages (guid, type, state, error, app_guid, docker_image)
-      SELECT  guid, 'docker', 'READY', NULL, guid, docker_image
-        FROM processes
-      WHERE docker_image IS NOT NULL
-    SQL
-
-    ####
-    ## Backfill droplets
-    ####
 
     alter_table :droplets do
       add_column :state, String
@@ -188,121 +119,25 @@ Sequel.migration do
       set_column_allow_null(:droplet_hash)
     end
 
-    # backfill any v2 droplets that do not exist due to lazy backfilling in v2 droplets.  it is unlikely there are
-    # any of these, but possible in very old CF deployments
-    run <<-SQL
-      INSERT INTO droplets (guid, app_id, droplet_hash, detected_start_command)
-      SELECT processes.guid, processes.id, processes.droplet_hash, '' AS detected_start_command
-        FROM processes
-      WHERE processes.droplet_hash IS NOT NULL
-        AND processes.id IN ( SELECT processes.id FROM processes LEFT JOIN droplets ON processes.id = droplets.app_id WHERE droplets.id IS NULL)
-    SQL
+    alter_table(:apps_routes) do
+      add_column :app_guid, String, collate_opts
+      add_column :route_guid, String, collate_opts
+      add_column :process_type, String
+      add_index :process_type, name: :route_mappings_process_type_index
 
-    # pruning will not delete from the blobstore
-    postgres_prune_droplets_query = <<-SQL
-      DELETE FROM droplets
-      USING droplets as d
-        JOIN processes ON processes.id = d.app_id
-      WHERE droplets.id = d.id AND (processes.droplet_hash <> d.droplet_hash OR processes.droplet_hash IS NULL)
-    SQL
-
-    mysql_prune_droplets_query = <<-SQL
-      DELETE droplets FROM droplets
-        JOIN processes ON processes.id = droplets.app_id
-      WHERE processes.droplet_hash <> droplets.droplet_hash OR processes.droplet_hash IS NULL
-    SQL
-
-    if dbtype == 'mysql'
-      run mysql_prune_droplets_query
-    elsif dbtype =='postgres'
-      run postgres_prune_droplets_query
+      drop_foreign_key [:route_id]
+      drop_foreign_key [:app_id]
+      drop_constraint :apps_routes_app_id_route_id_app_port_key, type: :unique
     end
 
-    # convert to v3 droplets
-    postgres_convert_to_v3_droplets_query = <<-SQL
-        UPDATE droplets
-        SET
-          guid = v2_app.guid,
-          state = 'STAGED',
-          app_guid = v2_app.guid,
-          package_guid = v2_app.guid,
-          docker_receipt_image = droplets.cached_docker_image,
-          process_types = '{"web":"' || droplets.detected_start_command || '"}',
-          buildpack_receipt_buildpack = v2_app.detected_buildpack_name,
-          buildpack_receipt_buildpack_guid = v2_app.detected_buildpack_guid,
-          buildpack_receipt_detect_output = v2_app.detected_buildpack
-        FROM processes AS v2_app
-        WHERE v2_app.id = droplets.app_id
-    SQL
+    alter_table(:service_bindings) do
+      add_column :app_guid, String
+      add_column :service_instance_guid, String
+      add_column :type, String
 
-    mysql_convert_to_v3_droplets_query = <<-SQL
-        UPDATE droplets
-        JOIN processes as v2_app
-          ON v2_app.id = droplets.app_id
-        SET
-          droplets.guid = v2_app.guid,
-          droplets.state = 'STAGED',
-          droplets.app_guid = v2_app.guid,
-          droplets.package_guid = v2_app.guid,
-          droplets.docker_receipt_image = droplets.cached_docker_image,
-          droplets.process_types = CONCAT('{"web":"', droplets.detected_start_command, '"}'),
-          droplets.buildpack_receipt_buildpack = v2_app.detected_buildpack_name,
-          droplets.buildpack_receipt_buildpack_guid = v2_app.detected_buildpack_guid,
-          droplets.buildpack_receipt_detect_output = v2_app.detected_buildpack
-    SQL
-
-    if dbtype == 'mysql'
-      run mysql_convert_to_v3_droplets_query
-    elsif dbtype =='postgres'
-      run postgres_convert_to_v3_droplets_query
+      drop_foreign_key [:service_instance_id]
+      drop_foreign_key [:app_id]
     end
-
-    # add lifecycle data to droplets
-    run <<-SQL
-      INSERT INTO buildpack_lifecycle_data (droplet_guid)
-      SELECT droplets.guid
-        FROM processes, droplets
-      WHERE processes.docker_image is NULL AND droplets.app_guid = processes.guid
-    SQL
-
-    # set current droplet on v3 app
-    postgres_set_current_droplet_query = <<-SQL
-      UPDATE apps
-      SET droplet_guid = current_droplet.guid
-      FROM droplets current_droplet, processes web_process
-      WHERE web_process.droplet_hash IS NOT NULL
-        AND web_process.app_guid = apps.guid
-        AND web_process.type = 'web'
-        AND current_droplet.app_guid = apps.guid
-        AND current_droplet.droplet_hash = web_process.droplet_hash
-    SQL
-
-    mysql_set_current_droplet_query = <<-SQL
-      UPDATE apps
-      JOIN droplets as current_droplet
-        ON apps.guid = current_droplet.app_guid
-      JOIN processes as web_process
-        ON web_process.app_guid = apps.guid AND web_process.type = 'web'
-      SET apps.droplet_guid = current_droplet.guid
-      WHERE web_process.droplet_hash IS NOT NULL AND current_droplet.droplet_hash = web_process.droplet_hash
-    SQL
-
-    if dbtype == 'mysql'
-      run mysql_set_current_droplet_query
-    elsif dbtype =='postgres'
-      run postgres_set_current_droplet_query
-    end
-
-    alter_table :droplets do
-      set_column_not_null(:state)
-      drop_column :app_id
-      drop_column :cached_docker_image
-      drop_column :detected_start_command
-    end
-
-    ####
-    ## Recreate tasks table
-    ####
 
     create_table :tasks do
       VCAP::Migration.common(self)
@@ -330,55 +165,244 @@ Sequel.migration do
     end
 
     ####
-    ## Fill in guids for buildpack_lifecycle_data inserts done for apps and droplets
+    ## Migrate data
     ####
 
-    if self.class.name.match(/mysql/i)
-      run 'update buildpack_lifecycle_data set guid=UUID();'
-    elsif self.class.name.match(/postgres/i)
-      run 'update buildpack_lifecycle_data set guid=get_uuid();'
+    transaction do
+
+      ####
+      ## Fill in v3 apps table data
+      ###
+      run <<-SQL
+        INSERT INTO apps (guid, name, salt, encrypted_environment_variables, created_at, updated_at, space_guid, desired_state)
+        SELECT p.guid, p.name, p.salt, p.encrypted_environment_json, p.created_at, p.updated_at, s.guid, p.state
+        FROM processes as p, spaces as s
+        WHERE p.space_id = s.id
+        ORDER BY p.id
+      SQL
+
+      run <<-SQL
+        UPDATE processes SET app_guid=guid
+      SQL
+
+      #####
+      ## Create lifecycle data for buildpack apps
+      ####
+
+      run <<-SQL
+        INSERT INTO buildpack_lifecycle_data (app_guid, stack)
+        SELECT processes.guid, stacks.name
+        FROM processes, stacks
+        WHERE docker_image is NULL AND stacks.id = processes.stack_id
+      SQL
+
+      run <<-SQL
+        UPDATE buildpack_lifecycle_data
+        SET
+          admin_buildpack_name=(
+            SELECT buildpacks.name
+            FROM buildpacks
+              JOIN processes ON processes.admin_buildpack_id = buildpacks.id
+            WHERE processes.admin_buildpack_id IS NOT NULL AND processes.guid=buildpack_lifecycle_data.app_guid
+          ),
+          encrypted_buildpack_url=(
+            SELECT processes.encrypted_buildpack
+            FROM processes
+            WHERE processes.admin_buildpack_id IS NULL AND processes.guid=buildpack_lifecycle_data.app_guid
+          ),
+          encrypted_buildpack_url_salt=(
+            SELECT processes.buildpack_salt
+            FROM processes
+            WHERE processes.admin_buildpack_id IS NULL AND processes.guid=buildpack_lifecycle_data.app_guid
+          )
+      SQL
+
+      #####
+      ## Fill in packages data
+      ####
+
+      run <<-SQL
+        INSERT INTO packages (guid, type, package_hash, state, error, app_guid)
+        SELECT guid, 'bits', package_hash, 'READY', NULL, guid
+          FROM processes
+        WHERE package_hash IS NOT NULL AND docker_image IS NULL
+      SQL
+
+      run <<-SQL
+        INSERT INTO packages (guid, type, state, error, app_guid, docker_image)
+        SELECT  guid, 'docker', 'READY', NULL, guid, docker_image
+          FROM processes
+        WHERE docker_image IS NOT NULL
+      SQL
+
+      ####
+      ## Fill in droplets data
+      ####
+
+      # backfill any v2 droplets that do not exist due to lazy backfilling in v2 droplets.  it is unlikely there are
+      # any of these, but possible in very old CF deployments
+      run <<-SQL
+        INSERT INTO droplets (guid, app_id, droplet_hash, detected_start_command)
+        SELECT processes.guid, processes.id, processes.droplet_hash, '' AS detected_start_command
+          FROM processes
+        WHERE processes.droplet_hash IS NOT NULL
+          AND processes.id IN ( SELECT processes.id FROM processes LEFT JOIN droplets ON processes.id = droplets.app_id WHERE droplets.id IS NULL)
+      SQL
+
+      # pruning will not delete from the blobstore
+      postgres_prune_droplets_query = <<-SQL
+        DELETE FROM droplets
+        USING droplets as d
+          JOIN processes ON processes.id = d.app_id
+        WHERE droplets.id = d.id AND (processes.droplet_hash <> d.droplet_hash OR processes.droplet_hash IS NULL)
+      SQL
+
+      mysql_prune_droplets_query = <<-SQL
+        DELETE droplets FROM droplets
+          JOIN processes ON processes.id = droplets.app_id
+        WHERE processes.droplet_hash <> droplets.droplet_hash OR processes.droplet_hash IS NULL
+      SQL
+
+      if dbtype == 'mysql'
+        run mysql_prune_droplets_query
+      elsif dbtype =='postgres'
+        run postgres_prune_droplets_query
+      end
+
+      # convert to v3 droplets
+      postgres_convert_to_v3_droplets_query = <<-SQL
+        UPDATE droplets
+        SET
+          guid = v2_app.guid,
+          state = 'STAGED',
+          app_guid = v2_app.guid,
+          package_guid = v2_app.guid,
+          docker_receipt_image = droplets.cached_docker_image,
+          process_types = '{"web":"' || droplets.detected_start_command || '"}',
+          buildpack_receipt_buildpack = v2_app.detected_buildpack_name,
+          buildpack_receipt_buildpack_guid = v2_app.detected_buildpack_guid,
+          buildpack_receipt_detect_output = v2_app.detected_buildpack
+        FROM processes AS v2_app
+        WHERE v2_app.id = droplets.app_id
+      SQL
+
+      mysql_convert_to_v3_droplets_query = <<-SQL
+        UPDATE droplets
+        JOIN processes as v2_app
+          ON v2_app.id = droplets.app_id
+        SET
+          droplets.guid = v2_app.guid,
+          droplets.state = 'STAGED',
+          droplets.app_guid = v2_app.guid,
+          droplets.package_guid = v2_app.guid,
+          droplets.docker_receipt_image = droplets.cached_docker_image,
+          droplets.process_types = CONCAT('{"web":"', droplets.detected_start_command, '"}'),
+          droplets.buildpack_receipt_buildpack = v2_app.detected_buildpack_name,
+          droplets.buildpack_receipt_buildpack_guid = v2_app.detected_buildpack_guid,
+          droplets.buildpack_receipt_detect_output = v2_app.detected_buildpack
+      SQL
+
+      if dbtype == 'mysql'
+        run mysql_convert_to_v3_droplets_query
+      elsif dbtype =='postgres'
+        run postgres_convert_to_v3_droplets_query
+      end
+
+      # add lifecycle data to buildpack droplets
+      run <<-SQL
+        INSERT INTO buildpack_lifecycle_data (droplet_guid)
+        SELECT droplets.guid
+          FROM processes, droplets
+        WHERE processes.docker_image is NULL AND droplets.app_guid = processes.guid
+      SQL
+
+      # set current droplet on v3 app
+      postgres_set_current_droplet_query = <<-SQL
+        UPDATE apps
+        SET droplet_guid = current_droplet.guid
+        FROM droplets current_droplet, processes web_process
+        WHERE web_process.droplet_hash IS NOT NULL
+          AND web_process.app_guid = apps.guid
+          AND web_process.type = 'web'
+          AND current_droplet.app_guid = apps.guid
+          AND current_droplet.droplet_hash = web_process.droplet_hash
+      SQL
+
+      mysql_set_current_droplet_query = <<-SQL
+        UPDATE apps
+        JOIN droplets as current_droplet
+          ON apps.guid = current_droplet.app_guid
+        JOIN processes as web_process
+          ON web_process.app_guid = apps.guid AND web_process.type = 'web'
+        SET apps.droplet_guid = current_droplet.guid
+        WHERE web_process.droplet_hash IS NOT NULL AND current_droplet.droplet_hash = web_process.droplet_hash
+      SQL
+
+      if dbtype == 'mysql'
+        run mysql_set_current_droplet_query
+      elsif dbtype =='postgres'
+        run postgres_set_current_droplet_query
+      end
+
+      ####
+      ## Fill in guids for buildpack_lifecycle_data inserts done for apps and droplets
+      ####
+
+      if self.class.name.match(/mysql/i)
+        run 'update buildpack_lifecycle_data set guid=UUID();'
+      elsif self.class.name.match(/postgres/i)
+        run 'update buildpack_lifecycle_data set guid=get_uuid();'
+      end
+
+      ####
+      ## Migrate route mappings
+      ####
+
+      run <<-SQL
+        UPDATE apps_routes SET
+          app_guid = (SELECT processes.guid FROM processes WHERE processes.id=apps_routes.app_id),
+          route_guid = (SELECT routes.guid FROM routes WHERE routes.id=apps_routes.route_id),
+          process_type = 'web'
+      SQL
+
+      run <<-SQL
+        UPDATE apps_routes SET app_port=8080 WHERE app_port IS NULL AND EXISTS (SELECT 1 FROM processes WHERE processes.docker_image IS NULL AND processes.id = apps_routes.app_id)
+      SQL
+
+      if self.class.name.match(/mysql/i)
+        run 'update apps_routes set guid=UUID() where guid is NULL;'
+      elsif self.class.name.match(/postgres/i)
+        run 'update apps_routes set guid=get_uuid() where guid is NULL;'
+      end
+
+      ####
+      ## Migrate service bindings
+      ####
+
+      run <<-SQL
+        UPDATE service_bindings SET
+          app_guid = (SELECT processes.guid FROM processes WHERE processes.id=service_bindings.app_id),
+          service_instance_guid = (SELECT service_instances.guid FROM service_instances WHERE service_instances.id=service_bindings.service_instance_id),
+          type = 'app'
+      SQL
     end
+
+    ####
+    ## Remove columns that have moved to other tables
+    ##
+    ## Re-establish foreign key and null constraints
+    ####
 
     alter_table(:buildpack_lifecycle_data) do
       set_column_not_null :guid
       add_index :guid, unique: true, name: :buildpack_lifecycle_data_guid_index
     end
 
-    ####
-    ## Migrate route mappings
-    ####
-
-    collate_opts = {}
-    if self.class.name.match(/mysql/i)
-      collate_opts[:collate] = :utf8_bin
-    end
-
-    alter_table(:apps_routes) do
-      add_column :app_guid, String, collate_opts
-      add_column :route_guid, String, collate_opts
-      add_column :process_type, String
-      add_index :process_type, name: :route_mappings_process_type_index
-
-      drop_foreign_key [:route_id]
-      drop_foreign_key [:app_id]
-      drop_constraint :apps_routes_app_id_route_id_app_port_key, type: :unique
-    end
-
-    run <<-SQL
-      UPDATE apps_routes SET
-        app_guid = (SELECT processes.guid FROM processes WHERE processes.id=apps_routes.app_id),
-        route_guid = (SELECT routes.guid FROM routes WHERE routes.id=apps_routes.route_id),
-        process_type = 'web'
-    SQL
-
-    run <<-SQL
-      UPDATE apps_routes SET app_port=8080 WHERE app_port IS NULL AND EXISTS (SELECT 1 FROM processes WHERE processes.docker_image IS NULL AND processes.id = apps_routes.app_id)
-    SQL
-
-    if self.class.name.match(/mysql/i)
-      run 'update apps_routes set guid=UUID() where guid is NULL;'
-    elsif self.class.name.match(/postgres/i)
-      run 'update apps_routes set guid=get_uuid() where guid is NULL;'
+    alter_table :droplets do
+      set_column_not_null(:state)
+      drop_column :app_id
+      drop_column :cached_docker_image
+      drop_column :detected_start_command
     end
 
     alter_table(:apps_routes) do
@@ -401,34 +425,13 @@ Sequel.migration do
 
     rename_table :apps_routes, :route_mappings
 
-    ####
-    ## Migrate service bindings
-    ####
-
     alter_table(:service_bindings) do
+      drop_column :service_instance_id
+      drop_column :app_id
       drop_column :gateway_name
       drop_column :gateway_data
       drop_column :configuration
       drop_column :binding_options
-
-      add_column :app_guid, String
-      add_column :service_instance_guid, String
-      add_column :type, String
-
-      drop_foreign_key [:service_instance_id]
-      drop_foreign_key [:app_id]
-    end
-
-    run <<-SQL
-      UPDATE service_bindings SET
-        app_guid = (SELECT processes.guid FROM processes WHERE processes.id=service_bindings.app_id),
-        service_instance_guid = (SELECT service_instances.guid FROM service_instances WHERE service_instances.id=service_bindings.service_instance_id),
-        type = 'app'
-    SQL
-
-    alter_table(:service_bindings) do
-      drop_column :service_instance_id
-      drop_column :app_id
 
       set_column_not_null(:app_guid)
       set_column_not_null(:service_instance_guid)
@@ -440,10 +443,6 @@ Sequel.migration do
       add_foreign_key [:app_guid], :apps, key: :guid, name: :fk_service_bindings_app_guid
       add_foreign_key [:service_instance_guid], :service_instances, key: :guid, name: :fk_service_bindings_service_instance_guid
     end
-
-    ####
-    ## Remove columns that have moved to other tables
-    ####
 
     alter_table(:processes) do
       drop_column :name
