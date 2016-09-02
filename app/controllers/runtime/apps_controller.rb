@@ -125,7 +125,7 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_bindings', app.class.table_name)
       end
 
-      AppDelete.new(SecurityContext.current_user.guid, SecurityContext.current_user_email).delete(app.app)
+      AppDelete.new(SecurityContext.current_user.guid, SecurityContext.current_user_email).delete_without_event(app.app)
 
       @app_event_repository.record_app_delete_request(
         app,

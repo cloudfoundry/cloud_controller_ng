@@ -18,7 +18,7 @@ module VCAP::CloudController
       @logger = Steno.logger('cc.action.app_delete')
     end
 
-    def delete(apps)
+    def delete(apps, record_event: true)
       apps = Array(apps)
 
       apps.each do |app|
@@ -27,19 +27,27 @@ module VCAP::CloudController
 
           delete_subresources(app)
 
-          Repositories::AppEventRepository.new.record_app_delete_request(
-            app,
-            app.space,
-            @user_guid,
-            @user_email
-          )
+          record_audit_event(app) if record_event
 
           app.destroy
         end
       end
     end
 
+    def delete_without_event(apps)
+      delete(apps, record_event: false)
+    end
+
     private
+
+    def record_audit_event(app)
+      Repositories::AppEventRepository.new.record_app_delete_request(
+        app,
+        app.space,
+        @user_guid,
+        @user_email
+      )
+    end
 
     def delete_subresources(app)
       PackageDelete.new(user_guid, user_email).delete(app.packages)

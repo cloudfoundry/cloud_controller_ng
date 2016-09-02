@@ -4,13 +4,13 @@ require 'actions/app_delete'
 module VCAP::CloudController
   RSpec.describe AppDelete do
     subject(:app_delete) { AppDelete.new(user.guid, user_email) }
+    let(:user) { User.make }
+    let(:user_email) { 'user@example.com' }
+
+    let!(:app) { AppModel.make }
+    let!(:app_dataset) { app }
 
     describe '#delete' do
-      let!(:app) { AppModel.make }
-      let!(:app_dataset) { app }
-      let(:user) { User.make }
-      let(:user_email) { 'user@example.com' }
-
       it 'deletes the app record' do
         expect {
           app_delete.delete(app_dataset)
@@ -101,6 +101,20 @@ module VCAP::CloudController
           expect(binding.exists?).to be_falsey
           expect(app.exists?).to be_falsey
         end
+      end
+    end
+
+    describe '#delete_without_event' do
+      it 'deletes the app record' do
+        expect {
+          app_delete.delete_without_event(app_dataset)
+        }.to change { AppModel.count }.by(-1)
+        expect(app.exists?).to be_falsey
+      end
+
+      it 'creates an audit event' do
+        expect_any_instance_of(Repositories::AppEventRepository).not_to receive(:record_app_delete_request)
+        app_delete.delete_without_event(app_dataset)
       end
     end
   end
