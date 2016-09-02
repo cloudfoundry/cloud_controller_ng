@@ -273,7 +273,9 @@ module VCAP::CloudController
           enabled: bool,
           optional(:public_endpoint) => String,
           optional(:private_endpoint) => String
-        }
+        },
+
+        :shared_isolation_segment_name => String
       }
     end
 

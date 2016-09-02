@@ -8,6 +8,8 @@ info:
   support_address: "http://support.cloudfoundry.com"
   description: "Cloud Foundry sponsored by Pivotal"
 
+shared_isolation_segment_name: 'shared'
+
 external_protocol: http
 internal_service_hostname: cc.internal.cf
 

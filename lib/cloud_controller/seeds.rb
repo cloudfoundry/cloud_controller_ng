@@ -9,6 +9,19 @@ module VCAP::CloudController
         create_seed_domains(config, system_org)
         create_seed_lockings
         create_seed_environment_variable_groups
+        create_seed_shared_isolation_segment(config)
+      end
+
+      def create_seed_shared_isolation_segment(config)
+        shared_isolation_segment_model = IsolationSegmentModel.find(guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
+
+        if shared_isolation_segment_model
+          if !shared_isolation_segment_model.name.eql?(config[:shared_isolation_segment_name])
+            shared_isolation_segment_model.update(name: config[:shared_isolation_segment_name])
+          end
+        else
+          IsolationSegmentModel.create(name: config[:shared_isolation_segment_name], guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
+        end
       end
 
       def create_seed_quota_definitions(config)
