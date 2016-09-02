@@ -158,7 +158,7 @@ module VCAP::CloudController
 
           expect(event.type).to eq('audit.app.process.crash')
           expect(event.actor).to eq(process.guid)
-          expect(event.actor_type).to eq('v3-process')
+          expect(event.actor_type).to eq('process')
           expect(event.actor_name).to eq('potato')
           expect(event.actee).to eq(app.guid)
           expect(event.actee_type).to eq('app')

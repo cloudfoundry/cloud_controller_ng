@@ -85,7 +85,6 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
   ].sort.freeze
 
   ACTOR_TYPES = %w(
-    v3-process
     user
     system
     service_broker

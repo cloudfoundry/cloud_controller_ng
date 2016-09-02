@@ -81,12 +81,12 @@ module VCAP::CloudController
         post url, MultiJson.dump(crashed_request)
         expect(last_response.status).to eq(200)
 
-        app_event = Event.find(actee: diego_process.guid, actor_type: 'v3-process')
+        app_event = Event.find(actee: diego_process.guid, actor_type: 'process')
 
         expect(app_event).to be
         expect(app_event.space).to eq(diego_process.space)
         expect(app_event.type).to eq('audit.app.process.crash')
-        expect(app_event.actor_type).to eq('v3-process')
+        expect(app_event.actor_type).to eq('process')
         expect(app_event.actor).to eq(diego_process.guid)
         expect(app_event.actee_type).to eq('app')
         expect(app_event.actee).to eq(diego_process.app.guid)
