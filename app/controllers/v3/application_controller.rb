@@ -16,6 +16,10 @@ module V3ErrorsHelper
   def unauthorized!
     raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
   end
+
+  def method_not_allowed!(method, obj)
+    raise CloudController::Errors::ApiError.new_from_details('MethodNotAllowed', method, obj)
+  end
 end
 
 class ApplicationController < ActionController::Base

@@ -12,6 +12,59 @@ module VCAP::CloudController
       end
     end
 
+    describe '.create_seed_shared_isolation_segment' do
+      before do
+        IsolationSegmentModel.dataset.destroy
+      end
+
+      it 'creates the shared isolation segment' do
+        expect {
+          Seeds.create_seed_shared_isolation_segment(config)
+        }.to change { IsolationSegmentModel.count }.from(0).to(1)
+
+        shared_isolation_segment_model = IsolationSegmentModel.first
+        expect(shared_isolation_segment_model.name).to eq('shared')
+        expect(shared_isolation_segment_model.guid).to eq(IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
+      end
+
+      context 'when the shared isolation segment already exists' do
+        before do
+          Seeds.create_seed_shared_isolation_segment(config)
+        end
+
+        context 'and the name does not change' do
+          it 'does not update the isolation segment' do
+            expect_any_instance_of(IsolationSegmentModel).to_not receive(:update)
+            Seeds.create_seed_shared_isolation_segment(config)
+          end
+        end
+
+        context 'and the name changes' do
+          it 'sets the name of the shared segment to the new value' do
+            expect{
+              Seeds.create_seed_shared_isolation_segment({ shared_isolation_segment_name: 'original-name' } )
+            }.to_not change { IsolationSegmentModel.count }
+
+            shared_isolation_segment_model = IsolationSegmentModel.first
+            expect(shared_isolation_segment_model.name).to eq('original-name')
+            expect(shared_isolation_segment_model.guid).to eq(IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
+          end
+
+          context 'and the name is already taken' do
+            let(:isolation_segment_model) { IsolationSegmentModel.make }
+
+            # this means that it will fail our deployment. To correct this issue we could
+            # redeploy with what the old 'shared' isolation segment name
+            it 'raises some kind of error TBD' do
+              expect{
+                Seeds.create_seed_shared_isolation_segment({ shared_isolation_segment_name: isolation_segment_model.name })
+              }.to raise_error(Sequel::ValidationFailed, /must be unique/)
+            end
+          end
+        end
+      end
+    end
+
     describe '.create_seed_quota_definitions' do
       let(:config) do
         {
