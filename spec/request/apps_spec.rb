@@ -866,9 +866,9 @@ RSpec.describe 'Apps' do
 
       events = VCAP::CloudController::Event.where(actor: user.guid).all
 
-      droplet_event = events.find { |e| e.type == 'audit.app.droplet_mapped' }
+      droplet_event = events.find { |e| e.type == 'audit.app.droplet.mapped' }
       expect(droplet_event.values).to include({
-        type:              'audit.app.droplet_mapped',
+        type:              'audit.app.droplet.mapped',
         actee:             app_model.guid,
         actee_type:        'app',
         actee_name:        'my_app',

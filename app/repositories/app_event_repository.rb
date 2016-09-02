@@ -33,7 +33,7 @@ module VCAP::CloudController
 
         actor    = { name: actor_name, guid: actor_guid, type: 'user' }
         metadata = { request: audit_hash }
-        create_app_audit_event('audit.app.droplet_mapped', app, space, actor, metadata)
+        create_app_audit_event('audit.app.droplet.mapped', app, space, actor, metadata)
       end
 
       def record_app_create(app, space, actor_guid, actor_name, request_attrs)

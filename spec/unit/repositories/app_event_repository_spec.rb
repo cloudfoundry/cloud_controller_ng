@@ -150,7 +150,7 @@ module VCAP::CloudController
           expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq('user')
           expect(event.actor_name).to eq(user_email)
-          expect(event.type).to eq('audit.app.droplet_mapped')
+          expect(event.type).to eq('audit.app.droplet.mapped')
           expect(event.actee).to eq(app.guid)
           expect(event.actee_type).to eq('app')
           expect(event.actee_name).to eq(app.name)
