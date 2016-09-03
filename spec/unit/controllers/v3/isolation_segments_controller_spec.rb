@@ -215,19 +215,19 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
           response_guids = parsed_body['resources'].map { |r| r['guid'] }
           expect(response.status).to eq(200)
-          expect(response_guids.length).to eq(2)
-          expect(response_guids).to include(isolation_segment1.guid)
-          expect(response_guids).to include(isolation_segment2.guid)
+          expect(response_guids.length).to eq(3)
+          expect(response_guids).to include(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID, isolation_segment1.guid, isolation_segment2.guid)
         end
       end
 
       context 'when no isolation segments have been created' do
-        it 'returns a 200 and an empty list' do
+        it 'returns a 200 and the seeded isolation segment' do
           get :index
 
           response_guids = parsed_body['resources'].map { |r| r['guid'] }
           expect(response.status).to eq(200)
-          expect(response_guids.length).to eq(0)
+          expect(response_guids.length).to eq(1)
+          expect(response_guids).to include(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
         end
       end
     end
