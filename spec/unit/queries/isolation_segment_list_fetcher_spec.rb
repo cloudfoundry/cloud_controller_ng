@@ -21,7 +21,8 @@ module VCAP::CloudController
       it 'returns all isolation segments' do
         isolation_segment_models = fetcher.fetch_all.all
 
-        expect(isolation_segment_models).to match_array([isolation_segment_model_1, isolation_segment_model_2, isolation_segment_model_3])
+        shared_isolation_segment_model = VCAP::CloudController::IsolationSegmentModel[guid: VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID]
+        expect(isolation_segment_models).to match_array([shared_isolation_segment_model, isolation_segment_model_1, isolation_segment_model_2, isolation_segment_model_3])
       end
 
       context 'filters' do
