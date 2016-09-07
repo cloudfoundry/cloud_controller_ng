@@ -49,7 +49,7 @@ module VCAP
     def decode_token_with_asymmetric_key(auth_token)
       tries = 2
       last_error = nil
-      while tries > 0 do
+      while tries > 0
         tries -= 1
         asymmetric_key.value.each do |key|
           begin
@@ -62,7 +62,6 @@ module VCAP
       end
       raise last_error
     end
-
 
     def decode_token_with_key(auth_token, options)
       options = { audience_ids: config[:resource_id] }.merge(options)
