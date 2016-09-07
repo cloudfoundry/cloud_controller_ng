@@ -49,7 +49,7 @@ gem 'nats', git: 'https://github.com/nats-io/ruby-nats', ref: '8571cf9d685b60630
 # We need to use https for git urls as the git protocol is blocked by various
 # firewalls
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
-gem 'cf-uaa-lib', '~> 3.1.0', git: 'https://github.com/cloudfoundry/cf-uaa-lib.git', ref: 'b1e11235dc6cd7d8d4680e005526de37201305ea'
+gem 'cf-uaa-lib', git: 'https://github.com/cloudfoundry/cf-uaa-lib.git', ref: 'db8fe11b56a1d008131a7d757b49c8a00242b9ab'
 gem 'cf-message-bus', '~> 0.3.0'
 gem 'bits_service_client', github: 'cloudfoundry-incubator/bits-service-client'
 
