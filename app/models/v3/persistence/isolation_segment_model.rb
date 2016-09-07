@@ -12,5 +12,10 @@ module VCAP::CloudController
 
       validates_unique [:name], message: Sequel.lit('isolation segment names are case insensitive and must be unique')
     end
+
+    def before_destroy
+      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'space', 'isolation segment') unless spaces.empty?
+      super
+    end
   end
 end
