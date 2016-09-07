@@ -1,5 +1,5 @@
 module VCAP
-  class UaaVerificationKeys
+  class UaaVerificationKey
     def initialize(verification_key, info)
       @verification_key = verification_key
       @info = info
@@ -16,15 +16,7 @@ module VCAP
     private
 
     def fetch
-      @verification_key.present? ? [@verification_key] : fetch_from_uaa
-    end
-
-    def fetch_from_uaa
-      keys = []
-      @info.validation_keys_hash.each do |_, key|
-        keys << key['value']
-      end
-      keys
+      @verification_key.present? ? @verification_key : @info.validation_key['value']
     end
   end
 end
