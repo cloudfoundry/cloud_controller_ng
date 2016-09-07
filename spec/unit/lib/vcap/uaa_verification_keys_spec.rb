@@ -3,7 +3,7 @@ require 'vcap/uaa_verification_keys'
 
 module VCAP
   RSpec.describe UaaVerificationKeys do
-    subject { described_class.new(config_hash[:verification_key], uaa_info) }
+    subject { described_class.new(uaa_info) }
 
     let(:config_hash) do
       { url: 'http://uaa-url' }
@@ -59,19 +59,6 @@ module VCAP
           end
         end
       end
-
-      context 'when config specified verification key' do
-        before { config_hash[:verification_key] = 'value-from-config' }
-
-        it 'returns key specified in config' do
-          expect(subject.value).to eq(['value-from-config'])
-        end
-
-        it 'is not fetched' do
-          expect(uaa_info).not_to receive(:validation_keys_hash)
-          subject.value
-        end
-      end
     end
 
     describe '#refresh' do
@@ -98,21 +85,6 @@ module VCAP
             subject.refresh
             expect(subject.value).to eq(['value-from-uaa'])
           end
-        end
-      end
-
-      context 'when config specified verification key' do
-        before { config_hash[:verification_key] = 'value-from-config' }
-
-        it 'returns key specified in config' do
-          subject.refresh
-          expect(subject.value).to eq(['value-from-config'])
-        end
-
-        it 'is not fetched' do
-          expect(uaa_info).not_to receive(:validation_keys_hash)
-          subject.refresh
-          expect(subject.value).to eq(['value-from-config'])
         end
       end
     end

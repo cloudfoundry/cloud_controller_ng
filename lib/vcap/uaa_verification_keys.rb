@@ -1,12 +1,11 @@
 module VCAP
   class UaaVerificationKeys
-    def initialize(verification_key, info)
-      @verification_key = verification_key
+    def initialize(info)
       @info = info
     end
 
     def value
-      @value ||= fetch
+      @value ||= fetch_from_uaa
     end
 
     def refresh
@@ -14,10 +13,6 @@ module VCAP
     end
 
     private
-
-    def fetch
-      @verification_key.present? ? [@verification_key] : fetch_from_uaa
-    end
 
     def fetch_from_uaa
       keys = []
