@@ -6,9 +6,11 @@ module VCAP
     subject { described_class.new(config_hash) }
 
     let(:config_hash) do
-      {
+      { uaa: {
         resource_id: 'resource-id',
         symmetric_secret: nil
+      },
+        skip_cert_verify: true
       }
     end
 
@@ -52,7 +54,7 @@ module VCAP
           { 'aud' => 'resource-id', 'payload' => 123, 'exp' => Time.now.utc.to_i + 10_000 }
         end
 
-        before { config_hash[:symmetric_secret] = 'symmetric-key' }
+        before { config_hash[:uaa][:symmetric_secret] = 'symmetric-key' }
 
         context 'when token is valid' do
           it 'uses UAA::TokenCoder to decode the token with skey' do
@@ -74,7 +76,7 @@ module VCAP
       end
 
       context 'when asymmetric key is used' do
-        before { config_hash[:symmetric_secret] = nil }
+        before { config_hash[:uaa][:symmetric_secret] = nil }
 
         let(:rsa_key) { OpenSSL::PKey::RSA.new(2048) }
         before { allow(uaa_info).to receive_messages(validation_keys_hash: { 'key1' => { 'value' => rsa_key.public_key.to_pem } }) }
