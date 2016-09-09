@@ -17,11 +17,11 @@ Sequel.migration do
   end
 end
       Ruby
-      puts"*"*123
+      puts"*"*134
       puts""
-      puts "Before writing a migration review our style guide: https://github.com/cloudfoundry/cloud_controller_ng/wiki/CAPI-Migrations"
+      puts "Before writing a migration review our style guide: https://github.com/cloudfoundry/cloud_controller_ng/wiki/CAPI-Migration-Style-Guide"
       puts""
-      puts"*"*123
+      puts"*"*134
 
     end
   end
