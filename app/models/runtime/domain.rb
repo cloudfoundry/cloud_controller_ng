@@ -67,7 +67,7 @@ module VCAP::CloudController
       join_table: 'organizations_private_domains',
       left_key: :private_domain_id,
       right_key: :organization_id,
-      before_set: :validate_add_shared_organization
+      before_add: :validate_add_shared_organization
     )
 
     add_association_dependencies(
@@ -158,7 +158,7 @@ module VCAP::CloudController
     end
 
     def validate_add_shared_organization(organization)
-      !shared? && !owned_by(organization)
+      !shared? && !owned_by?(organization)
     end
   end
 end
