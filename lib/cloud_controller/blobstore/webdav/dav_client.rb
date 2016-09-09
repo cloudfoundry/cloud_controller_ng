@@ -187,6 +187,9 @@ module CloudController
       rescue OpenSSL::SSL::SSLError => e
         logger.error("SSL verification failed: #{e.message}")
         raise BlobstoreError.new('SSL verification failed')
+      rescue => e
+        logger.error("Error with blobstore: #{e.message}")
+        raise BlobstoreError.new('Blobstore error')
       end
     end
   end
