@@ -250,6 +250,13 @@ Sequel.migration do
       SQL
 
       # pruning will not delete from the blobstore
+
+      # prune orphaned droplets
+      run <<-SQL
+        DELETE FROM droplets WHERE droplets.app_id NOT IN (SELECT id FROM processes)
+      SQL
+
+      # prune additional droplets, each app will have only one droplet
       postgres_prune_droplets_query = <<-SQL
         DELETE FROM droplets
         USING droplets as d
@@ -265,8 +272,18 @@ Sequel.migration do
 
       if dbtype == 'mysql'
         run mysql_prune_droplets_query
+
+        run <<-SQL
+          DELETE a FROM droplets a, droplets b
+          WHERE a.app_id=b.app_id AND a.id < b.id
+        SQL
       elsif dbtype =='postgres'
         run postgres_prune_droplets_query
+
+        run <<-SQL
+          DELETE FROM droplets a USING droplets b
+          WHERE a.app_id = b.app_id AND a.id < b.id
+        SQL
       end
 
       # convert to v3 droplets
