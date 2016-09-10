@@ -52,6 +52,26 @@ module VCAP::CloudController
         }.from(0).to(1)
       end
 
+      it 'expires old droplets' do
+        config = {
+          droplets: {
+            max_staged_droplets_stored: 5
+          }
+        }
+        expect {
+          10.times do
+            Tempfile.open('tmpfile') do |f|
+              f.write(file_content)
+              f.close
+              DropletUpload.new(f.path, app.id, config).perform
+            end
+          end
+        }.to change {
+          CloudController::DropletUploader.new(app.refresh, blobstore)
+          app.droplets.size
+        }.from(0).to(config[:droplets][:max_staged_droplets_stored])
+      end
+
       it 'deletes the uploaded file' do
         expect(FileUtils).to receive(:rm_f).with(local_file.path)
         job.perform

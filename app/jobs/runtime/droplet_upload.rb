@@ -4,9 +4,10 @@ module VCAP::CloudController
       class DropletUpload < VCAP::CloudController::Jobs::CCJob
         attr_reader :local_path, :app_id
 
-        def initialize(local_path, app_id)
+        def initialize(local_path, app_id, config=Config.config)
           @local_path = local_path
           @app_id = app_id
+          @droplets_storage_count = config[:droplets][:max_staged_droplets_stored] || 2
         end
 
         def perform
@@ -17,7 +18,7 @@ module VCAP::CloudController
 
           if app
             blobstore = CloudController::DependencyLocator.instance.droplet_blobstore
-            CloudController::DropletUploader.new(app, blobstore).upload(local_path)
+            CloudController::DropletUploader.new(app, blobstore).upload(local_path, @droplets_storage_count)
           end
 
           FileUtils.rm_f(local_path)
