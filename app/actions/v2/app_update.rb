@@ -28,9 +28,10 @@ module VCAP::CloudController
           @access_validator.validate_access(:update, process, request_attrs)
 
           start_or_stop(app, request_attrs)
+          prepare_to_stage(app) if staging_necessary?(process, request_attrs)
         end
 
-        stage_if_necessary(process, request_attrs)
+        stage(process) if staging_necessary?(process, request_attrs)
       end
 
       private
@@ -71,10 +72,12 @@ module VCAP::CloudController
         end
       end
 
-      def stage_if_necessary(process, request_attrs)
-        if request_attrs.key?('state') && process.needs_staging?
-          V2::AppStage.new(stagers: @stagers).stage(process)
-        end
+      def prepare_to_stage(app)
+        app.update(droplet_guid: nil)
+      end
+
+      def stage(process)
+        V2::AppStage.new(stagers: @stagers).stage(process)
       end
 
       def start_or_stop(app, request_attrs)
@@ -118,6 +121,10 @@ module VCAP::CloudController
 
       def custom_buildpacks_disabled?
         VCAP::CloudController::Config.config[:disable_custom_buildpacks]
+      end
+
+      def staging_necessary?(process, request_attrs)
+        request_attrs.key?('state') && process.needs_staging?
       end
     end
   end

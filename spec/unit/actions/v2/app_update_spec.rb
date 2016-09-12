@@ -227,7 +227,7 @@ module VCAP::CloudController
 
           context 'when the app needs staging' do
             before do
-              app.update(droplet: nil)
+              PackageModel.make(app: app, state: PackageModel::READY_STATE, package_hash: 'some-hash')
               process.reload
             end
 
@@ -236,6 +236,12 @@ module VCAP::CloudController
               app_update.update(app, process, request_attrs)
               expect(app_stage).to have_received(:stage)
             end
+
+            it 'unsets the current droplet' do
+              expect(process.current_droplet).not_to be_nil
+              app_update.update(app, process, request_attrs)
+              expect(process.reload.current_droplet).to be_nil
+            end
           end
 
           context 'when the app does not need staging' do
@@ -243,6 +249,12 @@ module VCAP::CloudController
               expect(process.needs_staging?).to be_falsey
               app_update.update(app, process, request_attrs)
               expect(app_stage).not_to have_received(:stage)
+            end
+
+            it 'does not change the current droplet' do
+              expect(process.current_droplet).not_to be_nil
+              app_update.update(app, process, request_attrs)
+              expect(process.reload.current_droplet).not_to be_nil
             end
           end
         end
