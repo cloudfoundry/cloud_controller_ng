@@ -59,6 +59,22 @@ module VCAP::CloudController
         }.to raise_error(Sequel::ValidationFailed, /type presence/)
       end
 
+      it 'passes validation when mount config is null' do
+        good_mount = '[{"driver":"foo", "container_dir":"/", "mode":"rw", "device_type":"shared", "device":{"volume_id":"a", "mount_config":null}}]'
+
+        binding = ServiceBindingModel.make
+        binding.volume_mounts = good_mount
+        expect { binding.save }.not_to raise_error
+      end
+
+      it 'passes validation when mount config is missing' do
+        good_mount = '[{"driver":"foo", "container_dir":"/", "mode":"rw", "device_type":"shared", "device":{"volume_id":"a"}}]'
+
+        binding = ServiceBindingModel.make
+        binding.volume_mounts = good_mount
+        expect { binding.save }.not_to raise_error
+      end
+
       it 'validates max length of volume_mounts' do
         too_long = 'a' * 65_535
         bad_mount = '[{"driver":"foo", "container_dir":"/", "mode":"rw", "device_type":"shared", "device":{"volume_id":"a", "mount_config":{"a":"' +

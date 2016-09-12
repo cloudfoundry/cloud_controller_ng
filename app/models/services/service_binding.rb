@@ -67,7 +67,7 @@ module VCAP::CloudController
       raise InvalidVolumeMount.new("required field 'device.volume_id' must be a non-empty string") unless
           mount_hash['device']['volume_id'].class == String && !mount_hash['device']['volume_id'].empty?
       raise InvalidVolumeMount.new("field 'device.mount_config' must be an object if it is defined") unless
-          !mount_hash['device'].key?('mount_config') || mount_hash['device']['mount_config'].class == Hash
+          !mount_hash['device'].key?('mount_config') || mount_hash['device']['mount_config'].nil? || mount_hash['device']['mount_config'].class == Hash
     end
 
     def validate_cannot_change_binding

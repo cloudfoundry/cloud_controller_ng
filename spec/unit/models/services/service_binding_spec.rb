@@ -15,6 +15,22 @@ module VCAP::CloudController
       it { is_expected.to validate_db_presence :credentials }
       it { is_expected.to validate_uniqueness [:app_id, :service_instance_id] }
 
+      it 'passes validation when mount config is null' do
+        good_mount = '[{"driver":"foo", "container_dir":"/", "mode":"rw", "device_type":"shared", "device":{"volume_id":"a", "mount_config":null}}]'
+
+        binding = ServiceBinding.make
+        binding.volume_mounts = good_mount
+        expect { binding.save }.not_to raise_error
+      end
+
+      it 'passes validation when mount config is missing' do
+        good_mount = '[{"driver":"foo", "container_dir":"/", "mode":"rw", "device_type":"shared", "device":{"volume_id":"a"}}]'
+
+        binding = ServiceBinding.make
+        binding.volume_mounts = good_mount
+        expect { binding.save }.not_to raise_error
+      end
+
       it 'validates max length of volume_mounts', focus: true do
         too_long = 'a' * 65_535
         bad_mount = '[{"driver":"foo", "container_dir":"/", "mode":"rw", "device_type":"shared", "device":{"volume_id":"a", "mount_config":{"a":"' +
