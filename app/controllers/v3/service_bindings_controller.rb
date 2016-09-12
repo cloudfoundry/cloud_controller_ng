@@ -31,6 +31,8 @@ class ServiceBindingsController < ApplicationController
       raise CloudController::Errors::ApiError.new_from_details('ServiceBindingAppServiceTaken', "#{app.guid} #{service_instance.guid}")
     rescue ServiceBindingCreate::VolumeMountServiceDisabled
       raise CloudController::Errors::ApiError.new_from_details('VolumeMountServiceDisabled')
+    rescue ServiceBindingCreate::InvalidVolumeMount
+      raise CloudController::Errors::ApiError.new_from_details('InvalidVolumeMount')
     end
   end
 

@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe ServiceBindingModel do
     let(:credentials) { { 'secret' => 'password' }.to_json }
-    let(:volume_mounts) { [{ 'array' => 'hashes' }].to_json }
+    let(:volume_mounts) { [].to_json }
     let(:last_row) { ServiceBindingModel.dataset.naked.order_by(:id).last }
     let!(:service_binding) { ServiceBindingModel.make(credentials: credentials, volume_mounts: volume_mounts) }
 
@@ -59,13 +59,83 @@ module VCAP::CloudController
         }.to raise_error(Sequel::ValidationFailed, /type presence/)
       end
 
-      it 'validates max length of volume_mounts' do
-        too_long = 'a' * (65_535 + 1)
+      it 'passes validation when mount config is null' do
+        good_mount = '[{"driver":"foo", "container_dir":"/", "mode":"rw", "device_type":"shared", "device":{"volume_id":"a", "mount_config":null}}]'
 
         binding = ServiceBindingModel.make
-        binding.volume_mounts = too_long
+        binding.volume_mounts = good_mount
+        expect { binding.save }.not_to raise_error
+      end
+
+      it 'passes validation when mount config is missing' do
+        good_mount = '[{"driver":"foo", "container_dir":"/", "mode":"rw", "device_type":"shared", "device":{"volume_id":"a"}}]'
+
+        binding = ServiceBindingModel.make
+        binding.volume_mounts = good_mount
+        expect { binding.save }.not_to raise_error
+      end
+
+      it 'validates max length of volume_mounts' do
+        too_long = 'a' * 65_535
+        bad_mount = '[{"driver":"foo", "container_dir":"/", "mode":"rw", "device_type":"shared", "device":{"volume_id":"a", "mount_config":{"a":"' +
+            too_long + '"}}}]'
+
+        binding = ServiceBindingModel.make
+        binding.volume_mounts = bad_mount
 
         expect { binding.save }.to raise_error(Sequel::ValidationFailed, /volume_mounts max_length/)
+      end
+
+      def verify_mount_option(bad_mount, exception, content)
+        binding = ServiceBindingModel.make
+        binding.volume_mounts = bad_mount
+        expect { binding.save }.to raise_error(exception, content)
+      end
+
+      it 'validates that volume_mounts have a device type' do
+        bad_mount = '[{"driver":"foo", "container_dir":"/", "mode":"rw", "device":{"volume_id":"a", "mount_config":{}}}]'
+
+        verify_mount_option(bad_mount, ServiceBindingModel::InvalidVolumeMount, /device_type/)
+      end
+      it 'validates that volume_mounts have a device' do
+        bad_mount = '[{"driver":"foo", "container_dir":"/", "device_type":"shared", "mode":"rw"}]'
+
+        verify_mount_option(bad_mount, ServiceBindingModel::InvalidVolumeMount, /'device'/)
+      end
+      it 'validates that volume_mounts have a mode' do
+        bad_mount = '[{"driver":"foo", "container_dir":"/", "device_type":"shared", "device":{"volume_id":"a", "mount_config":{}}}]'
+
+        verify_mount_option(bad_mount, ServiceBindingModel::InvalidVolumeMount, /mode/)
+      end
+      it 'validates that volume_mounts have a container_dir' do
+        bad_mount = '[{"driver":"foo", "device_type":"shared", "mode":"rw", "device":{"volume_id":"a", "mount_config":{}}}]'
+
+        verify_mount_option(bad_mount, ServiceBindingModel::InvalidVolumeMount, /container_dir/)
+      end
+      it 'validates that volume_mounts have a driver' do
+        bad_mount = '[{"container_dir":"/", "device_type":"shared", "mode":"rw", "device":{"volume_id":"a", "mount_config":{}}}]'
+
+        verify_mount_option(bad_mount, ServiceBindingModel::InvalidVolumeMount, /driver/)
+      end
+      it 'validates that volume_mounts is an array' do
+        bad_mount = '{"driver":"foo", "container_dir":"/", "device_type":"shared", "mode":"rw", "device":{"volume_id":"a", "mount_config":{}}}'
+
+        verify_mount_option(bad_mount, ServiceBindingModel::InvalidVolumeMount, /must be an Array/)
+      end
+      it 'validates that volume_mounts elements are json objects' do
+        bad_mount = '[{"driver":"foo", "container_dir":"/", "device_type":"shared", "mode":"rw", "device":{"volume_id":"a", "mount_config":{}}}, "extra junk"]'
+
+        verify_mount_option(bad_mount, ServiceBindingModel::InvalidVolumeMount, /must be an object/)
+      end
+      it 'validates that volume_mounts.device elements are json objects' do
+        bad_mount = '[{"driver":"foo", "container_dir":"/", "device_type":"shared", "mode":"rw", "device":"junk"}]'
+
+        verify_mount_option(bad_mount, ServiceBindingModel::InvalidVolumeMount, /must be an object/)
+      end
+      it 'validates that volume_mounts.device.mount_config elements are json objects' do
+        bad_mount = '[{"driver":"foo", "container_dir":"/", "device_type":"shared", "mode":"rw", "device":{"volume_id":"a", "mount_config":["junk"]}}]'
+
+        verify_mount_option(bad_mount, ServiceBindingModel::InvalidVolumeMount, /must be an object/)
       end
 
       describe 'changing the binding after creation' do

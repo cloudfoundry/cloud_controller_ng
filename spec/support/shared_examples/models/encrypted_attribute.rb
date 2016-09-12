@@ -13,7 +13,7 @@ module VCAP::CloudController
     end
 
     let(:model_class) { described_class }
-    let(:value_to_encrypt) { 'this-is-a-secret' }
+    let(:value_to_encrypt) { '[]' }
     let!(:model) { new_model }
     let(:storage_column) { encrypted_attr }
     let(:attr_salt) { "#{encrypted_attr}_salt" }

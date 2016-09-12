@@ -50,8 +50,8 @@ module VCAP::CloudController
                                     container_dir: '/data/images',
                                     mode: 'r',
                                     device_type: 'shared',
+                                    driver: 'cephfs',
                                     device: {
-                                        driver: 'cephfs',
                                         volume_id: 'abc',
                                         mount_config: {
                                             key: 'value'

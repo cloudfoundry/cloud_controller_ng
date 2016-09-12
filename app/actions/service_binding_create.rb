@@ -8,6 +8,7 @@ module VCAP::CloudController
     class ServiceBrokerInvalidSyslogDrainUrl < StandardError; end
     class InvalidServiceBinding < StandardError; end
     class VolumeMountServiceDisabled < StandardError; end
+    class InvalidVolumeMount < StandardError; end
 
     include VCAP::CloudController::LockCheck
 
@@ -39,6 +40,7 @@ module VCAP::CloudController
       rescue => e
         logger.error "Failed to save state of create for service binding #{service_binding.guid} with exception: #{e}"
         mitigate_orphan(service_binding)
+        raise InvalidVolumeMount if e.instance_of?(ServiceBindingModel::InvalidVolumeMount)
         raise e
       end
 

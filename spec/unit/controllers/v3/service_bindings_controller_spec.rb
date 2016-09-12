@@ -301,6 +301,34 @@ RSpec.describe ServiceBindingsController, type: :controller do
           expect(response.body).to include 'VolumeMountServiceDisabled'
         end
       end
+
+      context 'when the broker returns a volume_mount that is poorly formatted' do
+        let(:body) do
+          { 'credentials' => { 'super' => 'secret' },
+            'volume_mounts' => [{ 'thing' => 'other thing' }]
+          }.to_json
+        end
+        let(:opts) do
+          {
+              fake_service_binding: fake_service_binding,
+              body: body
+          }
+        end
+
+        before do
+          TestConfig.config[:volume_services_enabled] = true
+          stub_bind(service_instance, opts)
+          service_instance.service.requires = ['volume_mount']
+          service_instance.service.save
+        end
+
+        it 'returns CF-InvalidVolumeMount' do
+          post :create, body: req_body
+
+          expect(response.status).to eq(502)
+          expect(response.body).to include 'InvalidVolumeMount'
+        end
+      end
     end
   end
 

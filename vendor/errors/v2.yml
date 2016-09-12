@@ -363,6 +363,11 @@
   http_code: 502
   message: "The service is attempting to stream logs from your application, but is not registered as a logging service. Please contact the service provider."
 
+90007:
+  name: InvalidVolumeMount
+  http_code: 502
+  message: "The service broker responded to the bind request with a poorly formed or invalid volume mount. Please contact the service provider."
+
 100001:
   name: AppInvalid
   http_code: 400
