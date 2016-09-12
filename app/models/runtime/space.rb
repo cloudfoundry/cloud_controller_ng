@@ -100,7 +100,7 @@ module VCAP::CloudController
 
     export_attributes :name, :organization_guid, :space_quota_definition_guid, :allow_ssh
 
-    import_attributes :name, :organization_guid, :developer_guids, :allow_ssh,
+    import_attributes :name, :organization_guid, :developer_guids, :allow_ssh, :isolation_segment_guid,
       :manager_guids, :auditor_guids, :security_group_guids, :space_quota_definition_guid
 
     strip_attributes :name
