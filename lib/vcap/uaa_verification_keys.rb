@@ -5,21 +5,31 @@ module VCAP
     end
 
     def value
-      @value ||= fetch_from_uaa
+      if @uaa_keys.nil? || !valid_keys?
+        @uaa_keys = fetch_from_uaa
+      end
+      @uaa_keys[:keys]
     end
 
     def refresh
-      @value = nil
+      @uaa_keys = nil
     end
 
     private
 
+    def valid_keys?
+      return true unless Time.now - @uaa_keys[:requested_time] > 30
+    end
+
     def fetch_from_uaa
-      keys = []
+      uaa_keys = { keys: [] }
+
       @info.validation_keys_hash.each do |_, key|
-        keys << key['value']
+        uaa_keys[:keys] << key['value']
       end
-      keys
+
+      uaa_keys[:requested_time] = Time.now
+      uaa_keys
     end
   end
 end
