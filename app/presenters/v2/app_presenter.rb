@@ -40,8 +40,6 @@ module CloudController
           }
 
           entity.merge!(RelationsPresenter.new.to_hash(controller, app, opts, depth, parents, orphans))
-
-          entity
         end
 
         private

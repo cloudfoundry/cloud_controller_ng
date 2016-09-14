@@ -12,28 +12,28 @@ module VCAP::CloudController
 
       def scale
         raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @process.started?
-        with_logging('scale') { messenger.send_desire_request(@default_health_check_timeout) }
+        with_logging('scale') { messenger.send_desire_request(@process, @default_health_check_timeout) }
       end
 
       def start(_={})
-        with_logging('start') { messenger.send_desire_request(@default_health_check_timeout) }
+        with_logging('start') { messenger.send_desire_request(@process, @default_health_check_timeout) }
       end
 
       def update_routes
         raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @process.started?
-        with_logging('update_route') { messenger.send_desire_request(@default_health_check_timeout) unless @process.staging? }
+        with_logging('update_route') { messenger.send_desire_request(@process, @default_health_check_timeout) unless @process.staging? }
       end
 
       def desire_app_message
-        Diego::Protocol.new(@process).desire_app_message(@default_health_check_timeout)
+        Diego::Protocol.new.desire_app_message(@process, @default_health_check_timeout)
       end
 
       def stop
-        with_logging('stop_app') { messenger.send_stop_app_request }
+        with_logging('stop_app') { messenger.send_stop_app_request(@process) }
       end
 
       def stop_index(index)
-        with_logging('stop_index') { messenger.send_stop_index_request(index) }
+        with_logging('stop_index') { messenger.send_stop_index_request(@process, index) }
       end
 
       def with_logging(action=nil)
@@ -45,7 +45,7 @@ module VCAP::CloudController
       end
 
       def messenger
-        @messenger ||= Diego::Messenger.new(@process)
+        @messenger ||= Diego::Messenger.new
       end
 
       private

@@ -1,4 +1,3 @@
-require 'cloud_controller/diego/v3/environment'
 require 'repositories/task_event_repository'
 
 module VCAP::CloudController

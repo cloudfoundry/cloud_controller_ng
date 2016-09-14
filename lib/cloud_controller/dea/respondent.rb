@@ -31,25 +31,8 @@ module VCAP::CloudController
         app = App[guid: app_guid]
 
         if app && crashed_app?(decoded_message)
-          if app.app
-            metadata = decoded_message.slice('instance', 'index', 'exit_status', 'exit_description', 'reason')
-
-            Event.create(
-              space: app.space,
-              type: 'app.process.crash',
-              timestamp: Sequel::CURRENT_TIMESTAMP,
-              actee: app.app.guid,
-              actee_type: 'v3-app',
-              actee_name: app.app.name,
-              actor: app.guid,
-              actor_type: 'process',
-              actor_name: app.name,
-              metadata: metadata
-            )
-          else
-            app_event_repository = Repositories::AppEventRepository.new
-            app_event_repository.create_app_exit_event(app, decoded_message)
-          end
+          app_event_repository = Repositories::AppEventRepository.new
+          app_event_repository.create_app_exit_event(app, decoded_message)
         end
       end
     end

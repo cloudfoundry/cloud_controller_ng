@@ -59,7 +59,7 @@ module VCAP::CloudController
           type:       type,
           timestamp:  Sequel::CURRENT_TIMESTAMP,
           actee:      app.guid,
-          actee_type: 'v3-app',
+          actee_type: 'app',
           actee_name: app.name,
           actor:      user_guid,
           actor_type: 'user',

@@ -9,14 +9,8 @@ module VCAP::CloudController
       to_one :domain
       to_one :space
       to_one :service_instance, exclude_in: [:create, :update]
-      to_many :apps
-
-      # This to_many relationship is used only for the link, and explicitly sets
-      # the route_for to any empty array. This is used in relation with
-      # enumerate_route_mappings method to handle the route model already having
-      # a route_mappings association.
-      to_many :route_mappings, link_only: true, exclude_in: [:create, :update],
-                               route_for: [], association_name: :app_route_mappings
+      to_many :apps, route_for: :get, exclude_in: [:create, :update]
+      to_many :route_mappings, link_only: true, exclude_in: [:create, :update], route_for: [:get], association_controller: :RouteMappingsController
     end
 
     query_parameters :host, :domain_guid, :organization_guid, :path, :port
@@ -201,46 +195,6 @@ module VCAP::CloudController
       end
     end
 
-    # This method is an almost straight copy of
-    # ModelController#enumerate_related. The only difference is that this method
-    # needs control of the association_name used to lookup
-    # model/dataset/controller
-    get "#{path_guid}/route_mappings", :enumerate_route_mappings
-    def enumerate_route_mappings(guid)
-      path_name = :route_mappings
-      association_name = :app_route_mappings
-
-      obj = find_guid(guid)
-      validate_access(:read, obj)
-
-      associated_model = obj.class.association_reflection(association_name).associated_class
-
-      associated_controller = VCAP::CloudController.controller_from_model_name(associated_model)
-      associated_path = "#{self.class.url_for_guid(guid)}/#{path_name}"
-
-      validate_access(:index, associated_model, { related_obj: obj, related_model: model })
-
-      filtered_dataset =
-        Query.filtered_dataset_from_query_params(
-          associated_model,
-          obj.user_visible_relationship_dataset(association_name,
-                                                VCAP::CloudController::SecurityContext.current_user,
-                                                SecurityContext.admin?),
-                                                associated_controller.query_parameters,
-                                                @opts
-      )
-
-      associated_controller_instance = CloudController::ControllerFactory.new(@config, @logger, @env, @params, @body, @sinatra).create_controller(associated_controller)
-
-      associated_controller_instance.collection_renderer.render_json(
-        associated_controller,
-        filtered_dataset,
-        associated_path,
-        @opts,
-        {}
-      )
-    end
-
     get "#{path}/reserved/domain/:domain_guid", :route_reserved
     def route_reserved(domain_guid)
       host = params['host'] || ''
@@ -260,22 +214,59 @@ module VCAP::CloudController
       @route_event_repository.record_route_create(route, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
     end
 
-    def before_update(route)
-      super
-      unless request_attrs['app'].nil?
-        app = App.find(guid: request_attrs['app'])
-        begin
-          RouteMappingValidator.new(route, app).validate
-        rescue RouteMappingValidator::AppInvalidError
-          raise CloudController::Errors::ApiError.new_from_details('AppNotFound', request_attrs['app'])
-        rescue RouteMappingValidator::TcpRoutingDisabledError
-          raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
-        end
-      end
-    end
-
     def after_update(route)
       @route_event_repository.record_route_update(route, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+    end
+
+    put '/v2/routes/:route_guid/apps/:app_guid', :add_app
+    def add_app(route_guid, app_guid)
+      logger.debug 'cc.association.add', guid: route_guid, association: 'apps', other_guid: app_guid
+      @request_attrs = { 'app' => app_guid, verb: 'add', relation: 'apps', related_guid: app_guid }
+
+      route = find_guid(route_guid, Route)
+      validate_access(:read_related_object_for_update, route, request_attrs)
+
+      before_update(route)
+
+      app = App.find(guid: request_attrs['app'])
+      raise CloudController::Errors::ApiError.new_from_details('AppNotFound', app_guid) unless app
+
+      begin
+        V2::RouteMappingCreate.new(SecurityContext.current_user, SecurityContext.current_user_email, route, app).add(request_attrs)
+      rescue RouteMappingCreate::DuplicateRouteMapping
+        # the route is already mapped, consider the request successful
+      rescue V2::RouteMappingCreate::TcpRoutingDisabledError
+        raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+      rescue RouteMappingCreate::SpaceMismatch
+        raise CloudController::Errors::InvalidAppRelation.new(app.guid)
+      rescue V2::RouteMappingCreate::RouteServiceNotSupportedError
+        raise CloudController::Errors::InvalidAppRelation.new("#{app.guid} - Route services are only supported for apps on Diego")
+      end
+
+      after_update(route)
+
+      [HTTP::CREATED, object_renderer.render_json(self.class, route, @opts)]
+    end
+
+    delete '/v2/routes/:route_guid/apps/:app_guid', :remove_app
+    def remove_app(route_guid, app_guid)
+      logger.debug 'cc.association.remove', guid: route_guid, association: 'apps', other_guid: app_guid
+      @request_attrs = { 'app' => app_guid, verb: 'remove', relation: 'apps', related_guid: app_guid }
+
+      route = find_guid(route_guid, Route)
+      validate_access(:can_remove_related_object, route, request_attrs)
+
+      before_update(route)
+
+      process = App.find(guid: request_attrs['app'])
+      raise CloudController::Errors::ApiError.new_from_details('AppNotFound', app_guid) unless process
+
+      route_mapping = RouteMappingModel.find(app: process.app, route: route, process: process)
+      RouteMappingDelete.new(SecurityContext.current_user, SecurityContext.current_user_email).delete(route_mapping)
+
+      after_update(route)
+
+      [HTTP::NO_CONTENT]
     end
 
     define_messages

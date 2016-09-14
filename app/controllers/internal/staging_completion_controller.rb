@@ -24,39 +24,15 @@ module VCAP::CloudController
       @stagers = dependencies.fetch(:stagers)
     end
 
-    post '/internal/staging/:staging_guid/completed', :completed
-
-    def completed(staging_guid)
-      staging_response = read_body
-
-      app = App.find(guid: Diego::StagingGuid.process_guid(staging_guid))
-      raise CloudController::Errors::ApiError.new_from_details('NotFound') unless app
-      raise CloudController::Errors::ApiError.new_from_details('StagingBackendInvalid') unless app.diego?
-
-      begin
-        stagers.stager_for_app(app).staging_complete(staging_guid, staging_response)
-      rescue CloudController::Errors::ApiError => api_err
-        raise api_err
-      rescue => e
-        logger.error('diego.staging.completion-controller-error', error: e)
-        raise CloudController::Errors::ApiError.new_from_details('ServerError')
-      end
-
-      [200, '{}']
-    end
-
     post '/internal/v3/staging/:staging_guid/droplet_completed', :droplet_completed
 
     def droplet_completed(staging_guid)
       staging_response = read_body
       droplet = DropletModel.find(guid: staging_guid)
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found') if droplet.nil?
-      package = PackageModel.find(guid: droplet.package_guid)
-      raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found') if package.nil?
 
       begin
-        stagers.stager_for_package(package, droplet.lifecycle_type).staging_complete(droplet, staging_response)
-        BitsExpiration.new.expire_droplets!(droplet.app)
+        stagers.stager_for_app(droplet.app).staging_complete(droplet, staging_response, params['start'] == 'true')
       rescue CloudController::Errors::ApiError => api_err
         raise api_err
       rescue => e

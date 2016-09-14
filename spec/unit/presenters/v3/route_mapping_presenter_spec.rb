@@ -17,7 +17,7 @@ module VCAP::CloudController::Presenters::V3
       )
     end
     let(:app) { VCAP::CloudController::AppModel.make }
-    let(:process) { VCAP::CloudController::App.make(space: app.space, app_guid: app.guid, type: 'some-type') }
+    let(:process) { VCAP::CloudController::App.make(app: app, type: 'some-type') }
     let(:route) { VCAP::CloudController::Route.make(space: app.space) }
 
     describe '#to_hash' do

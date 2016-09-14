@@ -19,7 +19,7 @@ module VCAP
             actor_type:        'user',
             actor_name:        user_email,
             actee:             task.app.guid,
-            actee_type:        'v3-app',
+            actee_type:        'app',
             actee_name:        task.app.name,
             timestamp:         Sequel::CURRENT_TIMESTAMP,
             metadata:          {

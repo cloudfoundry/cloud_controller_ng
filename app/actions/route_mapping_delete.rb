@@ -11,11 +11,9 @@ module VCAP::CloudController
       route_mappings.each do |route_mapping|
         logger.debug("removing route mapping: #{route_mapping.inspect}")
 
-        process = nil
+        route_handler = ProcessRouteHandler.new(route_mapping.process)
 
-        RouteMapping.db.transaction do
-          process = delete_route_from_process(route_mapping)
-
+        RouteMappingModel.db.transaction do
           event_repository.record_unmap_route(
             route_mapping.app,
             route_mapping.route,
@@ -25,27 +23,12 @@ module VCAP::CloudController
           )
 
           route_mapping.destroy
+          route_handler.update_route_information
         end
-
-        notify_dea_of_route_changes(process)
       end
     end
 
     private
-
-    def delete_route_from_process(route_mapping)
-      process = route_mapping.app.processes.find { |p| p.type = route_mapping.process_type }
-      unless process.nil?
-        process.remove_route(route_mapping.route)
-      end
-      process
-    end
-
-    def notify_dea_of_route_changes(process)
-      if process && process.dea_update_pending?
-        Dea::Client.update_uris(process)
-      end
-    end
 
     def event_repository
       Repositories::AppEventRepository.new

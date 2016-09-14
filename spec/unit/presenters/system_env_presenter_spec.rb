@@ -2,11 +2,11 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SystemEnvPresenter do
-    subject(:system_env_presenter) { SystemEnvPresenter.new(app.all_service_bindings) }
+    subject(:system_env_presenter) { SystemEnvPresenter.new(app.service_bindings) }
 
     describe '#system_env' do
       context 'when there are no services' do
-        let(:app) { App.make(environment_json: { 'jesse' => 'awesome' }) }
+        let(:app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }) }
 
         it 'contains an empty vcap_services' do
           expect(system_env_presenter.system_env[:VCAP_SERVICES]).to eq({})
@@ -15,7 +15,7 @@ module VCAP::CloudController
 
       context 'when there are services' do
         let(:space) { Space.make }
-        let(:app) { App.make(environment_json: { 'jesse' => 'awesome' }, space: space) }
+        let(:app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }, space: space) }
         let(:service) { Service.make(label: 'elephantsql-n/a', provider: 'cool-provider') }
         let(:service_alt) { Service.make(label: 'giraffesql-n/a') }
         let(:service_plan) { ServicePlan.make(service: service) }
@@ -83,32 +83,6 @@ module VCAP::CloudController
             binding = system_env_presenter.system_env[:VCAP_SERVICES][:'user-provided'].first.to_hash
             expect(binding[:credentials]).to eq(service_binding.credentials)
             expect(binding[:name]).to eq('elephantsql-vip-uat')
-          end
-        end
-
-        context 'when process belongs to a parent(v3) app bound to a service' do
-          let(:parent_app) { AppModel.make space_guid: space.guid }
-          let(:service) { Service.make(label: 'rabbit', tags: ['swell']) }
-          let(:service_plan) { ServicePlan.make(service: service) }
-          let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'rabbit-instance') }
-          let!(:service_binding) do
-            ServiceBindingModel.create(app: parent_app, service_instance: service_instance,
-                                       type: 'app', credentials: { 'url' => 'www.service.com/foo' }, syslog_drain_url: 'logs.go-here-2.com')
-          end
-
-          before do
-            app.app = parent_app
-          end
-
-          it 'includes the services from the parent' do
-            expect(system_env_presenter.system_env[:VCAP_SERVICES]).not_to eq({})
-            expect(system_env_presenter.system_env[:VCAP_SERVICES]).to have_key(service.label.to_sym)
-          end
-
-          it 'includes service binding and instance information' do
-            binding_information = system_env_presenter.system_env[:VCAP_SERVICES][:rabbit].first.to_hash
-            expect(binding_information[:credentials]).to eq(service_binding.credentials)
-            expect(binding_information[:name]).to eq('rabbit-instance')
           end
         end
 

@@ -44,7 +44,6 @@ module VCAP::CloudController
           host: { type: 'string', default: '' },
           domain_guid: { type: 'string', required: true },
           space_guid: { type: 'string', required: true },
-          app_guids: { type: '[string]' },
           path: { type: 'string' },
           port: { type: 'integer' }
         )
@@ -54,7 +53,6 @@ module VCAP::CloudController
           host: { type: 'string' },
           domain_guid: { type: 'string' },
           space_guid: { type: 'string' },
-          app_guids: { type: '[string]' },
           path: { type: 'string' },
           port: { type: 'integer' }
         )
@@ -340,7 +338,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it do
-        expect(described_class).to have_nested_routes({ apps: [:get, :put, :delete] })
+        expect(described_class).to have_nested_routes({ apps: [:get], route_mappings: [:get] })
       end
 
       context 'with Docker app' do
@@ -845,31 +843,6 @@ module VCAP::CloudController
           end
         end
 
-        context 'when associating with app' do
-          let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
-          let(:req) { '' }
-          let(:app_obj) { AppFactory.make(space: route.space) }
-
-          it 'creates a route mapping' do
-            put "/v2/routes/#{route.guid}/apps/#{app_obj.guid}", MultiJson.dump(req)
-
-            expect(last_response).to have_status_code(201)
-            expect(app_obj.reload.routes.first).to eq(route)
-          end
-
-          context 'when routing api is not enabled' do
-            before do
-              TestConfig.override(routing_api: nil)
-            end
-
-            it 'returns 403' do
-              put "/v2/routes/#{route.guid}/apps/#{app_obj.guid}", MultiJson.dump(req)
-              expect(last_response).to have_status_code(403)
-              expect(decoded_response['description']).to include('Support for TCP routing is disabled')
-            end
-          end
-        end
-
         context 'when updating a route with a new port value that is not null' do
           let(:new_port) { 20000 }
           let(:req) { {
@@ -1082,7 +1055,7 @@ module VCAP::CloudController
       let(:space) { Space.make(organization: organization) }
       let(:route) { Route.make(domain: domain, space: space) }
       let(:app_obj) { AppFactory.make(space: route.space) }
-      let!(:app_route_mapping) { RouteMapping.make(route: route, app: app_obj) }
+      let!(:app_route_mapping) { RouteMappingModel.make(route: route, app: app_obj.app, process_type: app_obj.type) }
 
       before { set_current_user_as_admin }
 
@@ -1288,6 +1261,220 @@ module VCAP::CloudController
               end
             end
           end
+        end
+      end
+    end
+
+    describe 'PUT /v2/routes/:guid/apps/:app_guid' do
+      let(:route) { Route.make }
+      let(:app_obj) { AppFactory.make(space: route.space) }
+      let(:developer) { make_developer_for_space(route.space) }
+
+      before do
+        allow(route_event_repository).to receive(:record_route_update)
+        set_current_user(developer)
+      end
+
+      it 'associates the route and the app' do
+        expect(route.reload.apps).to be_empty
+
+        put "/v2/routes/#{route.guid}/apps/#{app_obj.guid}", nil
+        expect(last_response.status).to eq(201)
+
+        expect(route.reload.apps).to match_array([app_obj])
+
+        mapping = RouteMappingModel.last
+        expect(mapping.route).to eq(route)
+        expect(mapping.app).to eq(app_obj.app)
+        expect(mapping.process_type).to eq(app_obj.type)
+        expect(mapping.app_port).to eq(8080)
+      end
+
+      context 'when the route does not exist' do
+        it 'returns 404' do
+          expect(route.reload.apps).to be_empty
+
+          put "/v2/routes/not-a-route/apps/#{app_obj.guid}", nil
+          expect(last_response.status).to eq(404)
+          expect(last_response.body).to include('RouteNotFound')
+
+          expect(route.reload.apps).to be_empty
+        end
+      end
+
+      context 'when the app does not exist' do
+        it 'returns 404' do
+          expect(route.reload.apps).to be_empty
+
+          put "/v2/routes/#{route.guid}/apps/not-an-app", nil
+          expect(last_response.status).to eq(404)
+          expect(last_response.body).to include('AppNotFound')
+
+          expect(route.reload.apps).to be_empty
+        end
+      end
+
+      context 'when the user is not a SpaceDeveloper' do
+        before do
+          set_current_user(User.make)
+        end
+
+        it 'returns 403' do
+          expect(route.reload.apps).to be_empty
+
+          put "/v2/routes/#{route.guid}/apps/#{app_obj.guid}", nil
+          expect(last_response.status).to eq(403)
+
+          expect(route.reload.apps).to be_empty
+        end
+      end
+
+      context 'when the route and app are already associated' do
+        before do
+          RouteMappingModel.make(app: app_obj.app, route: route, process_type: app_obj.type)
+        end
+
+        it 'reports success' do
+          expect(route.reload.apps).to match_array([app_obj])
+
+          put "/v2/routes/#{route.guid}/apps/#{app_obj.guid}", nil
+          expect(last_response.status).to eq(201)
+
+          expect(route.reload.apps).to match_array([app_obj])
+        end
+      end
+
+      context 'when the app is in a different space' do
+        let(:app_obj) { AppFactory.make }
+
+        it 'raises an error' do
+          expect(route.reload.apps).to be_empty
+
+          put "/v2/routes/#{route.guid}/apps/#{app_obj.guid}", nil
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to include('InvalidRelation')
+          expect(last_response.body).to include(app_obj.guid)
+
+          expect(route.reload.apps).to be_empty
+        end
+      end
+
+      context 'when a route with a routing service is mapped to a non-diego app' do
+        let(:route_binding) { RouteBinding.make }
+        let(:route) { route_binding.route }
+        let(:app_obj) { AppFactory.make(space: route.space, diego: false) }
+
+        it 'fails to add the route' do
+          put "/v2/routes/#{route.guid}/apps/#{app_obj.guid}", nil
+          expect(last_response.status).to eq(400)
+          expect(decoded_response['description']).to match(/Invalid relation: The requested app relation is invalid: .* - Route services are only supported for apps on Diego/)
+        end
+      end
+
+      context 'when the app is diego' do
+        let(:app_obj) { AppFactory.make(diego: true, space: route.space, ports: [9797, 7979]) }
+
+        it 'uses the first port for the app as the app_port' do
+          put "/v2/routes/#{route.guid}/apps/#{app_obj.guid}", nil
+          expect(last_response.status).to eq(201)
+
+          mapping = RouteMappingModel.last
+          expect(mapping.app_port).to eq(9797)
+        end
+      end
+
+      describe 'tcp routes' do
+        let(:tcp_domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
+        let(:route) { Route.make(domain: tcp_domain, port: 9090, host: '') }
+
+        it 'associates the route and the app' do
+          expect(route.reload.apps).to be_empty
+
+          put "/v2/routes/#{route.guid}/apps/#{app_obj.guid}", nil
+          expect(last_response.status).to eq(201)
+
+          expect(route.reload.apps).to match_array([app_obj])
+
+          mapping = RouteMappingModel.last
+          expect(mapping.route).to eq(route)
+          expect(mapping.app).to eq(app_obj.app)
+          expect(mapping.process_type).to eq(app_obj.type)
+          expect(mapping.app_port).to eq(8080)
+        end
+
+        context 'when routing api is not enabled' do
+          before do
+            TestConfig.override(routing_api: nil)
+          end
+
+          it 'returns 403' do
+            put "/v2/routes/#{route.guid}/apps/#{app_obj.guid}", nil
+            expect(last_response).to have_status_code(403)
+            expect(decoded_response['description']).to include('Support for TCP routing is disabled')
+          end
+        end
+      end
+    end
+
+    describe 'DELETE /v2/routes/:guid/apps/:app_guid' do
+      let(:route) { Route.make }
+      let(:app_obj) { AppFactory.make(space: route.space) }
+      let(:developer) { make_developer_for_space(route.space) }
+      let!(:route_mapping) { RouteMappingModel.make(app: app_obj.app, route: route, process_type: app_obj.type) }
+
+      before do
+        allow(route_event_repository).to receive(:record_route_update)
+        set_current_user(developer)
+      end
+
+      it 'removes the association' do
+        expect(route.reload.apps).to match_array([app_obj])
+
+        delete "/v2/routes/#{route.guid}/apps/#{app_obj.guid}"
+        expect(last_response.status).to eq(204)
+
+        expect(route.reload.apps).to be_empty
+        expect(route_mapping.exists?).to be_falsey
+      end
+
+      context 'when the route does not exist' do
+        it 'returns a 404' do
+          delete "/v2/routes/bogus-guid/apps/#{app_obj.guid}"
+          expect(last_response.status).to eq(404)
+          expect(last_response.body).to include('RouteNotFound')
+        end
+      end
+
+      context 'when the app does not exist' do
+        it 'returns a 404' do
+          delete "/v2/routes/#{route.guid}/apps/whoops"
+          expect(last_response.status).to eq(404)
+          expect(last_response.body).to include('AppNotFound')
+        end
+      end
+
+      context 'when there is no route mapping' do
+        before { route_mapping.destroy }
+
+        it 'succeeds' do
+          expect(route.reload.apps).to match_array([])
+
+          delete "/v2/routes/#{route.guid}/apps/#{app_obj.guid}"
+          expect(last_response.status).to eq(204)
+
+          expect(route.reload.apps).to be_empty
+          expect(route_mapping.exists?).to be_falsey
+        end
+      end
+
+      context 'when the user is not a SpaceDeveloper' do
+        before do
+          set_current_user(User.make)
+        end
+
+        it 'returns 403' do
+          delete "/v2/routes/#{route.guid}/apps/#{app_obj.guid}"
+          expect(last_response).to have_status_code(403)
         end
       end
     end

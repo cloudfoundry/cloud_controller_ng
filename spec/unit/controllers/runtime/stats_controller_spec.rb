@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe VCAP::CloudController::StatsController do
     describe 'GET /v2/apps/:id/stats' do
       before :each do
-        @app = AppFactory.make(package_hash: 'abc', package_state: 'STAGED')
+        @app = AppFactory.make
         @user = make_user_for_space(@app.space)
         @developer = make_developer_for_space(@app.space)
         @auditor = make_auditor_for_space(@app.space)
@@ -137,7 +137,7 @@ module VCAP::CloudController
         context 'when the app is stopped' do
           before do
             set_current_user(@developer)
-            @app.stop!
+            @app.update(state: 'STOPPED')
           end
 
           it 'raises an error' do

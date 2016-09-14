@@ -211,9 +211,9 @@ module VCAP::CloudController::Metrics
       end
 
       it 'should include the length of the delayed job queue and the total' do
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_local')
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('ghj', 'klm', []), queue: 'cc_local')
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_generic')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_generic')
 
         periodic_updater.update_job_queue_length
 
@@ -228,8 +228,8 @@ module VCAP::CloudController::Metrics
       end
 
       it 'should find jobs which have not been attempted yet' do
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_local')
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_generic')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_generic')
 
         periodic_updater.update_job_queue_length
 
@@ -244,7 +244,7 @@ module VCAP::CloudController::Metrics
       end
 
       it 'should ignore jobs that have already been attempted' do
-        job = VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('abc', 'def', [])
+        job = VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1)
         Delayed::Job.enqueue(job, queue: 'cc_generic', attempts: 1)
 
         periodic_updater.update_job_queue_length
@@ -264,12 +264,12 @@ module VCAP::CloudController::Metrics
       end
 
       it 'includes the number of failed jobs in the delayed job queue with a total and sends it to all updaters' do
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_local')
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('ghj', 'klm', []), queue: 'cc_local')
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_generic')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(5), queue: 'cc_local')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(5), queue: 'cc_local')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(5), queue: 'cc_generic')
         Delayed::Job.dataset.update(failed_at: DateTime.now.utc)
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('gej', 'kkm', []), queue: 'cc_local')
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('bcz', 'dqf', []), queue: 'cc_generic')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(5), queue: 'cc_local')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(5), queue: 'cc_generic')
 
         periodic_updater.update_failed_job_count
 

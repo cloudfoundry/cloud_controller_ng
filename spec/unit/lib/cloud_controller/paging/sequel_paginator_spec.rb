@@ -48,13 +48,17 @@ module VCAP::CloudController
       end
 
       it 'works with a multi table result set' do
-        options = { page: 2, per_page: per_page }
-        new_dataset = dataset.join(:packages, packages__app_guid: :apps_v3__guid)
+        PackageModel.make(app: app_model1)
+        options = { page: 1, per_page: per_page }
         pagination_options = PaginationOptions.new(options)
+        new_dataset = dataset.join(PackageModel.table_name, "#{PackageModel.table_name}__app_guid".to_sym => "#{AppModel.table_name}__guid".to_sym)
 
+        paginated_result = nil
         expect {
-          paginator.get_page(new_dataset, pagination_options)
+          paginated_result = paginator.get_page(new_dataset, pagination_options)
         }.not_to raise_error
+
+        expect(paginated_result.total).to be > 0
       end
     end
   end

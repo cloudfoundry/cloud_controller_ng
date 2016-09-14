@@ -4,13 +4,13 @@ require 'actions/app_delete'
 module VCAP::CloudController
   RSpec.describe AppDelete do
     subject(:app_delete) { AppDelete.new(user.guid, user_email) }
+    let(:user) { User.make }
+    let(:user_email) { 'user@example.com' }
+
+    let!(:app) { AppModel.make }
+    let!(:app_dataset) { app }
 
     describe '#delete' do
-      let!(:app) { AppModel.make }
-      let!(:app_dataset) { app }
-      let(:user) { User.make }
-      let(:user_email) { 'user@example.com' }
-
       it 'deletes the app record' do
         expect {
           app_delete.delete(app_dataset)
@@ -31,7 +31,7 @@ module VCAP::CloudController
 
       describe 'recursive deletion' do
         it 'deletes associated packages' do
-          package = PackageModel.make(app_guid: app.guid)
+          package = PackageModel.make(app: app)
 
           expect {
             app_delete.delete(app_dataset)
@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated droplets' do
-          droplet = DropletModel.make(app_guid: app.guid)
+          droplet = DropletModel.make(:staged, app: app)
 
           expect {
             app_delete.delete(app_dataset)
@@ -51,7 +51,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated processes' do
-          process = App.make(app: app, space: app.space)
+          process = App.make(app: app)
 
           expect {
             app_delete.delete(app_dataset)
@@ -71,7 +71,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated tasks' do
-          task_model = TaskModel.make(app_guid: app.guid, name: 'task1', state: TaskModel::SUCCEEDED_STATE)
+          task_model = TaskModel.make(app: app, name: 'task1', state: TaskModel::SUCCEEDED_STATE)
 
           expect {
             app_delete.delete(app_dataset)
@@ -89,19 +89,32 @@ module VCAP::CloudController
           expect(job.queue).to eq('cc-generic')
           expect(app.exists?).to be_falsey
         end
+
+        it 'deletes associated service bindings' do
+          allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind)
+
+          binding = ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space))
+
+          expect {
+            app_delete.delete(app_dataset)
+          }.to change { ServiceBinding.count }.by(-1)
+          expect(binding.exists?).to be_falsey
+          expect(app.exists?).to be_falsey
+        end
+      end
+    end
+
+    describe '#delete_without_event' do
+      it 'deletes the app record' do
+        expect {
+          app_delete.delete_without_event(app_dataset)
+        }.to change { AppModel.count }.by(-1)
+        expect(app.exists?).to be_falsey
       end
 
-      context 'when the app has associated service bindings' do
-        let(:binding) { ServiceBindingModel.make }
-        let(:app) { binding.app }
-
-        it 'raises a meaningful error and does not delete the app' do
-          expect {
-            app_delete.delete(app)
-          }.to raise_error(AppDelete::InvalidDelete, 'Please delete the service_bindings associations for your apps.')
-
-          expect(app.exists?).to be_truthy
-        end
+      it 'creates an audit event' do
+        expect_any_instance_of(Repositories::AppEventRepository).not_to receive(:record_app_delete_request)
+        app_delete.delete_without_event(app_dataset)
       end
     end
   end

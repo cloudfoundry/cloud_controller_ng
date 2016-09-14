@@ -20,14 +20,6 @@ module CloudController
         @upload_url_generator      = UploadUrlGenerator.new(blobstore_options)
       end
 
-      def app_package_download_url(app)
-        if @package_blobstore.local?
-          @local_url_generator.app_package_download_url(app)
-        else
-          @internal_url_generator.app_package_download_url(app)
-        end
-      end
-
       def package_download_url(package)
         if @package_blobstore.local?
           @local_url_generator.package_download_url(package)
@@ -36,19 +28,11 @@ module CloudController
         end
       end
 
-      def buildpack_cache_download_url(app)
+      def buildpack_cache_download_url(app_guid, stack)
         if @buildpack_cache_blobstore.local?
-          @local_url_generator.buildpack_cache_download_url(app)
+          @local_url_generator.buildpack_cache_download_url(app_guid, stack)
         else
-          @internal_url_generator.buildpack_cache_download_url(app)
-        end
-      end
-
-      def v3_app_buildpack_cache_download_url(app_guid, stack)
-        if @buildpack_cache_blobstore.local?
-          @local_url_generator.v3_app_buildpack_cache_download_url(app_guid, stack)
-        else
-          @internal_url_generator.v3_app_buildpack_cache_download_url(app_guid, stack)
+          @internal_url_generator.buildpack_cache_download_url(app_guid, stack)
         end
       end
 
@@ -60,19 +44,11 @@ module CloudController
         end
       end
 
-      def droplet_download_url(app)
+      def droplet_download_url(droplet)
         if @droplet_blobstore.local?
-          @local_url_generator.droplet_download_url(app)
+          @local_url_generator.droplet_download_url(droplet)
         else
-          @internal_url_generator.droplet_download_url(app)
-        end
-      end
-
-      def v3_droplet_download_url(droplet)
-        if @droplet_blobstore.local?
-          @local_url_generator.v3_droplet_download_url(droplet)
-        else
-          @internal_url_generator.v3_droplet_download_url(droplet)
+          @internal_url_generator.droplet_download_url(droplet)
         end
       end
 
@@ -85,7 +61,6 @@ module CloudController
       def_delegators :@upload_url_generator,
         :droplet_upload_url,
         :package_droplet_upload_url,
-        :v3_app_buildpack_cache_upload_url,
         :buildpack_cache_upload_url
     end
   end

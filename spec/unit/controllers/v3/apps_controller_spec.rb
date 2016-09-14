@@ -588,6 +588,11 @@ RSpec.describe AppsV3Controller, type: :controller do
               } }
           end
 
+          before do
+            app_model.lifecycle_data.buildpack = 'some-buildpack'
+            app_model.lifecycle_data.save
+          end
+
           it 'sets the buildpack to nil' do
             expect(app_model.lifecycle_data.buildpack).to_not be_nil
             put :update, guid: app_model.guid, body: req_body
@@ -967,7 +972,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'when the user has an invalid app' do
       before do
-        allow_any_instance_of(VCAP::CloudController::AppStart).
+        allow(VCAP::CloudController::AppStart).
           to receive(:start).
           and_raise(VCAP::CloudController::AppStart::InvalidApp.new)
       end
@@ -1091,7 +1096,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'when the user has an invalid app' do
       before do
-        allow_any_instance_of(VCAP::CloudController::AppStop).
+        allow(VCAP::CloudController::AppStop).
           to receive(:stop).and_raise(VCAP::CloudController::AppStop::InvalidApp.new)
       end
 

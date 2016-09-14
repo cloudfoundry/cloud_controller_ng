@@ -3,14 +3,6 @@ require 'cloud_controller/diego/process_guid'
 
 module VCAP::CloudController
   RSpec.describe BulkAppsController do
-    def make_diego_app(options={})
-      AppFactory.make(options).tap do |app|
-        app.package_state = 'STAGED'
-        app.diego = true
-        app.save
-      end
-    end
-
     def app_table_entry(index)
       App.order_by(:id).all[index - 1]
     end
@@ -27,7 +19,7 @@ module VCAP::CloudController
       @internal_user = 'internal_user'
       @internal_password = 'internal_password'
 
-      5.times { |i| make_diego_app(state: 'STARTED') }
+      5.times { |i| AppFactory.make(diego: true, state: 'STARTED') }
     end
 
     describe 'GET', '/internal/bulk/apps' do
@@ -84,21 +76,19 @@ module VCAP::CloudController
 
         context 'when a format parameter is not specified' do
           before do
-            app = make_diego_app(
-              state: 'STARTED',
-              package_state: 'STAGED',
-              package_hash: 'package-hash',
-              disk_quota: 1_024,
-              environment_json: {
+            app = AppFactory.make(diego: true,
+                                  state: 'STARTED',
+                                  disk_quota: 1_024,
+                                  environment_json: {
                 'env-key-3' => 'env-value-3',
                 'env-key-4' => 'env-value-4',
               },
-              file_descriptors: 16_384,
-              instances: 4,
-              memory: 1_024,
-              guid: 'app-guid-6',
-              command: 'start-command-6',
-              stack: Stack.make(name: 'stack-6'),
+                                  file_descriptors: 16_384,
+                                  instances: 4,
+                                  memory: 1_024,
+                                  guid: 'app-guid-6',
+                                  command: 'start-command-6',
+                                  stack: Stack.make(name: 'stack-6'),
             )
 
             route1 = Route.make(
@@ -106,13 +96,14 @@ module VCAP::CloudController
               host: 'arsenio',
               domain: SharedDomain.make(name: 'lo-mein.com'),
             )
-            app.add_route(route1)
             route2 = Route.make(
               space: app.space,
               host: 'conan',
               domain: SharedDomain.make(name: 'doe-mane.com'),
             )
-            app.add_route(route2)
+
+            RouteMappingModel.make(app: app.app, route: route1, process_type: app.type)
+            RouteMappingModel.make(app: app.app, route: route2, process_type: app.type)
 
             app.version = 'app-version-6'
             app.save
@@ -157,9 +148,9 @@ module VCAP::CloudController
 
         context 'when there are unstaged apps' do
           before do
-            app = make_diego_app(state: 'STARTED')
-            app.package_state = 'PENDING'
-            app.save
+            app = AppFactory.make(diego: true, state: 'STARTED')
+            app.current_droplet.destroy
+            app.reload
           end
 
           it 'only returns staged apps' do
@@ -175,7 +166,7 @@ module VCAP::CloudController
 
         context 'when apps are not in the STARTED state' do
           before do
-            make_diego_app(state: 'STOPPED')
+            AppFactory.make(diego: true, state: 'STOPPED')
           end
 
           it 'does not return apps in the STOPPED state' do
@@ -209,7 +200,7 @@ module VCAP::CloudController
         context 'when docker is enabled' do
           let(:space) { Space.make }
           let(:docker_app) do
-            make_diego_app(docker_image: 'some-image', state: 'STARTED')
+            AppFactory.make(diego: true, docker_image: 'some-image', state: 'STARTED')
           end
 
           before do

@@ -5,7 +5,6 @@ module VCAP::CloudController
     let(:blobstore_url_generator) { CloudController::DependencyLocator.instance.blobstore_url_generator }
     let(:config_hash) { { staging: { timeout_in_seconds: 360 } } }
     let(:task_id) { 'somthing' }
-    let(:droplet_guid) { 'abc123' }
     let(:log_id) { 'log-id' }
     let(:staging_message) { Dea::StagingMessage.new(config_hash, blobstore_url_generator) }
 
@@ -16,21 +15,19 @@ module VCAP::CloudController
     end
 
     describe '.staging_request' do
-      let(:app) { AppFactory.make droplet_hash: nil, package_state: 'PENDING' }
+      let(:app) { AppFactory.make }
 
       before do
         3.times do
-          instance = ManagedServiceInstance.make(space: app.space)
-          binding = ServiceBinding.make(app: app, service_instance: instance)
-          app.add_service_binding(binding)
+          ServiceBinding.make(app: app.app, service_instance: ManagedServiceInstance.make(space: app.space))
         end
       end
 
       it 'includes app guid, task id, download/upload uris, stack name, and accepts_http flag' do
-        allow(blobstore_url_generator).to receive(:app_package_download_url).with(app).and_return('http://www.app.uri')
-        allow(blobstore_url_generator).to receive(:droplet_upload_url).with(app).and_return('http://www.droplet.upload.uri')
-        allow(blobstore_url_generator).to receive(:buildpack_cache_download_url).with(app).and_return('http://www.buildpack.cache.download.uri')
-        allow(blobstore_url_generator).to receive(:buildpack_cache_upload_url).with(app).and_return('http://www.buildpack.cache.upload.uri')
+        allow(blobstore_url_generator).to receive(:package_download_url).with(app.package).and_return('http://www.app.uri')
+        allow(blobstore_url_generator).to receive(:droplet_upload_url).with(task_id).and_return('http://www.droplet.upload.uri')
+        allow(blobstore_url_generator).to receive(:buildpack_cache_download_url).with(app.app.guid, app.stack.name).and_return('http://www.buildpack.cache.download.uri')
+        allow(blobstore_url_generator).to receive(:buildpack_cache_upload_url).with(app.app.guid, app.stack.name).and_return('http://www.buildpack.cache.upload.uri')
         request = staging_message.staging_request(app, task_id)
 
         expect(request[:app_id]).to eq(app.guid)
@@ -58,7 +55,7 @@ module VCAP::CloudController
 
       context 'when app does not have buildpack' do
         it 'returns nil for buildpack' do
-          app.buildpack = nil
+          app.app.lifecycle_data.update(buildpack: nil)
           request = staging_message.staging_request(app, task_id)
           expect(request[:properties][:buildpack]).to be_nil
         end
@@ -66,14 +63,14 @@ module VCAP::CloudController
 
       context 'when app has a buildpack' do
         it 'returns url for buildpack' do
-          app.buildpack = 'git://example.com/foo.git'
+          app.app.lifecycle_data.update(buildpack: 'git://example.com/foo.git')
           request = staging_message.staging_request(app, task_id)
           expect(request[:properties][:buildpack]).to eq('git://example.com/foo.git')
           expect(request[:properties][:buildpack_git_url]).to eq('git://example.com/foo.git')
         end
 
         it "doesn't return a buildpack key" do
-          app.buildpack = 'git://example.com/foo.git'
+          app.app.lifecycle_data.update(buildpack: 'git://example.com/foo.git')
           request = staging_message.staging_request(app, task_id)
           expect(request[:properties]).to_not have_key(:buildpack_key)
         end
@@ -133,8 +130,7 @@ module VCAP::CloudController
 
         context 'when a specific buildpack is requested' do
           before do
-            app.buildpack = Buildpack.first.name
-            app.save
+            app.app.lifecycle_data.update(buildpack: Buildpack.first.name)
           end
 
           it "includes a list of admin buildpacks so that the system doesn't think the buildpacks are gone" do
@@ -181,8 +177,7 @@ module VCAP::CloudController
 
       it 'includes the key of an admin buildpack when the app has a buildpack specified' do
         buildpack = Buildpack.make
-        app.buildpack = buildpack.name
-        app.save
+        app.app.lifecycle_data.update(buildpack: buildpack.name)
 
         request = staging_message.staging_request(app, task_id)
         expect(request[:properties][:buildpack_key]).to eql buildpack.key
@@ -190,8 +185,7 @@ module VCAP::CloudController
 
       it "doesn't include the custom buildpack url keys when the app has a buildpack specified" do
         buildpack = Buildpack.make
-        app.buildpack = buildpack.name
-        app.save
+        app.app.lifecycle_data.update(buildpack: buildpack.name)
 
         request = staging_message.staging_request(app, task_id)
         expect(request[:properties]).to_not have_key(:buildpack)
@@ -208,7 +202,7 @@ module VCAP::CloudController
 
       describe 'environment variables' do
         before do
-          app.environment_json = { 'KEY' => 'value' }
+          app.app.update(environment_variables: { 'KEY' => 'value' })
         end
 
         it 'includes app environment variables' do
@@ -226,8 +220,6 @@ module VCAP::CloudController
         end
 
         it 'includes CF_STACK' do
-          app.environment_json = { 'CF_STACK' => 'not-this' }
-
           request = staging_message.staging_request(app, task_id)
           expect(request[:properties][:environment]).to include("CF_STACK=#{app.stack.name}")
         end

@@ -35,42 +35,6 @@ module CloudController
       end
 
       context 'downloads' do
-        describe 'app package' do
-          let(:app) { double(:app) }
-
-          it 'delegates to local_url_generator when local' do
-            allow(package_blobstore).to receive(:local?).and_return(true)
-            allow(local_url_generator).to receive(:app_package_download_url)
-            url_generator.app_package_download_url(app)
-            expect(local_url_generator).to have_received(:app_package_download_url).with(app)
-          end
-
-          it 'delegates to internal_url_generator when not local' do
-            allow(package_blobstore).to receive(:local?).and_return(false)
-            allow(internal_url_generator).to receive(:app_package_download_url)
-            url_generator.app_package_download_url(app)
-            expect(internal_url_generator).to have_received(:app_package_download_url).with(app)
-          end
-        end
-
-        describe 'buildpack cache' do
-          let(:app) { double(:app) }
-
-          it 'delegates to local_url_generator when local' do
-            allow(buildpack_cache_blobstore).to receive(:local?).and_return(true)
-            allow(local_url_generator).to receive(:buildpack_cache_download_url)
-            url_generator.buildpack_cache_download_url(app)
-            expect(local_url_generator).to have_received(:buildpack_cache_download_url).with(app)
-          end
-
-          it 'delegates to internal_url_generator when not local' do
-            allow(buildpack_cache_blobstore).to receive(:local?).and_return(false)
-            allow(internal_url_generator).to receive(:buildpack_cache_download_url)
-            url_generator.buildpack_cache_download_url(app)
-            expect(internal_url_generator).to have_received(:buildpack_cache_download_url).with(app)
-          end
-        end
-
         describe 'admin buildpacks' do
           let(:buildpack) { VCAP::CloudController::Buildpack.make }
 
@@ -89,24 +53,6 @@ module CloudController
           end
         end
 
-        describe 'download droplets' do
-          let(:app) { double(:app) }
-
-          it 'delegates to local_url_generator when local' do
-            allow(droplet_blobstore).to receive(:local?).and_return(true)
-            allow(local_url_generator).to receive(:droplet_download_url)
-            url_generator.droplet_download_url(app)
-            expect(local_url_generator).to have_received(:droplet_download_url).with(app)
-          end
-
-          it 'delegates to internal_url_generator when not local' do
-            allow(droplet_blobstore).to receive(:local?).and_return(false)
-            allow(internal_url_generator).to receive(:droplet_download_url)
-            url_generator.droplet_download_url(app)
-            expect(internal_url_generator).to have_received(:droplet_download_url).with(app)
-          end
-        end
-
         describe 'download unauthorized droplets permalink' do
           let(:app) { VCAP::CloudController::AppFactory.make }
 
@@ -116,8 +62,8 @@ module CloudController
 
           context 'when no droplet_hash' do
             before do
-              app.droplet_hash = nil
-              app.save
+              app.current_droplet.destroy
+              app.reload
             end
 
             it 'returns nil if no droplet_hash' do
@@ -126,103 +72,76 @@ module CloudController
           end
         end
 
-        context 'v3 urls' do
-          describe 'v3 droplet downloads' do
-            let(:droplet) { double(:droplet) }
+        describe 'droplet' do
+          let(:droplet) { double(:droplet) }
 
-            it 'delegates to local_url_generator when local' do
-              allow(droplet_blobstore).to receive(:local?).and_return(true)
-              allow(local_url_generator).to receive(:v3_droplet_download_url)
-              url_generator.v3_droplet_download_url(droplet)
-              expect(local_url_generator).to have_received(:v3_droplet_download_url).with(droplet)
-            end
-
-            it 'delegates to internal_url_generator when not local' do
-              allow(droplet_blobstore).to receive(:local?).and_return(false)
-              allow(internal_url_generator).to receive(:v3_droplet_download_url)
-              url_generator.v3_droplet_download_url(droplet)
-              expect(internal_url_generator).to have_received(:v3_droplet_download_url).with(droplet)
-            end
+          it 'delegates to local_url_generator when local' do
+            allow(droplet_blobstore).to receive(:local?).and_return(true)
+            allow(local_url_generator).to receive(:droplet_download_url)
+            url_generator.droplet_download_url(droplet)
+            expect(local_url_generator).to have_received(:droplet_download_url).with(droplet)
           end
 
-          describe 'download app buildpack cache' do
-            let(:app_guid) { Sham.guid }
-            let(:stack) { Sham.name }
+          it 'delegates to internal_url_generator when not local' do
+            allow(droplet_blobstore).to receive(:local?).and_return(false)
+            allow(internal_url_generator).to receive(:droplet_download_url)
+            url_generator.droplet_download_url(droplet)
+            expect(internal_url_generator).to have_received(:droplet_download_url).with(droplet)
+          end
+        end
 
-            it 'delegates to local_url_generator when local' do
-              allow(buildpack_cache_blobstore).to receive(:local?).and_return(true)
-              allow(local_url_generator).to receive(:v3_app_buildpack_cache_download_url)
-              url_generator.v3_app_buildpack_cache_download_url(app_guid, stack)
-              expect(local_url_generator).to have_received(:v3_app_buildpack_cache_download_url).with(app_guid, stack)
-            end
+        describe 'buildpack cache' do
+          let(:app_guid) { Sham.guid }
+          let(:stack) { Sham.name }
 
-            it 'delegates to internal_url_generator when not local' do
-              allow(buildpack_cache_blobstore).to receive(:local?).and_return(false)
-              allow(internal_url_generator).to receive(:v3_app_buildpack_cache_download_url)
-              url_generator.v3_app_buildpack_cache_download_url(app_guid, stack)
-              expect(internal_url_generator).to have_received(:v3_app_buildpack_cache_download_url).with(app_guid, stack)
-            end
+          it 'delegates to local_url_generator when local' do
+            allow(buildpack_cache_blobstore).to receive(:local?).and_return(true)
+            allow(local_url_generator).to receive(:buildpack_cache_download_url)
+            url_generator.buildpack_cache_download_url(app_guid, stack)
+            expect(local_url_generator).to have_received(:buildpack_cache_download_url).with(app_guid, stack)
           end
 
-          describe 'package' do
-            let(:package) { double(:package) }
+          it 'delegates to internal_url_generator when not local' do
+            allow(buildpack_cache_blobstore).to receive(:local?).and_return(false)
+            allow(internal_url_generator).to receive(:buildpack_cache_download_url)
+            url_generator.buildpack_cache_download_url(app_guid, stack)
+            expect(internal_url_generator).to have_received(:buildpack_cache_download_url).with(app_guid, stack)
+          end
+        end
 
-            it 'delegates to local_url_generator when local' do
-              allow(package_blobstore).to receive(:local?).and_return(true)
-              allow(local_url_generator).to receive(:package_download_url)
-              url_generator.package_download_url(package)
-              expect(local_url_generator).to have_received(:package_download_url).with(package)
-            end
+        describe 'package' do
+          let(:package) { double(:package) }
 
-            it 'delegates to internal_url_generator when not local' do
-              allow(package_blobstore).to receive(:local?).and_return(false)
-              allow(internal_url_generator).to receive(:package_download_url)
-              url_generator.package_download_url(package)
-              expect(internal_url_generator).to have_received(:package_download_url).with(package)
-            end
+          it 'delegates to local_url_generator when local' do
+            allow(package_blobstore).to receive(:local?).and_return(true)
+            allow(local_url_generator).to receive(:package_download_url)
+            url_generator.package_download_url(package)
+            expect(local_url_generator).to have_received(:package_download_url).with(package)
+          end
+
+          it 'delegates to internal_url_generator when not local' do
+            allow(package_blobstore).to receive(:local?).and_return(false)
+            allow(internal_url_generator).to receive(:package_download_url)
+            url_generator.package_download_url(package)
+            expect(internal_url_generator).to have_received(:package_download_url).with(package)
           end
         end
       end
 
       context 'uploads' do
         describe 'droplets' do
-          let(:app) { double(:app) }
-
           it 'delegates to internal_url_generator when not local' do
             allow(upload_url_generator).to receive(:droplet_upload_url)
-            url_generator.droplet_upload_url(app)
-            expect(upload_url_generator).to have_received(:droplet_upload_url).with(app)
+            url_generator.droplet_upload_url('droplet-guid')
+            expect(upload_url_generator).to have_received(:droplet_upload_url).with('droplet-guid')
           end
         end
 
         describe 'buildpack cache' do
-          let(:app) { double(:app) }
-
           it 'delegates to internal_url_generator when not local' do
             allow(upload_url_generator).to receive(:buildpack_cache_upload_url)
-            url_generator.buildpack_cache_upload_url(app)
-            expect(upload_url_generator).to have_received(:buildpack_cache_upload_url).with(app)
-          end
-        end
-
-        describe 'v3 buildpack cache' do
-          let(:app_guid) { Sham.guid }
-          let(:stack) { Sham.name }
-
-          it 'delegates to internal_url_generator when not local' do
-            allow(upload_url_generator).to receive(:v3_app_buildpack_cache_upload_url)
-            url_generator.v3_app_buildpack_cache_upload_url(app_guid, stack)
-            expect(upload_url_generator).to have_received(:v3_app_buildpack_cache_upload_url).with(app_guid, stack)
-          end
-        end
-
-        describe 'v3 droplet' do
-          let(:droplet_guid) { Sham.guid }
-
-          it 'delegates to internal_url_generator when not local' do
-            allow(upload_url_generator).to receive(:package_droplet_upload_url)
-            url_generator.package_droplet_upload_url(droplet_guid)
-            expect(upload_url_generator).to have_received(:package_droplet_upload_url).with(droplet_guid)
+            url_generator.buildpack_cache_upload_url('app-guid', 'stack')
+            expect(upload_url_generator).to have_received(:buildpack_cache_upload_url).with('app-guid', 'stack')
           end
         end
       end

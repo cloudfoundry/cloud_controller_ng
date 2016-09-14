@@ -22,7 +22,7 @@ module VCAP::CloudController
     private
 
     def filter(message, dataset)
-      package_dataset = PackageModel.dataset.eager(:docker_data)
+      package_dataset = PackageModel.dataset
       filter_package_dataset(message, package_dataset).where(app: filter_app_dataset(message, dataset))
     end
 

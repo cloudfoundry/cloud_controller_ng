@@ -7,11 +7,16 @@ module VCAP::CloudController
     let(:app) { AppModel.make }
     let(:user) { double(:user, guid: '7') }
     let(:user_email) { '1@2.3' }
-    let(:process) { App.make(:process, app: app, space: space, type: process_type, ports: ports, health_check_type: 'none') }
+    let(:process) { App.make(:process, app: app, type: process_type, ports: ports, health_check_type: 'none') }
     let(:process_type) { 'web' }
     let(:ports) { [8888] }
     let(:requested_port) { 8888 }
     let(:message) { RouteMappingsCreateMessage.new({ app_port: requested_port, relationships: { process: { type: process_type } } }) }
+    let(:route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
+
+    before do
+      allow(ProcessRouteHandler).to receive(:new).and_return(route_handler)
+    end
 
     describe '#add' do
       let(:route) { Route.make(space: space) }
@@ -21,9 +26,34 @@ module VCAP::CloudController
         expect(app.reload.routes).to eq([route])
       end
 
-      it 'associates the route to the process' do
+      it 'delegates to the route handler to update route information' do
         route_mapping_create.add
-        expect(process.reload.routes).to eq([route])
+        expect(route_handler).to have_received(:update_route_information)
+      end
+
+      describe 'app_port' do
+        context 'docker' do
+          let(:process) { AppFactory.make(diego: true, health_check_type: 'none', docker_image: 'docker/image') }
+          let(:app) { process.app }
+          let(:requested_port) { nil }
+
+          it 'allows null when app_port is not requested' do
+            mapping = route_mapping_create.add
+            expect(app.reload.routes).to eq([route])
+            expect(mapping.app_port).to be_nil
+          end
+        end
+
+        context 'non-docker' do
+          let(:ports) { [1234, 5678] }
+          let(:requested_port) { nil }
+
+          it 'defaults to the the default http port when app_port is not requested' do
+            mapping = route_mapping_create.add
+            expect(app.reload.routes).to eq([route])
+            expect(mapping.app_port).to eq(VCAP::CloudController::App::DEFAULT_HTTP_PORT)
+          end
+        end
       end
 
       describe 'recording events' do
@@ -60,99 +90,66 @@ module VCAP::CloudController
 
       context 'when the process is web' do
         let(:process_type) { 'web' }
-        context 'when no app port is requested' do
-          let(:message) { RouteMappingsCreateMessage.new({ relationships: { process: { type: process_type } } }) }
-          context 'when the process has an empty array of ports' do
-            let(:ports) { [] }
-            it 'raises' do
-              expect {
-                route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /8080 is not available/)
-            end
-          end
 
-          context 'when the process has nil ports' do
-            let(:ports) { nil }
+        context 'dea' do
+          let(:process) { App.make(diego: false, app: app, type: process_type, health_check_type: 'none') }
+
+          context 'not requesting a port' do
+            let(:requested_port) { nil }
             it 'succeeds' do
               route_mapping_create.add
               expect(app.reload.routes).to eq([route])
             end
           end
 
-          context 'when the process has an array of ports' do
-            context 'that matches the default port' do
-              let(:ports) { [8080] }
+          context 'requesting a port' do
+            let(:requested_port) { 8080 }
+            it 'raises' do
+              expect {
+                route_mapping_create.add
+              }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8080 is not available/)
+            end
+          end
+        end
+
+        context 'diego' do
+          context 'buildpack' do
+            let(:process) { App.make(diego: true, app: app, type: process_type, ports: [1234, 5678], health_check_type: 'none') }
+
+            context 'requesting available port' do
+              let(:requested_port) { 5678 }
               it 'succeeds' do
                 route_mapping_create.add
                 expect(app.reload.routes).to eq([route])
               end
             end
 
-            context 'that does not match the default port' do
-              let(:ports) { [1234] }
-
+            context 'requesting unavailable' do
+              let(:requested_port) { 8888 }
               it 'raises' do
                 expect {
                   route_mapping_create.add
-                }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /8080 is not available/)
+                }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8888 is not available/)
+              end
+            end
+
+            context 'not requesting a port' do
+              let(:requested_port) { nil }
+
+              it 'succeeds using the first available port from the process' do
+                route_mapping_create.add
+                expect(app.reload.routes).to eq([route])
               end
             end
           end
-        end
 
-        context 'when the default port is requested' do
-          let(:requested_port) { 8080 }
+          context 'docker' do
+            let(:process) { AppFactory.make(diego: true, type: process_type, ports: [1234, 5678], health_check_type: 'none', docker_image: 'docker/image') }
+            let(:requested_port) { 8888 }
 
-          context 'and the process ports are nil' do
-            let(:ports) { nil }
-            it 'succeeds' do
+            it 'does not validate' do
               route_mapping_create.add
               expect(app.reload.routes).to eq([route])
-            end
-          end
-        end
-
-        context 'a non-default port is requested' do
-          let(:requested_port) { 1234 }
-
-          context 'when the process has an empty array of ports' do
-            let(:ports) { [] }
-
-            it 'raises' do
-              expect {
-                route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /1234 is not available/)
-            end
-          end
-
-          context 'when the process has nil ports' do
-            let(:ports) { nil }
-
-            it 'raises' do
-              expect {
-                route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /1234 is not available/)
-            end
-          end
-
-          context 'when the process has an array of ports' do
-            context 'that matches the requested port' do
-              let(:ports) { [1234, 5678] }
-
-              it 'succeeds' do
-                route_mapping_create.add
-                expect(app.reload.routes).to eq([route])
-              end
-            end
-
-            context 'that does not match the requested port' do
-              let(:ports) { [5678] }
-
-              it 'raises' do
-                expect {
-                  route_mapping_create.add
-                }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /1234 is not available/)
-              end
             end
           end
         end
@@ -163,42 +160,11 @@ module VCAP::CloudController
 
         context 'when no app port is requested' do
           let(:message) { RouteMappingsCreateMessage.new({ relationships: { process: { type: process_type } } }) }
-          context 'when the process has an empty array of ports' do
-            let(:ports) { [] }
-            it 'raises' do
-              expect {
-                route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /8080 is not available/)
-            end
-          end
 
-          context 'when the process has nil ports' do
-            let(:ports) { nil }
-            it 'raises' do
-              expect {
-                route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /8080 is not available/)
-            end
-          end
-
-          context 'when the process has an array of ports' do
-            context 'that matches the default port' do
-              let(:ports) { [8080] }
-              it 'succeeds' do
-                route_mapping_create.add
-                expect(app.reload.routes).to eq([route])
-              end
-            end
-
-            context 'that does not match the default port' do
-              let(:ports) { [1234] }
-
-              it 'raises' do
-                expect {
-                  route_mapping_create.add
-                }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /8080 is not available/)
-              end
-            end
+          it 'raises' do
+            expect {
+              route_mapping_create.add
+            }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /must be specified/)
           end
         end
 
@@ -209,7 +175,7 @@ module VCAP::CloudController
             it 'raises' do
               expect {
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /8080 is not available/)
+              }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8080 is not available/)
             end
           end
 
@@ -218,7 +184,7 @@ module VCAP::CloudController
             it 'raises' do
               expect {
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /8080 is not available/)
+              }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8080 is not available/)
             end
           end
         end
@@ -230,7 +196,7 @@ module VCAP::CloudController
             it 'raises' do
               expect {
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /1234 is not available/)
+              }.to raise_error(RouteMappingCreate::UnavailableAppPort, /1234 is not available/)
             end
           end
 
@@ -239,7 +205,7 @@ module VCAP::CloudController
             it 'raises' do
               expect {
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /1234 is not available/)
+              }.to raise_error(RouteMappingCreate::UnavailableAppPort, /1234 is not available/)
             end
           end
         end
@@ -254,13 +220,13 @@ module VCAP::CloudController
           it 'does not allow for duplicate route association' do
             expect {
               route_mapping_create.add
-            }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /Duplicate Route Mapping/)
+            }.to raise_error(RouteMappingCreate::DuplicateRouteMapping, /Duplicate Route Mapping/)
             expect(app.reload.routes).to eq([route])
           end
         end
 
         context 'for a different process type' do
-          let(:worker_process) { App.make(:process, app_guid: app.guid, space: space, type: 'worker', ports: [8888]) }
+          let(:worker_process) { App.make(:process, app: app, type: 'worker', ports: [8888]) }
           let(:worker_message) { RouteMappingsCreateMessage.new({ app_port: 8888, relationships: { process: { type: 'worker' } } }) }
 
           it 'allows a new route mapping' do

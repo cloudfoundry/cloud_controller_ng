@@ -88,7 +88,8 @@ module VCAP::CloudController
         end
 
         context 'when app_port is not present' do
-          it 'is not valid' do
+          it 'is valid' do
+            body.delete(:app_port)
             message = RouteMappingsCreateMessage.new(body)
             expect(message).to be_valid
           end

@@ -20,8 +20,6 @@ module VCAP::CloudController
         instances: 1,
         memory: @free_mem_size,
         state: 'STARTED',
-        package_hash: 'abc',
-        package_state: 'STAGED'
       )
 
       @num_services.times do
@@ -32,11 +30,11 @@ module VCAP::CloudController
           description: 'description goes here'
         )
         @services << instance
-        ServiceBinding.make(app: @app, service_instance: instance)
+        ServiceBinding.make(app: @app.app, service_instance: instance)
       end
 
-      @app.add_route(@route1)
-      @app.add_route(@route2)
+      RouteMappingModel.make(app: @app.app, route: @route1, process_type: @app.type)
+      RouteMappingModel.make(app: @app.app, route: @route2, process_type: @app.type)
 
       set_current_user_as_admin
     end

@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Route Mappings' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
-  let(:process) { VCAP::CloudController::App.make(:process, space: space, app: app_model, type: 'worker', ports: [8888]) }
+  let(:process) { VCAP::CloudController::App.make(:process, app: app_model, type: 'worker', ports: [8888]) }
   let(:route) { VCAP::CloudController::Route.make(space: space) }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) do
@@ -62,7 +62,7 @@ RSpec.describe 'Route Mappings' do
       expect(event.values).to include({
         type:              'audit.app.map-route',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        app_model.name,
         actor:             developer.guid,
         actor_type:        'user',
@@ -99,7 +99,7 @@ RSpec.describe 'Route Mappings' do
         'resources' => [
           {
             'guid'       => route_mapping1.guid,
-            'app_port'   => 8080,
+            'app_port'   => nil,
             'created_at' => iso8601,
             'updated_at' => nil,
 
@@ -112,7 +112,7 @@ RSpec.describe 'Route Mappings' do
           },
           {
             'guid'       => route_mapping2.guid,
-            'app_port'   => 8080,
+            'app_port'   => nil,
             'created_at' => iso8601,
             'updated_at' => nil,
 
@@ -189,14 +189,14 @@ RSpec.describe 'Route Mappings' do
   end
 
   describe 'GET /v3/route_mappings/:route_mapping_guid' do
-    let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'worker') }
+    let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'worker', app_port: 8888) }
 
     it 'retrieves the requests route mapping' do
       get "/v3/route_mappings/#{route_mapping.guid}", nil, developer_headers
 
       expected_response = {
         'guid'       => route_mapping.guid,
-        'app_port'   => 8080,
+        'app_port'   => 8888,
         'created_at' => iso8601,
         'updated_at' => nil,
 
@@ -231,7 +231,7 @@ RSpec.describe 'Route Mappings' do
       expect(event.values).to include({
         type:              'audit.app.unmap-route',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        app_model.name,
         actor:             developer.guid,
         actor_type:        'user',
@@ -266,7 +266,7 @@ RSpec.describe 'Route Mappings' do
         'resources' => [
           {
             'guid'       => route_mapping1.guid,
-            'app_port'   => 8080,
+            'app_port'   => nil,
             'created_at' => iso8601,
             'updated_at' => nil,
 
@@ -279,7 +279,7 @@ RSpec.describe 'Route Mappings' do
           },
           {
             'guid'       => route_mapping2.guid,
-            'app_port'   => 8080,
+            'app_port'   => nil,
             'created_at' => iso8601,
             'updated_at' => nil,
 

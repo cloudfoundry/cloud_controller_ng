@@ -3,9 +3,9 @@ require 'active_support/concern'
 module LegacyApiDsl
   extend ActiveSupport::Concern
 
-  def validate_response(model, json, expected_values={}, ignored_attributes=[])
+  def validate_response(model, json, expected_values: {}, ignored_attributes: [], expected_attributes: nil)
     ignored_attributes.push :guid
-    expected_attributes_for_model(model).each do |expected_attribute|
+    (expected_attributes || expected_attributes_for_model(model)).each do |expected_attribute|
       # refactor: pass exclusions, and figure out which are valid to not be there
       next if ignored_attributes.include? expected_attribute
 
@@ -19,17 +19,17 @@ module LegacyApiDsl
     end
   end
 
-  def standard_list_response(response_json, model)
+  def standard_list_response(response_json, model, expected_attributes: nil)
     standard_paginated_response_format? response_json
     resource = response_json['resources'].first
-    standard_entity_response resource, model
+    standard_entity_response resource, model, expected_attributes: expected_attributes
   end
 
-  def standard_entity_response(json, model, expected_values={})
+  def standard_entity_response(json, model, expected_values: {}, expected_attributes: nil)
     expect(json).to include('metadata')
     expect(json).to include('entity')
     standard_metadata_response_format? json['metadata'], model
-    validate_response model, json['entity'], expected_values
+    validate_response(model, json['entity'], expected_values: expected_values, expected_attributes: expected_attributes)
   end
 
   def standard_paginated_response_format?(json)
@@ -39,7 +39,7 @@ module LegacyApiDsl
   def standard_metadata_response_format?(json, model)
     ignored_attributes = []
     ignored_attributes = [:updated_at] unless model_has_updated_at?(model)
-    validate_response VCAP::RestAPI::MetadataMessage, json, {}, ignored_attributes
+    validate_response(VCAP::RestAPI::MetadataMessage, json, ignored_attributes: ignored_attributes)
   end
 
   def expected_attributes_for_model(model)
@@ -126,7 +126,7 @@ module LegacyApiDsl
 
         example_request "List all #{title}#{outer_model_description}" do
           expect(status).to eq 200
-          standard_list_response parsed_response, model
+          standard_list_response(parsed_response, model, expected_attributes: options[:export_attributes])
         end
       end
     end
@@ -166,7 +166,7 @@ module LegacyApiDsl
         include_context 'response_fields' if options[:response_fields]
 
         example_request "Retrieve a Particular #{title}" do
-          standard_entity_response parsed_response, model
+          standard_entity_response(parsed_response, model, expected_attributes: options[:export_attributes])
           if options[:nested_associations]
             options[:nested_associations].each do |association_name|
               expect(parsed_response['entity'].keys).to include("#{association_name}_url")

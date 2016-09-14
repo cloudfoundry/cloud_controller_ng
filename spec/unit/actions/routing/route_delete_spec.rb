@@ -38,7 +38,7 @@ module VCAP::CloudController
         expect(route_event_repository).to have_received(:record_route_delete_request).with(route, user, user_email, false)
       end
 
-      context 'when there are v3 route mappings' do
+      context 'when there are route mappings' do
         let!(:route_mapping) { RouteMappingModel.make route: route }
         let!(:route_mapping_2) { RouteMappingModel.make route: route }
 
@@ -57,34 +57,6 @@ module VCAP::CloudController
 
           expect(app_event_repository).to have_received(:record_unmap_route).with(app, route, user.guid, user_email, route_mapping: route_mapping).once
           expect(app_event_repository).to have_received(:record_unmap_route).with(app_2, route, user.guid, user_email, route_mapping: route_mapping_2).once
-        end
-      end
-
-      context 'when there are v2 route mappings' do
-        let(:app) { AppFactory.make(space: route.space) }
-        let(:app_2) { AppFactory.make(space: route.space) }
-        let!(:route_mapping) { RouteMapping.make app: app, route: route }
-        let!(:route_mapping_2) { RouteMapping.make app: app_2, route: route }
-
-        before do
-          allow(SecurityContext).to receive(:current_user).and_return(user)
-          allow(SecurityContext).to receive(:current_user_email).and_return(user_email)
-          allow(Repositories::AppEventRepository).to receive(:new).and_return(app_event_repository)
-          allow(app_event_repository).to receive(:record_map_route)
-        end
-
-        it 'deletes the mappings' do
-          route_delete_action.delete_sync(route: route, recursive: recursive)
-
-          expect(route_mapping.exists?).to be_falsey
-          expect(route_mapping_2.exists?).to be_falsey
-        end
-
-        it 'creates an audit event for each mapping' do
-          route_delete_action.delete_sync(route: route, recursive: recursive)
-
-          expect(app_event_repository).to have_received(:record_unmap_route).with(app, route, user.guid, user_email).once
-          expect(app_event_repository).to have_received(:record_unmap_route).with(app_2, route, user.guid, user_email).once
         end
       end
 

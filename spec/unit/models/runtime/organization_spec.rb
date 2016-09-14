@@ -29,6 +29,14 @@ module VCAP::CloudController
         expect(organization.apps).to include(app.reload)
       end
 
+      it 'does not associate non-web v2 apps' do
+        app_model = AppModel.make
+        org = app_model.space.organization
+        app1 = App.make(type: 'web', app: app_model)
+        App.make(type: 'other', app: app_model)
+        expect(org.apps).to match_array([app1])
+      end
+
       it 'has associated app models' do
         app_model = AppModel.make
         organization = app_model.space.organization
@@ -203,7 +211,7 @@ module VCAP::CloudController
         QuotaDefinition.make(memory_limit: 500)
       end
 
-      it 'should return the memory available when no apps are running' do
+      it 'should return the memory available when no processes are running' do
         org = Organization.make(quota_definition: quota)
         space = Space.make(organization: org)
         AppFactory.make(space: space, memory: 200, instances: 2)
@@ -212,11 +220,11 @@ module VCAP::CloudController
         expect(org.has_remaining_memory(501)).to eq(false)
       end
 
-      it 'should return the memory remaining when apps are consuming memory' do
+      it 'should return the memory remaining when processes are consuming memory' do
         org = Organization.make(quota_definition: quota)
         space = Space.make(organization: org)
 
-        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
+        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
         AppFactory.make(space: space, memory: 50, instances: 1, state: 'STARTED')
 
         expect(org.has_remaining_memory(50)).to eq(true)

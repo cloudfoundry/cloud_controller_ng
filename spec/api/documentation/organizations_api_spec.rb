@@ -48,7 +48,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
       example 'Update an Organization' do
         client.put "/v2/organizations/#{guid}", MultiJson.dump({ name: new_name, quota_definition_guid: quota_definition.guid }, pretty: true), headers
         expect(status).to eq 201
-        standard_entity_response parsed_response, :organization, name: new_name
+        standard_entity_response parsed_response, :organization, expected_values: { name: new_name }
       end
     end
   end

@@ -24,6 +24,8 @@ ActiveSupport::JSON::Encoding.time_precision = 0
 module VCAP::CloudController; end
 
 require 'cloud_controller/errors/invalid_relation'
+require 'cloud_controller/errors/invalid_app_relation'
+require 'cloud_controller/errors/invalid_route_relation'
 require 'delayed_job_plugins/deserialization_retry'
 require 'sequel_plugins/sequel_plugins'
 require 'vcap/sequel_add_association_dependencies_monkeypatch'
@@ -106,11 +108,13 @@ require 'cloud_controller/routing_api/disabled_routing_api_client'
 require 'cloud_controller/routing_api/router_group'
 
 require 'cloud_controller/route_validator'
-require 'cloud_controller/route_mapping_validator'
 
 require 'cloud_controller/integer_array_serializer'
 require 'cloud_controller/port_generator'
 
 require 'cloud_controller/route_binding_message'
+require 'cloud_controller/process_route_handler'
 
 require 'services'
+
+require 'ext/object_ext'

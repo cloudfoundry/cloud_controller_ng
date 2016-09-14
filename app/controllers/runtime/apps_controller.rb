@@ -1,9 +1,13 @@
 require 'presenters/system_env_presenter'
+require 'queries/v2/app_query'
+require 'actions/v2/app_stage'
+require 'actions/v2/app_create'
+require 'actions/v2/app_update'
 
 module VCAP::CloudController
   class AppsController < RestController::ModelController
     def self.dependencies
-      [:app_event_repository, :droplet_blobstore]
+      [:app_event_repository, :droplet_blobstore, :stagers]
     end
 
     define_attributes do
@@ -30,10 +34,10 @@ module VCAP::CloudController
       to_one :space
       to_one :stack, optional_in: :create
 
-      to_many :routes
-      to_many :events,              link_only: true
-      to_many :service_bindings,    exclude_in: :create
-      to_many :route_mappings,      link_only: true, exclude_in: [:create, :update], route_for: :get
+      to_many :routes,              exclude_in: [:create, :update], route_for: :get
+      to_many :events,              exclude_in: [:create, :update], link_only: true
+      to_many :service_bindings,    exclude_in: [:create, :update], route_for: [:get]
+      to_many :route_mappings,      exclude_in: [:create, :update], link_only: true, route_for: :get, association_controller: :RouteMappingsController
     end
 
     query_parameters :name, :space_guid, :organization_guid, :diego, :stack_guid
@@ -54,14 +58,14 @@ module VCAP::CloudController
           staging_env_json:     EnvironmentVariableGroup.staging.environment_json,
           running_env_json:     EnvironmentVariableGroup.running.environment_json,
           environment_json:     app.environment_json,
-          system_env_json:      SystemEnvPresenter.new(app.all_service_bindings).system_env,
+          system_env_json:      SystemEnvPresenter.new(app.service_bindings).system_env,
           application_env_json: { 'VCAP_APPLICATION' => vcap_application },
         }, pretty: true)
       ]
     end
 
     def self.translate_validation_exception(e, attributes)
-      space_and_name_errors  = e.errors.on([:space_id, :name])
+      space_and_name_errors  = e.errors.on([:space_guid, :name])
       memory_errors          = e.errors.on(:memory)
       instance_number_errors = e.errors.on(:instances)
       app_instance_limit_errors = e.errors.on(:app_instance_limit)
@@ -109,21 +113,23 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @app_event_repository = dependencies.fetch(:app_event_repository)
-      @blobstore = dependencies.fetch(:droplet_blobstore)
+      @blobstore            = dependencies.fetch(:droplet_blobstore)
+      @stagers              = dependencies.fetch(:stagers)
     end
 
     def delete(guid)
       app = find_guid_and_validate_access(:delete, guid)
+      space = app.space
 
       if !recursive_delete? && app.service_bindings.present?
         raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_bindings', app.class.table_name)
       end
 
-      app.destroy
+      AppDelete.new(SecurityContext.current_user.guid, SecurityContext.current_user_email).delete_without_event(app.app)
 
       @app_event_repository.record_app_delete_request(
         app,
-        app.space,
+        space,
         SecurityContext.current_user.guid,
         SecurityContext.current_user_email,
         recursive_delete?)
@@ -134,20 +140,22 @@ module VCAP::CloudController
     get '/v2/apps/:guid/droplet/download', :download_droplet
     def download_droplet(guid)
       app = find_guid_and_validate_access(:read, guid)
-      blob_dispatcher.send_or_redirect_blob(app.current_droplet.try(:blob))
+      blob_dispatcher.send_or_redirect(guid: app.current_droplet.try(:blobstore_key))
     rescue CloudController::Errors::BlobNotFound
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}")
+    end
+
+    def read(guid)
+      obj = find_guid(guid)
+      raise CloudController::Errors::ApiError.new_from_details('AppNotFound', guid) if obj.type != 'web'
+      validate_access(:read, obj)
+      object_renderer.render_json(self.class, obj, @opts)
     end
 
     private
 
     def blob_dispatcher
       BlobDispatcher.new(blobstore: @blobstore, controller: self)
-    end
-
-    def before_create
-      space = VCAP::CloudController::Space[guid: request_attrs['space_guid']]
-      verify_enable_ssh(space)
     end
 
     def before_update(app)
@@ -157,15 +165,6 @@ module VCAP::CloudController
       ignore_empty_ports! if ports == []
       if should_warn_about_changed_ports?(app.diego, updated_diego_flag, ports)
         add_warning('App ports have changed but are unknown. The app should now listen on the port specified by environment variable PORT.')
-      end
-      return if request_attrs['route'].blank?
-      route = Route.find(guid: request_attrs['route'])
-      begin
-        RouteMappingValidator.new(route, app).validate
-      rescue RouteMappingValidator::RouteInvalidError
-        raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', request_attrs['route_guid'])
-      rescue RouteMappingValidator::TcpRoutingDisabledError
-        raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
       end
     end
 
@@ -192,27 +191,135 @@ module VCAP::CloudController
       end
     end
 
-    def after_create(app)
-      record_app_create_value = @app_event_repository.record_app_create(
-        app,
-        app.space,
-        SecurityContext.current_user.guid,
-        SecurityContext.current_user_email,
-        request_attrs)
-      record_app_create_value if request_attrs
-    end
-
     def after_update(app)
       stager_response = app.last_stager_response
       if stager_response.respond_to?(:streaming_log_url) && stager_response.streaming_log_url
         set_header('X-App-Staging-Log', stager_response.streaming_log_url)
       end
 
-      if app.dea_update_pending?
-        Dea::Client.update_uris(app)
+      @app_event_repository.record_app_update(app, app.space, SecurityContext.current_user.guid, SecurityContext.current_user_email, request_attrs)
+    end
+
+    def update(guid)
+      json_msg       = self.class::UpdateMessage.decode(body)
+      @request_attrs = json_msg.extract(stringify_keys: true)
+      logger.debug 'cc.update', guid: guid, attributes: redact_attributes(:update, request_attrs)
+      raise InvalidRequest unless request_attrs
+
+      process = find_guid(guid)
+      app     = process.app
+
+      before_update(process)
+
+      updater = V2::AppUpdate.new(access_validator: self, stagers: @stagers)
+      updater.update(app, process, request_attrs)
+
+      after_update(process)
+
+      [HTTP::CREATED, object_renderer.render_json(self.class, process, @opts)]
+    end
+
+    def create
+      @request_attrs = self.class::CreateMessage.decode(body).extract(stringify_keys: true)
+      logger.debug 'cc.create', model: self.class.model_class_name, attributes: redact_attributes(:create, request_attrs)
+
+      space = VCAP::CloudController::Space[guid: request_attrs['space_guid']]
+      verify_enable_ssh(space)
+
+      creator = V2::AppCreate.new(access_validator: self)
+      process = creator.create(request_attrs)
+
+      @app_event_repository.record_app_create(
+        process,
+        process.space,
+        SecurityContext.current_user.guid,
+        SecurityContext.current_user_email,
+        request_attrs)
+
+      [
+        HTTP::CREATED,
+        { 'Location' => "#{self.class.path}/#{process.guid}" },
+        object_renderer.render_json(self.class, process, @opts)
+      ]
+    end
+
+    put '/v2/apps/:app_guid/routes/:route_guid', :add_route
+    def add_route(app_guid, route_guid)
+      logger.debug 'cc.association.add', guid: app_guid, association: 'routes', other_guid: route_guid
+      @request_attrs = { 'route' => route_guid, verb: 'add', relation: 'routes', related_guid: route_guid }
+
+      app = find_guid(app_guid, App)
+      validate_access(:read_related_object_for_update, app, request_attrs)
+
+      before_update(app)
+
+      route = Route.find(guid: request_attrs['route'])
+      raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', route_guid) unless route
+
+      begin
+        V2::RouteMappingCreate.new(SecurityContext.current_user, SecurityContext.current_user_email, route, app).add(request_attrs)
+      rescue RouteMappingCreate::DuplicateRouteMapping
+        # the route is already mapped, consider the request successful
+      rescue V2::RouteMappingCreate::TcpRoutingDisabledError
+        raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+      rescue V2::RouteMappingCreate::RouteServiceNotSupportedError
+        raise CloudController::Errors::InvalidRouteRelation.new("#{route.guid} - Route services are only supported for apps on Diego")
+      rescue RouteMappingCreate::SpaceMismatch
+        raise CloudController::Errors::InvalidRouteRelation.new(route.guid)
       end
 
-      @app_event_repository.record_app_update(app, app.space, SecurityContext.current_user.guid, SecurityContext.current_user_email, request_attrs)
+      after_update(app)
+
+      [HTTP::CREATED, object_renderer.render_json(self.class, app, @opts)]
+    end
+
+    delete '/v2/apps/:app_guid/routes/:route_guid', :remove_route
+    def remove_route(app_guid, route_guid)
+      logger.debug 'cc.association.remove', guid: app_guid, association: 'routes', other_guid: route_guid
+      @request_attrs = { 'route' => route_guid, verb: 'remove', relation: 'routes', related_guid: route_guid }
+
+      process = find_guid(app_guid, App)
+      validate_access(:can_remove_related_object, process, request_attrs)
+
+      before_update(process)
+
+      route = Route.find(guid: request_attrs['route'])
+      raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', route_guid) unless route
+
+      route_mapping = RouteMappingModel.find(app: process.app, route: route, process: process)
+      RouteMappingDelete.new(SecurityContext.current_user, SecurityContext.current_user_email).delete(route_mapping)
+
+      after_update(process)
+
+      [HTTP::NO_CONTENT]
+    end
+
+    delete '/v2/apps/:app_guid/service_bindings/:service_binding_guid', :remove_service_binding
+    def remove_service_binding(app_guid, service_binding_guid)
+      logger.debug 'cc.association.remove', guid: app_guid, association: 'service_bindings', other_guid: service_binding_guid
+      @request_attrs = { 'service_binding' => service_binding_guid, verb: 'remove', relation: 'service_bindings', related_guid: service_binding_guid }
+
+      process = find_guid(app_guid, App)
+      validate_access(:can_remove_related_object, process, request_attrs)
+
+      before_update(process)
+
+      service_binding = ServiceBinding.find(guid: request_attrs['service_binding'])
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', service_binding_guid) unless service_binding
+
+      ServiceBindingDelete.new(SecurityContext.current_user.guid, SecurityContext.current_user_email).single_delete_sync(service_binding)
+
+      after_update(process)
+
+      [HTTP::NO_CONTENT]
+    end
+
+    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
+      AppQuery.filtered_dataset_from_query_params(model, ds, qp, opts)
+    end
+
+    def filter_dataset(dataset)
+      dataset.where(type: 'web')
     end
 
     define_messages

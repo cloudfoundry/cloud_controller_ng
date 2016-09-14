@@ -4,16 +4,11 @@ module VCAP::CloudController
   RSpec.describe SyslogDrainUrlsController do
     let(:bulk_user) { 'bulk_user' }
     let(:bulk_password) { 'bulk_password' }
-    let(:app_obj) { AppFactory.make }
-    let(:v3_app) { AppModel.make }
+    let(:app_obj) { AppModel.make }
     let(:instance1) { UserProvidedServiceInstance.make(space: app_obj.space) }
     let(:instance2) { UserProvidedServiceInstance.make(space: app_obj.space) }
-    let(:instance3) { UserProvidedServiceInstance.make(space: v3_app.space) }
-    let(:instance4) { UserProvidedServiceInstance.make(space: v3_app.space) }
     let!(:binding_with_drain1) { ServiceBinding.make(syslog_drain_url: 'fishfinger', app: app_obj, service_instance: instance1) }
     let!(:binding_with_drain2) { ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj, service_instance: instance2) }
-    let!(:binding_with_drain3) { ServiceBindingModel.make(syslog_drain_url: 'sweetsyslogdrainname', app: v3_app, service_instance: instance3) }
-    let!(:binding_with_drain4) { ServiceBindingModel.make(syslog_drain_url: 'awesomesyslogdrainname', app: v3_app, service_instance: instance4) }
 
     before do
       TestConfig.config[:bulk_api][:auth_user] = bulk_user
@@ -38,48 +33,41 @@ module VCAP::CloudController
         it 'returns a list of syslog drain urls' do
           get '/v2/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
-          expect(decoded_results.count).to eq(2)
+          expect(decoded_results.count).to eq(1)
           expect(decoded_results).to include(
             {
               app_obj.guid => match_array(['fishfinger', 'foobar']),
-              v3_app.guid => match_array(['sweetsyslogdrainname', 'awesomesyslogdrainname'])
             }
           )
         end
 
         context 'when an app has no service binding' do
-          let!(:app_obj_no_binding) { AppFactory.make }
-          let!(:v3_app_no_binding) { AppModel.make }
+          let!(:app_no_binding) { AppModel.make }
 
           it 'does not include that app' do
             get '/v2/syslog_drain_urls', '{}'
             expect(last_response).to be_successful
-            expect(decoded_results).not_to have_key(app_obj_no_binding.guid)
-            expect(decoded_results).not_to have_key(v3_app_no_binding.guid)
+            expect(decoded_results).not_to have_key(app_no_binding.guid)
           end
         end
 
         context "when an app's bindings have no syslog_drain_url" do
-          let!(:app_obj_no_drain) { ServiceBinding.make.app }
-          let!(:v3_app_no_drain) { ServiceBindingModel.make.app }
+          let!(:app_no_drain) { ServiceBinding.make.app }
 
           it 'does not include that app' do
             get '/v2/syslog_drain_urls', '{}'
             expect(last_response).to be_successful
-            expect(decoded_results).not_to have_key(app_obj_no_drain.guid)
-            expect(decoded_results).not_to have_key(v3_app_no_drain.guid)
+            expect(decoded_results).not_to have_key(app_no_drain.guid)
           end
         end
 
         context "when an app's binding has blank syslog_drain_urls" do
-          let!(:app_obj_empty_drain) { ServiceBinding.make(syslog_drain_url: '').app }
-          let!(:v3_app_empty_drain) { ServiceBindingModel.make(syslog_drain_url: '').app }
+          let!(:app_empty_drain) { ServiceBinding.make(syslog_drain_url: '').app }
 
           it 'includes the app without the empty syslog_drain_urls' do
             get '/v2/syslog_drain_urls', '{}'
             expect(last_response).to be_successful
-            expect(decoded_results).not_to have_key(app_obj_empty_drain.guid)
-            expect(decoded_results).not_to have_key(v3_app_empty_drain.guid)
+            expect(decoded_results).not_to have_key(app_empty_drain.guid)
           end
         end
 
@@ -90,7 +78,7 @@ module VCAP::CloudController
         describe 'paging' do
           before do
             3.times do
-              app_obj = AppFactory.make
+              app_obj = AppModel.make
               instance = UserProvidedServiceInstance.make(space: app_obj.space)
               ServiceBinding.make(syslog_drain_url: 'fishfinger', app: app_obj, service_instance: instance)
             end
@@ -128,7 +116,7 @@ module VCAP::CloudController
 
           it 'should eventually return entire collection, batch after batch' do
             apps = {}
-            total_size = App.count + AppModel.count
+            total_size = AppModel.count
 
             token = 0
             while apps.size < total_size
@@ -153,7 +141,7 @@ module VCAP::CloudController
 
           context 'when an app has no service_bindings' do
             before do
-              App.make(guid: '00000')
+              AppModel.make(guid: '00000')
             end
 
             it 'does not affect the paging results' do
@@ -168,10 +156,9 @@ module VCAP::CloudController
           end
 
           context 'when an app has no syslog_drain_urls' do
+            let(:app_with_first_ordered_guid) { AppModel.make(guid: '000', space: instance1.space) }
             before do
-              sb = ServiceBinding.make(syslog_drain_url: nil)
-              sb.app.guid = '000'
-              sb.app.save
+              ServiceBinding.make(syslog_drain_url: nil, app: app_with_first_ordered_guid, service_instance: instance1)
             end
 
             it 'does not affect the paging results' do

@@ -1,3 +1,5 @@
+require 'cloud_controller/blobstore/errors'
+
 module V3ErrorsHelper
   def invalid_request!(message)
     raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', message)

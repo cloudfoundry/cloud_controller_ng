@@ -46,18 +46,11 @@ module VCAP::CloudController
       AppFactory.make(
         instances: 2,
         state: app_state,
-        droplet_hash: droplet_hash,
-        package_hash: 'abcd',
-        package_state: package_state,
         diego: diego,
       )
     end
-
     let(:diego) { false }
-
     let(:app_state) { 'STARTED' }
-    let(:droplet_hash) { 'present-hash' }
-    let(:package_state) { 'STAGED' }
 
     describe '#process_hm9000_start' do
       let(:hm9000_start_message) do
@@ -123,8 +116,8 @@ module VCAP::CloudController
 
             context 'if the app failed to stage' do
               before do
-                app.package_state = 'FAILED'
-                app.save
+                DropletModel.make(app: app.app, package: app.package, state: DropletModel::FAILED_STATE)
+                app.reload
               end
 
               it 'should not do anything' do
@@ -242,10 +235,10 @@ module VCAP::CloudController
                   end
                 end
 
-                context 'but the package is pending staging' do
+                context 'but the package is staging' do
                   before do
-                    app.package_state = 'PENDING'
-                    app.save
+                    DropletModel.make(app: app.app, package: app.package, state: DropletModel::STAGING_STATE)
+                    app.reload
                   end
 
                   it 'should ignore the request' do
@@ -256,8 +249,8 @@ module VCAP::CloudController
 
                 context 'but the package has failed to stage' do
                   before do
-                    app.package_state = 'FAILED'
-                    app.save
+                    DropletModel.make(app: app.app, package: app.package, state: DropletModel::FAILED_STATE)
+                    app.reload
                   end
 
                   it 'should stop the index' do

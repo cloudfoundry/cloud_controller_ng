@@ -56,7 +56,8 @@ RSpec.resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
 
       expect(status).to eq(201)
 
-      standard_entity_response parsed_response, :quota_definition, instance_memory_limit: 10_240, app_instance_limit: 10, app_task_limit: 5, total_reserved_route_ports: 3
+      standard_entity_response parsed_response, :quota_definition,
+        expected_values: { instance_memory_limit: 10_240, app_instance_limit: 10, app_task_limit: 5, total_reserved_route_ports: 3 }
 
       expect(parsed_response['entity']).to include('instance_memory_limit')
       expect(parsed_response['entity']).to include('app_instance_limit')

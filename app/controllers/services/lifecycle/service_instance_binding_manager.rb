@@ -1,17 +1,15 @@
-require 'actions/services/service_binding_delete'
+require 'actions/services/locks/lock_check'
 
 module VCAP::CloudController
   class ServiceInstanceBindingManager
     class ServiceInstanceNotFound < StandardError; end
+    class ServiceInstanceNotBindable < StandardError; end
+    class ServiceInstanceAlreadyBoundToSameRoute < StandardError; end
     class RouteNotFound < StandardError; end
     class RouteBindingNotFound < StandardError; end
-    class ServiceInstanceNotBindable < StandardError; end
+    class RouteServiceDisabled < StandardError; end
     class RouteServiceRequiresDiego < StandardError; end
     class RouteAlreadyBoundToServiceInstance < StandardError; end
-    class ServiceInstanceAlreadyBoundToSameRoute < StandardError; end
-    class AppNotFound < StandardError; end
-    class RouteServiceDisabled < StandardError; end
-    class VolumeMountServiceDisabled < StandardError; end
 
     include VCAP::CloudController::LockCheck
 
@@ -75,74 +73,11 @@ module VCAP::CloudController
       route_binding.notify_diego if route_binding.route_service_url
     end
 
-    def create_app_service_instance_binding(service_instance_guid, app_guid, binding_attrs, arbitrary_parameters, volume_mount_services_enabled)
-      service_instance = ServiceInstance.first(guid: service_instance_guid)
-      raise ServiceInstanceNotFound unless service_instance
-      raise ServiceInstanceNotBindable unless service_instance.bindable?
-      raise AppNotFound unless App.first(guid: app_guid)
-      raise VolumeMountServiceDisabled if service_instance.volume_service? && !volume_mount_services_enabled
-
-      service_binding = ServiceBinding.new(binding_attrs)
-      @access_validator.validate_access(:create, service_binding)
-      raise Sequel::ValidationFailed.new(service_binding) unless service_binding.valid?
-
-      raw_attributes = bind(service_binding, arbitrary_parameters)
-
-      attributes_to_update = raw_attributes.tap { |r| r.delete(:route_service_url) }
-
-      service_binding.set_all(attributes_to_update)
-
-      begin
-        service_binding.save
-      rescue => e
-        @logger.error "Failed to save state of create for service binding #{service_binding.guid} with exception: #{e}"
-        mitigate_orphan(service_binding)
-        raise e
-      end
-
-      services_event_repository.record_service_binding_event(:create, service_binding)
-
-      service_binding
-    end
-
-    def delete_service_instance_binding(service_binding, params)
-      delete_action = ServiceBindingDelete.new
-      deletion_job = Jobs::DeleteActionJob.new(ServiceBinding, service_binding.guid, delete_action)
-      delete_and_audit_job = Jobs::AuditEventJob.new(
-        deletion_job,
-        services_event_repository,
-        :record_service_binding_event,
-        :delete,
-        service_binding.class,
-        service_binding.guid
-      )
-
-      enqueue_deletion_job(delete_and_audit_job, params)
-    end
-
     private
 
     def bind(binding_obj, arbitrary_parameters)
       raise_if_locked(binding_obj.service_instance)
       binding_obj.client.bind(binding_obj, arbitrary_parameters)
-    end
-
-    def unbind(binding_obj)
-      raise_if_locked(binding_obj.service_instance)
-      binding_obj.client.unbind(binding_obj)
-    end
-
-    def async?(params)
-      params['async'] == 'true'
-    end
-
-    def enqueue_deletion_job(deletion_job, params)
-      if async?(params)
-        Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
-      else
-        deletion_job.perform
-        nil
-      end
     end
 
     def mitigate_orphan(binding)
@@ -162,7 +97,7 @@ module VCAP::CloudController
 
     def delete_route_binding(route_binding)
       route_binding.db.transaction do
-        errors = ServiceBindingDelete.new.delete [route_binding]
+        errors = RouteBindingDelete.new.delete [route_binding]
         unless errors.empty?
           @logger.error "Failed to delete binding with guid: #{route_binding.guid} with errors: #{errors.map(&:message).join(',')}"
           raise errors.first

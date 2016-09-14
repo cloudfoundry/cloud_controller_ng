@@ -68,7 +68,7 @@ RSpec.describe 'Apps' do
       expect(event.values).to include({
         type:              'audit.app.create',
         actee:             created_app.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
@@ -132,7 +132,7 @@ RSpec.describe 'Apps' do
         expect(event.values).to include({
           type:              'audit.app.create',
           actee:             created_app.guid,
-          actee_type:        'v3-app',
+          actee_type:        'app',
           actee_name:        'my_app',
           actor:             user.guid,
           actor_type:        'user',
@@ -145,16 +145,14 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v3/apps' do
     it 'returns a paginated list of apps the user has access to' do
-      buildpack                           = VCAP::CloudController::Buildpack.make(name: 'bp-name')
-      stack                               = VCAP::CloudController::Stack.make(name: 'stack-name')
-      app_model1                          = VCAP::CloudController::AppModel.make(:buildpack,
-        name:          'name1',
-        space:         space,
-        desired_state: 'STOPPED'
+      buildpack = VCAP::CloudController::Buildpack.make(name: 'bp-name')
+      stack     = VCAP::CloudController::Stack.make(name: 'stack-name')
+
+      app_model1 = VCAP::CloudController::AppModel.make(name: 'name1', space: space, desired_state: 'STOPPED')
+      app_model1.lifecycle_data.update(
+        buildpack: buildpack.name,
+        stack:     stack.name
       )
-      app_model1.lifecycle_data.buildpack = buildpack.name
-      app_model1.lifecycle_data.stack     = stack.name
-      app_model1.lifecycle_data.save
 
       app_model2 = VCAP::CloudController::AppModel.make(
         :docker,
@@ -217,7 +215,7 @@ RSpec.describe 'Apps' do
               'data' => {}
             },
             'created_at'              => iso8601,
-            'updated_at'              => nil,
+            'updated_at'              => iso8601,
             'environment_variables'   => {
               'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
             },
@@ -355,8 +353,8 @@ RSpec.describe 'Apps' do
       app_model.lifecycle_data.buildpack = buildpack.name
       app_model.lifecycle_data.stack     = stack.name
       app_model.lifecycle_data.save
-      app_model.add_process(VCAP::CloudController::App.make(space: space, instances: 1))
-      app_model.add_process(VCAP::CloudController::App.make(space: space, instances: 2))
+      app_model.add_process(VCAP::CloudController::App.make(instances: 1))
+      app_model.add_process(VCAP::CloudController::App.make(instances: 2))
 
       get "/v3/apps/#{app_model.guid}", nil, user_header
 
@@ -437,7 +435,7 @@ RSpec.describe 'Apps' do
         name:  'si-name',
         tags:  ['50% off']
       )
-      VCAP::CloudController::ServiceBindingModel.make(
+      VCAP::CloudController::ServiceBinding.make(
         service_instance: service_instance,
         app:              app_model,
         syslog_drain_url: 'https://syslog.example.com/drain',
@@ -500,7 +498,7 @@ RSpec.describe 'Apps' do
     let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'app_name', space: space) }
     let!(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
     let!(:droplet) { VCAP::CloudController::DropletModel.make(package: package, app: app_model) }
-    let!(:process) { VCAP::CloudController::AppFactory.make(app: app_model, space: space) }
+    let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
 
     it 'deletes an App' do
       delete "/v3/apps/#{app_model.guid}", nil, user_header
@@ -516,7 +514,7 @@ RSpec.describe 'Apps' do
       expect(event.values).to include({
         type:              'audit.app.delete-request',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'app_name',
         actor:             user.guid,
         actor_type:        'user',
@@ -589,7 +587,7 @@ RSpec.describe 'Apps' do
       expect(event.values).to include({
         type:              'audit.app.update',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'new-name',
         actor:             user.guid,
         actor_type:        'user',
@@ -661,7 +659,7 @@ RSpec.describe 'Apps' do
       expect(event.values).to include({
         type:              'audit.app.start',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'app-name',
         actor:             user.guid,
         actor_type:        'user',
@@ -729,7 +727,7 @@ RSpec.describe 'Apps' do
       expect(event.values).to include({
         type:              'audit.app.stop',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'app-name',
         actor:             user.guid,
         actor_type:        'user',
@@ -750,7 +748,7 @@ RSpec.describe 'Apps' do
         package_guid:                package_model.guid,
         buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-name',
-        error:                       'example error',
+        error_description: 'example error',
         environment_variables:       { 'cloud' => 'foundry' },
         execution_metadata: 'some-data',
         droplet_hash: 'shalalala',
@@ -788,7 +786,7 @@ RSpec.describe 'Apps' do
         'staging_disk_in_mb' => 200,
         'result' => {
           'hash'                   => { 'type' => 'sha1', 'value' => 'shalalala' },
-          'buildpack'              => 'http://buildpack.git.url.com',
+          'buildpack'              => { 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil },
           'stack'                  => 'stack-name',
           'execution_metadata'     => 'some-data',
           'process_types'          => { 'web' => 'start-command' }
@@ -868,11 +866,11 @@ RSpec.describe 'Apps' do
 
       events = VCAP::CloudController::Event.where(actor: user.guid).all
 
-      droplet_event = events.find { |e| e.type == 'audit.app.droplet_mapped' }
+      droplet_event = events.find { |e| e.type == 'audit.app.droplet.mapped' }
       expect(droplet_event.values).to include({
-        type:              'audit.app.droplet_mapped',
+        type:              'audit.app.droplet.mapped',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
@@ -909,7 +907,7 @@ RSpec.describe 'Apps' do
       expect(web_process_event.values).to include({
         type:              'audit.app.process.create',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
@@ -922,7 +920,7 @@ RSpec.describe 'Apps' do
       expect(other_process_event.values).to include({
         type:              'audit.app.process.create',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
@@ -933,7 +931,7 @@ RSpec.describe 'Apps' do
     end
 
     it 'creates audit.app.process.update events' do
-      process_to_update = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'web', command: 'original', space: app_model.space, metadata: {})
+      process_to_update = VCAP::CloudController::ProcessModel.make(:process, app: app_model, type: 'web', command: 'original')
 
       droplet = VCAP::CloudController::DropletModel.make(
         app:           app_model,
@@ -955,7 +953,7 @@ RSpec.describe 'Apps' do
       expect(update_event.values).to include({
         type:              'audit.app.process.update',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
@@ -972,7 +970,7 @@ RSpec.describe 'Apps' do
     end
 
     it 'creates audit.app.process.delete events' do
-      process_to_delete = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'bob', space: app_model.space)
+      process_to_delete = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'bob')
 
       droplet = VCAP::CloudController::DropletModel.make(
         app:           app_model,
@@ -994,7 +992,7 @@ RSpec.describe 'Apps' do
       expect(delete_event.values).to include({
         type:              'audit.app.process.delete',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',

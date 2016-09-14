@@ -12,6 +12,9 @@ module VCAP::CloudController
                 dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces, is_gateway_service: true) }
 
     one_to_many :apps,
+                dataset: -> { App.filter(space: spaces, type: 'web') }
+
+    one_to_many :processes,
                 dataset: -> { App.filter(space: spaces) }
 
     one_to_many :app_models,
@@ -187,7 +190,7 @@ module VCAP::CloudController
     end
 
     def memory_remaining
-      memory_used = apps_dataset.where(state: 'STARTED').sum(Sequel.*(:memory, :instances)) || 0
+      memory_used = processes_dataset.where(state: 'STARTED').sum(Sequel.*(:memory, :instances)) || 0
       quota_definition.memory_limit - memory_used
     end
 

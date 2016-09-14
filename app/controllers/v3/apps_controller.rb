@@ -106,7 +106,7 @@ class AppsV3Controller < ApplicationController
       FeatureFlag.raise_unless_enabled!(:diego_docker)
     end
 
-    AppStart.new(current_user, current_user_email).start(app)
+    AppStart.start(app: app, user_guid: current_user.guid, user_email: current_user_email)
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppStart::InvalidApp => e
@@ -118,7 +118,7 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
 
-    AppStop.new(current_user, current_user_email).stop(app)
+    AppStop.stop(app: app, user_guid: current_user.guid, user_email: current_user_email)
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppStop::InvalidApp => e

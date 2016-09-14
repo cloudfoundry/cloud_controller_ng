@@ -9,6 +9,8 @@ module VCAP::CloudController
 
     SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
 
+    plugin :many_through_many
+
     many_to_one :isolation_segment_model,
        primary_key: :guid,
        key: :isolation_segment_guid
@@ -18,8 +20,16 @@ module VCAP::CloudController
     define_user_group :auditors, reciprocal: :audited_spaces, before_add: :validate_auditor
 
     many_to_one :organization, before_set: :validate_change_organization
-    one_to_many :apps
+
     one_to_many :app_models, primary_key: :guid, key: :space_guid
+
+    one_to_many :processes, class: 'VCAP::CloudController::App', dataset: -> { App.filter(app: app_models) }
+
+    many_through_many :apps, [
+      [:spaces, :id, :guid],
+      [:apps, :space_guid, :guid]
+    ], class: 'VCAP::CloudController::App', right_primary_key: :app_guid, conditions: { type: 'web' }
+
     one_to_many :events, primary_key: :guid, key: :space_guid
     one_to_many :service_instances
     one_to_many :managed_service_instances
@@ -83,7 +93,7 @@ module VCAP::CloudController
 
     add_association_dependencies(
       default_users: :nullify,
-      apps: :destroy,
+      processes: :destroy,
       routes: :destroy,
       security_groups: :nullify,
     )
@@ -144,13 +154,11 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       {
-        id: Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).union(
-          Space.dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__id)
-          ).union(
-            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__id)
-          ).union(
-            Space.dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__id)
-          ).select(:id)
+        spaces__id: dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).
+          union(dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__id)).
+          union(dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__id)).
+          union(dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__id)).
+          select(:id)
       }
     end
 
@@ -191,13 +199,11 @@ module VCAP::CloudController
     end
 
     def running_task_memory
-      TaskModel.join(:apps_v3, id: :app_id).
-        where(state: TaskModel::RUNNING_STATE, apps_v3__space_guid: guid).
-        sum(:memory_in_mb) || 0
+      tasks_dataset.where(state: TaskModel::RUNNING_STATE).sum(:memory_in_mb) || 0
     end
 
     def started_app_memory
-      apps_dataset.where(state: 'STARTED').sum(Sequel.*(:memory, :instances)) || 0
+      processes_dataset.where(state: 'STARTED').sum(Sequel.*(:memory, :instances)) || 0
     end
 
     def running_and_pending_tasks_count

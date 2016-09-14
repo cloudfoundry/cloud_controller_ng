@@ -5,6 +5,8 @@ module VCAP::CloudController::RoutingApi
   class Client
     attr_reader :skip_cert_verify, :routing_api_uri, :token_issuer
 
+    ROUTER_GROUPS_PATH = '/routing/v1/router_groups'.freeze
+
     def initialize(routing_api_uri, token_issuer, skip_cert_verify)
       @routing_api_uri = URI(routing_api_uri) if routing_api_uri
       @token_issuer = token_issuer
@@ -20,7 +22,7 @@ module VCAP::CloudController::RoutingApi
       client = HTTPClient.new
       client.ssl_config.set_default_paths
       use_ssl = routing_api_uri.scheme.to_s.downcase == 'https'
-      routing_api_uri.path = '/routing/v1/router_groups'
+      routing_api_uri.path = ROUTER_GROUPS_PATH
 
       if use_ssl
         client.ssl_config.verify_mode = skip_cert_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER

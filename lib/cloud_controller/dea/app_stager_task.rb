@@ -1,3 +1,4 @@
+require 'cloud_controller/multi_response_message_bus_request'
 require 'presenters/message_bus/service_binding_presenter'
 
 module VCAP::CloudController
@@ -8,25 +9,23 @@ module VCAP::CloudController
       attr_reader :config
       attr_reader :message_bus
 
-      def initialize(config, message_bus, app, dea_pool, blobstore_url_generator)
-        @config = config
-        @message_bus = message_bus
-        @app = app
-        @dea_pool = dea_pool
+      def initialize(config, message_bus, droplet, dea_pool, blobstore_url_generator)
+        @config                  = config
+        @message_bus             = message_bus
+        @dea_pool                = dea_pool
         @blobstore_url_generator = blobstore_url_generator
+        @app                     = droplet.app.web_process
+        @droplet                 = droplet
       end
 
       def task_id
-        @task_id ||= VCAP.secure_uuid
+        @task_id ||= @droplet.guid
       end
 
       def stage(&completion_callback)
         stager = @dea_pool.find_stager(@app.stack.name, staging_task_memory_mb, staging_task_disk_mb)
         raise CloudController::Errors::ApiError.new_from_details('StagingError', 'no available stagers') unless stager
         @stager_id = stager.dea_id
-
-        # Save the current staging task
-        @app.update(package_state: 'PENDING', staging_task_id: task_id)
 
         # Attempt to stop any in-flight staging for this app
         @message_bus.publish('staging.stop', app_id: @app.guid)
@@ -72,7 +71,7 @@ module VCAP::CloudController
           stage { @completion_callback }
         end
       rescue => e
-        @app.mark_as_failed_to_stage('StagingError')
+        staging_fail('StagingError')
         logger.error e.message
         raise e
       end
@@ -157,7 +156,7 @@ module VCAP::CloudController
         message = error_message(response)
 
         if type && message
-          @app.mark_as_failed_to_stage(type)
+          staging_fail(type)
           raise CloudController::Errors::ApiError.new_from_details(type, message)
         end
       end
@@ -203,17 +202,44 @@ module VCAP::CloudController
       end
 
       def check_task_id
-        if @app.staging_task_id != task_id
+        if @app.latest_droplet.guid != task_id
           raise CloudController::Errors::ApiError.new_from_details('StagingError', 'failed to stage application: another staging request was initiated')
         end
       end
 
       def staging_completion(stager_response)
-        @app.db.transaction do
-          @app.lock!
-          @app.mark_as_staged
-          @app.update_detected_buildpack(stager_response.detected_buildpack, stager_response.buildpack_key)
-          @app.current_droplet.update_detected_start_command(stager_response.detected_start_command) if @app.current_droplet
+        @droplet.db.transaction do
+          @droplet.lock!
+          @droplet.app.lock!
+
+          @droplet.mark_as_staged
+          @droplet.set_buildpack_receipt(
+            detect_output:       stager_response.detected_buildpack,
+            buildpack_key:       stager_response.buildpack_key,
+            requested_buildpack: @droplet.buildpack_lifecycle_data.buildpack
+          )
+          @droplet.process_types      = { web: stager_response.detected_start_command }
+          @droplet.execution_metadata = stager_response.execution_metadata
+          @droplet.save_changes(raise_on_save_failure: true)
+
+          @droplet.app.droplet = @droplet
+          @droplet.app.save
+
+          @droplet.app.processes.each do |p|
+            p.lock!
+            Repositories::AppUsageEventRepository.new.create_from_app(p, 'BUILDPACK_SET')
+          end
+        end
+
+        BitsExpiration.new.expire_droplets!(@droplet.app)
+      end
+
+      def staging_fail(error)
+        @droplet.db.transaction do
+          @droplet.lock!
+          @droplet.fail_to_stage!(error)
+
+          AppStop.stop_without_event(@droplet.app)
         end
       end
 

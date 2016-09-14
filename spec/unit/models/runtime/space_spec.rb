@@ -59,7 +59,6 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it { is_expected.to have_associated :organization, associated_instance: ->(space) { space.organization } }
-      it { is_expected.to have_associated :apps }
       it { is_expected.to have_associated :events }
       it { is_expected.to have_associated :service_instances, class: UserProvidedServiceInstance }
       it { is_expected.to have_associated :managed_service_instances }
@@ -246,6 +245,102 @@ module VCAP::CloudController
           include_examples 'bad app space permission', perm
         end
       end
+
+      describe 'apps which is the process relationship' do
+        it 'has apps' do
+          space = Space.make
+          app1  = AppFactory.make(space: space)
+          app2  = AppFactory.make(space: space)
+          expect(space.apps).to match_array([app1, app2])
+        end
+
+        it 'does not associate non-web v2 apps' do
+          space = Space.make
+          app1  = AppFactory.make(type: 'web', space: space)
+          AppFactory.make(type: 'other', space: space)
+          expect(space.apps).to match_array([app1])
+        end
+
+        describe 'eager loading' do
+          it 'loads only web processes' do
+            # rubocop:disable UselessAssignment
+            space1 = Space.make
+            space2 = Space.make
+            space3 = Space.make
+            space4 = Space.make
+
+            app1_space1 = AppFactory.make(space: space1)
+            app2_space1 = AppFactory.make(space: space1)
+            app3_space1 = AppFactory.make(space: space1)
+            non_web_app_space1 = AppFactory.make(space: space1, type: 'other')
+
+            app1_space2 = AppFactory.make(space: space2)
+            app2_space2 = AppFactory.make(space: space2)
+            app3_space2 = AppFactory.make(space: space2)
+            non_web_app_space2 = AppFactory.make(space: space2, type: 'other')
+
+            app1_space3 = AppFactory.make(space: space3)
+            app2_space3 = AppFactory.make(space: space3)
+            app3_space3 = AppFactory.make(space: space3)
+            non_web_app_space3 = AppFactory.make(space: space3, type: 'other')
+
+            app1_space4 = AppFactory.make(space: space4)
+            app2_space4 = AppFactory.make(space: space4)
+            app3_space4 = AppFactory.make(space: space4)
+            non_web_app_space4 = AppFactory.make(space: space4, type: 'other')
+
+            spaces = Space.where(id: [space1.id, space3.id]).eager(:apps).all
+
+            expect(spaces).to match_array([space1, space3])
+            queried_space_1 = spaces.select { |s| s.guid == space1.guid }.first
+            queried_space_3 = spaces.select { |s| s.guid == space3.guid }.first
+            expect(queried_space_1.associations[:apps]).to match_array([app1_space1, app2_space1, app3_space1])
+            expect(queried_space_3.associations[:apps]).to match_array([app1_space3, app2_space3, app3_space3])
+            # rubocop:enable UselessAssignment
+          end
+
+          it 'respects when an eager block is passed in' do
+            # rubocop:disable UselessAssignment
+            space1 = Space.make
+            space2 = Space.make
+            space3 = Space.make
+            space4 = Space.make
+
+            app1_space1 = AppFactory.make(space: space1)
+            app2_space1 = AppFactory.make(space: space1)
+            app3_space1 = AppFactory.make(space: space1)
+            non_web_app_space1 = AppFactory.make(space: space1, type: 'other')
+            scaled_app_space1 = AppFactory.make(space: space1, instances: 5)
+
+            app1_space2 = AppFactory.make(space: space2)
+            app2_space2 = AppFactory.make(space: space2)
+            app3_space2 = AppFactory.make(space: space2)
+            non_web_app_space2 = AppFactory.make(space: space2, type: 'other')
+            scaled_app_space2 = AppFactory.make(space: space2, instances: 5)
+
+            app1_space3 = AppFactory.make(space: space3)
+            app2_space3 = AppFactory.make(space: space3)
+            app3_space3 = AppFactory.make(space: space3)
+            non_web_app_space3 = AppFactory.make(space: space3, type: 'other')
+            scaled_app_space3 = AppFactory.make(space: space3, instances: 5)
+
+            app1_space4 = AppFactory.make(space: space4)
+            app2_space4 = AppFactory.make(space: space4)
+            app3_space4 = AppFactory.make(space: space4)
+            non_web_app_space4 = AppFactory.make(space: space4, type: 'other')
+            scaled_app_space4 = AppFactory.make(space: space4, instances: 5)
+
+            spaces = Space.where(id: [space1.id, space3.id]).eager(apps: proc { |ds| ds.where(instances: 5) }).all
+
+            expect(spaces).to match_array([space1, space3])
+            queried_space_1 = spaces.select { |s| s.guid == space1.guid }.first
+            queried_space_3 = spaces.select { |s| s.guid == space3.guid }.first
+            expect(queried_space_1.associations[:apps]).to match_array([scaled_app_space1])
+            expect(queried_space_3.associations[:apps]).to match_array([scaled_app_space3])
+            # rubocop:enable UselessAssignment
+          end
+        end
+      end
     end
 
     describe 'Serialization' do
@@ -341,21 +436,33 @@ module VCAP::CloudController
         expect(event).to be
         expect(event.space).to be_nil
       end
+
+      it 'destroys all processes' do
+        app1 = AppFactory.make(space: space)
+        app2 = AppFactory.make(space: space)
+        app3 = AppFactory.make(space: space, type: 'potato')
+
+        expect {
+          subject.destroy
+        }.to change {
+          App.where(id: [app1.id, app2.id, app3.id]).count
+        }.by(-3)
+      end
     end
 
     describe '#has_remaining_memory' do
       let(:space_quota) { SpaceQuotaDefinition.make(memory_limit: 500) }
       let(:space) { Space.make(space_quota_definition: space_quota, organization: space_quota.organization) }
 
-      it 'returns true if there is enough memory remaining when no apps are running' do
+      it 'returns true if there is enough memory remaining when no processes are running' do
         AppFactory.make(space: space, memory: 50, instances: 1)
 
         expect(space.has_remaining_memory(500)).to eq(true)
         expect(space.has_remaining_memory(501)).to eq(false)
       end
 
-      it 'returns true if there is enough memory remaining when apps are consuming memory' do
-        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
+      it 'returns true if there is enough memory remaining when processes are consuming memory' do
+        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'other')
         AppFactory.make(space: space, memory: 50, instances: 1, state: 'STARTED')
 
         expect(space.has_remaining_memory(50)).to eq(true)

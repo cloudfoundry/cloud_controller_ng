@@ -92,7 +92,7 @@ module VCAP::CloudController
           type:       'audit.app.process.crash',
           actor_guid: process.guid,
           actor_name: process.type,
-          actor_type: 'v3-process',
+          actor_type: 'process',
           metadata:   crash_payload
         )
       end
@@ -105,7 +105,7 @@ module VCAP::CloudController
           Event.create(
             type:       type,
             actee:      app.guid,
-            actee_type: 'v3-app',
+            actee_type: 'app',
             actee_name: app.name,
             actor:      actor_guid,
             actor_type: actor_type,

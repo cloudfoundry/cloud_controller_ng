@@ -16,12 +16,8 @@ RSpec.describe DropletsController, type: :controller do
       allow_user_read_access(user, space: space)
       allow_user_write_access(user, space: space)
       allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
-      allow(stagers).to receive(:stager_for_package).and_return(double(:stager, stage: nil))
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(
-        app:       app_model,
-        buildpack: nil,
-        stack:     VCAP::CloudController::Stack.default.name
-      )
+      allow(stagers).to receive(:stager_for_app).and_return(double(:stager, stage: nil))
+      app_model.lifecycle_data.update(buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns a 201 Created response' do
@@ -111,8 +107,7 @@ RSpec.describe DropletsController, type: :controller do
           let(:req_body) { {} }
 
           before do
-            app_model.buildpack_lifecycle_data.buildpack = buildpack.name
-            app_model.buildpack_lifecycle_data.save
+            app_model.lifecycle_data.update(buildpack: buildpack.name)
           end
 
           it 'uses the apps buildpack' do
@@ -313,12 +308,10 @@ RSpec.describe DropletsController, type: :controller do
           allow(droplet_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::DropletCreate::SpaceQuotaExceeded)
         end
 
-        it 'returns 400 UnableToPerform' do
+        it 'returns 422 Unprocessable' do
           post :create, package_guid: package.guid
 
-          expect(response.status).to eq(400)
-          expect(response.body).to include('UnableToPerform')
-          expect(response.body).to include('Staging request')
+          expect(response.status).to eq(422)
           expect(response.body).to include("space's memory limit exceeded")
         end
       end
@@ -328,12 +321,10 @@ RSpec.describe DropletsController, type: :controller do
           allow(droplet_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::DropletCreate::OrgQuotaExceeded)
         end
 
-        it 'returns 400 UnableToPerform' do
+        it 'returns 422 Unprocessable' do
           post :create, package_guid: package.guid
 
-          expect(response.status).to eq(400)
-          expect(response.body).to include('UnableToPerform')
-          expect(response.body).to include('Staging request')
+          expect(response.status).to eq(422)
           expect(response.body).to include("organization's memory limit exceeded")
         end
       end
@@ -343,12 +334,10 @@ RSpec.describe DropletsController, type: :controller do
           allow(droplet_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::DropletCreate::DiskLimitExceeded)
         end
 
-        it 'returns 400 UnableToPerform' do
+        it 'returns 422 Unprocessable' do
           post :create, package_guid: package.guid
 
-          expect(response.status).to eq(400)
-          expect(response.body).to include('UnableToPerform')
-          expect(response.body).to include('Staging request')
+          expect(response.status).to eq(422)
           expect(response.body).to include('disk limit exceeded')
         end
       end
@@ -488,15 +477,16 @@ RSpec.describe DropletsController, type: :controller do
       end
     end
 
-    context 'when the source droplet is not STAGED' do
-      let(:state) { 'STAGING' }
+    context 'when the action raises errors' do
+      before do
+        allow_any_instance_of(VCAP::CloudController::DropletCopy).to receive(:copy).and_raise(VCAP::CloudController::DropletCopy::InvalidCopyError.new('boom'))
+      end
 
-      it 'returns an invalid request error ' do
+      it 'returns an error ' do
         post :copy, guid: source_droplet_guid, body: req_body
 
-        expect(response.status).to eq(400)
-        expect(response.body).to include 'UnableToPerform'
-        expect(response.body).to include 'source droplet is not staged'
+        expect(response.status).to eq(422)
+        expect(response.body).to include('boom')
       end
     end
 
@@ -583,10 +573,13 @@ RSpec.describe DropletsController, type: :controller do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:space) { droplet.space }
+    let(:stagers) { instance_double(VCAP::CloudController::Stagers, stager_for_app: stager) }
+    let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stop_stage: nil) }
 
     before do
       allow_user_read_access(user, space: space)
       allow_user_write_access(user, space: space)
+      CloudController::DependencyLocator.instance.register(:stagers, stagers)
     end
 
     it 'returns a 204 NO CONTENT' do

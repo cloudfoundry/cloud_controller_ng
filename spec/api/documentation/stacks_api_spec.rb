@@ -26,8 +26,10 @@ RSpec.resource 'Stacks', type: [:api, :legacy_api] do
           client.post '/v2/stacks', fields_json, headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :stack,
-            name: 'example_stack',
-            description: 'Description for the example stack'
+            expected_values: {
+              name:        'example_stack',
+              description: 'Description for the example stack'
+            }
         end
 
         context 'without a description' do
@@ -37,8 +39,10 @@ RSpec.resource 'Stacks', type: [:api, :legacy_api] do
             client.post '/v2/stacks', fields_json, headers
             expect(status).to eq 201
             standard_entity_response parsed_response, :stack,
-              name: 'example_stack',
-              description: nil
+              expected_values: {
+                name:        'example_stack',
+                description: nil
+              }
           end
         end
       end

@@ -5,48 +5,45 @@ require 'cloud_controller/diego/protocol/open_process_ports'
 require 'cloud_controller/diego/protocol/app_volume_mounts'
 require 'cloud_controller/diego/protocol/routing_info'
 require 'cloud_controller/diego/protocol/container_network_info'
+require 'cloud_controller/diego/lifecycle_protocol'
 
 module VCAP::CloudController
   module Diego
     class Protocol
-      attr_reader :process
-
-      def initialize(process)
-        @process = process
+      def initialize
         @egress_rules = Diego::EgressRules.new
       end
 
-      def stage_app_request(config)
-        env = Environment.new(process, EnvironmentVariableGroup.staging.environment_json).as_json
+      def stage_package_request(config, staging_details)
+        env = VCAP::CloudController::Diego::NormalEnvHashToDiegoEnvArrayPhilosopher.muse(staging_details.environment_variables)
         logger.debug2("staging environment: #{env.map { |e| e['name'] }}")
 
-        lifecycle_type, lifecycle_data = lifecycle_protocol.lifecycle_data(process)
+        lifecycle_type = staging_details.droplet.lifecycle_type
+        lifecycle_data = LifecycleProtocol.protocol_for_type(lifecycle_type).lifecycle_data(staging_details)
 
         staging_request                     = StagingRequest.new
-        staging_request.app_id              = process.guid
-        staging_request.log_guid            = process.guid
+        staging_request.app_id              = staging_details.droplet.guid
+        staging_request.log_guid            = staging_details.package.app_guid
         staging_request.environment         = env
-        staging_request.memory_mb           = [process.memory, config[:staging][:minimum_staging_memory_mb]].max
-        staging_request.disk_mb             = [process.disk_quota, config[:staging][:minimum_staging_disk_mb]].max
-        staging_request.file_descriptors    = [process.file_descriptors, config[:staging][:minimum_staging_file_descriptor_limit]].max
+        staging_request.memory_mb           = staging_details.staging_memory_in_mb
+        staging_request.disk_mb             = staging_details.staging_disk_in_mb
+        staging_request.file_descriptors    = config[:staging][:minimum_staging_file_descriptor_limit]
         staging_request.egress_rules        = @egress_rules.staging
         staging_request.timeout             = config[:staging][:timeout_in_seconds]
         staging_request.lifecycle           = lifecycle_type
         staging_request.lifecycle_data      = lifecycle_data
-        staging_request.completion_callback = completion_callback(config)
+        staging_request.completion_callback = staging_completion_callback(staging_details, config)
 
         staging_request.message
       end
 
-      def desire_app_request(default_health_check_timeout)
-        desire_app_message(default_health_check_timeout).to_json
+      def desire_app_request(process, default_health_check_timeout)
+        desire_app_message(process, default_health_check_timeout).to_json
       end
 
-      def desire_app_message(default_health_check_timeout)
+      def desire_app_message(process, default_health_check_timeout)
         env = Environment.new(process, EnvironmentVariableGroup.running.environment_json).as_json
         logger.debug2("running environment: #{env.map { |e| e['name'] }}")
-        log_guid = process.is_v3? ? process.app.guid : process.guid
-        log_source = process.is_v3? ? "APP/PROC/#{process.type.upcase}" : 'APP'
 
         {
           'process_guid'                    => ProcessGuid.from_process(process),
@@ -59,8 +56,8 @@ module VCAP::CloudController
           'num_instances'                   => process.desired_instances,
           'routes'                          => process.uris,
           'routing_info'                    => RoutingInfo.new(process).routing_info,
-          'log_guid'                        => log_guid,
-          'log_source'                      => log_source,
+          'log_guid'                        => process.app.guid,
+          'log_source'                      => "APP/PROC/#{process.type.upcase}",
           'health_check_type'               => process.health_check_type,
           'health_check_timeout_in_seconds' => process.health_check_timeout || default_health_check_timeout,
           'egress_rules'                    => @egress_rules.running(process),
@@ -68,24 +65,16 @@ module VCAP::CloudController
           'allow_ssh'                       => process.enable_ssh,
           'ports'                           => OpenProcessPorts.new(process).to_a,
           'network'                         => ContainerNetworkInfo.new(process).to_h,
-          'volume_mounts'                   => AppVolumeMounts.new(process)
-        }.merge(lifecycle_protocol.desired_app_message(process))
-      end
-
-      def lifecycle_protocol
-        if @process.docker?
-          Diego::Docker::LifecycleProtocol.new
-        else
-          Diego::Buildpack::LifecycleProtocol.new(::CloudController::DependencyLocator.instance.blobstore_url_generator)
-        end
+          'volume_mounts'                   => AppVolumeMounts.new(process.app)
+        }.merge(LifecycleProtocol.protocol_for_type(process.app.lifecycle_type).desired_app_message(process))
       end
 
       private
 
-      def completion_callback(config)
+      def staging_completion_callback(staging_details, config)
         auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"
         host_port = "#{config[:internal_service_hostname]}:#{config[:external_port]}"
-        path      = "/internal/staging/#{StagingGuid.from_process(process)}/completed"
+        path      = "/internal/v3/staging/#{staging_details.droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}"
         "http://#{auth}@#{host_port}#{path}"
       end
 

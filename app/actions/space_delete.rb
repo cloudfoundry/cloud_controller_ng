@@ -16,15 +16,17 @@ module VCAP::CloudController
           errors.push CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_model.name, error_message)
         end
 
-        delete_apps(space_model)
-
         broker_delete_errors = delete_service_brokers(space_model)
         unless broker_delete_errors.empty?
           error_message = broker_delete_errors.map { |error| "\t#{error.message}" }.join("\n\n")
           errors.push CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_model.name, error_message)
         end
 
-        space_model.destroy if instance_delete_errors.empty?
+        if instance_delete_errors.empty?
+          delete_apps(space_model)
+          space_model.destroy
+        end
+
         errors
       end
     end

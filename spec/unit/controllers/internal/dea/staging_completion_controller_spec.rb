@@ -26,19 +26,12 @@ module VCAP::CloudController
         }
       end
 
-      def make_dea_app(package_state, app_state)
-        AppFactory.make.tap do |app|
-          app.package_state = package_state
-          app.state = app_state
-          app.staging_task_id = Sham.guid
-          app.save
-        end
-      end
+      let(:v2_app) { AppFactory.make(state: 'STOPPED') }
+      let(:droplet) { DropletModel.make(app: v2_app.app, package: v2_app.package, state: DropletModel::STAGING_STATE) }
 
-      let(:v2_app) { make_dea_app('PENDING', 'STOPPED') }
-      let(:app_guid) { v2_app.guid }
-      let(:task_id) { v2_app.staging_task_id }
-      let(:url) { "/internal/dea/staging/#{app_guid}/completed" }
+      let(:staging_guid) { v2_app.guid }
+      let(:task_id) { droplet.guid }
+      let(:url) { "/internal/dea/staging/#{staging_guid}/completed" }
 
       before do
         @internal_user = 'internal_user'
@@ -87,8 +80,8 @@ module VCAP::CloudController
       end
 
       context 'with a valid app' do
-        it 'calls the stager with the staging guid and response' do
-          expect_any_instance_of(Dea::Stager).to receive(:staging_complete).with(nil, staging_response)
+        it 'calls the stager with the droplet and response' do
+          expect_any_instance_of(Dea::Stager).to receive(:staging_complete).with(droplet, staging_response)
 
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(200)
@@ -110,7 +103,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the app does not exist' do
+      context 'when the process does not exist' do
         before { v2_app.delete }
 
         it 'fails with a 404' do
@@ -129,6 +122,18 @@ module VCAP::CloudController
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(400)
           expect(last_response.body).to match /InvalidRequest/
+        end
+
+        context 'because the droplet no longer exists' do
+          before { DropletModel.dataset.destroy }
+
+          it 'discards the response and fails with a 400' do
+            expect_any_instance_of(Dea::Stager).to_not receive(:staging_complete)
+
+            post url, MultiJson.dump(staging_response)
+            expect(last_response.status).to eq(400)
+            expect(last_response.body).to match /InvalidRequest/
+          end
         end
       end
     end

@@ -20,7 +20,7 @@ module VCAP::CloudController
 
     def pre_known_receipt_information
       {
-        docker_receipt_image: @package.docker_data.image
+        docker_receipt_image: @package.image
       }
     end
 

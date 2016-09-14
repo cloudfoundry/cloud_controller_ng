@@ -4,16 +4,18 @@ class DockerPolicy
 
   def initialize(app)
     @errors = app.errors
-    @app = app
+    @app    = app
   end
 
   def validate
-    if @app.docker? && @app.buildpack_specified?
-      @errors.add(:docker_image, BUILDPACK_DETECTED_ERROR_MSG)
-    end
+    if @app.docker_image
+      if @app.buildpack_specified?
+        @errors.add(:docker_image, BUILDPACK_DETECTED_ERROR_MSG)
+      end
 
-    if @app.docker? && VCAP::CloudController::FeatureFlag.disabled?(:diego_docker)
-      @errors.add(:docker, :docker_disabled) if @app.being_started?
+      if VCAP::CloudController::FeatureFlag.disabled?(:diego_docker)
+        @errors.add(:docker, :docker_disabled) if @app.being_started?
+      end
     end
 
     docker_credentials = @app.docker_credentials_json

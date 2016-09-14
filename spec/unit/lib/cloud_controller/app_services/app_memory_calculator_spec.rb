@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe AppMemoryCalculator do
     subject { described_class.new(app) }
-    let(:app) { AppFactory.make(package_hash: 'made-up-hash') }
+    let(:app) { AppFactory.make }
     let(:stopped_state) { 'STOPPED' }
     let(:started_state) { 'STARTED' }
 
@@ -20,7 +20,7 @@ module VCAP::CloudController
       end
 
       context 'when the app state is STARTED' do
-        let(:app) { AppFactory.make(state: started_state, package_hash: 'made-up-hash') }
+        let(:app) { AppFactory.make(state: started_state) }
 
         context 'and the app is already in the db' do
           it 'raises ApplicationMissing if the app no longer exists in the db' do

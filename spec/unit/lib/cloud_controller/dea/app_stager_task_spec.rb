@@ -2,20 +2,22 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe Dea::AppStagerTask do
+    subject!(:staging_task) { Dea::AppStagerTask.new(config_hash, message_bus, droplet, dea_pool, blobstore_url_generator) }
+
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
-    let(:dea_pool) { double(:dea_pool, reserve_app_memory: nil) }
+    let(:dea_pool) { instance_double(Dea::Pool, reserve_app_memory: nil) }
     let(:config_hash) { { staging: { timeout_in_seconds: 360 } } }
     let(:droplet_sha1) { nil }
     let(:app) do
       AppFactory.make(
-        package_hash:  'abc',
-        droplet_hash:  droplet_sha1,
-        package_state: 'PENDING',
-        state:         'STARTED',
-        instances:     1,
-        disk_quota:    1024
+        type:       'web',
+        state:      'STARTED',
+        instances:  1,
+        disk_quota: 1024
       )
     end
+    let(:package) { PackageModel.make(app: app.app, package_hash: 'some-hash', state: PackageModel::READY_STATE) }
+    let(:droplet) { DropletModel.make(app: app.app, package: package) }
 
     let(:dea_advertisement) { Dea::NatsMessages::DeaAdvertisement.new({ 'id' => 'my_stager' }, nil) }
     let(:stager_id) { dea_advertisement.dea_id }
@@ -23,7 +25,6 @@ module VCAP::CloudController
     let(:blobstore_url_generator) { CloudController::DependencyLocator.instance.blobstore_url_generator }
 
     let(:options) { {} }
-    subject(:staging_task) { Dea::AppStagerTask.new(config_hash, message_bus, app, dea_pool, blobstore_url_generator) }
 
     let(:first_reply_json_error) { nil }
     let(:task_streaming_log_url) { 'task-streaming-log-url' }
@@ -57,7 +58,8 @@ module VCAP::CloudController
         'detected_start_command' => detected_start_command,
         'error'                  => reply_json_error,
         'error_info'             => reply_error_info,
-        'droplet_sha1'           => 'droplet-sha1'
+        'droplet_sha1'           => 'droplet-sha1',
+        'execution_metadata'     => 'i got your data homey'
       }
     end
 
@@ -74,7 +76,6 @@ module VCAP::CloudController
     before do
       expect(app.staged?).to be false
 
-      allow(VCAP).to receive(:secure_uuid) { 'some_task_id' }
       allow(dea_pool).to receive(:find_stager).with(app.stack.name, 1024, anything).and_return(dea_advertisement)
 
       allow(EM).to receive(:add_timer)
@@ -92,12 +93,15 @@ module VCAP::CloudController
         end
 
         it 'uses http' do
-          expect(app).to receive(:update).with({ package_state: 'PENDING', staging_task_id: staging_task.task_id })
           expect(message_bus).to receive(:publish).with('staging.stop', { app_id: app.guid })
           expect(dea_pool).to receive(:reserve_app_memory).with(stager_id, app.memory)
           expect(Dea::Client).to receive(:stage).with(dea_advertisement.url, staging_message).and_return(202)
           expect(message_bus).not_to receive(:publish).with('staging.my_stager.start', staging_task.staging_request)
+
           staging_task.stage
+
+          expect(app.reload.staging_task_id).to eq(staging_task.task_id)
+          expect(app.package_state).to eq('PENDING')
         end
 
         context 'when staging is not supported' do
@@ -121,9 +125,9 @@ module VCAP::CloudController
           it 'marks app as failed and raises an error' do
             allow(Dea::Client).to receive(:stage).and_raise 'failure'
 
-            expect(app).to receive(:mark_as_failed_to_stage).with('StagingError')
             expect(logger).to receive(:error).with(/failure/)
             expect { staging_task.stage }.to raise_error 'failure'
+            expect(app.reload.staging_failed_reason).to eq('StagingError')
           end
 
           context 'when the dea chosen returns a 503' do
@@ -139,11 +143,14 @@ module VCAP::CloudController
 
       context 'when the dea does not support http' do
         it 'uses nats' do
-          expect(app).to receive(:update).with({ package_state: 'PENDING', staging_task_id: staging_task.task_id })
           expect(message_bus).to receive(:publish).with('staging.stop', { app_id: app.guid })
           expect(dea_pool).to receive(:reserve_app_memory).with(stager_id, app.memory)
           expect(staging_task).not_to receive(:stage_with_http)
+
           staging_task.stage
+
+          expect(app.reload.staging_task_id).to eq(staging_task.task_id)
+          expect(app.package_state).to eq('PENDING')
         end
       end
     end
@@ -173,10 +180,13 @@ module VCAP::CloudController
           end
 
           context 'and the droplet has been uploaded' do
-            let(:droplet_sha1) { 'Abc' }
+            before do
+              droplet.update(state: DropletModel::STAGED_STATE, droplet_hash: 'abc')
+            end
+
             it 'saves the detected start command' do
               expect { staging_task.handle_http_response(response) }.to change {
-                app.current_droplet.refresh
+                app.refresh.current_droplet
                 app.detected_start_command
               }.from('').to('wait_for_godot')
             end
@@ -204,11 +214,9 @@ module VCAP::CloudController
               }
             end
 
-            let(:droplet_sha1) { 'Abc' }
-
             it 'does not change the detected start command' do
               expect { staging_task.handle_http_response(response) }.not_to change {
-                app.current_droplet.refresh
+                app.refresh.current_droplet
                 app.detected_start_command
               }.from('')
             end
@@ -217,9 +225,6 @@ module VCAP::CloudController
           context 'when an admin buildpack is used' do
             let(:admin_buildpack) { Buildpack.make(name: 'buildpack-name') }
             let(:buildpack_key) { admin_buildpack.key }
-            before do
-              app.buildpack = admin_buildpack.name
-            end
 
             it 'saves the detected buildpack guid' do
               expect { staging_task.handle_http_response(response) }.to change { app.refresh.detected_buildpack_guid }.from(nil)
@@ -257,9 +262,7 @@ module VCAP::CloudController
         end
 
         context 'when staging was already marked as failed' do
-          before do
-            app.mark_as_failed_to_stage
-          end
+          let(:droplet) { DropletModel.make(app: app.app, package: package, state: DropletModel::FAILED_STATE) }
 
           it 'does not mark the app as staged' do
             expect {
@@ -312,13 +315,13 @@ module VCAP::CloudController
         it 'marks the app as having failed to stage' do
           expect {
             ignore_staging_error { staging_task.handle_http_response(response) }
-          }.to change { app.staging_failed? }.to(true)
+          }.to change { app.reload.staging_failed? }.to(true)
         end
 
         it 'leaves the app with a generic staging failed reason' do
           expect {
             ignore_staging_error { staging_task.handle_http_response(response) }
-          }.to change { app.staging_failed_reason }.to('StagerError')
+          }.to change { app.reload.staging_failed_reason }.to('StagerError')
         end
       end
 
@@ -377,7 +380,7 @@ module VCAP::CloudController
         it 'marks the app as having failed to stage' do
           expect {
             ignore_staging_error { staging_task.handle_http_response(response) }
-          }.to change { app.staging_failed? }.to(true)
+          }.to change { app.reload.staging_failed? }.to(true)
         end
 
         context 'when a staging error is present' do
@@ -386,7 +389,7 @@ module VCAP::CloudController
           it 'sets the staging failed reason to the specified value' do
             expect {
               ignore_staging_error { staging_task.handle_http_response(response) }
-            }.to change { app.staging_failed_reason }.to('NoAppDetectedError')
+            }.to change { app.reload.staging_failed_reason }.to('NoAppDetectedError')
           end
         end
 
@@ -396,7 +399,7 @@ module VCAP::CloudController
           it 'sets staging failed reason to StagerError' do
             expect {
               ignore_staging_error { staging_task.handle_http_response(response) }
-            }.to change { app.staging_failed_reason }.to('StagerError')
+            }.to change { app.reload.staging_failed_reason }.to('StagerError')
           end
         end
       end
@@ -421,8 +424,16 @@ module VCAP::CloudController
 
     describe 'staging memory requirements' do
       context 'when the app memory requirement exceeds the staging memory requirement (1024)' do
+        let(:app) do
+          AppFactory.make(
+            type:       'web',
+            state:      'STARTED',
+            instances:  1,
+            memory: 1025
+          )
+        end
+
         it 'should request a stager with the app memory requirement' do
-          app.memory = 1025
           expect(dea_pool).to receive(:find_stager).with(app.stack.name, 1025, anything).and_return(dea_advertisement)
           staging_task.stage
         end
@@ -438,9 +449,19 @@ module VCAP::CloudController
     end
 
     describe 'staging disk requirements' do
+      let(:app) do
+        AppFactory.make(
+          type:       'web',
+          state:      'STARTED',
+          instances:  1,
+          disk_quota: disk_quota
+        )
+      end
+
       context 'when the app disk requirement is less than the staging disk requirement' do
+        let(:disk_quota) { 12 }
+
         it 'should request a stager with enough disk' do
-          app.disk_quota                                  = 12
           config_hash[:staging][:minimum_staging_disk_mb] = 1025
           expect(dea_pool).to receive(:find_stager).with(app.stack.name, anything, 1025).and_return(dea_advertisement)
           staging_task.stage
@@ -448,8 +469,9 @@ module VCAP::CloudController
       end
 
       context 'when the app disk requirement is less than the default (4096) staging disk requirement, and it wasnt overridden' do
+        let(:disk_quota) { 123 }
+
         it 'should request a stager with enough disk' do
-          app.disk_quota                                  = 123
           config_hash[:staging][:minimum_staging_disk_mb] = nil
           expect(dea_pool).to receive(:find_stager).with(app.stack.name, anything, 4096).and_return(dea_advertisement)
           staging_task.stage
@@ -457,8 +479,9 @@ module VCAP::CloudController
       end
 
       context 'when the app disk requirement exceeds the staging disk requirement' do
+        let(:disk_quota) { 123 }
+
         it 'should request a stager with enough disk' do
-          app.disk_quota                                  = 123
           config_hash[:staging][:minimum_staging_disk_mb] = 122
           expect(dea_pool).to receive(:find_stager).with(app.stack.name, anything, 123).and_return(dea_advertisement)
           staging_task.stage
@@ -469,13 +492,10 @@ module VCAP::CloudController
     describe 'staging' do
       describe 'receiving the first response from the stager (the staging setup completion message)' do
         context 'it sets up the app' do
-          before do
-            allow(app).to receive(:update).and_call_original
-          end
-
           it 'sets the app package state to pending before it tries to stage' do
-            expect(app).to receive(:update).with({ package_state: 'PENDING', staging_task_id: staging_task.task_id })
             stage
+
+            expect(app.package_state).to eq('PENDING')
           end
         end
 
@@ -497,9 +517,9 @@ module VCAP::CloudController
               stage
             end
 
-            it 'saves staging task id' do
+            it 'saves staging task id as the droplet guid' do
               stage
-              expect(app.staging_task_id).to eq('some_task_id')
+              expect(app.reload.staging_task_id).to eq(droplet.guid)
             end
           end
           it 'keeps the app as not staged' do
@@ -570,7 +590,11 @@ module VCAP::CloudController
           end
 
           it 'marks the app as having failed to stage' do
-            expect { ignore_staging_error { stage } }.to change { app.staging_failed? }.to(true)
+            expect { ignore_staging_error { stage } }.to change { app.reload.staging_failed? }.to(true)
+          end
+
+          it 'stops the app' do
+            expect { ignore_staging_error { stage } }.to change { app.reload.state }.to('STOPPED')
           end
         end
 
@@ -606,7 +630,11 @@ module VCAP::CloudController
           end
 
           it 'marks the app as having failed to stage' do
-            expect { ignore_staging_error { stage } }.to change { app.staging_failed? }.to(true)
+            expect { ignore_staging_error { stage } }.to change { app.reload.staging_failed? }.to(true)
+          end
+
+          it 'stops the app' do
+            expect { ignore_staging_error { stage } }.to change { app.reload.state }.to('STOPPED')
           end
         end
 
@@ -653,11 +681,18 @@ module VCAP::CloudController
               expect { stage }.to change { app.refresh.detected_buildpack }.from(nil)
             end
 
+            it 'saves the execution metadata' do
+              expect { stage }.to change { app.refresh.execution_metadata }.from('')
+            end
+
             context 'and the droplet has been uploaded' do
+              before do
+                droplet.update(state: DropletModel::STAGED_STATE, droplet_hash: 'abc')
+              end
+
               it 'saves the detected start command' do
-                app.droplet_hash = 'Abc'
                 expect { stage }.to change {
-                  app.current_droplet.refresh
+                  app.refresh.current_droplet
                   app.detected_start_command
                 }.from('').to('wait_for_godot')
               end
@@ -686,9 +721,8 @@ module VCAP::CloudController
               end
 
               it 'does not change the detected start command' do
-                app.droplet_hash = 'Abc'
                 expect { stage }.not_to change {
-                  app.current_droplet.refresh
+                  app.reload
                   app.detected_start_command
                 }.from('')
               end
@@ -698,10 +732,14 @@ module VCAP::CloudController
               let(:admin_buildpack) { Buildpack.make(name: 'buildpack-name') }
               let(:buildpack_key) { admin_buildpack.key }
               before do
-                app.buildpack = admin_buildpack.name
+                app.app.lifecycle_data.update(buildpack: admin_buildpack.name)
               end
 
-              it 'saves the detected buildpack guid' do
+              it 'saves the buildpack name' do
+                expect { stage }.to change { app.refresh.detected_buildpack_name }.from(nil)
+              end
+
+              it 'saves the buildpack guid' do
                 expect { stage }.to change { app.refresh.detected_buildpack_guid }.from(nil)
               end
             end
@@ -729,13 +767,24 @@ module VCAP::CloudController
               stage { |options| callback_options = options }
               expect(callback_options[:started_instances]).to equal(1)
             end
+
+            it 'expires old droplets' do
+              expect_any_instance_of(BitsExpiration).to receive(:expire_droplets!).with(app.app)
+              stage
+            end
+
+            it 'records a buildpack set event for each process' do
+              App.make(app: app.app, type: 'asdf')
+              expect {
+                stage
+              }.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.to(2).from(0)
+            end
           end
 
           context 'when other staging has happened' do
             before do
               @before_staging_completion = -> {
-                app.staging_task_id = 'another-staging-task-id'
-                app.save
+                DropletModel.make(app: app.app, package: app.package)
               }
             end
 
@@ -758,7 +807,7 @@ module VCAP::CloudController
               }.to_not change {
                 app.refresh
                 app.droplet_hash
-              }.from(nil)
+              }.from(app.current_droplet.droplet_hash)
             end
 
             it 'does not save the detected buildpack' do
@@ -785,7 +834,7 @@ module VCAP::CloudController
           context 'when staging was already marked as failed' do
             before do
               @before_staging_completion = -> {
-                app.mark_as_failed_to_stage
+                droplet.update(state: DropletModel::FAILED_STATE)
               }
             end
 
@@ -839,11 +888,15 @@ module VCAP::CloudController
           end
 
           it 'marks the app as having failed to stage' do
-            expect { stage }.to change { app.staging_failed? }.to(true)
+            expect { stage }.to change { app.reload.staging_failed? }.to(true)
           end
 
           it 'leaves the app with a generic staging failed reason' do
-            expect { stage }.to change { app.staging_failed_reason }.to('StagerError')
+            expect { stage }.to change { app.reload.staging_failed_reason }.to('StagerError')
+          end
+
+          it 'stops the app' do
+            expect { stage }.to change { app.reload.state }.to('STOPPED')
           end
         end
 
@@ -884,14 +937,22 @@ module VCAP::CloudController
           end
 
           it 'marks the app as having failed to stage' do
-            expect { stage }.to change { app.staging_failed? }.to(true)
+            expect { stage }.to change { app.reload.staging_failed? }.to(true)
+          end
+
+          it 'stops the app' do
+            expect { stage }.to change { app.reload.state }.to('STOPPED')
           end
 
           context 'when a staging error is present' do
             let(:reply_error_info) { { 'type' => 'NoAppDetectedError', 'message' => 'uh oh' } }
 
             it 'sets the staging failed reason to the specified value' do
-              expect { stage }.to change { app.staging_failed_reason }.to('NoAppDetectedError')
+              expect { stage }.to change { app.reload.staging_failed_reason }.to('NoAppDetectedError')
+            end
+
+            it 'saves the corresponding api error message' do
+              expect { stage }.to change { app.reload.staging_failed_description }.to('An app was not successfully detected by any available buildpack')
             end
           end
 
@@ -899,7 +960,7 @@ module VCAP::CloudController
             let(:reply_error_info) { nil }
 
             it 'sets a generic staging failed reason' do
-              expect { stage }.to change { app.staging_failed_reason }.to('StagerError')
+              expect { stage }.to change { app.reload.staging_failed_reason }.to('StagerError')
             end
           end
         end

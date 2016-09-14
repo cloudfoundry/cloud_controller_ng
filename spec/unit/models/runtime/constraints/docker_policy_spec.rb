@@ -1,13 +1,9 @@
 require 'spec_helper'
 
 RSpec.describe DockerPolicy do
-  let(:app) { VCAP::CloudController::AppFactory.make }
+  let(:app) { VCAP::CloudController::AppFactory.make(:docker, docker_image: 'some-image:latest') }
 
   subject(:validator) { DockerPolicy.new(app) }
-
-  before do
-    allow(app).to receive(:docker_image).and_return('some-image:latest')
-  end
 
   context 'when a buildpack is specified' do
     before do

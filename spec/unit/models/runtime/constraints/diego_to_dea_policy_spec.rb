@@ -24,8 +24,8 @@ RSpec.describe DiegoToDeaPolicy do
   end
 
   context 'app with multiple ports but only one port mapped' do
-    let!(:route_mapping_1) { VCAP::CloudController::RouteMapping.make(app: app, route: route) }
-    let!(:route_mapping_2) { VCAP::CloudController::RouteMapping.make(app: app, route: route2) }
+    let!(:route_mapping_1) { VCAP::CloudController::RouteMappingModel.make(app: app.app, process_type: app.type, route: route) }
+    let!(:route_mapping_2) { VCAP::CloudController::RouteMappingModel.make(app: app.app, process_type: app.type, route: route2) }
 
     before do
       app.diego = false
@@ -37,11 +37,11 @@ RSpec.describe DiegoToDeaPolicy do
   end
 
   context 'app with multiple route mappings' do
-    let!(:route_mapping_1) { VCAP::CloudController::RouteMapping.make(app: app, route: route) }
-    let!(:route_mapping_2) { VCAP::CloudController::RouteMapping.make(app: app, route: route2) }
+    let!(:route_mapping_1) { VCAP::CloudController::RouteMappingModel.make(app: app.app, process_type: app.type, route: route) }
+    let!(:route_mapping_2) { VCAP::CloudController::RouteMappingModel.make(app: app.app, process_type: app.type, route: route2) }
 
     before do
-      route_mapping_2.app_port = 8082
+      route_mapping_2.update(app_port: 8082)
       app.diego = false
     end
 

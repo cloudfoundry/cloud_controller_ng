@@ -1,21 +1,18 @@
-require 'cloud_controller/blobstore/client'
-require 'cloud_controller/dependency_locator'
+require 'cloud_controller/packager/package_upload_handler'
 
 module VCAP::CloudController
   module Jobs
     module V3
       class PackageBits
-        def initialize(package_guid, uploaded_compressed_path)
-          @package_guid = package_guid
-          @uploaded_compressed_path = uploaded_compressed_path
+        def initialize(package_guid, package_zip_path, fingerprints)
+          @package_guid     = package_guid
+          @package_zip_path = package_zip_path
+          @fingerprints     = fingerprints
         end
 
         def perform
-          logger = Steno.logger('cc.background')
-          logger.info("Packing the app bits for package '#{@package_guid}'")
-
-          app_bits_packer = AppBitsPackage.new
-          app_bits_packer.create_package_in_blobstore(@package_guid, @uploaded_compressed_path)
+          Steno.logger('cc.background').info("Packing the app bits for package '#{@package_guid}'")
+          CloudController::Packager::PackageUploadHandler.new(@package_guid, @package_zip_path, @fingerprints).pack
         end
 
         def job_name_in_configuration

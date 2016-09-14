@@ -5,12 +5,13 @@ module VCAP::CloudController::RestController
     include VCAP::RestAPI
 
     class ToRelationshipAttribute < NamedAttribute
-      attr_reader :association_name, :link_only
+      attr_reader :association_name, :link_only, :association_controller
       alias_method :link_only?, :link_only
 
       def initialize(name, opts={})
         @association_name = opts[:association_name] || name
         @link_only = opts[:link_only] || false
+        @association_controller = opts[:association_controller]
         super
       end
     end

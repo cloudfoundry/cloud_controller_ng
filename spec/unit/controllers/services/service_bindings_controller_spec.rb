@@ -10,7 +10,6 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(described_class).to have_creatable_attributes({
-          binding_options: { type: 'hash', default: {} },
           app_guid: { type: 'string', required: true },
           service_instance_guid: { type: 'string', required: true },
           parameters: { type: 'hash', required: false }
@@ -19,7 +18,6 @@ module VCAP::CloudController
 
       it do
         expect(described_class).to have_updatable_attributes({
-          binding_options: { type: 'hash' },
           app_guid: { type: 'string' },
           service_instance_guid: { type: 'string' },
           parameters: { type: 'hash', required: false }
@@ -73,14 +71,14 @@ module VCAP::CloudController
         @app_a = AppFactory.make(space: @space_a)
         @service_instance_a = ManagedServiceInstance.make(space: @space_a)
         @obj_a = ServiceBinding.make(
-          app: @app_a,
+          app: @app_a.app,
           service_instance: @service_instance_a
         )
 
         @app_b = AppFactory.make(space: @space_b)
         @service_instance_b = ManagedServiceInstance.make(space: @space_b)
         @obj_b = ServiceBinding.make(
-          app: @app_b,
+          app: @app_b.app,
           service_instance: @service_instance_b
         )
       end
@@ -242,8 +240,12 @@ module VCAP::CloudController
 
           expect(event.metadata).to include({
             'request' => {
-              'service_instance_guid' => req[:service_instance_guid],
-              'app_guid' => req[:app_guid]
+              'type'          => 'app',
+              'relationships' => {
+                'app'              => { 'guid' => req[:app_guid] },
+                'service_instance' => { 'guid' => req[:service_instance_guid] }
+              },
+              'data' => 'PRIVATE DATA HIDDEN'
             }
           })
         end
@@ -290,17 +292,20 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the app is invalid' do
-          context 'because app_guid is invalid' do
-            let(:req) do
-              {
-                app_guid: 'THISISWRONG',
-                service_instance_guid: instance.guid
-              }.to_json
-            end
+        context 'when the app does not exist' do
+          it 'returns CF-AppNotFound' do
+            post '/v2/service_bindings', { app_guid: 'not-found', service_instance_guid: instance.guid }.to_json
+
+            hash_body = JSON.parse(last_response.body)
+            expect(hash_body['error_code']).to eq('CF-AppNotFound')
+            expect(last_response.status).to eq(404)
+          end
+
+          context 'because it maps to non-web process' do
+            let(:app_obj) { AppFactory.make(space: space, type: 'non-web') }
 
             it 'returns CF-AppNotFound' do
-              post '/v2/service_bindings', req
+              post '/v2/service_bindings', { app_guid: app_obj.guid, service_instance_guid: instance.guid }.to_json
 
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-AppNotFound')
@@ -309,22 +314,38 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the service instance is invalid' do
-          context 'because service_instance_guid is invalid' do
-            let(:req) do
-              {
-                app_guid: app_obj.guid,
-                service_instance_guid: 'THISISWRONG'
-              }.to_json
-            end
+        context 'when the service instance does not exist' do
+          let(:req) do
+            {
+              app_guid:              app_obj.guid,
+              service_instance_guid: 'THISISWRONG'
+            }.to_json
+          end
 
-            it 'returns CF-ServiceInstanceNotFound error' do
-              post '/v2/service_bindings', req
+          it 'returns CF-ServiceInstanceNotFound error' do
+            post '/v2/service_bindings', req
 
-              hash_body = JSON.parse(last_response.body)
-              expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
-              expect(last_response.status).to eq(404)
-            end
+            hash_body = JSON.parse(last_response.body)
+            expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
+            expect(last_response.status).to eq(404)
+          end
+        end
+
+        context 'when the user is not a SpaceDeveloper' do
+          let(:req) do
+            {
+              app_guid:              app_obj.guid,
+              service_instance_guid: instance.guid
+            }.to_json
+          end
+
+          before do
+            set_current_user(User.make)
+          end
+
+          it 'returns 403' do
+            post '/v2/service_bindings', req
+            expect(last_response.status).to eq(403)
           end
         end
 
@@ -426,8 +447,15 @@ module VCAP::CloudController
           end
 
           context 'when attempting to bind and the service binding already exists' do
+            let(:req) do
+              {
+                app_guid:              app_obj.guid,
+                service_instance_guid: instance.guid
+              }.to_json
+            end
+
             before do
-              ServiceBinding.make(app: app_obj, service_instance: instance)
+              ServiceBinding.make(app: app_obj.app, service_instance: instance)
             end
 
             it 'returns a ServiceBindingAppServiceTaken error' do
@@ -562,9 +590,7 @@ module VCAP::CloudController
         expect(event.space_guid).to eq(space.guid)
         expect(event.organization_guid).to eq(space.organization.guid)
 
-        expect(event.metadata).to include({
-          'request' => {}
-        })
+        expect(event.metadata).to include({})
       end
 
       describe 'locking the service instance of the binding' do
@@ -587,7 +613,7 @@ module VCAP::CloudController
 
               delete "/v2/service_bindings/#{service_binding.guid}?async=true"
               expect(service_binding).not_to be_nil
-              expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::AuditEventJob
+              expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::DeleteActionJob
 
               expect(service_instance.refresh.last_operation).to be_nil
             end
@@ -614,7 +640,7 @@ module VCAP::CloudController
 
               delete "/v2/service_bindings/#{service_binding.guid}?async=true"
               expect(service_binding).not_to be_nil
-              expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::AuditEventJob
+              expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::DeleteActionJob
 
               expect(service_instance.refresh.last_operation.state).to eq 'succeeded'
               expect(service_instance.refresh.last_operation.type).to eq 'create'
@@ -657,18 +683,26 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(403)
         end
       end
+
+      context 'when the service binding does not exist' do
+        it 'returns 404' do
+          delete '/v2/service_bindings/not-found'
+          expect(last_response).to have_status_code 404
+        end
+      end
     end
 
     describe 'GET', '/v2/service_bindings?inline-relations-depth=1', regression: true do
       let(:space) { Space.make }
       let(:managed_service_instance) { ManagedServiceInstance.make(space: space) }
       let(:user_provided_service_instance) { UserProvidedServiceInstance.make(space: space) }
+      let(:app_obj) { AppFactory.make(space: space) }
       let(:developer) { make_developer_for_space(space) }
 
       it 'returns both user provided and managed service instances' do
         set_current_user(developer)
-        ServiceBinding.make(service_instance: managed_service_instance)
-        ServiceBinding.make(service_instance: user_provided_service_instance)
+        ServiceBinding.make(service_instance: managed_service_instance, app: app_obj.app)
+        ServiceBinding.make(service_instance: user_provided_service_instance, app: app_obj.app)
 
         get '/v2/service_bindings?inline-relations-depth=1'
         expect(last_response.status).to eql(200)

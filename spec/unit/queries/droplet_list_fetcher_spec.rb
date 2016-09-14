@@ -15,7 +15,7 @@ module VCAP::CloudController
       let!(:failed_droplet_for_app1) { DropletModel.make(app_guid: app1.guid, state: DropletModel::FAILED_STATE) }
 
       let(:app2) { AppModel.make }
-      let!(:pending_droplet_for_app2) { DropletModel.make(app_guid: app2.guid, state: DropletModel::PENDING_STATE) }
+      let!(:staging_droplet_for_app2) { DropletModel.make(app_guid: app2.guid, state: DropletModel::STAGING_STATE) }
 
       it 'returns a Sequel::Dataset' do
         results = fetcher.fetch_all
@@ -24,7 +24,7 @@ module VCAP::CloudController
 
       it 'returns all of the droplets' do
         results = fetcher.fetch_all
-        expect(results).to match_array([staged_droplet_for_app1, failed_droplet_for_app1, pending_droplet_for_app2])
+        expect(results).to match_array([staged_droplet_for_app1, failed_droplet_for_app1, staging_droplet_for_app2])
       end
 
       context 'filtering space guids' do
@@ -46,12 +46,12 @@ module VCAP::CloudController
       end
 
       context 'filtering states' do
-        let(:filters) { { states: [DropletModel::STAGED_STATE, DropletModel::PENDING_STATE] } }
-        let!(:pending_droplet_for_other_app) { DropletModel.make(state: DropletModel::PENDING_STATE) }
+        let(:filters) { { states: [DropletModel::STAGED_STATE, DropletModel::STAGING_STATE] } }
+        let!(:staging_droplet_for_other_app) { DropletModel.make(state: DropletModel::STAGING_STATE) }
 
         it 'returns all of the droplets with the requested states' do
           results = fetcher.fetch_all.all
-          expect(results).to match_array([staged_droplet_for_app1, pending_droplet_for_app2, pending_droplet_for_other_app])
+          expect(results).to match_array([staged_droplet_for_app1, staging_droplet_for_app2, staging_droplet_for_other_app])
         end
       end
 
@@ -70,7 +70,7 @@ module VCAP::CloudController
 
           it 'returns all of the droplets with the requested guids' do
             results = fetcher.fetch_all.all
-            expect(results).to match_array([pending_droplet_for_app2])
+            expect(results).to match_array([staging_droplet_for_app2])
           end
         end
 
@@ -99,7 +99,7 @@ module VCAP::CloudController
 
           it 'returns all of the droplets with the requested guids' do
             results = fetcher.fetch_all.all
-            expect(results).to match_array([pending_droplet_for_app2])
+            expect(results).to match_array([staging_droplet_for_app2])
           end
         end
 
@@ -122,11 +122,11 @@ module VCAP::CloudController
 
       let(:app2) { AppModel.make }
       let(:space2) { app2.space }
-      let!(:pending_droplet_for_app2) { DropletModel.make(app_guid: app2.guid, state: DropletModel::PENDING_STATE) }
+      let!(:staging_droplet_for_app2) { DropletModel.make(app_guid: app2.guid, state: DropletModel::STAGING_STATE) }
 
       let(:app3) { AppModel.make }
       let(:space3) { app3.space }
-      let!(:pending_droplet_for_app3) { DropletModel.make(app_guid: app3.guid, state: DropletModel::PENDING_STATE) }
+      let!(:pending_droplet_for_app3) { DropletModel.make(app_guid: app3.guid, state: DropletModel::STAGING_STATE) }
 
       let(:space_guids) { [space1.guid, space2.guid] }
 
@@ -137,7 +137,7 @@ module VCAP::CloudController
 
       it 'returns all of the desired droplets in the requested spaces' do
         results = fetcher.fetch_for_spaces(space_guids: space_guids).all
-        expect(results.map(&:guid)).to match_array([staged_droplet_for_app1.guid, failed_droplet_for_app1.guid, pending_droplet_for_app2.guid])
+        expect(results.map(&:guid)).to match_array([staged_droplet_for_app1.guid, failed_droplet_for_app1.guid, staging_droplet_for_app2.guid])
       end
 
       context 'filtering app guids' do
@@ -146,26 +146,26 @@ module VCAP::CloudController
 
         it 'returns all of the desired droplets for the requested app guids' do
           results = fetcher.fetch_for_spaces(space_guids: space_guids).all
-          expect(results).to match_array([pending_droplet_for_app2, pending_droplet_for_app3])
+          expect(results).to match_array([staging_droplet_for_app2, pending_droplet_for_app3])
         end
       end
 
       context 'filtering states' do
-        let(:filters) { { states: [DropletModel::PENDING_STATE, DropletModel::FAILED_STATE] } }
+        let(:filters) { { states: [DropletModel::STAGING_STATE, DropletModel::FAILED_STATE] } }
         let(:space_guids) { [space1.guid, space2.guid, space3.guid] }
 
         it 'returns all of the desired droplets with the requested droplet states' do
           results = fetcher.fetch_for_spaces(space_guids: space_guids).all
-          expect(results).to match_array([failed_droplet_for_app1, pending_droplet_for_app2, pending_droplet_for_app3])
+          expect(results).to match_array([failed_droplet_for_app1, staging_droplet_for_app2, pending_droplet_for_app3])
         end
       end
 
       context 'filtering guids' do
-        let(:filters) { { guids: [failed_droplet_for_app1.guid, pending_droplet_for_app2.guid] } }
+        let(:filters) { { guids: [failed_droplet_for_app1.guid, staging_droplet_for_app2.guid] } }
 
         it 'returns all of the desired droplets with the requested droplet guids' do
           results = fetcher.fetch_for_spaces(space_guids: space_guids).all
-          expect(results).to match_array([failed_droplet_for_app1, pending_droplet_for_app2])
+          expect(results).to match_array([failed_droplet_for_app1, staging_droplet_for_app2])
         end
       end
 

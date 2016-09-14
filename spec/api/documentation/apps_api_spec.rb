@@ -131,7 +131,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     end
 
     def after_standard_model_delete(guid)
-      event = VCAP::CloudController::Event.find(type: 'audit.app.delete-request', actee: guid)
+      event = VCAP::CloudController::Event.find(type: 'audit.app.delete-request', actee: guid, actee_type: 'app')
       audited_event event
     end
 
@@ -157,7 +157,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :app
-        expect(parsed_response['entity']['docker_image']).to eq('cloudfoundry/diego-docker-app:latest')
+        expect(parsed_response['entity']['docker_image']).to eq('cloudfoundry/diego-docker-app')
         expect(parsed_response['entity']['diego']).to be_truthy
 
         app_guid = parsed_response['metadata']['guid']
@@ -173,7 +173,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
         client.put "/v2/apps/#{guid}", MultiJson.dump(new_attributes, pretty: true), headers
         expect(status).to eq(201)
-        standard_entity_response parsed_response, :app, name: 'new_name'
+        standard_entity_response parsed_response, :app, expected_values: { name: 'new_name' }
       end
     end
   end
@@ -187,7 +187,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
       let(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance) }
       let(:service_binding_guid) { service_binding.guid }
-      let!(:associated_service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: associated_service_instance) }
+      let!(:associated_service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj.app, service_instance: associated_service_instance) }
       let(:associated_service_binding_guid) { associated_service_binding.guid }
 
       before do
@@ -203,7 +203,10 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
           to_return(status: 200, body: '{}')
       end
 
-      standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController, outer_model: :app
+      standard_model_list :service_binding,
+        VCAP::CloudController::ServiceBindingsController,
+        outer_model:       :app,
+        export_attributes: [:app_guid, :service_instance_guid, :credentials, :binding_options, :gateway_data, :gateway_name, :syslog_drain_url, :volume_mounts]
 
       context 'has service binding guid param' do
         parameter :service_binding_guid, 'The guid of the service binding'
@@ -213,7 +216,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
     describe 'Routes' do
       before do
-        app_obj.add_route(associated_route)
+        VCAP::CloudController::RouteMappingModel.make(app: app_obj.app, route: associated_route, process_type: app_obj.type)
       end
       let!(:route) { VCAP::CloudController::Route.make(space: app_obj.space) }
       let(:route_guid) { route.guid }
@@ -268,7 +271,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   get '/v2/apps/:guid/instances' do
     include_context 'guid_parameter'
 
-    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED', package_hash: 'abc', package_state: 'STAGED') }
+    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED') }
 
     example 'Get the instance information for a STARTED App' do
       explanation <<-EOD
@@ -334,7 +337,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   get '/v2/apps/:guid/stats' do
     include_context 'guid_parameter'
 
-    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED', package_hash: 'abc') }
+    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED') }
 
     example 'Get detailed stats for a STARTED App' do
       explanation <<-EOD

@@ -108,7 +108,7 @@ module VCAP::CloudController
 
         context 'when using valid credentials' do
           it 'succeeds' do
-            allow_any_instance_of(Diego::V3::Stager).to receive(:staging_complete)
+            allow_any_instance_of(Diego::Stager).to receive(:staging_complete)
             post url, MultiJson.dump(task_response)
 
             expect(last_response.status).to eq(200)

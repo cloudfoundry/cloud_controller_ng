@@ -39,7 +39,7 @@ class PackagesController < ApplicationController
     message = PackageUploadMessage.create_from_params(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
+    package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
     package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
     unauthorized! unless can_write?(package.space.guid)
 
@@ -47,7 +47,13 @@ class PackagesController < ApplicationController
     bits_already_uploaded! if package.state != PackageModel::CREATED_STATE
 
     begin
-      PackageUpload.new(current_user.guid, current_user_email).upload(message, package, configuration)
+      PackageUpload.new.upload_async(
+        message:    message,
+        package:    package,
+        config:     configuration,
+        user_guid:  current_user.guid,
+        user_email: current_user_email
+      )
     rescue PackageUpload::InvalidPackage => e
       unprocessable!(e.message)
     end
@@ -56,7 +62,7 @@ class PackagesController < ApplicationController
   end
 
   def download
-    package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
+    package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
     package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
     unauthorized! unless can_see_secrets?(package.space)
 
@@ -73,7 +79,7 @@ class PackagesController < ApplicationController
   end
 
   def show
-    package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
+    package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
     package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
 
     render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
@@ -105,7 +111,7 @@ class PackagesController < ApplicationController
     app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     unauthorized! unless can_write?(app.space.guid)
 
-    package = PackageCreate.new(current_user.guid, current_user_email).create(message)
+    package = PackageCreate.create(message: message, user_guid: current_user.guid, user_email: current_user_email)
 
     render status: :created, json: Presenters::V3::PackagePresenter.new(package)
   rescue PackageCreate::InvalidPackage => e
@@ -117,11 +123,16 @@ class PackagesController < ApplicationController
     app_not_found! unless destination_app && can_read?(destination_app.space.guid, destination_app.organization.guid)
     unauthorized! unless can_write?(destination_app.space.guid)
 
-    source_package = PackageModel.where(guid: params[:source_package_guid]).eager(:app, :space, space: :organization).eager(:docker_data).all.first
+    source_package = PackageModel.where(guid: params[:source_package_guid]).eager(:app, :space, space: :organization).all.first
     package_not_found! unless source_package && can_read?(source_package.space.guid, source_package.space.organization.guid)
     unauthorized! unless can_write?(source_package.space.guid)
 
-    package = PackageCopy.new(current_user.guid, current_user_email).copy(params[:app_guid], source_package)
+    package = PackageCopy.new.copy(
+      destination_app_guid: params[:app_guid],
+      source_package:       source_package,
+      user_guid:            current_user.guid,
+      user_email:           current_user_email
+    )
 
     render status: :created, json: Presenters::V3::PackagePresenter.new(package)
   rescue PackageCopy::InvalidPackage => e

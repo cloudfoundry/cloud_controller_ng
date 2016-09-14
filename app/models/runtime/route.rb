@@ -2,33 +2,27 @@ require 'cloud_controller/dea/client'
 
 module VCAP::CloudController
   class Route < Sequel::Model
-    ROUTE_REGEX = /\A#{URI.regexp}\Z/
-
     class InvalidDomainRelation < CloudController::Errors::InvalidRelation; end
-    class InvalidAppRelation < CloudController::Errors::InvalidRelation; end
     class InvalidOrganizationRelation < CloudController::Errors::InvalidRelation; end
     class DockerDisabled < CloudController::Errors::InvalidRelation; end
 
     many_to_one :domain
     many_to_one :space, after_set: :validate_changed_space
 
-    # This is a v3 relationship
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', key: :route_guid, primary_key: :guid
 
-    # This is a v2 relationship for the /v2/route_mappings endpoints and associations
-    one_to_many :app_route_mappings, class: 'VCAP::CloudController::RouteMapping'
-
-    many_to_many :apps,
-                 distinct: true,
-                 order: Sequel.asc(:id),
-                 before_add:   :validate_app,
-                 after_add:    :handle_add_app,
-                 after_remove: :handle_remove_app
+    many_to_many :apps, class: 'VCAP::CloudController::App',
+                        join_table:              RouteMappingModel.table_name,
+                        left_primary_key:        :guid, left_key: :route_guid,
+                        right_primary_key:       [:app_guid, :type], right_key: [:app_guid, :process_type],
+                        distinct:                true,
+                        order:                   Sequel.asc(:id),
+                        conditions:              { type: 'web' }
 
     one_to_one :route_binding
     one_through_one :service_instance, join_table: :route_bindings
 
-    add_association_dependencies apps: :nullify, route_mappings: :destroy
+    add_association_dependencies route_mappings: :destroy
 
     export_attributes :host, :path, :domain_guid, :space_guid, :service_instance_guid, :port
     import_attributes :host, :path, :domain_guid, :space_guid, :app_guids, :port
@@ -120,7 +114,7 @@ module VCAP::CloudController
     def validate_path
       return if path == ''
 
-      if !ROUTE_REGEX.match("pathcheck://#{host}#{path}")
+      if !"pathcheck://#{host}#{path}".is_uri?
         errors.add(:path, :invalid_path)
       end
 
@@ -146,26 +140,8 @@ module VCAP::CloudController
       apps.all?(&:diego?)
     end
 
-    def validate_app(app)
-      return unless space && app && domain
-
-      unless app.space == space
-        raise InvalidAppRelation.new(app.guid)
-      end
-
-      unless domain.usable_by_organization?(space.organization)
-        raise InvalidDomainRelation.new(domain.guid)
-      end
-    end
-
-    # If you change this function, also change _add_route in app.rb
-    def _add_app(app, hash={})
-      app_port = app.user_provided_ports.first unless app.user_provided_ports.blank?
-      model.db[:apps_routes].insert(hash.merge(app_id: app.id, app_port: app_port, route_id: id, guid: SecureRandom.uuid))
-    end
-
     def validate_changed_space(new_space)
-      apps.each { |app| validate_app(app) }
+      raise CloudController::Errors::InvalidAppRelation if apps.any? { |app| app.space.id != space.id }
       raise InvalidOrganizationRelation if domain && !domain.usable_by_organization?(new_space.organization)
     end
 
@@ -199,7 +175,7 @@ module VCAP::CloudController
     end
 
     def destroy_route_bindings
-      errors = ServiceBindingDelete.new.delete(self.route_binding_dataset)
+      errors = RouteBindingDelete.new.delete(self.route_binding_dataset)
       raise errors.first unless errors.empty?
     end
 
@@ -208,11 +184,7 @@ module VCAP::CloudController
       super
 
       loaded_apps.each do |app|
-        handle_remove_app(app)
-
-        if app.dea_update_pending?
-          Dea::Client.update_uris(app)
-        end
+        ProcessRouteHandler.new(app).notify_backend_of_route_update
       end
     end
 
@@ -222,14 +194,6 @@ module VCAP::CloudController
       validates_unique [:domain_id, :host], message: :host_and_domain_taken_different_space do |ds|
         ds.where(port: 0).exclude(space: space)
       end
-    end
-
-    def handle_add_app(app)
-      app.handle_add_route(self)
-    end
-
-    def handle_remove_app(app)
-      app.handle_remove_route(self)
     end
 
     def validate_host

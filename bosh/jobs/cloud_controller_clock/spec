@@ -113,12 +113,9 @@ properties:
     description: "How long a completed task will stay in cloud controller database before being cleaned up based on last updated time with success or failure."
     default: 31
 
-  cc.pending_packages.frequency_in_seconds:
-    description: "How often the package pending cleanup job runs"
+  cc.pending_droplets.frequency_in_seconds:
+    description: "How often the droplet pending cleanup job runs"
     default: 300
-  cc.pending_packages.expiration_in_seconds:
-    description: "How long packages can remain in pending state before being cleaned up"
-    default: 1200
 
   cc.external_protocol:
     default: "https"

@@ -59,6 +59,11 @@ module VCAP::CloudController
           expect(process.ports).to eq(nil)
           expect(process.diego).to be_truthy
         end
+
+        it 'sets process guid to the app guid' do
+          process = process_create.create(app, message)
+          expect(process.guid).to eq(app.guid)
+        end
       end
 
       describe 'default values for non-web processes' do
@@ -68,6 +73,7 @@ module VCAP::CloudController
             command: 'gogogadget'
           }
         end
+
         it '0 instances, process health_check_type, nil ports' do
           process = process_create.create(app, message)
 

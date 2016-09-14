@@ -834,11 +834,12 @@ module VCAP::Services::ServiceBrokers::V2
 
     describe '#bind' do
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
-      let(:app) { VCAP::CloudController::App.make(space: instance.space) }
+      let(:app) { VCAP::CloudController::AppModel.make(space: instance.space) }
       let(:binding) do
         VCAP::CloudController::ServiceBinding.new(
           service_instance: instance,
-          app: app
+          app:              app,
+          type:             'app'
         )
       end
       let(:arbitrary_parameters) { {} }
@@ -1012,11 +1013,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when binding fails' do
         let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
-        let(:binding) do
-          VCAP::CloudController::ServiceBinding.make(
-            binding_options: { 'this' => 'that' }
-          )
-        end
+        let(:binding) { VCAP::CloudController::ServiceBinding.make }
         let(:uri) { 'some-uri.com/v2/service_instances/instance-guid/service_bindings/binding-guid' }
         let(:response) { HttpResponse.new(body: nil, message: nil, code: nil) }
 
@@ -1077,11 +1074,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#unbind' do
-      let(:binding) do
-        VCAP::CloudController::ServiceBinding.make(
-          binding_options: { 'this' => 'that' }
-        )
-      end
+      let(:binding) { VCAP::CloudController::ServiceBinding.make }
 
       let(:response_data) { {} }
 

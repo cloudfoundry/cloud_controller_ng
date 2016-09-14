@@ -66,7 +66,7 @@ RSpec.describe 'Packages' do
           actor_type:        'user',
           actor_name:        email,
           actee:             package.app.guid,
-          actee_type:        'v3-app',
+          actee_type:        'app',
           actee_name:        package.app.name,
           metadata:          expected_metadata,
           space_guid:        space.guid,
@@ -77,13 +77,9 @@ RSpec.describe 'Packages' do
 
     describe 'copying' do
       let(:target_app_model) { VCAP::CloudController::AppModel.make(space_guid: space_guid) }
-      let!(:original_package) { VCAP::CloudController::PackageModel.make(type: 'docker', app_guid: app_model.guid) }
+      let!(:original_package) { VCAP::CloudController::PackageModel.make(type: 'docker', app_guid: app_model.guid, docker_image: 'http://awesome-sauce.com') }
       let!(:guid) { target_app_model.guid }
       let(:source_package_guid) { original_package.guid }
-
-      before do
-        VCAP::CloudController::PackageDockerDataModel.create(package: original_package, image: 'http://awesome-sauce.com')
-      end
 
       it 'copies a package' do
         expect {
@@ -126,7 +122,7 @@ RSpec.describe 'Packages' do
           actor_type:        'user',
           actor_name:        email,
           actee:             package.app.guid,
-          actee_type:        'v3-app',
+          actee_type:        'app',
           actee_name:        package.app.name,
           metadata:          expected_metadata,
           space_guid:        space.guid,
@@ -302,11 +298,10 @@ RSpec.describe 'Packages' do
       docker_package = VCAP::CloudController::PackageModel.make(
         type: docker_type,
         app_guid: app_model.guid,
-        state: VCAP::CloudController::PackageModel::READY_STATE)
-      docker_package2 = VCAP::CloudController::PackageModel.make(type: docker_type, app_guid: app_model.guid)
+        state: VCAP::CloudController::PackageModel::READY_STATE,
+        docker_image: 'http://location-of-image.com')
+      VCAP::CloudController::PackageModel.make(type: docker_type, app_guid: app_model.guid, docker_image: 'http://location-of-image-2.com')
       VCAP::CloudController::PackageModel.make(app_guid: VCAP::CloudController::AppModel.make.guid)
-      VCAP::CloudController::PackageDockerDataModel.create(package: docker_package, image: 'http://location-of-image.com')
-      VCAP::CloudController::PackageDockerDataModel.create(package: docker_package2, image: 'http://location-of-image-2.com')
 
       expected_response =
         {
@@ -639,7 +634,7 @@ RSpec.describe 'Packages' do
         actor_type:        'user',
         actor_name:        email,
         actee:             'woof',
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'meow',
         metadata:          expected_metadata,
         space_guid:        space.guid,
@@ -694,7 +689,7 @@ RSpec.describe 'Packages' do
           actor_type:        'user',
           actor_name:        email,
           actee:             'woof-guid',
-          actee_type:        'v3-app',
+          actee_type:        'app',
           actee_name:        'meow',
           metadata:          expected_metadata,
           space_guid:        space.guid,
@@ -735,7 +730,7 @@ RSpec.describe 'Packages' do
         actor_type:        'user',
         actor_name:        email,
         actee:             app_guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        app_name,
         metadata:          expected_metadata,
         space_guid:        space.guid,

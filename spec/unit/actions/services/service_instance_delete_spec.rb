@@ -151,20 +151,20 @@ module VCAP::CloudController
         end
 
         it 'should leave the service instance unchanged' do
-          original_attrs = service_binding_1.as_json
+          original_attrs = service_instance_1.as_json
           expect {
             Timeout.timeout(0.5.second) do
               service_instance_delete.delete(service_instance_dataset)
             end
           }.to raise_error(Timeout::Error)
 
-          service_binding_1.reload
+          service_instance_1.reload
 
           expect(a_request(:delete, unbind_url(service_binding_1))).
             to have_been_made.times(1)
-          expect(service_binding_1.as_json).to eq(original_attrs)
 
-          expect(ServiceInstance.first(id: service_instance_1.id)).to be
+          expect(service_instance_1.as_json).to eq(original_attrs)
+          expect(service_binding_1.exists?).to be_truthy
         end
       end
 

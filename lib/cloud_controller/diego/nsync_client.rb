@@ -1,5 +1,5 @@
 require 'cloud_controller/diego/process_guid'
-require 'cloud_controller/diego/v3/protocol/task_protocol'
+require 'cloud_controller/diego/task_protocol'
 
 module VCAP::CloudController
   module Diego
@@ -17,7 +17,7 @@ module VCAP::CloudController
         logger.info('task.request', task_guid: task.guid)
 
         path = '/v1/tasks'
-        task_request = V3::Protocol::TaskProtocol.new(EgressRules.new).task_request(task, @config)
+        task_request = TaskProtocol.new(EgressRules.new).task_request(task, @config)
 
         begin
           tries ||= 3

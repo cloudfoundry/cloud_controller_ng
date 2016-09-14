@@ -7,7 +7,7 @@ module VCAP::CloudController
       RSpec.describe AppVolumeMounts do
         subject(:mounts) { AppVolumeMounts.new(app) }
 
-        let(:app) { App.make }
+        let(:app) { AppModel.make }
         let(:service_instance) { ServiceInstance.make(space: app.space) }
         let(:service_instance2) { ServiceInstance.make(space: app.space) }
 

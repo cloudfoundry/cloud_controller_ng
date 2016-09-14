@@ -37,8 +37,18 @@ module VCAP::CloudController
             let(:ports) { nil }
 
             context 'when this is a docker process' do
+              let(:process) do
+                AppFactory.make(
+                  docker_image:      'some-image',
+                  command:           'start_me',
+                  diego:             true,
+                  type:              type,
+                  ports:             ports,
+                  health_check_type: 'process'
+                )
+              end
+
               before do
-                allow(process).to receive(:docker_image).and_return('docker/image')
                 allow(process).to receive(:docker_ports).and_return([123, 456])
               end
 

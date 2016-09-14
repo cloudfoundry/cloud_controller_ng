@@ -28,7 +28,7 @@ module VCAP::CloudController::Validators
 
   class UriValidator < ActiveModel::EachValidator
     def validate_each(record, attribute, value)
-      record.errors.add attribute, 'must be a valid URI' unless value =~ /\A#{URI.regexp}\Z/
+      record.errors.add attribute, 'must be a valid URI' unless value.is_uri?
     end
   end
 
@@ -42,6 +42,8 @@ module VCAP::CloudController::Validators
             record.errors.add(attribute, 'cannot start with CF_')
           elsif key =~ /^VCAP_/i
             record.errors.add(attribute, 'cannot start with VCAP_')
+          elsif key =~ /^VMC/i
+            record.errors.add(attribute, 'cannot start with VMC_')
           elsif key =~ /^PORT$/i
             record.errors.add(attribute, 'cannot set PORT')
           end

@@ -9,14 +9,14 @@ module VCAP::CloudController
       let(:user_email) { 'are@youreddy.com' }
       let(:volume_mount_services_enabled) { true }
 
-      let(:app_model) { AppModel.make }
-      let(:service_instance) { ManagedServiceInstance.make(space_guid: app_model.space.guid) }
+      let(:app) { AppModel.make }
+      let(:service_instance) { ManagedServiceInstance.make(space: app.space) }
       let(:request) do
         {
           'type'          => 'app',
           'relationships' => {
             'app' => {
-              'guid' => app_model.guid
+              'guid' => app.guid
             },
             'service_instance' => {
               'guid' => service_instance.guid
@@ -32,7 +32,7 @@ module VCAP::CloudController
 
       before do
         credentials          = { 'credentials' => '{}' }.to_json
-        fake_service_binding = ServiceBindingModel.new(service_instance: service_instance, guid: '')
+        fake_service_binding = ServiceBinding.new(service_instance: service_instance, guid: '')
         opts                 = {
           fake_service_binding: fake_service_binding,
           body:                 credentials
@@ -40,22 +40,22 @@ module VCAP::CloudController
         stub_bind(service_instance, opts)
       end
 
-      it 'creates a v3 Service Binding' do
-        service_binding = service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
+      it 'creates a Service Binding' do
+        service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
 
-        expect(ServiceBindingModel.count).to eq(1)
-        expect(service_binding.app_guid).to eq(app_model.guid)
+        expect(ServiceBinding.count).to eq(1)
+        expect(service_binding.app_guid).to eq(app.guid)
         expect(service_binding.service_instance_guid).to eq(service_instance.guid)
         expect(service_binding.type).to eq('app')
       end
 
       it 'creates an audit.service_binding.create event' do
-        service_binding = service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
+        service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
 
         event = Event.last
         expect(event.type).to eq('audit.service_binding.create')
         expect(event.actee).to eq(service_binding.guid)
-        expect(event.actee_type).to eq('v3-service-binding')
+        expect(event.actee_type).to eq('service_binding')
       end
 
       context 'when the instance has another operation in progress' do
@@ -63,7 +63,7 @@ module VCAP::CloudController
           ServiceInstanceOperation.make(service_instance_id: service_instance.id, state: 'in progress')
 
           expect {
-            service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
+            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
           }.to raise_error do |e|
             expect(e).to be_a(CloudController::Errors::ApiError)
             expect(e.message).to include('in progress')
@@ -79,31 +79,42 @@ module VCAP::CloudController
 
         it 'raises ServiceInstanceNotBindable' do
           expect {
-            service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
+            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
           }.to raise_error(ServiceBindingCreate::ServiceInstanceNotBindable)
         end
       end
 
       context 'when the service binding is invalid' do
         before do
-          allow_any_instance_of(ServiceBindingModel).to receive(:valid?).and_return(false)
+          allow_any_instance_of(ServiceBinding).to receive(:valid?).and_return(false)
         end
 
         it 'raises InvalidServiceBinding' do
           expect {
-            service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
+            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
           }.to raise_error(ServiceBindingCreate::InvalidServiceBinding)
         end
       end
 
       context 'when volume mount services are disabled and the service requires volume_mount' do
         let(:volume_mount_services_enabled) { false }
-        let(:service_instance) { ManagedServiceInstance.make(:volume_mount, space_guid: app_model.space.guid) }
+        let(:service_instance) { ManagedServiceInstance.make(:volume_mount, space_guid: app.space.guid) }
 
         it 'raises a VolumeMountServiceDisabled error' do
           expect {
-            service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
+            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
           }.to raise_error ServiceBindingCreate::VolumeMountServiceDisabled
+        end
+      end
+
+      context 'when the app and service instance are in different spaces' do
+        let(:app) { AppModel.make(space: Space.make) }
+        let(:service_instance) { ManagedServiceInstance.make(space: Space.make) }
+
+        it 'raises a SpaceMismatch error' do
+          expect {
+            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
+          }.to raise_error ServiceBindingCreate::SpaceMismatch
         end
       end
 
@@ -115,10 +126,10 @@ module VCAP::CloudController
 
           it 'does not create a binding' do
             expect {
-              service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
+              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
             }.to raise_error VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse
 
-            expect(ServiceBindingModel.count).to eq 0
+            expect(ServiceBinding.count).to eq 0
           end
         end
 
@@ -128,12 +139,12 @@ module VCAP::CloudController
             stub_request(:delete, service_binding_url_pattern)
 
             allow(service_binding_create).to receive(:logger).and_return(logger)
-            allow_any_instance_of(ServiceBindingModel).to receive(:save).and_raise('meow')
+            allow_any_instance_of(ServiceBinding).to receive(:save).and_raise('meow')
             allow(logger).to receive(:error)
             allow(logger).to receive(:info)
 
             expect {
-              service_binding_create.create(app_model, service_instance, message, volume_mount_services_enabled)
+              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
             }.to raise_error('meow')
           end
 

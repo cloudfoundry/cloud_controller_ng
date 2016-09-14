@@ -24,7 +24,6 @@ RSpec.describe 'Droplets' do
         app_guid: app_model.guid,
         state:    VCAP::CloudController::PackageModel::READY_STATE,
         type:     VCAP::CloudController::PackageModel::BITS_TYPE,
-        url:      'hello.com'
       )
     end
 
@@ -60,7 +59,7 @@ RSpec.describe 'Droplets' do
 
       expected_response = {
         'guid'                  => created_droplet.guid,
-        'state'                 => 'PENDING',
+        'state'                 => 'STAGING',
         'error'                 => nil,
         'lifecycle'             => {
           'type' => 'buildpack',
@@ -107,7 +106,7 @@ RSpec.describe 'Droplets' do
       expect(event.values).to include(
         type:              'audit.app.droplet.create',
         actee:             app_model.guid,
-        actee_type:        'v3-app',
+        actee_type:        'app',
         actee_name:        'my-app',
         actor:             developer.guid,
         actor_type:        'user',
@@ -127,7 +126,7 @@ RSpec.describe 'Droplets' do
         package_guid:                package_model.guid,
         buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-name',
-        error:                       'example error',
+        error_description:                       'example error',
         environment_variables:       { 'cloud' => 'foundry' },
         execution_metadata: 'some-data',
         droplet_hash: 'shalalala',
@@ -163,7 +162,7 @@ RSpec.describe 'Droplets' do
         'staging_disk_in_mb'    => 200,
         'result'                => {
           'hash'                   => { 'type' => 'sha1', 'value' => 'shalalala' },
-          'buildpack'              => 'http://buildpack.git.url.com',
+          'buildpack'              => { 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil },
           'stack'                  => 'stack-name',
           'execution_metadata'     => 'some-data',
           'process_types'          => { 'web' => 'start-command' }
@@ -215,7 +214,8 @@ RSpec.describe 'Droplets' do
         buildpack_receipt_stack_name:     'stack-1',
         environment_variables:            { 'yuu' => 'huuu' },
         staging_disk_in_mb:               235,
-        error:                            'example-error'
+        error_description:                'example-error',
+        state:                            VCAP::CloudController::DropletModel::STAGING_STATE
       )
     end
     let!(:droplet2) do
@@ -231,7 +231,7 @@ RSpec.describe 'Droplets' do
         staging_memory_in_mb:         123,
         staging_disk_in_mb:           456,
         execution_metadata:           'black-box-secrets',
-        error:                        'example-error'
+        error_description:                        'example-error'
       )
     end
 
@@ -273,7 +273,7 @@ RSpec.describe 'Droplets' do
             'staging_disk_in_mb'    => 456,
             'result'                => {
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
-              'buildpack'              => 'http://buildpack.git.url.com',
+              'buildpack'              => { 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil },
               'stack'                  => 'stack-2',
               'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
               'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
@@ -330,19 +330,19 @@ RSpec.describe 'Droplets' do
       let(:space2) { VCAP::CloudController::Space.make }
       let(:app_model2) { VCAP::CloudController::AppModel.make(space: space) }
       let(:app_model3) { VCAP::CloudController::AppModel.make(space: space2) }
-      let!(:droplet3) { VCAP::CloudController::DropletModel.make(app: app_model2, state: VCAP::CloudController::DropletModel::PENDING_STATE) }
-      let!(:droplet4) { VCAP::CloudController::DropletModel.make(app: app_model3, state: VCAP::CloudController::DropletModel::PENDING_STATE) }
+      let!(:droplet3) { VCAP::CloudController::DropletModel.make(app: app_model2, state: VCAP::CloudController::DropletModel::FAILED_STATE) }
+      let!(:droplet4) { VCAP::CloudController::DropletModel.make(app: app_model3, state: VCAP::CloudController::DropletModel::FAILED_STATE) }
 
       it 'filters by states' do
-        get '/v3/droplets?states=STAGED,PENDING', nil, developer_headers
+        get '/v3/droplets?states=STAGED,FAILED', nil, developer_headers
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 2,
             'total_pages'   => 1,
-            'first'         => { 'href' => '/v3/droplets?page=1&per_page=50&states=STAGED%2CPENDING' },
-            'last'          => { 'href' => '/v3/droplets?page=1&per_page=50&states=STAGED%2CPENDING' },
+            'first'         => { 'href' => '/v3/droplets?page=1&per_page=50&states=STAGED%2CFAILED' },
+            'last'          => { 'href' => '/v3/droplets?page=1&per_page=50&states=STAGED%2CFAILED' },
             'next'          => nil,
             'previous'      => nil,
           })
@@ -431,6 +431,10 @@ RSpec.describe 'Droplets' do
   describe 'DELETE /v3/droplets/:guid' do
     let!(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, app_guid: app_model.guid) }
 
+    before do
+      stub_request(:delete, /#{TestConfig.config[:diego_stager_url]}/).to_return(status: 202)
+    end
+
     it 'deletes a droplet' do
       expect {
         delete "/v3/droplets/#{droplet.guid}", nil, developer_headers
@@ -459,8 +463,8 @@ RSpec.describe 'Droplets' do
         buildpack_receipt_stack_name:     'stack-1',
         environment_variables:            { 'yuu' => 'huuu' },
         staging_disk_in_mb:               235,
-        error:                            'example-error',
-        state:                            VCAP::CloudController::DropletModel::PENDING_STATE,
+        error_description:                            'example-error',
+        state:                            VCAP::CloudController::DropletModel::STAGING_STATE,
       )
     end
     let!(:droplet2) do
@@ -476,7 +480,7 @@ RSpec.describe 'Droplets' do
         staging_memory_in_mb:         123,
         staging_disk_in_mb:           456,
         execution_metadata:           'black-box-secrets',
-        error:                        'example-error'
+        error_description:                        'example-error'
       )
     end
 
@@ -537,7 +541,7 @@ RSpec.describe 'Droplets' do
             'staging_disk_in_mb'    => 456,
             'result'                => {
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
-              'buildpack'              => 'http://buildpack.git.url.com',
+              'buildpack'              => { 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil },
               'stack'                  => 'stack-2',
               'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
               'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
@@ -554,7 +558,7 @@ RSpec.describe 'Droplets' do
           },
           {
             'guid'                  => droplet1.guid,
-            'state'                 => VCAP::CloudController::DropletModel::PENDING_STATE,
+            'state'                 => VCAP::CloudController::DropletModel::STAGING_STATE,
             'error'                 => 'example-error',
             'lifecycle'             => {
               'type' => 'buildpack',
@@ -601,8 +605,8 @@ RSpec.describe 'Droplets' do
         buildpack_receipt_stack_name:     'stack-1',
         environment_variables:            { 'yuu' => 'huuu' },
         staging_disk_in_mb:               235,
-        error:                            'example-error',
-        state:                            VCAP::CloudController::DropletModel::PENDING_STATE,
+        error_description:                            'example-error',
+        state:                            VCAP::CloudController::DropletModel::STAGING_STATE,
       )
     end
 
@@ -619,7 +623,7 @@ RSpec.describe 'Droplets' do
         staging_memory_in_mb:         123,
         staging_disk_in_mb:           456,
         execution_metadata:           'black-box-secrets',
-        error:                        'example-error'
+        error_description:                        'example-error'
       )
     end
 
@@ -680,7 +684,7 @@ RSpec.describe 'Droplets' do
             'staging_disk_in_mb'    => 456,
             'result'                => {
               'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
-              'buildpack'              => 'http://buildpack.git.url.com',
+              'buildpack'              => { 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil },
               'stack'                  => 'stack-2',
               'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
               'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
@@ -697,7 +701,7 @@ RSpec.describe 'Droplets' do
           },
           {
             'guid'                  => droplet1.guid,
-            'state'                 => VCAP::CloudController::DropletModel::PENDING_STATE,
+            'state'                 => VCAP::CloudController::DropletModel::STAGING_STATE,
             'error'                 => 'example-error',
             'lifecycle'             => {
               'type' => 'buildpack',
@@ -735,7 +739,7 @@ RSpec.describe 'Droplets' do
         package_guid:                package_model.guid,
         buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-name',
-        error:                       nil,
+        error_description:                       nil,
         environment_variables:       { 'cloud' => 'foundry' },
         execution_metadata: 'some-data',
         droplet_hash: 'shalalala',
@@ -764,7 +768,7 @@ RSpec.describe 'Droplets' do
       expect(last_response.status).to eq(201)
       expect(parsed_response).to be_a_response_like({
         'guid'                  => copied_droplet.guid,
-        'state'                 => VCAP::CloudController::DropletModel::PENDING_STATE,
+        'state'                 => VCAP::CloudController::DropletModel::COPYING_STATE,
         'error'                 => nil,
         'lifecycle'             => {
           'type' => 'buildpack',

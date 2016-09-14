@@ -26,8 +26,8 @@ module VCAP::CloudController::Presenters::V3
       let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: app.space, service_plan: service_plan, name: 'rabbit-instance') }
       let!(:service_binding) do
-        VCAP::CloudController::ServiceBindingModel.create(app: app, service_instance: service_instance,
-                                                          type: 'app', credentials: { 'url' => 'www.service.com/foo' }, syslog_drain_url: 'logs.go-here-2.com')
+        VCAP::CloudController::ServiceBinding.create(app: app, service_instance: service_instance,
+                                                     type: 'app', credentials: { 'url' => 'www.service.com/foo' }, syslog_drain_url: 'logs.go-here-2.com')
       end
       let(:result) { presenter.to_hash }
 

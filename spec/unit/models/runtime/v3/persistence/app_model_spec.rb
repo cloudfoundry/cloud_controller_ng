@@ -3,57 +3,12 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe AppModel do
-    let(:app_model) { AppModel.make }
-    let(:space) { Space.find(guid: app_model.space_guid) }
-
-    describe '.user_visible' do
-      it 'shows the developer apps' do
-        developer = User.make
-        space.organization.add_user developer
-        space.add_developer developer
-        expect(AppModel.user_visible(developer)).to include(app_model)
-      end
-
-      it 'shows the space manager apps' do
-        space_manager = User.make
-        space.organization.add_user space_manager
-        space.add_manager space_manager
-
-        expect(AppModel.user_visible(space_manager)).to include(app_model)
-      end
-
-      it 'shows the auditor apps' do
-        auditor = User.make
-        space.organization.add_user auditor
-        space.add_auditor auditor
-
-        expect(AppModel.user_visible(auditor)).to include(app_model)
-      end
-
-      it 'shows the org manager apps' do
-        org_manager = User.make
-        space.organization.add_manager org_manager
-
-        expect(AppModel.user_visible(org_manager)).to include(app_model)
-      end
-
-      it 'hides everything from a regular user' do
-        evil_hacker = User.make
-        expect(AppModel.user_visible(evil_hacker)).to_not include(app_model)
-      end
-    end
+    let(:app_model) { AppModel.create(space: space, name: 'some-name') }
+    let(:space) { Space.make }
 
     describe '#staging_in_progress' do
       context 'when a droplet is in staging state' do
         let!(:droplet) { DropletModel.make(app_guid: app_model.guid, state: DropletModel::STAGING_STATE) }
-
-        it 'returns true' do
-          expect(app_model.staging_in_progress?).to eq(true)
-        end
-      end
-
-      context 'when a droplet is in pending state' do
-        let!(:droplet) { DropletModel.make(app_guid: app_model.guid, state: DropletModel::PENDING_STATE) }
 
         it 'returns true' do
           expect(app_model.staging_in_progress?).to eq(true)
@@ -70,6 +25,8 @@ module VCAP::CloudController
     end
 
     describe 'validations' do
+      it { is_expected.to strip_whitespace :name }
+
       describe 'name' do
         let(:space_guid) { space.guid }
         let(:app) { AppModel.make }
@@ -208,7 +165,7 @@ module VCAP::CloudController
       end
 
       context 'buildpack_lifecycle_data is nil' do
-        let(:non_buildpack_app_model) { AppModel.make }
+        let(:non_buildpack_app_model) { AppModel.create(name: 'non-buildpack', space: space) }
 
         it 'returns a docker data model' do
           expect(non_buildpack_app_model.lifecycle_data).to be_a(DockerLifecycleDataModel)

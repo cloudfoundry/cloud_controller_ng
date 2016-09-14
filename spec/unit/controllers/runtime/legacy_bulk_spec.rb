@@ -32,7 +32,7 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/bulk/apps' do
-      before { 5.times { AppFactory.make(state: 'STARTED', package_state: 'STAGED') } }
+      before { 5.times { AppFactory.make(state: 'STARTED') } }
 
       it 'requires authentication' do
         get '/bulk/apps'
@@ -141,7 +141,7 @@ module VCAP::CloudController
         end
 
         it 'does not include diego apps' do
-          app = AppFactory.make(state: 'STARTED', package_state: 'STAGED', diego: true)
+          app = AppFactory.make(state: 'STARTED', diego: true)
 
           get '/bulk/apps', {
                               'batch_size' => 20,

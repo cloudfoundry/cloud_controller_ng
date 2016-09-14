@@ -4,6 +4,7 @@ require 'rspec_api_documentation/dsl'
 RSpec.resource 'Service Bindings', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:service_binding) { VCAP::CloudController::ServiceBinding.make }
+  let!(:v2_app) { VCAP::CloudController::App.make(app: service_binding.app, type: 'web') }
   let(:guid) { service_binding.guid }
   authenticated_request
 
@@ -19,8 +20,12 @@ RSpec.resource 'Service Bindings', type: [:api, :legacy_api] do
       to_return(status: 200, body: '{}')
   end
 
-  standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController
-  standard_model_get :service_binding, nested_associations: [:app, :service_instance]
+  standard_model_list :service_binding,
+    VCAP::CloudController::ServiceBindingsController,
+    export_attributes: [:app_guid, :service_instance_guid, :credentials, :binding_options, :gateway_data, :gateway_name, :syslog_drain_url, :volume_mounts]
+  standard_model_get :service_binding,
+    nested_associations: [:app, :service_instance],
+    export_attributes: [:app_guid, :service_instance_guid, :credentials, :binding_options, :gateway_data, :gateway_name, :syslog_drain_url, :volume_mounts]
   standard_model_delete :service_binding
 
   post '/v2/service_bindings' do
@@ -32,7 +37,7 @@ RSpec.resource 'Service Bindings', type: [:api, :legacy_api] do
     example 'Create a Service Binding' do
       space = VCAP::CloudController::Space.make
       service_instance_guid = VCAP::CloudController::ServiceInstance.make(space: space).guid
-      app_guid = VCAP::CloudController::App.make(space: space).guid
+      app_guid = VCAP::CloudController::AppFactory.make(space: space).guid
       request_json = MultiJson.dump({ service_instance_guid: service_instance_guid, app_guid: app_guid, parameters: { the_service_broker: 'wants this object' } }, pretty: true)
 
       client.post '/v2/service_bindings', request_json, headers

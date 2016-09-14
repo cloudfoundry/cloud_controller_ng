@@ -3,14 +3,13 @@ require 'messages/base_message'
 module VCAP::CloudController
   class RouteMappingsCreateMessage < BaseMessage
     ALLOWED_KEYS = [:relationships, :app_port].freeze
-    DEFAULT_PORT = 8080
     DEFAULT_PROCESS_TYPE = 'web'.freeze
 
     attr_accessor(*ALLOWED_KEYS)
     validates_with NoAdditionalKeysValidator
     validates :app, hash: true
     validates :app_guid, guid: true
-    validates :app_port, numericality: { only_integer: true, greater_than: 0 }
+    validates :app_port, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
     validates :route, hash: true
     validates :route_guid, guid: true
     validates :process, hash: true, allow_nil: true
@@ -26,10 +25,6 @@ module VCAP::CloudController
 
     def app_guid
       HashUtils.dig(app, :guid) || HashUtils.dig(app, 'guid')
-    end
-
-    def app_port
-      @app_port ||= DEFAULT_PORT
     end
 
     def process

@@ -12,12 +12,7 @@ RSpec.describe ServiceBindingPresenter do
       )
     end
     let(:binding_options) { nil }
-    let(:service_binding) do
-      VCAP::CloudController::ServiceBinding.make(
-        service_instance: service_instance,
-        binding_options: binding_options
-      )
-    end
+    let(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance) }
 
     context 'with syslog_drain_url' do
       before do

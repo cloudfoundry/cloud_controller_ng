@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'cloud_controller/diego/v3/protocol/task_protocol'
+require 'cloud_controller/diego/task_protocol'
 
 module VCAP::CloudController::Diego
   RSpec.describe NsyncClient do
@@ -208,11 +208,11 @@ module VCAP::CloudController::Diego
             internal_service_hostname: 'hostname'
           }
         end
-        let(:protocol) { instance_double(VCAP::CloudController::Diego::V3::Protocol::TaskProtocol) }
+        let(:protocol) { instance_double(VCAP::CloudController::Diego::TaskProtocol) }
         let(:desired_message) { MultiJson.dump({ process_guid: 'process-guid' }) }
 
         before do
-          allow(VCAP::CloudController::Diego::V3::Protocol::TaskProtocol).to receive(:new).and_return(protocol)
+          allow(VCAP::CloudController::Diego::TaskProtocol).to receive(:new).and_return(protocol)
           allow(protocol).to receive(:task_request).and_return(desired_message)
           stub_request(:post, client_url).to_return(status: 202, body: '')
         end

@@ -4,7 +4,7 @@ module VCAP::CloudController
   class BuildpackLifecycleDataModel < Sequel::Model(:buildpack_lifecycle_data)
     LIFECYCLE_TYPE = Lifecycles::BUILDPACK
 
-    encrypt :buildpack, salt: :salt, column: :encrypted_buildpack
+    encrypt :buildpack_url, salt: :encrypted_buildpack_url_salt, column: :encrypted_buildpack_url
 
     many_to_one :droplet,
       class: '::VCAP::CloudController::DropletModel',
@@ -18,20 +18,24 @@ module VCAP::CloudController
       primary_key: :guid,
       without_guid_generation: true
 
-    def buildpack_with_serialization=(buildpack_name)
-      self.buildpack_without_serialization = buildpack_name
-    end
-    alias_method_chain :buildpack=, 'serialization'
+    def buildpack=(buildpack)
+      self.buildpack_url = nil
+      self.admin_buildpack_name = nil
 
-    def buildpack_with_serialization
-      buildpack_without_serialization
+      if buildpack.is_uri?
+        self.buildpack_url = buildpack
+      else
+        self.admin_buildpack_name = buildpack
+      end
     end
-    alias_method_chain :buildpack, 'serialization'
+
+    def buildpack
+      return self.admin_buildpack_name if self.admin_buildpack_name.present?
+      self.buildpack_url
+    end
 
     def to_hash
-      obfuscated_buildpack = buildpack.nil? ? buildpack : CloudController::UrlSecretObfuscator.obfuscate(buildpack)
-
-      { buildpack: obfuscated_buildpack, stack: stack }
+      { buildpack: CloudController::UrlSecretObfuscator.obfuscate(buildpack), stack: stack }
     end
 
     def validate

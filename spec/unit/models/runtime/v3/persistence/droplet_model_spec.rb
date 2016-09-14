@@ -5,48 +5,6 @@ module VCAP::CloudController
   RSpec.describe DropletModel do
     it { is_expected.to validates_includes DropletModel::DROPLET_STATES, :state, allow_missing: true }
 
-    describe '.user_visible' do
-      let(:app_model) { AppModel.make(space_guid: space.guid) }
-      let!(:droplet_model) { DropletModel.make(app_guid: app_model.guid) }
-      let(:space) { Space.make }
-
-      it 'shows the developer droplets' do
-        developer = User.make
-        space.organization.add_user developer
-        space.add_developer developer
-        expect(DropletModel.user_visible(developer)).to include(droplet_model)
-        expect(DropletModel.user_visible(developer).first.guid).to eq(droplet_model.guid)
-      end
-
-      it 'shows the space manager droplets' do
-        space_manager = User.make
-        space.organization.add_user space_manager
-        space.add_manager space_manager
-
-        expect(DropletModel.user_visible(space_manager)).to include(droplet_model)
-      end
-
-      it 'shows the auditor droplets' do
-        auditor = User.make
-        space.organization.add_user auditor
-        space.add_auditor auditor
-
-        expect(DropletModel.user_visible(auditor)).to include(droplet_model)
-      end
-
-      it 'shows the org manager droplets' do
-        org_manager = User.make
-        space.organization.add_manager org_manager
-
-        expect(DropletModel.user_visible(org_manager)).to include(droplet_model)
-      end
-
-      it 'hides everything from a regular user' do
-        evil_hacker = User.make
-        expect(DropletModel.user_visible(evil_hacker)).to_not include(droplet_model)
-      end
-    end
-
     describe '#blobstore_key' do
       let(:droplet) { DropletModel.make(droplet_hash: droplet_hash) }
 
@@ -77,7 +35,7 @@ module VCAP::CloudController
       end
 
       context 'when the droplet has not been staged' do
-        let!(:droplet_model) { DropletModel.make(state: 'PENDING') }
+        let!(:droplet_model) { DropletModel.make(state: 'STAGING') }
 
         it 'returns false' do
           expect(droplet_model.staged?).to be false
@@ -153,33 +111,92 @@ module VCAP::CloudController
       end
     end
 
-    describe '#update_buildpack_receipt' do
+    describe '#set_buildpack_receipt' do
       let!(:droplet_model) { DropletModel.make(state: 'STAGED') }
-      let(:buildpack) { Buildpack.make }
-      let(:buildpack_key) { buildpack.key }
 
-      it 'updates the buildpack receipt with the new buildpack and buildpack guid' do
-        droplet_model.update_buildpack_receipt(buildpack_key)
-        droplet_model.reload
-
-        expect(droplet_model.buildpack_receipt_buildpack_guid).to eq(buildpack.guid)
-        expect(droplet_model.buildpack_receipt_buildpack).to eq(buildpack.name)
+      it 'records the output of the detect script' do
+        droplet_model.set_buildpack_receipt(buildpack_key: nil, requested_buildpack: nil, detect_output: 'detect-output')
+        expect(droplet_model.buildpack_receipt_detect_output).to eq('detect-output')
       end
 
-      context 'when there is no detected buildpack' do
-        let(:old_buildpack) { Buildpack.make }
-        before do
-          droplet_model.update(
-            buildpack_receipt_buildpack_guid: old_buildpack.guid,
-            buildpack_receipt_buildpack: old_buildpack.name
-          )
+      describe 'admin buildpack' do
+        let(:buildpack) { Buildpack.make }
+        let(:buildpack_key) { buildpack.key }
+
+        it 'records the admin buildpack info' do
+          droplet_model.set_buildpack_receipt(buildpack_key: buildpack_key, requested_buildpack: nil, detect_output: nil)
+          expect(droplet_model.buildpack_receipt_buildpack_guid).to eq(buildpack.guid)
+          expect(droplet_model.buildpack_receipt_buildpack).to eq(buildpack.name)
+        end
+      end
+
+      describe 'custom buildpack' do
+        it 'records the custom buildpack info' do
+          droplet_model.set_buildpack_receipt(buildpack_url: 'http://buildpack.example.com', buildpack_key: nil, requested_buildpack: nil, detect_output: nil)
+          expect(droplet_model.buildpack_receipt_buildpack).to eq('http://buildpack.example.com')
+        end
+      end
+
+      describe 'unknown buildpack from response' do
+        it 'records the requested buildpack' do
+          droplet_model.set_buildpack_receipt(buildpack_key: nil, requested_buildpack: 'requested-buildpack', detect_output: nil)
+          expect(droplet_model.buildpack_receipt_buildpack).to eq('requested-buildpack')
+        end
+      end
+    end
+
+    describe '#fail_to_stage!' do
+      subject(:droplet) { DropletModel.make(state: DropletModel::STAGING_STATE) }
+
+      it 'sets the state to FAILED' do
+        expect { droplet.fail_to_stage! }.to change { droplet.state }.to(DropletModel::FAILED_STATE)
+      end
+
+      context 'when a valid reason is specified' do
+        DropletModel::STAGING_FAILED_REASONS.each do |reason|
+          it 'sets the requested staging failed reason' do
+            expect {
+              droplet.fail_to_stage!(reason)
+            }.to change { droplet.error_id }.to(reason)
+          end
+        end
+      end
+
+      context 'when an unexpected reason is specifed' do
+        it 'should use the default, generic reason' do
+          expect {
+            droplet.fail_to_stage!('bogus')
+          }.to change { droplet.error_id }.to('StagingError')
+        end
+      end
+
+      context 'when a reason is not specified' do
+        it 'should use the default, generic reason' do
+          expect {
+            droplet.fail_to_stage!
+          }.to change { droplet.error_id }.to('StagingError')
+        end
+      end
+
+      describe 'setting staging_failed_description' do
+        it 'sets the staging_failed_description to the v2.yml description of the error type' do
+          expect {
+            droplet.fail_to_stage!('NoAppDetectedError')
+          }.to change { droplet.error_description }.to('An app was not successfully detected by any available buildpack')
         end
 
-        it 'does not update the buildpack receipt' do
-          droplet_model.update_buildpack_receipt(nil)
+        it 'provides a string for interpolation on errors that require it' do
+          expect {
+            droplet.fail_to_stage!('StagingError')
+          }.to change { droplet.error_description }.to('Staging error: staging failed')
+        end
 
-          expect(droplet_model.buildpack_receipt_buildpack_guid).to eq(old_buildpack.guid)
-          expect(droplet_model.buildpack_receipt_buildpack).to eq(old_buildpack.name)
+        DropletModel::STAGING_FAILED_REASONS.each do |reason|
+          it "successfully sets staging_failed_description for reason: #{reason}" do
+            expect {
+              droplet.fail_to_stage!(reason)
+            }.to_not raise_error
+          end
         end
       end
     end
@@ -197,36 +214,22 @@ module VCAP::CloudController
 
           expect(AppUsageEvent.last.state).to eq('STAGING_STARTED')
         end
+
+        context 'when state is COPYING' do
+          it 'does not record an event' do
+            expect {
+              DropletModel.new(state: DropletModel::COPYING_STATE).save
+            }.not_to change { AppUsageEvent.count }.from(0)
+          end
+        end
       end
 
       context 'when updating a droplet' do
         let!(:droplet) { DropletModel.make(state: initial_state) }
 
-        context 'when state is PENDING' do
-          let(:initial_state) { DropletModel::STAGING_STATE }
-
-          it 'records no usage event' do
-            expect {
-              droplet.state = DropletModel::PENDING_STATE
-              droplet.save
-            }.not_to change { AppUsageEvent.count }
-          end
-        end
-
-        context 'when state is STAGING' do
-          let(:initial_state) { DropletModel::PENDING_STATE }
-
-          it 'records no usage event' do
-            expect {
-              droplet.state = DropletModel::STAGING_STATE
-              droplet.save
-            }.not_to change { AppUsageEvent.count }
-          end
-        end
-
         context 'when state is FAILED' do
           context 'changing from a different state' do
-            let(:initial_state) { DropletModel::PENDING_STATE }
+            let(:initial_state) { DropletModel::STAGING_STATE }
 
             it 'records a STAGING_STOPPED event ' do
               expect {
@@ -252,7 +255,7 @@ module VCAP::CloudController
 
         context 'when state is STAGED' do
           context 'changing from a different state' do
-            let(:initial_state) { DropletModel::PENDING_STATE }
+            let(:initial_state) { DropletModel::STAGING_STATE }
 
             it 'records a STAGING_STOPPED event ' do
               expect {
@@ -291,15 +294,13 @@ module VCAP::CloudController
       context 'when deleting a droplet' do
         let!(:droplet) { DropletModel.make(state: state) }
 
-        context 'when state is PENDING' do
-          let(:state) { DropletModel::PENDING_STATE }
+        context 'when state is COPYING' do
+          let(:state) { DropletModel::COPYING_STATE }
 
-          it 'records a STAGING_STOPPED event ' do
+          it 'records no usage event' do
             expect {
               droplet.destroy
-            }.to change { AppUsageEvent.count }.by(1)
-
-            expect(AppUsageEvent.last.state).to eq('STAGING_STOPPED')
+            }.not_to change { AppUsageEvent.count }
           end
         end
 

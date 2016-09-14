@@ -4,8 +4,8 @@ module VCAP::CloudController
   RSpec.describe SpaceSummariesController do
     let(:space) { Space.make }
     let(:app_obj) { AppFactory.make(space: space) }
-    let!(:first_route) { Route.make(space: space, app_guids: [app_obj.guid]) }
-    let!(:second_route) { Route.make(space: space, app_guids: [app_obj.guid]) }
+    let!(:first_route) { Route.make(space: space) }
+    let!(:second_route) { Route.make(space: space) }
     let(:first_service) { ManagedServiceInstance.make(space: space) }
     let(:second_service) { ManagedServiceInstance.make(space: space) }
 
@@ -13,8 +13,11 @@ module VCAP::CloudController
     let(:running_instances) { { app_obj.guid => 5 } }
 
     before do
-      ServiceBinding.make(app: app_obj, service_instance: first_service)
-      ServiceBinding.make(app: app_obj, service_instance: second_service)
+      ServiceBinding.make(app: app_obj.app, service_instance: first_service)
+      ServiceBinding.make(app: app_obj.app, service_instance: second_service)
+
+      RouteMappingModel.make(app: app_obj.app, route: first_route, process_type: app_obj.type)
+      RouteMappingModel.make(app: app_obj.app, route: second_route, process_type: app_obj.type)
 
       allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
       allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_processes).and_return(running_instances)

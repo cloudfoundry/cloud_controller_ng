@@ -5,16 +5,17 @@ module VCAP::CloudController
   RSpec.describe DropletCopy do
     let(:droplet_copy) { DropletCopy.new(source_droplet) }
     let(:source_space) { VCAP::CloudController::Space.make }
-    let(:target_app) { VCAP::CloudController::AppModel.make(name: 'target-app-name') }
-    let(:source_app) { VCAP::CloudController::AppModel.make(name: 'source-app-name', space_guid: source_space.guid) }
+    let!(:target_app) { VCAP::CloudController::AppModel.make(name: 'target-app-name') }
+    let!(:source_app) { VCAP::CloudController::AppModel.make(name: 'source-app-name', space: source_space) }
     let(:lifecycle_type) { :buildpack }
-    let!(:source_droplet) { VCAP::CloudController::DropletModel.make(lifecycle_type,
-      app_guid: source_app.guid,
-      droplet_hash: 'abcdef',
-      process_types: { web: 'bundle exec rails s' },
-      environment_variables: { 'THING' => 'STUFF' },
-      state: VCAP::CloudController::DropletModel::STAGING_STATE)
-    }
+    let!(:source_droplet) do
+      VCAP::CloudController::DropletModel.make(lifecycle_type,
+        app_guid:              source_app.guid,
+        droplet_hash:          'abcdef',
+        process_types:         { web: 'bundle exec rails s' },
+        environment_variables: { 'THING' => 'STUFF' },
+        state:                 VCAP::CloudController::DropletModel::STAGED_STATE)
+    end
 
     describe '#copy' do
       it 'copies the passed in droplet to the target app' do
@@ -24,10 +25,9 @@ module VCAP::CloudController
 
         copied_droplet = DropletModel.last
 
-        expect(copied_droplet.state).to eq DropletModel::PENDING_STATE
+        expect(copied_droplet.state).to eq DropletModel::COPYING_STATE
         expect(copied_droplet.buildpack_receipt_buildpack_guid).to eq source_droplet.buildpack_receipt_buildpack_guid
         expect(copied_droplet.droplet_hash).to be nil
-        expect(copied_droplet.detected_start_command).to eq source_droplet.detected_start_command
         expect(copied_droplet.environment_variables).to eq(nil)
         expect(copied_droplet.process_types).to eq({ 'web' => 'bundle exec rails s' })
         expect(copied_droplet.buildpack_receipt_buildpack).to eq source_droplet.buildpack_receipt_buildpack
@@ -53,6 +53,18 @@ module VCAP::CloudController
         )
 
         droplet_copy.copy(target_app, 'user-guid', 'user-email')
+      end
+
+      context 'when the source droplet is not STAGED' do
+        before do
+          source_droplet.update(state: DropletModel::FAILED_STATE)
+        end
+
+        it 'raises' do
+          expect {
+            droplet_copy.copy(target_app, 'user-guid', 'user-email')
+          }.to raise_error(/source droplet is not staged/)
+        end
       end
 
       context 'when lifecycle is buildpack' do
@@ -99,7 +111,7 @@ module VCAP::CloudController
           expect(copied_droplet).to be_docker
           expect(copied_droplet.guid).to_not eq(source_droplet.guid)
           expect(copied_droplet.docker_receipt_image).to eq('urvashi/reddy')
-          expect(copied_droplet.state).to eq(VCAP::CloudController::DropletModel::STAGING_STATE)
+          expect(copied_droplet.state).to eq(VCAP::CloudController::DropletModel::STAGED_STATE)
         end
       end
     end

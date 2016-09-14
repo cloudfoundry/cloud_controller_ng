@@ -10,7 +10,7 @@ module VCAP::CloudController
         num_service_instances.times do
           instance = ManagedServiceInstance.make(space: app.space)
           binding = ServiceBinding.make(
-            app: app,
+            app: app.app,
             service_instance: instance
           )
           app.add_service_binding(binding)
@@ -77,13 +77,13 @@ module VCAP::CloudController
 
     describe 'update_uris' do
       it "does not update deas if app isn't staged" do
-        app.update(package_state: 'PENDING')
+        app.current_droplet.destroy
+        app.reload
         expect(message_bus).not_to receive(:publish)
         Dea::Client.update_uris(app)
       end
 
       it 'sends a dea update message' do
-        app.update(package_state: 'STAGED')
         expect(message_bus).to receive(:publish).with(
           'dea.update',
           hash_including(

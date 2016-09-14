@@ -201,7 +201,6 @@ module VCAP::CloudController
           return unless app.staged?
           message = dea_update_message(app)
           dea_publish_update(message)
-          app.routes_changed = false
         end
 
         def find_stats(app)

@@ -4,13 +4,16 @@ require 'actions/app_update'
 module VCAP::CloudController
   RSpec.describe AppUpdate do
     let(:app_model) { AppModel.make(name: app_name, environment_variables: environment_variables) }
-    let!(:buildpack_lifecycle_model) { BuildpackLifecycleDataModel.make(buildpack: buildpack, stack: Stack.default.name, app: app_model) }
     let(:user) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
     let(:app_update) { AppUpdate.new(user, user_email) }
     let(:buildpack) { 'http://original.com' }
     let(:app_name) { 'original name' }
     let(:environment_variables) { { 'original' => 'value' } }
+
+    before do
+      app_model.lifecycle_data.update(buildpack: buildpack, stack: Stack.default.name)
+    end
 
     describe '#update' do
       let(:lifecycle) { AppLifecycleProvider.provide_for_update(message, app_model) }

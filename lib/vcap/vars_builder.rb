@@ -16,11 +16,11 @@ module VCAP
     end
 
     def to_hash
+      app_name = @process.name
+
       if @process.class == VCAP::CloudController::AppModel
-        app_name = @process.name
         uris = @process.routes.map(&:fqdn)
       else
-        app_name = @process.is_v3? ? @process.app.name : @process.name
         @staging_disk_in_mb ||= @process.disk_quota
         @memory_limit ||= @process.memory
         @file_descriptors ||= @process.file_descriptors

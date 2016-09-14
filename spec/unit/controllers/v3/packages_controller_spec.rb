@@ -102,7 +102,7 @@ RSpec.describe PackagesController, type: :controller do
 
     context 'when the package is invalid' do
       before do
-        allow_any_instance_of(VCAP::CloudController::PackageUpload).to receive(:upload).and_raise(VCAP::CloudController::PackageUpload::InvalidPackage.new('err'))
+        allow_any_instance_of(VCAP::CloudController::PackageUpload).to receive(:upload_async).and_raise(VCAP::CloudController::PackageUpload::InvalidPackage.new('err'))
       end
 
       it 'returns 422' do
@@ -605,7 +605,7 @@ RSpec.describe PackagesController, type: :controller do
 
         context 'when the package is invalid' do
           before do
-            allow_any_instance_of(VCAP::CloudController::PackageCreate).to receive(:create).and_raise(VCAP::CloudController::PackageCreate::InvalidPackage.new('err'))
+            allow(VCAP::CloudController::PackageCreate).to receive(:create).and_raise(VCAP::CloudController::PackageCreate::InvalidPackage.new('err'))
           end
 
           it 'returns 422' do
@@ -677,7 +677,7 @@ RSpec.describe PackagesController, type: :controller do
           app_model.reload
           package = app_model.packages.first
           expect(package.type).to eq('docker')
-          expect(package.docker_data.image).to eq('registry/image:latest')
+          expect(package.image).to eq('registry/image:latest')
         end
       end
     end
