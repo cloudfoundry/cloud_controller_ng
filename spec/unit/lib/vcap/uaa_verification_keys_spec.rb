@@ -35,14 +35,13 @@ module VCAP
       end
 
       context 'when key was fetched more than 30 seconds ago' do
-        before { allow(uaa_info).to receive_messages(validation_keys_hash: key_hash) }
         let(:key_hash2) { { 'key-name' => { 'value' => 'another-from-uaa' } } }
+        before { allow(uaa_info).to receive(:validation_keys_hash).and_return(key_hash, key_hash2) }
 
         it 're-fetches the key' do
           Timecop.freeze do
             subject.value
             Timecop.travel(40)
-            allow(uaa_info).to receive_messages(validation_keys_hash: key_hash2)
             subject.value
           end
 
@@ -51,17 +50,51 @@ module VCAP
       end
 
       context 'when key was fetched less than 30 seconds ago' do
-        before { allow(uaa_info).to receive_messages(validation_keys_hash: key_hash) }
         let(:key_hash2) { { 'key-name' => { 'value' => 'another-from-uaa' } } }
+        before { allow(uaa_info).to receive(:validation_keys_hash).and_return(key_hash, key_hash2) }
 
         it 'does not fetch the keys' do
           Timecop.freeze do
             subject.value
             Timecop.travel(25)
-            allow(uaa_info).to receive_messages(validation_keys_hash: key_hash2)
             subject.value
           end
           expect(subject.value).to eq(['value-from-uaa'])
+        end
+      end
+
+      context 'when the verification keys cannot be fetched from uaa' do
+        it 'tries to fetch three times' do
+          allow(uaa_info).to receive(:validation_keys_hash).and_return({}, {}, key_hash)
+          subject.value
+
+          expect(uaa_info).to have_received(:validation_keys_hash).exactly(3).times
+        end
+
+        context 'but have been previously fetched' do
+          before do
+            allow(uaa_info).to receive(:validation_keys_hash).and_return(key_hash, {})
+          end
+
+          it 'returns the previously fetched verification keys' do
+            Timecop.freeze do
+              expect(subject.value).to eq(['value-from-uaa'])
+              Timecop.travel(40)
+              expect(subject.value).to eq(['value-from-uaa'])
+            end
+          end
+        end
+
+        context 'never been fetched before' do
+          before do
+            allow(uaa_info).to receive(:validation_keys_hash).and_return({})
+          end
+
+          it 'returns an empty array' do
+            expect {
+              subject.value
+            }.to raise_error(VCAP::CloudController::UaaUnavailable)
+          end
         end
       end
     end
