@@ -659,7 +659,10 @@ It will include environment variables for Environment Variable Groups and Servic
       "type": "sha1",
       "value": "0cd90dd63dd9f42db25340445d203fba25c69cf6"
     },
-    "buildpack": "ruby 1.6.14",
+    "buildpack": {
+      "name": "ruby_buildpack",
+      "detect_output": "ruby 1.6.14"
+    },
     "stack": "cflinuxfs2"
   },
   "environment_variables": {
@@ -749,7 +752,10 @@ It will include environment variables for Environment Variable Groups and Servic
       "type": "sha1",
       "value": "0cd90dd63dd9f42db25340445d203fba25c69cf6"
     },
-    "buildpack": "ruby 1.6.14",
+    "buildpack": {
+      "name": "ruby_buildpack",
+      "detect_output": "ruby 1.6.14"
+    },
     "stack": "cflinuxfs2"
   },
   "environment_variables": {
@@ -1248,7 +1254,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
     </h4>
 
     <p class="method-list-item-description">
-      State of the package. Possible states are &ldquo;PENDING&rdquo;, &ldquo;STAGING&rdquo;, &ldquo;STAGED&rdquo;, &ldquo;FAILED&rdquo;, or &ldquo;EXPIRED&rdquo;.
+      State of the package. Possible states are &ldquo;STAGING&rdquo;, &ldquo;STAGED&rdquo;, &ldquo;COPYING&rdquo;, &ldquo;FAILED&rdquo;, or &ldquo;EXPIRED&rdquo;.
     </p>
   </li>
   <li class="method-list-item">
@@ -1448,7 +1454,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 
 {
   "guid": "585bc3c1-3743-497d-88b0-403ad6b56d16",
-  "state": "PENDING",
+  "state": "STAGING",
   "error": null,
   "lifecycle": {
     "type": "buildpack",
@@ -1581,7 +1587,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 
 {
   "guid": "585bc3c1-3743-497d-88b0-403ad6b56d16",
-  "state": "PENDING",
+  "state": "COPYING",
   "error": null,
   "lifecycle": {
     "type": "buildpack",
@@ -1672,7 +1678,10 @@ environment variables listed on the source droplet.</p>
       "type": "sha1",
       "value": "0cd90dd63dd9f42db25340445d203fba25c69cf6"
     },
-    "buildpack": "ruby 1.6.14",
+    "buildpack": {
+      "name": "ruby_buildpack",
+      "detect_output": "ruby 1.6.14"
+    },
     "stack": "cflinuxfs2"
   },
   "environment_variables": {
@@ -1809,7 +1818,10 @@ environment variables listed on the source droplet.</p>
           "type": "sha1",
           "value": "0cd90dd63dd9f42db25340445d203fba25c69cf6"
         },
-        "buildpack": "ruby 1.6.14",
+        "buildpack": {
+          "name": "ruby_buildpack",
+          "detect_output": "ruby 1.6.14"
+        },
         "stack": "cflinuxfs2"
       },
       "environment_variables": {
@@ -2034,7 +2046,10 @@ environment variables listed on the source droplet.</p>
           "type": "sha1",
           "value": "0cd90dd63dd9f42db25340445d203fba25c69cf6"
         },
-        "buildpack": "ruby 1.6.14",
+        "buildpack": {
+          "name": "ruby_buildpack",
+          "detect_output": "ruby 1.6.14"
+        },
         "stack": "cflinuxfs2"
       },
       "environment_variables": {
@@ -2135,9 +2150,9 @@ environment variables listed on the source droplet.</p>
     </h4>
 
     <p class="method-list-item-description">
-      Comma-delimited list of droplet states to filter by. Valid values are &ldquo;PENDING&rdquo;, &ldquo;STAGING&rdquo;, &ldquo;STAGED&rdquo;, &ldquo;FAILED&rdquo;, or &ldquo;EXPIRED&rdquo;.
+      Comma-delimited list of droplet states to filter by.
       <br>
-      Example: <code>states=PENDING,STAGING</code>
+      Example: <code>states=STAGING</code>
     </p>
   </li>
 
@@ -2220,7 +2235,10 @@ environment variables listed on the source droplet.</p>
           "type": "sha1",
           "value": "0cd90dd63dd9f42db25340445d203fba25c69cf6"
         },
-        "buildpack": "ruby 1.6.14",
+        "buildpack": {
+          "name": "ruby_buildpack",
+          "detect_output": "ruby 1.6.14"
+        },
         "stack": "cflinuxfs2"
       },
       "environment_variables": {
@@ -2321,9 +2339,9 @@ environment variables listed on the source droplet.</p>
     </h4>
 
     <p class="method-list-item-description">
-      Comma-delimited list of droplet states to filter by. Valid values are &ldquo;PENDING&rdquo;, &ldquo;STAGING&rdquo;, &ldquo;STAGED&rdquo;, &ldquo;FAILED&rdquo;, or &ldquo;EXPIRED&rdquo;.
+      Comma-delimited list of droplet states to filter by.
       <br>
-      Example: <code>states=PENDING,STAGING</code>
+      Example: <code>states=STAGING</code>
     </p>
   </li>
 
@@ -2588,141 +2606,8 @@ environment variables listed on the source droplet.</p>
 </p>
 
           <h2 id="stage-a-package">Stage a package</h2>
-<pre class="highlight plaintext"><code>Definition
-</code></pre>
-<pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/packages/:guid/droplets</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/packages/[guid]/droplets"</span> <span class="se">\</span>
-  -X POST <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -d <span class="s1">'{
-    "environment_variables": {
-      "CUSTOM_ENV_VAR": "hello"
-    },
-    "lifecycle": {
-      "type": "buildpack",
-      "data": {
-        "buildpack": "http://github.com/myorg/awesome-buildpack",
-        "stack": "cflinuxfs2"
-      }
-    }
-  }'</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
 
-{
-  "guid": "whatuuid",
-  "state": "PENDING",
-  "error": null,
-  "lifecycle": {
-    "type": "buildpack",
-    "data": {
-      "buildpack": "http://github.com/myorg/awesome-buildpack",
-      "stack": "cflinuxfs2"
-    }
-  },
-  "staging_memory_in_mb": 1024,
-  "staging_disk_in_mb": 4096,
-  "result": {
-    "buildpack": null,
-    "stack": "cflinuxfs2",
-    "process_types": null,
-    "hash": {
-      "type": "sha1",
-      "value": null
-    },
-    "execution_metadata": null
-  },
-  "environment_variables":
-  {
-    "CUSTOM_ENV_VAR": "hello",
-    "VCAP_APPLICATION": {
-      "limits": {
-        "mem": 1024,
-        "disk": 4096,
-        "fds": 16384
-      },
-      "application_id": "f82a88a2-2197-45b2-8b6d-84d1be8e2d0e",
-      "application_version": "whatuuid",
-      "application_name": "name-673",
-      "application_uris": [ ],
-      "version": "whatuuid",
-      "name": "name-673",
-      "space_name": "name-670",
-      "space_id": "8543c9f2-0ec4-4bd2-adb4-eee7b2cd6c9d",
-      "uris": [ ],
-      "users": null
-    },
-    "CF_STACK": "cflinuxfs2",
-    "MEMORY_LIMIT": 1024,
-    "VCAP_SERVICES": { }
-  },
-  "created_at": "2015-11-03T00:53:54Z",
-  "updated_at": null,
-  "links": {
-    "self": {
-      "href": "/v3/droplets/whatuuid"
-    },
-    "package": {
-      "href": "/v3/packages/aee22e31-6476-435e-a8c9-8961c6ead83e"
-    },
-    "app": {
-      "href": "/v3/apps/f82a88a2-2197-45b2-8b6d-84d1be8e2d0e"
-    },
-    "assign_current_droplet": {
-      "href": "/v3/apps/f82a88a2-2197-45b2-8b6d-84d1be8e2d0e/droplets/current",
-      "method": "PUT"
-    }
-  }
-}
-</code></pre>
-
-<p>This endpoint stages a package. Staging a package creates a droplet.</p>
-
-<h3 id="body-parameters">Body Parameters</h3>
-
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      environment_variables
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">JSON object of environment variables to use during staging. Environment variable names may not start with &ldquo;VCAP_&rdquo; or &ldquo;CF_&rdquo;. &ldquo;PORT&rdquo; is not a valid environment variable. Example environment variables: {&ldquo;FEATURE_ENABLED&rdquo;: &ldquo;true&rdquo;}</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      staging_memory_in_mb
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Memory limit used to stage package. Must be an integer.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      staging_disk_in_mb
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Disk limit used to stage package. Must be an integer.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      lifecycle
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">JSON object of lifecycle information for a droplet. If not provided, it will default to a buildpack. Example lifecycle information: { &ldquo;type&rdquo;: &ldquo;buildpack&rdquo;, &ldquo;data&rdquo;: { &ldquo;buildpack&rdquo;: &ldquo;http://github.com/myorg/awesome-buildpack&rdquo;, &ldquo;stack&rdquo;: &ldquo;cflinuxfs2&rdquo; } }</p>
-  </li>
-</ul>
+<p>Staging a package is accomplished by creating a droplet. See <a href=#create-a-droplet>Create a droplet</a></p>
 
           <h2 id="upload-package-bits">Upload package bits</h2>
 <pre class="highlight plaintext"><code>Definition
