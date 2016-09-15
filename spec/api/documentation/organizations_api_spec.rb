@@ -90,6 +90,43 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
       end
     end
 
+    describe 'Isolation Segments (experimental)' do
+      let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+
+      before do
+        organization.add_manager(everything_user)
+        isolation_segment_model.add_organization(organization)
+      end
+
+      get '/v2/organizations/:guid/isolation_segments (experimental)' do
+        example 'get the associated Isolation Segments for the Organization' do
+          client.get "v2/organizations/#{organization.guid}/isolation_segments", {}, headers
+          expect(status).to eq(200)
+
+          expected_response = {
+            'pagination' => {
+              'total_results' =>  1,
+              'total_pages'   =>  1,
+              'first'         =>  { 'href' => "/v2/organizations/#{organization.guid}/isolation_segments?page=1&per_page=50" },
+              'last'          =>  { 'href' => "/v2/organizations/#{organization.guid}/isolation_segments?page=1&per_page=50" },
+              'next'          =>  nil,
+              'previous'      =>  nil
+            },
+            'resources' => [
+              {
+                'name'       => isolation_segment_model.name,
+                'guid'       => isolation_segment_model.guid,
+                'created_at' => iso8601,
+                'updated_at' => nil
+              }
+            ]
+          }
+
+          expect(parsed_response).to be_a_response_like(expected_response)
+        end
+      end
+    end
+
     describe 'Spaces' do
       before do
         VCAP::CloudController::Space.make(organization: organization)

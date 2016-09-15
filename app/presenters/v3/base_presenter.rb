@@ -5,10 +5,11 @@ module VCAP::CloudController
         REDACTED_MESSAGE      = '[PRIVATE DATA HIDDEN]'.freeze
         REDACTED_LIST_MESSAGE = '[PRIVATE DATA HIDDEN IN LISTS]'.freeze
 
-        def initialize(resource, show_secrets: true, censored_message: REDACTED_MESSAGE)
+        def initialize(resource, show_secrets: true, censored_message: REDACTED_MESSAGE, build_links: true)
           @resource         = resource
           @show_secrets     = show_secrets
           @censored_message = censored_message
+          @build_links      = build_links
         end
 
         private

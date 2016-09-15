@@ -41,8 +41,8 @@ module VCAP::CloudController
 
         context 'and the name changes' do
           it 'sets the name of the shared segment to the new value' do
-            expect{
-              Seeds.create_seed_shared_isolation_segment({ shared_isolation_segment_name: 'original-name' } )
+            expect {
+              Seeds.create_seed_shared_isolation_segment({ shared_isolation_segment_name: 'original-name' })
             }.to_not change { IsolationSegmentModel.count }
 
             shared_isolation_segment_model = IsolationSegmentModel.first
@@ -56,7 +56,7 @@ module VCAP::CloudController
             # this means that it will fail our deployment. To correct this issue we could
             # redeploy with what the old 'shared' isolation segment name
             it 'raises some kind of error TBD' do
-              expect{
+              expect {
                 Seeds.create_seed_shared_isolation_segment({ shared_isolation_segment_name: isolation_segment_model.name })
               }.to raise_error(Sequel::ValidationFailed, /must be unique/)
             end

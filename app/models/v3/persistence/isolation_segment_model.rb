@@ -9,6 +9,15 @@ module VCAP::CloudController
       key: :isolation_segment_guid,
       primary_key: :guid
 
+    many_to_many :organizations,
+      left_key: :isolation_segment_guid,
+      left_primary_key: :guid,
+      right_key: :organization_guid,
+      right_primary_key: :guid,
+      join_table: :organizations_isolation_segments,
+      after_add: proc { |isolation_segment, org| org.default_isolation_segment(isolation_segment) },
+      before_remove: proc { |isolation_segment, org| org.unset_default_isolation_segment(isolation_segment) }
+
     def validate
       validates_format ISOLATION_SEGMENT_MODEL_REGEX, :name, message: Sequel.lit('isolation segment names can only contain non-blank unicode characters')
 
@@ -17,6 +26,7 @@ module VCAP::CloudController
 
     def before_destroy
       raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'space', 'isolation segment') unless spaces.empty?
+      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'Organization', 'Isolation Segment') unless organizations.empty?
       super
     end
   end

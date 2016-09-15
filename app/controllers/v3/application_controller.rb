@@ -94,6 +94,10 @@ class ApplicationController < ActionController::Base
     VCAP::CloudController::Permissions.new(current_user).readable_space_guids
   end
 
+  def readable_org_guids
+    VCAP::CloudController::Permissions.new(current_user).readable_org_guids
+  end
+
   ###
   ### FILTERS
   ###

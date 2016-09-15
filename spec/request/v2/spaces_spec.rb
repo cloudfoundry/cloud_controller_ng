@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'pry'
 
 RSpec.describe 'Spaces' do
   let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }

@@ -4,6 +4,211 @@ RSpec.describe IsolationSegmentsController, type: :controller do
   let(:user) { set_current_user(VCAP::CloudController::User.make) }
   let(:space) { VCAP::CloudController::Space.make }
 
+  describe '#relationships_orgs' do
+    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:org1) { VCAP::CloudController::Organization.make }
+    let(:org2) { VCAP::CloudController::Organization.make }
+
+    context 'when user is not an admin' do
+      before do
+        allow_user_write_access(user, space: space)
+      end
+
+      it 'returns a 403' do
+        get :relationships_orgs, guid: isolation_segment_model.guid
+        expect(response.status).to eq 403
+      end
+    end
+
+    context ' when the user is an admin' do
+      before do
+        set_current_user_as_admin
+      end
+
+      it 'returns an empty list' do
+        get :relationships_orgs, guid: isolation_segment_model.guid
+        expect(response.status).to eq 200
+
+        org_guids = parsed_body['data'].map { |r| r['guid'] }
+
+        expect(org_guids).to be_empty
+      end
+
+      context 'when the segment has been assigned to orgs' do
+        before do
+          isolation_segment_model.add_organization(org1)
+          isolation_segment_model.add_organization(org2)
+        end
+
+        it 'returns the org guids' do
+          get :relationships_orgs, guid: isolation_segment_model.guid
+          expect(response.status).to eq 200
+
+          org_guids = parsed_body['data'].map { |r| r['guid'] }
+          expect(org_guids).to eq([org1.guid, org2.guid])
+        end
+      end
+    end
+  end
+
+  describe '#relationships_spaces' do
+    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:space1) { VCAP::CloudController::Space.make }
+    let(:space2) { VCAP::CloudController::Space.make }
+
+    context 'when user is not an admin' do
+      before do
+        allow_user_write_access(user, space: space)
+      end
+
+      it 'returns a 403' do
+        get :relationships_spaces, guid: isolation_segment_model.guid
+        expect(response.status).to eq 403
+      end
+    end
+
+    context ' when the user is an admin' do
+      before do
+        set_current_user_as_admin
+      end
+
+      it 'returns an empty list' do
+        get :relationships_spaces, guid: isolation_segment_model.guid
+        expect(response.status).to eq 200
+
+        guids = parsed_body['data'].map { |r| r['guid'] }
+
+        expect(guids).to be_empty
+      end
+
+      context 'when the segment has been associated with spaces' do
+        before do
+          isolation_segment_model.add_space(space1)
+          isolation_segment_model.add_space(space2)
+        end
+
+        it 'returns the org guids' do
+          get :relationships_spaces, guid: isolation_segment_model.guid
+          expect(response.status).to eq 200
+
+          guids = parsed_body['data'].map { |r| r['guid'] }
+          expect(guids).to eq([space1.guid, space2.guid])
+        end
+      end
+    end
+  end
+
+  describe '#assign_allowed_organizations' do
+    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:org) { VCAP::CloudController::Organization.make }
+    let(:org_2) { VCAP::CloudController::Organization.make }
+
+    let(:req_body) do
+      {
+        data: [
+          { guid: org.guid }
+        ]
+      }
+    end
+
+    context 'when the user is admin' do
+      before do
+        set_current_user_as_admin
+      end
+
+      it 'assigns the isolation segment to the org' do
+        post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+
+        expect(response.status).to eq 201
+
+        expect(parsed_body['guid']).to eq(isolation_segment_model.guid)
+
+        expect(isolation_segment_model.organizations).to include(org)
+      end
+
+      it 'assigns multiple organizations to the isolation segment' do
+        req_body[:data] << { guid: org_2.guid }
+        post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+
+        expect(response.status).to eq 201
+
+        expect(parsed_body['guid']).to eq(isolation_segment_model.guid)
+
+        # need to reload the orgs because the default isolation segment get set
+        # This also means that the updated at time is on our ors
+        org.reload
+        org_2.reload
+        expect(isolation_segment_model.organizations).to eq([org, org_2])
+      end
+
+      context 'when the isolation segment does not exist' do
+        it 'returns a 404' do
+          post :assign_allowed_organizations, guid: 'some-guid', org_guid: org.guid
+          expect(response.status).to eq 404
+        end
+      end
+
+      context 'when the request contains an org that does not exist' do
+        let(:req_body) do
+          {
+            data: [
+              { guid: org.guid },
+              { guid: 'bogus-guid' }
+            ]
+          }
+        end
+
+        it 'does not assign any of the valid orgs and returns a 400' do
+          post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+          expect(response.status).to eq 400
+
+          expect(isolation_segment_model.organizations).to be_empty
+          expect(org.isolation_segment_model).to be_nil
+        end
+      end
+
+      context 'when the organization does not exist' do
+        let(:req_body) do
+          {
+            data: [
+              { guid: 'bogus-guid' }
+            ]
+          }
+        end
+
+        it 'returns a 400' do
+          post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+          expect(response.status).to eq 400
+        end
+      end
+
+      context 'when the isolation segment has already been assigned to the specified organization' do
+        before do
+          isolation_segment_model.add_organization(org)
+        end
+
+        it 'returns a 201 and leaves the existing assignment intact' do
+          post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+
+          expect(response.status).to eq 201
+
+          expect(isolation_segment_model.organizations).to include(org)
+        end
+      end
+    end
+
+    context 'when the user is not an admin' do
+      before do
+        allow_user_write_access(user, space: space)
+      end
+
+      it 'returns a 403' do
+        post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+        expect(response.status).to eq 403
+      end
+    end
+  end
+
   describe '#create' do
     let(:req_body) do
       {
@@ -74,8 +279,6 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(response.status).to eq 200
           expect(parsed_body['guid']).to eq(isolation_segment.guid)
           expect(parsed_body['name']).to eq(isolation_segment.name)
-          expect(parsed_body['links']['self']['href']).to eq("/v3/isolation_segments/#{isolation_segment.guid}")
-          expect(parsed_body['links']['spaces']['href']).to eq("/v2/spaces?q=isolation_segment_guid:#{isolation_segment.guid}")
         end
       end
 
@@ -109,8 +312,6 @@ RSpec.describe IsolationSegmentsController, type: :controller do
             expect(response.status).to eq 200
             expect(parsed_body['guid']).to eq(isolation_segment.guid)
             expect(parsed_body['name']).to eq(isolation_segment.name)
-            expect(parsed_body['links']['self']['href']).to eq("/v3/isolation_segments/#{isolation_segment.guid}")
-            expect(parsed_body['links']['spaces']['href']).to eq("/v2/spaces?q=isolation_segment_guid:#{isolation_segment.guid}")
           end
         end
       end
@@ -181,23 +382,37 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       end
     end
 
-    context 'the user has access to a space associated with an isolation segment' do
+    context 'when the user is not an admin' do
       let!(:isolation_segment1) { VCAP::CloudController::IsolationSegmentModel.make }
       let!(:isolation_segment2) { VCAP::CloudController::IsolationSegmentModel.make }
+      let!(:isolation_segment3) { VCAP::CloudController::IsolationSegmentModel.make }
+      let(:org1) { VCAP::CloudController::Organization.make }
+      let(:org2) { VCAP::CloudController::Organization.make }
 
-      before do
-        isolation_segment1.add_space(space)
-        stub_readable_space_guids_for(user, space)
-      end
+      context 'and the user is registered to one or more orgs' do
+        before do
+          stub_readable_org_guids_for(user, org1)
+          org1.add_user(user)
+          org2.add_user(user)
+        end
 
-      it 'shows the segment associated with the space' do
-        get :index
+        context 'and the org is associated with an isolation segment' do
+          before do
+            isolation_segment1.add_organization(org1)
+            isolation_segment2.add_organization(org1)
+          end
 
-        expect(response.status).to eq 200
+          it 'allows the user to see the isolation segment' do
+            get :index
 
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
-        expect(response_guids).to include(isolation_segment1.guid)
-        expect(response_guids).to_not include(isolation_segment2.guid)
+            expect(response.status).to eq 200
+
+            response_guids = parsed_body['resources'].map { |r| r['guid'] }
+            expect(response_guids).to include(isolation_segment1.guid)
+            expect(response_guids).to include(isolation_segment2.guid)
+            expect(response_guids).to_not include(isolation_segment3.guid)
+          end
+        end
       end
     end
 

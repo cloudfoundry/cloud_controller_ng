@@ -7,6 +7,7 @@ require 'presenters/v3/process_presenter'
 require 'presenters/v3/route_mapping_presenter'
 require 'presenters/v3/service_binding_presenter'
 require 'presenters/v3/task_presenter'
+require 'presenters/v2/organization_presenter'
 
 module VCAP::CloudController
   module Presenters

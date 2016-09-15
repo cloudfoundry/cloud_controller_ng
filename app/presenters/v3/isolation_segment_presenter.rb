@@ -5,13 +5,15 @@ module VCAP::CloudController
     module V3
       class IsolationSegmentPresenter < BasePresenter
         def to_hash
-          {
+          return_hash = {
             guid:       isolation_segment.guid,
             name:       isolation_segment.name,
             created_at: isolation_segment.created_at,
             updated_at: isolation_segment.updated_at,
-            links:      build_links
           }
+
+          return_hash[:links] = build_links if @build_links
+          return_hash
         end
 
         private
@@ -23,7 +25,8 @@ module VCAP::CloudController
         def build_links
           {
             self:   { href: "/v3/isolation_segments/#{isolation_segment.guid}" },
-            spaces: { href: "/v2/spaces?q=isolation_segment_guid:#{isolation_segment.guid}" },
+            organizations: { href: "/v3/isolation_segments/#{isolation_segment.guid}/organizations" },
+            spaces: { href: "/v3/isolation_segments/#{isolation_segment.guid}/spaces" },
           }
         end
       end

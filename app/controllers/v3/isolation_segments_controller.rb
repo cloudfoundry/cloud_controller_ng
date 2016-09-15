@@ -1,7 +1,9 @@
+require 'messages/isolation_segment_assign_org_message'
 require 'messages/isolation_segment_create_message'
 require 'messages/isolation_segment_update_message'
 require 'messages/isolation_segments_list_message'
 require 'presenters/v3/isolation_segment_presenter'
+require 'presenters/v3/relationship_presenter'
 require 'queries/isolation_segment_list_fetcher'
 
 class IsolationSegmentsController < ApplicationController
@@ -44,7 +46,7 @@ class IsolationSegmentsController < ApplicationController
     dataset = if roles.admin? || roles.admin_read_only?
                 fetcher.fetch_all
               else
-                fetcher.fetch_for_spaces(space_guids: readable_space_guids)
+                fetcher.fetch_for_organizations(org_guids: readable_org_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, base_url: '/v3/isolation_segments', message: message)
@@ -88,6 +90,47 @@ class IsolationSegmentsController < ApplicationController
     render status: :ok, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
   rescue Sequel::ValidationFailed => e
     unprocessable!(e.message)
+  end
+
+  def relationships_orgs
+    unauthorized! unless roles.admin?
+
+    isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
+    resource_not_found!(:isolation_segment) unless isolation_segment_model
+
+    render status: :ok, json: Presenters::V3::RelationshipPresenter.new(isolation_segment_model.organizations)
+  end
+
+  def relationships_spaces
+    unauthorized! unless roles.admin?
+
+    isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
+    resource_not_found!(:isolation_segment) unless isolation_segment_model
+
+    render status: :ok, json: Presenters::V3::RelationshipPresenter.new(isolation_segment_model.spaces)
+  end
+
+  def assign_allowed_organizations
+    unauthorized! unless roles.admin?
+
+    isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
+    resource_not_found!(:isolation_segment) unless isolation_segment_model
+
+    message = IsolationSegmentAssignOrgMessage.create_from_http_request(params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    organizations = Organization.where(guid: message.guids).all
+    invalid_request!("Organization guids: #{message.guids - organizations.map { |org| org.guid } } cannot be found") unless organizations.length == message.guids.length
+
+    isolation_segment_model.db.transaction do
+      isolation_segment_model.lock!
+      organizations.each do |org|
+        isolation_segment_model.add_organization(org)
+      end
+    end
+
+
+    render status: :created, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
   end
 
   private
