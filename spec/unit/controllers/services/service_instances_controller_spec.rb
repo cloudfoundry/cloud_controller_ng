@@ -1146,9 +1146,11 @@ module VCAP::CloudController
       context 'with a managed service instance' do
         let(:space) { Space.make }
         let(:service_instance) { ManagedServiceInstance.make(space: space) }
+        let(:service_plan) { ServicePlan.make(active: false) }
 
         before do
           service_instance.dashboard_url = 'this.should.be.visible.com'
+          service_instance.service_plan_id = service_plan.id
           service_instance.save
         end
 
@@ -1159,27 +1161,41 @@ module VCAP::CloudController
           expect(decoded_response.fetch('metadata').fetch('guid')).to eq(service_instance.guid)
         end
 
-        context 'developer' do
+        context 'space developer' do
           before do
             set_current_user(developer)
           end
+
           it 'returns the dashboard url in the response' do
             get "v2/service_instances/#{service_instance.guid}"
             expect(last_response.status).to eq(200)
             expect(decoded_response.fetch('entity').fetch('dashboard_url')).to eq('this.should.be.visible.com')
           end
+
+          it 'returns service_plan_guid in the response' do
+            get "v2/service_instances/#{service_instance.guid}"
+            expect(last_response.status).to eq(200)
+            expect(decoded_response.fetch('entity').fetch('service_plan_guid')).to eq(service_plan.guid)
+          end
         end
 
-        context 'manager' do
+        context 'space manager' do
           let(:manager) { make_manager_for_space(space) }
 
           before do
             set_current_user(manager)
           end
+
           it 'returns the dashboard url in the response' do
             get "v2/service_instances/#{service_instance.guid}"
             expect(last_response.status).to eq(200)
             expect(decoded_response.fetch('entity').fetch('dashboard_url')).to eq('')
+          end
+
+          it 'returns service_plan_guid in the response' do
+            get "v2/service_instances/#{service_instance.guid}"
+            expect(last_response.status).to eq(200)
+            expect(decoded_response.fetch('entity').fetch('service_plan_guid')).to eq(service_plan.guid)
           end
         end
 
@@ -1187,10 +1203,17 @@ module VCAP::CloudController
           before do
             set_current_user_as_admin
           end
+
           it 'returns the dashboard url in the response' do
             get "v2/service_instances/#{service_instance.guid}"
             expect(last_response.status).to eq(200)
             expect(decoded_response.fetch('entity').fetch('dashboard_url')).to eq('this.should.be.visible.com')
+          end
+
+          it 'returns service_plan_guid in the response' do
+            get "v2/service_instances/#{service_instance.guid}"
+            expect(last_response.status).to eq(200)
+            expect(decoded_response.fetch('entity').fetch('service_plan_guid')).to eq(service_plan.guid)
           end
         end
       end
