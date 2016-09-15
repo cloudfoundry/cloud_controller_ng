@@ -20,6 +20,10 @@ module VCAP::CloudController
         app_ssh_oauth_client: @config[:info][:app_ssh_oauth_client],
       }
 
+      if @config[:bits_service][:enabled]
+        info[:bits_endpoint] = @config[:bits_service][:public_endpoint]
+      end
+
       if @config[:routing_api] && @config[:routing_api][:url]
         info[:routing_endpoint] = @config[:routing_api][:url]
       end
