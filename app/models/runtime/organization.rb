@@ -5,6 +5,19 @@ module VCAP::CloudController
 
     one_to_many :spaces
 
+    many_to_one :isolation_segment_model,
+      primary_key: :guid,
+      key: :isolation_segment_guid
+
+    many_to_many :isolation_segment_models,
+      left_key: :organization_guid,
+      left_primary_key: :guid,
+      right_key: :isolation_segment_guid,
+      right_primary_key: :guid,
+      join_table: :organizations_isolation_segments,
+      before_add: proc { raise CloudController::Errors::ApiError.new_from_details('OperationNotImplemented', 'add_isolation_segment', 'Organization') },
+      before_remove: proc { raise CloudController::Errors::ApiError.new_from_details('OperationNotImplemented', 'remove_isolation_segment', 'Organization') }
+
     one_to_many :service_instances,
                 dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces) }
 
@@ -121,6 +134,12 @@ module VCAP::CloudController
       }
     end
 
+    def before_destroy
+      update(isolation_segment_model: nil)
+      remove_all_isolation_segment_models
+      super
+    end
+
     def before_save
       if column_changed?(:billing_enabled) && billing_enabled?
         @is_billing_enabled = true
@@ -166,7 +185,36 @@ module VCAP::CloudController
       billing_enabled
     end
 
+    def default_isolation_segment(isolation_segment)
+      if isolation_segment_models.length == 1
+        self.lock!
+        self.update(isolation_segment_model: isolation_segment)
+        self.save
+      end
+    end
+
+    def unset_default_isolation_segment(isolation_segment)
+      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'space', 'isolation segment') unless
+      !isolation_segment_associated_with_space?(isolation_segment)
+
+      if isolation_segment_models.length > 1 && isolation_segment_model == isolation_segment
+        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform',
+              "Removal of isolation segment #{isolation_segment.name} from organization #{name}",
+              'This operation can only be completed if another isolation segment is set as the default')
+      end
+
+      if isolation_segment_models.length == 1
+        self.lock!
+        self.update(isolation_segment_model: nil)
+        self.save
+      end
+    end
+
     private
+
+    def isolation_segment_associated_with_space?(isolation_segment)
+      !Space.dataset.where(isolation_segment_model: isolation_segment, organization: self).empty?
+    end
 
     def validate_quota_on_create
       return if quota_definition

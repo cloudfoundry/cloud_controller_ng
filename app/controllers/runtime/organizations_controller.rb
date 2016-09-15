@@ -1,5 +1,6 @@
 require 'actions/organization_delete'
 require 'queries/organization_user_roles_fetcher'
+require 'messages/isolation_segments_list_message'
 
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
@@ -48,6 +49,19 @@ module VCAP::CloudController
       else
         CloudController::Errors::ApiError.new_from_details('OrganizationInvalid', e.errors.full_messages)
       end
+    end
+
+    def before_update(obj)
+      if request_attrs['isolation_segment_guid']
+        raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless SecurityContext.admin?
+        # TODO: fix the security check to allow org manager to do it
+
+        isolation_segment = IsolationSegmentModel[guid: request_attrs['isolation_segment_guid']]
+        raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
+                "Could not find Isolation Segment with guid: #{request_attrs['isolation_segment_guid']}") unless isolation_segment
+      end
+
+      super(obj)
     end
 
     get '/v2/organizations/:guid/user_roles', :enumerate_user_roles
@@ -212,6 +226,21 @@ module VCAP::CloudController
       controller_instance.add_warning('Endpoint removed')
       headers = { 'Location' => '/v2/private_domains/:domain_guid' }
       [HTTP::MOVED_PERMANENTLY, headers, 'Use DELETE /v2/private_domains/:domain_guid']
+    end
+
+    get '/v2/organizations/:guid/isolation_segments', :list_isolation_segments
+    def list_isolation_segments(guid)
+      org = find_guid_and_validate_access(:read, guid)
+
+      dataset = IsolationSegmentModel.dataset.where(organizations: org)
+      message = IsolationSegmentsListMessage.from_params(@params)
+
+      [HTTP::OK, MultiJson.dump(Presenters::V3::PaginatedListPresenter.new(
+        dataset: dataset,
+        path: "/v2/organizations/#{org.guid}/isolation_segments",
+        message: message,
+        show_secrets: false
+      ).to_hash)]
     end
 
     define_messages

@@ -14,7 +14,8 @@ module VCAP::CloudController::Presenters::V3
       it 'presents the isolation_segment as json' do
         links = {
           self: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
-          spaces: { href: "#{link_prefix}/v2/spaces?q=isolation_segment_guid:#{isolation_segment.guid}" },
+          organizations: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/organizations" },
+          spaces: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/spaces" },
         }
 
         expect(result[:guid]).to eq(isolation_segment.guid)
@@ -22,6 +23,18 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:created_at]).to eq(isolation_segment.created_at)
         expect(result[:updated_at]).to eq(isolation_segment.updated_at)
         expect(result[:links]).to eq(links)
+      end
+
+      context 'when links should not be provided' do
+        let(:result) { IsolationSegmentPresenter.new(isolation_segment, build_links: false).to_hash }
+
+        it 'does not show them' do
+          expect(result[:guid]).to eq(isolation_segment.guid)
+          expect(result[:name]).to eq(isolation_segment.name)
+          expect(result[:created_at]).to eq(isolation_segment.created_at)
+          expect(result[:updated_at]).to eq(isolation_segment.updated_at)
+          expect(result[:links]).to be_nil
+        end
       end
     end
   end

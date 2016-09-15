@@ -16,6 +16,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :billing_managers, class: User }
       it { is_expected.to have_associated :auditors, class: User }
       it { is_expected.to have_associated :space_quota_definitions, associated_instance: ->(org) { SpaceQuotaDefinition.make(organization: org) } }
+      it { is_expected.to have_associated :isolation_segment_model, class: IsolationSegmentModel }
 
       it 'has associated owned_private domains' do
         domain = PrivateDomain.make
@@ -54,6 +55,28 @@ module VCAP::CloudController
         organization = task.space.organization
 
         expect(organization.tasks).to include(task.reload)
+      end
+    end
+
+    describe 'destroying' do
+      context 'when there are isolation segments in the allowed list' do
+        let(:org) { Organization.make }
+        let(:isolation_segment_model) { IsolationSegmentModel.make }
+        let(:isolation_segment_model2) { IsolationSegmentModel.make }
+
+        before do
+          isolation_segment_model.add_organization(org)
+          isolation_segment_model2.add_organization(org)
+
+          expect(org.isolation_segment_model).to eq(isolation_segment_model)
+          expect(org.isolation_segment_models).to eq([isolation_segment_model, isolation_segment_model2])
+        end
+
+        it 'removes the assignment records' do
+          org.destroy
+          isolation_segment_model.reload
+          expect(isolation_segment_model.organizations).to be_empty
+        end
       end
     end
 
@@ -98,6 +121,46 @@ module VCAP::CloudController
           expect {
             org.save
           }.to raise_error(Sequel::ValidationFailed)
+        end
+      end
+
+      describe 'isolation segments' do
+        let(:isolation_segment_model) { IsolationSegmentModel.make }
+
+        context 'when setting the default isolation segment' do
+          it 'raises an error if it is not in the allowed list' do
+            expect {
+              org.isolation_segment_model = isolation_segment_model
+              org.save
+            }.to raise_error(Sequel::ForeignKeyConstraintViolation)
+          end
+
+          it 'must be in the allowed list' do
+          end
+
+          it 'can be updated' do
+          end
+        end
+
+        context 'when adding isolation segments to the allowed list' do
+          it 'raises an ApiError' do
+            expect{
+              org.add_isolation_segment_model(isolation_segment_model)
+            }.to raise_error(CloudController::Errors::ApiError)
+          end
+        end
+
+        context 'when removing isolation segments from the allowed list' do
+          before do
+            isolation_segment_model.add_organization(org)
+          end
+
+          it 'removing raises an ApiError' do
+            expect{
+              org.remove_isolation_segment_model(isolation_segment_model)
+            }.to raise_error(CloudController::Errors::ApiError)
+            expect(org.isolation_segment_model).to eq(isolation_segment_model)
+          end
         end
       end
 
