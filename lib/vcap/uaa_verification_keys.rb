@@ -42,13 +42,16 @@ module VCAP
     end
 
     def fetch_from_uaa
-      retries = 3
-      validation_hash = @info.validation_keys_hash
+      validation_hash = {}
+      retries         = 3
 
       while retries > 0 && !validation_hash.present?
-        logger.debug("fetch-verficiation-keys-retry", remaining_retries: retries)
-        retries -= 1
-        validation_hash = @info.validation_keys_hash
+        begin
+          validation_hash = @info.validation_keys_hash
+        rescue => e
+          logger.debug("fetch-verification-keys-retry", error: e, remaining_retries: retries)
+          retries -= 1
+        end
       end
       validation_hash
     end

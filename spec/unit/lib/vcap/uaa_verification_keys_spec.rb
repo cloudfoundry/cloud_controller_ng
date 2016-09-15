@@ -73,7 +73,12 @@ module VCAP
 
         context 'but have been previously fetched' do
           before do
-            allow(uaa_info).to receive(:validation_keys_hash).and_return(key_hash, {})
+            call_count = 0
+            allow(uaa_info).to receive(:validation_keys_hash) {
+              call_count += 1
+              raise '404' unless call_count == 1
+              key_hash
+            }
           end
 
           it 'returns the previously fetched verification keys' do
@@ -87,7 +92,7 @@ module VCAP
 
         context 'never been fetched before' do
           before do
-            allow(uaa_info).to receive(:validation_keys_hash).and_return({})
+            allow(uaa_info).to receive(:validation_keys_hash).and_raise('404')
           end
 
           it 'returns an empty array' do
