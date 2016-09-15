@@ -32,6 +32,16 @@ module CloudController
           expect(obfuscated_url).to eq 'https://github.com/my-stuff&q=heart'
         end
       end
+
+      context 'when an invalid url is provided' do
+        let(:url) { "i'm a potato" }
+
+        it 'obfuscates nothing' do
+          obfuscated_url = described_class.obfuscate(url)
+
+          expect(obfuscated_url).to eq "i'm a potato"
+        end
+      end
     end
   end
 end

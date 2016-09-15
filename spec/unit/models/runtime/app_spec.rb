@@ -228,7 +228,7 @@ module VCAP::CloudController
         end
 
         it 'does allow a public url' do
-          app.app.lifecycle_data.update(buildpack: 'git://user@github.com:repo')
+          app.app.lifecycle_data.update(buildpack: 'git://user@github.com/repo.git')
           expect {
             app.save
           }.to_not raise_error

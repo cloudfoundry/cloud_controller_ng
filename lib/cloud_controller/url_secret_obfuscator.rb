@@ -2,7 +2,12 @@ module CloudController
   class UrlSecretObfuscator
     def self.obfuscate(url)
       return nil if url.nil?
-      parsed_url = Addressable::URI.parse(url)
+
+      begin
+        parsed_url = URI.parse(url)
+      rescue URI::InvalidURIError
+        return url
+      end
 
       if parsed_url.user
         parsed_url.user = '***'
