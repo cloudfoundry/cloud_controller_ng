@@ -112,7 +112,35 @@ class IsolationSegmentsController < ApplicationController
 
   def assign_allowed_organizations
     unauthorized! unless roles.admin?
+    isolation_segment_model, orgs = assign_helper
 
+    isolation_segment_model.db.transaction do
+      isolation_segment_model.lock!
+      orgs.each do |org|
+        isolation_segment_model.add_organization(org)
+      end
+    end
+
+    render status: :created, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
+  end
+
+  def unassign_allowed_organizations
+    unauthorized! unless roles.admin?
+    isolation_segment_model, orgs = assign_helper
+
+    isolation_segment_model.db.transaction do
+      isolation_segment_model.lock!
+      orgs.each do |org|
+        isolation_segment_model.remove_organization(org)
+      end
+    end
+
+    head :no_content
+  end
+
+  private
+
+  def assign_helper
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
     resource_not_found!(:isolation_segment) unless isolation_segment_model
 
@@ -122,18 +150,8 @@ class IsolationSegmentsController < ApplicationController
     organizations = Organization.where(guid: message.guids).all
     invalid_request!("Organization guids: #{message.guids - organizations.map { |org| org.guid } } cannot be found") unless organizations.length == message.guids.length
 
-    isolation_segment_model.db.transaction do
-      isolation_segment_model.lock!
-      organizations.each do |org|
-        isolation_segment_model.add_organization(org)
-      end
-    end
-
-
-    render status: :created, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
+    [isolation_segment_model, organizations]
   end
-
-  private
 
   def filter(message, dataset)
     if message.requested?(:names)
