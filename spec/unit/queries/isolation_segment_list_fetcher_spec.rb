@@ -12,6 +12,16 @@ module VCAP::CloudController
     let!(:isolation_segment_model_2) { VCAP::CloudController::IsolationSegmentModel.make(name: 'frank') }
     let!(:isolation_segment_model_3) { VCAP::CloudController::IsolationSegmentModel.make }
 
+    let(:org1) { VCAP::CloudController::Organization.make }
+    let(:org2) { VCAP::CloudController::Organization.make }
+    let(:org3) { VCAP::CloudController::Organization.make }
+
+    before do
+      isolation_segment_model_1.add_organization(org1)
+      isolation_segment_model_2.add_organization(org2)
+      isolation_segment_model_3.add_organization(org3)
+    end
+
     describe '#fetch_all' do
       it 'returns a Sequel::Dataset' do
         results = fetcher.fetch_all
@@ -26,7 +36,7 @@ module VCAP::CloudController
       end
 
       context 'filters' do
-        context 'by guids' do
+        context 'by isolation segment guids' do
           let(:filters) { { guids: [isolation_segment_model_1.guid] } }
 
           it 'filters by guids' do
@@ -36,7 +46,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'by names' do
+        context 'by isolation segment names' do
           let(:filters) { { names: [isolation_segment_model_2.name.capitalize, isolation_segment_model_3.name] } }
 
           it 'filters by names and ignores case' do
@@ -48,42 +58,39 @@ module VCAP::CloudController
       end
     end
 
-    describe '#fetch_for_spaces' do
-      let(:space1) { VCAP::CloudController::Space.make(isolation_segment_guid: isolation_segment_model_1.guid) }
-      let(:space2) { VCAP::CloudController::Space.make(isolation_segment_guid: isolation_segment_model_2.guid) }
-
+    describe '#fetch_for_organizations' do
       it 'returns a Sequel::Dataset' do
-        results = fetcher.fetch_for_spaces(space_guids: [])
+        results = fetcher.fetch_for_organizations(org_guids: [])
         expect(results).to be_a(Sequel::Dataset)
       end
 
-      it 'fetches only those isolation segments associated with the specified spaces' do
-        isolation_segment_models = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid]).all
+      it 'fetches only those isolation segments associated with the specified orgs' do
+        isolation_segment_models = fetcher.fetch_for_organizations(org_guids: [org1.guid, org2.guid]).all
 
         expect(isolation_segment_models).to contain_exactly(isolation_segment_model_1, isolation_segment_model_2)
       end
 
-      it 'returns no isolation segments when the list of space guids is empty' do
-        isolation_segment_models = fetcher.fetch_for_spaces(space_guids: []).all
+      it 'returns no isolation segments when the list of org guids is empty' do
+        isolation_segment_models = fetcher.fetch_for_organizations(org_guids: []).all
 
         expect(isolation_segment_models).to be_empty
       end
 
-      context 'filtering by names' do
+      context 'filtering by isolation_segment_names' do
         let(:filters) { { names: [isolation_segment_model_2.name.capitalize, isolation_segment_model_3.name] } }
 
         it 'filters by names and ignores case' do
-          isolation_segment_models = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid]).all
+          isolation_segment_models = fetcher.fetch_for_organizations(org_guids: [org1.guid, org2.guid]).all
 
           expect(isolation_segment_models).to contain_exactly(isolation_segment_model_2)
         end
       end
 
-      context 'filtering by guids' do
+      context 'filtering by isolation_segment_guids' do
         let(:filters) { { guids: [isolation_segment_model_1.guid] } }
 
         it 'filters by guids' do
-          isolation_segment_models = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid]).all
+          isolation_segment_models = fetcher.fetch_for_organizations(org_guids: [org1.guid, org2.guid]).all
 
           expect(isolation_segment_models).to contain_exactly(isolation_segment_model_1)
         end

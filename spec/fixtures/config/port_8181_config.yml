@@ -88,6 +88,7 @@ quota_definitions:
 
 default_quota_definition: default
 
+shared_isolation_segment_name: 'shared'
 
 resource_pool:
   resource_directory_key: "cc-resources"

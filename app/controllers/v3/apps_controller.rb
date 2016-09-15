@@ -149,6 +149,7 @@ class AppsV3Controller < ApplicationController
 
     droplet_not_found! if droplet.nil?
 
+    # actually create process for an app
     SetCurrentDroplet.new(current_user, current_user_email).update_to(app, droplet)
 
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
