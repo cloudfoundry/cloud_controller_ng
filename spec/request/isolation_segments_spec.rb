@@ -59,7 +59,9 @@ RSpec.describe 'IsolationSegmentModels' do
         ]
       }
 
-      expect(parsed_response).to be_a_response_like(expected_response)
+      expect(parsed_response['data'].length).to eq 2
+      expect(parsed_response['data']).to include(expected_response['data'][0])
+      expect(parsed_response['data']).to include(expected_response['data'][1])
     end
   end
 
@@ -86,7 +88,9 @@ RSpec.describe 'IsolationSegmentModels' do
         ]
       }
 
-      expect(parsed_response).to be_a_response_like(expected_response)
+      expect(parsed_response['data'].length).to eq 2
+      expect(parsed_response['data']).to include(expected_response['data'][0])
+      expect(parsed_response['data']).to include(expected_response['data'][1])
     end
   end
 
@@ -120,8 +124,29 @@ RSpec.describe 'IsolationSegmentModels' do
       }
 
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
 
-      expect(isolation_segment.organizations).to include(org1)
+  describe 'DELETE /v3/isolation_segments/:guid/relationships/allowed_organizations' do
+    let(:org1) { VCAP::CloudController::Organization.make }
+    let(:org2) { VCAP::CloudController::Organization.make }
+    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
+
+    before do
+      isolation_segment.add_organization(org1)
+      isolation_segment.add_organization(org2)
+    end
+
+    it 'removes the organization from the isolation segment' do
+      unassign_request = {
+        data: [
+          { guid: org2.guid }
+        ]
+      }
+
+      delete "/v3/isolation_segments/#{isolation_segment.guid}/relationships/allowed_organizations", unassign_request, user_header
+
+      expect(last_response.status).to eq(204)
     end
   end
 

@@ -67,6 +67,7 @@ Rails.application.routes.draw do
   delete '/isolation_segments/:guid', to: 'isolation_segments#destroy'
   put '/isolation_segments/:guid', to: 'isolation_segments#update'
   post '/isolation_segments/:guid/relationships/allowed_organizations', to: 'isolation_segments#assign_allowed_organizations'
+  delete '/isolation_segments/:guid/relationships/allowed_organizations', to: 'isolation_segments#unassign_allowed_organizations'
   get '/isolation_segments/:guid/organizations', to: 'isolation_segments#relationships_orgs'
   get '/isolation_segments/:guid/spaces', to: 'isolation_segments#relationships_spaces'
 

@@ -48,7 +48,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(response.status).to eq 200
 
           org_guids = parsed_body['data'].map { |r| r['guid'] }
-          expect(org_guids).to eq([org1.guid, org2.guid])
+          expect(org_guids).to include(org1.guid, org2.guid)
         end
       end
     end
@@ -141,13 +141,26 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         # This also means that the updated at time is on our ors
         org.reload
         org_2.reload
-        expect(isolation_segment_model.organizations).to eq([org, org_2])
+        expect(isolation_segment_model.organizations).to include(org, org_2)
       end
 
       context 'when the isolation segment does not exist' do
         it 'returns a 404' do
           post :assign_allowed_organizations, guid: 'some-guid', org_guid: org.guid
           expect(response.status).to eq 404
+        end
+      end
+
+      context 'when the request is malformed' do
+        let(:req_body) {
+          {
+            bork: 'some-name',
+          }
+        }
+
+        it 'returns a 422' do
+          post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+          expect(response.status).to eq 422
         end
       end
 
@@ -207,6 +220,156 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
       it 'returns a 403' do
         post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+        expect(response.status).to eq 403
+      end
+    end
+  end
+
+  describe '#unassign_allowed_organizations' do
+    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:org) { VCAP::CloudController::Organization.make }
+    let(:org_2) { VCAP::CloudController::Organization.make }
+
+    let(:req_body) do
+      {
+        data: [
+          { guid: org.guid }
+        ]
+      }
+    end
+
+    context 'when the user is an admin' do
+      before do
+        set_current_user_as_admin
+      end
+
+      context 'and no orgs have been assigned to the isoilation segment' do
+        it 'removes the org from the isolation segment' do
+          post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+          expect(response.status).to eq 204
+        end
+      end
+
+      context 'and an org has been assigned to the isolation segment' do
+        before do
+          isolation_segment_model.add_organization(org)
+        end
+
+        it 'removes the org from the isolation segment' do
+          post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+          expect(response.status).to eq 204
+
+          isolation_segment_model.reload
+          org.reload
+          expect(isolation_segment_model.organizations).to be_empty
+          expect(org.isolation_segment_models).to be_empty
+          expect(org.isolation_segment_model).to be_nil
+        end
+
+        it 'removes all passsed orgs in the request' do
+          req_body[:data] << { guid: org_2.guid }
+          post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+          expect(response.status).to eq 204
+
+          isolation_segment_model.reload
+          expect(isolation_segment_model.organizations).to be_empty
+        end
+
+        context 'when there are multiple isolation segmetns in an organizations allowed list' do
+          before do
+            isolation_segment_model_2 = VCAP::CloudController::IsolationSegmentModel.make
+            isolation_segment_model_2.add_organization(org)
+          end
+
+          it 'cannot remove the default isolation segment' do
+            post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+            expect(response.status).to eq 400
+          end
+
+          context 'and we remove an isolation_segment that is not the default' do
+            let(:req_body) do
+              {
+                data: [
+                  { guid: org_2.guid }
+                ]
+              }
+            end
+
+            it 'succeeds' do
+              post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+              expect(response.status).to eq 204
+            end
+          end
+        end
+
+        context 'and a space beloning to the org is assinged the isolation segment' do
+          before do
+            space = VCAP::CloudController::Space.make(organization: org)
+            isolation_segment_model.add_space(space)
+          end
+
+          it 'returns a 400' do
+            post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+            expect(response.status).to eq 400
+          end
+        end
+
+        context 'and an organization in the request body does not exist' do
+          let(:req_body) do
+            {
+              data: [
+                { guid: 'bad-guid' }
+              ]
+            }
+          end
+
+          it 'fails with a 400' do
+            post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+            expect(response.status).to eq 400
+          end
+
+          it 'does not remove the valid assignments from the request body' do
+            req_body[:data] << { guid: org.guid }
+            post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+            expect(response.status).to eq 400
+
+            isolation_segment_model.reload
+            org.reload
+            expect(isolation_segment_model.organizations).to eq([org])
+            expect(org.isolation_segment_models).to eq([isolation_segment_model])
+            expect(org.isolation_segment_model).to eq(isolation_segment_model)
+          end
+        end
+      end
+
+      context 'when the request is malformed' do
+        let(:req_body) {
+          {
+            bork: 'some-name',
+          }
+        }
+
+        it 'returns a 422' do
+          post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+          expect(response.status).to eq 422
+        end
+      end
+
+      context 'when the isolation segment does not exist' do
+        it 'returns a 404' do
+          post :unassign_allowed_organizations, guid: 'bad-guid', body: req_body
+          expect(response.status).to eq 404
+        end
+      end
+    end
+
+    context 'when the user is not an admin' do
+      before do
+        allow_user_write_access(user, space: space)
+      end
+
+      it 'returns a 403' do
+        post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
         expect(response.status).to eq 403
       end
     end
