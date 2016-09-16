@@ -245,7 +245,7 @@ module VCAP::CloudController
     describe 'Serialization' do
       it { is_expected.to export_attributes :name, :billing_enabled, :quota_definition_guid, :status }
       it { is_expected.to import_attributes :name, :billing_enabled, :user_guids, :manager_guids, :billing_manager_guids,
-                                    :auditor_guids, :quota_definition_guid, :status
+                                    :auditor_guids, :quota_definition_guid, :status, :isolation_segment_guid
       }
     end
 

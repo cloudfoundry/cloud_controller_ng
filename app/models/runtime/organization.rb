@@ -108,7 +108,7 @@ module VCAP::CloudController
     export_attributes :name, :billing_enabled, :quota_definition_guid, :status
     import_attributes :name, :billing_enabled,
                       :user_guids, :manager_guids, :billing_manager_guids,
-                      :auditor_guids, :quota_definition_guid, :status
+                      :auditor_guids, :quota_definition_guid, :status, :isolation_segment_guid
 
     def remove_user(user)
       can_remove = ([user.spaces, user.audited_spaces, user.managed_spaces].flatten & spaces).empty?
