@@ -1,6 +1,7 @@
 # deployment cloudcontroller nginx.conf
 
 error_log <%= p("cc.nginx_error_log_destination") %> <%= p("cc.nginx_error_log_level") %>;
+error_log syslog:server=127.0.0.1,severity=error,tag=vcap_nginx_error <%= p("cc.nginx_error_log_level") %>;
 pid       /var/vcap/sys/run/nginx_cc/nginx.pid;
 
 events {
@@ -16,6 +17,7 @@ http {
   log_format main  '<%= p("cc.nginx_access_log_format").chomp %>';
 
   access_log  <%= p("cc.nginx_access_log_destination") %>  main;
+  access_log  syslog:server=127.0.0.1,severity=info,tag=vcap_nginx_access main;
 
   sendfile             on;  #enable use of sendfile()
   tcp_nopush           on;
@@ -58,6 +60,7 @@ http {
     # proxy and log all CC traffic
     location / {
       access_log                  <%= p("cc.nginx_access_log_destination") %>  main;
+      access_log                  syslog:server=127.0.0.1,severity=info,tag=vcap_nginx_access main;
       proxy_buffering             off;
       proxy_set_header            Host $host;
       proxy_set_header            X-Real_IP $remote_addr;
