@@ -63,7 +63,7 @@ function first_release_with_sha {
   local tag
   release=""
 
-  pushd ~/workspace/cf-release > /dev/null
+  pushd "${CF_RELEASE_DIR}" > /dev/null
     for tag in $(git tag | grep -E "v[0-9]{3}$" | sort -n -t v -k 2); do
       exists_on_ref "${tag}" "${sha}"
 
