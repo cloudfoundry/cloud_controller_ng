@@ -15,7 +15,7 @@ module VCAP::CloudController
             result:                { failure_reason: task.failure_reason },
             created_at:            task.created_at,
             updated_at:            task.updated_at,
-            droplet_guid:          task.droplet.guid,
+            droplet_guid:          task.droplet_guid,
             links:                 build_links
           }
         end
@@ -30,7 +30,7 @@ module VCAP::CloudController
           {
             self:    { href: "/v3/tasks/#{task.guid}" },
             app:     { href: "/v3/apps/#{task.app.guid}" },
-            droplet: { href: "/v3/droplets/#{task.droplet.guid}" },
+            droplet: { href: "/v3/droplets/#{task.droplet_guid}" },
           }
         end
       end
