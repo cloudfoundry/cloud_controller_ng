@@ -22,6 +22,32 @@ module VCAP::CloudController
         }
       end
 
+      context 'shared_organizations' do
+        let(:org) { Organization.make }
+
+        it 'associates with shared organizations' do
+          domain = Domain.make(owning_organization_id: Organization.make.id)
+          domain.add_shared_organization(org)
+          expect(domain.shared_organizations).to include(org)
+        end
+
+        context 'when the domain is a shared domain' do
+          it 'fails validation' do
+            domain = Domain.make(owning_organization_id: nil)
+            expect { domain.add_shared_organization(org) }.to raise_error(Sequel::HookFailed)
+            expect(domain.shared_organizations).to_not include(org)
+          end
+        end
+
+        context 'when the domain is owned by the organization' do
+          it 'fails validation' do
+            domain = Domain.make(owning_organization_id: org.id)
+            expect { domain.add_shared_organization(org) }.to raise_error(Sequel::HookFailed)
+            expect(domain.shared_organizations).to_not include(org)
+          end
+        end
+      end
+
       context 'owning_organization' do
         let(:org) { Organization.make }
         it do
