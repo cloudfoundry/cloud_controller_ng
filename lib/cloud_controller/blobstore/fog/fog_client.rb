@@ -186,8 +186,9 @@ module CloudController
         options = @connection_config
         blobstore_timeout = options.delete(:blobstore_timeout)
         options = options.merge(endpoint: '') if local?
-        options = options.merge({ connection_options: { read_timeout: blobstore_timeout,
-                                                        write_timeout: blobstore_timeout } })
+        connection_options = options[:connection_options] || {}
+        connection_options = connection_options.merge(read_timeout: blobstore_timeout, write_timeout: blobstore_timeout)
+        options = options.merge(connection_options: connection_options)
         @connection ||= Fog::Storage.new(options)
       end
 
