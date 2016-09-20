@@ -88,7 +88,7 @@ RSpec.resource 'Space Quota Definitions', type: [:api, :legacy_api] do
       nested_model_remove :space, :space_quota_definition
 
       describe 'Associate Spaces' do
-      let!(:space) { VCAP::CloudController::Space.make(organization_guid: space_quota_definition.organization_guid) }
+        let!(:space) { VCAP::CloudController::Space.make(organization_guid: space_quota_definition.organization_guid) }
         let(:space_guid) { space.guid }
         parameter :space_guid, 'The guid of the space'
 
