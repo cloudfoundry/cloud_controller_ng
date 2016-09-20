@@ -212,11 +212,13 @@ module VCAP::CloudController
 
     def before_update(obj)
       if request_attrs['isolation_segment_guid']
-        raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless SecurityContext.admin?
+        validate_access(:update, obj.organization, nil)
 
-        isolation_segment = IsolationSegmentModel[guid: request_attrs['isolation_segment_guid']]
-        raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
-                "Could not find Isolation Segment with guid: #{request_attrs['isolation_segment_guid']}") unless isolation_segment
+        isolation_segment_guids = obj.organization.isolation_segment_models.map { |is| is.guid }
+        unless isolation_segment_guids.include?(request_attrs['isolation_segment_guid'])
+          raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
+            "Space's Organization does not have access to Isolation Segment with guid: #{request_attrs['isolation_segment_guid']}")
+        end
       end
 
       super(obj)
