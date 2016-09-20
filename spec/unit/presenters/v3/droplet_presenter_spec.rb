@@ -21,12 +21,13 @@ module VCAP::CloudController::Presenters::V3
     describe '#to_hash' do
       let(:result) { DropletPresenter.new(droplet).to_hash }
       let(:buildpack) { 'the-happiest-buildpack' }
+      let(:buildpack_receipt_buildpack) { 'the-happiest-buildpack' }
 
       context 'buildpack lifecycle' do
         before do
           droplet.lifecycle_data.buildpack        = buildpack
           droplet.lifecycle_data.stack            = 'the-happiest-stack'
-          droplet.buildpack_receipt_buildpack     = 'the-happiest-buildpack'
+          droplet.buildpack_receipt_buildpack     = buildpack_receipt_buildpack
           droplet.buildpack_receipt_detect_output = 'the-happiest-buildpack-detect-output'
           droplet.buildpack_receipt_stack_name    = 'the-happiest-stack'
           droplet.save
@@ -57,8 +58,11 @@ module VCAP::CloudController::Presenters::V3
 
         context 'when buildpack contains username and password' do
           let(:buildpack) { 'https://amelia:meow@neopets.com' }
+          let(:buildpack_receipt_buildpack) { 'https://amelia:meow@neopets.com' }
+
           it 'obfuscates the username and password' do
             expect(result[:lifecycle][:data]['buildpack']).to eq('https://***:***@neopets.com')
+            expect(result[:result][:buildpack][:name]).to eq('https://***:***@neopets.com')
           end
         end
 

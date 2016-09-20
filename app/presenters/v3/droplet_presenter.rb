@@ -53,7 +53,7 @@ module VCAP::CloudController
                                    value: droplet.droplet_hash,
                                  },
                                  buildpack: {
-                                   name:          droplet.buildpack_receipt_buildpack,
+                                   name:          CloudController::UrlSecretObfuscator.obfuscate(droplet.buildpack_receipt_buildpack),
                                    detect_output: droplet.buildpack_receipt_detect_output
                                  },
                                  stack:     droplet.buildpack_receipt_stack_name,
