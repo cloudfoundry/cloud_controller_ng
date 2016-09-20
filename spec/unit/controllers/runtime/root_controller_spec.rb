@@ -18,7 +18,7 @@ module VCAP::CloudController
           {
             'href' => expected_uri,
             'meta' => {
-              'version' => VCAP::CloudController::Constants::API_VERSION.to_s
+              'version' => VCAP::CloudController::Constants::API_VERSION
             }
           }
         )
@@ -32,7 +32,7 @@ module VCAP::CloudController
           {
             'href' => expected_uri,
             'meta' => {
-              'version' => '3.0.0-alpha.1'
+              'version' => VCAP::CloudController::Constants::API_VERSION_V3
             }
           }
         )
