@@ -94,7 +94,14 @@ function seed_db {
   popd > /dev/null
 }
 
+function start_consul_agent {
+  if [ -f /var/vcap/jobs/consul_agent/bin/agent_ctl ]; then
+    /var/vcap/jobs/consul_agent/bin/agent_ctl start
+  fi
+}
+
 function main {
+  start_consul_agent
   setup_directories
   <% if spec.bootstrap && p('cc.run_prestart_migrations') %>
   perform_migration
