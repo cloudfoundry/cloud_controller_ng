@@ -12,6 +12,8 @@ require 'rack/test'
 require 'timecop'
 require 'awesome_print'
 
+require 'pry'
+
 require 'steno'
 require 'webmock/rspec'
 require 'cf_message_bus/mock_message_bus'
