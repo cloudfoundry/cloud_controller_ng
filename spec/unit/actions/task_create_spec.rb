@@ -117,6 +117,15 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the name is not requested' do
+        let(:message) { TaskCreateMessage.new command: command, memory_in_mb: 1024, environment_variables: environment_variables }
+
+        it 'uses a hex string as the name' do
+          task = task_create_action.create(app, message, user_guid, user_email)
+          expect(task.name).to match /^[0-9a-f]{8}$/
+        end
+      end
+
       context 'when the task is invalid' do
         before do
           allow_any_instance_of(TaskModel).to receive(:save).and_raise(Sequel::ValidationFailed.new('booooooo'))

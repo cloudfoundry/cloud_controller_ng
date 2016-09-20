@@ -17,7 +17,7 @@ module VCAP::CloudController
       task = nil
       TaskModel.db.transaction do
         task = TaskModel.create(
-          name:                  message.name,
+          name:                  use_requested_name_or_generate_name(message),
           state:                 TaskModel::PENDING_STATE,
           droplet:               droplet,
           command:               message.command,
@@ -42,6 +42,15 @@ module VCAP::CloudController
     end
 
     private
+
+    def use_requested_name_or_generate_name(message)
+      if message.requested?(:name)
+        name = message.name
+      else
+        name = Random.new.bytes(4).unpack('H*').first
+      end
+      name
+    end
 
     attr_reader :config
 

@@ -16,10 +16,7 @@ Example Request
 curl "https://api.[your-domain.com]/v3/apps/[guid]/tasks" \
   -X POST \
   -H "Authorization: bearer [token]" \
-  -d '{
-    "name": "migrate",
-    "command": "rake db:migrate"
-  }'
+  -d '{ "command": "rake db:migrate" }'
 ```
 
 ```
@@ -43,21 +40,21 @@ These overwrite and are appended to the app's running environment variable group
 <ul class="method-list-group">
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      name
-
-      <span class="method-list-item-type method-list-item-type-required">required</span>
-    </h4>
-
-    <p class="method-list-item-description">User-facing name of the task</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
       command
 
       <span class="method-list-item-type method-list-item-type-required">required</span>
     </h4>
 
     <p class="method-list-item-description">Command that will be executed</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      name
+
+     <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">User-facing name of the task</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
