@@ -11,6 +11,7 @@ module VCAP::CloudController::Presenters::V3
         memory_in_mb:          2048,
         updated_at:            Time.at(2),
         created_at:            Time.at(1),
+        sequence_id:           5
       )
     }
 
@@ -31,6 +32,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:result][:failure_reason]).to eq 'sup dawg'
         expect(result[:environment_variables]).to eq(task.environment_variables)
         expect(result[:memory_in_mb]).to eq(task.memory_in_mb)
+        expect(result[:sequence_id]).to eq(5)
         expect(result[:created_at]).to eq(task.created_at.iso8601)
         expect(result[:updated_at]).to eq(task.updated_at.iso8601)
         expect(result[:links]).to eq(links)

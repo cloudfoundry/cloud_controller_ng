@@ -25,6 +25,7 @@ Sham.define do
   unique_id           { |index| "unique-id-#{index}" }
   status              { |_| %w(active suspended cancelled).sample(1).first }
   error_message       { |index| "error-message-#{index}" }
+  sequence_id         { |index| index }
 end
 
 module VCAP::CloudController
@@ -96,6 +97,7 @@ module VCAP::CloudController
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::RUNNING_STATE }
     memory_in_mb { 256 }
+    sequence_id { Sham.sequence_id }
   end
 
   User.blueprint do

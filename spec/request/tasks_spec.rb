@@ -33,7 +33,7 @@ RSpec.describe 'Tasks' do
         app_guid:              app_model.guid,
         droplet:               app_model.droplet,
         environment_variables: { unicorn: 'magic' },
-        memory_in_mb:          5,
+        memory_in_mb:          5
       )
       task2 = VCAP::CloudController::TaskModel.make(
         name:         'task two',
@@ -62,6 +62,7 @@ RSpec.describe 'Tasks' do
           'resources' => [
             {
               'guid'                  => task1.guid,
+              'sequence_id'           => task1.sequence_id,
               'name'                  => 'task one',
               'command'               => '[PRIVATE DATA HIDDEN IN LISTS]',
               'state'                 => 'RUNNING',
@@ -87,6 +88,7 @@ RSpec.describe 'Tasks' do
             },
             {
               'guid'                  => task2.guid,
+              'sequence_id'           => task2.sequence_id,
               'name'                  => 'task two',
               'command'               => '[PRIVATE DATA HIDDEN IN LISTS]',
               'state'                 => 'RUNNING',
@@ -189,6 +191,7 @@ RSpec.describe 'Tasks' do
 
       expected_response = {
         'guid'                  => task_guid,
+        'sequence_id'           => task.sequence_id,
         'name'                  => 'task',
         'command'               => 'echo task',
         'state'                 => 'RUNNING',
@@ -301,6 +304,7 @@ RSpec.describe 'Tasks' do
           'resources' => [
             {
               'guid'                  => task1.guid,
+              'sequence_id'           => task1.sequence_id,
               'name'                  => 'task one',
               'command'               => '[PRIVATE DATA HIDDEN IN LISTS]',
               'state'                 => 'RUNNING',
@@ -326,6 +330,7 @@ RSpec.describe 'Tasks' do
             },
             {
               'guid'                  => task2.guid,
+              'sequence_id'           => task2.sequence_id,
               'name'                  => 'task two',
               'command'               => '[PRIVATE DATA HIDDEN IN LISTS]',
               'state'                 => 'RUNNING',
@@ -421,9 +426,11 @@ RSpec.describe 'Tasks' do
 
       parsed_response = MultiJson.load(last_response.body)
       guid            = parsed_response['guid']
+      sequence_id     = parsed_response['sequence_id']
 
       expected_response = {
         'guid'                  => guid,
+        'sequence_id'           => sequence_id,
         'name'                  => 'best task ever',
         'command'               => 'be rake && true',
         'state'                 => 'RUNNING',

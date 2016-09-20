@@ -39,6 +39,33 @@ module VCAP::CloudController
         expect(task.environment_variables).to eq(environment_variables)
       end
 
+      describe 'sequence id' do
+        it 'gives the task a sequence id' do
+          task = task_create_action.create(app, message, user_guid, user_email)
+
+          expect(task.sequence_id).to eq(0)
+        end
+
+        it 'increments the sequence id for each task' do
+          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(0)
+          app.reload
+          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(1)
+          app.reload
+          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(2)
+        end
+
+        it 'does not re-use task ids from deleted tasks' do
+          task_create_action.create(app, message, user_guid, user_email)
+          app.reload
+          task_create_action.create(app, message, user_guid, user_email)
+          app.reload
+          task = task_create_action.create(app, message, user_guid, user_email)
+          task.delete
+          app.reload
+          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(3)
+        end
+      end
+
       it "sets the task state to 'PENDING'" do
         task = task_create_action.create(app, message, user_guid, user_email)
 

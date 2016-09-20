@@ -91,6 +91,33 @@ module VCAP::CloudController
         end
       end
 
+      describe 'sequence_id' do
+        it 'can be set to an integer' do
+          task.sequence_id = 1
+          expect(task).to be_valid
+        end
+
+        it 'is unique per app' do
+          task.sequence_id = 0
+          task.save
+
+          expect {
+            TaskModel.make app: task.app, sequence_id: 0
+          }.to raise_exception Sequel::UniqueConstraintViolation
+        end
+
+        it 'is NOT unique across different apps' do
+          task.sequence_id = 0
+          task.save
+
+          other_app = AppModel.make space_guid: space.guid
+
+          expect {
+            TaskModel.make app: other_app, sequence_id: 0
+          }.to_not raise_exception
+        end
+      end
+
       describe 'environment_variables' do
         it 'validates them' do
           expect {

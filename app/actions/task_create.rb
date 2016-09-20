@@ -23,8 +23,12 @@ module VCAP::CloudController
           command:               message.command,
           app:                   app,
           memory_in_mb:          message.memory_in_mb || config[:default_app_memory],
-          environment_variables: message.environment_variables
+          environment_variables: message.environment_variables,
+          sequence_id:           app.max_task_sequence_id
         )
+
+        app.max_task_sequence_id = app.max_task_sequence_id + 1
+        app.save
 
         app_usage_event_repository.create_from_task(task, 'TASK_STARTED')
         task_event_repository.record_task_create(task, user_guid, user_email)

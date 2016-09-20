@@ -24,6 +24,14 @@ module VCAP::CloudController
       end
     end
 
+    describe 'fields' do
+      describe 'max_task_sequence_id' do
+        it 'defaults to 0' do
+          expect(app_model.max_task_sequence_id).to eq(0)
+        end
+      end
+    end
+
     describe 'validations' do
       it { is_expected.to strip_whitespace :name }
 

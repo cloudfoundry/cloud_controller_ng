@@ -7,6 +7,7 @@ module VCAP::CloudController
         def to_hash
           {
             guid:                  task.guid,
+            sequence_id:           task.sequence_id,
             name:                  task.name,
             command:               redact(task.command),
             state:                 task.state,
