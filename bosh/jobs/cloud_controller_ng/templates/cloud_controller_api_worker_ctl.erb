@@ -28,7 +28,6 @@ export NEW_RELIC_DISPATCHER="delayed_job"
 source /var/vcap/packages/capi_utils/syslog_utils.sh
 source /var/vcap/packages/capi_utils/pid_utils.sh
 source "${CC_JOB_DIR}/bin/blobstore_waiter.sh"
-source "${CC_JOB_DIR}/bin/handle_local_blobstore.sh"
 
 tee_output_to_sys_log_and_file "${LOG_DIR}" "$(basename "$0")"
 
@@ -45,7 +44,6 @@ case $1 in
     echo $$ > "$PIDFILE"
 
     wait_for_blobstore
-    handle_local_blobstore
 
     cd "${CC_PACKAGE_DIR}/cloud_controller_ng"
     exec bundle exec rake "jobs:local[cc_api_worker.<%= spec.job.name %>.<%= spec.index %>.${INDEX}]"

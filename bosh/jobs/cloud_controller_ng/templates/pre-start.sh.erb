@@ -14,6 +14,8 @@ CONFIG_DIR="${CC_JOB_DIR}/config"
 export CLOUD_CONTROLLER_NG_CONFIG="${CONFIG_DIR}/cloud_controller_ng.yml"
 export BUNDLE_GEMFILE="${CC_PACKAGE_DIR}/cloud_controller_ng/Gemfile"
 
+source ${CC_JOB_DIR}/bin/setup_local_blobstore.sh
+
 source "${SCRIPT_DIR}/ruby_version.sh"
 
 function setup_nginx_directories {
@@ -69,10 +71,11 @@ function setup_api_directories {
 }
 
 function setup_directories {
+  setup_local_blobstore
   setup_api_directories
   setup_nginx_directories
   setup_nginx_plugin_directories
-  
+
   <% if_p("cc.directories.diagnostics") do |diag_dir| %>
   mkdir -p "<%= diag_dir %>"
   chown vcap:vcap "<%= diag_dir %>"

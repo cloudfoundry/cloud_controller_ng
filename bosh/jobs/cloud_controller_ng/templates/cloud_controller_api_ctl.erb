@@ -48,7 +48,6 @@ export DYNO=<%= "#{spec.job.name}-#{spec.index}" %>
 source /var/vcap/packages/capi_utils/syslog_utils.sh
 source /var/vcap/packages/capi_utils/pid_utils.sh
 source $CC_JOB_DIR/bin/blobstore_waiter.sh
-source $CC_JOB_DIR/bin/handle_local_blobstore.sh
 
 tee_output_to_sys_log_and_file "${LOG_DIR}" "$(basename "$0")"
 
@@ -64,7 +63,6 @@ case $1 in
     pid_guard "$PIDFILE" "Cloud controller ng"
 
     wait_for_blobstore
-    handle_local_blobstore
 
     ulimit -c unlimited
 

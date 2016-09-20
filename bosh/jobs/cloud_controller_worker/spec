@@ -6,7 +6,7 @@ description: "Cloud Controller worker processes background tasks submitted via t
 templates:
   cloud_controller_worker.yml.erb: config/cloud_controller_ng.yml
   cloud_controller_worker_ctl.erb: bin/cloud_controller_worker_ctl
-  handle_local_blobstore.sh.erb: bin/handle_local_blobstore.sh
+  setup_local_blobstore.sh.erb: bin/setup_local_blobstore.sh
   newrelic.yml.erb: config/newrelic.yml
   stacks.yml.erb: config/stacks.yml
   ruby_version.sh.erb: bin/ruby_version.sh
