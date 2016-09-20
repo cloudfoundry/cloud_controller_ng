@@ -135,6 +135,20 @@ module VCAP::CloudController
           droplet_model.set_buildpack_receipt(buildpack_url: 'http://buildpack.example.com', buildpack_key: nil, requested_buildpack: nil, detect_output: nil)
           expect(droplet_model.buildpack_receipt_buildpack).to eq('http://buildpack.example.com')
         end
+
+        context 'when buildpack_url contains username and password' do
+          it 'obfuscates the username and password' do
+            droplet_model.set_buildpack_receipt(buildpack_url: 'https://amelia:meow@neopets.com', buildpack_key: nil, requested_buildpack: nil, detect_output: nil)
+            expect(droplet_model.buildpack_receipt_buildpack).to eq('https://***:***@neopets.com')
+          end
+        end
+
+        context 'when requested_buildpack contains username and password' do
+          it 'obfuscates the username and password' do
+            droplet_model.set_buildpack_receipt(buildpack_key: nil, requested_buildpack: 'https://amelia:meow@neopets.com', detect_output: nil)
+            expect(droplet_model.buildpack_receipt_buildpack).to eq('https://***:***@neopets.com')
+          end
+        end
       end
 
       describe 'unknown buildpack from response' do

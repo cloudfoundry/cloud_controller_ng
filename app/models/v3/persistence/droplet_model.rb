@@ -73,6 +73,8 @@ module VCAP::CloudController
       else
         self.buildpack_receipt_buildpack = requested_buildpack
       end
+
+      self.buildpack_receipt_buildpack = CloudController::UrlSecretObfuscator.obfuscate(buildpack_receipt_buildpack)
     end
 
     def blobstore_key(hash=nil)
