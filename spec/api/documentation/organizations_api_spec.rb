@@ -119,11 +119,11 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
             },
             'resources' => [
               {
-                'name'       => isolation_segment_model.name,
-                'guid'       => isolation_segment_model.guid,
-                'created_at' => iso8601,
-                'updated_at' => nil,
-                'links' => {
+                'name'        => isolation_segment_model.name,
+                'guid'        => isolation_segment_model.guid,
+                'created_at'  => iso8601,
+                'updated_at'  => nil,
+                'links'       => {
                   'self'          => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}" },
                   'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" },
                   'spaces'        => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/spaces" },
