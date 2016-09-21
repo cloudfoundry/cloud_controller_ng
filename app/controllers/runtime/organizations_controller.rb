@@ -243,8 +243,7 @@ module VCAP::CloudController
       [HTTP::OK, MultiJson.dump(Presenters::V3::PaginatedListPresenter.new(
         dataset: dataset,
         path: "/v2/organizations/#{org.guid}/isolation_segments",
-        message: message,
-        show_secrets: false
+        message: message
       ).to_hash)]
     end
 
