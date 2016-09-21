@@ -226,7 +226,10 @@ a, .link {
     background-color: $nav-subitem-bg;
     font-weight: 400;
     padding: 0 $nav-padding 0 $nav-padding;
-  }
+
+      .tocify-subheader {
+      }
+    }
 
   .toc-footer {
     padding: 1em 0;

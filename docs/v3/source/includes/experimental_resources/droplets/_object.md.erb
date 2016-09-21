@@ -1,0 +1,86 @@
+<div class='no-margin'></div>
+
+### The droplet object
+
+<ul class="method-list-group">
+<%= yield_content :guid, 'droplet' %>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      state
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      State of the package. Possible states are "STAGING", "STAGED", "COPYING", "FAILED", or "EXPIRED".
+    </p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      error
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      A string describing the last error during the droplet lifecycle.
+    </p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      lifecycle
+      <span class="method-list-item-type">object</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      An object describing the lifecycle that was configured or discovered.
+    </p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      staging_memory_in_mb
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      The maximum memory in mb that can be used by a droplet.
+    </p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      staging_disk_in_mb
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      The disk quota applied during droplet staging.
+    </p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      result
+      <span class="method-list-item-type">object</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      An object describing the result of a droplet that has completed staging (where state is
+      "STAGED", "FAILED", or "EXPIRED"). Droplets in uncomplete states return null result.
+    </p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      environment_variables
+      <span class="method-list-item-type">object</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      Environment variables to be used when staging the droplet. Variables in the <code>CF_</code>
+      and <code>VCAP_</code> scopes will be populated by the system. 
+    </p>
+  </li>
+
+<%= yield_content :created_at %>
+
+<%= yield_content :updated_at %>
+
+<%= yield_content :links %>
+</ul>
+
