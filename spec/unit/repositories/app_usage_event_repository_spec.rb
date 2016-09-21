@@ -117,6 +117,15 @@ module VCAP::CloudController
             expect(event.buildpack_name).to eq('https://git.example.com/repo.git')
           end
 
+          context 'where there are user credentials in the buildpack url' do
+            let(:buildpack_url) {'https://super:secret@git.example.com/repo.git'}
+
+            it 'redacts them' do
+              event = repository.create_from_app(app)
+              expect(event.buildpack_name).to eq('https://***:***@git.example.com/repo.git')
+            end
+          end
+
           it 'will create an event without a buildpack guid' do
             event = repository.create_from_app(app)
             expect(event.buildpack_guid).to be_nil
@@ -393,6 +402,20 @@ module VCAP::CloudController
 
             expect(event.buildpack_name).to eq('http://git.url.example.com')
             expect(event.buildpack_guid).to be_nil
+          end
+
+          context 'when buildpack lifecycle info contains credentials in buildpack url' do
+            before do
+              lifecycle_data           = droplet.lifecycle_data
+              lifecycle_data.buildpack = 'http://ping:pong@example.com'
+            end
+
+            it 'redacts credentials from the url' do
+              event = repository.create_from_droplet(droplet, state)
+
+              expect(event.buildpack_name).to eq('http://***:***@example.com')
+              expect(event.buildpack_guid).to be_nil
+            end
           end
         end
 

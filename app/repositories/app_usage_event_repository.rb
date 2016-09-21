@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       def buildpack_name_for_app(app)
-        app.custom_buildpack_url || app.detected_buildpack_name
+        CloudController::UrlSecretObfuscator.obfuscate(app.custom_buildpack_url || app.detected_buildpack_name)
       end
 
       def create_from_task(task, state)
@@ -79,9 +79,8 @@ module VCAP::CloudController
 
         if droplet.lifecycle_type == Lifecycles::BUILDPACK
           opts[:buildpack_guid] = droplet.buildpack_receipt_buildpack_guid
-          opts[:buildpack_name] = droplet.buildpack_receipt_buildpack || droplet.lifecycle_data.buildpack
+          opts[:buildpack_name] = CloudController::UrlSecretObfuscator.obfuscate(droplet.buildpack_receipt_buildpack || droplet.lifecycle_data.buildpack)
         end
-
         AppUsageEvent.create(opts)
       end
 
