@@ -5,20 +5,20 @@ module VCAP::CloudController
     module V3
       class TaskPresenter < BasePresenter
         def to_hash
-          {
+          hide_secrets({
             guid:                  task.guid,
             sequence_id:           task.sequence_id,
             name:                  task.name,
-            command:               redact(task.command),
+            command:               task.command,
             state:                 task.state,
             memory_in_mb:          task.memory_in_mb,
-            environment_variables: redact_hash(task.environment_variables || {}),
+            environment_variables: task.environment_variables || {},
             result:                { failure_reason: task.failure_reason },
             created_at:            task.created_at,
             updated_at:            task.updated_at,
             droplet_guid:          task.droplet_guid,
             links:                 build_links
-          }
+          })
         end
 
         private
@@ -33,6 +33,14 @@ module VCAP::CloudController
             app:     { href: "/v3/apps/#{task.app.guid}" },
             droplet: { href: "/v3/droplets/#{task.droplet_guid}" },
           }
+        end
+
+        def hide_secrets(hash)
+          unless @show_secrets
+            hash.delete(:environment_variables)
+            hash.delete(:command)
+          end
+          hash
         end
       end
     end

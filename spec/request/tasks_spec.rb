@@ -64,10 +64,8 @@ RSpec.describe 'Tasks' do
               'guid'                  => task1.guid,
               'sequence_id'           => task1.sequence_id,
               'name'                  => 'task one',
-              'command'               => '[PRIVATE DATA HIDDEN IN LISTS]',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 5,
-              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
               'result'                => {
                 'failure_reason' => nil
               },
@@ -90,10 +88,8 @@ RSpec.describe 'Tasks' do
               'guid'                  => task2.guid,
               'sequence_id'           => task2.sequence_id,
               'name'                  => 'task two',
-              'command'               => '[PRIVATE DATA HIDDEN IN LISTS]',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 100,
-              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
               'result'                => {
                 'failure_reason' => nil
               },
@@ -222,7 +218,7 @@ RSpec.describe 'Tasks' do
       expect(parsed_response).to be_a_response_like(expected_response)
     end
 
-    it 'redacts information for auditors' do
+    it 'excludes information for auditors' do
       task = VCAP::CloudController::TaskModel.make(
         name:                  'task',
         command:               'echo task',
@@ -242,8 +238,8 @@ RSpec.describe 'Tasks' do
       parsed_response = MultiJson.load(last_response.body)
 
       expect(last_response.status).to eq(200)
-      expect(parsed_response['command']).to eq('[PRIVATE DATA HIDDEN]')
-      expect(parsed_response['environment_variables']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+      expect(parsed_response).not_to have_key('command')
+      expect(parsed_response).not_to have_key('environment_variables')
     end
   end
 
@@ -306,10 +302,8 @@ RSpec.describe 'Tasks' do
               'guid'                  => task1.guid,
               'sequence_id'           => task1.sequence_id,
               'name'                  => 'task one',
-              'command'               => '[PRIVATE DATA HIDDEN IN LISTS]',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 5,
-              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
               'result'                => {
                 'failure_reason' => nil
               },
@@ -332,10 +326,8 @@ RSpec.describe 'Tasks' do
               'guid'                  => task2.guid,
               'sequence_id'           => task2.sequence_id,
               'name'                  => 'task two',
-              'command'               => '[PRIVATE DATA HIDDEN IN LISTS]',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 100,
-              'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
               'result'                => {
                 'failure_reason' => nil
               },

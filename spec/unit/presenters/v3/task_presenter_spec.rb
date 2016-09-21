@@ -41,9 +41,9 @@ module VCAP::CloudController::Presenters::V3
       context 'when show_secrets is false' do
         let(:presenter) { TaskPresenter.new(task, show_secrets: false) }
 
-        it 'redacts command and environment_variables' do
-          expect(result[:command]).to eq('[PRIVATE DATA HIDDEN]')
-          expect(result[:environment_variables]).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+        it 'excludes command and environment_variables' do
+          expect(result).not_to have_key(:command)
+          expect(result).not_to have_key(:environment_variables)
         end
       end
     end
