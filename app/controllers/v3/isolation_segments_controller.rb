@@ -5,6 +5,8 @@ require 'messages/isolation_segments_list_message'
 require 'presenters/v3/isolation_segment_presenter'
 require 'presenters/v3/relationship_presenter'
 require 'queries/isolation_segment_list_fetcher'
+require 'queries/isolation_segment_organizations_fetcher'
+require 'queries/isolation_segment_spaces_fetcher'
 
 class IsolationSegmentsController < ApplicationController
   def create
@@ -27,11 +29,11 @@ class IsolationSegmentsController < ApplicationController
 
   def show
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
-    resource_not_found!(:isolation_segment) unless isolation_segment_model
-
-    unauthorized! unless roles.admin? || isolation_segment_model.spaces.any? do |space|
-      can_read?(space.guid, space.organization.guid)
-    end
+    resource_not_found!(:isolation_segment) unless isolation_segment_model && (
+      roles.admin? || 
+      isolation_segment_model.spaces.any? { |space| can_read?(space.guid, space.organization.guid) } ||
+      isolation_segment_model.organizations.any? { |org| can_read_from_org?(org.guid) }
+    )
 
     render status: :ok, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
   end
@@ -93,21 +95,38 @@ class IsolationSegmentsController < ApplicationController
   end
 
   def relationships_orgs
-    unauthorized! unless roles.admin?
-
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
-    resource_not_found!(:isolation_segment) unless isolation_segment_model
+    resource_not_found!(:isolation_segment) unless isolation_segment_model && (
+      roles.admin? || 
+      isolation_segment_model.organizations.any? { |org| can_read_from_org?(org.guid) }
+    )
 
-    render status: :ok, json: Presenters::V3::RelationshipPresenter.new(isolation_segment_model.organizations)
+    fetcher = IsolationSegmentOrganizationsFetcher.new(isolation_segment_model)
+    organizations = if roles.admin? || roles.admin_read_only?
+                fetcher.fetch_all
+              else
+                fetcher.fetch_for_organizations(org_guids: readable_org_guids)
+              end
+
+    render status: :ok, json: Presenters::V3::RelationshipPresenter.new(organizations)
   end
 
   def relationships_spaces
-    unauthorized! unless roles.admin?
-
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
-    resource_not_found!(:isolation_segment) unless isolation_segment_model
+    resource_not_found!(:isolation_segment) unless isolation_segment_model && (
+      roles.admin? || 
+      isolation_segment_model.spaces.any? { |space| can_read?(space.guid, space.organization.guid) } ||
+      isolation_segment_model.organizations.any? { |org| can_read_from_org?(org.guid) }
+    )
 
-    render status: :ok, json: Presenters::V3::RelationshipPresenter.new(isolation_segment_model.spaces)
+    fetcher = IsolationSegmentSpacesFetcher.new(isolation_segment_model)
+    spaces = if roles.admin? || roles.admin_read_only?
+                fetcher.fetch_all
+              else
+                fetcher.fetch_for_spaces(space_guids: readable_space_guids)
+              end
+              
+    render status: :ok, json: Presenters::V3::RelationshipPresenter.new(spaces)
   end
 
   def assign_allowed_organizations
