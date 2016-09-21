@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get '/', to: 'root#v3_root'
+
   # apps
   get '/apps', to: 'apps_v3#index'
   post '/apps', to: 'apps_v3#create'
