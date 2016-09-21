@@ -115,10 +115,15 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
             },
             'resources' => [
               {
-                'name'       => isolation_segment_model.name,
-                'guid'       => isolation_segment_model.guid,
-                'created_at' => iso8601,
-                'updated_at' => nil
+                'name'        => isolation_segment_model.name,
+                'guid'        => isolation_segment_model.guid,
+                'created_at'  => iso8601,
+                'updated_at'  => nil,
+                'links'       => {
+                  'self'          => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}" },
+                  'organizations' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" },
+                  'spaces'        => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/spaces" },
+                }
               }
             ]
           }

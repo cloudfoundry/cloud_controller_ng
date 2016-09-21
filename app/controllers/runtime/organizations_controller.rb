@@ -235,7 +235,7 @@ module VCAP::CloudController
       dataset = IsolationSegmentModel.dataset.where(organizations: org)
       message = IsolationSegmentsListMessage.from_params(@params)
 
-      [HTTP::OK, MultiJson.dump(Presenters::V3::PaginatedListPresenter.new(dataset, "/v2/organizations/#{org.guid}/isolation_segments", message, false).to_hash)]
+      [HTTP::OK, MultiJson.dump(Presenters::V3::PaginatedListPresenter.new(dataset, "/v2/organizations/#{org.guid}/isolation_segments", message).to_hash)]
     end
 
     define_messages
