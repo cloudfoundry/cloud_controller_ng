@@ -44,12 +44,7 @@ module VCAP::CloudController
     private
 
     def use_requested_name_or_generate_name(message)
-      if message.requested?(:name)
-        name = message.name
-      else
-        name = Random.new.bytes(4).unpack('H*').first
-      end
-      name
+      message.requested?(:name) ? message.name : Random.new.bytes(4).unpack('H*').first
     end
 
     attr_reader :config
