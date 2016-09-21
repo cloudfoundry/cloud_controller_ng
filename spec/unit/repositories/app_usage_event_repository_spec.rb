@@ -118,7 +118,7 @@ module VCAP::CloudController
           end
 
           context 'where there are user credentials in the buildpack url' do
-            let(:buildpack_url) {'https://super:secret@git.example.com/repo.git'}
+            let(:buildpack_url) { 'https://super:secret@git.example.com/repo.git' }
 
             it 'redacts them' do
               event = repository.create_from_app(app)

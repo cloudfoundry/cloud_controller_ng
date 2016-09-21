@@ -24,6 +24,7 @@ require_relative 'relations_presenter'
 
 require_relative 'private_domain_presenter'
 require_relative 'app_presenter'
+require_relative 'app_usage_event_presenter'
 require_relative 'route_presenter'
 require_relative 'shared_domain_presenter'
 require_relative 'route_mapping_presenter'
