@@ -29,7 +29,7 @@ class AppsV3Controller < ApplicationController
                 AppListFetcher.new.fetch(message, readable_space_guids)
               end
 
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset, '/v3/apps', message)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, base_url: '/v3/apps', message: message)
   end
 
   def show

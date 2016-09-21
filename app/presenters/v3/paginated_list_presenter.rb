@@ -23,10 +23,11 @@ module VCAP::CloudController
           'TaskModel'             => VCAP::CloudController::Presenters::V3::TaskPresenter,
         }.freeze
 
-        def initialize(dataset, base_url, message=nil)
-          @dataset  = dataset
-          @base_url = base_url
-          @message  = message
+        def initialize(dataset:, base_url:, message: nil, show_secrets: false)
+          @dataset      = dataset
+          @base_url     = base_url
+          @message      = message
+          @show_secrets = show_secrets
         end
 
         def to_hash
@@ -40,7 +41,7 @@ module VCAP::CloudController
 
         def presented_resources
           paginator.records.map do |resource|
-            presenter.new(resource, show_secrets: false, censored_message: BasePresenter::REDACTED_LIST_MESSAGE).to_hash
+            presenter.new(resource, show_secrets: @show_secrets, censored_message: BasePresenter::REDACTED_LIST_MESSAGE).to_hash
           end
         end
 

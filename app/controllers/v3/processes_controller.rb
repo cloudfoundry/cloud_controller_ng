@@ -31,7 +31,7 @@ class ProcessesController < ApplicationController
                 end
     end
 
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset, base_url(resource: 'processes'), message)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, base_url: base_url(resource: 'processes'), message: message)
   end
 
   def show

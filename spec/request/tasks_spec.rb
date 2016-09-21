@@ -302,8 +302,10 @@ RSpec.describe 'Tasks' do
               'guid'                  => task1.guid,
               'sequence_id'           => task1.sequence_id,
               'name'                  => 'task one',
+              'command'               => 'echo task',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 5,
+              'environment_variables' => { 'unicorn' => 'magic' },
               'result'                => {
                 'failure_reason' => nil
               },
@@ -326,8 +328,10 @@ RSpec.describe 'Tasks' do
               'guid'                  => task2.guid,
               'sequence_id'           => task2.sequence_id,
               'name'                  => 'task two',
+              'command'               => 'echo task',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 100,
+              'environment_variables' => {},
               'result'                => {
                 'failure_reason' => nil
               },
@@ -353,6 +357,25 @@ RSpec.describe 'Tasks' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    describe 'perms' do
+      it 'exlcudes secrets when the user should not see them' do
+        VCAP::CloudController::TaskModel.make(
+          name:                  'task one',
+          command:               'echo task',
+          app_guid:              app_model.guid,
+          droplet:               app_model.droplet,
+          environment_variables: { unicorn: 'magic' },
+          memory_in_mb:          5,
+        )
+
+        get "/v3/apps/#{app_model.guid}/tasks", nil, headers_for(make_auditor_for_space(space))
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['resources'][0]).not_to have_key('command')
+        expect(parsed_response['resources'][0]).not_to have_key('environment_variables')
+      end
     end
 
     describe 'filtering' do

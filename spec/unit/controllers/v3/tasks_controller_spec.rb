@@ -362,6 +362,10 @@ RSpec.describe TasksController, type: :controller do
     end
 
     context 'when accessed as an app subresource' do
+      before do
+        allow_user_secret_access(user, space: space)
+      end
+
       it 'uses the app as a filter' do
         task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
         task_2 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
@@ -378,6 +382,20 @@ RSpec.describe TasksController, type: :controller do
         get :index, app_guid: app_model.guid
 
         expect(parsed_body['pagination']['first']['href']).to include("/v3/apps/#{app_model.guid}/tasks")
+      end
+
+      context 'when the user cannot view secrets' do
+        before do
+          disallow_user_secret_access(user, space: space)
+        end
+
+        it 'excludes secrets' do
+          VCAP::CloudController::TaskModel.make(app: app_model)
+
+          get :index, app_guid: app_model.guid
+
+          expect(parsed_body['resources'][0]).not_to have_key('command')
+        end
       end
 
       context 'the app does not exist' do

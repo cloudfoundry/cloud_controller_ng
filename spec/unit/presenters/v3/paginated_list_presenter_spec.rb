@@ -3,7 +3,7 @@ require 'presenters/v3/paginated_list_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe PaginatedListPresenter do
-    subject(:presenter) { described_class.new(dataset, base_url, message) }
+    subject(:presenter) { described_class.new(dataset: dataset, base_url: base_url, message: message) }
     let(:set) { [Monkey.new('bobo'), Monkey.new('george')] }
     let(:dataset) { double('sequel dataset') }
     let(:message) { double('message', pagination_options: pagination_options, to_param_hash: {}) }
@@ -57,6 +57,17 @@ module VCAP::CloudController::Presenters::V3
         presenter.to_hash
         expect(MonkeyPresenter).to have_received(:new).
           with(anything, show_secrets: false, censored_message: BasePresenter::REDACTED_LIST_MESSAGE).exactly(set.count).times
+      end
+
+      context 'when show_secrets is true' do
+        subject(:presenter) { described_class.new(dataset: dataset, base_url: base_url, message: message, show_secrets: true) }
+
+        it 'sends true for show_secrets' do
+          allow(MonkeyPresenter).to receive(:new).and_call_original
+          presenter.to_hash
+          expect(MonkeyPresenter).to have_received(:new).
+            with(anything, show_secrets: true, censored_message: BasePresenter::REDACTED_LIST_MESSAGE).exactly(set.count).times
+        end
       end
     end
   end

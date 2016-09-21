@@ -16,9 +16,12 @@ class TasksController < ApplicationController
     message = TasksListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
+    show_secrets = false
+
     if app_nested?
       app, dataset = TaskListFetcher.new.fetch_for_app(message: message)
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
+      show_secrets = can_see_secrets?(app.space)
     else
       dataset = if roles.admin? || roles.admin_read_only?
                   TaskListFetcher.new.fetch_all(message: message)
@@ -27,7 +30,12 @@ class TasksController < ApplicationController
                 end
     end
 
-    render :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset, base_url(resource: 'tasks'), message)
+    render :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      dataset:      dataset,
+      base_url:     base_url(resource: 'tasks'),
+      message:      message,
+      show_secrets: show_secrets
+    )
   end
 
   def create

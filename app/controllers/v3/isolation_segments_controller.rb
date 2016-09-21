@@ -47,7 +47,7 @@ class IsolationSegmentsController < ApplicationController
                 fetcher.fetch_for_spaces(space_guids: readable_space_guids)
               end
 
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset, '/v3/isolation_segments', message)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, base_url: '/v3/isolation_segments', message: message)
   end
 
   def destroy

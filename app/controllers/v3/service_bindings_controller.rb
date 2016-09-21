@@ -48,7 +48,7 @@ class ServiceBindingsController < ApplicationController
                 ServiceBindingListFetcher.new(message).fetch(space_guids: readable_space_guids)
               end
 
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset, '/v3/service_bindings', message)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, base_url: base_url(resource: 'service_bindings'), message: message)
   end
 
   def destroy

@@ -32,7 +32,7 @@ class DropletsController < ApplicationController
                 end
     end
 
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset, base_url(resource: 'droplets'), message)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, base_url: base_url(resource: 'droplets'), message: message)
   end
 
   def show

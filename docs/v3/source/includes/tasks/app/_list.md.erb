@@ -28,7 +28,8 @@ HTTP/1.1 200 OK
 <%= yield_content :paginated_list_of_tasks, '/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks' %>
 ```
 
-This endpoint retrieves the tasks the user has access to.
+This endpoint retrieves the tasks the user has access to. The <code>command</code> and <code>environment_variables</code>
+fields may be excluded in the response based on the user's role.
 
 ### Query Parameters
 
