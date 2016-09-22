@@ -239,6 +239,14 @@ module VCAP::CloudController
             expect(results.all).to match_array([])
           end
         end
+
+        context 'when sequence_ids are provided' do
+          let(:filters) { { sequence_ids: [task2_in_space1.sequence_id], app_guid: app_in_space1.guid } }
+
+          it 'returns the correct set of tasks' do
+            expect(results.all).to match_array([task2_in_space1])
+          end
+        end
       end
     end
   end

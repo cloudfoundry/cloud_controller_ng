@@ -379,41 +379,72 @@ RSpec.describe 'Tasks' do
     end
 
     describe 'filtering' do
-      it 'returns a paginated list of tasks' do
-        task1 = VCAP::CloudController::TaskModel.make(
-          name:                  'task one',
-          command:               'echo task',
-          app_guid:              app_model.guid,
-          droplet:               app_model.droplet,
-          environment_variables: { unicorn: 'magic' },
-          memory_in_mb:          5,
-          state:                 VCAP::CloudController::TaskModel::SUCCEEDED_STATE,
-        )
-        VCAP::CloudController::TaskModel.make(
-          name:         'task two',
-          command:      'echo task',
-          app_guid:     app_model.guid,
-          droplet:      app_model.droplet,
-          memory_in_mb: 100,
-        )
-        VCAP::CloudController::TaskModel.make(
-          app_guid: app_model.guid,
-          droplet:  app_model.droplet,
-        )
+      it 'filters by name' do
+        expected_task = VCAP::CloudController::TaskModel.make(name: 'task one', app: app_model)
+        VCAP::CloudController::TaskModel.make(name: 'task two', app: app_model)
 
-        query = {
-          names:  'task one',
-          states: 'SUCCEEDED'
-        }
+        query = { names: 'task one' }
 
         get "/v3/apps/#{app_model.guid}/tasks?#{query.to_query}", nil, developer_headers
 
-        expected_query = 'names=task+one&page=1&per_page=50&states=SUCCEEDED'
+        expected_query = 'names=task+one&page=1&per_page=50'
 
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to eq([task1.guid])
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to eq([expected_task.guid])
+        expect(parsed_response['pagination']).to be_a_response_like(
+          {
+            'total_results' => 1,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'next'          => nil,
+            'previous'      => nil,
+          }
+        )
+      end
+
+      it 'filters by state' do
+        expected_task = VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE, app: app_model)
+        VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::FAILED_STATE, app: app_model)
+
+        query = { states: 'SUCCEEDED' }
+
+        get "/v3/apps/#{app_model.guid}/tasks?#{query.to_query}", nil, developer_headers
+
+        expected_query = 'page=1&per_page=50&states=SUCCEEDED'
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to eq([expected_task.guid])
+        expect(parsed_response['pagination']).to be_a_response_like(
+          {
+            'total_results' => 1,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'next'          => nil,
+            'previous'      => nil,
+          }
+        )
+      end
+
+      it 'filters by sequence_id' do
+        expected_task = VCAP::CloudController::TaskModel.make(app: app_model)
+        VCAP::CloudController::TaskModel.make(app: app_model)
+
+        query = { sequence_ids: expected_task.sequence_id }
+
+        get "/v3/apps/#{app_model.guid}/tasks?#{query.to_query}", nil, developer_headers
+
+        expected_query = "page=1&per_page=50&sequence_ids=#{expected_task.sequence_id}"
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to eq([expected_task.guid])
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 1,

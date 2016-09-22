@@ -50,6 +50,10 @@ module VCAP::CloudController
         task_dataset = task_dataset.where(guid: message.guids)
       end
 
+      if message.requested?(:sequence_ids)
+        task_dataset = task_dataset.where(sequence_id: message.sequence_ids)
+      end
+
       task_dataset
     end
   end

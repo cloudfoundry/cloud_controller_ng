@@ -2,7 +2,7 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class TasksListMessage < ListMessage
-    ALLOWED_KEYS = [:names, :states, :guids, :app_guids, :organization_guids, :space_guids, :page, :per_page, :order_by, :app_guid].freeze
+    ALLOWED_KEYS = [:names, :states, :guids, :app_guids, :organization_guids, :space_guids, :page, :per_page, :order_by, :app_guid, :sequence_ids].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 
@@ -15,6 +15,8 @@ module VCAP::CloudController
     validates :organization_guids, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
     validate :app_nested_request, if: -> { app_guid.present? }
+    validate :non_app_nested_request, if: -> { !app_guid.present? }
+    validates :sequence_ids, array: true, allow_nil: true
 
     def initialize(params={})
       super(params.symbolize_keys)
@@ -26,7 +28,7 @@ module VCAP::CloudController
 
     def self.from_params(params)
       opts = params.dup
-      %w(names states guids app_guids organization_guids space_guids).each do |attribute|
+      %w(names states guids app_guids organization_guids space_guids sequence_ids).each do |attribute|
         to_array! opts, attribute
       end
       new(opts.symbolize_keys)
@@ -35,11 +37,17 @@ module VCAP::CloudController
     private
 
     def app_nested_request
-      invalid_guids = []
-      invalid_guids << :space_guids if space_guids
-      invalid_guids << :organization_guids if organization_guids
-      invalid_guids << :app_guids if app_guids
-      errors.add(:base, "Unknown query parameter(s): '#{invalid_guids.join("', '")}'") if invalid_guids.present?
+      invalid_params = []
+      invalid_params << :space_guids if space_guids
+      invalid_params << :organization_guids if organization_guids
+      invalid_params << :app_guids if app_guids
+      errors.add(:base, "Unknown query parameter(s): '#{invalid_params.join("', '")}'") if invalid_params.present?
+    end
+
+    def non_app_nested_request
+      invalid_params = []
+      invalid_params << :sequence_ids if sequence_ids
+      errors.add(:base, "Unknown query parameter(s): '#{invalid_params.join("', '")}'") if invalid_params.present?
     end
 
     def allowed_keys

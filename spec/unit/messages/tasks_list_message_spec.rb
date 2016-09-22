@@ -14,7 +14,8 @@ module VCAP::CloudController
           'space_guids'        => 'spaceguid',
           'page'               => 1,
           'per_page'           => 5,
-          'app_guid'           => 'blah-blah'
+          'app_guid'           => 'blah-blah',
+          'sequence_ids'       => '1,2'
         }
       end
 
@@ -31,6 +32,7 @@ module VCAP::CloudController
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.app_guid).to eq('blah-blah')
+        expect(message.sequence_ids).to eq(['1', '2'])
       end
 
       it 'converts requested keys to symbols' do
@@ -45,6 +47,7 @@ module VCAP::CloudController
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
         expect(message.requested?(:app_guid)).to be_truthy
+        expect(message.requested?(:sequence_ids)).to be_truthy
       end
     end
 
@@ -57,13 +60,14 @@ module VCAP::CloudController
           app_guids:          ['appguid1', 'appguid2'],
           organization_guids: ['orgguid1', 'orgguid2'],
           space_guids:        ['spaceguid1', 'spaceguid2'],
+          sequence_ids:       ['1, 2'],
           page:               1,
           per_page:           5,
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names, :states, :guids, :app_guids, :organization_guids, :space_guids]
+        expected_params = [:names, :states, :guids, :app_guids, :organization_guids, :space_guids, :sequence_ids]
         expect(TasksListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -147,6 +151,12 @@ module VCAP::CloudController
               expect(message.errors[:base]).to include("Unknown query parameter(s): 'space_guids', 'organization_guids', 'app_guids'")
             end
           end
+
+          it 'validates sequence_ids is an array' do
+            message = TasksListMessage.new sequence_ids: 'not array'
+            expect(message).to be_invalid
+            expect(message.errors[:sequence_ids].length).to eq 1
+          end
         end
 
         it 'validates names is an array' do
@@ -183,6 +193,12 @@ module VCAP::CloudController
           message = TasksListMessage.new space_guids: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:space_guids].length).to eq 1
+        end
+
+        it 'does not allow sequence_ids' do
+          message = TasksListMessage.new sequence_ids: [1]
+          expect(message).to be_invalid
+          expect(message.errors[:base]).to include("Unknown query parameter(s): 'sequence_ids'")
         end
       end
     end
