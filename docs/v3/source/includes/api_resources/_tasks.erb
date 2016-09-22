@@ -1,7 +1,7 @@
 <% content_for :single_task do %>
 {
   "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
-  "sequence_id": 0,
+  "sequence_id": 1,
   "name": "migrate",
   "command": "rake db:migrate",
   "state": "RUNNING",
@@ -30,7 +30,7 @@
 <% content_for :canceling_task do %>
 {
   "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
-  "sequence_id": 0,
+  "sequence_id": 1,
   "name": "migrate",
   "command": "rake db:migrate",
   "state": "CANCELING",
@@ -75,7 +75,7 @@
   "resources": [
     {
       "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
-      "sequence_id": 0,
+      "sequence_id": 1,
       "name": "hello",
       "state": "SUCCEEDED",
       "memory_in_mb": 512,
@@ -99,7 +99,7 @@
     },
     {
       "guid": "63b4cd89-fd8b-4bf1-a311-7174fcc907d6",
-      "sequence_id": 1,
+      "sequence_id": 2,
       "name": "migrate",
       "state": "FAILED",
       "memory_in_mb": 512,

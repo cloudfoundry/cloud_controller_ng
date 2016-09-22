@@ -47,7 +47,7 @@ RSpec.describe TasksController, type: :controller do
       expect(parsed_body['name']).to eq('mytask')
       expect(parsed_body['state']).to eq('PENDING')
       expect(parsed_body['memory_in_mb']).to eq(2048)
-      expect(parsed_body['sequence_id']).to eq(0)
+      expect(parsed_body['sequence_id']).to eq(1)
     end
 
     it 'creates a task for the app' do

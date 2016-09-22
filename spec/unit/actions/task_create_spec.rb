@@ -43,15 +43,15 @@ module VCAP::CloudController
         it 'gives the task a sequence id' do
           task = task_create_action.create(app, message, user_guid, user_email)
 
-          expect(task.sequence_id).to eq(0)
+          expect(task.sequence_id).to eq(1)
         end
 
         it 'increments the sequence id for each task' do
-          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(0)
-          app.reload
           expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(1)
           app.reload
           expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(2)
+          app.reload
+          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(3)
         end
 
         it 'does not re-use task ids from deleted tasks' do
@@ -62,7 +62,7 @@ module VCAP::CloudController
           task = task_create_action.create(app, message, user_guid, user_email)
           task.delete
           app.reload
-          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(3)
+          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(4)
         end
       end
 

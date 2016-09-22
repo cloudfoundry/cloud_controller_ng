@@ -27,7 +27,7 @@ module VCAP::CloudController
     describe 'fields' do
       describe 'max_task_sequence_id' do
         it 'defaults to 0' do
-          expect(app_model.max_task_sequence_id).to eq(0)
+          expect(app_model.max_task_sequence_id).to eq(1)
         end
       end
     end
