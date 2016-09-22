@@ -16,6 +16,8 @@ module VCAP::CloudController
 
       task = nil
       TaskModel.db.transaction do
+        app.lock!
+
         task = TaskModel.create(
           name:                  use_requested_name_or_generate_name(message),
           state:                 TaskModel::PENDING_STATE,
@@ -27,8 +29,7 @@ module VCAP::CloudController
           sequence_id:           app.max_task_sequence_id
         )
 
-        app.max_task_sequence_id = app.max_task_sequence_id + 1
-        app.save
+        app.update(max_task_sequence_id: app.max_task_sequence_id + 1)
 
         app_usage_event_repository.create_from_task(task, 'TASK_STARTED')
         task_event_repository.record_task_create(task, user_guid, user_email)
