@@ -44,7 +44,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'with droplets which are pending or staging but have "NULL" updated_at' do
+        context 'with droplets which are pending or staging but have no updated_at (db specific)' do
           let!(:droplet1) { DropletModel.make(state: DropletModel::STAGING_STATE) }
           let!(:droplet2) { DropletModel.make(state: DropletModel::STAGING_STATE) }
           let(:null_timestamp) do
@@ -55,18 +55,38 @@ module VCAP::CloudController
             end
           end
 
-          before do
-            droplet1.this.update(updated_at: null_timestamp, created_at: expired_time)
-            droplet2.this.update(updated_at: null_timestamp, created_at: expired_time)
+          context 'when the droplets were created too long ago' do
+            before do
+              droplet1.this.update(updated_at: null_timestamp, created_at: expired_time)
+              droplet2.this.update(updated_at: null_timestamp, created_at: expired_time)
+
+              expect(droplet1.reload.updated_at).to be_nil
+              expect(droplet2.reload.updated_at).to be_nil
+            end
+
+            it 'fails them' do
+              cleanup_job.perform
+
+              expect(droplet1.reload.failed?).to be_truthy
+              expect(droplet2.reload.failed?).to be_truthy
+            end
           end
 
-          it 'fails them based on created_at' do
-            expect(droplet1.reload.updated_at).to be_nil
+          context 'when the droplets were created recently' do
+            before do
+              droplet1.this.update(updated_at: null_timestamp, created_at: non_expired_time)
+              droplet2.this.update(updated_at: null_timestamp, created_at: non_expired_time)
 
-            cleanup_job.perform
+              expect(droplet1.reload.updated_at).to be_nil
+              expect(droplet2.reload.updated_at).to be_nil
+            end
 
-            expect(droplet1.reload.failed?).to be_truthy
-            expect(droplet2.reload.failed?).to be_truthy
+            it 'does NOT fail them' do
+              cleanup_job.perform
+
+              expect(droplet1.reload.failed?).to be_falsey
+              expect(droplet2.reload.failed?).to be_falsey
+            end
           end
         end
 
