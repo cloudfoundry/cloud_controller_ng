@@ -332,7 +332,7 @@ curl</a></li>
 
 {
   "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
-  "sequence_id": 0,
+  "sequence_id": 1,
   "name": "migrate",
   "command": "rake db:migrate",
   "state": "RUNNING",
@@ -429,7 +429,7 @@ These overwrite and are appended to the app&rsquo;s running environment variable
 
 {
   "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
-  "sequence_id": 0,
+  "sequence_id": 1,
   "name": "migrate",
   "command": "rake db:migrate",
   "state": "RUNNING",
@@ -484,7 +484,7 @@ fields may be excluded in the response based on the user&rsquo;s role.</p>
 
 {
   "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
-  "sequence_id": 0,
+  "sequence_id": 1,
   "name": "migrate",
   "command": "rake db:migrate",
   "state": "CANCELING",
@@ -560,7 +560,7 @@ fields may be excluded in the response based on the user&rsquo;s role.</p>
   "resources": [
     {
       "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
-      "sequence_id": 0,
+      "sequence_id": 1,
       "name": "hello",
       "state": "SUCCEEDED",
       "memory_in_mb": 512,
@@ -584,7 +584,7 @@ fields may be excluded in the response based on the user&rsquo;s role.</p>
     },
     {
       "guid": "63b4cd89-fd8b-4bf1-a311-7174fcc907d6",
-      "sequence_id": 1,
+      "sequence_id": 2,
       "name": "migrate",
       "state": "FAILED",
       "memory_in_mb": 512,
@@ -750,7 +750,7 @@ fields are excluded in the response.</p>
 
 {
   "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
-  "sequence_id": 0,
+  "sequence_id": 1,
   "name": "migrate",
   "command": "rake db:migrate",
   "state": "CANCELING",
@@ -826,7 +826,7 @@ fields are excluded in the response.</p>
   "resources": [
     {
       "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
-      "sequence_id": 0,
+      "sequence_id": 1,
       "name": "hello",
       "state": "SUCCEEDED",
       "memory_in_mb": 512,
@@ -850,7 +850,7 @@ fields are excluded in the response.</p>
     },
     {
       "guid": "63b4cd89-fd8b-4bf1-a311-7174fcc907d6",
-      "sequence_id": 1,
+      "sequence_id": 2,
       "name": "migrate",
       "state": "FAILED",
       "memory_in_mb": 512,
@@ -903,6 +903,17 @@ fields may be excluded in the response based on the user&rsquo;s role.</p>
     </h4>
 
     <p class="method-list-item-description">Comma-delimited list of task names to filter by.</p>
+  </li>
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      sequence_ids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma delimited list of sequence ids to filter by. Possible values are integers >= 1</p>
   </li>
 
   <li class="method-list-item">
