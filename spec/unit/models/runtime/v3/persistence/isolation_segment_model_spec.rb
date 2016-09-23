@@ -176,20 +176,20 @@ module VCAP::CloudController
           it 'can be updated' do
           end
         end
+      end
     end
-  end
 
     describe 'validations' do
       it 'requires a name' do
         expect {
           IsolationSegmentModel.make(name: nil)
-        }.to raise_error(Sequel::ValidationFailed, 'isolation segment names can only contain non-blank unicode characters')
+        }.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names can only contain non-blank unicode characters')
       end
 
       it 'requires a non blank name' do
         expect {
           IsolationSegmentModel.make(name: '')
-        }.to raise_error(Sequel::ValidationFailed, 'isolation segment names can only contain non-blank unicode characters')
+        }.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names can only contain non-blank unicode characters')
       end
 
       it 'requires a unique name' do
@@ -197,7 +197,7 @@ module VCAP::CloudController
 
         expect {
           IsolationSegmentModel.make(name: 'segment1')
-        }.to raise_error(Sequel::ValidationFailed, 'isolation segment names are case insensitive and must be unique')
+        }.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names are case insensitive and must be unique')
       end
 
       it 'uniqueness is case insensitive' do
@@ -205,7 +205,7 @@ module VCAP::CloudController
 
         expect {
           IsolationSegmentModel.make(name: 'lowerCase')
-        }.to raise_error(Sequel::ValidationFailed, 'isolation segment names are case insensitive and must be unique')
+        }.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names are case insensitive and must be unique')
       end
 
       it 'should allow standard ascii characters' do

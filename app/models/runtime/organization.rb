@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     many_to_one :isolation_segment_model,
       primary_key: :guid,
-      key: :isolation_segment_guid
+      key: :default_isolation_segment_guid
 
     many_to_many :isolation_segment_models,
       left_key: :organization_guid,
@@ -108,7 +108,7 @@ module VCAP::CloudController
     export_attributes :name, :billing_enabled, :quota_definition_guid, :status
     import_attributes :name, :billing_enabled,
                       :user_guids, :manager_guids, :billing_manager_guids,
-                      :auditor_guids, :quota_definition_guid, :status, :isolation_segment_guid
+                      :auditor_guids, :quota_definition_guid, :status, :default_isolation_segment_guid
 
     def remove_user(user)
       can_remove = ([user.spaces, user.audited_spaces, user.managed_spaces].flatten & spaces).empty?
@@ -194,13 +194,13 @@ module VCAP::CloudController
     end
 
     def unset_default_isolation_segment(isolation_segment)
-      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'space', 'isolation segment') unless
+      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'Space', 'Isolation Segment') unless
       !isolation_segment_associated_with_space?(isolation_segment)
 
       if isolation_segment_models.length > 1 && isolation_segment_model == isolation_segment
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform',
-              "Removal of isolation segment #{isolation_segment.name} from organization #{name}",
-              'This operation can only be completed if another isolation segment is set as the default')
+              "Removal of Isolation Segment #{isolation_segment.name} from Organization #{name}",
+              'This operation can only be completed if another Isolation Segment is set as the default')
       end
 
       if isolation_segment_models.length == 1

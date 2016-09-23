@@ -280,9 +280,9 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           }
         end
 
-        it 'does not assign any of the valid orgs and returns a 400' do
+        it 'does not assign any of the valid orgs' do
           post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-          expect(response.status).to eq 400
+          expect(response.status).to eq 404
 
           expect(isolation_segment_model.organizations).to be_empty
           expect(org.isolation_segment_model).to be_nil
@@ -298,9 +298,9 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           }
         end
 
-        it 'returns a 400' do
+        it 'returns a 404' do
           post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-          expect(response.status).to eq 400
+          expect(response.status).to eq 404
         end
       end
 
@@ -429,15 +429,15 @@ RSpec.describe IsolationSegmentsController, type: :controller do
             }
           end
 
-          it 'fails with a 400' do
+          it 'fails with a 404' do
             post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-            expect(response.status).to eq 400
+            expect(response.status).to eq 404
           end
 
           it 'does not remove the valid assignments from the request body' do
             req_body[:data] << { guid: org.guid }
             post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-            expect(response.status).to eq 400
+            expect(response.status).to eq 404
 
             isolation_segment_model.reload
             org.reload
@@ -552,8 +552,8 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(parsed_body['guid']).to eq(isolation_segment.guid)
           expect(parsed_body['name']).to eq(isolation_segment.name)
           expect(parsed_body['links']['self']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}")
-          expect(parsed_body['links']['organizations']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/organizations")
-          expect(parsed_body['links']['spaces']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/spaces")
+          expect(parsed_body['links']['organizations']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations")
+          expect(parsed_body['links']['spaces']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces")
         end
       end
 
@@ -600,8 +600,8 @@ RSpec.describe IsolationSegmentsController, type: :controller do
             expect(parsed_body['guid']).to eq(isolation_segment.guid)
             expect(parsed_body['name']).to eq(isolation_segment.name)
             expect(parsed_body['links']['self']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}")
-            expect(parsed_body['links']['organizations']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/organizations")
-            expect(parsed_body['links']['spaces']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/spaces")
+            expect(parsed_body['links']['organizations']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations")
+            expect(parsed_body['links']['spaces']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces")
           end
         end
       end

@@ -62,17 +62,6 @@ module VCAP::CloudController::Presenters::V3
           with(anything, show_secrets: false, censored_message: BasePresenter::REDACTED_LIST_MESSAGE).exactly(set.count).times
       end
 
-      context 'when links should not built' do
-        subject(:presenter) { described_class.new(dataset, base_url, message) }
-
-        it 'calls the presenter without build links' do
-          allow(MonkeyPresenter).to receive(:new).and_call_original
-          presenter.to_hash
-          expect(MonkeyPresenter).to have_received(:new).
-            with(anything, show_secrets: false, censored_message: BasePresenter::REDACTED_LIST_MESSAGE).exactly(set.count).times
-        end
-      end
-
       context 'when show_secrets is true' do
         subject(:presenter) { described_class.new(dataset: dataset, path: path, message: message, show_secrets: true) }
 

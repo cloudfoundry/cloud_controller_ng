@@ -66,10 +66,12 @@ Rails.application.routes.draw do
   get '/isolation_segments/:guid', to: 'isolation_segments#show'
   delete '/isolation_segments/:guid', to: 'isolation_segments#destroy'
   put '/isolation_segments/:guid', to: 'isolation_segments#update'
-  post '/isolation_segments/:guid/relationships/allowed_organizations', to: 'isolation_segments#assign_allowed_organizations'
-  delete '/isolation_segments/:guid/relationships/allowed_organizations', to: 'isolation_segments#unassign_allowed_organizations'
-  get '/isolation_segments/:guid/organizations', to: 'isolation_segments#relationships_orgs'
-  get '/isolation_segments/:guid/spaces', to: 'isolation_segments#relationships_spaces'
+  post '/isolation_segments/:guid/relationships/organizations', to: 'isolation_segments#assign_allowed_organizations'
+  delete '/isolation_segments/:guid/relationships/organizations', to: 'isolation_segments#unassign_allowed_organizations'
+
+  get '/isolation_segments/:guid/relationships/organizations', to: 'isolation_segments#relationships_orgs'
+  # To build these relationships. OrgManagers/Admins set the isolation segment on Spaces
+  get '/isolation_segments/:guid/relationships/spaces', to: 'isolation_segments#relationships_spaces'
 
   # service_bindings
   post '/service_bindings', to: 'service_bindings#create'

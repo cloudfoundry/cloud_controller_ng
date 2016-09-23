@@ -1351,7 +1351,7 @@ module VCAP::CloudController
               put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
 
               expect(last_response.status).to eq 400
-              expect(decoded_response['error_code']).to eq 'CF-InvalidRelation'
+              expect(decoded_response['error_code']).to eq 'CF-UnableToPerform'
             end
           end
 
@@ -1364,7 +1364,7 @@ module VCAP::CloudController
               put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
 
               expect(last_response.status).to eq 400
-              expect(decoded_response['error_code']).to eq 'CF-InvalidRelation'
+              expect(decoded_response['error_code']).to eq 'CF-UnableToPerform'
             end
           end
 
@@ -1418,7 +1418,7 @@ module VCAP::CloudController
               put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
 
               expect(last_response.status).to eq 400
-              expect(decoded_response['error_code']).to eq 'CF-InvalidRelation'
+              expect(decoded_response['error_code']).to eq 'CF-UnableToPerform'
             end
           end
 
@@ -1431,7 +1431,7 @@ module VCAP::CloudController
               put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
 
               expect(last_response.status).to eq 400
-              expect(decoded_response['error_code']).to eq 'CF-InvalidRelation'
+              expect(decoded_response['error_code']).to eq 'CF-UnableToPerform'
             end
           end
 

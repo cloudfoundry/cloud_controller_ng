@@ -213,10 +213,11 @@ module VCAP::CloudController
       if request_attrs['isolation_segment_guid']
         check_isolation_segment_access!(obj)
 
-        isolation_segment_guids = obj.organization.isolation_segment_models.map { |is| is.guid }
+        isolation_segment_guids = obj.organization.isolation_segment_models.map(&:guid)
         unless isolation_segment_guids.include?(request_attrs['isolation_segment_guid'])
-          raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
-            "Space's Organization does not have access to Isolation Segment with guid: #{request_attrs['isolation_segment_guid']}")
+          raise CloudController::Errors::ApiError.new_from_details('UnableToPerform',
+                                                                   'Adding the Isolation Segment to the Space',
+                                                                   "Only Isolation Segments in the Organization's allowed list can be used.")
         end
       end
 

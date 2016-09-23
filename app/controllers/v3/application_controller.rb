@@ -20,6 +20,10 @@ module V3ErrorsHelper
   def method_not_allowed!(method, obj)
     raise CloudController::Errors::ApiError.new_from_details('MethodNotAllowed', method, obj)
   end
+
+  def resources_not_found!(message)
+    raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', message)
+  end
 end
 
 class ApplicationController < ActionController::Base
