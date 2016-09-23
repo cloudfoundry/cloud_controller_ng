@@ -80,6 +80,10 @@ module UserHelpers
     allow(permissions_double(user)).to receive(:readable_space_guids).and_return([space.guid])
   end
 
+  def stub_readable_org_guids_for(user, org)
+    allow(permissions_double(user)).to receive(:readable_org_guids).and_return([org.guid])
+  end
+
   def permissions_double(user)
     @permissions ||= {}
     @permissions[user.guid] ||= begin

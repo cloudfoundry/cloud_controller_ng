@@ -15,6 +15,10 @@ module VCAP::CloudController
     describe '.merge_defaults' do
       context 'when no config values are provided' do
         let(:config) { Config.from_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml')) }
+        it 'sets the default isolation segment name' do
+          expect(config[:shared_isolation_segment_name]).to eq('shared')
+        end
+
         it 'sets default stacks_file' do
           expect(config[:stacks_file]).to eq(File.join(Config.config_dir, 'stacks.yml'))
         end

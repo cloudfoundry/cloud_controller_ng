@@ -14,6 +14,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:created_at]).to eq(isolation_segment.created_at)
         expect(result[:updated_at]).to eq(isolation_segment.updated_at)
         expect(result[:links]).to include(:self)
+        expect(result[:links]).to include(:organizations)
         expect(result[:links]).to include(:spaces)
       end
     end

@@ -197,9 +197,8 @@ module VCAP::CloudController
 
     delete '/v2/spaces/:guid/isolation_segment', :delete_isolation_segment
     def delete_isolation_segment(guid)
-      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless SecurityContext.admin?
-
       space = find_guid(guid)
+      check_isolation_segment_access!(space)
 
       space.db.transaction do
         space.lock!
@@ -212,11 +211,14 @@ module VCAP::CloudController
 
     def before_update(obj)
       if request_attrs['isolation_segment_guid']
-        raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless SecurityContext.admin?
+        check_isolation_segment_access!(obj)
 
-        isolation_segment = IsolationSegmentModel[guid: request_attrs['isolation_segment_guid']]
-        raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
-                "Could not find Isolation Segment with guid: #{request_attrs['isolation_segment_guid']}") unless isolation_segment
+        isolation_segment_guids = obj.organization.isolation_segment_models.map(&:guid)
+        unless isolation_segment_guids.include?(request_attrs['isolation_segment_guid'])
+          raise CloudController::Errors::ApiError.new_from_details('UnableToPerform',
+                                                                   'Adding the Isolation Segment to the Space',
+                                                                   "Only Isolation Segments in the Organization's allowed list can be used.")
+        end
       end
 
       super(obj)
@@ -236,6 +238,10 @@ module VCAP::CloudController
       if space.service_instances.present? || space.app_models.present? || space.service_brokers.present?
         raise CloudController::Errors::ApiError.new_from_details('NonrecursiveSpaceDeletionFailed', space.name)
       end
+    end
+
+    def check_isolation_segment_access!(space)
+      validate_access(:update, space.organization, nil)
     end
 
     define_messages

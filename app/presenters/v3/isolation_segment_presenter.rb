@@ -10,7 +10,7 @@ module VCAP::CloudController
             name:       isolation_segment.name,
             created_at: isolation_segment.created_at,
             updated_at: isolation_segment.updated_at,
-            links:      build_links
+            links: build_links,
           }
         end
 
@@ -23,7 +23,8 @@ module VCAP::CloudController
         def build_links
           {
             self:   { href: "/v3/isolation_segments/#{isolation_segment.guid}" },
-            spaces: { href: "/v2/spaces?q=isolation_segment_guid:#{isolation_segment.guid}" },
+            organizations: { href: "/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations" },
+            spaces: { href: "/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces" },
           }
         end
       end

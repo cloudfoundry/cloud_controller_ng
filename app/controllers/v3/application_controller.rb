@@ -16,6 +16,14 @@ module V3ErrorsHelper
   def unauthorized!
     raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
   end
+
+  def method_not_allowed!(method, obj)
+    raise CloudController::Errors::ApiError.new_from_details('MethodNotAllowed', method, obj)
+  end
+
+  def resources_not_found!(message)
+    raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', message)
+  end
 end
 
 class ApplicationController < ActionController::Base
@@ -78,6 +86,10 @@ class ApplicationController < ActionController::Base
     VCAP::CloudController::Permissions.new(current_user).can_read_from_space?(space_guid, org_guid)
   end
 
+  def can_read_from_org?(org_guid)
+    VCAP::CloudController::Permissions.new(current_user).can_read_from_org?(org_guid)
+  end
+
   def can_see_secrets?(space)
     VCAP::CloudController::Permissions.new(current_user).can_see_secrets_in_space?(space.guid, space.organization.guid)
   end
@@ -88,6 +100,10 @@ class ApplicationController < ActionController::Base
 
   def readable_space_guids
     VCAP::CloudController::Permissions.new(current_user).readable_space_guids
+  end
+
+  def readable_org_guids
+    VCAP::CloudController::Permissions.new(current_user).readable_org_guids
   end
 
   ###
