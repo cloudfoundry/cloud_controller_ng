@@ -107,7 +107,9 @@
           
 
 
-          <h1 id="overview">Overview</h1>
+          <h1 id="introduction">Introduction</h1>
+
+<h2 id="overview">Overview</h2>
 
 <p>Welcome to the Cloud Foundry V3 API docs! Version 3 will add support for several
 key features:</p>
@@ -136,14 +138,835 @@ curl</a></li>
 <li><a href="https://cloudfoundry.slack.com/messages/capi/">CAPI Slack Channel</a></li>
 </ul>
 
-          <h1 id="apps">Apps</h1>
+          <h1 id="concepts">Concepts</h1>
+
+<h2 id="authentication">Authentication</h2>
+
+<p>Coming Soon</p>
+
+<h2 id="authorization">Authorization</h2>
+
+<p>Coming Soon</p>
+
+<h3 id="redacted-fields-see-below">Redacted Fields (see below)</h3>
+
+<p>Coming Soon</p>
+
+<h2 id="errors">Errors</h2>
+
+<p>Coming Soon</p>
+
+<h2 id="pagination">Pagination</h2>
+
+<p>Coming Soon</p>
+
+<h2 id="responses">Responses</h2>
+
+<p>Coming Soon</p>
+
+<h3 id="status-codes">Status Codes</h3>
+
+<p>Coming Soon</p>
+
+<h3 id="links">Links</h3>
+
+<p>Coming Soon</p>
+
+<h2 id="workflows">Workflows</h2>
+
+<p>Coming Soon</p>
+
+<h3 id="push-v2-app-and-run-a-v3-task">Push V2 App and Run a V3 Task</h3>
+
+<p>Coming Soon</p>
+
+          <h1 id="resources">Resources</h1>
+
+          <h2 id="tasks">Tasks</h2>
+
+<p>Tasks are one-off jobs that are intended to perform a task, stop, and be cleaned up, freeing up resources.</p>
+
+<p>Examples of this include database migrations, sending things, and batch jobs.</p>
+
+          <div class='no-margin'></div>
+
+<h3 id="the-task-object">The task object</h3>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guid
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Unique GUID for the task</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      sequence_id
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">User-facing id of the task. This number is unique for every task associated with a given app.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      name
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">User-facing name of the task.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      command
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Command that will be executed. This field may be excluded based on a user&rsquo;s role.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      environment_variables
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Environment variables set on the
+    container running your task. This field may be excluded based on a user&rsquo;s role.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      memory_in_mb
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">Maximum memory for the task in MB.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      state
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">State of the task. Possible states are PENDING, RUNNING, SUCCEEDED, CANCELING, and FAILED</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      droplet_guid
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">The guid of the droplet that will be used to run the command.</p>
+  </li>
+  <li class="method-list-item">
+      <h4 class="method-list-item-label">
+        result
+        <span class="method-list-item-type">object</span>
+      </h4>
+
+      <p class="method-list-item-description">Results from the task</p>
+  </li>
+  <li class="method-list-item">
+      <h4 class="method-list-item-label">
+        result[failure_reason]
+        <span class="method-list-item-type">string</span>
+      </h4>
+
+      <p class="method-list-item-description">Null if the task succeeds, contains the error message if it fails.</p>
+  </li>
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      created_at
+
+        <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">    The time with zone when the app was created.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      updated_at
+
+        <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">    The time with zone with the package was last updated.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      links
+
+        <span class="method-list-item-type">object</span>
+    </h4>
+
+    <p class="method-list-item-description">    Links to related resources.
+</p>
+  </li>
+
+
+</ul>
+
+          <h3 id="create-a-task">Create a task</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/apps/:guid/tasks</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/tasks"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -d <span class="s1">'{ "command": "rake db:migrate" }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
+
+{
+  "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
+  "sequence_id": 0,
+  "name": "migrate",
+  "command": "rake db:migrate",
+  "state": "RUNNING",
+  "memory_in_mb": 512,
+  "environment_variables": {},
+  "result": {
+    "failure_reason": null
+  },
+  "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
+  "created_at": "2016-05-04T17:00:41Z",
+  "updated_at": "2016-05-04T17:00:42Z",
+  "links": {
+    "self": {
+      "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
+    },
+    "app": {
+      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+    },
+    "droplet": {
+      "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+    }
+  }
+}
+
+</code></pre>
+
+<p>This endpoint creates a new task.</p>
+
+<p>Environment variables specified in the request body will overwrite and be appended to the environment variables set on the app associated with your task.
+These overwrite and are appended to the app&rsquo;s running environment variable group.</p>
+
+<h4 id="body-parameters">Body Parameters</h4>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      command
+
+      <span class="method-list-item-type method-list-item-type-required">required</span>
+    </h4>
+
+    <p class="method-list-item-description">Command that will be executed</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      name
+
+     <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">User-facing name of the task</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+     environment_variables
+     <span class="method-list-item-type">optional</span>
+    </h4>
+    <p class="method-list-item-description">Environment variables passed to the
+    container running your task.</p>
+
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      memory_in_mb
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Maximum memory for the task in MB. Defaults to operater-configurable &lsquo;default_app_memory&rsquo; when not specified.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      droplet_guid
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">The guid of the droplet that will be used to run the command. Defaults to the app&rsquo;s current droplet when not specified.</p>
+  </li>
+</ul>
+
+          <h3 id="get-a-task">Get a task</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/tasks/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/tasks/[guid]"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+
+{
+  "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
+  "sequence_id": 0,
+  "name": "migrate",
+  "command": "rake db:migrate",
+  "state": "RUNNING",
+  "memory_in_mb": 512,
+  "environment_variables": {},
+  "result": {
+    "failure_reason": null
+  },
+  "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
+  "created_at": "2016-05-04T17:00:41Z",
+  "updated_at": "2016-05-04T17:00:42Z",
+  "links": {
+    "self": {
+      "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
+    },
+    "app": {
+      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+    },
+    "droplet": {
+      "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+    }
+  }
+}
+
+</code></pre>
+
+<p>This endpoint retrieves a specific task. The <code>command</code> and <code>environment_variables</code>
+fields may be excluded in the response based on the user&rsquo;s role.</p>
+
+<h4 id="body-parameters">Body Parameters</h4>
+
+<p class='no-body-parameters-outer'>
+  <span class='no-body-parameters-required'>
+    No arguments
+  </span>
+</p>
+
+          <h3 id="cancel-a-task">Cancel a task</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/tasks/:task_guid/cancel</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/tasks/[guid]/cancel"</span> <span class="se">\</span>
+  -X PUT <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
+
+{
+  "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
+  "sequence_id": 0,
+  "name": "migrate",
+  "command": "rake db:migrate",
+  "state": "CANCELING",
+  "memory_in_mb": 512,
+  "environment_variables": {},
+  "result": {
+    "failure_reason": null
+  },
+  "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
+  "created_at": "2016-05-04T17:00:41Z",
+  "updated_at": "2016-05-04T17:00:42Z",
+  "links": {
+    "self": {
+      "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
+    },
+    "app": {
+      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+    },
+    "droplet": {
+      "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+    }
+  }
+}
+
+</code></pre>
+
+<p>This endpoint cancels a running task.</p>
+
+<p>Canceled tasks will initially be in state &ldquo;CANCELING&rdquo; and will move to state &ldquo;FAILED&rdquo; once the cancel request has been processed.</p>
+
+<p>Cancel requests are idempotent and will be processed according to the state of the task when the request is executed.</p>
+
+<p>Canceling a task that is in &ldquo;SUCCEEDED&rdquo; or &ldquo;FAILED&rdquo; state will return an error.</p>
+
+<h4 id="body-parameters">Body Parameters</h4>
+
+<p class='no-body-parameters-outer'>
+  <span class='no-body-parameters-required'>
+    No arguments
+  </span>
+</p>
+
+          <h3 id="list-tasks">List tasks</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/tasks</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/tasks"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+
+{
+  "pagination": {
+    "total_results": 3,
+    "total_pages": 2,
+    "first": {
+      "href": "/v3/tasks?page=1&amp;per_page=2"
+    },
+    "last": {
+      "href": "/v3/tasks?page=2&amp;per_page=2"
+    },
+    "next": {
+      "href": "/v3/tasks?page=2&amp;per_page=2"
+    },
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
+      "sequence_id": 0,
+      "name": "hello",
+      "state": "SUCCEEDED",
+      "memory_in_mb": 512,
+      "result": {
+        "failure_reason": null
+      },
+      "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
+      "created_at": "2016-05-04T17:00:41Z",
+      "updated_at": "2016-05-04T17:00:42Z",
+      "links": {
+        "self": {
+          "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
+        },
+        "app": {
+          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+        },
+        "droplet": {
+          "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+        }
+      }
+    },
+    {
+      "guid": "63b4cd89-fd8b-4bf1-a311-7174fcc907d6",
+      "sequence_id": 1,
+      "name": "migrate",
+      "state": "FAILED",
+      "memory_in_mb": 512,
+      "result": {
+        "failure_reason": "Exited with status 1"
+      },
+      "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
+      "created_at": "2016-05-04T17:00:41Z",
+      "updated_at": "2016-05-04T17:00:42Z",
+      "links": {
+        "self": {
+          "href": "/v3/tasks/63b4cd89-fd8b-4bf1-a311-7174fcc907d6"
+        },
+        "app": {
+          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+        },
+        "droplet": {
+          "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+        }
+      }
+    },
+  ]
+}
+
+</code></pre>
+
+<p>This endpoint retrieves the tasks the user has access to. The <code>command</code> and <code>environment_variables</code>
+fields are excluded in the response.</p>
+
+<h4 id="query-parameters">Query Parameters</h4>
+
+<ul class="method-list-group">
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      app_guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of app guids to filter by. <br>Example: <code>app_guids=app_guid1,app_guid2</code>
+</p>
+  </li>
+
+
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      names
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of task names to filter by.</p>
+  </li>
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of task guids to filter by.</p>
+  </li>
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      organization_guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of organization guids to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code>
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      space_guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of space guids to filter by. <br>Example: <code>space_guids=space_guid1,space_guid2</code>
+</p>
+  </li>
+
+
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      states
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of task states to filter by.</p>
+  </li>
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      page
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      per_page
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+</p>
+  </li>
+
+
+</ul>
+
+          <h3 id="cancel-a-task-for-an-app">Cancel a task for an app</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/apps/:guid/tasks/:guid/cancel</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/tasks/[guid]/cancel"</span> <span class="se">\</span>
+  -X PUT <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
+
+{
+  "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
+  "sequence_id": 0,
+  "name": "migrate",
+  "command": "rake db:migrate",
+  "state": "CANCELING",
+  "memory_in_mb": 512,
+  "environment_variables": {},
+  "result": {
+    "failure_reason": null
+  },
+  "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
+  "created_at": "2016-05-04T17:00:41Z",
+  "updated_at": "2016-05-04T17:00:42Z",
+  "links": {
+    "self": {
+      "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
+    },
+    "app": {
+      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+    },
+    "droplet": {
+      "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+    }
+  }
+}
+
+</code></pre>
+
+<p>This endpoint cancels a running task.</p>
+
+<p>Canceled tasks will initially be in state &ldquo;CANCELING&rdquo; and will move to state &ldquo;FAILED&rdquo; once the cancel request has been processed.</p>
+
+<p>Cancel requests are idempotent and will be processed according to the state of the task when the request is executed.</p>
+
+<p>Canceling a task that is in &ldquo;SUCCEEDED&rdquo; or &ldquo;FAILED&rdquo; state will return an error.</p>
+
+<h4 id="body-parameters">Body Parameters</h4>
+
+<p class='no-body-parameters-outer'>
+  <span class='no-body-parameters-required'>
+    No arguments
+  </span>
+</p>
+
+          <h3 id="list-tasks-for-an-app">List tasks for an app</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/tasks</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/:guid/tasks"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+
+{
+  "pagination": {
+    "total_results": 3,
+    "total_pages": 2,
+    "first": {
+      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks?page=1&amp;per_page=2"
+    },
+    "last": {
+      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks?page=2&amp;per_page=2"
+    },
+    "next": {
+      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks?page=2&amp;per_page=2"
+    },
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
+      "sequence_id": 0,
+      "name": "hello",
+      "state": "SUCCEEDED",
+      "memory_in_mb": 512,
+      "result": {
+        "failure_reason": null
+      },
+      "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
+      "created_at": "2016-05-04T17:00:41Z",
+      "updated_at": "2016-05-04T17:00:42Z",
+      "links": {
+        "self": {
+          "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
+        },
+        "app": {
+          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+        },
+        "droplet": {
+          "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+        }
+      }
+    },
+    {
+      "guid": "63b4cd89-fd8b-4bf1-a311-7174fcc907d6",
+      "sequence_id": 1,
+      "name": "migrate",
+      "state": "FAILED",
+      "memory_in_mb": 512,
+      "result": {
+        "failure_reason": "Exited with status 1"
+      },
+      "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
+      "created_at": "2016-05-04T17:00:41Z",
+      "updated_at": "2016-05-04T17:00:42Z",
+      "links": {
+        "self": {
+          "href": "/v3/tasks/63b4cd89-fd8b-4bf1-a311-7174fcc907d6"
+        },
+        "app": {
+          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+        },
+        "droplet": {
+          "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+        }
+      }
+    },
+  ]
+}
+
+</code></pre>
+
+<p>This endpoint retrieves the tasks the user has access to. The <code>command</code> and <code>environment_variables</code>
+fields may be excluded in the response based on the user&rsquo;s role.</p>
+
+<h4 id="query-parameters">Query Parameters</h4>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of task guids to filter by.</p>
+  </li>
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      names
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of task names to filter by.</p>
+  </li>
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      states
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma delimited list of task states to filter by.</p>
+  </li>
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      page
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      per_page
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      order_by
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+</p>
+  </li>
+
+
+</ul>
+
+          <h1 id="experimental-resources">Experimental Resources</h1>
+
+          <h2 id="apps">Apps</h2>
 
 <p>Apps are top-level objects that link together and contain configuration
 information for your packages, droplets, processes, tasks, and more.</p>
 
           <div class='no-margin'></div>
 
-<h2 id="the-app-object">The app object</h2>
+<h3 id="the-app-object">The app object</h3>
 
 <ul class="method-list-group">
     <li class="method-list-item">
@@ -239,7 +1062,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
 </ul>
 
-          <h2 id="create-an-app">Create an app</h2>
+          <h3 id="create-an-app">Create an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/apps</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -328,7 +1151,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
 <p>This endpoint creates a new app.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -369,7 +1192,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
   </li>
 </ul>
 
-          <h2 id="get-an-app">Get an app</h2>
+          <h3 id="get-an-app">Get an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -441,7 +1264,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
 <p>This endpoint retrieves an app.</p>
 
-          <h2 id="get-environment-for-an-app">Get environment for an app</h2>
+          <h3 id="get-environment-for-an-app">Get environment for an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/env</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -504,7 +1327,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <p>This endpoint retrieves the environment variables that will be provided to an app at runtime.
 It will include environment variables for Environment Variable Groups and Service Bindings.</p>
 
-          <h2 id="update-an-app">Update an app</h2>
+          <h3 id="update-an-app">Update an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">PATCH</span> <span class="nn">/v3/apps/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -588,7 +1411,7 @@ It will include environment variables for Environment Variable Groups and Servic
 
 <p>This endpoint updates an app.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -620,7 +1443,7 @@ It will include environment variables for Environment Variable Groups and Servic
   </li>
 </ul>
 
-          <h2 id="set-current-droplet-for-an-app">Set current droplet for an app</h2>
+          <h3 id="set-current-droplet-for-an-app">Set current droplet for an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/apps/:guid/droplets/current</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -714,7 +1537,7 @@ It will include environment variables for Environment Variable Groups and Servic
 
 <p>This endpoint sets the current droplet for an app. The current droplet is the droplet that the app will use when running.</p>
 
-          <h2 id="get-current-droplet-for-an-app">Get current droplet for an app</h2>
+          <h3 id="get-current-droplet-for-an-app">Get current droplet for an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/droplets/current</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -807,7 +1630,7 @@ It will include environment variables for Environment Variable Groups and Servic
 
 <p>This endpoint retrieves the current droplet for an app.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -815,7 +1638,7 @@ It will include environment variables for Environment Variable Groups and Servic
   </span>
 </p>
 
-          <h2 id="start-an-app">Start an app</h2>
+          <h3 id="start-an-app">Start an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/apps/:guid/start</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -887,7 +1710,7 @@ It will include environment variables for Environment Variable Groups and Servic
 
 <p>This endpoint starts running the app.</p>
 
-          <h2 id="stop-an-app">Stop an app</h2>
+          <h3 id="stop-an-app">Stop an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/apps/:guid/stop</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -959,7 +1782,7 @@ It will include environment variables for Environment Variable Groups and Servic
 
 <p>This endpoint stops a running app.</p>
 
-          <h2 id="delete-an-app">Delete an app</h2>
+          <h3 id="delete-an-app">Delete an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">DELETE</span> <span class="nn">/v3/apps/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -977,7 +1800,7 @@ It will include environment variables for Environment Variable Groups and Servic
 
 <p>This endpoint deletes an app.</p>
 
-          <h2 id="list-apps">List apps</h2>
+          <h3 id="list-apps">List apps</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -1119,7 +1942,7 @@ It will include environment variables for Environment Variable Groups and Servic
 
 <p>This endpoint retrieves all the apps the user has access to.</p>
 
-<h3 id="query-parameters">Query Parameters</h3>
+<h4 id="query-parameters">Query Parameters</h4>
 
 <ul class="method-list-group">
 
@@ -1217,7 +2040,7 @@ It will include environment variables for Environment Variable Groups and Servic
 
 </ul>
 
-          <h1 id="droplets">Droplets</h1>
+          <h2 id="droplets">Droplets</h2>
 
 <p>Droplets are created by staging an application package. There are two types
 (lifecycles) of droplets: buildpack and docker. In the case of the buildpacks,
@@ -1232,7 +2055,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 
           <div class='no-margin'></div>
 
-<h2 id="the-droplet-object">The droplet object</h2>
+<h3 id="the-droplet-object">The droplet object</h3>
 
 <ul class="method-list-group">
     <li class="method-list-item">
@@ -1362,11 +2185,11 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 
           <div class='no-margin'></div>
 
-<h2 id="the-lifecycle-object">The lifecycle object</h2>
+<h3 id="the-lifecycle-object">The lifecycle object</h3>
 
 <p>Lifecycle objects describe buildpacks or docker images.</p>
 
-<h3 id="lifecycle-object-for-buildpack-droplets">Lifecycle object for buildpack droplets</h3>
+<h4 id="lifecycle-object-for-buildpack-droplets">Lifecycle object for buildpack droplets</h4>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -1400,7 +2223,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
   </li>
 </ul>
 
-<h3 id="lifecycle-object-for-docker">Lifecycle object for docker</h3>
+<h4 id="lifecycle-object-for-docker">Lifecycle object for docker</h4>
 
 <p>Droplets created with a docker lifecycle are only valid for docker packages.</p>
 
@@ -1425,7 +2248,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
   </li>
 </ul>
 
-          <h2 id="create-a-droplet">Create a droplet</h2>
+          <h3 id="create-a-droplet">Create a droplet</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/packages/:guid/droplets</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -1515,7 +2338,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 
 <p>This endpoint creates a new droplet from a package.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -1563,7 +2386,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
   </li>
 </ul>
 
-          <h2 id="copy-a-droplet">Copy a droplet</h2>
+          <h3 id="copy-a-droplet">Copy a droplet</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/droplets/:guid/copy</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -1624,7 +2447,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 <p>This endpoint copies a droplet to a different app. The copied droplet excludes the
 environment variables listed on the source droplet.</p>
 
-<h3 id="query-parameters">Query Parameters</h3>
+<h4 id="query-parameters">Query Parameters</h4>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -1640,7 +2463,7 @@ environment variables listed on the source droplet.</p>
   </li>
 </ul>
 
-          <h2 id="get-a-droplet">Get a droplet</h2>
+          <h3 id="get-a-droplet">Get a droplet</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/droplets/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -1733,7 +2556,7 @@ environment variables listed on the source droplet.</p>
 
 <p>This endpoint retrieves a specific droplet.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -1741,7 +2564,7 @@ environment variables listed on the source droplet.</p>
   </span>
 </p>
 
-          <h2 id="delete-a-droplet">Delete a droplet</h2>
+          <h3 id="delete-a-droplet">Delete a droplet</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">DELETE</span> <span class="nn">/v3/droplets/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -1759,7 +2582,7 @@ environment variables listed on the source droplet.</p>
 
 <p>This endpoint deletes a specific droplet.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -1767,7 +2590,7 @@ environment variables listed on the source droplet.</p>
   </span>
 </p>
 
-          <h2 id="list-droplets">List droplets</h2>
+          <h3 id="list-droplets">List droplets</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/droplets</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -1884,7 +2707,7 @@ environment variables listed on the source droplet.</p>
 
 <p>This endpoint retrieves the droplets the user has access to.</p>
 
-<h3 id="query-parameters">Query Parameters</h3>
+<h4 id="query-parameters">Query Parameters</h4>
 
 <ul class="method-list-group">
     <li class="method-list-item">
@@ -1995,7 +2818,7 @@ environment variables listed on the source droplet.</p>
 
 </ul>
 
-          <h2 id="list-droplets-for-an-app">List droplets for an app</h2>
+          <h3 id="list-droplets-for-an-app">List droplets for an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/droplets</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -2112,7 +2935,7 @@ environment variables listed on the source droplet.</p>
 
 <p>This endpoint retrieves a list of droplets belonging to an app.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <ul class="method-list-group">
     <li class="method-list-item">
@@ -2184,7 +3007,7 @@ environment variables listed on the source droplet.</p>
 
 </ul>
 
-          <h2 id="list-droplets-for-a-package">List droplets for a package</h2>
+          <h3 id="list-droplets-for-a-package">List droplets for a package</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/packages/:guid/droplets</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -2301,7 +3124,7 @@ environment variables listed on the source droplet.</p>
 
 <p>This endpoint retrieves a list of droplets belonging to a package.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <ul class="method-list-group">
     <li class="method-list-item">
@@ -2373,7 +3196,7 @@ environment variables listed on the source droplet.</p>
 
 </ul>
 
-          <h1 id="packages">Packages</h1>
+          <h2 id="packages">Packages</h2>
 
 <p>A package is an application&rsquo;s &lsquo;source code&rsquo;; either raw bits for your application or a pointer to these bits.</p>
 
@@ -2381,7 +3204,7 @@ environment variables listed on the source droplet.</p>
 
           <div class='no-margin'></div>
 
-<h2 id="the-package-object">The package object</h2>
+<h3 id="the-package-object">The package object</h3>
 
 <ul class="method-list-group">
     <li class="method-list-item">
@@ -2461,7 +3284,7 @@ environment variables listed on the source droplet.</p>
 
 </ul>
 
-          <h2 id="create-a-package">Create a package</h2>
+          <h3 id="create-a-package">Create a package</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/apps/:guid/packages</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -2511,7 +3334,7 @@ environment variables listed on the source droplet.</p>
 
 <p>This endpoint creates a new package.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -2543,7 +3366,7 @@ environment variables listed on the source droplet.</p>
   </li>
 </ul>
 
-          <h2 id="get-a-package">Get a package</h2>
+          <h3 id="get-a-package">Get a package</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/packages/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -2597,7 +3420,7 @@ environment variables listed on the source droplet.</p>
 
 <p>This endpoint retrieves a specific package.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -2605,11 +3428,11 @@ environment variables listed on the source droplet.</p>
   </span>
 </p>
 
-          <h2 id="stage-a-package">Stage a package</h2>
+          <h3 id="stage-a-package">Stage a package</h3>
 
 <p>Staging a package is accomplished by creating a droplet. See <a href=#create-a-droplet>Create a droplet</a></p>
 
-          <h2 id="upload-package-bits">Upload package bits</h2>
+          <h3 id="upload-package-bits">Upload package bits</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/packages/:guid/upload</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -2664,7 +3487,7 @@ environment variables listed on the source droplet.</p>
 
 <p>This endpoint uploads bits to an existing package of type &lsquo;bits&rsquo;. The bits must be sent as part of a multi-part form</p>
 
-<h3 id="form-parameters">Form Parameters</h3>
+<h4 id="form-parameters">Form Parameters</h4>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -2678,7 +3501,7 @@ environment variables listed on the source droplet.</p>
   </li>
 </ul>
 
-          <h2 id="download-package-bits">Download package bits</h2>
+          <h3 id="download-package-bits">Download package bits</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/packages/:guid/download</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -2700,7 +3523,7 @@ You are being redirected.
 <p>This endpoint downloads the bits of an existing package.<br><br>
 When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits. If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be replayed on the new redirect request. Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -2708,7 +3531,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </span>
 </p>
 
-          <h2 id="copy-a-package">Copy a Package</h2>
+          <h3 id="copy-a-package">Copy a Package</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/apps/:guid/packages</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -2750,7 +3573,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint copies the bits of a source package to a target package.</p>
 
-<h3 id="query-parameters">Query Parameters</h3>
+<h4 id="query-parameters">Query Parameters</h4>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -2764,7 +3587,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
 </ul>
 
-          <h2 id="delete-a-package">Delete a package</h2>
+          <h3 id="delete-a-package">Delete a package</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">DELETE</span> <span class="nn">/v3/packages/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -2782,7 +3605,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint deletes a specific package.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -2790,7 +3613,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </span>
 </p>
 
-          <h2 id="list-packages">List packages</h2>
+          <h3 id="list-packages">List packages</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/packages</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -2885,7 +3708,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint retrieves all the packages the user has access to.</p>
 
-<h3 id="query-parameters">Query Parameters</h3>
+<h4 id="query-parameters">Query Parameters</h4>
 
 <ul class="method-list-group">
     <li class="method-list-item">
@@ -3010,7 +3833,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 </ul>
 
-          <h2 id="list-packages-for-an-app">List packages for an app</h2>
+          <h3 id="list-packages-for-an-app">List packages for an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/packages</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -3080,7 +3903,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint retrieves the packages that associates with the given app guid.</p>
 
-<h3 id="query-parameters">Query Parameters</h3>
+<h4 id="query-parameters">Query Parameters</h4>
 
 <ul class="method-list-group">
     <li class="method-list-item">
@@ -3163,7 +3986,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 </ul>
 
-          <h1 id="processes-by-guid">Processes By Guid</h1>
+          <h2 id="processes-by-guid">Processes By Guid</h2>
 
 <p>Processes define the runnable units of an app. An app can have multiple process types, each with differing commands and scale.</p>
 
@@ -3171,7 +3994,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
           <div class='no-margin'></div>
 
-<h2 id="the-process-object">The process object</h2>
+<h3 id="the-process-object">The process object</h3>
 
 <ul class="method-list-group">
     <li class="method-list-item">
@@ -3285,7 +4108,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
           <div class='no-margin'></div>
 
-<h2 id="the-health_check-object">The health_check object</h2>
+<h3 id="the-health_check-object">The health_check object</h3>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -3308,7 +4131,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
           <div class='no-margin'></div>
 
-<h2 id="the-process-stats-object">The process stats object</h2>
+<h3 id="the-process-stats-object">The process stats object</h3>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -3417,7 +4240,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
 </ul>
 
-          <h2 id="get-a-process">Get a process</h2>
+          <h3 id="get-a-process">Get a process</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/processes/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -3472,7 +4295,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint retrieves a specific process.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -3480,7 +4303,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </span>
 </p>
 
-          <h2 id="get-stats-for-a-process">Get stats for a process</h2>
+          <h3 id="get-stats-for-a-process">Get stats for a process</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/processes/:guid/stats</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -3526,7 +4349,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint retrieves the stats for a specific process.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -3534,7 +4357,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </span>
 </p>
 
-          <h2 id="update-a-process">Update a process</h2>
+          <h3 id="update-a-process">Update a process</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">PATCH</span> <span class="nn">/v3/processes/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -3590,7 +4413,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint updates an existing process.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -3621,7 +4444,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
 </ul>
 
-          <h2 id="scale-a-process">Scale a process</h2>
+          <h3 id="scale-a-process">Scale a process</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/processes/:guid/scale</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -3681,7 +4504,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint scales an existing process.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -3713,7 +4536,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
 </ul>
 
-          <h2 id="terminate-a-process-instance">Terminate a process instance</h2>
+          <h3 id="terminate-a-process-instance">Terminate a process instance</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">DELETE</span> <span class="nn">/v3/processes/:guid/instances/:index</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -3733,7 +4556,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This allows a user to stop a single misbehaving instance of a process.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -3741,7 +4564,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </span>
 </p>
 
-          <h2 id="list-processes">List processes</h2>
+          <h3 id="list-processes">List processes</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/processes</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -3849,7 +4672,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint retrieves the processes the user has access to.</p>
 
-<h3 id="query-parameters">Query Parameters</h3>
+<h4 id="query-parameters">Query Parameters</h4>
 
 <ul class="method-list-group">
     <li class="method-list-item">
@@ -3963,7 +4786,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 </ul>
 
-          <h1 id="processes-by-app-and-type">Processes By App and Type</h1>
+          <h2 id="processes-by-app-and-type">Processes By App and Type</h2>
 
 <p>Processes define the runnable units of an app. An app can have multiple process types, each with differing commands and scale.</p>
 
@@ -3971,7 +4794,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
           <div class='no-margin'></div>
 
-<h2 id="the-process-object">The process object</h2>
+<h3 id="the-process-object">The process object</h3>
 
 <ul class="method-list-group">
     <li class="method-list-item">
@@ -4085,7 +4908,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
           <div class='no-margin'></div>
 
-<h2 id="the-health_check-object">The health_check object</h2>
+<h3 id="the-health_check-object">The health_check object</h3>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -4108,7 +4931,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
           <div class='no-margin'></div>
 
-<h2 id="the-process-stats-object">The process stats object</h2>
+<h3 id="the-process-stats-object">The process stats object</h3>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -4217,7 +5040,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
 </ul>
 
-          <h2 id="get-a-process-for-an-app">Get a process for an app</h2>
+          <h3 id="get-a-process-for-an-app">Get a process for an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/processes/:type</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -4272,7 +5095,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint retrieves a specific process belonging to an app.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -4280,7 +5103,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </span>
 </p>
 
-          <h2 id="get-stats-for-a-process-for-an-app">Get stats for a process for an app</h2>
+          <h3 id="get-stats-for-a-process-for-an-app">Get stats for a process for an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/processes/:type/stats</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -4326,7 +5149,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint retrieves the stats for a specific process belonging to an app.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -4334,7 +5157,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </span>
 </p>
 
-          <h2 id="scale-a-process-for-an-app">Scale a process for an app</h2>
+          <h3 id="scale-a-process-for-an-app">Scale a process for an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/apps/:guid/processes/:type/scale</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -4394,7 +5217,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint scales an existing process belonging to an app.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -4426,7 +5249,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
 </ul>
 
-          <h2 id="terminate-a-process-instance-for-an-app">Terminate a process instance for an app</h2>
+          <h3 id="terminate-a-process-instance-for-an-app">Terminate a process instance for an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">DELETE</span> <span class="nn">/v3/apps/:guid/processes/:type/instances/:index</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -4446,7 +5269,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This allows a user to stop a single misbehaving instance of a process.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -4454,7 +5277,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </span>
 </p>
 
-          <h2 id="list-processes-for-an-app">List processes for an app</h2>
+          <h3 id="list-processes-for-an-app">List processes for an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/processes</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -4562,7 +5385,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint retrieves the processes belonging to an app.</p>
 
-<h3 id="query-parameters">Query Parameters</h3>
+<h4 id="query-parameters">Query Parameters</h4>
 
 <ul class="method-list-group">
     <li class="method-list-item">
@@ -4676,13 +5499,13 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 </ul>
 
-          <h1 id="route-mappings">Route Mappings</h1>
+          <h2 id="route-mappings">Route Mappings</h2>
 
 <p>Route Mappings are relations between an app and a route; to direct traffic from a route to an app, you must first create a mapping.</p>
 
           <div class='no-margin'></div>
 
-<h2 id="the-route_mapping-object">The route_mapping object</h2>
+<h3 id="the-route_mapping-object">The route_mapping object</h3>
 
 <ul class="method-list-group">
     <li class="method-list-item">
@@ -4747,7 +5570,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 </ul>
 
-          <h2 id="create-a-route-mapping">Create a route mapping</h2>
+          <h3 id="create-a-route-mapping">Create a route mapping</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/route_mappings</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -4797,7 +5620,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint creates a new route mapping.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -4838,7 +5661,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
 </ul>
 
-          <h2 id="get-a-route-mapping">Get a route mapping</h2>
+          <h3 id="get-a-route-mapping">Get a route mapping</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/route_mappings/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -4878,7 +5701,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint retrieves a specific route mapping.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -4886,7 +5709,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </span>
 </p>
 
-          <h2 id="delete-a-route-mapping">Delete a route mapping</h2>
+          <h3 id="delete-a-route-mapping">Delete a route mapping</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">DELETE</span> <span class="nn">/v3/route_mappings/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -4904,7 +5727,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint deletes a specific route mapping.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -4912,7 +5735,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </span>
 </p>
 
-          <h2 id="list-route-mappings">List route mappings</h2>
+          <h3 id="list-route-mappings">List route mappings</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/route_mappings</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -4990,7 +5813,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint retrieves the route mappings the user has access to.</p>
 
-<h3 id="query-parameters">Query Parameters</h3>
+<h4 id="query-parameters">Query Parameters</h4>
 
 <ul class="method-list-group">
     <li class="method-list-item">
@@ -5062,7 +5885,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 </ul>
 
-          <h2 id="list-route-mappings-for-an-app">List route mappings for an app</h2>
+          <h3 id="list-route-mappings-for-an-app">List route mappings for an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/route_mappings</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -5140,7 +5963,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint retrieves the route mappings the user has access to.</p>
 
-<h3 id="query-parameters">Query Parameters</h3>
+<h4 id="query-parameters">Query Parameters</h4>
 
 <p><li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -5190,7 +6013,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p></ul></p>
 
-          <h1 id="service-bindings">Service Bindings</h1>
+          <h2 id="service-bindings">Service Bindings</h2>
 
 <p>Service bindings are relations between a service instance and an app; to use a service instance with an app, you must first bind them together.</p>
 
@@ -5198,7 +6021,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
           <div class='no-margin'></div>
 
-<h2 id="the-service_binding-object">The service_binding object</h2>
+<h3 id="the-service_binding-object">The service_binding object</h3>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -5262,7 +6085,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
 </ul>
 
-          <h2 id="create-a-service-binding">Create a service binding</h2>
+          <h3 id="create-a-service-binding">Create a service binding</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/service_bindings</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -5322,7 +6145,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint creates a new service binding.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <ul class="method-list-group">
   <li class="method-list-item">
@@ -5363,7 +6186,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
 </ul>
 
-          <h2 id="get-a-service-binding">Get a service binding</h2>
+          <h3 id="get-a-service-binding">Get a service binding</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/service_bindings/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -5407,7 +6230,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint retrieves a specific service binding.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -5415,7 +6238,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </span>
 </p>
 
-          <h2 id="delete-a-service-binding">Delete a service binding</h2>
+          <h3 id="delete-a-service-binding">Delete a service binding</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">DELETE</span> <span class="nn">/v3/service_bindings/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -5433,7 +6256,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint deletes a specific service binding.</p>
 
-<h3 id="body-parameters">Body Parameters</h3>
+<h4 id="body-parameters">Body Parameters</h4>
 
 <p class='no-body-parameters-outer'>
   <span class='no-body-parameters-required'>
@@ -5441,7 +6264,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </span>
 </p>
 
-          <h2 id="list-service-bindings">List service bindings</h2>
+          <h3 id="list-service-bindings">List service bindings</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/service_bindings</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -5527,7 +6350,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 <p>This endpoint retrieves the service bindings the user has access to.</p>
 
-<h3 id="query-parameters">Query Parameters</h3>
+<h4 id="query-parameters">Query Parameters</h4>
 
 <ul class="method-list-group">
     <li class="method-list-item">
@@ -5557,781 +6380,6 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
 
 
-
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      page
-
-        <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
-</p>
-  </li>
-
-
-
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      per_page
-
-        <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
-</p>
-  </li>
-
-
-
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      order_by
-
-        <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
-    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
-</p>
-  </li>
-
-
-</ul>
-
-          <h1 id="tasks">Tasks</h1>
-
-<p>Tasks are one-off jobs that are intended to perform a task, stop, and be cleaned up, freeing up resources.</p>
-
-<p>Examples of this include database migrations, sending things, and batch jobs.</p>
-
-          <div class='no-margin'></div>
-
-<h2 id="the-task-object">The task object</h2>
-
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      guid
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Unique GUID for the task</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      name
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">User-facing name of the task.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      command
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Command that will be executed</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      environment_variables
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Environment variables set on the
-    container running your task.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      memory_in_mb
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">Maximum memory for the task in MB.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      state
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">State of the task. Possible states are PENDING, RUNNING, SUCCEEDED, CANCELING, and FAILED</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      droplet_guid
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">The guid of the droplet that will be used to run the command.</p>
-  </li>
-  <li class="method-list-item">
-      <h4 class="method-list-item-label">
-        result
-        <span class="method-list-item-type">object</span>
-      </h4>
-
-      <p class="method-list-item-description">Results from the task</p>
-  </li>
-  <li class="method-list-item">
-      <h4 class="method-list-item-label">
-        result[failure_reason]
-        <span class="method-list-item-type">string</span>
-      </h4>
-
-      <p class="method-list-item-description">Null if the task succeeds, contains the error message if it fails.</p>
-  </li>
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      created_at
-
-        <span class="method-list-item-type">datetime</span>
-    </h4>
-
-    <p class="method-list-item-description">    The time with zone when the app was created.
-</p>
-  </li>
-
-
-
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      updated_at
-
-        <span class="method-list-item-type">datetime</span>
-    </h4>
-
-    <p class="method-list-item-description">    The time with zone with the package was last updated.
-</p>
-  </li>
-
-
-
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      links
-
-        <span class="method-list-item-type">object</span>
-    </h4>
-
-    <p class="method-list-item-description">    Links to related resources.
-</p>
-  </li>
-
-
-</ul>
-
-          <h2 id="create-a-task">Create a task</h2>
-<pre class="highlight plaintext"><code>Definition
-</code></pre>
-<pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/apps/:guid/tasks</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/tasks"</span> <span class="se">\</span>
-  -X POST <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -d <span class="s1">'{
-    "name": "migrate",
-    "command": "rake db:migrate"
-  }'</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
-
-{
-  "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
-  "name": "migrate",
-  "command": "rake db:migrate",
-  "state": "RUNNING",
-  "memory_in_mb": 512,
-  "environment_variables": {},
-  "result": {
-    "failure_reason": null
-  },
-  "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
-  "created_at": "2016-05-04T17:00:41Z",
-  "updated_at": "2016-05-04T17:00:42Z",
-  "links": {
-    "self": {
-      "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
-    },
-    "app": {
-      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
-    },
-    "droplet": {
-      "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
-    }
-  }
-}
-
-</code></pre>
-
-<p>This endpoint creates a new task.</p>
-
-<p>Environment variables specified in the request body will overwrite and be appended to the environment variables set on the app associated with your task.
-These overwrite and are appended to the app&rsquo;s running environment variable group.</p>
-
-<h3 id="body-parameters">Body Parameters</h3>
-
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      name
-
-      <span class="method-list-item-type method-list-item-type-required">required</span>
-    </h4>
-
-    <p class="method-list-item-description">User-facing name of the task</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      command
-
-      <span class="method-list-item-type method-list-item-type-required">required</span>
-    </h4>
-
-    <p class="method-list-item-description">Command that will be executed</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-     environment_variables
-     <span class="method-list-item-type">optional</span>
-    </h4>
-    <p class="method-list-item-description">Environment variables passed to the
-    container running your task.</p>
-
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      memory_in_mb
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Maximum memory for the task in MB. Defaults to operater-configurable &lsquo;default_app_memory&rsquo; when not specified.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      droplet_guid
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">The guid of the droplet that will be used to run the command. Defaults to the app&rsquo;s current droplet when not specified.</p>
-  </li>
-</ul>
-
-          <h2 id="get-a-task">Get a task</h2>
-<pre class="highlight plaintext"><code>Definition
-</code></pre>
-<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/tasks/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/tasks/[guid]"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-
-{
-  "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
-  "name": "migrate",
-  "command": "rake db:migrate",
-  "state": "RUNNING",
-  "memory_in_mb": 512,
-  "environment_variables": {},
-  "result": {
-    "failure_reason": null
-  },
-  "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
-  "created_at": "2016-05-04T17:00:41Z",
-  "updated_at": "2016-05-04T17:00:42Z",
-  "links": {
-    "self": {
-      "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
-    },
-    "app": {
-      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
-    },
-    "droplet": {
-      "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
-    }
-  }
-}
-
-</code></pre>
-
-<p>This endpoint retrieves a specific task.</p>
-
-<h3 id="body-parameters">Body Parameters</h3>
-
-<p class='no-body-parameters-outer'>
-  <span class='no-body-parameters-required'>
-    No arguments
-  </span>
-</p>
-
-          <h2 id="cancel-a-task">Cancel a task</h2>
-<pre class="highlight plaintext"><code>Definition
-</code></pre>
-<pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/tasks/:task_guid/cancel</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/tasks/[guid]/cancel"</span> <span class="se">\</span>
-  -X PUT <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
-
-{
-  "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
-  "name": "migrate",
-  "command": "rake db:migrate",
-  "state": "CANCELING",
-  "memory_in_mb": 512,
-  "environment_variables": {},
-  "result": {
-    "failure_reason": null
-  },
-  "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
-  "created_at": "2016-05-04T17:00:41Z",
-  "updated_at": "2016-05-04T17:00:42Z",
-  "links": {
-    "self": {
-      "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
-    },
-    "app": {
-      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
-    },
-    "droplet": {
-      "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
-    }
-  }
-}
-
-</code></pre>
-
-<p>This endpoint cancels a running task.</p>
-
-<p>Canceled tasks will initially be in state &ldquo;CANCELING&rdquo; and will move to state &ldquo;FAILED&rdquo; once the cancel request has been processed.</p>
-
-<p>Cancel requests are idempotent and will be processed according to the state of the task when the request is executed.</p>
-
-<p>Canceling a task that is in &ldquo;SUCCEEDED&rdquo; or &ldquo;FAILED&rdquo; state will return an error.</p>
-
-<h3 id="body-parameters">Body Parameters</h3>
-
-<p class='no-body-parameters-outer'>
-  <span class='no-body-parameters-required'>
-    No arguments
-  </span>
-</p>
-
-          <h2 id="list-tasks">List tasks</h2>
-<pre class="highlight plaintext"><code>Definition
-</code></pre>
-<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/tasks</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/tasks"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-
-{
-  "pagination": {
-    "total_results": 3,
-    "total_pages": 2,
-    "first": {
-      "href": "/v3/tasks?page=1&amp;per_page=2"
-    },
-    "last": {
-      "href": "/v3/tasks?page=2&amp;per_page=2"
-    },
-    "next": {
-      "href": "/v3/tasks?page=2&amp;per_page=2"
-    },
-    "previous": null
-  },
-  "resources": [
-    {
-      "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
-      "name": "hello",
-      "command": "[PRIVATE DATA HIDDEN IN LISTS]",
-      "state": "SUCCEEDED",
-      "memory_in_mb": 512,
-      "environment_variables": {
-        "redacted_message": "[PRIVATE DATA HIDDEN IN LISTS]"
-      },
-      "result": {
-        "failure_reason": null
-      },
-      "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
-      "created_at": "2016-05-04T17:00:41Z",
-      "updated_at": "2016-05-04T17:00:42Z",
-      "links": {
-        "self": {
-          "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
-        },
-        "app": {
-          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
-        },
-        "droplet": {
-          "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
-        }
-      }
-    },
-    {
-      "guid": "63b4cd89-fd8b-4bf1-a311-7174fcc907d6",
-      "name": "migrate",
-      "command": "[PRIVATE DATA HIDDEN IN LISTS]",
-      "state": "FAILED",
-      "memory_in_mb": 512,
-      "environment_variables": {
-        "redacted_message": "[PRIVATE DATA HIDDEN IN LISTS]"
-      },
-      "result": {
-        "failure_reason": "Exited with status 1"
-      },
-      "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
-      "created_at": "2016-05-04T17:00:41Z",
-      "updated_at": "2016-05-04T17:00:42Z",
-      "links": {
-        "self": {
-          "href": "/v3/tasks/63b4cd89-fd8b-4bf1-a311-7174fcc907d6"
-        },
-        "app": {
-          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
-        },
-        "droplet": {
-          "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
-        }
-      }
-    },
-  ]
-}
-
-</code></pre>
-
-<p>This endpoint retrieves the tasks the user has access to.</p>
-
-<h3 id="query-parameters">Query Parameters</h3>
-
-<ul class="method-list-group">
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      app_guids
-
-        <span class="method-list-item-type">optional</span>
-        <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">    Comma-delimited list of app guids to filter by. <br>Example: <code>app_guids=app_guid1,app_guid2</code>
-</p>
-  </li>
-
-
-
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      names
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of task names to filter by.</p>
-  </li>
-
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      guids
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of task guids to filter by.</p>
-  </li>
-
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      organization_guids
-
-        <span class="method-list-item-type">optional</span>
-        <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">    Comma-delimited list of organization guids to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code>
-</p>
-  </li>
-
-
-
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      space_guids
-
-        <span class="method-list-item-type">optional</span>
-        <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">    Comma-delimited list of space guids to filter by. <br>Example: <code>space_guids=space_guid1,space_guid2</code>
-</p>
-  </li>
-
-
-
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      states
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of task states to filter by.</p>
-  </li>
-
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      page
-
-        <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
-</p>
-  </li>
-
-
-
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      per_page
-
-        <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
-</p>
-  </li>
-
-
-
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      order_by
-
-        <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
-    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
-</p>
-  </li>
-
-
-</ul>
-
-          <h2 id="cancel-a-task-for-an-app">Cancel a task for an app</h2>
-<pre class="highlight plaintext"><code>Definition
-</code></pre>
-<pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/apps/:guid/tasks/:guid/cancel</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/tasks/[guid]/cancel"</span> <span class="se">\</span>
-  -X PUT <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
-
-{
-  "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
-  "name": "migrate",
-  "command": "rake db:migrate",
-  "state": "CANCELING",
-  "memory_in_mb": 512,
-  "environment_variables": {},
-  "result": {
-    "failure_reason": null
-  },
-  "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
-  "created_at": "2016-05-04T17:00:41Z",
-  "updated_at": "2016-05-04T17:00:42Z",
-  "links": {
-    "self": {
-      "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
-    },
-    "app": {
-      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
-    },
-    "droplet": {
-      "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
-    }
-  }
-}
-
-</code></pre>
-
-<p>This endpoint cancels a running task.</p>
-
-<p>Canceled tasks will initially be in state &ldquo;CANCELING&rdquo; and will move to state &ldquo;FAILED&rdquo; once the cancel request has been processed.</p>
-
-<p>Cancel requests are idempotent and will be processed according to the state of the task when the request is executed.</p>
-
-<p>Canceling a task that is in &ldquo;SUCCEEDED&rdquo; or &ldquo;FAILED&rdquo; state will return an error.</p>
-
-<h3 id="body-parameters">Body Parameters</h3>
-
-<p class='no-body-parameters-outer'>
-  <span class='no-body-parameters-required'>
-    No arguments
-  </span>
-</p>
-
-          <h2 id="list-tasks-for-an-app">List tasks for an app</h2>
-<pre class="highlight plaintext"><code>Definition
-</code></pre>
-<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/tasks</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/:guid/tasks"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-
-{
-  "pagination": {
-    "total_results": 3,
-    "total_pages": 2,
-    "first": {
-      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks?page=1&amp;per_page=2"
-    },
-    "last": {
-      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks?page=2&amp;per_page=2"
-    },
-    "next": {
-      "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks?page=2&amp;per_page=2"
-    },
-    "previous": null
-  },
-  "resources": [
-    {
-      "guid": "d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa",
-      "name": "hello",
-      "command": "[PRIVATE DATA HIDDEN IN LISTS]",
-      "state": "SUCCEEDED",
-      "memory_in_mb": 512,
-      "environment_variables": {
-        "redacted_message": "[PRIVATE DATA HIDDEN IN LISTS]"
-      },
-      "result": {
-        "failure_reason": null
-      },
-      "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
-      "created_at": "2016-05-04T17:00:41Z",
-      "updated_at": "2016-05-04T17:00:42Z",
-      "links": {
-        "self": {
-          "href": "/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
-        },
-        "app": {
-          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
-        },
-        "droplet": {
-          "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
-        }
-      }
-    },
-    {
-      "guid": "63b4cd89-fd8b-4bf1-a311-7174fcc907d6",
-      "name": "migrate",
-      "command": "[PRIVATE DATA HIDDEN IN LISTS]",
-      "state": "FAILED",
-      "memory_in_mb": 512,
-      "environment_variables": {
-        "redacted_message": "[PRIVATE DATA HIDDEN IN LISTS]"
-      },
-      "result": {
-        "failure_reason": "Exited with status 1"
-      },
-      "droplet_guid": "740ebd2b-162b-469a-bd72-3edb96fabd9a",
-      "created_at": "2016-05-04T17:00:41Z",
-      "updated_at": "2016-05-04T17:00:42Z",
-      "links": {
-        "self": {
-          "href": "/v3/tasks/63b4cd89-fd8b-4bf1-a311-7174fcc907d6"
-        },
-        "app": {
-          "href": "/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
-        },
-        "droplet": {
-          "href": "/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
-        }
-      }
-    },
-  ]
-}
-
-</code></pre>
-
-<p>This endpoint retrieves the tasks the user has access to.</p>
-
-<h3 id="query-parameters">Query Parameters</h3>
-
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      guids
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of task guids to filter by.</p>
-  </li>
-
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      names
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of task names to filter by.</p>
-  </li>
-
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      states
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma delimited list of task states to filter by.</p>
-  </li>
 
     <li class="method-list-item">
     <h4 class="method-list-item-label">
