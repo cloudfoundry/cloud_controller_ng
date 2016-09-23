@@ -19,7 +19,7 @@ module VCAP::CloudController
       attribute :name,            String
       attribute :billing_enabled, Message::Boolean, default: false
       attribute :status,          String, default: 'active'
-      attribute :isolation_segment_guid, String, default: nil, exclude_in: :create, optional_in: :update
+      attribute :default_isolation_segment_guid, String, default: nil, exclude_in: :create, optional_in: :update
 
       to_one :quota_definition, optional_in: :create
       to_many :spaces,           exclude_in: :create
@@ -53,11 +53,11 @@ module VCAP::CloudController
     end
 
     def before_update(obj)
-      if request_attrs['isolation_segment_guid']
-        isolation_segment_guids = obj.isolation_segment_models.map { |is| is.guid }
-        unless isolation_segment_guids.include?(request_attrs['isolation_segment_guid'])
+      if request_attrs['default_isolation_segment_guid']
+        isolation_segment_guids = obj.isolation_segment_models.map(&:guid)
+        unless isolation_segment_guids.include?(request_attrs['default_isolation_segment_guid'])
           raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
-            "Organization does not have access to Isolation Segment with guid: #{request_attrs['isolation_segment_guid']}")
+            "Organization does not have access to Isolation Segment with guid: #{request_attrs['default_isolation_segment_guid']}")
         end
       end
 

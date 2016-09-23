@@ -44,7 +44,7 @@ module VCAP::CloudController
             app_event_guids:              { type: '[string]' },
             space_guids:                  { type: '[string]' },
             space_quota_definition_guids: { type: '[string]' },
-            isolation_segment_guid:       { type: 'string' }
+            default_isolation_segment_guid:       { type: 'string' }
           })
       end
 
@@ -214,7 +214,7 @@ module VCAP::CloudController
 
         it 'returns a 403' do
           put "/v2/organizations/#{org.guid}", MultiJson.dump({
-            isolation_segment_guid: isolation_segment.guid
+            default_isolation_segment_guid: isolation_segment.guid
           })
 
           expect(last_response.status).to eq(403)
@@ -232,7 +232,7 @@ module VCAP::CloudController
         context 'when the isolation segment does not exist' do
           it 'returns a 400' do
             put "/v2/organizations/#{org.guid}", MultiJson.dump({
-              isolation_segment_guid: 'bogus-guid'
+              default_isolation_segment_guid: 'bogus-guid'
             })
 
             expect(last_response.status).to eq(400)
@@ -242,7 +242,7 @@ module VCAP::CloudController
         context 'when the isolation segment is not in the allowed list' do
           it 'returns a 400' do
             put "/v2/organizations/#{org.guid}", MultiJson.dump({
-              isolation_segment_guid: isolation_segment.guid
+              default_isolation_segment_guid: isolation_segment.guid
             })
 
             expect(last_response.status).to eq(400)
@@ -250,7 +250,6 @@ module VCAP::CloudController
         end
 
         context 'when the isolation segment is in the allowed list' do
-
           before do
             isolation_segment.add_organization(org)
             isolation_segment2.add_organization(org)
@@ -259,7 +258,7 @@ module VCAP::CloudController
 
           it 'sets the isolation segment as the org default' do
             put "/v2/organizations/#{org.guid}", MultiJson.dump({
-              isolation_segment_guid: isolation_segment2.guid
+              default_isolation_segment_guid: isolation_segment2.guid
             })
 
             expect(last_response.status).to eq(201)
@@ -270,7 +269,7 @@ module VCAP::CloudController
           context 'when the segment is already the default isolation segment' do
             it 'leaves the default unchanged' do
               put "/v2/organizations/#{org.guid}", MultiJson.dump({
-                isolation_segment_guid: isolation_segment.guid
+                default_isolation_segment_guid: isolation_segment.guid
               })
 
               expect(last_response.status).to eq(201)
@@ -292,7 +291,7 @@ module VCAP::CloudController
 
         it 'sets the isolation segment as the org default' do
           put "/v2/organizations/#{org.guid}", MultiJson.dump({
-            isolation_segment_guid: isolation_segment2.guid
+            default_isolation_segment_guid: isolation_segment2.guid
           })
 
           expect(last_response.status).to eq(201)
