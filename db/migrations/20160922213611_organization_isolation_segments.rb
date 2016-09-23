@@ -15,15 +15,15 @@ Sequel.migration do
     end
 
     alter_table :organizations do
-      add_column :isolation_segment_guid, String, collate_opts
+      add_column :default_isolation_segment_guid, String, collate_opts
 
-      add_foreign_key [:guid, :isolation_segment_guid], :organizations_isolation_segments, :name => 'organizations_isolation_segments_pk'
+      add_foreign_key [:guid, :default_isolation_segment_guid], :organizations_isolation_segments, :name => 'organizations_isolation_segments_pk'
     end
   end
 
   down do
     alter_table :organizations do
-      drop_foreign_key :isolation_segment_guid
+      drop_foreign_key :organizations_isolation_segment_pk
     end
 
     drop_table :organizations_isolation_segments

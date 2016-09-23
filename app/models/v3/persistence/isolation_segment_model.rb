@@ -19,9 +19,9 @@ module VCAP::CloudController
       before_remove: proc { |isolation_segment, org| org.unset_default_isolation_segment(isolation_segment) }
 
     def validate
-      validates_format ISOLATION_SEGMENT_MODEL_REGEX, :name, message: Sequel.lit('isolation segment names can only contain non-blank unicode characters')
+      validates_format ISOLATION_SEGMENT_MODEL_REGEX, :name, message: Sequel.lit('Isolation Segment names can only contain non-blank unicode characters')
 
-      validates_unique [:name], message: Sequel.lit('isolation segment names are case insensitive and must be unique')
+      validates_unique [:name], message: Sequel.lit('Isolation Segment names are case insensitive and must be unique')
     end
 
     def before_destroy

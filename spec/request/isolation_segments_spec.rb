@@ -24,8 +24,8 @@ RSpec.describe 'IsolationSegmentModels' do
         'updated_at' => nil,
         'links'      => {
           'self' => { 'href' => "/v3/isolation_segments/#{created_isolation_segment.guid}" },
-          'spaces' => { 'href' => "/v3/isolation_segments/#{created_isolation_segment.guid}/spaces" },
-          'organizations' => { 'href' => "/v3/isolation_segments/#{created_isolation_segment.guid}/organizations" },
+          'spaces' => { 'href' => "/v3/isolation_segments/#{created_isolation_segment.guid}/relationships/spaces" },
+          'organizations' => { 'href' => "/v3/isolation_segments/#{created_isolation_segment.guid}/relationships/organizations" },
         }
       }
 
@@ -33,7 +33,7 @@ RSpec.describe 'IsolationSegmentModels' do
     end
   end
 
-  describe 'GET /v3/isolation_segments/:guid/organizations' do
+  describe 'GET /v3/isolation_segments/:guid/relationships/organizations' do
     let(:org1) { VCAP::CloudController::Organization.make }
     let(:org2) { VCAP::CloudController::Organization.make }
     let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
@@ -44,15 +44,15 @@ RSpec.describe 'IsolationSegmentModels' do
     end
 
     it 'returns the organization guids assigned' do
-      get "/v3/isolation_segments/#{isolation_segment_model.guid}/organizations", nil, user_header
+      get "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations", nil, user_header
 
       parsed_response = MultiJson.load(last_response.body)
       expect(last_response.status).to eq(200)
 
       expected_response = {
         'data' => [
-          { 'guid' => org1.guid },
-          { 'guid' => org2.guid },
+          { 'name' => org1.name, 'guid' => org1.guid, 'link' => "/v2/organizations/#{org1.guid}" },
+          { 'name' => org2.name, 'guid' => org2.guid, 'link' => "/v2/organizations/#{org2.guid}" },
         ]
       }
 
@@ -62,7 +62,7 @@ RSpec.describe 'IsolationSegmentModels' do
     end
   end
 
-  describe 'GET /v3/isolation_segments/:guid/spaces' do
+  describe 'GET /v3/isolation_segments/:guid/relationships/spaces' do
     let(:space1) { VCAP::CloudController::Space.make }
     let(:space2) { VCAP::CloudController::Space.make }
     let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
@@ -73,15 +73,15 @@ RSpec.describe 'IsolationSegmentModels' do
     end
 
     it 'returns the guids of the associated spaces' do
-      get "/v3/isolation_segments/#{isolation_segment_model.guid}/spaces", nil, user_header
+      get "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces", nil, user_header
 
       parsed_response = MultiJson.load(last_response.body)
       expect(last_response.status).to eq(200)
 
       expected_response = {
         'data' => [
-          { 'guid' => space1.guid },
-          { 'guid' => space2.guid },
+          { 'name' => space1.name, 'guid' => space1.guid, 'link' => "/v2/spaces/#{space1.guid}" },
+          { 'name' => space2.name, 'guid' => space2.guid, 'link' => "/v2/spaces/#{space2.guid}" },
         ]
       }
 
@@ -91,7 +91,7 @@ RSpec.describe 'IsolationSegmentModels' do
     end
   end
 
-  describe 'POST /v3/isolation_segments/:guid/relationships/allowed_organizations' do
+  describe 'POST /v3/isolation_segments/:guid/relationships/organizations' do
     let(:org1) { VCAP::CloudController::Organization.make }
     let(:org2) { VCAP::CloudController::Organization.make }
     let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
@@ -103,7 +103,7 @@ RSpec.describe 'IsolationSegmentModels' do
         ]
       }
 
-      post "/v3/isolation_segments/#{isolation_segment.guid}/relationships/allowed_organizations", assign_request, user_header
+      post "/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations", assign_request, user_header
 
       parsed_response = MultiJson.load(last_response.body)
       expect(last_response.status).to eq(201)
@@ -115,8 +115,8 @@ RSpec.describe 'IsolationSegmentModels' do
         'updated_at' => nil,
         'links'      => {
           'self' => { 'href' => "/v3/isolation_segments/#{isolation_segment.guid}" },
-          'spaces' => { 'href' => "/v3/isolation_segments/#{isolation_segment.guid}/spaces" },
-          'organizations' => { 'href' => "/v3/isolation_segments/#{isolation_segment.guid}/organizations" },
+          'spaces' => { 'href' => "/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces" },
+          'organizations' => { 'href' => "/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations" },
         }
       }
 
@@ -124,7 +124,7 @@ RSpec.describe 'IsolationSegmentModels' do
     end
   end
 
-  describe 'DELETE /v3/isolation_segments/:guid/relationships/allowed_organizations' do
+  describe 'DELETE /v3/isolation_segments/:guid/relationships/organizations' do
     let(:org1) { VCAP::CloudController::Organization.make }
     let(:org2) { VCAP::CloudController::Organization.make }
     let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
@@ -141,7 +141,7 @@ RSpec.describe 'IsolationSegmentModels' do
         ]
       }
 
-      delete "/v3/isolation_segments/#{isolation_segment.guid}/relationships/allowed_organizations", unassign_request, user_header
+      delete "/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations", unassign_request, user_header
 
       expect(last_response.status).to eq(204)
     end
@@ -164,8 +164,8 @@ RSpec.describe 'IsolationSegmentModels' do
           'updated_at' => nil,
           'links'      => {
             'self' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}" },
-            'spaces' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/spaces" },
-            'organizations' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" },
+            'spaces' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" },
+            'organizations' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations" },
           }
         }
 
@@ -196,8 +196,8 @@ RSpec.describe 'IsolationSegmentModels' do
           'updated_at' => nil,
           'links'      => {
             'self' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}" },
-            'spaces' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/spaces" },
-            'organizations' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" },
+            'spaces' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" },
+            'organizations' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations" },
           }
         }
 
@@ -235,8 +235,8 @@ RSpec.describe 'IsolationSegmentModels' do
             'updated_at' => nil,
             'links'      => {
               'self' => { 'href' => "/v3/isolation_segments/#{shared_guid}" },
-              'spaces' => { 'href' => "/v3/isolation_segments/#{shared_guid}/spaces" },
-              'organizations' => { 'href' => "/v3/isolation_segments/#{shared_guid}/organizations" },
+              'spaces' => { 'href' => "/v3/isolation_segments/#{shared_guid}/relationships/spaces" },
+              'organizations' => { 'href' => "/v3/isolation_segments/#{shared_guid}/relationships/organizations" },
             }
           }
         ]
@@ -281,8 +281,8 @@ RSpec.describe 'IsolationSegmentModels' do
               'updated_at'  =>  nil,
               'links'       =>  {
                 'self' => { 'href' => "/v3/isolation_segments/#{models[1].guid}" },
-                'spaces' => { 'href' => "/v3/isolation_segments/#{models[1].guid}/spaces" },
-                'organizations' => { 'href' => "/v3/isolation_segments/#{models[1].guid}/organizations" },
+                'spaces' => { 'href' => "/v3/isolation_segments/#{models[1].guid}/relationships/spaces" },
+                'organizations' => { 'href' => "/v3/isolation_segments/#{models[1].guid}/relationships/organizations" },
               }
             },
             {
@@ -292,8 +292,8 @@ RSpec.describe 'IsolationSegmentModels' do
               'updated_at'  =>  nil,
               'links'       =>  {
                 'self' => { 'href' => "/v3/isolation_segments/#{models[2].guid}" },
-                'spaces' => { 'href' => "/v3/isolation_segments/#{models[2].guid}/spaces" },
-                'organizations' => { 'href' => "/v3/isolation_segments/#{models[2].guid}/organizations" },
+                'spaces' => { 'href' => "/v3/isolation_segments/#{models[2].guid}/relationships/spaces" },
+                'organizations' => { 'href' => "/v3/isolation_segments/#{models[2].guid}/relationships/organizations" },
               }
             },
           ]
@@ -373,8 +373,8 @@ RSpec.describe 'IsolationSegmentModels' do
                 'updated_at'  =>  nil,
                 'links'       =>  {
                   'self' => { 'href' => "/v3/isolation_segments/#{models[0].guid}" },
-                  'spaces' => { 'href' => "/v3/isolation_segments/#{models[0].guid}/spaces" },
-                  'organizations' => { 'href' => "/v3/isolation_segments/#{models[0].guid}/organizations" },
+                  'spaces' => { 'href' => "/v3/isolation_segments/#{models[0].guid}/relationships/spaces" },
+                  'organizations' => { 'href' => "/v3/isolation_segments/#{models[0].guid}/relationships/organizations" },
                 }
               },
               {
@@ -384,14 +384,14 @@ RSpec.describe 'IsolationSegmentModels' do
                 'updated_at'  =>  nil,
                 'links'       =>  {
                   'self' => { 'href' => "/v3/isolation_segments/#{models[1].guid}" },
-                  'spaces' => { 'href' => "/v3/isolation_segments/#{models[1].guid}/spaces" },
-                  'organizations' => { 'href' => "/v3/isolation_segments/#{models[1].guid}/organizations" },
+                  'spaces' => { 'href' => "/v3/isolation_segments/#{models[1].guid}/relationships/spaces" },
+                  'organizations' => { 'href' => "/v3/isolation_segments/#{models[1].guid}/relationships/organizations" },
                 }
               },
             ]
           }
 
-          expect(parsed_response).to be_a_response_like(expected_response)
+          expect(parsed_response['pagination']).to be_a_response_like(expected_response['pagination'])
         end
       end
     end
@@ -412,8 +412,8 @@ RSpec.describe 'IsolationSegmentModels' do
         'updated_at' => iso8601,
         'links'      => {
           'self' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}" },
-          'spaces' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/spaces" },
-          'organizations' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" },
+          'spaces' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" },
+          'organizations' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations" },
         }
       }
 

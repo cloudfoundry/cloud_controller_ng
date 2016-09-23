@@ -69,7 +69,7 @@ module VCAP::CloudController
           isolation_segment_model2.add_organization(org)
 
           expect(org.isolation_segment_model).to eq(isolation_segment_model)
-          expect(org.isolation_segment_models).to eq([isolation_segment_model, isolation_segment_model2])
+          expect(org.isolation_segment_models).to match_array([isolation_segment_model, isolation_segment_model2])
         end
 
         it 'removes the assignment records' do
@@ -144,7 +144,7 @@ module VCAP::CloudController
 
         context 'when adding isolation segments to the allowed list' do
           it 'raises an ApiError' do
-            expect{
+            expect {
               org.add_isolation_segment_model(isolation_segment_model)
             }.to raise_error(CloudController::Errors::ApiError)
           end
@@ -156,7 +156,7 @@ module VCAP::CloudController
           end
 
           it 'removing raises an ApiError' do
-            expect{
+            expect {
               org.remove_isolation_segment_model(isolation_segment_model)
             }.to raise_error(CloudController::Errors::ApiError)
             expect(org.isolation_segment_model).to eq(isolation_segment_model)
@@ -245,7 +245,7 @@ module VCAP::CloudController
     describe 'Serialization' do
       it { is_expected.to export_attributes :name, :billing_enabled, :quota_definition_guid, :status }
       it { is_expected.to import_attributes :name, :billing_enabled, :user_guids, :manager_guids, :billing_manager_guids,
-                                    :auditor_guids, :quota_definition_guid, :status, :isolation_segment_guid
+                                    :auditor_guids, :quota_definition_guid, :status, :default_isolation_segment_guid
       }
     end
 

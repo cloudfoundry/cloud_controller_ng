@@ -21,7 +21,6 @@ module VCAP::CloudController
       end
     end
 
-
     def guids
       data.map { |val| val['guid'] }
     end

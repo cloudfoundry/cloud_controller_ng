@@ -30,7 +30,7 @@ class IsolationSegmentsController < ApplicationController
   def show
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
     resource_not_found!(:isolation_segment) unless isolation_segment_model && (
-      roles.admin? || 
+      roles.admin? ||
       isolation_segment_model.spaces.any? { |space| can_read?(space.guid, space.organization.guid) } ||
       isolation_segment_model.organizations.any? { |org| can_read_from_org?(org.guid) }
     )
@@ -57,10 +57,11 @@ class IsolationSegmentsController < ApplicationController
   def destroy
     unauthorized! unless roles.admin?
 
-    method_not_allowed!('DELETE', 'the shared isolation segment') if params[:guid].eql?(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
-
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
     resource_not_found!(:isolation_segment) unless isolation_segment_model
+
+    method_not_allowed!('DELETE', "the #{isolation_segment_model.name} Isolation Segment") if
+      isolation_segment_model.guid.eql?(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
 
     isolation_segment_model.db.transaction do
       isolation_segment_model.lock!
@@ -73,13 +74,14 @@ class IsolationSegmentsController < ApplicationController
   def update
     unauthorized! unless roles.admin?
 
-    method_not_allowed!('PUT', 'the shared isolation segment') if params[:guid].eql?(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
+    isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
+    resource_not_found!(:isolation_segment) unless isolation_segment_model
+
+    method_not_allowed!('PUT', "the #{isolation_segment_model.name} Isolation Segment") if
+      isolation_segment_model.guid.eql?(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
 
     message = IsolationSegmentCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
-
-    isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
-    resource_not_found!(:isolation_segment) unless isolation_segment_model
 
     isolation_segment_model.db.transaction do
       isolation_segment_model.lock!
@@ -97,41 +99,41 @@ class IsolationSegmentsController < ApplicationController
   def relationships_orgs
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
     resource_not_found!(:isolation_segment) unless isolation_segment_model && (
-      roles.admin? || 
+      roles.admin? ||
       isolation_segment_model.organizations.any? { |org| can_read_from_org?(org.guid) }
     )
 
     fetcher = IsolationSegmentOrganizationsFetcher.new(isolation_segment_model)
     organizations = if roles.admin? || roles.admin_read_only?
-                fetcher.fetch_all
-              else
-                fetcher.fetch_for_organizations(org_guids: readable_org_guids)
-              end
+                      fetcher.fetch_all
+                    else
+                      fetcher.fetch_for_organizations(org_guids: readable_org_guids)
+                    end
 
-    render status: :ok, json: Presenters::V3::RelationshipPresenter.new(organizations)
+    render status: :ok, json: Presenters::V3::RelationshipPresenter.new('organizations', organizations)
   end
 
   def relationships_spaces
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
     resource_not_found!(:isolation_segment) unless isolation_segment_model && (
-      roles.admin? || 
+      roles.admin? ||
       isolation_segment_model.spaces.any? { |space| can_read?(space.guid, space.organization.guid) } ||
       isolation_segment_model.organizations.any? { |org| can_read_from_org?(org.guid) }
     )
 
     fetcher = IsolationSegmentSpacesFetcher.new(isolation_segment_model)
     spaces = if roles.admin? || roles.admin_read_only?
-                fetcher.fetch_all
-              else
-                fetcher.fetch_for_spaces(space_guids: readable_space_guids)
-              end
-              
-    render status: :ok, json: Presenters::V3::RelationshipPresenter.new(spaces)
+               fetcher.fetch_all
+             else
+               fetcher.fetch_for_spaces(space_guids: readable_space_guids)
+             end
+
+    render status: :ok, json: Presenters::V3::RelationshipPresenter.new('spaces', spaces)
   end
 
   def assign_allowed_organizations
     unauthorized! unless roles.admin?
-    isolation_segment_model, orgs = assign_helper
+    isolation_segment_model, orgs = organizations_lookup
 
     isolation_segment_model.db.transaction do
       isolation_segment_model.lock!
@@ -145,7 +147,7 @@ class IsolationSegmentsController < ApplicationController
 
   def unassign_allowed_organizations
     unauthorized! unless roles.admin?
-    isolation_segment_model, orgs = assign_helper
+    isolation_segment_model, orgs = organizations_lookup
 
     isolation_segment_model.db.transaction do
       isolation_segment_model.lock!
@@ -159,7 +161,7 @@ class IsolationSegmentsController < ApplicationController
 
   private
 
-  def assign_helper
+  def organizations_lookup
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
     resource_not_found!(:isolation_segment) unless isolation_segment_model
 
@@ -167,18 +169,8 @@ class IsolationSegmentsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     organizations = Organization.where(guid: message.guids).all
-    invalid_request!("Organization guids: #{message.guids - organizations.map { |org| org.guid } } cannot be found") unless organizations.length == message.guids.length
+    resources_not_found!("Organization guids: #{message.guids - organizations.map(&:guid)} cannot be found") unless organizations.length == message.guids.length
 
     [isolation_segment_model, organizations]
-  end
-
-  def filter(message, dataset)
-    if message.requested?(:names)
-      dataset = dataset.where(name: message.names)
-    end
-    if message.requested?(:guids)
-      dataset = dataset.where(guid: message.guids)
-    end
-    dataset
   end
 end

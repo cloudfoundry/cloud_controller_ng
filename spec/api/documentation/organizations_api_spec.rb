@@ -19,7 +19,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
       field :status, 'Status of the organization'
       field :quota_definition_guid, 'The guid of quota to associate with this organization', example_values: ['org-quota-def-guid']
       field :billing_enabled, 'If billing is enabled for this organization', deprecated: true
-      field :isolation_segment_guid, 'The guid for the default isolation segment', experimental: true
+      field :default_isolation_segment_guid, 'The guid for the default isolation segment', experimental: true
     end
 
     standard_model_list :organization, VCAP::CloudController::OrganizationsController do
@@ -121,8 +121,8 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
                 'updated_at'  => nil,
                 'links'       => {
                   'self'          => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}" },
-                  'organizations' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" },
-                  'spaces'        => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/spaces" },
+                  'organizations' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations" },
+                  'spaces'        => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" },
                 }
               }
             ]

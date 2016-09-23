@@ -23,8 +23,8 @@ module VCAP::CloudController
         def build_links
           {
             self:   { href: "/v3/isolation_segments/#{isolation_segment.guid}" },
-            organizations: { href: "/v3/isolation_segments/#{isolation_segment.guid}/organizations" },
-            spaces: { href: "/v3/isolation_segments/#{isolation_segment.guid}/spaces" },
+            organizations: { href: "/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations" },
+            spaces: { href: "/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces" },
           }
         end
       end
