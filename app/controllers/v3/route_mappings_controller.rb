@@ -28,7 +28,7 @@ class RouteMappingsController < ApplicationController
                 end
     end
 
-    render :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, base_url: base_url(resource: 'route_mappings'), message: message)
+    render :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, path: base_url(resource: 'route_mappings'), message: message)
   end
 
   def create

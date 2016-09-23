@@ -12,6 +12,9 @@ RSpec.describe 'Tasks' do
     )
   end
   let(:developer_headers) { headers_for(user) }
+  let(:scheme) { TestConfig.config[:external_protocol] }
+  let(:host) { TestConfig.config[:external_domain] }
+  let(:link_prefix) { "#{scheme}://#{host}" }
 
   before do
     space.organization.add_user user
@@ -54,9 +57,9 @@ RSpec.describe 'Tasks' do
           'pagination' => {
             'total_results' => 3,
             'total_pages'   => 2,
-            'first'         => { 'href' => '/v3/tasks?page=1&per_page=2' },
-            'last'          => { 'href' => '/v3/tasks?page=2&per_page=2' },
-            'next'          => { 'href' => '/v3/tasks?page=2&per_page=2' },
+            'first'         => { 'href' => "#{link_prefix}/v3/tasks?page=1&per_page=2" },
+            'last'          => { 'href' => "#{link_prefix}/v3/tasks?page=2&per_page=2" },
+            'next'          => { 'href' => "#{link_prefix}/v3/tasks?page=2&per_page=2" },
             'previous'      => nil,
           },
           'resources' => [
@@ -74,13 +77,13 @@ RSpec.describe 'Tasks' do
               'updated_at'            => nil,
               'links'                 => {
                 'self' => {
-                  'href' => "/v3/tasks/#{task1.guid}"
+                  'href' => "#{link_prefix}/v3/tasks/#{task1.guid}"
                 },
                 'app' => {
-                  'href' => "/v3/apps/#{app_model.guid}"
+                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
                 },
                 'droplet' => {
-                  'href' => "/v3/droplets/#{app_model.droplet.guid}"
+                  'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
                 }
               }
             },
@@ -98,13 +101,13 @@ RSpec.describe 'Tasks' do
               'updated_at'            => nil,
               'links'                 => {
                 'self' => {
-                  'href' => "/v3/tasks/#{task2.guid}"
+                  'href' => "#{link_prefix}/v3/tasks/#{task2.guid}"
                 },
                 'app' => {
-                  'href' => "/v3/apps/#{app_model.guid}"
+                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
                 },
                 'droplet' => {
-                  'href' => "/v3/droplets/#{app_model.droplet.guid}"
+                  'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
                 }
               }
             }
@@ -161,8 +164,8 @@ RSpec.describe 'Tasks' do
           {
             'total_results' => 1,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/tasks?#{expected_query}" },
-            'last'          => { 'href' => "/v3/tasks?#{expected_query}" },
+            'first'         => { 'href' => "#{link_prefix}/v3/tasks?#{expected_query}" },
+            'last'          => { 'href' => "#{link_prefix}/v3/tasks?#{expected_query}" },
             'next'          => nil,
             'previous'      => nil,
           }
@@ -201,13 +204,13 @@ RSpec.describe 'Tasks' do
         'updated_at'            => nil,
         'links'                 => {
           'self' => {
-            'href' => "/v3/tasks/#{task_guid}"
+            'href' => "#{link_prefix}/v3/tasks/#{task_guid}"
           },
           'app' => {
-            'href' => "/v3/apps/#{app_model.guid}"
+            'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
           },
           'droplet' => {
-            'href' => "/v3/droplets/#{app_model.droplet.guid}"
+            'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
           }
         }
       }
@@ -292,9 +295,9 @@ RSpec.describe 'Tasks' do
           'pagination' => {
             'total_results' => 3,
             'total_pages'   => 2,
-            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/tasks?page=1&per_page=2" },
-            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/tasks?page=2&per_page=2" },
-            'next'          => { 'href' => "/v3/apps/#{app_model.guid}/tasks?page=2&per_page=2" },
+            'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?page=1&per_page=2" },
+            'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?page=2&per_page=2" },
+            'next'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?page=2&per_page=2" },
             'previous'      => nil,
           },
           'resources' => [
@@ -314,13 +317,13 @@ RSpec.describe 'Tasks' do
               'updated_at'            => nil,
               'links'                 => {
                 'self' => {
-                  'href' => "/v3/tasks/#{task1.guid}"
+                  'href' => "#{link_prefix}/v3/tasks/#{task1.guid}"
                 },
                 'app' => {
-                  'href' => "/v3/apps/#{app_model.guid}"
+                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
                 },
                 'droplet' => {
-                  'href' => "/v3/droplets/#{app_model.droplet.guid}"
+                  'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
                 }
               }
             },
@@ -340,13 +343,13 @@ RSpec.describe 'Tasks' do
               'updated_at'            => nil,
               'links'                 => {
                 'self' => {
-                  'href' => "/v3/tasks/#{task2.guid}"
+                  'href' => "#{link_prefix}/v3/tasks/#{task2.guid}"
                 },
                 'app' => {
-                  'href' => "/v3/apps/#{app_model.guid}"
+                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
                 },
                 'droplet' => {
-                  'href' => "/v3/droplets/#{app_model.droplet.guid}"
+                  'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
                 }
               }
             }
@@ -397,8 +400,8 @@ RSpec.describe 'Tasks' do
           {
             'total_results' => 1,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
-            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
             'next'          => nil,
             'previous'      => nil,
           }
@@ -423,8 +426,8 @@ RSpec.describe 'Tasks' do
           {
             'total_results' => 1,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
-            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
             'next'          => nil,
             'previous'      => nil,
           }
@@ -449,8 +452,8 @@ RSpec.describe 'Tasks' do
           {
             'total_results' => 1,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
-            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
             'next'          => nil,
             'previous'      => nil,
           }
@@ -490,13 +493,13 @@ RSpec.describe 'Tasks' do
         'updated_at'            => iso8601,
         'links'                 => {
           'self' => {
-            'href' => "/v3/tasks/#{guid}"
+            'href' => "#{link_prefix}/v3/tasks/#{guid}"
           },
           'app' => {
-            'href' => "/v3/apps/#{app_model.guid}"
+            'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
           },
           'droplet' => {
-            'href' => "/v3/droplets/#{droplet.guid}"
+            'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}"
           }
         }
       }
@@ -531,7 +534,7 @@ RSpec.describe 'Tasks' do
 
         expect(last_response.status).to eq(202)
         expect(parsed_response['droplet_guid']).to eq(non_assigned_droplet.guid)
-        expect(parsed_response['links']['droplet']['href']).to eq("/v3/droplets/#{non_assigned_droplet.guid}")
+        expect(parsed_response['links']['droplet']['href']).to eq("#{link_prefix}/v3/droplets/#{non_assigned_droplet.guid}")
         expect(VCAP::CloudController::TaskModel.find(guid: guid)).to be_present
       end
     end

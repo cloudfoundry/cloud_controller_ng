@@ -5,6 +5,9 @@ RSpec.describe 'v3 service bindings' do
   let(:space) { app_model.space }
   let(:user) { make_developer_for_space(space) }
   let(:user_headers) { headers_for(user) }
+  let(:scheme) { TestConfig.config[:external_protocol] }
+  let(:host) { TestConfig.config[:external_domain] }
+  let(:link_prefix) { "#{scheme}://#{host}" }
 
   describe 'POST /v3/service_bindings' do
     context 'managed service instance' do
@@ -53,13 +56,13 @@ RSpec.describe 'v3 service bindings' do
           'updated_at' => nil,
           'links'      => {
             'self' => {
-              'href' => "/v3/service_bindings/#{guid}"
+              'href' => "#{link_prefix}/v3/service_bindings/#{guid}"
             },
             'service_instance' => {
-              'href' => "/v2/service_instances/#{service_instance.guid}"
+              'href' => "#{link_prefix}/v2/service_instances/#{service_instance.guid}"
             },
             'app' => {
-              'href' => "/v3/apps/#{app_model.guid}"
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
             }
           }
         }
@@ -135,13 +138,13 @@ RSpec.describe 'v3 service bindings' do
           'updated_at' => nil,
           'links'      => {
             'self' => {
-              'href' => "/v3/service_bindings/#{guid}"
+              'href' => "#{link_prefix}/v3/service_bindings/#{guid}"
             },
             'service_instance' => {
-              'href' => "/v2/service_instances/#{service_instance.guid}"
+              'href' => "#{link_prefix}/v2/service_instances/#{service_instance.guid}"
             },
             'app' => {
-              'href' => "/v3/apps/#{app_model.guid}"
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
             }
           }
         }
@@ -248,13 +251,13 @@ RSpec.describe 'v3 service bindings' do
         'updated_at' => nil,
         'links'      => {
           'self' => {
-            'href' => "/v3/service_bindings/#{service_binding.guid}"
+            'href' => "#{link_prefix}/v3/service_bindings/#{service_binding.guid}"
           },
           'service_instance' => {
-            'href' => "/v2/service_instances/#{service_instance.guid}"
+            'href' => "#{link_prefix}/v2/service_instances/#{service_instance.guid}"
           },
           'app' => {
-            'href' => "/v3/apps/#{app_model.guid}"
+            'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
           }
         }
       }
@@ -307,9 +310,9 @@ RSpec.describe 'v3 service bindings' do
         'pagination' => {
           'total_results' => 3,
           'total_pages'   => 2,
-          'first'         => { 'href' => '/v3/service_bindings?page=1&per_page=2' },
-          'last'          => { 'href' => '/v3/service_bindings?page=2&per_page=2' },
-          'next'          => { 'href' => '/v3/service_bindings?page=2&per_page=2' },
+          'first'         => { 'href' => "#{link_prefix}/v3/service_bindings?page=1&per_page=2" },
+          'last'          => { 'href' => "#{link_prefix}/v3/service_bindings?page=2&per_page=2" },
+          'next'          => { 'href' => "#{link_prefix}/v3/service_bindings?page=2&per_page=2" },
           'previous'      => nil,
         },
         'resources' => [
@@ -327,13 +330,13 @@ RSpec.describe 'v3 service bindings' do
             'updated_at' => nil,
             'links'      => {
               'self' => {
-                'href' => "/v3/service_bindings/#{service_binding1.guid}"
+                'href' => "#{link_prefix}/v3/service_bindings/#{service_binding1.guid}"
               },
               'service_instance' => {
-                'href' => "/v2/service_instances/#{service_instance1.guid}"
+                'href' => "#{link_prefix}/v2/service_instances/#{service_instance1.guid}"
               },
               'app' => {
-                'href' => "/v3/apps/#{app_model.guid}"
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
               }
             }
           },
@@ -351,13 +354,13 @@ RSpec.describe 'v3 service bindings' do
             'updated_at' => nil,
             'links'      => {
               'self' => {
-                'href' => "/v3/service_bindings/#{service_binding2.guid}"
+                'href' => "#{link_prefix}/v3/service_bindings/#{service_binding2.guid}"
               },
               'service_instance' => {
-                'href' => "/v2/service_instances/#{service_instance2.guid}"
+                'href' => "#{link_prefix}/v2/service_instances/#{service_instance2.guid}"
               },
               'app' => {
-                'href' => "/v3/apps/#{app_model.guid}"
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
               }
             }
           }
@@ -402,8 +405,8 @@ RSpec.describe 'v3 service bindings' do
             {
               'total_results' => 2,
               'total_pages'   => 1,
-              'first'         => { 'href' => "/v3/service_bindings?app_guids=#{app_model2.guid}%2C#{app_model3.guid}&page=1&per_page=2" },
-              'last'          => { 'href' => "/v3/service_bindings?app_guids=#{app_model2.guid}%2C#{app_model3.guid}&page=1&per_page=2" },
+              'first'         => { 'href' => "#{link_prefix}/v3/service_bindings?app_guids=#{app_model2.guid}%2C#{app_model3.guid}&page=1&per_page=2" },
+              'last'          => { 'href' => "#{link_prefix}/v3/service_bindings?app_guids=#{app_model2.guid}%2C#{app_model3.guid}&page=1&per_page=2" },
               'next'          => nil,
               'previous'      => nil,
             }
@@ -423,8 +426,8 @@ RSpec.describe 'v3 service bindings' do
             {
               'total_results' => 2,
               'total_pages'   => 1,
-              'first'         => { 'href' => "/v3/service_bindings?page=1&per_page=2&service_instance_guids=#{service_instance1.guid}%2C#{service_instance2.guid}" },
-              'last'          => { 'href' => "/v3/service_bindings?page=1&per_page=2&service_instance_guids=#{service_instance1.guid}%2C#{service_instance2.guid}" },
+              'first'         => { 'href' => "#{link_prefix}/v3/service_bindings?page=1&per_page=2&service_instance_guids=#{service_instance1.guid}%2C#{service_instance2.guid}" },
+              'last'          => { 'href' => "#{link_prefix}/v3/service_bindings?page=1&per_page=2&service_instance_guids=#{service_instance1.guid}%2C#{service_instance2.guid}" },
               'next'          => nil,
               'previous'      => nil,
             }

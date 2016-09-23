@@ -4,6 +4,9 @@ RSpec.describe 'IsolationSegmentModels' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { admin_headers_for(user) }
   let(:space) { VCAP::CloudController::Space.make }
+  let(:scheme) { TestConfig.config[:external_protocol] }
+  let(:host) { TestConfig.config[:external_domain] }
+  let(:link_prefix) { "#{scheme}://#{host}" }
 
   describe 'POST /v3/isolation_segments' do
     it 'creates an isolation segment' do
@@ -23,8 +26,8 @@ RSpec.describe 'IsolationSegmentModels' do
         'created_at' => iso8601,
         'updated_at' => nil,
         'links'      => {
-          'self' => { 'href' => "/v3/isolation_segments/#{created_isolation_segment.guid}" },
-          'spaces' => { 'href' => "/v2/spaces?q=isolation_segment_guid:#{created_isolation_segment.guid}" }
+          'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{created_isolation_segment.guid}" },
+          'spaces' => { 'href' => "#{link_prefix}/v2/spaces?q=isolation_segment_guid:#{created_isolation_segment.guid}" }
         }
       }
 
@@ -48,8 +51,8 @@ RSpec.describe 'IsolationSegmentModels' do
           'created_at' => iso8601,
           'updated_at' => nil,
           'links'      => {
-            'self' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}" },
-            'spaces' => { 'href' => "/v2/spaces?q=isolation_segment_guid:#{isolation_segment_model.guid}" }
+            'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}" },
+            'spaces' => { 'href' => "#{link_prefix}/v2/spaces?q=isolation_segment_guid:#{isolation_segment_model.guid}" }
           }
         }
 
@@ -79,8 +82,8 @@ RSpec.describe 'IsolationSegmentModels' do
           'created_at' => iso8601,
           'updated_at' => nil,
           'links'      => {
-            'self' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}" },
-            'spaces' => { 'href' => "/v2/spaces?q=isolation_segment_guid:#{isolation_segment_model.guid}" }
+            'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}" },
+            'spaces' => { 'href' => "#{link_prefix}/v2/spaces?q=isolation_segment_guid:#{isolation_segment_model.guid}" }
           }
         }
 
@@ -111,9 +114,9 @@ RSpec.describe 'IsolationSegmentModels' do
         'pagination' => {
           'total_results' =>  6,
           'total_pages'   =>  3,
-          'first'         =>  { 'href' => '/v3/isolation_segments?page=1&per_page=2' },
-          'last'          =>  { 'href' => '/v3/isolation_segments?page=3&per_page=2' },
-          'next'          =>  { 'href' => '/v3/isolation_segments?page=2&per_page=2' },
+          'first'         =>  { 'href' => "#{link_prefix}/v3/isolation_segments?page=1&per_page=2" },
+          'last'          =>  { 'href' => "#{link_prefix}/v3/isolation_segments?page=3&per_page=2" },
+          'next'          =>  { 'href' => "#{link_prefix}/v3/isolation_segments?page=2&per_page=2" },
           'previous'      =>  nil
         },
         'resources' => [
@@ -123,8 +126,8 @@ RSpec.describe 'IsolationSegmentModels' do
             'created_at'  =>  iso8601,
             'updated_at'  =>  nil,
             'links'       =>  {
-              'self' => { 'href' => "/v3/isolation_segments/#{models[0].guid}" },
-              'spaces' => { 'href' => "/v2/spaces?q=isolation_segment_guid:#{models[0].guid}" }
+              'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[0].guid}" },
+              'spaces' => { 'href' => "#{link_prefix}/v2/spaces?q=isolation_segment_guid:#{models[0].guid}" }
             }
           },
           {
@@ -133,8 +136,8 @@ RSpec.describe 'IsolationSegmentModels' do
             'created_at'  =>  iso8601,
             'updated_at'  =>  nil,
             'links'       =>  {
-              'self' => { 'href' => "/v3/isolation_segments/#{models[1].guid}" },
-              'spaces' => { 'href' => "/v2/spaces?q=isolation_segment_guid:#{models[1].guid}" }
+              'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[1].guid}" },
+              'spaces' => { 'href' => "#{link_prefix}/v2/spaces?q=isolation_segment_guid:#{models[1].guid}" }
             }
           },
         ]
@@ -149,8 +152,8 @@ RSpec.describe 'IsolationSegmentModels' do
       expected_pagination = {
         'total_results' =>  2,
         'total_pages'   =>  1,
-        'first'         =>  { 'href' => "/v3/isolation_segments?names=#{models[2].name}%2C#{models[4].name}&page=1&per_page=50" },
-        'last'          =>  { 'href' => "/v3/isolation_segments?names=#{models[2].name}%2C#{models[4].name}&page=1&per_page=50" },
+        'first'         =>  { 'href' => "#{link_prefix}/v3/isolation_segments?names=#{models[2].name}%2C#{models[4].name}&page=1&per_page=50" },
+        'last'          =>  { 'href' => "#{link_prefix}/v3/isolation_segments?names=#{models[2].name}%2C#{models[4].name}&page=1&per_page=50" },
         'next'          =>  nil,
         'previous'      =>  nil
       }
@@ -168,8 +171,8 @@ RSpec.describe 'IsolationSegmentModels' do
       expected_pagination = {
         'total_results' =>  2,
         'total_pages'   =>  1,
-        'first'         =>  { 'href' => "/v3/isolation_segments?guids=#{models[3].guid}%2C#{models[5].guid}&page=1&per_page=50" },
-        'last'          =>  { 'href' => "/v3/isolation_segments?guids=#{models[3].guid}%2C#{models[5].guid}&page=1&per_page=50" },
+        'first'         =>  { 'href' => "#{link_prefix}/v3/isolation_segments?guids=#{models[3].guid}%2C#{models[5].guid}&page=1&per_page=50" },
+        'last'          =>  { 'href' => "#{link_prefix}/v3/isolation_segments?guids=#{models[3].guid}%2C#{models[5].guid}&page=1&per_page=50" },
         'next'          =>  nil,
         'previous'      =>  nil
       }
@@ -201,8 +204,8 @@ RSpec.describe 'IsolationSegmentModels' do
           'pagination' => {
             'total_results' =>  1,
             'total_pages'   =>  1,
-            'first'         =>  { 'href' => '/v3/isolation_segments?page=1&per_page=50' },
-            'last'          =>  { 'href' => '/v3/isolation_segments?page=1&per_page=50' },
+            'first'         =>  { 'href' => "#{link_prefix}/v3/isolation_segments?page=1&per_page=50" },
+            'last'          =>  { 'href' => "#{link_prefix}/v3/isolation_segments?page=1&per_page=50" },
             'next'          =>  nil,
             'previous'      =>  nil
           },
@@ -213,8 +216,8 @@ RSpec.describe 'IsolationSegmentModels' do
               'created_at'  =>  iso8601,
               'updated_at'  =>  nil,
               'links'       =>  {
-                'self' => { 'href' => "/v3/isolation_segments/#{models[1].guid}" },
-                'spaces' => { 'href' => "/v2/spaces?q=isolation_segment_guid:#{models[1].guid}" }
+                'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[1].guid}" },
+                'spaces' => { 'href' => "#{link_prefix}/v2/spaces?q=isolation_segment_guid:#{models[1].guid}" }
               }
             },
           ]
@@ -239,8 +242,8 @@ RSpec.describe 'IsolationSegmentModels' do
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'links'      => {
-          'self' => { 'href' => "/v3/isolation_segments/#{isolation_segment_model.guid}" },
-          'spaces' => { 'href' => "/v2/spaces?q=isolation_segment_guid:#{isolation_segment_model.guid}" }
+          'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}" },
+          'spaces' => { 'href' => "#{link_prefix}/v2/spaces?q=isolation_segment_guid:#{isolation_segment_model.guid}" }
         }
       }
 

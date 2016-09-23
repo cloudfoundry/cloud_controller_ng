@@ -1,6 +1,10 @@
 require 'rails_helper'
 
 RSpec.describe PackagesController, type: :controller do
+  let(:scheme) { TestConfig.config[:external_protocol] }
+  let(:host) { TestConfig.config[:external_domain] }
+  let(:link_prefix) { "#{scheme}://#{host}" }
+
   describe '#upload' do
     let(:package) { VCAP::CloudController::PackageModel.make }
     let(:space) { package.space }
@@ -418,7 +422,7 @@ RSpec.describe PackagesController, type: :controller do
 
     it 'returns pagination links for /v3/packages' do
       get :index
-      expect(parsed_body['pagination']['first']['href']).to start_with('/v3/packages')
+      expect(parsed_body['pagination']['first']['href']).to start_with("#{link_prefix}/v3/packages")
     end
 
     context 'when accessed as an app subresource' do
@@ -437,7 +441,7 @@ RSpec.describe PackagesController, type: :controller do
 
       it 'provides the correct base url in the pagination links' do
         get :index, app_guid: app_model.guid
-        expect(parsed_body['pagination']['first']['href']).to include("/v3/apps/#{app_model.guid}/packages")
+        expect(parsed_body['pagination']['first']['href']).to include("#{link_prefix}/v3/apps/#{app_model.guid}/packages")
       end
 
       context 'the app does not exist' do

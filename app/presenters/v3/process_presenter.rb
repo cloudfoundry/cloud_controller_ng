@@ -33,12 +33,13 @@ module VCAP::CloudController
         end
 
         def build_links
+          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
           {
-            self:  { href: "/v3/processes/#{process.guid}" },
-            scale: { href: "/v3/processes/#{process.guid}/scale", method: 'PUT', },
-            app:   { href: "/v3/apps/#{process.app_guid}" },
-            space: { href: "/v2/spaces/#{process.space_guid}" },
-            stats: { href: "/v3/processes/#{process.guid}/stats" }
+            self:  { href: url_builder.build_url(path: "/v3/processes/#{process.guid}") },
+            scale: { href: url_builder.build_url(path: "/v3/processes/#{process.guid}/scale"), method: 'PUT', },
+            app:   { href: url_builder.build_url(path: "/v3/apps/#{process.app_guid}") },
+            space: { href: url_builder.build_url(path: "/v2/spaces/#{process.space_guid}") },
+            stats: { href: url_builder.build_url(path: "/v3/processes/#{process.guid}/stats") }
           }
         end
       end

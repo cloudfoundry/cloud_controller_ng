@@ -3,6 +3,9 @@ require 'rails_helper'
 RSpec.describe IsolationSegmentsController, type: :controller do
   let(:user) { set_current_user(VCAP::CloudController::User.make) }
   let(:space) { VCAP::CloudController::Space.make }
+  let(:scheme) { TestConfig.config[:external_protocol] }
+  let(:host) { TestConfig.config[:external_domain] }
+  let(:link_prefix) { "#{scheme}://#{host}" }
 
   describe '#create' do
     let(:req_body) do
@@ -74,8 +77,8 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(response.status).to eq 200
           expect(parsed_body['guid']).to eq(isolation_segment.guid)
           expect(parsed_body['name']).to eq(isolation_segment.name)
-          expect(parsed_body['links']['self']['href']).to eq("/v3/isolation_segments/#{isolation_segment.guid}")
-          expect(parsed_body['links']['spaces']['href']).to eq("/v2/spaces?q=isolation_segment_guid:#{isolation_segment.guid}")
+          expect(parsed_body['links']['self']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}")
+          expect(parsed_body['links']['spaces']['href']).to eq("#{link_prefix}/v2/spaces?q=isolation_segment_guid:#{isolation_segment.guid}")
         end
       end
 
@@ -109,8 +112,8 @@ RSpec.describe IsolationSegmentsController, type: :controller do
             expect(response.status).to eq 200
             expect(parsed_body['guid']).to eq(isolation_segment.guid)
             expect(parsed_body['name']).to eq(isolation_segment.name)
-            expect(parsed_body['links']['self']['href']).to eq("/v3/isolation_segments/#{isolation_segment.guid}")
-            expect(parsed_body['links']['spaces']['href']).to eq("/v2/spaces?q=isolation_segment_guid:#{isolation_segment.guid}")
+            expect(parsed_body['links']['self']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}")
+            expect(parsed_body['links']['spaces']['href']).to eq("#{link_prefix}/v2/spaces?q=isolation_segment_guid:#{isolation_segment.guid}")
           end
         end
       end
@@ -250,7 +253,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(response.status).to eq 200
           expect(parsed_body['guid']).to eq(isolation_segment_model.guid)
           expect(parsed_body['name']).to eq(new_name)
-          expect(parsed_body['links']['self']['href']).to eq("/v3/isolation_segments/#{isolation_segment_model.guid}")
+          expect(parsed_body['links']['self']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}")
         end
 
         context 'with a non-unique name' do

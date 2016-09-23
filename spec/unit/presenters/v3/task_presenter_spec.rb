@@ -14,15 +14,18 @@ module VCAP::CloudController::Presenters::V3
         sequence_id:           5
       )
     }
+    let(:scheme) { TestConfig.config[:external_protocol] }
+    let(:host) { TestConfig.config[:external_domain] }
+    let(:link_prefix) { "#{scheme}://#{host}" }
 
     describe '#to_hash' do
       let(:result) { presenter.to_hash }
 
       it 'presents the task as a hash' do
         links = {
-          self:    { href: "/v3/tasks/#{task.guid}" },
-          app:     { href: "/v3/apps/#{task.app.guid}" },
-          droplet: { href: "/v3/droplets/#{task.droplet.guid}" },
+          self:    { href: "#{link_prefix}/v3/tasks/#{task.guid}" },
+          app:     { href: "#{link_prefix}/v3/apps/#{task.app.guid}" },
+          droplet: { href: "#{link_prefix}/v3/droplets/#{task.droplet.guid}" },
         }
 
         expect(result[:guid]).to eq(task.guid)

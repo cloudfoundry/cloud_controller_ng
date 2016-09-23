@@ -28,10 +28,12 @@ module VCAP::CloudController
         end
 
         def build_links
+          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+
           {
-            self:    { href: "/v3/tasks/#{task.guid}" },
-            app:     { href: "/v3/apps/#{task.app.guid}" },
-            droplet: { href: "/v3/droplets/#{task.droplet_guid}" },
+            self:    { href: url_builder.build_url(path: "/v3/tasks/#{task.guid}") },
+            app:     { href: url_builder.build_url(path: "/v3/apps/#{task.app.guid}") },
+            droplet: { href: url_builder.build_url(path: "/v3/droplets/#{task.droplet_guid}") },
           }
         end
 

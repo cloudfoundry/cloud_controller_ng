@@ -30,7 +30,7 @@ class PackagesController < ApplicationController
                 end
     end
 
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, base_url: base_url(resource: 'packages'), message: message)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, path: base_url(resource: 'packages'), message: message)
   end
 
   def upload

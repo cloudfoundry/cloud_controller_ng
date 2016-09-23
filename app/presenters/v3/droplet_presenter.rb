@@ -32,14 +32,16 @@ module VCAP::CloudController
         DEFAULT_HASHING_ALGORITHM = 'sha1'.freeze
 
         def build_links
+          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+
           {
-            self:                   { href: "/v3/droplets/#{droplet.guid}" },
+            self:                   { href: url_builder.build_url(path: "/v3/droplets/#{droplet.guid}") },
             package:                nil,
-            app:                    { href: "/v3/apps/#{droplet.app_guid}" },
-            assign_current_droplet: { href: "/v3/apps/#{droplet.app_guid}/droplets/current", method: 'PUT' },
+            app:                    { href: url_builder.build_url(path: "/v3/apps/#{droplet.app_guid}") },
+            assign_current_droplet: { href: url_builder.build_url(path: "/v3/apps/#{droplet.app_guid}/droplets/current"), method: 'PUT' },
           }.tap do |links|
-            links[:package] = { href: "/v3/packages/#{droplet.package_guid}" } if droplet.package_guid.present?
-            links.merge!(links_for_lifecyle)
+            links[:package] = { href: url_builder.build_url(path: "/v3/packages/#{droplet.package_guid}") } if droplet.package_guid.present?
+            links.merge!(links_for_lifecyle(url_builder))
           end
         end
 
@@ -70,12 +72,12 @@ module VCAP::CloudController
           }.merge(lifecycle_result)
         end
 
-        def links_for_lifecyle
+        def links_for_lifecyle(url_builder)
           links = {}
 
           if droplet.lifecycle_type == Lifecycles::BUILDPACK
             if droplet.buildpack_receipt_buildpack_guid
-              links[:buildpack] = { href: "/v2/buildpacks/#{droplet.buildpack_receipt_buildpack_guid}" }
+              links[:buildpack] = { href: url_builder.build_url(path: "/v2/buildpacks/#{droplet.buildpack_receipt_buildpack_guid}") }
             end
           end
 

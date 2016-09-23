@@ -14,11 +14,20 @@ module VCAP::CloudController::Presenters::V3
       syslog_drain_url: 'syslog:/syslog.com',
       volume_mounts: volume_mounts)
     }
+    let(:scheme) { TestConfig.config[:external_protocol] }
+    let(:host) { TestConfig.config[:external_domain] }
+    let(:link_prefix) { "#{scheme}://#{host}" }
 
     describe '#to_hash' do
       let(:result) { presenter.to_hash }
 
       it 'presents the model as a hash' do
+        links = {
+          self: { href: "#{link_prefix}/v3/service_bindings/#{service_binding.guid}" },
+          service_instance: { href: "#{link_prefix}/v2/service_instances/#{service_binding.service_instance.guid}" },
+          app: { href: "#{link_prefix}/v3/apps/#{service_binding.app_guid}" }
+        }
+
         expect(result[:guid]).to eq(service_binding.guid)
         expect(result[:type]).to eq(service_binding.type)
         expect(result[:data].to_hash[:credentials]).to eq(credentials)
@@ -29,6 +38,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links]).to include(:self)
         expect(result[:links]).to include(:service_instance)
         expect(result[:links]).to include(:app)
+        expect(result[:links]).to eq(links)
       end
 
       context 'when show_secrets is false' do

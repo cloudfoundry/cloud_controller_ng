@@ -25,8 +25,7 @@ module VCAP::CloudController
         DEFAULT_HASHING_ALGORITHM = 'sha1'.freeze
 
         def build_data
-          data = package.docker? ? docker_data : buildpack_data
-          data
+          package.docker? ? docker_data : buildpack_data
         end
 
         def docker_data
@@ -46,22 +45,21 @@ module VCAP::CloudController
         end
 
         def build_links
+          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+
           upload_link = nil
+          download_link = nil
           if package.type == 'bits'
-            upload_link   = { href: "/v3/packages/#{package.guid}/upload", method: 'POST' }
-            download_link = { href: "/v3/packages/#{package.guid}/download", method: 'GET' }
+            upload_link   = { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/upload"), method: 'POST' }
+            download_link = { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/download"), method: 'GET' }
           end
 
           links = {
-            self:     {
-              href: "/v3/packages/#{package.guid}"
-            },
-            upload:   upload_link,
+            self: { href: url_builder.build_url(path: "/v3/packages/#{package.guid}") },
+            upload: upload_link,
             download: download_link,
-            stage:    { href: "/v3/packages/#{package.guid}/droplets", method: 'POST' },
-            app:      {
-              href: "/v3/apps/#{package.app_guid}",
-            },
+            stage: { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/droplets"), method: 'POST' },
+            app: { href: url_builder.build_url(path: "/v3/apps/#{package.app_guid}") },
           }
 
           links.delete_if { |_, v| v.nil? }

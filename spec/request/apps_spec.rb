@@ -4,6 +4,9 @@ RSpec.describe 'Apps' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user) }
   let(:space) { VCAP::CloudController::Space.make }
+  let(:scheme) { TestConfig.config[:external_protocol] }
+  let(:host) { TestConfig.config[:external_domain] }
+  let(:link_prefix) { "#{scheme}://#{host}" }
 
   before do
     space.organization.add_user(user)
@@ -47,16 +50,16 @@ RSpec.describe 'Apps' do
         'updated_at'              => nil,
         'environment_variables'   => { 'open' => 'source' },
         'links'                   => {
-          'self'                   => { 'href' => "/v3/apps/#{created_app.guid}" },
-          'processes'              => { 'href' => "/v3/apps/#{created_app.guid}/processes" },
-          'packages'               => { 'href' => "/v3/apps/#{created_app.guid}/packages" },
-          'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
-          'droplet'                => { 'href' => "/v3/apps/#{created_app.guid}/droplets/current" },
-          'droplets'               => { 'href' => "/v3/apps/#{created_app.guid}/droplets" },
-          'tasks'                  => { 'href' => "/v3/apps/#{created_app.guid}/tasks" },
-          'route_mappings'         => { 'href' => "/v3/apps/#{created_app.guid}/route_mappings" },
-          'start'                  => { 'href' => "/v3/apps/#{created_app.guid}/start", 'method' => 'PUT' },
-          'stop'                   => { 'href' => "/v3/apps/#{created_app.guid}/stop", 'method' => 'PUT' },
+          'self'                   => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}" },
+          'processes'              => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/processes" },
+          'packages'               => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/packages" },
+          'space'                  => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+          'droplet'                => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets/current" },
+          'droplets'               => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets" },
+          'tasks'                  => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/tasks" },
+          'route_mappings'         => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/route_mappings" },
+          'start'                  => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/start", 'method' => 'PUT' },
+          'stop'                   => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/stop", 'method' => 'PUT' },
         }
       }
 
@@ -111,16 +114,16 @@ RSpec.describe 'Apps' do
           'updated_at'              => nil,
           'environment_variables'   => { 'open' => 'source' },
           'links'                   => {
-            'self'                   => { 'href' => "/v3/apps/#{created_app.guid}" },
-            'processes'              => { 'href' => "/v3/apps/#{created_app.guid}/processes" },
-            'packages'               => { 'href' => "/v3/apps/#{created_app.guid}/packages" },
-            'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
-            'droplet'                => { 'href' => "/v3/apps/#{created_app.guid}/droplets/current" },
-            'droplets'               => { 'href' => "/v3/apps/#{created_app.guid}/droplets" },
-            'tasks'                  => { 'href' => "/v3/apps/#{created_app.guid}/tasks" },
-            'route_mappings'         => { 'href' => "/v3/apps/#{created_app.guid}/route_mappings" },
-            'start'                  => { 'href' => "/v3/apps/#{created_app.guid}/start", 'method' => 'PUT' },
-            'stop'                   => { 'href' => "/v3/apps/#{created_app.guid}/stop", 'method' => 'PUT' },
+            'self'                   => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}" },
+            'processes'              => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/processes" },
+            'packages'               => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/packages" },
+            'space'                  => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+            'droplet'                => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets/current" },
+            'droplets'               => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets" },
+            'tasks'                  => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/tasks" },
+            'route_mappings'         => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/route_mappings" },
+            'start'                  => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/start", 'method' => 'PUT' },
+            'stop'                   => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/stop", 'method' => 'PUT' },
           }
         }
 
@@ -169,9 +172,9 @@ RSpec.describe 'Apps' do
         'pagination' => {
           'total_results' => 3,
           'total_pages'   => 2,
-          'first'         => { 'href' => '/v3/apps?page=1&per_page=2' },
-          'last'          => { 'href' => '/v3/apps?page=2&per_page=2' },
-          'next'          => { 'href' => '/v3/apps?page=2&per_page=2' },
+          'first'         => { 'href' => "#{link_prefix}/v3/apps?page=1&per_page=2" },
+          'last'          => { 'href' => "#{link_prefix}/v3/apps?page=2&per_page=2" },
+          'next'          => { 'href' => "#{link_prefix}/v3/apps?page=2&per_page=2" },
           'previous'      => nil,
         },
         'resources' => [
@@ -193,16 +196,16 @@ RSpec.describe 'Apps' do
               'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
             },
             'links' => {
-              'self'                   => { 'href' => "/v3/apps/#{app_model1.guid}" },
-              'processes'              => { 'href' => "/v3/apps/#{app_model1.guid}/processes" },
-              'packages'               => { 'href' => "/v3/apps/#{app_model1.guid}/packages" },
-              'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
-              'droplet'                => { 'href' => "/v3/apps/#{app_model1.guid}/droplets/current" },
-              'droplets'               => { 'href' => "/v3/apps/#{app_model1.guid}/droplets" },
-              'tasks'                  => { 'href' => "/v3/apps/#{app_model1.guid}/tasks" },
-              'route_mappings'         => { 'href' => "/v3/apps/#{app_model1.guid}/route_mappings" },
-              'start'                  => { 'href' => "/v3/apps/#{app_model1.guid}/start", 'method' => 'PUT' },
-              'stop'                   => { 'href' => "/v3/apps/#{app_model1.guid}/stop", 'method' => 'PUT' },
+              'self'                   => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}" },
+              'processes'              => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/processes" },
+              'packages'               => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/packages" },
+              'space'                  => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+              'droplet'                => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets/current" },
+              'droplets'               => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets" },
+              'tasks'                  => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/tasks" },
+              'route_mappings'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/route_mappings" },
+              'start'                  => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/start", 'method' => 'PUT' },
+              'stop'                   => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/stop", 'method' => 'PUT' },
             }
           },
           {
@@ -220,16 +223,16 @@ RSpec.describe 'Apps' do
               'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
             },
             'links' => {
-              'self'                   => { 'href' => "/v3/apps/#{app_model2.guid}" },
-              'processes'              => { 'href' => "/v3/apps/#{app_model2.guid}/processes" },
-              'packages'               => { 'href' => "/v3/apps/#{app_model2.guid}/packages" },
-              'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
-              'droplet'                => { 'href' => "/v3/apps/#{app_model2.guid}/droplets/current" },
-              'droplets'               => { 'href' => "/v3/apps/#{app_model2.guid}/droplets" },
-              'tasks'                  => { 'href' => "/v3/apps/#{app_model2.guid}/tasks" },
-              'route_mappings'         => { 'href' => "/v3/apps/#{app_model2.guid}/route_mappings" },
-              'start'                  => { 'href' => "/v3/apps/#{app_model2.guid}/start", 'method' => 'PUT' },
-              'stop'                   => { 'href' => "/v3/apps/#{app_model2.guid}/stop", 'method' => 'PUT' },
+              'self'                   => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}" },
+              'processes'              => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/processes" },
+              'packages'               => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/packages" },
+              'space'                  => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+              'droplet'                => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/droplets/current" },
+              'droplets'               => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/droplets" },
+              'tasks'                  => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/tasks" },
+              'route_mappings'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/route_mappings" },
+              'start'                  => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/start", 'method' => 'PUT' },
+              'stop'                   => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/stop", 'method' => 'PUT' },
             }
           }
         ]
@@ -254,8 +257,8 @@ RSpec.describe 'Apps' do
         expected_pagination = {
           'total_results' => 2,
           'total_pages'   => 1,
-          'first'         => { 'href' => "/v3/apps?guids=#{app_model1.guid}%2C#{app_model3.guid}&page=1&per_page=50" },
-          'last'          => { 'href' => "/v3/apps?guids=#{app_model1.guid}%2C#{app_model3.guid}&page=1&per_page=50" },
+          'first'         => { 'href' => "#{link_prefix}/v3/apps?guids=#{app_model1.guid}%2C#{app_model3.guid}&page=1&per_page=50" },
+          'last'          => { 'href' => "#{link_prefix}/v3/apps?guids=#{app_model1.guid}%2C#{app_model3.guid}&page=1&per_page=50" },
           'next'          => nil,
           'previous'      => nil
         }
@@ -277,8 +280,8 @@ RSpec.describe 'Apps' do
         expected_pagination = {
           'total_results' => 2,
           'total_pages'   => 1,
-          'first'         => { 'href' => '/v3/apps?names=name1%2Cname2&page=1&per_page=50' },
-          'last'          => { 'href' => '/v3/apps?names=name1%2Cname2&page=1&per_page=50' },
+          'first'         => { 'href' => "#{link_prefix}/v3/apps?names=name1%2Cname2&page=1&per_page=50" },
+          'last'          => { 'href' => "#{link_prefix}/v3/apps?names=name1%2Cname2&page=1&per_page=50" },
           'next'          => nil,
           'previous'      => nil
         }
@@ -300,8 +303,8 @@ RSpec.describe 'Apps' do
         expected_pagination = {
           'total_results' => 2,
           'total_pages'   => 1,
-          'first'         => { 'href' => "/v3/apps?organization_guids=#{app_model1.organization.guid}%2C#{app_model3.organization.guid}&page=1&per_page=50" },
-          'last'          => { 'href' => "/v3/apps?organization_guids=#{app_model1.organization.guid}%2C#{app_model3.organization.guid}&page=1&per_page=50" },
+          'first'         => { 'href' => "#{link_prefix}/v3/apps?organization_guids=#{app_model1.organization.guid}%2C#{app_model3.organization.guid}&page=1&per_page=50" },
+          'last'          => { 'href' => "#{link_prefix}/v3/apps?organization_guids=#{app_model1.organization.guid}%2C#{app_model3.organization.guid}&page=1&per_page=50" },
           'next'          => nil,
           'previous'      => nil
         }
@@ -323,8 +326,8 @@ RSpec.describe 'Apps' do
         expected_pagination = {
           'total_results' => 2,
           'total_pages'   => 1,
-          'first'         => { 'href' => "/v3/apps?page=1&per_page=50&space_guids=#{app_model1.space.guid}%2C#{app_model3.space.guid}" },
-          'last'          => { 'href' => "/v3/apps?page=1&per_page=50&space_guids=#{app_model1.space.guid}%2C#{app_model3.space.guid}" },
+          'first'         => { 'href' => "#{link_prefix}/v3/apps?page=1&per_page=50&space_guids=#{app_model1.space.guid}%2C#{app_model3.space.guid}" },
+          'last'          => { 'href' => "#{link_prefix}/v3/apps?page=1&per_page=50&space_guids=#{app_model1.space.guid}%2C#{app_model3.space.guid}" },
           'next'          => nil,
           'previous'      => nil
         }
@@ -374,16 +377,16 @@ RSpec.describe 'Apps' do
           }
         },
         'links' => {
-          'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
-          'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
-          'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
-          'droplet'                => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" },
-          'droplets'               => { 'href' => "/v3/apps/#{app_model.guid}/droplets" },
-          'tasks'                  => { 'href' => "/v3/apps/#{app_model.guid}/tasks" },
-          'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
-          'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
-          'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
+          'self'                   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'processes'              => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+          'packages'               => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+          'space'                  => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+          'droplet'                => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+          'droplets'               => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+          'tasks'                  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+          'route_mappings'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings" },
+          'start'                  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
+          'stop'                   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
         }
       }
 
@@ -566,16 +569,16 @@ RSpec.describe 'Apps' do
         'updated_at'              => iso8601,
         'environment_variables'   => { 'NEWENV' => 'VARIABLE' },
         'links'                   => {
-          'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
-          'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
-          'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
-          'droplet'                => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" },
-          'droplets'               => { 'href' => "/v3/apps/#{app_model.guid}/droplets" },
-          'tasks'                  => { 'href' => "/v3/apps/#{app_model.guid}/tasks" },
-          'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
-          'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
-          'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
+          'self'                   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'processes'              => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+          'packages'               => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+          'space'                  => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+          'droplet'                => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+          'droplets'               => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+          'tasks'                  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+          'route_mappings'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings" },
+          'start'                  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
+          'stop'                   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
         }
       }
 
@@ -637,16 +640,16 @@ RSpec.describe 'Apps' do
           }
         },
         'links' => {
-          'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
-          'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
-          'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
-          'droplet'                => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" },
-          'droplets'               => { 'href' => "/v3/apps/#{app_model.guid}/droplets" },
-          'tasks'                  => { 'href' => "/v3/apps/#{app_model.guid}/tasks" },
-          'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
-          'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
-          'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
+          'self'                   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'processes'              => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+          'packages'               => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+          'space'                  => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+          'droplet'                => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+          'droplets'               => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+          'tasks'                  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+          'route_mappings'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings" },
+          'start'                  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
+          'stop'                   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
         }
       }
 
@@ -705,16 +708,16 @@ RSpec.describe 'Apps' do
           }
         },
         'links' => {
-          'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
-          'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
-          'space'                  => { 'href' => "/v2/spaces/#{space.guid}" },
-          'droplet'                => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" },
-          'droplets'               => { 'href' => "/v3/apps/#{app_model.guid}/droplets" },
-          'tasks'                  => { 'href' => "/v3/apps/#{app_model.guid}/tasks" },
-          'route_mappings'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings" },
-          'start'                  => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
-          'stop'                   => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
+          'self'                   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'processes'              => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+          'packages'               => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+          'space'                  => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+          'droplet'                => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+          'droplets'               => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+          'tasks'                  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+          'route_mappings'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings" },
+          'start'                  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
+          'stop'                   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
         }
       }
 
@@ -795,10 +798,10 @@ RSpec.describe 'Apps' do
         'created_at'            => iso8601,
         'updated_at'            => iso8601,
         'links'                 => {
-          'self'                   => { 'href' => "/v3/droplets/#{guid}" },
-          'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
-          'app'                    => { 'href' => "/v3/apps/#{app_guid}" },
-          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_guid}/droplets/current", 'method' => 'PUT' },
+          'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
+          'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+          'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
+          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets/current", 'method' => 'PUT' },
         }
       })
     end
@@ -852,10 +855,10 @@ RSpec.describe 'Apps' do
         'created_at'            => iso8601,
         'updated_at'            => iso8601,
         'links'                 => {
-          'self'                   => { 'href' => "/v3/droplets/#{droplet.guid}" },
-          'package'                => { 'href' => "/v3/packages/#{droplet.package.guid}" },
-          'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+          'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}" },
+          'package'                => { 'href' => "#{link_prefix}/v3/packages/#{droplet.package.guid}" },
+          'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
         }
       }
 

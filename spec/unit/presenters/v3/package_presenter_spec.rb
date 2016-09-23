@@ -6,8 +6,16 @@ module VCAP::CloudController::Presenters::V3
     describe '#to_hash' do
       let(:result) { PackagePresenter.new(package).to_hash }
       let(:package) { VCAP::CloudController::PackageModel.make(type: 'package_type', created_at: Time.at(1), updated_at: Time.at(2)) }
+      let(:scheme) { TestConfig.config[:external_protocol] }
+      let(:host) { TestConfig.config[:external_domain] }
+      let(:link_prefix) { "#{scheme}://#{host}" }
 
       it 'presents the package as json' do
+        links = {
+          self: { href: "#{link_prefix}/v3/packages/#{package.guid}" },
+          app: { href: "#{link_prefix}/v3/apps/#{package.app_guid}" }
+        }
+
         expect(result[:guid]).to eq(package.guid)
         expect(result[:type]).to eq(package.type)
         expect(result[:state]).to eq(package.state)
@@ -15,18 +23,20 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:data][:hash]).to eq({ type: 'sha1', value: package.package_hash })
         expect(result[:created_at]).to eq('1970-01-01T00:00:01Z')
         expect(result[:updated_at]).to eq('1970-01-01T00:00:02Z')
-        expect(result[:links]).to include(:self)
-        expect(result[:links]).to include(:app)
+        expect(result[:links]).to include(links)
       end
 
       context 'when the package type is bits' do
         let(:package) { VCAP::CloudController::PackageModel.make(type: 'bits') }
 
-        it 'includes links to upload and stage' do
-          expect(result[:links][:upload][:href]).to eq("/v3/packages/#{package.guid}/upload")
+        it 'includes links to upload, download, and stage' do
+          expect(result[:links][:upload][:href]).to eq("#{link_prefix}/v3/packages/#{package.guid}/upload")
           expect(result[:links][:upload][:method]).to eq('POST')
 
-          expect(result[:links][:stage][:href]).to eq("/v3/packages/#{package.guid}/droplets")
+          expect(result[:links][:download][:href]).to eq("#{link_prefix}/v3/packages/#{package.guid}/download")
+          expect(result[:links][:download][:method]).to eq('GET')
+
+          expect(result[:links][:stage][:href]).to eq("#{link_prefix}/v3/packages/#{package.guid}/droplets")
           expect(result[:links][:stage][:method]).to eq('POST')
         end
       end
@@ -42,8 +52,13 @@ module VCAP::CloudController::Presenters::V3
         end
 
         it 'includes links to stage' do
-          expect(result[:links][:stage][:href]).to eq("/v3/packages/#{package.guid}/droplets")
+          expect(result[:links][:stage][:href]).to eq("#{link_prefix}/v3/packages/#{package.guid}/droplets")
           expect(result[:links][:stage][:method]).to eq('POST')
+        end
+
+        it 'does not include upload or download links' do
+          expect(result[:links]).not_to include(:upload)
+          expect(result[:links]).not_to include(:download)
         end
       end
 

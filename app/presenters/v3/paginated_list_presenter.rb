@@ -23,16 +23,16 @@ module VCAP::CloudController
           'TaskModel'             => VCAP::CloudController::Presenters::V3::TaskPresenter,
         }.freeze
 
-        def initialize(dataset:, base_url:, message: nil, show_secrets: false)
+        def initialize(dataset:, path:, message: nil, show_secrets: false)
           @dataset      = dataset
-          @base_url     = base_url
+          @path         = path
           @message      = message
           @show_secrets = show_secrets
         end
 
         def to_hash
           {
-            pagination: PaginationPresenter.new.present_pagination_hash(paginator, @base_url, @message),
+            pagination: PaginationPresenter.new.present_pagination_hash(paginator, @path, @message),
             resources:  presented_resources
           }
         end

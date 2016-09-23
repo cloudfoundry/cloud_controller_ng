@@ -1,3 +1,5 @@
+require 'presenters/api_url_builder'
+
 module VCAP::CloudController
   class RootController < RestController::BaseController
     allow_unauthenticated_access
@@ -5,21 +7,23 @@ module VCAP::CloudController
     get '/', :read
 
     def read
+      api_url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+
       response = {
         links: {
           self: {
-            href: build_api_uri
+            href: api_url_builder.build_url
           },
 
           cloud_controller_v2: {
-            href: build_api_uri(path: '/v2'),
+            href: api_url_builder.build_url(path: '/v2'),
             meta: {
               version: VCAP::CloudController::Constants::API_VERSION
             }
           },
 
           cloud_controller_v3: {
-            href: build_api_uri(path: '/v3'),
+            href: api_url_builder.build_url(path: '/v3'),
             meta: {
               version: VCAP::CloudController::Constants::API_VERSION_V3
             }
@@ -28,14 +32,6 @@ module VCAP::CloudController
       }
 
       [200, MultiJson.dump(response, pretty: true)]
-    end
-
-    private
-
-    def build_api_uri(path: nil)
-      my_uri = URI::HTTP.build(host: Config.config[:external_domain], path: path)
-      my_uri.scheme = Config.config[:external_protocol]
-      my_uri.to_s
     end
   end
 end

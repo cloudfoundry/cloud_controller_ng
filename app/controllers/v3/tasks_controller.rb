@@ -32,7 +32,7 @@ class TasksController < ApplicationController
 
     render :ok, json: Presenters::V3::PaginatedListPresenter.new(
       dataset:      dataset,
-      base_url:     base_url(resource: 'tasks'),
+      path:     base_url(resource: 'tasks'),
       message:      message,
       show_secrets: show_secrets
     )

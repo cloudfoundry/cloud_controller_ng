@@ -7,6 +7,9 @@ RSpec.describe 'Droplets' do
   let(:developer_headers) { headers_for(developer) }
 
   let(:parsed_response) { MultiJson.load(last_response.body) }
+  let(:scheme) { TestConfig.config[:external_protocol] }
+  let(:host) { TestConfig.config[:external_domain] }
+  let(:link_prefix) { "#{scheme}://#{host}" }
 
   describe 'POST /v3/packages/:guid/droplets' do
     let(:diego_staging_response) do
@@ -92,10 +95,10 @@ RSpec.describe 'Droplets' do
         'created_at'            => iso8601,
         'updated_at'            => nil,
         'links'                 => {
-          'self'                   => { 'href' => "/v3/droplets/#{created_droplet.guid}" },
-          'package'                => { 'href' => "/v3/packages/#{package.guid}" },
-          'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+          'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{created_droplet.guid}" },
+          'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
+          'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
         }
       }
 
@@ -171,10 +174,10 @@ RSpec.describe 'Droplets' do
         'created_at'            => iso8601,
         'updated_at'            => iso8601,
         'links'                 => {
-          'self'                   => { 'href' => "/v3/droplets/#{guid}" },
-          'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
-          'app'                    => { 'href' => "/v3/apps/#{app_guid}" },
-          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_guid}/droplets/current", 'method' => 'PUT' },
+          'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
+          'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+          'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
+          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets/current", 'method' => 'PUT' },
         }
       })
     end
@@ -252,8 +255,8 @@ RSpec.describe 'Droplets' do
         'pagination' => {
           'total_results' => 2,
           'total_pages'   => 1,
-          'first'         => { 'href' => "/v3/droplets?order_by=#{order_by}&page=1&per_page=2" },
-          'last'          => { 'href' => "/v3/droplets?order_by=#{order_by}&page=1&per_page=2" },
+          'first'         => { 'href' => "#{link_prefix}/v3/droplets?order_by=#{order_by}&page=1&per_page=2" },
+          'last'          => { 'href' => "#{link_prefix}/v3/droplets?order_by=#{order_by}&page=1&per_page=2" },
           'next'          => nil,
           'previous'      => nil,
         },
@@ -282,10 +285,10 @@ RSpec.describe 'Droplets' do
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
-              'self'                   => { 'href' => "/v3/droplets/#{droplet2.guid}" },
-              'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
-              'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+              'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
+              'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+              'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
             }
           },
           {
@@ -306,11 +309,11 @@ RSpec.describe 'Droplets' do
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
-              'self'                   => { 'href' => "/v3/droplets/#{droplet1.guid}" },
-              'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
-              'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
-              'buildpack'              => { 'href' => "/v2/buildpacks/#{buildpack.guid}" }
+              'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
+              'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+              'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+              'buildpack'              => { 'href' => "#{link_prefix}/v2/buildpacks/#{buildpack.guid}" }
             }
           }
         ]
@@ -341,8 +344,8 @@ RSpec.describe 'Droplets' do
           {
             'total_results' => 2,
             'total_pages'   => 1,
-            'first'         => { 'href' => '/v3/droplets?page=1&per_page=50&states=STAGED%2CFAILED' },
-            'last'          => { 'href' => '/v3/droplets?page=1&per_page=50&states=STAGED%2CFAILED' },
+            'first'         => { 'href' => "#{link_prefix}/v3/droplets?page=1&per_page=50&states=STAGED%2CFAILED" },
+            'last'          => { 'href' => "#{link_prefix}/v3/droplets?page=1&per_page=50&states=STAGED%2CFAILED" },
             'next'          => nil,
             'previous'      => nil,
           })
@@ -359,8 +362,8 @@ RSpec.describe 'Droplets' do
           {
             'total_results' => 2,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/droplets?app_guids=#{app_model.guid}&page=1&per_page=50" },
-            'last'          => { 'href' => "/v3/droplets?app_guids=#{app_model.guid}&page=1&per_page=50" },
+            'first'         => { 'href' => "#{link_prefix}/v3/droplets?app_guids=#{app_model.guid}&page=1&per_page=50" },
+            'last'          => { 'href' => "#{link_prefix}/v3/droplets?app_guids=#{app_model.guid}&page=1&per_page=50" },
             'next'          => nil,
             'previous'      => nil,
           })
@@ -377,8 +380,8 @@ RSpec.describe 'Droplets' do
           {
             'total_results' => 2,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/droplets?guids=#{droplet1.guid}%2C#{droplet3.guid}&page=1&per_page=50" },
-            'last'          => { 'href' => "/v3/droplets?guids=#{droplet1.guid}%2C#{droplet3.guid}&page=1&per_page=50" },
+            'first'         => { 'href' => "#{link_prefix}/v3/droplets?guids=#{droplet1.guid}%2C#{droplet3.guid}&page=1&per_page=50" },
+            'last'          => { 'href' => "#{link_prefix}/v3/droplets?guids=#{droplet1.guid}%2C#{droplet3.guid}&page=1&per_page=50" },
             'next'          => nil,
             'previous'      => nil,
           })
@@ -398,8 +401,8 @@ RSpec.describe 'Droplets' do
           {
             'total_results' => 3,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/droplets?organization_guids=#{organization1.guid}&page=1&per_page=50" },
-            'last'          => { 'href' => "/v3/droplets?organization_guids=#{organization1.guid}&page=1&per_page=50" },
+            'first'         => { 'href' => "#{link_prefix}/v3/droplets?organization_guids=#{organization1.guid}&page=1&per_page=50" },
+            'last'          => { 'href' => "#{link_prefix}/v3/droplets?organization_guids=#{organization1.guid}&page=1&per_page=50" },
             'next'          => nil,
             'previous'      => nil,
           })
@@ -416,8 +419,8 @@ RSpec.describe 'Droplets' do
           {
             'total_results' => 3,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/droplets?page=1&per_page=50&space_guids=#{space.guid}%2C#{space2.guid}" },
-            'last'          => { 'href' => "/v3/droplets?page=1&per_page=50&space_guids=#{space.guid}%2C#{space2.guid}" },
+            'first'         => { 'href' => "#{link_prefix}/v3/droplets?page=1&per_page=50&space_guids=#{space.guid}%2C#{space2.guid}" },
+            'last'          => { 'href' => "#{link_prefix}/v3/droplets?page=1&per_page=50&space_guids=#{space.guid}%2C#{space2.guid}" },
             'next'          => nil,
             'previous'      => nil,
           })
@@ -500,8 +503,8 @@ RSpec.describe 'Droplets' do
         {
           'total_results' => 1,
           'total_pages'   => 1,
-          'first'         => { 'href' => "/v3/apps/#{app_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
-          'last'          => { 'href' => "/v3/apps/#{app_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
+          'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
+          'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
           'next'          => nil,
           'previous'      => nil,
         })
@@ -520,8 +523,8 @@ RSpec.describe 'Droplets' do
         'pagination' => {
           'total_results' => 2,
           'total_pages'   => 1,
-          'first'         => { 'href' => "/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
-          'last'          => { 'href' => "/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
+          'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
+          'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
           'next'          => nil,
           'previous'      => nil,
         },
@@ -550,10 +553,10 @@ RSpec.describe 'Droplets' do
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
-              'self'                   => { 'href' => "/v3/droplets/#{droplet2.guid}" },
-              'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
-              'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+              'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
+              'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+              'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
             }
           },
           {
@@ -574,11 +577,11 @@ RSpec.describe 'Droplets' do
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
-              'self'                   => { 'href' => "/v3/droplets/#{droplet1.guid}" },
-              'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
-              'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
-              'buildpack'              => { 'href' => "/v2/buildpacks/#{buildpack.guid}" }
+              'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
+              'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+              'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+              'buildpack'              => { 'href' => "#{link_prefix}/v2/buildpacks/#{buildpack.guid}" }
             }
           }
         ]
@@ -643,8 +646,8 @@ RSpec.describe 'Droplets' do
         {
           'total_results' => 1,
           'total_pages'   => 1,
-          'first'         => { 'href' => "/v3/packages/#{package_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
-          'last'          => { 'href' => "/v3/packages/#{package_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
+          'first'         => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
+          'last'          => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
           'next'          => nil,
           'previous'      => nil,
         })
@@ -663,8 +666,8 @@ RSpec.describe 'Droplets' do
         'pagination' => {
           'total_results' => 2,
           'total_pages'   => 1,
-          'first'         => { 'href' => "/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
-          'last'          => { 'href' => "/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
+          'first'         => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
+          'last'          => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
           'next'          => nil,
           'previous'      => nil,
         },
@@ -693,10 +696,10 @@ RSpec.describe 'Droplets' do
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
-              'self'                   => { 'href' => "/v3/droplets/#{droplet2.guid}" },
-              'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
-              'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+              'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
+              'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+              'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
             }
           },
           {
@@ -717,11 +720,11 @@ RSpec.describe 'Droplets' do
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
             'links'                 => {
-              'self'                   => { 'href' => "/v3/droplets/#{droplet1.guid}" },
-              'package'                => { 'href' => "/v3/packages/#{package_model.guid}" },
-              'app'                    => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
-              'buildpack'              => { 'href' => "/v2/buildpacks/#{buildpack.guid}" }
+              'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
+              'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+              'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+              'buildpack'              => { 'href' => "#{link_prefix}/v2/buildpacks/#{buildpack.guid}" }
             }
           }
         ]
@@ -784,10 +787,10 @@ RSpec.describe 'Droplets' do
         'created_at'            => iso8601,
         'updated_at'            => nil,
         'links'                 => {
-          'self'                   => { 'href' => "/v3/droplets/#{copied_droplet.guid}" },
+          'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{copied_droplet.guid}" },
           'package'                => nil,
-          'app'                    => { 'href' => "/v3/apps/#{new_app.guid}" },
-          'assign_current_droplet' => { 'href' => "/v3/apps/#{new_app.guid}/droplets/current", 'method' => 'PUT' },
+          'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}" },
+          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}/droplets/current", 'method' => 'PUT' },
         }
       })
     end

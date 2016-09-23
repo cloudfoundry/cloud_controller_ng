@@ -5,6 +5,9 @@ require 'messages/route_mappings_list_message'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RouteMappingPresenter do
     subject(:presenter) { described_class.new(route_mapping) }
+    let(:scheme) { TestConfig.config[:external_protocol] }
+    let(:host) { TestConfig.config[:external_domain] }
+    let(:link_prefix) { "#{scheme}://#{host}" }
 
     let(:route_mapping) do
       VCAP::CloudController::RouteMappingModel.make(
@@ -36,10 +39,10 @@ module VCAP::CloudController::Presenters::V3
 
       context 'links' do
         it 'includes correct link hrefs' do
-          expect(result[:links][:self][:href]).to eq("/v3/route_mappings/#{route_mapping.guid}")
-          expect(result[:links][:app][:href]).to eq("/v3/apps/#{app.guid}")
-          expect(result[:links][:route][:href]).to eq("/v2/routes/#{route_mapping.route.guid}")
-          expect(result[:links][:process][:href]).to eq("/v3/apps/#{app.guid}/processes/some-type")
+          expect(result[:links][:self][:href]).to eq("#{link_prefix}/v3/route_mappings/#{route_mapping.guid}")
+          expect(result[:links][:app][:href]).to eq("#{link_prefix}/v3/apps/#{app.guid}")
+          expect(result[:links][:route][:href]).to eq("#{link_prefix}/v2/routes/#{route_mapping.route.guid}")
+          expect(result[:links][:process][:href]).to eq("#{link_prefix}/v3/apps/#{app.guid}/processes/some-type")
         end
 
         context 'when the process is gone' do

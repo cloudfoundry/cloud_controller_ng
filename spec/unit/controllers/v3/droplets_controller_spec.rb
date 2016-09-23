@@ -1,6 +1,10 @@
 require 'rails_helper'
 
 RSpec.describe DropletsController, type: :controller do
+  let(:scheme) { TestConfig.config[:external_protocol] }
+  let(:host) { TestConfig.config[:external_domain] }
+  let(:link_prefix) { "#{scheme}://#{host}" }
+
   describe '#create' do
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:stagers) { instance_double(VCAP::CloudController::Stagers) }
@@ -669,7 +673,7 @@ RSpec.describe DropletsController, type: :controller do
 
     it 'returns pagination links for /v3/droplets' do
       get :index
-      expect(parsed_body['pagination']['first']['href']).to start_with('/v3/droplets')
+      expect(parsed_body['pagination']['first']['href']).to start_with("#{link_prefix}/v3/droplets")
     end
 
     context 'when pagination options are specified' do
@@ -704,7 +708,7 @@ RSpec.describe DropletsController, type: :controller do
       it 'provides the correct base url in the pagination links' do
         get :index, app_guid: app.guid
 
-        expect(parsed_body['pagination']['first']['href']).to include("/v3/apps/#{app.guid}/droplets")
+        expect(parsed_body['pagination']['first']['href']).to include("#{link_prefix}/v3/apps/#{app.guid}/droplets")
       end
 
       context 'when the user cannot read the app' do

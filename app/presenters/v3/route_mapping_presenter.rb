@@ -22,14 +22,16 @@ module VCAP::CloudController
 
         def build_links
           process_link = nil
+          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+
           unless route_mapping.process_type.blank?
-            process_link = { href: "/v3/apps/#{route_mapping.app.guid}/processes/#{route_mapping.process_type}" }
+            process_link = { href: url_builder.build_url(path: "/v3/apps/#{route_mapping.app.guid}/processes/#{route_mapping.process_type}") }
           end
 
           {
-            self:  { href: "/v3/route_mappings/#{route_mapping.guid}" },
-            app:   { href: "/v3/apps/#{route_mapping.app.guid}" },
-            route: { href: "/v2/routes/#{route_mapping.route.guid}" },
+            self:  { href: url_builder.build_url(path: "/v3/route_mappings/#{route_mapping.guid}") },
+            app:   { href: url_builder.build_url(path: "/v3/apps/#{route_mapping.app.guid}") },
+            route: { href: url_builder.build_url(path: "/v2/routes/#{route_mapping.route.guid}") },
             process: process_link
           }
         end

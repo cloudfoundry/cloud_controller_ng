@@ -21,7 +21,10 @@ module VCAP::CloudController::Presenters::V3
         )
       }
       let(:result) { ProcessPresenter.new(process).to_hash }
-      let(:base_url) { nil }
+
+      let(:scheme) { TestConfig.config[:external_protocol] }
+      let(:host) { TestConfig.config[:external_domain] }
+      let(:link_prefix) { "#{scheme}://#{host}" }
 
       before do
         process.updated_at = Time.at(2)
@@ -29,11 +32,11 @@ module VCAP::CloudController::Presenters::V3
 
       it 'presents the process as a hash' do
         links = {
-          self: { href: "/v3/processes/#{process.guid}" },
-          scale: { href: "/v3/processes/#{process.guid}/scale", method: 'PUT' },
-          app: { href: "/v3/apps/#{app_model.guid}" },
-          space: { href: "/v2/spaces/#{process.space_guid}" },
-          stats: { href: "/v3/processes/#{process.guid}/stats" },
+          self: { href: "#{link_prefix}/v3/processes/#{process.guid}" },
+          scale: { href: "#{link_prefix}/v3/processes/#{process.guid}/scale", method: 'PUT' },
+          app: { href: "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          space: { href: "#{link_prefix}/v2/spaces/#{process.space_guid}" },
+          stats: { href: "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         }
 
         expect(result[:guid]).to eq(process.guid)

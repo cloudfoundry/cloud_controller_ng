@@ -17,6 +17,9 @@ module VCAP::CloudController::Presenters::V3
         package_guid:          'abcdefabcdef12345'
       )
     end
+    let(:scheme) { TestConfig.config[:external_protocol] }
+    let(:host) { TestConfig.config[:external_domain] }
+    let(:link_prefix) { "#{scheme}://#{host}" }
 
     describe '#to_hash' do
       let(:result) { DropletPresenter.new(droplet).to_hash }
@@ -34,6 +37,13 @@ module VCAP::CloudController::Presenters::V3
         end
 
         it 'presents the droplet as a hash' do
+          links = {
+            self: { href: "#{link_prefix}/v3/droplets/#{droplet.guid}" },
+            package: { href: "#{link_prefix}/v3/packages/#{droplet.package_guid}" },
+            app: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}" },
+            assign_current_droplet: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}/droplets/current", method: 'PUT' }
+          }
+
           expect(result[:guid]).to eq(droplet.guid)
           expect(result[:state]).to eq('STAGED')
           expect(result[:error]).to eq('FAILED - things went all sorts of bad')
@@ -47,13 +57,7 @@ module VCAP::CloudController::Presenters::V3
 
           expect(result[:created_at]).to be_a(Time)
           expect(result[:updated_at]).to be_a(Time)
-          expect(result[:links]).to include(:self)
-          expect(result[:links][:self][:href]).to eq("/v3/droplets/#{droplet.guid}")
-          expect(result[:links]).to include(:package)
-          expect(result[:links][:package][:href]).to eq("/v3/packages/#{droplet.package_guid}")
-          expect(result[:links][:app][:href]).to eq("/v3/apps/#{droplet.app_guid}")
-          expect(result[:links][:assign_current_droplet][:href]).to eq("/v3/apps/#{droplet.app_guid}/droplets/current")
-          expect(result[:links][:assign_current_droplet][:method]).to eq('PUT')
+          expect(result[:links]).to eq(links)
         end
 
         context 'when buildpack contains username and password' do
@@ -113,7 +117,7 @@ module VCAP::CloudController::Presenters::V3
             let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, buildpack_receipt_buildpack_guid: 'some-guid') }
 
             it 'links to the buildpack' do
-              expect(result[:links][:buildpack][:href]).to eq('/v2/buildpacks/some-guid')
+              expect(result[:links][:buildpack][:href]).to eq("#{link_prefix}/v2/buildpacks/some-guid")
             end
           end
 

@@ -7,6 +7,9 @@ RSpec.describe 'Packages' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:space_guid) { space.guid }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space_guid) }
+  let(:scheme) { TestConfig.config[:external_protocol] }
+  let(:host) { TestConfig.config[:external_domain] }
+  let(:link_prefix) { "#{scheme}://#{host}" }
 
   describe 'POST /v3/apps/:guid/packages' do
     let(:guid) { app_model.guid }
@@ -41,9 +44,9 @@ RSpec.describe 'Packages' do
           'created_at' => iso8601,
           'updated_at' => nil,
           'links' => {
-            'self' => { 'href' => "/v3/packages/#{package.guid}" },
-            'app'  => { 'href' => "/v3/apps/#{guid}" },
-            'stage' => { 'href' => "/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
+            'self' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
+            'app'  => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
+            'stage' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
           }
         }
 
@@ -98,9 +101,9 @@ RSpec.describe 'Packages' do
           'created_at' => iso8601,
           'updated_at' => nil,
           'links' => {
-            'self' => { 'href' => "/v3/packages/#{package.guid}" },
-            'app'  => { 'href' => "/v3/apps/#{guid}" },
-            'stage' => { 'href' => "/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
+            'self' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
+            'app'  => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
+            'stage' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
           }
         }
 
@@ -153,8 +156,8 @@ RSpec.describe 'Packages' do
         'pagination' => {
           'total_results' => 2,
           'total_pages'   => 1,
-          'first'         => { 'href' => "/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
-          'last'          => { 'href' => "/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
+          'first'         => { 'href' => "#{link_prefix}/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
+          'last'          => { 'href' => "#{link_prefix}/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
           'next'          => nil,
           'previous'      => nil,
         },
@@ -170,11 +173,11 @@ RSpec.describe 'Packages' do
             'created_at' => iso8601,
             'updated_at' => nil,
             'links' => {
-              'self'   => { 'href' => "/v3/packages/#{package2.guid}" },
-              'upload' => { 'href' => "/v3/packages/#{package2.guid}/upload", 'method' => 'POST' },
-              'download' => { 'href' => "/v3/packages/#{package2.guid}/download", 'method' => 'GET' },
-              'stage' => { 'href' => "/v3/packages/#{package2.guid}/droplets", 'method' => 'POST' },
-              'app' => { 'href' => "/v3/apps/#{guid}" },
+              'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}" },
+              'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}/upload", 'method' => 'POST' },
+              'download' => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}/download", 'method' => 'GET' },
+              'stage' => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}/droplets", 'method' => 'POST' },
+              'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
             }
           },
           {
@@ -188,11 +191,11 @@ RSpec.describe 'Packages' do
             'created_at' => iso8601,
             'updated_at' => nil,
             'links' => {
-              'self'   => { 'href' => "/v3/packages/#{package.guid}" },
-              'upload' => { 'href' => "/v3/packages/#{package.guid}/upload", 'method' => 'POST' },
-              'download' => { 'href' => "/v3/packages/#{package.guid}/download", 'method' => 'GET' },
-              'stage' => { 'href' => "/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
-              'app' => { 'href' => "/v3/apps/#{guid}" },
+              'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
+              'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/upload", 'method' => 'POST' },
+              'download' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/download", 'method' => 'GET' },
+              'stage' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
+              'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
             }
           },
         ]
@@ -218,8 +221,8 @@ RSpec.describe 'Packages' do
         expected_pagination = {
           'total_results' => 3,
           'total_pages'   => 1,
-          'first'         => { 'href' => '/v3/packages?page=1&per_page=50&types=bits' },
-          'last'          => { 'href' => '/v3/packages?page=1&per_page=50&types=bits' },
+          'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
+          'last'          => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
           'next'          => nil,
           'previous'      => nil
         }
@@ -243,8 +246,8 @@ RSpec.describe 'Packages' do
         expected_pagination = {
           'total_results' => 2,
           'total_pages'   => 1,
-          'first'         => { 'href' => "/v3/apps/#{app_model.guid}/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
-          'last'          => { 'href' => "/v3/apps/#{app_model.guid}/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
+          'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
+          'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
           'next'          => nil,
           'previous'      => nil
         }
@@ -267,8 +270,8 @@ RSpec.describe 'Packages' do
         expected_pagination = {
           'total_results' => 2,
           'total_pages'   => 1,
-          'first'         => { 'href' => "/v3/apps/#{app_model.guid}/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
-          'last'          => { 'href' => "/v3/apps/#{app_model.guid}/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
+          'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
+          'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
           'next'          => nil,
           'previous'      => nil
         }
@@ -308,9 +311,9 @@ RSpec.describe 'Packages' do
         'pagination' => {
               'total_results' => 3,
               'total_pages'   => 2,
-              'first'         => { 'href' => '/v3/packages?page=1&per_page=2' },
-              'last'          => { 'href' => '/v3/packages?page=2&per_page=2' },
-              'next'          => { 'href' => '/v3/packages?page=2&per_page=2' },
+              'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=2" },
+              'last'          => { 'href' => "#{link_prefix}/v3/packages?page=2&per_page=2" },
+              'next'          => { 'href' => "#{link_prefix}/v3/packages?page=2&per_page=2" },
               'previous'      => nil,
             },
         'resources' => [
@@ -325,11 +328,11 @@ RSpec.describe 'Packages' do
             'created_at' => iso8601,
             'updated_at' => nil,
             'links' => {
-              'self'   => { 'href' => "/v3/packages/#{bits_package.guid}" },
-              'upload' => { 'href' => "/v3/packages/#{bits_package.guid}/upload", 'method' => 'POST' },
-              'download' => { 'href' => "/v3/packages/#{bits_package.guid}/download", 'method' => 'GET' },
-              'stage' => { 'href' => "/v3/packages/#{bits_package.guid}/droplets", 'method' => 'POST' },
-              'app' => { 'href' => "/v3/apps/#{bits_package.app_guid}" },
+              'self'   => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}" },
+              'upload' => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}/upload", 'method' => 'POST' },
+              'download' => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}/download", 'method' => 'GET' },
+              'stage' => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}/droplets", 'method' => 'POST' },
+              'app' => { 'href' => "#{link_prefix}/v3/apps/#{bits_package.app_guid}" },
             }
           },
           {
@@ -342,9 +345,9 @@ RSpec.describe 'Packages' do
             'created_at' => iso8601,
             'updated_at' => nil,
             'links' => {
-              'self' => { 'href' => "/v3/packages/#{docker_package.guid}" },
-              'app'  => { 'href' => "/v3/apps/#{docker_package.app_guid}" },
-              'stage' => { 'href' => "/v3/packages/#{docker_package.guid}/droplets", 'method' => 'POST' },
+              'self' => { 'href' => "#{link_prefix}/v3/packages/#{docker_package.guid}" },
+              'app'  => { 'href' => "#{link_prefix}/v3/apps/#{docker_package.app_guid}" },
+              'stage' => { 'href' => "#{link_prefix}/v3/packages/#{docker_package.guid}/droplets", 'method' => 'POST' },
             }
           }
         ]
@@ -371,8 +374,8 @@ RSpec.describe 'Packages' do
         expected_pagination = {
           'total_results' => 3,
           'total_pages'   => 1,
-          'first'         => { 'href' => '/v3/packages?page=1&per_page=50&types=bits' },
-          'last'          => { 'href' => '/v3/packages?page=1&per_page=50&types=bits' },
+          'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
+          'last'          => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
           'next'          => nil,
           'previous'      => nil
         }
@@ -398,8 +401,8 @@ RSpec.describe 'Packages' do
         expected_pagination = {
           'total_results' => 3,
           'total_pages'   => 1,
-          'first'         => { 'href' => '/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD' },
-          'last'          => { 'href' => '/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD' },
+          'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
+          'last'          => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
           'next'          => nil,
           'previous'      => nil
         }
@@ -423,8 +426,8 @@ RSpec.describe 'Packages' do
         expected_pagination = {
           'total_results' => 2,
           'total_pages'   => 1,
-          'first'         => { 'href' => "/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
-          'last'          => { 'href' => "/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
+          'first'         => { 'href' => "#{link_prefix}/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
+          'last'          => { 'href' => "#{link_prefix}/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
           'next'          => nil,
           'previous'      => nil
         }
@@ -447,8 +450,8 @@ RSpec.describe 'Packages' do
         expected_pagination = {
           'total_results' => 2,
           'total_pages'   => 1,
-          'first'         => { 'href' => "/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
-          'last'          => { 'href' => "/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
+          'first'         => { 'href' => "#{link_prefix}/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
+          'last'          => { 'href' => "#{link_prefix}/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
           'next'          => nil,
           'previous'      => nil
         }
@@ -478,8 +481,8 @@ RSpec.describe 'Packages' do
         expected_pagination = {
           'total_results' => 2,
           'total_pages'   => 1,
-          'first'         => { 'href' => "/v3/packages?page=1&per_page=50&space_guids=#{space2.guid}%2C#{space_guid}" },
-          'last'          => { 'href' => "/v3/packages?page=1&per_page=50&space_guids=#{space2.guid}%2C#{space_guid}" },
+          'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&space_guids=#{space2.guid}%2C#{space_guid}" },
+          'last'          => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&space_guids=#{space2.guid}%2C#{space_guid}" },
           'next'          => nil,
           'previous'      => nil
         }
@@ -516,8 +519,8 @@ RSpec.describe 'Packages' do
         expected_pagination = {
           'total_results' => 2,
           'total_pages'   => 1,
-          'first'         => { 'href' => "/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
-          'last'          => { 'href' => "/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
+          'first'         => { 'href' => "#{link_prefix}/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
+          'last'          => { 'href' => "#{link_prefix}/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
           'next'          => nil,
           'previous'      => nil
         }
@@ -558,11 +561,11 @@ RSpec.describe 'Packages' do
         'created_at' => iso8601,
         'updated_at' => nil,
         'links' => {
-          'self'   => { 'href' => "/v3/packages/#{guid}" },
-          'upload' => { 'href' => "/v3/packages/#{guid}/upload", 'method' => 'POST' },
-          'download' => { 'href' => "/v3/packages/#{guid}/download", 'method' => 'GET' },
-          'stage' => { 'href' => "/v3/packages/#{guid}/droplets", 'method' => 'POST' },
-          'app' => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'self'   => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
+          'upload' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/upload", 'method' => 'POST' },
+          'download' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/download", 'method' => 'GET' },
+          'stage' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/droplets", 'method' => 'POST' },
+          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
         }
       }
 
@@ -614,11 +617,11 @@ RSpec.describe 'Packages' do
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'links' => {
-          'self'   => { 'href' => "/v3/packages/#{guid}" },
-          'upload' => { 'href' => "/v3/packages/#{guid}/upload", 'method' => 'POST' },
-          'download' => { 'href' => "/v3/packages/#{guid}/download", 'method' => 'GET' },
-          'stage' => { 'href' => "/v3/packages/#{guid}/droplets", 'method' => 'POST' },
-          'app' => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'self'   => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
+          'upload' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/upload", 'method' => 'POST' },
+          'download' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/download", 'method' => 'GET' },
+          'stage' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/droplets", 'method' => 'POST' },
+          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
         }
       }
       parsed_response = MultiJson.load(last_response.body)

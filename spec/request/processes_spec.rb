@@ -5,6 +5,9 @@ RSpec.describe 'Processes' do
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space, name: 'my_app') }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer) }
+  let(:scheme) { TestConfig.config[:external_protocol] }
+  let(:host) { TestConfig.config[:external_domain] }
+  let(:link_prefix) { "#{scheme}://#{host}" }
 
   describe 'GET /v3/processes' do
     let!(:web_process) {
@@ -39,9 +42,9 @@ RSpec.describe 'Processes' do
         'pagination' => {
           'total_results' => 3,
           'total_pages'   => 2,
-          'first'         => { 'href' => '/v3/processes?page=1&per_page=2' },
-          'last'          => { 'href' => '/v3/processes?page=2&per_page=2' },
-          'next'          => { 'href' => '/v3/processes?page=2&per_page=2' },
+          'first'         => { 'href' => "#{link_prefix}/v3/processes?page=1&per_page=2" },
+          'last'          => { 'href' => "#{link_prefix}/v3/processes?page=2&per_page=2" },
+          'next'          => { 'href' => "#{link_prefix}/v3/processes?page=2&per_page=2" },
           'previous'      => nil,
         },
         'resources' => [
@@ -62,11 +65,11 @@ RSpec.describe 'Processes' do
             'created_at'   => iso8601,
             'updated_at'   => nil,
             'links'        => {
-              'self'  => { 'href' => "/v3/processes/#{web_process.guid}" },
-              'scale' => { 'href' => "/v3/processes/#{web_process.guid}/scale", 'method' => 'PUT' },
-              'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-              'stats' => { 'href' => "/v3/processes/#{web_process.guid}/stats" },
+              'self'  => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}" },
+              'scale' => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}/scale", 'method' => 'PUT' },
+              'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+              'stats' => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}/stats" },
             },
           },
           {
@@ -86,11 +89,11 @@ RSpec.describe 'Processes' do
             'created_at'   => iso8601,
             'updated_at'   => nil,
             'links'        => {
-              'self'  => { 'href' => "/v3/processes/#{worker_process.guid}" },
-              'scale' => { 'href' => "/v3/processes/#{worker_process.guid}/scale", 'method' => 'PUT' },
-              'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-              'stats' => { 'href' => "/v3/processes/#{worker_process.guid}/stats" },
+              'self'  => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}" },
+              'scale' => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}/scale", 'method' => 'PUT' },
+              'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+              'stats' => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}/stats" },
             },
           }
         ]
@@ -110,8 +113,8 @@ RSpec.describe 'Processes' do
           expected_pagination = {
             'total_results' => 1,
             'total_pages'   => 1,
-            'first'         => { 'href' => '/v3/processes?page=1&per_page=2&types=worker%2Cdoesnotexist' },
-            'last'          => { 'href' => '/v3/processes?page=1&per_page=2&types=worker%2Cdoesnotexist' },
+            'first'         => { 'href' => "#{link_prefix}/v3/processes?page=1&per_page=2&types=worker%2Cdoesnotexist" },
+            'last'          => { 'href' => "#{link_prefix}/v3/processes?page=1&per_page=2&types=worker%2Cdoesnotexist" },
             'next'          => nil,
             'previous'      => nil,
           }
@@ -151,8 +154,8 @@ RSpec.describe 'Processes' do
           expected_pagination = {
             'total_results' => 1,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/processes?page=1&per_page=2&space_guids=#{other_space.guid}" },
-            'last'          => { 'href' => "/v3/processes?page=1&per_page=2&space_guids=#{other_space.guid}" },
+            'first'         => { 'href' => "#{link_prefix}/v3/processes?page=1&per_page=2&space_guids=#{other_space.guid}" },
+            'last'          => { 'href' => "#{link_prefix}/v3/processes?page=1&per_page=2&space_guids=#{other_space.guid}" },
             'next'          => nil,
             'previous'      => nil,
           }
@@ -190,8 +193,8 @@ RSpec.describe 'Processes' do
           expected_pagination = {
             'total_results' => 1,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/processes?organization_guids=#{other_org.guid}&page=1&per_page=2" },
-            'last'          => { 'href' => "/v3/processes?organization_guids=#{other_org.guid}&page=1&per_page=2" },
+            'first'         => { 'href' => "#{link_prefix}/v3/processes?organization_guids=#{other_org.guid}&page=1&per_page=2" },
+            'last'          => { 'href' => "#{link_prefix}/v3/processes?organization_guids=#{other_org.guid}&page=1&per_page=2" },
             'next'          => nil,
             'previous'      => nil,
           }
@@ -225,8 +228,8 @@ RSpec.describe 'Processes' do
           expected_pagination = {
             'total_results' => 1,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/processes?app_guids=#{desired_app.guid}&page=1&per_page=2" },
-            'last'          => { 'href' => "/v3/processes?app_guids=#{desired_app.guid}&page=1&per_page=2" },
+            'first'         => { 'href' => "#{link_prefix}/v3/processes?app_guids=#{desired_app.guid}&page=1&per_page=2" },
+            'last'          => { 'href' => "#{link_prefix}/v3/processes?app_guids=#{desired_app.guid}&page=1&per_page=2" },
             'next'          => nil,
             'previous'      => nil,
           }
@@ -248,8 +251,8 @@ RSpec.describe 'Processes' do
           expected_pagination = {
             'total_results' => 2,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/processes?guids=#{web_process.guid}%2C#{worker_process.guid}&page=1&per_page=2" },
-            'last'          => { 'href' => "/v3/processes?guids=#{web_process.guid}%2C#{worker_process.guid}&page=1&per_page=2" },
+            'first'         => { 'href' => "#{link_prefix}/v3/processes?guids=#{web_process.guid}%2C#{worker_process.guid}&page=1&per_page=2" },
+            'last'          => { 'href' => "#{link_prefix}/v3/processes?guids=#{web_process.guid}%2C#{worker_process.guid}&page=1&per_page=2" },
             'next'          => nil,
             'previous'      => nil,
           }
@@ -297,11 +300,11 @@ RSpec.describe 'Processes' do
         'created_at'   => iso8601,
         'updated_at'   => nil,
         'links'        => {
-          'self'  => { 'href' => "/v3/processes/#{process.guid}" },
-          'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
-          'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-          'stats' => { 'href' => "/v3/processes/#{process.guid}/stats" },
+          'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
+          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
 
@@ -465,11 +468,11 @@ RSpec.describe 'Processes' do
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
         'links'        => {
-          'self'  => { 'href' => "/v3/processes/#{process.guid}" },
-          'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
-          'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-          'stats' => { 'href' => "/v3/processes/#{process.guid}/stats" },
+          'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
+          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
 
@@ -549,11 +552,11 @@ RSpec.describe 'Processes' do
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
         'links'        => {
-          'self'  => { 'href' => "/v3/processes/#{process.guid}" },
-          'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
-          'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-          'stats' => { 'href' => "/v3/processes/#{process.guid}/stats" },
+          'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
+          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
 
@@ -659,9 +662,9 @@ RSpec.describe 'Processes' do
         'pagination' => {
           'total_results' => 3,
           'total_pages'   => 2,
-          'first'         => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=1&per_page=2" },
-          'last'          => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=2&per_page=2" },
-          'next'          => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=2&per_page=2" },
+          'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes?page=1&per_page=2" },
+          'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes?page=2&per_page=2" },
+          'next'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes?page=2&per_page=2" },
           'previous'      => nil,
         },
         'resources' => [
@@ -682,11 +685,11 @@ RSpec.describe 'Processes' do
             'created_at'   => iso8601,
             'updated_at'   => nil,
             'links'        => {
-              'self'  => { 'href' => "/v3/processes/#{process1.guid}" },
-              'scale' => { 'href' => "/v3/processes/#{process1.guid}/scale", 'method' => 'PUT' },
-              'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-              'stats' => { 'href' => "/v3/processes/#{process1.guid}/stats" },
+              'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}" },
+              'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/scale", 'method' => 'PUT' },
+              'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+              'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/stats" },
             },
           },
           {
@@ -706,11 +709,11 @@ RSpec.describe 'Processes' do
             'created_at'   => iso8601,
             'updated_at'   => nil,
             'links'        => {
-              'self'  => { 'href' => "/v3/processes/#{process2.guid}" },
-              'scale' => { 'href' => "/v3/processes/#{process2.guid}/scale", 'method' => 'PUT' },
-              'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-              'stats' => { 'href' => "/v3/processes/#{process2.guid}/stats" },
+              'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}" },
+              'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}/scale", 'method' => 'PUT' },
+              'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+              'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}/stats" },
             },
           }
         ]
@@ -730,8 +733,8 @@ RSpec.describe 'Processes' do
           expected_pagination = {
             'total_results' => 1,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=1&per_page=2&types=worker" },
-            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=1&per_page=2&types=worker" },
+            'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes?page=1&per_page=2&types=worker" },
+            'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes?page=1&per_page=2&types=worker" },
             'next'          => nil,
             'previous'      => nil,
           }
@@ -753,8 +756,8 @@ RSpec.describe 'Processes' do
           expected_pagination = {
             'total_results' => 2,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/processes?guids=#{process1.guid}%2C#{process2.guid}&page=1&per_page=2" },
-            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/processes?guids=#{process1.guid}%2C#{process2.guid}&page=1&per_page=2" },
+            'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes?guids=#{process1.guid}%2C#{process2.guid}&page=1&per_page=2" },
+            'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes?guids=#{process1.guid}%2C#{process2.guid}&page=1&per_page=2" },
             'next'          => nil,
             'previous'      => nil,
           }
@@ -802,11 +805,11 @@ RSpec.describe 'Processes' do
         'created_at'   => iso8601,
         'updated_at'   => nil,
         'links'        => {
-          'self'  => { 'href' => "/v3/processes/#{process.guid}" },
-          'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
-          'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-          'stats' => { 'href' => "/v3/processes/#{process.guid}/stats" },
+          'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
+          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
 
@@ -962,11 +965,11 @@ RSpec.describe 'Processes' do
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
         'links'        => {
-          'self'  => { 'href' => "/v3/processes/#{process.guid}" },
-          'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
-          'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-          'stats' => { 'href' => "/v3/processes/#{process.guid}/stats" },
+          'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
+          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
 

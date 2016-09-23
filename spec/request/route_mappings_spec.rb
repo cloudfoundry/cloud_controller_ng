@@ -9,6 +9,9 @@ RSpec.describe 'Route Mappings' do
   let(:developer_headers) do
     headers_for(developer)
   end
+  let(:scheme) { TestConfig.config[:external_protocol] }
+  let(:host) { TestConfig.config[:external_domain] }
+  let(:link_prefix) { "#{scheme}://#{host}" }
 
   before do
     allow(ApplicationController).to receive(:configuration).and_return(TestConfig.config)
@@ -36,10 +39,10 @@ RSpec.describe 'Route Mappings' do
         'updated_at' => nil,
 
         'links'      => {
-          'self'    => { 'href' => "/v3/route_mappings/#{route_mapping.guid}" },
-          'app'     => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'route'   => { 'href' => "/v2/routes/#{route.guid}" },
-          'process' => { 'href' => "/v3/apps/#{app_model.guid}/processes/worker" }
+          'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping.guid}" },
+          'app'     => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'route'   => { 'href' => "#{link_prefix}/v2/routes/#{route.guid}" },
+          'process' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes/worker" }
         }
       }
 
@@ -91,9 +94,9 @@ RSpec.describe 'Route Mappings' do
         'pagination' => {
           'total_results' => 3,
           'total_pages'   => 2,
-          'first'         => { 'href' => '/v3/route_mappings?page=1&per_page=2' },
-          'last'          => { 'href' => '/v3/route_mappings?page=2&per_page=2' },
-          'next'          => { 'href' => '/v3/route_mappings?page=2&per_page=2' },
+          'first'         => { 'href' => "#{link_prefix}/v3/route_mappings?page=1&per_page=2" },
+          'last'          => { 'href' => "#{link_prefix}/v3/route_mappings?page=2&per_page=2" },
+          'next'          => { 'href' => "#{link_prefix}/v3/route_mappings?page=2&per_page=2" },
           'previous'      => nil
         },
         'resources' => [
@@ -104,10 +107,10 @@ RSpec.describe 'Route Mappings' do
             'updated_at' => nil,
 
             'links'      => {
-              'self'    => { 'href' => "/v3/route_mappings/#{route_mapping1.guid}" },
-              'app'     => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'route'   => { 'href' => "/v2/routes/#{route.guid}" },
-              'process' => { 'href' => "/v3/apps/#{app_model.guid}/processes/web" }
+              'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping1.guid}" },
+              'app'     => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'route'   => { 'href' => "#{link_prefix}/v2/routes/#{route.guid}" },
+              'process' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes/web" }
             }
           },
           {
@@ -117,10 +120,10 @@ RSpec.describe 'Route Mappings' do
             'updated_at' => nil,
 
             'links'      => {
-              'self'    => { 'href' => "/v3/route_mappings/#{route_mapping2.guid}" },
-              'app'     => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'route'   => { 'href' => "/v2/routes/#{route.guid}" },
-              'process' => { 'href' => "/v3/apps/#{app_model.guid}/processes/worker" }
+              'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping2.guid}" },
+              'app'     => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'route'   => { 'href' => "#{link_prefix}/v2/routes/#{route.guid}" },
+              'process' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes/worker" }
             }
           }
         ]
@@ -144,8 +147,8 @@ RSpec.describe 'Route Mappings' do
           expected_pagination = {
             'total_results' => 4,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/route_mappings?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
-            'last'          => { 'href' => "/v3/route_mappings?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
+            'first'         => { 'href' => "#{link_prefix}/v3/route_mappings?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
+            'last'          => { 'href' => "#{link_prefix}/v3/route_mappings?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
             'next'          => nil,
             'previous'      => nil
           }
@@ -170,8 +173,8 @@ RSpec.describe 'Route Mappings' do
           expected_pagination = {
             'total_results' => 4,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
-            'last'          => { 'href' => "/v3/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
+            'first'         => { 'href' => "#{link_prefix}/v3/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
+            'last'          => { 'href' => "#{link_prefix}/v3/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
             'next'          => nil,
             'previous'      => nil
           }
@@ -201,10 +204,10 @@ RSpec.describe 'Route Mappings' do
         'updated_at' => nil,
 
         'links'      => {
-          'self'    => { 'href' => "/v3/route_mappings/#{route_mapping.guid}" },
-          'app'     => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'route'   => { 'href' => "/v2/routes/#{route.guid}" },
-          'process' => { 'href' => "/v3/apps/#{app_model.guid}/processes/#{process.type}" }
+          'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping.guid}" },
+          'app'     => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'route'   => { 'href' => "#{link_prefix}/v2/routes/#{route.guid}" },
+          'process' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes/#{process.type}" }
         }
       }
 
@@ -258,9 +261,9 @@ RSpec.describe 'Route Mappings' do
         'pagination' => {
           'total_results' => 3,
           'total_pages'   => 2,
-          'first'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings?page=1&per_page=2" },
-          'last'          => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings?page=2&per_page=2" },
-          'next'          => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings?page=2&per_page=2" },
+          'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings?page=1&per_page=2" },
+          'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings?page=2&per_page=2" },
+          'next'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings?page=2&per_page=2" },
           'previous'      => nil
         },
         'resources' => [
@@ -271,10 +274,10 @@ RSpec.describe 'Route Mappings' do
             'updated_at' => nil,
 
             'links'      => {
-              'self'    => { 'href' => "/v3/route_mappings/#{route_mapping1.guid}" },
-              'app'     => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'route'   => { 'href' => "/v2/routes/#{route.guid}" },
-              'process' => { 'href' => "/v3/apps/#{app_model.guid}/processes/web" }
+              'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping1.guid}" },
+              'app'     => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'route'   => { 'href' => "#{link_prefix}/v2/routes/#{route.guid}" },
+              'process' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes/web" }
             }
           },
           {
@@ -284,10 +287,10 @@ RSpec.describe 'Route Mappings' do
             'updated_at' => nil,
 
             'links'      => {
-              'self'    => { 'href' => "/v3/route_mappings/#{route_mapping2.guid}" },
-              'app'     => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'route'   => { 'href' => "/v2/routes/#{route.guid}" },
-              'process' => { 'href' => "/v3/apps/#{app_model.guid}/processes/worker" }
+              'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping2.guid}" },
+              'app'     => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'route'   => { 'href' => "#{link_prefix}/v2/routes/#{route.guid}" },
+              'process' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes/worker" }
             }
           }
         ]
@@ -312,8 +315,8 @@ RSpec.describe 'Route Mappings' do
           expected_pagination = {
             'total_results' => 4,
             'total_pages'   => 1,
-            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
-            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
+            'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
+            'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings?page=1&per_page=50&route_guids=#{route.guid}%2C#{route2.guid}" },
             'next'          => nil,
             'previous'      => nil
           }

@@ -9,6 +9,9 @@ module VCAP::CloudController::Presenters::V3
         desired_state: 'STOPPED',
       )
     end
+    let(:scheme) { TestConfig.config[:external_protocol] }
+    let(:host) { TestConfig.config[:external_domain] }
+    let(:link_prefix) { "#{scheme}://#{host}" }
 
     before do
       app.lifecycle_data.update(
@@ -23,6 +26,19 @@ module VCAP::CloudController::Presenters::V3
       it 'presents the app as json' do
         app.add_process({ app: app, instances: 4 })
 
+        links = {
+          self: { href: "#{link_prefix}/v3/apps/#{app.guid}" },
+          space: { href: "#{link_prefix}/v2/spaces/#{app.space_guid}" },
+          processes: { href: "#{link_prefix}/v3/apps/#{app.guid}/processes" },
+          route_mappings: { href: "#{link_prefix}/v3/apps/#{app.guid}/route_mappings" },
+          packages: { href: "#{link_prefix}/v3/apps/#{app.guid}/packages" },
+          droplet: { href: "#{link_prefix}/v3/apps/#{app.guid}/droplets/current" },
+          droplets: { href: "#{link_prefix}/v3/apps/#{app.guid}/droplets" },
+          tasks: { href: "#{link_prefix}/v3/apps/#{app.guid}/tasks" },
+          start: { href: "#{link_prefix}/v3/apps/#{app.guid}/start", method: 'PUT' },
+          stop: { href: "#{link_prefix}/v3/apps/#{app.guid}/stop", method: 'PUT' }
+        }
+
         expect(result[:guid]).to eq(app.guid)
         expect(result[:name]).to eq(app.name)
         expect(result[:desired_state]).to eq(app.desired_state)
@@ -30,9 +46,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:total_desired_instances]).to eq(4)
         expect(result[:created_at]).to be_a(Time)
         expect(result[:updated_at]).to be_a(Time)
-        expect(result[:links]).to include(:droplet)
-        expect(result[:links]).to include(:start)
-        expect(result[:links]).to include(:stop)
+        expect(result[:links]).to eq(links)
         expect(result[:lifecycle][:type]).to eq('buildpack')
         expect(result[:lifecycle][:data][:stack]).to eq('the-happiest-stack')
         expect(result[:lifecycle][:data][:buildpack]).to eq('git://***:***@github.com/repo')
@@ -61,11 +75,11 @@ module VCAP::CloudController::Presenters::V3
         end
 
         it 'includes route_mappings links' do
-          expect(result[:links][:route_mappings][:href]).to eq("/v3/apps/#{app.guid}/route_mappings")
+          expect(result[:links][:route_mappings][:href]).to eq("#{link_prefix}/v3/apps/#{app.guid}/route_mappings")
         end
 
         it 'includes tasks links' do
-          expect(result[:links][:tasks][:href]).to eq("/v3/apps/#{app.guid}/tasks")
+          expect(result[:links][:tasks][:href]).to eq("#{link_prefix}/v3/apps/#{app.guid}/tasks")
         end
 
         context 'droplets' do
@@ -74,12 +88,12 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'includes a link to the current droplet' do
-            expect(result[:links][:droplet][:href]).to eq("/v3/apps/#{app.guid}/droplets/current")
+            expect(result[:links][:droplet][:href]).to eq("#{link_prefix}/v3/apps/#{app.guid}/droplets/current")
           end
 
           it 'includes a link to the droplets if present' do
             VCAP::CloudController::DropletModel.make(app: app, state: VCAP::CloudController::DropletModel::STAGING_STATE)
-            expect(result[:links][:droplets][:href]).to eq("/v3/apps/#{app.guid}/droplets")
+            expect(result[:links][:droplets][:href]).to eq("#{link_prefix}/v3/apps/#{app.guid}/droplets")
           end
         end
       end
