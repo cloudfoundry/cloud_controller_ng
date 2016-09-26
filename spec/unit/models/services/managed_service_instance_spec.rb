@@ -111,6 +111,12 @@ module VCAP::CloudController
         expect(event.state).to eq(Repositories::ServiceUsageEventRepository::CREATED_EVENT_STATE)
         expect(event).to match_service_instance(instance)
       end
+
+      it 'allows really long dashboard urls' do
+        instance = ManagedServiceInstance.make
+        instance.update dashboard_url: 'a' * 1024
+        expect(instance.guid).to be
+      end
     end
 
     describe '#save_with_new_operation' do
