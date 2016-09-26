@@ -32,6 +32,7 @@ templates:
   post-start.sh.erb: bin/post-start
   migrate_db.sh.erb: bin/migrate_db
   seed_db.sh.erb: bin/seed_db
+  uaa_ca.crt.erb: config/certs/uaa_ca.crt
 
 packages:
   - capi_utils
@@ -449,6 +450,8 @@ properties:
     description: "Symmetric secret used to decode uaa tokens. Used for testing."
   uaa.url:
     description: "URL of the UAA server"
+  uaa.ca_cert:
+    description: "The certificate authority being used by UAA"
   login.protocol:
     description: "http or https"
     default: "https"

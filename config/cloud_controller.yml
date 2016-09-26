@@ -84,6 +84,7 @@ uaa:
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"
   symmetric_secret: "tokensecret"
+  ca_file: "/var/vcap/job/cloud_controller_ng/config/certs/uaa_ca.crt"
 
 hm9000:
   url: "http://localhost:5155"

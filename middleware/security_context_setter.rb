@@ -19,7 +19,7 @@ module CloudFoundry
         @app.call(env)
 
       rescue VCAP::CloudController::UaaUnavailable => e
-        logger.error("Failed communicating with UAA: #{e}")
+        logger.error("Failed communicating with UAA: #{e.message}")
         [502, {}, []]
       end
 
