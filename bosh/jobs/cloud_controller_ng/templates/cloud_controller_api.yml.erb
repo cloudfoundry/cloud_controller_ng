@@ -168,6 +168,11 @@ logging:
   level: <%= p("cc.logging_level") %>
   max_retries: <%= p("cc.logging_max_retries") %>
 
+<% if_p("metron_endpoint.host", "metron_endpoint.port") do |host, port| %>
+loggregator:
+  router: <%= host %>:<%= port %>
+<% end %>
+
 doppler:
   enabled: <%= p("doppler.enabled") %>
   <% if p("doppler.enabled") %>
