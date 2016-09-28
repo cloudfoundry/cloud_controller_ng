@@ -239,7 +239,7 @@ module VCAP::CloudController
           @droplet.lock!
           @droplet.fail_to_stage!(error)
 
-          AppStop.stop_without_event(@droplet.app)
+          V2::AppStop.stop(@droplet.app, stagers)
         end
       end
 
@@ -274,6 +274,10 @@ module VCAP::CloudController
           (@config[:staging] && @config[:staging][:minimum_staging_memory_mb] || 1024),
           @app.memory
         ].max
+      end
+
+      def stagers
+        CloudController::DependencyLocator.instance.stagers
       end
 
       def logger

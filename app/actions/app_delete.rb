@@ -52,11 +52,15 @@ module VCAP::CloudController
     def delete_subresources(app)
       PackageDelete.new(user_guid, user_email).delete(app.packages)
       TaskDelete.new(user_guid, user_email).delete(app.tasks)
-      DropletDelete.new(user_guid, user_email, CloudController::DependencyLocator.instance.stagers).delete(app.droplets)
+      DropletDelete.new(user_guid, user_email, stagers).delete(app.droplets)
       ProcessDelete.new(user_guid, user_email).delete(app.processes)
       RouteMappingDelete.new(user_guid, user_email).delete(route_mappings_to_delete(app))
       ServiceBindingDelete.new(user_guid, user_email).delete(app.service_bindings)
       delete_buildpack_cache(app)
+    end
+
+    def stagers
+      CloudController::DependencyLocator.instance.stagers
     end
 
     def route_mappings_to_delete(app)

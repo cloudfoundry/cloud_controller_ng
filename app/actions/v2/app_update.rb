@@ -1,3 +1,5 @@
+require 'actions/v2/app_stop'
+
 module VCAP::CloudController
   module V2
     class AppUpdate
@@ -86,7 +88,7 @@ module VCAP::CloudController
           when 'STARTED'
             AppStart.start_without_event(app)
           when 'STOPPED'
-            AppStop.stop_without_event(app)
+            V2::AppStop.stop(app, @stagers)
           end
         end
       end

@@ -52,7 +52,7 @@ module VCAP::CloudController
             droplet.fail_to_stage!(payload[:error][:id])
 
             if with_start
-              AppStop.stop_without_event(droplet.app)
+              V2::AppStop.stop(droplet.app, stagers)
             end
           end
         rescue => e
@@ -121,6 +121,10 @@ module VCAP::CloudController
             },
           }
         end
+      end
+
+      def stagers
+        CloudController::DependencyLocator.instance.stagers
       end
     end
   end

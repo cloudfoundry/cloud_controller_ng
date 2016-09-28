@@ -318,6 +318,12 @@ module VCAP::CloudController
 
         context 'stopping' do
           let(:state) { 'STARTED' }
+          let(:stager) { instance_double(Diego::Stager) }
+
+          before do
+            allow(stagers).to receive(:stager_for_app).and_return(stager)
+            allow(stager).to receive(:stop_stage)
+          end
 
           it 'is reflected in the parent app and all sibling processes' do
             expect(app.desired_state).to eq('STARTED')

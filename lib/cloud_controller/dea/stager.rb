@@ -26,7 +26,7 @@ module VCAP::CloudController
         end
       end
 
-      def stop_stage
+      def stop_stage(_staging_guid)
         nil
       end
 

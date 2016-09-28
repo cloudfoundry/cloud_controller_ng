@@ -28,7 +28,7 @@ module VCAP::CloudController
           raise CloudController::Errors::ApiError.new_from_details('NotStaged')
         end
 
-        AppStop.stop_without_event(process.app)
+        V2::AppStop.stop(process.app, @stagers)
         process.app.update(droplet_guid: nil)
         AppStart.start_without_event(process.app)
       end
