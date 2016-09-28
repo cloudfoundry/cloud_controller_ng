@@ -13,7 +13,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.[your-domain.com]/v3/route_mappings/[guid]" \
+curl "https://api.example.org/v3/route_mappings/[guid]" \
   -X DELETE \
   -H "Authorization: bearer [token]"
 ```

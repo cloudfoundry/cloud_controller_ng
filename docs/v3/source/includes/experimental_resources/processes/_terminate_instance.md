@@ -13,7 +13,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.[your-domain.com]/v3/processes/[guid]/instances/[index]" \
+curl "https://api.example.org/v3/processes/[guid]/instances/[index]" \
   -X DELETE \
   -H "Authorization: bearer [token]"
 ```
