@@ -346,6 +346,8 @@ module VCAP::CloudController
         return CloudController::Errors::ApiError.new_from_details('PathInvalid', 'the path must start with a "/"')
       elsif path_error.include?(:path_contains_question)
         return CloudController::Errors::ApiError.new_from_details('PathInvalid', 'illegal "?" character')
+      elsif path_error.include?(:path_exceeds_valid_length)
+        return CloudController::Errors::ApiError.new_from_details('PathInvalid', 'the path exceeds 128 characters')
       elsif path_error.include?(:invalid_path)
         return CloudController::Errors::ApiError.new_from_details('PathInvalid', attributes['path'])
       end

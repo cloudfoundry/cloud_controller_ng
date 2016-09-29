@@ -129,6 +129,10 @@ module VCAP::CloudController
       if path =~ /\?/
         errors.add(:path, :path_contains_question)
       end
+
+      if path.length > 128
+        errors.add(:path, :path_exceeds_valid_length)
+      end
     end
 
     def domains_match?

@@ -443,6 +443,14 @@ module VCAP::CloudController
         end
       end
 
+      context 'paths over 128 characters' do
+        it 'raises exceeds valid length error' do
+          path = '/path' * 100
+
+          expect { Route.make(path: path) }.to raise_error(Sequel::ValidationFailed)
+        end
+      end
+
       describe 'host' do
         let(:space) { Space.make }
         let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
