@@ -1,8 +1,10 @@
 GIT
   remote: git://github.com/cloudfoundry-incubator/bits-service-client.git
-  revision: 589a62ae68f4d10528bd33b4a22b94ddf539c94e
+  revision: 1f8f88c586ed5d10636841707a6e79b828baec7a
   specs:
-    bits_service_client (0.1.0)
+    bits_service_client (0.2.0)
+      activesupport
+      steno
 
 GIT
   remote: https://github.com/cloudfoundry/cf-uaa-lib.git
