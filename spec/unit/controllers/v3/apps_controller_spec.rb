@@ -485,7 +485,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         let(:req_body) do
           {
             environment_variables: {
-              CF_GOOFY_GOOF: 'you done goofed!'
+              VCAP_GOOFY_GOOF: 'you done goofed!'
             }
           }
         end
@@ -495,7 +495,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
-          expect(response.body).to include 'The request is semantically invalid: environment_variables cannot start with CF_'
+          expect(response.body).to include 'The request is semantically invalid: environment_variables cannot start with VCAP_'
         end
       end
     end

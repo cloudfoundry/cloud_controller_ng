@@ -143,18 +143,6 @@ module VCAP::CloudController::Validators
         expect(fake_class.errors[:field]).to include 'must be a hash'
       end
 
-      it 'does not allow variables that start with CF_' do
-        fake_class = environment_variables_class.new field: { CF_POTATO: 'yum' }
-        expect(fake_class.valid?).to be_falsey
-        expect(fake_class.errors[:field]).to include 'cannot start with CF_'
-      end
-
-      it 'does not allow variables that start with cf_' do
-        fake_class = environment_variables_class.new field: { cf_potato: 'gross' }
-        expect(fake_class.valid?).to be_falsey
-        expect(fake_class.errors[:field]).to include 'cannot start with CF_'
-      end
-
       it 'does not allow variables that start with VCAP_' do
         fake_class = environment_variables_class.new field: { VCAP_BANANA: 'woo' }
         expect(fake_class.valid?).to be_falsey
