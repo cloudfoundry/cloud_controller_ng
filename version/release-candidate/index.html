@@ -321,7 +321,7 @@ curl</a></li>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/tasks"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/tasks"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{ "command": "rake db:migrate" }'</span>
@@ -346,13 +346,13 @@ curl</a></li>
   "updated_at": "2016-05-04T17:00:42Z",
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
+      "href": "https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
     },
     "droplet": {
-      "href": "https://api.[your-domain.com]/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+      "href": "https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
     }
   }
 }
@@ -419,7 +419,7 @@ These overwrite and are appended to the app&rsquo;s running environment variable
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/tasks/[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/tasks/[guid]"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -443,13 +443,13 @@ These overwrite and are appended to the app&rsquo;s running environment variable
   "updated_at": "2016-05-04T17:00:42Z",
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
+      "href": "https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
     },
     "droplet": {
-      "href": "https://api.[your-domain.com]/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+      "href": "https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
     }
   }
 }
@@ -474,7 +474,7 @@ fields may be excluded in the response based on the user&rsquo;s role.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/tasks/[guid]/cancel"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/tasks/[guid]/cancel"</span> <span class="se">\</span>
   -X PUT <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -498,13 +498,13 @@ fields may be excluded in the response based on the user&rsquo;s role.</p>
   "updated_at": "2016-05-04T17:00:42Z",
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
+      "href": "https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
     },
     "droplet": {
-      "href": "https://api.[your-domain.com]/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+      "href": "https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
     }
   }
 }
@@ -534,7 +534,7 @@ fields may be excluded in the response based on the user&rsquo;s role.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/tasks"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/tasks"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -547,13 +547,13 @@ fields may be excluded in the response based on the user&rsquo;s role.</p>
     "total_results": 3,
     "total_pages": 2,
     "first": {
-      "href": "https://api.[your-domain.com]/v3/tasks?page=1&amp;per_page=2"
+      "href": "https://api.example.org/v3/tasks?page=1&amp;per_page=2"
     },
     "last": {
-      "href": "https://api.[your-domain.com]/v3/tasks?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/tasks?page=2&amp;per_page=2"
     },
     "next": {
-      "href": "https://api.[your-domain.com]/v3/tasks?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/tasks?page=2&amp;per_page=2"
     },
     "previous": null
   },
@@ -572,13 +572,13 @@ fields may be excluded in the response based on the user&rsquo;s role.</p>
       "updated_at": "2016-05-04T17:00:42Z",
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
+          "href": "https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
         },
         "droplet": {
-          "href": "https://api.[your-domain.com]/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+          "href": "https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
         }
       }
     },
@@ -596,13 +596,13 @@ fields may be excluded in the response based on the user&rsquo;s role.</p>
       "updated_at": "2016-05-04T17:00:42Z",
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/tasks/63b4cd89-fd8b-4bf1-a311-7174fcc907d6"
+          "href": "https://api.example.org/v3/tasks/63b4cd89-fd8b-4bf1-a311-7174fcc907d6"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
         },
         "droplet": {
-          "href": "https://api.[your-domain.com]/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+          "href": "https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
         }
       }
     },
@@ -740,7 +740,7 @@ fields are excluded in the response.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/tasks/[guid]/cancel"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/tasks/[guid]/cancel"</span> <span class="se">\</span>
   -X PUT <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -764,13 +764,13 @@ fields are excluded in the response.</p>
   "updated_at": "2016-05-04T17:00:42Z",
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
+      "href": "https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
     },
     "droplet": {
-      "href": "https://api.[your-domain.com]/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+      "href": "https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
     }
   }
 }
@@ -800,7 +800,7 @@ fields are excluded in the response.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/:guid/tasks"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/:guid/tasks"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -813,13 +813,13 @@ fields are excluded in the response.</p>
     "total_results": 3,
     "total_pages": 2,
     "first": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks?page=1&amp;per_page=2"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks?page=1&amp;per_page=2"
     },
     "last": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks?page=2&amp;per_page=2"
     },
     "next": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks?page=2&amp;per_page=2"
     },
     "previous": null
   },
@@ -838,13 +838,13 @@ fields are excluded in the response.</p>
       "updated_at": "2016-05-04T17:00:42Z",
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
+          "href": "https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
         },
         "droplet": {
-          "href": "https://api.[your-domain.com]/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+          "href": "https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
         }
       }
     },
@@ -862,13 +862,13 @@ fields are excluded in the response.</p>
       "updated_at": "2016-05-04T17:00:42Z",
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/tasks/63b4cd89-fd8b-4bf1-a311-7174fcc907d6"
+          "href": "https://api.example.org/v3/tasks/63b4cd89-fd8b-4bf1-a311-7174fcc907d6"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
         },
         "droplet": {
-          "href": "https://api.[your-domain.com]/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
+          "href": "https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"
         }
       }
     },
@@ -1080,7 +1080,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{
@@ -1124,35 +1124,35 @@ information for your packages, droplets, processes, tasks, and more.</p>
   },
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
     },
     "space": {
-      "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+      "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
     },
     "processes": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
     },
     "route_mappings": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
     },
     "packages": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
     },
     "droplet": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
     },
     "droplets": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
     },
     "tasks": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
     },
     "start": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
       "method": "PUT"
     },
     "stop": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
       "method": "PUT"
     }
   }
@@ -1210,7 +1210,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -1237,35 +1237,35 @@ information for your packages, droplets, processes, tasks, and more.</p>
   },
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
     },
     "space": {
-      "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+      "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
     },
     "processes": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
     },
     "route_mappings": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
     },
     "packages": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
     },
     "droplet": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
     },
     "droplets": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
     },
     "tasks": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
     },
     "start": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
       "method": "PUT"
     },
     "stop": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
       "method": "PUT"
     }
   }
@@ -1282,7 +1282,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/env"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/env"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -1345,7 +1345,7 @@ It will include environment variables for Environment Variable Groups and Servic
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]"</span> <span class="se">\</span>
   -X PATCH <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{
@@ -1384,35 +1384,35 @@ It will include environment variables for Environment Variable Groups and Servic
   },
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
     },
     "space": {
-      "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+      "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
     },
     "processes": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
     },
     "route_mappings": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
     },
     "packages": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
     },
     "droplet": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
     },
     "droplets": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
     },
     "tasks": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
     },
     "start": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
       "method": "PUT"
     },
     "stop": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
       "method": "PUT"
     }
   }
@@ -1461,7 +1461,7 @@ It will include environment variables for Environment Variable Groups and Servic
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/droplets/current"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/droplets/current"</span> <span class="se">\</span>
   -X PUT <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{ "droplet_guid": "[droplet_guid]" }'</span>
@@ -1529,16 +1529,16 @@ It will include environment variables for Environment Variable Groups and Servic
   "updated_at": "2016-03-28T23:39:47Z",
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
+      "href": "https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
     },
     "package": {
-      "href": "https://api.[your-domain.com]/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
+      "href": "https://api.example.org/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+      "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
     },
     "assign_current_droplet": {
-      "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
+      "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
       "method": "PUT"
     }
   }
@@ -1555,7 +1555,7 @@ It will include environment variables for Environment Variable Groups and Servic
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/droplets/current"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/droplets/current"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -1622,16 +1622,16 @@ It will include environment variables for Environment Variable Groups and Servic
   "updated_at": "2016-03-28T23:39:47Z",
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
+      "href": "https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
     },
     "package": {
-      "href": "https://api.[your-domain.com]/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
+      "href": "https://api.example.org/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+      "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
     },
     "assign_current_droplet": {
-      "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
+      "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
       "method": "PUT"
     }
   }
@@ -1656,7 +1656,7 @@ It will include environment variables for Environment Variable Groups and Servic
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/start"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/start"</span> <span class="se">\</span>
   -X PUT <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -1683,35 +1683,35 @@ It will include environment variables for Environment Variable Groups and Servic
   },
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
     },
     "space": {
-      "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+      "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
     },
     "processes": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
     },
     "route_mappings": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
     },
     "packages": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
     },
     "droplet": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
     },
     "droplets": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
     },
     "tasks": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
     },
     "start": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
       "method": "PUT"
     },
     "stop": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
       "method": "PUT"
     }
   }
@@ -1728,7 +1728,7 @@ It will include environment variables for Environment Variable Groups and Servic
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/stop"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/stop"</span> <span class="se">\</span>
   -X PUT <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -1755,35 +1755,35 @@ It will include environment variables for Environment Variable Groups and Servic
   },
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
     },
     "space": {
-      "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+      "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
     },
     "processes": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
     },
     "route_mappings": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
     },
     "packages": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
     },
     "droplet": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
     },
     "droplets": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
     },
     "tasks": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
     },
     "start": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
       "method": "PUT"
     },
     "stop": {
-      "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
+      "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
       "method": "PUT"
     }
   }
@@ -1800,7 +1800,7 @@ It will include environment variables for Environment Variable Groups and Servic
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]"</span> <span class="se">\</span>
   -X DELETE <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -1818,7 +1818,7 @@ It will include environment variables for Environment Variable Groups and Servic
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -1831,13 +1831,13 @@ It will include environment variables for Environment Variable Groups and Servic
     "total_results": 3,
     "total_pages": 2,
     "first": {
-      "href": "https://api.[your-domain.com]/v3/apps?page=1&amp;per_page=2"
+      "href": "https://api.example.org/v3/apps?page=1&amp;per_page=2"
     },
     "last": {
-      "href": "https://api.[your-domain.com]/v3/apps?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/apps?page=2&amp;per_page=2"
     },
     "next": {
-      "href": "https://api.[your-domain.com]/v3/apps?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/apps?page=2&amp;per_page=2"
     },
     "previous": null
   },
@@ -1861,35 +1861,35 @@ It will include environment variables for Environment Variable Groups and Servic
       },
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
+          "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"
         },
         "space": {
-          "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+          "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
         },
         "processes": {
-          "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
+          "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"
         },
         "route_mappings": {
-          "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
+          "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"
         },
         "packages": {
-          "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
+          "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"
         },
         "droplet": {
-          "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
+          "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"
         },
         "droplets": {
-          "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
+          "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"
         },
         "tasks": {
-          "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
+          "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"
         },
         "start": {
-          "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
+          "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start",
           "method": "PUT"
         },
         "stop": {
-          "href": "https://api.[your-domain.com]/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
+          "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop",
           "method": "PUT"
         }
       }
@@ -1913,35 +1913,35 @@ It will include environment variables for Environment Variable Groups and Servic
       },
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8"
+          "href": "https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8"
         },
         "space": {
-          "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+          "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
         },
         "processes": {
-          "href": "https://api.[your-domain.com]/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/processes"
+          "href": "https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/processes"
         },
         "route_mappings": {
-          "href": "https://api.[your-domain.com]/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/route_mappings"
+          "href": "https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/route_mappings"
         },
         "packages": {
-          "href": "https://api.[your-domain.com]/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/packages"
+          "href": "https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/packages"
         },
         "droplet": {
-          "href": "https://api.[your-domain.com]/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets/current"
+          "href": "https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets/current"
         },
         "droplets": {
-          "href": "https://api.[your-domain.com]/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets"
+          "href": "https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets"
         },
         "tasks": {
-          "href": "https://api.[your-domain.com]/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/tasks"
+          "href": "https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/tasks"
         },
         "start": {
-          "href": "https://api.[your-domain.com]/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/start",
+          "href": "https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/start",
           "method": "PUT"
         },
         "stop": {
-          "href": "https://api.[your-domain.com]/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/stop",
+          "href": "https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/stop",
           "method": "PUT"
         }
       }
@@ -2266,7 +2266,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/packages/[guid]/droplets"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/[guid]/droplets"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{
@@ -2330,16 +2330,16 @@ they either use a specific droplet guid, or use the current droplet assigned to 
   "updated_at": null,
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
+      "href": "https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
     },
     "package": {
-      "href": "https://api.[your-domain.com]/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
+      "href": "https://api.example.org/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+      "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
     },
     "assign_current_droplet": {
-      "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
+      "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
       "method": "PUT"
     }
   }
@@ -2404,7 +2404,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/droplets/[guid]/copy"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets/[guid]/copy"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{
@@ -2438,16 +2438,16 @@ they either use a specific droplet guid, or use the current droplet assigned to 
   "updated_at": null,
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
+      "href": "https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
     },
     "package": {
-      "href": "https://api.[your-domain.com]/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
+      "href": "https://api.example.org/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+      "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
     },
     "assign_current_droplet": {
-      "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
+      "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
       "method": "PUT"
     }
   }
@@ -2481,7 +2481,7 @@ environment variables listed on the source droplet.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/droplets/[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets/[guid]"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -2548,16 +2548,16 @@ environment variables listed on the source droplet.</p>
   "updated_at": "2016-03-28T23:39:47Z",
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
+      "href": "https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
     },
     "package": {
-      "href": "https://api.[your-domain.com]/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
+      "href": "https://api.example.org/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+      "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
     },
     "assign_current_droplet": {
-      "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
+      "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
       "method": "PUT"
     }
   }
@@ -2582,7 +2582,7 @@ environment variables listed on the source droplet.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/droplets/[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets/[guid]"</span> <span class="se">\</span>
   -X DELETE <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -2608,7 +2608,7 @@ environment variables listed on the source droplet.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/droplets"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -2621,10 +2621,10 @@ environment variables listed on the source droplet.</p>
     "total_results": 2,
     "total_pages": 1,
     "first": {
-      "href": "https://api.[your-domain.com]/v3/droplets?page=1&amp;per_page=50"
+      "href": "https://api.example.org/v3/droplets?page=1&amp;per_page=50"
     },
     "last": {
-      "href": "https://api.[your-domain.com]/v3/droplets?page=1&amp;per_page=50"
+      "href": "https://api.example.org/v3/droplets?page=1&amp;per_page=50"
     },
     "next": null,
     "previous": null
@@ -2665,16 +2665,16 @@ environment variables listed on the source droplet.</p>
       "updated_at": "2016-03-28T23:39:47Z",
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
+          "href": "https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
         },
         "package": {
-          "href": "https://api.[your-domain.com]/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
+          "href": "https://api.example.org/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+          "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
         },
         "assign_current_droplet": {
-          "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
+          "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
           "method": "PUT"
         }
       }
@@ -2697,16 +2697,16 @@ environment variables listed on the source droplet.</p>
       "updated_at": "2016-03-17T21:41:32Z",
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/droplets/fdf3851c-def8-4de1-87f1-6d4543189e22"
+          "href": "https://api.example.org/v3/droplets/fdf3851c-def8-4de1-87f1-6d4543189e22"
         },
         "package": {
-          "href": "https://api.[your-domain.com]/v3/packages/c5725684-a02f-4e59-bc67-8f36ae944688"
+          "href": "https://api.example.org/v3/packages/c5725684-a02f-4e59-bc67-8f36ae944688"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+          "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
         },
         "assign_current_droplet": {
-          "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
+          "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
           "method": "PUT"
         }
       }
@@ -2836,7 +2836,7 @@ environment variables listed on the source droplet.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/droplets"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/droplets"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -2849,10 +2849,10 @@ environment variables listed on the source droplet.</p>
     "total_results": 2,
     "total_pages": 1,
     "first": {
-      "href": "https://api.[your-domain.com]/v3/app/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets?page=1&amp;per_page=50"
+      "href": "https://api.example.org/v3/app/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets?page=1&amp;per_page=50"
     },
     "last": {
-      "href": "https://api.[your-domain.com]/v3/app/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets?page=1&amp;per_page=50"
+      "href": "https://api.example.org/v3/app/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets?page=1&amp;per_page=50"
     },
     "next": null,
     "previous": null
@@ -2893,16 +2893,16 @@ environment variables listed on the source droplet.</p>
       "updated_at": "2016-03-28T23:39:47Z",
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
+          "href": "https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
         },
         "package": {
-          "href": "https://api.[your-domain.com]/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
+          "href": "https://api.example.org/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+          "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
         },
         "assign_current_droplet": {
-          "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
+          "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
           "method": "PUT"
         }
       }
@@ -2925,16 +2925,16 @@ environment variables listed on the source droplet.</p>
       "updated_at": "2016-03-17T21:41:32Z",
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/droplets/fdf3851c-def8-4de1-87f1-6d4543189e22"
+          "href": "https://api.example.org/v3/droplets/fdf3851c-def8-4de1-87f1-6d4543189e22"
         },
         "package": {
-          "href": "https://api.[your-domain.com]/v3/packages/c5725684-a02f-4e59-bc67-8f36ae944688"
+          "href": "https://api.example.org/v3/packages/c5725684-a02f-4e59-bc67-8f36ae944688"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+          "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
         },
         "assign_current_droplet": {
-          "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
+          "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
           "method": "PUT"
         }
       }
@@ -3025,7 +3025,7 @@ environment variables listed on the source droplet.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/packages/[guid]/droplets"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/[guid]/droplets"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -3038,10 +3038,10 @@ environment variables listed on the source droplet.</p>
     "total_results": 2,
     "total_pages": 1,
     "first": {
-      "href": "https://api.[your-domain.com]/v3/packages/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets?page=1&amp;per_page=50"
+      "href": "https://api.example.org/v3/packages/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets?page=1&amp;per_page=50"
     },
     "last": {
-      "href": "https://api.[your-domain.com]/v3/packages/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets?page=1&amp;per_page=50"
+      "href": "https://api.example.org/v3/packages/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets?page=1&amp;per_page=50"
     },
     "next": null,
     "previous": null
@@ -3082,16 +3082,16 @@ environment variables listed on the source droplet.</p>
       "updated_at": "2016-03-28T23:39:47Z",
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
+          "href": "https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"
         },
         "package": {
-          "href": "https://api.[your-domain.com]/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
+          "href": "https://api.example.org/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+          "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
         },
         "assign_current_droplet": {
-          "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
+          "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
           "method": "PUT"
         }
       }
@@ -3114,16 +3114,16 @@ environment variables listed on the source droplet.</p>
       "updated_at": "2016-03-17T21:41:32Z",
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/droplets/fdf3851c-def8-4de1-87f1-6d4543189e22"
+          "href": "https://api.example.org/v3/droplets/fdf3851c-def8-4de1-87f1-6d4543189e22"
         },
         "package": {
-          "href": "https://api.[your-domain.com]/v3/packages/c5725684-a02f-4e59-bc67-8f36ae944688"
+          "href": "https://api.example.org/v3/packages/c5725684-a02f-4e59-bc67-8f36ae944688"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+          "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
         },
         "assign_current_droplet": {
-          "href": "https://api.[your-domain.com]/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
+          "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current",
           "method": "PUT"
         }
       }
@@ -3302,7 +3302,7 @@ environment variables listed on the source droplet.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/packages"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/packages"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{
@@ -3333,10 +3333,10 @@ environment variables listed on the source droplet.</p>
   "links":
   {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/packages/4cb65058-f04f-458f-aca1-5f4e43de6407"
+      "href": "https://api.example.org/v3/packages/4cb65058-f04f-458f-aca1-5f4e43de6407"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/d8b8148d-5798-44de-821a-64b85b15e968"
+      "href": "https://api.example.org/v3/apps/d8b8148d-5798-44de-821a-64b85b15e968"
     }
   }
 }
@@ -3384,7 +3384,7 @@ environment variables listed on the source droplet.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/packages/[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/[guid]"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -3407,22 +3407,22 @@ environment variables listed on the source droplet.</p>
   "updated_at": null,
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13"
+      "href": "https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13"
     },
     "upload": {
-      "href": "https://api.[your-domain.com]/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/upload",
+      "href": "https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/upload",
       "method": "POST"
     },
     "download": {
-      "href": "https://api.[your-domain.com]/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/download",
+      "href": "https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/download",
       "method": "GET"
     },
     "stage": {
-      "href": "https://api.[your-domain.com]/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/droplets",
+      "href": "https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/droplets",
       "method": "POST"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a"
+      "href": "https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a"
     }
   }
 }
@@ -3450,7 +3450,7 @@ environment variables listed on the source droplet.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/packages/[guid]/upload"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/[guid]/upload"</span> <span class="se">\</span>
   -F <span class="nv">bits</span><span class="o">=</span>@<span class="s2">"package.zip"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
@@ -3474,22 +3474,22 @@ environment variables listed on the source droplet.</p>
   "updated_at": null,
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13"
+      "href": "https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13"
     },
     "upload": {
-      "href": "https://api.[your-domain.com]/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/upload",
+      "href": "https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/upload",
       "method": "POST"
     },
     "download": {
-      "href": "https://api.[your-domain.com]/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/download",
+      "href": "https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/download",
       "method": "GET"
     },
     "stage": {
-      "href": "https://api.[your-domain.com]/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/droplets",
+      "href": "https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/droplets",
       "method": "POST"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a"
+      "href": "https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a"
     }
   }
 }
@@ -3519,7 +3519,7 @@ environment variables listed on the source droplet.</p>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/packages/[guid]/download"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/[guid]/download"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -3549,7 +3549,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/packages?source_package_guid=[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/packages?source_package_guid=[guid]"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -3568,14 +3568,14 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "updated_at": null,
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/packages/fec72fc1-e453-4463-a86d-5df426f337a3"
+      "href": "https://api.example.org/v3/packages/fec72fc1-e453-4463-a86d-5df426f337a3"
     },
     "stage": {
-      "href": "https://api.[your-domain.com]/v3/packages/fec72fc1-e453-4463-a86d-5df426f337a3/droplets",
+      "href": "https://api.example.org/v3/packages/fec72fc1-e453-4463-a86d-5df426f337a3/droplets",
       "method": "POST"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/36208a68-562d-4f51-94ea-28bd8553a271"
+      "href": "https://api.example.org/v3/apps/36208a68-562d-4f51-94ea-28bd8553a271"
     }
   }
 }
@@ -3605,7 +3605,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/packages/[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/[guid]"</span> <span class="se">\</span>
   -X DELETE <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -3631,7 +3631,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/packages"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -3644,10 +3644,10 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
     "total_results": 2,
     "total_pages": 1,
     "first": {
-      "href": "https://api.[your-domain.com]/v3/packages?types=bits%2Cdocker&amp;page=1&amp;per_page=2"
+      "href": "https://api.example.org/v3/packages?types=bits%2Cdocker&amp;page=1&amp;per_page=2"
     },
     "last": {
-      "href": "https://api.[your-domain.com]/v3/packages?types=bits%2Cdocker&amp;page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/packages?types=bits%2Cdocker&amp;page=2&amp;per_page=2"
     },
     "next": {
       "href": null
@@ -3670,22 +3670,22 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "updated_at": null,
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4"
+          "href": "https://api.example.org/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4"
         },
         "upload": {
-          "href": "https://api.[your-domain.com]/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4/upload",
+          "href": "https://api.example.org/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4/upload",
           "method": "POST"
         },
         "download": {
-          "href": "https://api.[your-domain.com]/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4/download",
+          "href": "https://api.example.org/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4/download",
           "method": "GET"
         },
         "stage": {
-          "href": "https://api.[your-domain.com]/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4/droplets",
+          "href": "https://api.example.org/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4/droplets",
           "method": "POST"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/fa3558ce-1c4d-46fc-9776-54b9c8021745"
+          "href": "https://api.example.org/v3/apps/fa3558ce-1c4d-46fc-9776-54b9c8021745"
         }
       }
     },
@@ -3705,10 +3705,10 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "updated_at": null,
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/packages/8f1f294d-cef8-4c11-9f0b-3bcdc0bd2691"
+          "href": "https://api.example.org/v3/packages/8f1f294d-cef8-4c11-9f0b-3bcdc0bd2691"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/fa3558ce-1c4d-46fc-9776-54b9c8021745"
+          "href": "https://api.example.org/v3/apps/fa3558ce-1c4d-46fc-9776-54b9c8021745"
         }
       }
     }
@@ -3851,7 +3851,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/packages"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/packages"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -3864,10 +3864,10 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
     "total_results": 1,
     "total_pages": 1,
     "first": {
-      "href": "https://api.[your-domain.com]/v3/apps/f2efe391-2b5b-4836-8518-ad93fa9ebf69/packages?states=READY&amp;page=1&amp;per_page=50"
+      "href": "https://api.example.org/v3/apps/f2efe391-2b5b-4836-8518-ad93fa9ebf69/packages?states=READY&amp;page=1&amp;per_page=50"
     },
     "last": {
-      "href": "https://api.[your-domain.com]/v3/apps/f2efe391-2b5b-4836-8518-ad93fa9ebf69/packages?states=READY&amp;page=1&amp;per_page=50"
+      "href": "https://api.example.org/v3/apps/f2efe391-2b5b-4836-8518-ad93fa9ebf69/packages?states=READY&amp;page=1&amp;per_page=50"
     },
     "next": null,
     "previous": null
@@ -3888,22 +3888,22 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "updated_at": null,
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/packages/752edab0-2147-4f58-9c25-cd72ad8c3561"
+          "href": "https://api.example.org/v3/packages/752edab0-2147-4f58-9c25-cd72ad8c3561"
         },
         "upload": {
-          "href": "https://api.[your-domain.com]/v3/packages/752edab0-2147-4f58-9c25-cd72ad8c3561/upload",
+          "href": "https://api.example.org/v3/packages/752edab0-2147-4f58-9c25-cd72ad8c3561/upload",
           "method": "POST"
         },
         "download": {
-          "href": "https://api.[your-domain.com]/v3/packages/752edab0-2147-4f58-9c25-cd72ad8c3561/download",
+          "href": "https://api.example.org/v3/packages/752edab0-2147-4f58-9c25-cd72ad8c3561/download",
           "method": "GET"
         },
         "stage": {
-          "href": "https://api.[your-domain.com]/v3/packages/752edab0-2147-4f58-9c25-cd72ad8c3561/droplets",
+          "href": "https://api.example.org/v3/packages/752edab0-2147-4f58-9c25-cd72ad8c3561/droplets",
           "method": "POST"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/f2efe391-2b5b-4836-8518-ad93fa9ebf69"
+          "href": "https://api.example.org/v3/apps/f2efe391-2b5b-4836-8518-ad93fa9ebf69"
         }
       }
     }
@@ -4258,7 +4258,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/processes/[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -4284,20 +4284,20 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "updated_at": "2016-03-23T18:48:42Z",
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
     },
     "scale": {
-      "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
       "method": "PUT"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
     },
     "space": {
-      "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+      "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
     },
     "stats": {
-      "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
     }
   }
 }
@@ -4321,7 +4321,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/processes/[guid]/stats"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]/stats"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -4375,7 +4375,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/processes/[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]"</span> <span class="se">\</span>
   -X PATCH <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{ "command": "rackup" }'</span>
@@ -4402,20 +4402,20 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "updated_at": "2016-03-23T18:48:42Z",
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
     },
     "scale": {
-      "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
       "method": "PUT"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
     },
     "space": {
-      "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+      "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
     },
     "stats": {
-      "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
     }
   }
 }
@@ -4462,7 +4462,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/processes/[guid]/scale"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]/scale"</span> <span class="se">\</span>
   -X PUT <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{
@@ -4493,20 +4493,20 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "updated_at": "2016-03-23T18:48:42Z",
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
     },
     "scale": {
-      "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
       "method": "PUT"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
     },
     "space": {
-      "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+      "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
     },
     "stats": {
-      "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
     }
   }
 }
@@ -4554,7 +4554,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/processes/[guid]/instances/[index]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]/instances/[index]"</span> <span class="se">\</span>
   -X DELETE <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -4582,7 +4582,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/processes </span><span class="se">\</span><span class="s2">
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes </span><span class="se">\</span><span class="s2">
   -X GET </span><span class="se">\</span><span class="s2">
   -H "</span>Authorization: bearer <span class="o">[</span>token]<span class="s2">"
 </span></code></pre>
@@ -4595,13 +4595,13 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
     "total_results": 3,
     "total_pages": 2,
     "first": {
-      "href": "https://api.[your-domain.com]/v3/processes?page=1&amp;per_page=2"
+      "href": "https://api.example.org/v3/processes?page=1&amp;per_page=2"
     },
     "last": {
-      "href": "https://api.[your-domain.com]/v3/processes?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/processes?page=2&amp;per_page=2"
     },
     "next": {
-      "href": "https://api.[your-domain.com]/v3/processes?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/processes?page=2&amp;per_page=2"
     },
     "previous": null
   },
@@ -4624,20 +4624,20 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "updated_at": "2016-03-23T18:48:42Z",
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
+          "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
         },
         "scale": {
-          "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
+          "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
           "method": "PUT"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
         },
         "space": {
-          "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+          "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
         },
         "stats": {
-          "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
+          "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
         }
       }
     },
@@ -4659,20 +4659,20 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "updated_at": "2016-03-23T18:48:42Z",
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb"
+          "href": "https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb"
         },
         "scale": {
-          "href": "https://api.[your-domain.com]/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/scale",
+          "href": "https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/scale",
           "method": "PUT"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
         },
         "space": {
-          "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+          "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
         },
         "stats": {
-          "href": "https://api.[your-domain.com]/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/stats"
+          "href": "https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/stats"
         }
       }
     }
@@ -5058,7 +5058,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/processes/[type]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/processes/[type]"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -5084,20 +5084,20 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "updated_at": "2016-03-23T18:48:42Z",
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
     },
     "scale": {
-      "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
       "method": "PUT"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
     },
     "space": {
-      "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+      "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
     },
     "stats": {
-      "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
     }
   }
 }
@@ -5121,7 +5121,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/processes/[type]/stats"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/processes/[type]/stats"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -5175,7 +5175,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/processes/[type]/scale"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/processes/[type]/scale"</span> <span class="se">\</span>
   -X PUT <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{
@@ -5206,20 +5206,20 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "updated_at": "2016-03-23T18:48:42Z",
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
     },
     "scale": {
-      "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
       "method": "PUT"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
     },
     "space": {
-      "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+      "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
     },
     "stats": {
-      "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
     }
   }
 }
@@ -5267,7 +5267,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/processes/[type]/instances/[index]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/processes/[type]/instances/[index]"</span> <span class="se">\</span>
   -X DELETE <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -5295,7 +5295,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/processes </span><span class="se">\</span><span class="s2">
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/processes </span><span class="se">\</span><span class="s2">
   -X GET </span><span class="se">\</span><span class="s2">
   -H "</span>Authorization: bearer <span class="o">[</span>token]<span class="s2">"
 </span></code></pre>
@@ -5308,13 +5308,13 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
     "total_results": 3,
     "total_pages": 2,
     "first": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes?page=1&amp;per_page=2"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes?page=1&amp;per_page=2"
     },
     "last": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes?page=2&amp;per_page=2"
     },
     "next": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes?page=2&amp;per_page=2"
     },
     "previous": null
   },
@@ -5337,20 +5337,20 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "updated_at": "2016-03-23T18:48:42Z",
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
+          "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
         },
         "scale": {
-          "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
+          "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
           "method": "PUT"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
         },
         "space": {
-          "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+          "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
         },
         "stats": {
-          "href": "https://api.[your-domain.com]/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
+          "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
         }
       }
     },
@@ -5372,20 +5372,20 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "updated_at": "2016-03-23T18:48:42Z",
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb"
+          "href": "https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb"
         },
         "scale": {
-          "href": "https://api.[your-domain.com]/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/scale",
+          "href": "https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/scale",
           "method": "PUT"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
         },
         "space": {
-          "href": "https://api.[your-domain.com]/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+          "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
         },
         "stats": {
-          "href": "https://api.[your-domain.com]/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/stats"
+          "href": "https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/stats"
         }
       }
     }
@@ -5588,7 +5588,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/route_mappings"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/route_mappings"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{
@@ -5613,16 +5613,16 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "updated_at": null,
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
+      "href": "https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
     },
     "route": {
-      "href": "https://api.[your-domain.com]/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
+      "href": "https://api.example.org/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
     },
     "process": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
     }
   }
 }
@@ -5679,7 +5679,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/route_mappings/[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/route_mappings/[guid]"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -5694,16 +5694,16 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "updated_at": null,
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
+      "href": "https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
     },
     "route": {
-      "href": "https://api.[your-domain.com]/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
+      "href": "https://api.example.org/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
     },
     "process": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
     }
   }
 }
@@ -5727,7 +5727,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/route_mappings/[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/route_mappings/[guid]"</span> <span class="se">\</span>
   -X DELETE <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -5753,7 +5753,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/route_mappings"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/route_mappings"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -5766,13 +5766,13 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
     "total_results": 3,
     "total_pages": 2,
     "first": {
-      "href": "https://api.[your-domain.com]/v3/route_mappings?page=1&amp;per_page=2"
+      "href": "https://api.example.org/v3/route_mappings?page=1&amp;per_page=2"
     },
     "last": {
-      "href": "https://api.[your-domain.com]/v3/route_mappings?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/route_mappings?page=2&amp;per_page=2"
     },
     "next": {
-      "href": "https://api.[your-domain.com]/v3/route_mappings?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/route_mappings?page=2&amp;per_page=2"
     },
     "previous": null
   },
@@ -5784,16 +5784,16 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "updated_at": null,
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
+          "href": "https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
         },
         "route": {
-          "href": "https://api.[your-domain.com]/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
+          "href": "https://api.example.org/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
         },
         "process": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
         }
       }
     },
@@ -5804,16 +5804,16 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "updated_at": null,
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/route_mappings/9f4970a8-9e6f-4984-b0a5-5e4a8af91665"
+          "href": "https://api.example.org/v3/route_mappings/9f4970a8-9e6f-4984-b0a5-5e4a8af91665"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
         },
         "route": {
-          "href": "https://api.[your-domain.com]/v2/routes/a32332f0-fb30-4e9e-9b78-348b8b6b98b6"
+          "href": "https://api.example.org/v2/routes/a32332f0-fb30-4e9e-9b78-348b8b6b98b6"
         },
         "process": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/admin-web"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/admin-web"
         }
       }
     }
@@ -5903,7 +5903,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/apps/[guid]/route_mappings"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/route_mappings"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -5916,13 +5916,13 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
     "total_results": 3,
     "total_pages": 2,
     "first": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/route_mappings?page=1&amp;per_page=2"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/route_mappings?page=1&amp;per_page=2"
     },
     "last": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/route_mappings?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/route_mappings?page=2&amp;per_page=2"
     },
     "next": {
-      "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/route_mappings?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/route_mappings?page=2&amp;per_page=2"
     },
     "previous": null
   },
@@ -5934,16 +5934,16 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "updated_at": null,
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
+          "href": "https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
         },
         "route": {
-          "href": "https://api.[your-domain.com]/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
+          "href": "https://api.example.org/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
         },
         "process": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
         }
       }
     },
@@ -5954,16 +5954,16 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "updated_at": null,
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/route_mappings/9f4970a8-9e6f-4984-b0a5-5e4a8af91665"
+          "href": "https://api.example.org/v3/route_mappings/9f4970a8-9e6f-4984-b0a5-5e4a8af91665"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
         },
         "route": {
-          "href": "https://api.[your-domain.com]/v2/routes/a32332f0-fb30-4e9e-9b78-348b8b6b98b6"
+          "href": "https://api.example.org/v2/routes/a32332f0-fb30-4e9e-9b78-348b8b6b98b6"
         },
         "process": {
-          "href": "https://api.[your-domain.com]/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/admin-web"
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/admin-web"
         }
       }
     }
@@ -6103,7 +6103,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/service_bindings"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_bindings"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{
@@ -6141,13 +6141,13 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "updated_at": null,
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/service_bindings/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"
+      "href": "https://api.example.org/v3/service_bindings/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"
     },
     "service_instance": {
-      "href": "https://api.[your-domain.com]/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e"
+      "href": "https://api.example.org/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/74f7c078-0934-470f-9883-4fddss5b8f13"
+      "href": "https://api.example.org/v3/apps/74f7c078-0934-470f-9883-4fddss5b8f13"
     }
   }
 }
@@ -6204,7 +6204,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/service_bindings/[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_bindings/[guid]"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -6226,13 +6226,13 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   "updated_at": null,
   "links": {
     "self": {
-      "href": "https://api.[your-domain.com]/v3/service_bindings/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"
+      "href": "https://api.example.org/v3/service_bindings/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"
     },
     "service_instance": {
-      "href": "https://api.[your-domain.com]/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e"
+      "href": "https://api.example.org/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e"
     },
     "app": {
-      "href": "https://api.[your-domain.com]/v3/apps/74f7c078-0934-470f-9883-4fddss5b8f13"
+      "href": "https://api.example.org/v3/apps/74f7c078-0934-470f-9883-4fddss5b8f13"
     }
   }
 }
@@ -6256,7 +6256,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/service_bindings/[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_bindings/[guid]"</span> <span class="se">\</span>
   -X DELETE <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -6282,7 +6282,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.[your-domain.com]/v3/service_bindings"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_bindings"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -6295,13 +6295,13 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
     "total_results": 3,
     "total_pages": 2,
     "first": {
-      "href": "https://api.[your-domain.com]/v3/service_bindings?page=1&amp;per_page=2"
+      "href": "https://api.example.org/v3/service_bindings?page=1&amp;per_page=2"
     },
     "last": {
-      "href": "https://api.[your-domain.com]/v3/service_bindings?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/service_bindings?page=2&amp;per_page=2"
     },
     "next": {
-      "href": "https://api.[your-domain.com]/v3/service_bindings?page=2&amp;per_page=2"
+      "href": "https://api.example.org/v3/service_bindings?page=2&amp;per_page=2"
     },
     "previous": null
   },
@@ -6320,13 +6320,13 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "updated_at": null,
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/service_bindings/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"
+          "href": "https://api.example.org/v3/service_bindings/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"
         },
         "service_instance": {
-          "href": "https://api.[your-domain.com]/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e"
+          "href": "https://api.example.org/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/74f7c078-0934-470f-9883-4fddss5b8f13"
+          "href": "https://api.example.org/v3/apps/74f7c078-0934-470f-9883-4fddss5b8f13"
         }
       }
     },
@@ -6344,13 +6344,13 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "updated_at": null,
       "links": {
         "self": {
-          "href": "https://api.[your-domain.com]/v3/service_bindings/7aa37bad-6ccb-4ef9-ba48-9ce3a91b2b62"
+          "href": "https://api.example.org/v3/service_bindings/7aa37bad-6ccb-4ef9-ba48-9ce3a91b2b62"
         },
         "service_instance": {
-          "href": "https://api.[your-domain.com]/v3/service_instances/8bf356j3-9e18-45b1-3333-124163f31f9e"
+          "href": "https://api.example.org/v3/service_instances/8bf356j3-9e18-45b1-3333-124163f31f9e"
         },
         "app": {
-          "href": "https://api.[your-domain.com]/v3/apps/74f7c078-0934-470f-9883-4fddss5b8f13"
+          "href": "https://api.example.org/v3/apps/74f7c078-0934-470f-9883-4fddss5b8f13"
         }
       }
     }
