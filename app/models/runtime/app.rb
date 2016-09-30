@@ -473,6 +473,10 @@ module VCAP::CloudController
       state == 'STARTED'
     end
 
+    def package_available?
+      current_droplet || latest_package.try(:ready?)
+    end
+
     def active?
       if diego? && docker?
         return false unless FeatureFlag.enabled?(:diego_docker)

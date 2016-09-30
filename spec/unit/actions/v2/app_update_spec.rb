@@ -119,7 +119,7 @@ module VCAP::CloudController
           let(:process) { AppFactory.make(state: 'STARTED') }
 
           before do
-            PackageModel.make(app: app, package_hash: 'some-hash')
+            PackageModel.make(app: app, package_hash: 'some-hash', state: PackageModel::READY_STATE)
             process.reload
           end
 
@@ -293,6 +293,19 @@ module VCAP::CloudController
             app_update.update(process.app, process, { 'state' => 'STARTED' })
           }.to raise_error(/bits have not been uploaded/)
         end
+
+        context 'and there is a staged droplet' do
+          before do
+            process.app.update(droplet: DropletModel.make(app: process.app, state: DropletModel::STAGED_STATE))
+          end
+
+          it 'does not raise an error' do
+            expect {
+              app_update.update(process.app, process, { 'state' => 'STARTED' })
+            }.not_to raise_error
+          end
+        end
+
       end
 
       describe 'starting and stopping' do

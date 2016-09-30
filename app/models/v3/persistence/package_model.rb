@@ -43,6 +43,10 @@ module VCAP::CloudController
       state == FAILED_STATE
     end
 
+    def ready?
+      state == READY_STATE
+    end
+
     def succeed_upload!(package_hash)
       db.transaction do
         self.lock!

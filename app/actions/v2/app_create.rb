@@ -83,7 +83,7 @@ module VCAP::CloudController
       end
 
       def validate_package_is_uploaded!(process)
-        if process.needs_package_in_current_state? && !process.package_hash
+        if process.needs_package_in_current_state? && !process.package_available?
           raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
         end
       end
