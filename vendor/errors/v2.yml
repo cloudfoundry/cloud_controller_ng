@@ -1053,3 +1053,8 @@
   name: EnvironmentVariableGroupInvalid
   http_code: 400
   message: "The Environment Variable Group is invalid: %s"
+
+380002:
+  name: DropletUploadInvalid
+  http_code: 400
+  message: "The droplet upload is invalid: %s"

@@ -1329,4 +1329,54 @@ RSpec.describe 'Apps' do
       )
     end
   end
+
+  describe 'PUT /v2/apps/:guid/droplet/upload' do
+    let(:process) { VCAP::CloudController::AppFactory.make(space: space) }
+    let(:tmpdir) { Dir.mktmpdir }
+    let(:valid_zip) do
+      zip_name = File.join(tmpdir, 'file.zip')
+      TestZip.create(zip_name, 1, 1024)
+      zip_file = File.new(zip_name)
+      Rack::Test::UploadedFile.new(zip_file)
+    end
+
+    before do
+      TestConfig.config[:nginx][:use_nginx] = false
+    end
+
+    after do
+      TestConfig.config[:nginx][:use_nginx] = true
+    end
+
+    it 'uploads the application bits' do
+      put "/v2/apps/#{process.guid}/droplet/upload", { droplet: valid_zip }, headers_for(user)
+
+      job = Delayed::Job.last
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq 201
+      expect(parsed_response).to be_a_response_like(
+        {
+          'metadata' => {
+            'guid'       => job.guid,
+            'created_at' => iso8601,
+            'url'        => "/v2/jobs/#{job.guid}"
+          },
+          'entity'   => {
+            'guid'   => job.guid,
+            'status' => 'queued'
+          }
+        }
+      )
+
+      droplet = VCAP::CloudController::DropletModel.last
+      expect(droplet.state).to eq(VCAP::CloudController::DropletModel::PROCESSING_UPLOAD_STATE)
+
+      Delayed::Worker.new.work_off
+      droplet.reload
+
+      expect(droplet.state).to eq(VCAP::CloudController::DropletModel::STAGED_STATE)
+      expect(process.reload.current_droplet).to eq(droplet)
+    end
+  end
 end

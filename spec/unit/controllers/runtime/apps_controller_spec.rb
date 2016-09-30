@@ -1620,6 +1620,71 @@ module VCAP::CloudController
       end
     end
 
+    describe 'uploading the droplet' do
+      let(:app_obj) { App.make }
+
+      let(:tmpdir) { Dir.mktmpdir }
+      after { FileUtils.rm_rf(tmpdir) }
+
+      let(:valid_zip) do
+        zip_name = File.join(tmpdir, 'file.zip')
+        TestZip.create(zip_name, 1, 1024)
+        zip_file = File.new(zip_name)
+        Rack::Test::UploadedFile.new(zip_file)
+      end
+
+      context 'as an admin' do
+        let(:req_body) { { droplet: valid_zip } }
+
+        it 'is allowed' do
+          set_current_user(User.make, admin: true)
+          put "/v2/apps/#{app_obj.guid}/droplet/upload", req_body
+
+          expect(last_response.status).to eq(201)
+        end
+      end
+
+      context 'as a developer' do
+        let(:user) { make_developer_for_space(app_obj.space) }
+
+        context 'with an empty request' do
+          it 'fails to upload' do
+            set_current_user(user)
+            put "/v2/apps/#{app_obj.guid}/droplet/upload", {}
+
+            expect(last_response.status).to eq(400)
+            expect(JSON.parse(last_response.body)['description']).to include('missing :droplet_path')
+          end
+        end
+
+        context 'with valid request' do
+          let(:req_body) { { droplet: valid_zip } }
+
+          it 'creates a delayed job' do
+            set_current_user(user)
+            expect {
+              put "/v2/apps/#{app_obj.guid}/droplet/upload", req_body
+              expect(last_response.status).to eq 201
+            }.to change {
+              Delayed::Job.count
+            }.by(1)
+
+            job = Delayed::Job.last
+            expect(job.handler).to include('V2::UploadDropletFromUser')
+          end
+        end
+      end
+
+      context 'as a non-developer' do
+        let(:req_body) { { droplet: valid_zip } }
+
+        it 'returns 403' do
+          put "/v2/apps/#{app_obj.guid}/droplet/upload", req_body
+          expect(last_response.status).to eq(403)
+        end
+      end
+    end
+
     describe 'on route change', isolation: :truncation do
       let(:space) { app_obj.space }
       let(:domain) do

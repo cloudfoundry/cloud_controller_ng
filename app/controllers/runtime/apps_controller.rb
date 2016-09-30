@@ -7,7 +7,7 @@ require 'actions/v2/app_update'
 module VCAP::CloudController
   class AppsController < RestController::ModelController
     def self.dependencies
-      [:app_event_repository, :droplet_blobstore, :stagers]
+      [:app_event_repository, :droplet_blobstore, :stagers, :upload_handler]
     end
 
     define_attributes do
@@ -115,6 +115,7 @@ module VCAP::CloudController
       @app_event_repository = dependencies.fetch(:app_event_repository)
       @blobstore            = dependencies.fetch(:droplet_blobstore)
       @stagers              = dependencies.fetch(:stagers)
+      @upload_handler       = dependencies.fetch(:upload_handler)
     end
 
     def delete(guid)
@@ -143,6 +144,28 @@ module VCAP::CloudController
       blob_dispatcher.send_or_redirect(guid: app.current_droplet.try(:blobstore_key))
     rescue CloudController::Errors::BlobNotFound
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}")
+    end
+
+    put '/v2/apps/:guid/droplet/upload', :upload_droplet
+    def upload_droplet(guid)
+      process = find_guid_and_validate_access(:update, guid)
+      droplet_path = @upload_handler.uploaded_file(params, 'droplet')
+
+      unless droplet_path
+        missing_resources_message = 'missing :droplet_path'
+        raise CloudController::Errors::ApiError.new_from_details('DropletUploadInvalid', missing_resources_message)
+      end
+
+      enqueued_job = nil
+      DropletModel.db.transaction do
+        droplet = DropletModel.create(app: process.app, state: DropletModel::PROCESSING_UPLOAD_STATE)
+        BuildpackLifecycleDataModel.create(droplet: droplet)
+
+        droplet_upload_job = Jobs::V2::UploadDropletFromUser.new(droplet_path, droplet.guid)
+        enqueued_job       = Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::LocalQueue.new(config)).enqueue
+      end
+
+      [HTTP::CREATED, JobPresenter.new(enqueued_job).to_json]
     end
 
     def read(guid)
