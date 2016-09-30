@@ -126,6 +126,19 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'when the app has a staged droplet but no package' do
+          before do
+            application.latest_package.destroy
+          end
+
+          it 'raises error' do
+            restage_request
+
+            expect(last_response.status).to eq(400)
+            expect(last_response.body).to include('bits have not been uploaded')
+          end
+        end
       end
     end
   end

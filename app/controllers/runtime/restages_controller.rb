@@ -28,6 +28,10 @@ module VCAP::CloudController
           raise CloudController::Errors::ApiError.new_from_details('NotStaged')
         end
 
+        if process.latest_package.nil?
+          raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
+        end
+
         V2::AppStop.stop(process.app, @stagers)
         process.app.update(droplet_guid: nil)
         AppStart.start_without_event(process.app)
