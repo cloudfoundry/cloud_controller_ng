@@ -8,6 +8,7 @@ class DiegoToDeaPolicy
   def validate
     return if !@diego_to_dea_flag || @app.route_mappings.nil?
     @errors.add(:diego_to_dea, 'Multiple app ports not allowed') if has_multiple_route_mappings?
+    @errors.add(:docker_to_dea, 'Cannot change docker app to DEAs') if @app.docker?
   end
 
   private

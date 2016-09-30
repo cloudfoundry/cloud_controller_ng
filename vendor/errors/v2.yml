@@ -303,6 +303,11 @@
   http_code: 403
   message: "Support for volume mount services is disabled"
 
+60026:
+  name: DockerAppToDea
+  http_code: 400
+  message: "Docker apps cannot run on DEAs"
+
 70001:
   name: RuntimeInvalid
   http_code: 400

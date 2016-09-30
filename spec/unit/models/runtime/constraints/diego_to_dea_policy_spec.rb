@@ -49,4 +49,15 @@ RSpec.describe DiegoToDeaPolicy do
       expect(validator).to validate_with_error(app, :diego_to_dea, 'Multiple app ports not allowed')
     end
   end
+
+  context 'docker app' do
+    before do
+      app.app.buildpack_lifecycle_data = nil
+      app.diego = false
+    end
+
+    it 'registers error when app is a docker app and cannot run on DEAs' do
+      expect(validator).to validate_with_error(app, :docker_to_dea, 'Cannot change docker app to DEAs')
+    end
+  end
 end

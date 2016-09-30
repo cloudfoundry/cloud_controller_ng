@@ -655,6 +655,24 @@ module VCAP::CloudController
             expect(decoded_response['description']).to include(error_message)
           end
         end
+
+        context 'when the app is a docker app' do
+          let(:app_obj) { AppFactory.make(instances: 1, diego: true) }
+          let(:error_message) do
+            'Docker apps cannot run on DEAs'
+          end
+
+          before do
+            app_obj.app.buildpack_lifecycle_data = nil
+          end
+
+          it 'returns an error' do
+            put "/v2/apps/#{app_obj.guid}", '{ "diego": false }'
+            expect(last_response).to have_status_code(400)
+            expect(decoded_response['error_code']).to eq('CF-DockerAppToDea')
+            expect(decoded_response['description']).to include(error_message)
+          end
+        end
       end
 
       context 'when app is dea app' do
