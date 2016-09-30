@@ -27,7 +27,7 @@ module VCAP::CloudController
       end
 
       let(:v2_app) { AppFactory.make(state: 'STOPPED') }
-      let(:droplet) { DropletModel.make(app: v2_app.app, package: v2_app.package, state: DropletModel::STAGING_STATE) }
+      let(:droplet) { DropletModel.make(app: v2_app.app, package: v2_app.latest_package, state: DropletModel::STAGING_STATE) }
 
       let(:staging_guid) { v2_app.guid }
       let(:task_id) { droplet.guid }

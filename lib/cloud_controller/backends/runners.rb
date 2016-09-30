@@ -80,7 +80,7 @@ module VCAP::CloudController
               where("#{App.table_name}.id > ?", last_id).
               order("#{App.table_name}__id".to_sym).
               limit(batch_size).
-              eager(:current_droplet, package: :latest_droplet)
+              eager(:latest_droplet, :latest_package, current_droplet: :package)
 
       apps = query.all.reject { |a| a.package_state == 'FAILED' }
 

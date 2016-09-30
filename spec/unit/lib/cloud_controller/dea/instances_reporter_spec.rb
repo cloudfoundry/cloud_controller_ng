@@ -56,7 +56,7 @@ module VCAP::CloudController
 
         context 'and the app failed to stage' do
           before do
-            app.package.update(state: 'FAILED')
+            app.latest_package.update(state: 'FAILED')
           end
 
           it 'returns 0' do
@@ -83,7 +83,7 @@ module VCAP::CloudController
 
       let(:failed_apps) do
         a = AppFactory.make(state: 'STARTED')
-        a.package.update(state: 'FAILED')
+        a.latest_package.update(state: 'FAILED')
         [a]
       end
 
@@ -172,7 +172,7 @@ module VCAP::CloudController
         let(:staging_failed_apps) do
           Array.new(3) do
             AppFactory.make(state: 'STARTED').tap do |a|
-              a.package.update(state: 'FAILED')
+              a.latest_package.update(state: 'FAILED')
             end
           end
         end

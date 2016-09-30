@@ -116,7 +116,7 @@ module VCAP::CloudController
 
             context 'if the app failed to stage' do
               before do
-                DropletModel.make(app: app.app, package: app.package, state: DropletModel::FAILED_STATE)
+                DropletModel.make(app: app.app, package: app.latest_package, state: DropletModel::FAILED_STATE)
                 app.reload
               end
 
@@ -237,7 +237,7 @@ module VCAP::CloudController
 
                 context 'but the package is staging' do
                   before do
-                    DropletModel.make(app: app.app, package: app.package, state: DropletModel::STAGING_STATE)
+                    DropletModel.make(app: app.app, package: app.latest_package, state: DropletModel::STAGING_STATE)
                     app.reload
                   end
 
@@ -249,7 +249,7 @@ module VCAP::CloudController
 
                 context 'but the package has failed to stage' do
                   before do
-                    DropletModel.make(app: app.app, package: app.package, state: DropletModel::FAILED_STATE)
+                    DropletModel.make(app: app.app, package: app.latest_package, state: DropletModel::FAILED_STATE)
                     app.reload
                   end
 

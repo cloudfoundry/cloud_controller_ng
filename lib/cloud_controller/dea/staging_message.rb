@@ -13,7 +13,7 @@ module VCAP::CloudController
           task_id:                      task_id,
           properties:                   staging_task_properties(app),
           # All url generation should go to blobstore_url_generator
-          download_uri:                 @blobstore_url_generator.package_download_url(app.package),
+          download_uri:                 @blobstore_url_generator.package_download_url(app.latest_package),
           upload_uri:                   @blobstore_url_generator.droplet_upload_url(task_id),
           buildpack_cache_download_uri: @blobstore_url_generator.buildpack_cache_download_url(app.app.guid, app.stack.name),
           buildpack_cache_upload_uri:   @blobstore_url_generator.buildpack_cache_upload_url(app.app.guid, app.stack.name),

@@ -607,7 +607,7 @@ module VCAP::CloudController
 
             context 'when the latest_droplet is FAILED' do
               before do
-                DropletModel.make(app: app.app, package: app.package, state: DropletModel::FAILED_STATE)
+                DropletModel.make(app: app.app, package: app.latest_package, state: DropletModel::FAILED_STATE)
                 app.reload
               end
 
@@ -621,7 +621,7 @@ module VCAP::CloudController
 
             context 'when the latest_droplet is not STAGED or FAILED' do
               before do
-                DropletModel.make(app: app.app, package: app.package, state: DropletModel::STAGING_STATE)
+                DropletModel.make(app: app.app, package: app.latest_package, state: DropletModel::STAGING_STATE)
                 app.reload
               end
 
@@ -650,7 +650,7 @@ module VCAP::CloudController
 
               context 'and the package is FAILED' do
                 before do
-                  app.package.update(state: PackageModel::FAILED_STATE)
+                  app.latest_package.update(state: PackageModel::FAILED_STATE)
                   app.reload
                 end
 

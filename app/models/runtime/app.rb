@@ -46,15 +46,15 @@ module VCAP::CloudController
       self.associations[:stack] = Stack.default unless stack
     end
 
-    one_through_one :package,
+    one_through_one :latest_package,
       class:             'VCAP::CloudController::PackageModel',
       join_table:        AppModel.table_name,
       left_primary_key:  :app_guid, left_key: :guid,
       right_primary_key: :app_guid, right_key: :guid,
       order:             [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
 
-    one_through_one :latest_package,
-      class:             'VCAP::CloudController::PackageModel',
+    one_through_one :latest_droplet,
+      class:             'VCAP::CloudController::DropletModel',
       join_table:        AppModel.table_name,
       left_primary_key:  :app_guid, left_key: :guid,
       right_primary_key: :app_guid, right_key: :guid,
@@ -142,30 +142,33 @@ module VCAP::CloudController
     # get the value of ports stored in the database
     alias_method(:user_provided_ports, :ports)
 
-    def latest_droplet
-      package.try(:latest_droplet)
-    end
-
     def package_hash
-      return nil unless package
+      return nil unless latest_package
 
-      if package.bits?
-        package.package_hash
-      elsif package.docker?
-        package.image
+      if latest_package.bits?
+        latest_package.package_hash
+      elsif latest_package.docker?
+        latest_package.image
       end
     end
 
     def package_state
-      state = package.try(:state)
+      return 'FAILED' if latest_droplet.try(:failed?)
+      return 'PENDING' if current_droplet != latest_droplet
 
-      if state == PackageModel::FAILED_STATE || latest_droplet.try(:failed?)
-        'FAILED'
-      elsif state == 'READY' && current_droplet && current_droplet == latest_droplet
-        'STAGED'
-      else
-        'PENDING'
+      if current_droplet
+        if latest_package
+          return 'STAGED' if current_droplet.package == latest_package || current_droplet.created_at > latest_package.created_at
+          return 'FAILED' if latest_package.failed?
+          return 'PENDING'
+        end
+
+        return 'STAGED'
       end
+
+      return 'FAILED' if latest_package.try(:failed?)
+
+      'PENDING'
     end
 
     def staging_task_id
@@ -177,11 +180,11 @@ module VCAP::CloudController
     end
 
     def package_updated_at
-      package.try(:created_at)
+      latest_package.try(:created_at)
     end
 
     def docker_image
-      package.try(:image)
+      latest_package.try(:image)
     end
 
     def copy_buildpack_errors

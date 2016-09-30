@@ -189,7 +189,7 @@ module VCAP::CloudController
 
       describe 'updating docker_image' do
         let(:process) { AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image') }
-        let!(:original_package) { process.package }
+        let!(:original_package) { process.latest_package }
 
         it 'creates a new docker package' do
           request_attrs = { 'docker_image' => 'repo/new-image' }
@@ -198,7 +198,7 @@ module VCAP::CloudController
           app_update.update(process.app, process, request_attrs)
 
           expect(process.reload.docker_image).to eq('repo/new-image')
-          expect(process.package).not_to eq(original_package)
+          expect(process.latest_package).not_to eq(original_package)
         end
 
         context 'when the docker image is requested but is not a change' do
@@ -208,7 +208,7 @@ module VCAP::CloudController
             app_update.update(process.app, process, request_attrs)
 
             expect(process.reload.docker_image).to eq('repo/original-image')
-            expect(process.package).to eq(original_package)
+            expect(process.latest_package).to eq(original_package)
           end
         end
       end

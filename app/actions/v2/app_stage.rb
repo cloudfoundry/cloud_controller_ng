@@ -13,11 +13,11 @@ module VCAP::CloudController
           staging_disk_in_mb:   app.disk_quota
         })
 
-        lifecycle = LifecycleProvider.provide(app.package, message)
+        lifecycle = LifecycleProvider.provide(app.latest_package, message)
 
         droplet_creator = DropletCreate.new
         droplet_creator.create_and_stage_without_event(
-          package:             app.package,
+          package:             app.latest_package,
           lifecycle:           lifecycle,
           message:             message,
           start_after_staging: true

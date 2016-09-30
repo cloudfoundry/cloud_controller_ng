@@ -39,6 +39,10 @@ module VCAP::CloudController
       type == DOCKER_TYPE
     end
 
+    def failed?
+      state == FAILED_STATE
+    end
+
     def succeed_upload!(package_hash)
       db.transaction do
         self.lock!

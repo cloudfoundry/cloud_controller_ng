@@ -24,7 +24,7 @@ module VCAP::CloudController
       end
 
       it 'includes app guid, task id, download/upload uris, stack name, and accepts_http flag' do
-        allow(blobstore_url_generator).to receive(:package_download_url).with(app.package).and_return('http://www.app.uri')
+        allow(blobstore_url_generator).to receive(:package_download_url).with(app.latest_package).and_return('http://www.app.uri')
         allow(blobstore_url_generator).to receive(:droplet_upload_url).with(task_id).and_return('http://www.droplet.upload.uri')
         allow(blobstore_url_generator).to receive(:buildpack_cache_download_url).with(app.app.guid, app.stack.name).and_return('http://www.buildpack.cache.download.uri')
         allow(blobstore_url_generator).to receive(:buildpack_cache_upload_url).with(app.app.guid, app.stack.name).and_return('http://www.buildpack.cache.upload.uri')

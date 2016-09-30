@@ -784,7 +784,7 @@ module VCAP::CloudController
           context 'when other staging has happened' do
             before do
               @before_staging_completion = -> {
-                DropletModel.make(app: app.app, package: app.package)
+                DropletModel.make(app: app.app, package: app.latest_package)
               }
             end
 

@@ -272,7 +272,7 @@ module VCAP::CloudController
 
           response_body = JSON.parse(last_response.body, symbolize_names: true)
           job = Delayed::Job.last
-          expect(job.handler).to include(app_obj.reload.package.guid)
+          expect(job.handler).to include(app_obj.reload.latest_package.guid)
           expect(job.queue).to eq('cc-api_z1-99')
           expect(job.guid).not_to be_nil
           expect(last_response.status).to eq 201

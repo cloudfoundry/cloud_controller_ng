@@ -332,7 +332,7 @@ module VCAP::CloudController
 
       it 'does not return apps that failed to stage' do
         staging_failed_app = dea_app1
-        DropletModel.make(package: dea_app1.package, app: dea_app1.app, state: DropletModel::FAILED_STATE)
+        DropletModel.make(package: dea_app1.latest_package, app: dea_app1.app, state: DropletModel::FAILED_STATE)
 
         batch, _ = runners.dea_apps_hm9k(100, 0)
 

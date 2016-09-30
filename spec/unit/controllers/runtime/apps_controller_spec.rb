@@ -433,7 +433,7 @@ module VCAP::CloudController
           expect(v2_app.docker_image).to eq('some-image:latest')
           expect(v2_app.package_hash).to eq('some-image:latest')
 
-          package = v2_app.package
+          package = v2_app.latest_package
           expect(package.image).to eq('some-image:latest')
         end
       end
@@ -876,7 +876,7 @@ module VCAP::CloudController
           let(:app_obj) { AppFactory.make(state: 'STARTED') }
 
           before do
-            PackageModel.make(app: app_obj.app, package_hash: 'some-hash')
+            PackageModel.make(app: app_obj.app, package_hash: 'some-hash', state: PackageModel::READY_STATE)
             app_obj.reload
           end
 
@@ -941,7 +941,7 @@ module VCAP::CloudController
       describe 'updating docker_image' do
         it 'creates a new docker package' do
           app = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
-          original_package = app.package
+          original_package = app.latest_package
 
           expect(app.docker_image).not_to eq('repo/new-image')
 
@@ -950,13 +950,13 @@ module VCAP::CloudController
           put "/v2/apps/#{app.guid}", MultiJson.dump({ docker_image: 'repo/new-image' })
 
           expect(app.reload.docker_image).to eq('repo/new-image')
-          expect(app.package).not_to eq(original_package)
+          expect(app.latest_package).not_to eq(original_package)
         end
 
         context 'when the docker image is requested but is not a change' do
           it 'does not create a new package' do
             app = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
-            original_package = app.package
+            original_package = app.latest_package
 
             expect(app.docker_image).not_to eq('repo/new-image')
 
@@ -965,7 +965,7 @@ module VCAP::CloudController
             put "/v2/apps/#{app.guid}", MultiJson.dump({ docker_image: 'REPO/ORIGINAL-IMAGE' })
 
             expect(app.reload.docker_image).to eq('repo/original-image')
-            expect(app.package).to eq(original_package)
+            expect(app.latest_package).to eq(original_package)
           end
         end
       end

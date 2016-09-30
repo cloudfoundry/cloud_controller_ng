@@ -69,7 +69,7 @@ module VCAP::CloudController
       dest_app = find_guid_and_validate_access(:upload, dest_app_guid)
 
       copier = PackageCopy.new
-      copier.copy_without_event(dest_app.app.guid, src_app.package)
+      copier.copy_without_event(dest_app.app.guid, src_app.latest_package)
 
       @app_event_repository.record_src_copy_bits(dest_app, src_app, SecurityContext.current_user.guid, SecurityContext.current_user_email)
       @app_event_repository.record_dest_copy_bits(dest_app, src_app, SecurityContext.current_user.guid, SecurityContext.current_user_email)
