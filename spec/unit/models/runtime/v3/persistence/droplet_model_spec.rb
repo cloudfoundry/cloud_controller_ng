@@ -217,7 +217,7 @@ module VCAP::CloudController
 
     describe 'usage events' do
       it 'ensures we have coverage for all states' do
-        expect(DropletModel::DROPLET_STATES.count).to eq(5), 'After adding a new state, tests for app usage event coverage should be added.'
+        expect(DropletModel::DROPLET_STATES.count).to eq(6), 'After adding a new state, tests for app usage event coverage should be added.'
       end
 
       context 'when creating a droplet' do
@@ -233,6 +233,14 @@ module VCAP::CloudController
           it 'does not record an event' do
             expect {
               DropletModel.new(state: DropletModel::COPYING_STATE).save
+            }.not_to change { AppUsageEvent.count }.from(0)
+          end
+        end
+
+        context 'when state is PROCESSING_UPLOAD' do
+          it 'does not record an event' do
+            expect {
+              DropletModel.new(state: DropletModel::PROCESSING_UPLOAD_STATE).save
             }.not_to change { AppUsageEvent.count }.from(0)
           end
         end
@@ -278,6 +286,17 @@ module VCAP::CloudController
               }.to change { AppUsageEvent.count }.by(1)
 
               expect(AppUsageEvent.last.state).to eq('STAGING_STOPPED')
+            end
+
+            context 'but the initial state is PROCESSING_UPLOAD' do
+              let(:initial_state) { DropletModel::PROCESSING_UPLOAD_STATE }
+
+              it 'records no STAGING_STOPPED event ' do
+                expect {
+                  droplet.state = DropletModel::STAGED_STATE
+                  droplet.save
+                }.not_to change { AppUsageEvent.count }
+              end
             end
           end
 
@@ -352,6 +371,16 @@ module VCAP::CloudController
 
         context 'when state is EXPIRED' do
           let(:state) { DropletModel::EXPIRED_STATE }
+
+          it 'records no usage event' do
+            expect {
+              droplet.destroy
+            }.not_to change { AppUsageEvent.count }
+          end
+        end
+
+        context 'when state is PROCESSING_UPLOAD' do
+          let(:state) { DropletModel::PROCESSING_UPLOAD_STATE }
 
           it 'records no usage event' do
             expect {

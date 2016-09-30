@@ -3,11 +3,12 @@ module VCAP::CloudController
     include Serializer
 
     DROPLET_STATES = [
-      STAGING_STATE = 'STAGING'.freeze,
-      COPYING_STATE = 'COPYING'.freeze,
-      FAILED_STATE  = 'FAILED'.freeze,
-      STAGED_STATE  = 'STAGED'.freeze,
-      EXPIRED_STATE = 'EXPIRED'.freeze,
+      STAGING_STATE         = 'STAGING'.freeze,
+      COPYING_STATE         = 'COPYING'.freeze,
+      FAILED_STATE          = 'FAILED'.freeze,
+      STAGED_STATE          = 'STAGED'.freeze,
+      EXPIRED_STATE         = 'EXPIRED'.freeze,
+      PROCESSING_UPLOAD_STATE = 'PROCESSING_UPLOAD'.freeze,
     ].freeze
     FINAL_STATES = [
       FAILED_STATE,
@@ -43,21 +44,21 @@ module VCAP::CloudController
 
     def after_create
       super
-      unless copying?
+      unless copying? || processing_upload?
         app_usage_event_repository.create_from_droplet(self, 'STAGING_STARTED')
       end
     end
 
     def after_update
       super
-      if entering_staged? || entering_failed?
+      if !exiting_processing_upload? && (entering_staged? || entering_failed?)
         app_usage_event_repository.create_from_droplet(self, 'STAGING_STOPPED')
       end
     end
 
     def after_destroy
       super
-      unless in_final_state? || copying?
+      unless in_final_state? || copying? || processing_upload?
         app_usage_event_repository.create_from_droplet(self, 'STAGING_STOPPED')
       end
     end
@@ -106,6 +107,10 @@ module VCAP::CloudController
       self.state == COPYING_STATE
     end
 
+    def processing_upload?
+      self.state == PROCESSING_UPLOAD_STATE
+    end
+
     def mark_as_staged
       self.state = STAGED_STATE
     end
@@ -141,6 +146,10 @@ module VCAP::CloudController
 
     def entering_failed?
       column_changed?(:state) && self.state == FAILED_STATE
+    end
+
+    def exiting_processing_upload?
+      column_changed?(:state) && initial_value(:state) == PROCESSING_UPLOAD_STATE
     end
 
     def app_usage_event_repository
