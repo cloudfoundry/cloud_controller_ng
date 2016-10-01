@@ -13,7 +13,7 @@ module VCAP::CloudController
         def perform
           null_timestamp = null_timestamp_for_db(DropletModel.db.database_type)
           DropletModel.
-            where(state: DropletModel::STAGING_STATE).
+            where(state: [DropletModel::STAGING_STATE, DropletModel::PROCESSING_UPLOAD_STATE]).
             where(
               (updated_at_past_threshold & Sequel.~({ updated_at: null_timestamp })) |
                 (created_at_past_threshold & { updated_at: null_timestamp })

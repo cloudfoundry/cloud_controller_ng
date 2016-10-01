@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Jobs::V2
     RSpec.describe UploadDropletFromUser do
       let(:app) { AppModel.make }
-      let(:droplet) { DropletModel.make(app: app) }
+      let(:droplet) { DropletModel.make(app: app, state: DropletModel::PROCESSING_UPLOAD_STATE) }
 
       subject(:job) { described_class.new('file_path', droplet.guid) }
 
@@ -39,6 +39,24 @@ module VCAP::CloudController
 
           it 'does not raise an error' do
             expect { job.perform }.not_to raise_error
+          end
+        end
+
+        context 'when the droplet has changed to another state' do
+          before do
+            droplet.update(state: DropletModel::FAILED_STATE)
+          end
+
+          it 'does not mark the droplet as staged' do
+            expect(droplet.staged?).to be_falsey
+            job.perform
+            expect(droplet.reload.staged?).to be_falsey
+          end
+
+          it 'does not set the droplet as the current droplet for the app' do
+            expect(app.droplet).to be_nil
+            job.perform
+            expect(app.droplet).to be_nil
           end
         end
       end

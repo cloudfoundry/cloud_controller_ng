@@ -15,8 +15,12 @@ module VCAP::CloudController
 
           if (droplet = DropletModel.where(guid: @droplet_guid).eager(:app).all.first)
             droplet.db.transaction do
-              droplet.update(state: DropletModel::STAGED_STATE)
-              droplet.app.update(droplet: droplet)
+              droplet.lock!
+
+              if droplet.processing_upload?
+                droplet.update(state: DropletModel::STAGED_STATE)
+                droplet.app.update(droplet: droplet)
+              end
             end
           end
         end
