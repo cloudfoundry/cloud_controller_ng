@@ -102,6 +102,14 @@ module VCAP::CloudController
             expect(last_response.status).to eq(400)
           end
         end
+
+        context 'when associated organization is deleted' do
+          it 'fails with DatabaseError' do
+            delete "/v2/organizations/#{org.guid}"
+            expect(last_response.status).to eq(500)
+            expect(decoded_response['error_code']).to match(/DatabaseError/)
+          end
+        end
       end
 
       describe 'with space' do
