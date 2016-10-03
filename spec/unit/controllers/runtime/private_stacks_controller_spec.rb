@@ -66,62 +66,25 @@ module VCAP::CloudController
 
     describe 'associate / unassociate' do
       let(:stack) { Stack.make(is_private: true) }
-      let(:org) { Organization.make }
 
       before do
         set_current_user_as_admin
-
-        put "/v2/private_stacks/#{stack.guid}/organizations/#{org.guid}"
-        expect(last_response.status).to eq(201)
-      end
-
-      after do
-        delete "/v2/private_stacks/#{stack.guid}/organizations/#{org.guid}"
-        expect(last_response.status).to eq(204)
       end
 
       describe 'with organization' do
-        let(:space) { Space.make(organization: org) }
+        let(:org) { Organization.make }
 
         before do
-          put "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
+          put "/v2/private_stacks/#{stack.guid}/organizations/#{org.guid}"
           expect(last_response.status).to eq(201)
         end
 
         after do
-          delete "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
+          delete "/v2/private_stacks/#{stack.guid}/organizations/#{org.guid}"
           expect(last_response.status).to eq(204)
         end
 
         context 'when any space in organization is associated with private stack' do
-          it 'fails to unassociate private stack with organization' do
-            delete "/v2/private_stacks/#{stack.guid}/organizations/#{org.guid}"
-            expect(last_response.status).to eq(400)
-          end
-        end
-      end
-
-      describe 'with space' do
-        it 'can be associated / unassociated with space in org associated' do
-          space = Space.make(organization: org)
-
-          put "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
-          expect(last_response.status).to eq(201)
-
-          delete "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
-          expect(last_response.status).to eq(204)
-        end
-
-        it 'cannot be associated with space in org not associated' do
-          space = Space.make
-
-          put "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
-          expect(last_response.status).to eq(500)
-          expect(decoded_response['description']).to match(/AssociationError/)
-          expect(decoded_response['error_code']).to match(/AssociationError/)
-        end
-
-        context 'when any app with private stack exists' do
           let(:space) { Space.make(organization: org) }
 
           before do
@@ -134,21 +97,74 @@ module VCAP::CloudController
             expect(last_response.status).to eq(204)
           end
 
-          it 'fails to unassociate private stack with space' do
-            post "/v2/apps", MultiJson.dump(name: 'app', space_guid: space.guid, stack_guid: stack.guid)
+          it 'fails to unassociate private stack with organization' do
+            delete "/v2/private_stacks/#{stack.guid}/organizations/#{org.guid}"
+            expect(last_response.status).to eq(400)
+          end
+        end
+      end
+
+      describe 'with space' do
+        let(:org) { Organization.make }
+        let(:space) { Space.make(organization: org) }
+
+        context 'in associated organization' do
+          before do
+            put "/v2/private_stacks/#{stack.guid}/organizations/#{org.guid}"
             expect(last_response.status).to eq(201)
-            app_guid = metadata['guid']
+          end
+
+          after do
+            delete "/v2/private_stacks/#{stack.guid}/organizations/#{org.guid}"
+            expect(last_response.status).to eq(204)
+          end
+
+          it 'can be associated / unassociated' do
+            put "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
+            expect(last_response.status).to eq(201)
 
             delete "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
-            expect(last_response.status).to eq(400)
-
-            get "/v2/private_stacks/#{stack.guid}/spaces"
-            expect(last_response.status).to eq(200)
-            expect(decoded_response['total_results']).to eq(1)
-            expect(decoded_response['resources'][0]['metadata']['guid']).to eq(space.guid)
-
-            delete "/v2/apps/#{app_guid}"
             expect(last_response.status).to eq(204)
+          end
+
+          context 'when any app with private stack exists' do
+            before do
+              put "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
+              expect(last_response.status).to eq(201)
+            end
+
+            after do
+              delete "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
+              expect(last_response.status).to eq(204)
+            end
+
+            it 'fails to unassociate private stack with space' do
+              post "/v2/apps", MultiJson.dump(name: 'app', space_guid: space.guid, stack_guid: stack.guid)
+              expect(last_response.status).to eq(201)
+              app_guid = metadata['guid']
+
+              delete "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
+              expect(last_response.status).to eq(400)
+
+              get "/v2/private_stacks/#{stack.guid}/spaces"
+              expect(last_response.status).to eq(200)
+              expect(decoded_response['total_results']).to eq(1)
+              expect(decoded_response['resources'][0]['metadata']['guid']).to eq(space.guid)
+
+              delete "/v2/apps/#{app_guid}"
+              expect(last_response.status).to eq(204)
+            end
+          end
+        end
+
+        context 'in organization not associated' do
+          let(:space) { space = Space.make }
+
+          it 'cannot be associated' do
+            put "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
+            expect(last_response.status).to eq(500)
+            expect(decoded_response['description']).to match(/AssociationError/)
+            expect(decoded_response['error_code']).to match(/AssociationError/)
           end
         end
       end
