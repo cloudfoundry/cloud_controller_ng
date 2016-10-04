@@ -80,8 +80,10 @@ module VCAP::CloudController
         end
 
         after do
-          delete "/v2/private_stacks/#{stack.guid}/organizations/#{org.guid}"
-          expect(last_response.status).to eq(204)
+          if stack.organizations.size > 0
+            delete "/v2/private_stacks/#{stack.guid}/organizations/#{org.guid}"
+            expect(last_response.status).to eq(204)
+          end
         end
 
         context 'when any space in organization is associated with private stack' do
@@ -104,10 +106,15 @@ module VCAP::CloudController
         end
 
         context 'when associated organization is deleted' do
-          it 'fails with DatabaseError' do
+          before do
             delete "/v2/organizations/#{org.guid}"
-            expect(last_response.status).to eq(500)
-            expect(decoded_response['error_code']).to match(/DatabaseError/)
+            expect(last_response.status).to eq(204)
+          end
+
+          it 'deletes association for private stack with organization' do
+            get "/v2/private_stacks/#{stack.guid}/organizations"
+            expect(last_response.status).to eq(200)
+            expect(decoded_response['total_results']).to eq(0)
           end
         end
       end
