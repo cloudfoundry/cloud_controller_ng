@@ -221,7 +221,8 @@ Cookie: </pre>
         <h3>Response</h3>
 
         <h4>Status</h4>
-        <pre class="response status">202 Accepted</pre>
+        <span> If accepts_incomplete is set to false, or if the service is synchronous, the successful response status code will be 201.  Otherwise the success response is a 202</span>
+        <pre class="response status">201 Created, 202 Accepted</pre>
 
           <h4>Body</h4>
           <table class="response-fields table table-striped table-bordered table-condensed">
