@@ -53,7 +53,7 @@ module VCAP::CloudController
 
       def envs_for_diego(app, task)
         running_envs = VCAP::CloudController::EnvironmentVariableGroup.running.environment_json
-        envs         = VCAP::CloudController::Diego::TaskEnvironment.new(app, task, app.space, running_envs).build(task.environment_variables)
+        envs         = VCAP::CloudController::Diego::TaskEnvironment.new(app, task, app.space, running_envs).build
         diego_envs   = VCAP::CloudController::Diego::NormalEnvHashToDiegoEnvArrayPhilosopher.muse(envs)
 
         logger.debug2("task environment: #{diego_envs.map { |e| e['name'] }}")

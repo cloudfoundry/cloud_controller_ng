@@ -27,7 +27,6 @@ module VCAP
               request:   {
                 name:                  task.name,
                 memory_in_mb:          task.memory_in_mb,
-                environment_variables: 'PRIVATE DATA HIDDEN',
                 command:               'PRIVATE DATA HIDDEN'
               }
             },

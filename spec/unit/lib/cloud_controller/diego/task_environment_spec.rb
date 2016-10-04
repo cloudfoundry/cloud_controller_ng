@@ -62,36 +62,17 @@ module VCAP::CloudController::Diego
         end
       end
 
-      context 'when additional environment variables are provided' do
-        it 'is merged on top of the initial envs and app envs' do
-          running_envs    = { 'SILLY' => 'lily', 'PUPPIES' => 'frolicking' }
-          additional_envs = { 'ENV_VAR_2' => 'not jeff', 'NICE' => 'shirt' }
+      it 'uses environment variables from initial envs and app envs' do
+        running_envs = { 'SILLY' => 'lily', 'PUPPIES' => 'frolicking' }
 
-          constructed_envs = TaskEnvironment.new(app, task, space, running_envs).build(additional_envs)
-          expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
-          expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
-          expect(constructed_envs).to include({ 'VCAP_SERVICES' => be_an_instance_of(Hash) })
-          expect(constructed_envs).to include({ 'MEMORY_LIMIT' => "#{task.memory_in_mb}m" })
-          expect(constructed_envs).to include({ 'ENV_VAR_2' => 'not jeff' })
-          expect(constructed_envs).to include({ 'SILLY' => 'lily' })
-          expect(constructed_envs).to include({ 'PUPPIES' => 'frolicking' })
-          expect(constructed_envs).to include({ 'NICE' => 'shirt' })
-        end
-      end
-
-      context 'when additional environment variables are nil' do
-        it 'is merged on top of the initial envs and app envs' do
-          running_envs = { 'SILLY' => 'lily', 'PUPPIES' => 'frolicking' }
-
-          constructed_envs = TaskEnvironment.new(app, task, space, running_envs).build(nil)
-          expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
-          expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
-          expect(constructed_envs).to include({ 'VCAP_SERVICES' => be_an_instance_of(Hash) })
-          expect(constructed_envs).to include({ 'MEMORY_LIMIT' => "#{task.memory_in_mb}m" })
-          expect(constructed_envs).to include({ 'ENV_VAR_2' => 'jeff' })
-          expect(constructed_envs).to include({ 'SILLY' => 'lily' })
-          expect(constructed_envs).to include({ 'PUPPIES' => 'frolicking' })
-        end
+        constructed_envs = TaskEnvironment.new(app, task, space, running_envs).build
+        expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
+        expect(constructed_envs).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
+        expect(constructed_envs).to include({ 'VCAP_SERVICES' => be_an_instance_of(Hash) })
+        expect(constructed_envs).to include({ 'MEMORY_LIMIT' => "#{task.memory_in_mb}m" })
+        expect(constructed_envs).to include({ 'ENV_VAR_2' => 'jeff' })
+        expect(constructed_envs).to include({ 'SILLY' => 'lily' })
+        expect(constructed_envs).to include({ 'PUPPIES' => 'frolicking' })
       end
 
       context 'when the app has a route associated with it' do

@@ -12,9 +12,8 @@ module VCAP::CloudController
       let(:droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::STAGED_STATE) }
       let(:command) { 'bundle exec rake panda' }
       let(:name) { 'my_task_name' }
-      let(:message) { TaskCreateMessage.new name: name, command: command, memory_in_mb: 1024, environment_variables: environment_variables }
+      let(:message) { TaskCreateMessage.new name: name, command: command, memory_in_mb: 1024 }
       let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
-      let(:environment_variables) { { 'unicorn' => 'magic' } }
       let(:user_guid) { 'user-guid' }
       let(:user_email) { 'user-email' }
 
@@ -36,7 +35,6 @@ module VCAP::CloudController
         expect(task.name).to eq(name)
         expect(task.memory_in_mb).to eq(1024)
         expect(TaskModel.count).to eq(1)
-        expect(task.environment_variables).to eq(environment_variables)
       end
 
       describe 'sequence id' do
@@ -118,7 +116,7 @@ module VCAP::CloudController
       end
 
       context 'when the name is not requested' do
-        let(:message) { TaskCreateMessage.new command: command, memory_in_mb: 1024, environment_variables: environment_variables }
+        let(:message) { TaskCreateMessage.new command: command, memory_in_mb: 1024 }
 
         it 'uses a hex string as the name' do
           task = task_create_action.create(app, message, user_guid, user_email)

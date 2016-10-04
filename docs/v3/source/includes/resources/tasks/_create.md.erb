@@ -31,9 +31,6 @@ HTTP/1.1 202 Accepted
 
 This endpoint creates a new task.
 
-Environment variables specified in the request body will overwrite and be appended to the environment variables set on the app associated with your task.
-These overwrite and are appended to the app's running environment variable group.
-
 
 #### Body Parameters
 
@@ -55,15 +52,6 @@ These overwrite and are appended to the app's running environment variable group
     </h4>
 
     <p class="method-list-item-description">User-facing name of the task</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-     environment_variables
-     <span class="method-list-item-type">optional</span>
-    </h4>
-    <p class="method-list-item-description">Environment variables passed to the
-    container running your task.</p>
-
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">

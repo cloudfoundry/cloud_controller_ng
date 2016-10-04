@@ -6,7 +6,6 @@ module VCAP::CloudController::Presenters::V3
     subject(:presenter) { TaskPresenter.new(task) }
     let(:task) {
       VCAP::CloudController::TaskModel.make(
-        environment_variables: { 'some' => 'stuff' },
         failure_reason:        'sup dawg',
         memory_in_mb:          2048,
         updated_at:            Time.at(2),
@@ -33,7 +32,6 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:command]).to eq(task.command)
         expect(result[:state]).to eq(task.state)
         expect(result[:result][:failure_reason]).to eq 'sup dawg'
-        expect(result[:environment_variables]).to eq(task.environment_variables)
         expect(result[:memory_in_mb]).to eq(task.memory_in_mb)
         expect(result[:sequence_id]).to eq(5)
         expect(result[:created_at]).to eq(task.created_at.iso8601)
@@ -44,9 +42,8 @@ module VCAP::CloudController::Presenters::V3
       context 'when show_secrets is false' do
         let(:presenter) { TaskPresenter.new(task, show_secrets: false) }
 
-        it 'excludes command and environment_variables' do
+        it 'excludes command' do
           expect(result).not_to have_key(:command)
-          expect(result).not_to have_key(:environment_variables)
         end
       end
     end

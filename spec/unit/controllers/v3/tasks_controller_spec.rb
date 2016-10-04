@@ -20,9 +20,6 @@ RSpec.describe TasksController, type: :controller do
         "name": 'mytask',
         "command": 'rake db:migrate && true',
         "memory_in_mb": 2048,
-        "environment_variables": {
-          "unicorn": 'magic'
-        }
       }
     end
     let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }

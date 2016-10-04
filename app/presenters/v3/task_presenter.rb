@@ -12,7 +12,6 @@ module VCAP::CloudController
             command:               task.command,
             state:                 task.state,
             memory_in_mb:          task.memory_in_mb,
-            environment_variables: task.environment_variables || {},
             result:                { failure_reason: task.failure_reason },
             created_at:            task.created_at,
             updated_at:            task.updated_at,
@@ -39,7 +38,6 @@ module VCAP::CloudController
 
         def hide_secrets(hash)
           unless @show_secrets
-            hash.delete(:environment_variables)
             hash.delete(:command)
           end
           hash

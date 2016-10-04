@@ -35,7 +35,6 @@ RSpec.describe 'Tasks' do
         command:               'echo task',
         app_guid:              app_model.guid,
         droplet:               app_model.droplet,
-        environment_variables: { unicorn: 'magic' },
         memory_in_mb:          5
       )
       task2 = VCAP::CloudController::TaskModel.make(
@@ -127,7 +126,6 @@ RSpec.describe 'Tasks' do
           command:               'echo task',
           app_guid:              app_model.guid,
           droplet:               app_model.droplet,
-          environment_variables: { unicorn: 'magic' },
           memory_in_mb:          5,
           state:                 VCAP::CloudController::TaskModel::SUCCEEDED_STATE,
         )
@@ -181,7 +179,6 @@ RSpec.describe 'Tasks' do
         command:               'echo task',
         app_guid:              app_model.guid,
         droplet:               app_model.droplet,
-        environment_variables: { unicorn: 'magic' },
         memory_in_mb:          5,
       )
       task_guid = task.guid
@@ -195,7 +192,6 @@ RSpec.describe 'Tasks' do
         'command'               => 'echo task',
         'state'                 => 'RUNNING',
         'memory_in_mb'          => 5,
-        'environment_variables' => { 'unicorn' => 'magic' },
         'result'                => {
           'failure_reason' => nil
         },
@@ -227,7 +223,6 @@ RSpec.describe 'Tasks' do
         command:               'echo task',
         app_guid:              app_model.guid,
         droplet:               app_model.droplet,
-        environment_variables: { unicorn: 'magic' },
         memory_in_mb:          5,
       )
       task_guid = task.guid
@@ -242,13 +237,12 @@ RSpec.describe 'Tasks' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).not_to have_key('command')
-      expect(parsed_response).not_to have_key('environment_variables')
     end
   end
 
   describe 'PUT /v3/tasks/:guid/cancel' do
     it 'returns a json representation of the task with the requested guid' do
-      task      = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', environment_variables: { unicorn: 'magic' }, app_guid: app_model.guid
+      task      = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', app_guid: app_model.guid
       task_guid = task.guid
 
       stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/tasks/#{task_guid}").to_return(status: 202)
@@ -262,7 +256,6 @@ RSpec.describe 'Tasks' do
       expect(parsed_body['command']).to eq('echo task')
       expect(parsed_body['state']).to eq('CANCELING')
       expect(parsed_body['result']).to eq({ 'failure_reason' => nil })
-      expect(parsed_body['environment_variables']).to eq({ 'unicorn' => 'magic' })
     end
   end
 
@@ -273,7 +266,6 @@ RSpec.describe 'Tasks' do
         command:               'echo task',
         app_guid:              app_model.guid,
         droplet:               app_model.droplet,
-        environment_variables: { unicorn: 'magic' },
         memory_in_mb:          5,
       )
       task2 = VCAP::CloudController::TaskModel.make(
@@ -308,7 +300,6 @@ RSpec.describe 'Tasks' do
               'command'               => 'echo task',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 5,
-              'environment_variables' => { 'unicorn' => 'magic' },
               'result'                => {
                 'failure_reason' => nil
               },
@@ -334,7 +325,6 @@ RSpec.describe 'Tasks' do
               'command'               => 'echo task',
               'state'                 => 'RUNNING',
               'memory_in_mb'          => 100,
-              'environment_variables' => {},
               'result'                => {
                 'failure_reason' => nil
               },
@@ -369,7 +359,6 @@ RSpec.describe 'Tasks' do
           command:               'echo task',
           app_guid:              app_model.guid,
           droplet:               app_model.droplet,
-          environment_variables: { unicorn: 'magic' },
           memory_in_mb:          5,
         )
 
@@ -377,7 +366,6 @@ RSpec.describe 'Tasks' do
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['resources'][0]).not_to have_key('command')
-        expect(parsed_response['resources'][0]).not_to have_key('environment_variables')
       end
     end
 
@@ -467,7 +455,6 @@ RSpec.describe 'Tasks' do
       body = {
         name:                  'best task ever',
         command:               'be rake && true',
-        environment_variables: { unicorn: 'magic' },
         memory_in_mb:          1234,
       }
 
@@ -484,7 +471,6 @@ RSpec.describe 'Tasks' do
         'command'               => 'be rake && true',
         'state'                 => 'RUNNING',
         'memory_in_mb'          => 1234,
-        'environment_variables' => { 'unicorn' => 'magic' },
         'result'                => {
           'failure_reason' => nil
         },
@@ -522,7 +508,6 @@ RSpec.describe 'Tasks' do
         body = {
           name:                  'best task ever',
           command:               'be rake && true',
-          environment_variables: { unicorn: 'magic' },
           memory_in_mb:          1234,
           droplet_guid:          non_assigned_droplet.guid
         }

@@ -25,7 +25,6 @@ module VCAP::CloudController
           command:               message.command,
           app:                   app,
           memory_in_mb:          message.memory_in_mb || config[:default_app_memory],
-          environment_variables: message.environment_variables,
           sequence_id:           app.max_task_sequence_id
         )
 

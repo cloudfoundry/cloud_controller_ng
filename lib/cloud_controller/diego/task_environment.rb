@@ -8,9 +8,8 @@ module VCAP::CloudController
         @initial_env = initial_env || {}
       end
 
-      def build(additional_variables={})
+      def build
         app_env = @app.environment_variables || {}
-        additional_variables ||= {}
 
         vars_builder = VCAP::VarsBuilder.new(
           @app,
@@ -24,7 +23,6 @@ module VCAP::CloudController
 
         @initial_env.
           merge(app_env).
-          merge(additional_variables.try(:stringify_keys)).
           merge({
             'VCAP_APPLICATION' => vcap_application,
             'MEMORY_LIMIT'     => "#{@task.memory_in_mb}m"

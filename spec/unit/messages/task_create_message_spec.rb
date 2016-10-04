@@ -9,9 +9,6 @@ module VCAP::CloudController
           'name': 'mytask',
           'command': 'rake db:migrate && true',
           'droplet_guid': Sham.guid,
-          'environment_variables' => {
-            'ENVVAR' => 'env-val'
-          },
           'memory_in_mb' => 2048
         }
       end
@@ -22,7 +19,6 @@ module VCAP::CloudController
         expect(message).to be_a(TaskCreateMessage)
         expect(message.name).to eq('mytask')
         expect(message.command).to eq('rake db:migrate && true')
-        expect(message.environment_variables).to eq({ 'ENVVAR' => 'env-val' })
         expect(message.memory_in_mb).to eq(2048)
       end
 
@@ -97,30 +93,6 @@ module VCAP::CloudController
             expect(message).to_not be_valid
             expect(message.errors.full_messages).to include('Memory in mb must be greater than 0')
           end
-        end
-      end
-
-      context 'when environment_variables is not a hash' do
-        let(:params) do
-          {
-            name:                  'name',
-            environment_variables: 'potato',
-            relationships:         { space: { guid: 'guid' } },
-            lifecycle: {
-              type: 'buildpack',
-              data: {
-                buildpack: 'nil',
-                stack: Stack.default.name
-              }
-            }
-          }
-        end
-
-        it 'is not valid' do
-          message = TaskCreateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors_on(:environment_variables)).to include('must be a hash')
         end
       end
     end
