@@ -256,6 +256,26 @@ module VCAP::Services
           "expected \"volume_mounts\" key to contain an array of JSON objects in body, broker returned '#{body}'"
         end
 
+        def self.invalid_volume_mounts_missing_field_error(field, uri)
+          "The service broker returned an invalid response for the request to #{uri}: " \
+          "missing required field '#{field}'"
+        end
+
+        def self.invalid_volume_mounts_missing_volume_id_error(uri)
+          "The service broker returned an invalid response for the request to #{uri}: " \
+          "required field 'device.volume_id' must be a non-empty string"
+        end
+
+        def self.invalid_volume_mounts_bad_mount_config_error(uri)
+          "The service broker returned an invalid response for the request to #{uri}: " \
+          "field 'device.mount_config' must be an object if it is defined"
+        end
+
+        def self.invalid_volume_mounts_device_type_error(uri)
+          "The service broker returned an invalid response for the request to #{uri}: " \
+          "required field 'device' must be an object but is String"
+        end
+
         def self.volume_mounts_not_required_error(uri)
           "The service broker returned an invalid response for the request to #{uri}: " \
           'The service is attempting to supply volume mounts from your application, but is not registered as a volume mount service. ' \
@@ -264,13 +284,113 @@ module VCAP::Services
 
         def self.with_valid_volume_mounts
           {
-            'volume_mounts' => [{}]
+            'volume_mounts' => [{ 'device_type' => 'none', 'device' => { 'volume_id' => 'foo' }, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }]
+          }
+        end
+
+        def self.with_valid_volume_mounts_nil_mount_config
+          {
+            'volume_mounts' => [{
+                'device_type' => 'none',
+                'device' => { 'volume_id' => 'foo', 'mount_config' => nil },
+                'mode' => 'none',
+                'container_dir' => 'none',
+                'driver' => 'none'
+              }]
           }
         end
 
         def self.with_invalid_volume_mounts
           {
             'volume_mounts' => {}
+          }
+        end
+
+        def self.with_invalid_volume_mounts_device_type
+          {
+            'volume_mounts' => [
+              { 'device_type' => 'none', 'device' => 'foo', 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
+            ]
+          }
+        end
+
+        def self.with_invalid_volume_mounts_nil_driver
+          {
+            'volume_mounts' => [
+              { 'device_type' => 'none', 'mode' => 'none', 'container_dir' => 'none', 'driver' => nil, 'device' => { 'volume_id' => 'foo' } }
+            ]
+          }
+        end
+
+        def self.with_invalid_volume_mounts_empty_driver
+          {
+            'volume_mounts' => [
+              { 'device_type' => 'none', 'mode' => 'none', 'container_dir' => 'none', 'driver' => '', 'device' => { 'volume_id' => 'foo' } }
+            ]
+          }
+        end
+
+        def self.with_invalid_volume_mounts_no_device
+          {
+            'volume_mounts' => [
+              { 'device_type' => 'none', 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
+            ]
+          }
+        end
+
+        def self.with_invalid_volume_mounts_no_device_type
+          {
+            'volume_mounts' => [
+              { 'device' => { 'volume_id' => 'foo' }, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
+            ]
+          }
+        end
+
+        def self.with_invalid_volume_mounts_no_mode
+          {
+            'volume_mounts' => [
+              { 'device_type' => 'none', 'device' => { 'volume_id' => 'foo' }, 'container_dir' => 'none', 'driver' => 'none' }
+            ]
+          }
+        end
+
+        def self.with_invalid_volume_mounts_no_container_dir
+          {
+            'volume_mounts' => [
+              { 'device_type' => 'none', 'device' => { 'volume_id' => 'foo' }, 'mode' => 'none', 'driver' => 'none' }
+            ]
+          }
+        end
+
+        def self.with_invalid_volume_mounts_no_driver
+          {
+            'volume_mounts' => [
+              { 'device_type' => 'none', 'device' => { 'volume_id' => 'foo' }, 'mode' => 'none', 'container_dir' => 'none' }
+            ]
+          }
+        end
+
+        def self.with_invalid_volume_mounts_no_volume_id
+          {
+            'volume_mounts' => [
+              { 'device_type' => 'none', 'device' => {}, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
+            ]
+          }
+        end
+
+        def self.with_invalid_volume_mounts_bad_volume_id
+          {
+            'volume_mounts' => [
+              { 'device_type' => 'none', 'device' => { 'volume_id' => 4 }, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
+            ]
+          }
+        end
+
+        def self.with_invalid_volume_mounts_bad_mount_config
+          {
+            'volume_mounts' => [
+              { 'device_type' => 'none', 'device' => { 'volume_id' => 'foo', 'mount_config' => 'foo' }, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
+            ]
           }
         end
 
@@ -327,6 +447,18 @@ module VCAP::Services
         test_case(:bind,      200, with_valid_volume_mounts.to_json, service: :volume_mount,    result: client_result_with_state('succeeded').merge(with_valid_volume_mounts))
         test_case(:bind,      200, without_volume_mounts.to_json, service: :no_volume_mount,    result: client_result_with_state('succeeded'))
         test_case(:bind,      200, with_valid_volume_mounts.to_json, service: :no_volume_mount, error: Errors::ServiceBrokerInvalidVolumeMounts, description: volume_mounts_not_required_error(binding_uri))
+        test_case(:bind,      200, with_invalid_volume_mounts_device_type.to_json, service: :volume_mount, error: Errors::ServiceBrokerInvalidVolumeMounts, description: invalid_volume_mounts_device_type_error(binding_uri))
+        test_case(:bind,      200, with_invalid_volume_mounts_nil_driver.to_json, service: :volume_mount, error: Errors::ServiceBrokerInvalidVolumeMounts, description: invalid_volume_mounts_missing_field_error('driver', binding_uri))
+        test_case(:bind,      200, with_invalid_volume_mounts_empty_driver.to_json, service: :volume_mount, error: Errors::ServiceBrokerInvalidVolumeMounts, description: invalid_volume_mounts_missing_field_error('driver', binding_uri))
+        test_case(:bind,      200, with_invalid_volume_mounts_no_device.to_json, service: :volume_mount, error: Errors::ServiceBrokerInvalidVolumeMounts, description: invalid_volume_mounts_missing_field_error('device', binding_uri))
+        test_case(:bind,      200, with_invalid_volume_mounts_no_device_type.to_json, service: :volume_mount, error: Errors::ServiceBrokerInvalidVolumeMounts, description: invalid_volume_mounts_missing_field_error('device_type', binding_uri))
+        test_case(:bind,      200, with_invalid_volume_mounts_no_mode.to_json, service: :volume_mount, error: Errors::ServiceBrokerInvalidVolumeMounts, description: invalid_volume_mounts_missing_field_error('mode', binding_uri))
+        test_case(:bind,      200, with_invalid_volume_mounts_no_container_dir.to_json, service: :volume_mount, error: Errors::ServiceBrokerInvalidVolumeMounts, description: invalid_volume_mounts_missing_field_error('container_dir', binding_uri))
+        test_case(:bind,      200, with_invalid_volume_mounts_no_driver.to_json, service: :volume_mount, error: Errors::ServiceBrokerInvalidVolumeMounts, description: invalid_volume_mounts_missing_field_error('driver', binding_uri))
+        test_case(:bind,      200, with_invalid_volume_mounts_no_volume_id.to_json, service: :volume_mount, error: Errors::ServiceBrokerInvalidVolumeMounts, description: invalid_volume_mounts_missing_volume_id_error(binding_uri))
+        test_case(:bind,      200, with_invalid_volume_mounts_bad_volume_id.to_json, service: :volume_mount, error: Errors::ServiceBrokerInvalidVolumeMounts, description: invalid_volume_mounts_missing_volume_id_error(binding_uri))
+        test_case(:bind,      200, with_invalid_volume_mounts_bad_mount_config.to_json, service: :volume_mount,  error: Errors::ServiceBrokerInvalidVolumeMounts, description: invalid_volume_mounts_bad_mount_config_error(binding_uri))
+        test_case(:bind,      200, with_valid_volume_mounts_nil_mount_config.to_json, service: :volume_mount,    result: client_result_with_state('succeeded').merge(with_valid_volume_mounts_nil_mount_config))
         test_pass_through(:bind, 200, with_credentials,                                         expected_state: 'succeeded')
 
         test_case(:bind,      201, broker_partial_json,                                         error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, binding_uri))
