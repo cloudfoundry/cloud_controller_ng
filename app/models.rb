@@ -72,3 +72,4 @@ require 'models/services/service_key'
 require 'models/services/route_binding'
 
 require 'models/job'
+require 'models/request_count'
