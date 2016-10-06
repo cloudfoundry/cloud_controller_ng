@@ -750,3 +750,7 @@ properties:
   cc.bits_service.private_endpoint:
     description: "Private url for the bits-service service"
     default: ""
+
+  cc.rate_limiter.default_limit:
+    description: "The number of requests a user or client is allowed to make for all endpoints that do not have a custom limit over the configured interval"
+    default: 2000

@@ -5,6 +5,7 @@ require 'request_metrics'
 require 'request_logs'
 require 'cef_logs'
 require 'security_context_setter'
+require 'rate_limiter'
 
 module VCAP::CloudController
   class RackAppBuilder
@@ -20,6 +21,10 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::VcapRequestId
         use CloudFoundry::Middleware::SecurityContextSetter, configurer
         use CloudFoundry::Middleware::RequestLogs, Steno.logger('cc.api')
+        if HashUtils.dig(config, :rate_limiter, :default_limit)
+          use CloudFoundry::Middleware::RateLimiter, config[:rate_limiter][:default_limit]
+        end
+
         if HashUtils.dig(config, :security_event_logging, :enabled)
           use CloudFoundry::Middleware::CefLogs, Syslog::Logger.new(HashUtils.dig(config, :logging, :syslog) || 'vcap.cloud_controller_ng'), config[:local_route]
         end

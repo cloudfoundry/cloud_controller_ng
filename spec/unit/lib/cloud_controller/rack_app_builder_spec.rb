@@ -30,6 +30,32 @@ module VCAP::CloudController
         end
       end
 
+      describe 'RateLimiter' do
+        before do
+          allow(CloudFoundry::Middleware::RateLimiter).to receive(:new)
+        end
+
+        context 'when configuring a limit' do
+          before do
+            builder.build(TestConfig.override(rate_limiter: { default_limit: 123 }), request_metrics).to_app
+          end
+
+          it 'enables the RateLimiter middleware' do
+            expect(CloudFoundry::Middleware::RateLimiter).to have_received(:new).with(anything, 123)
+          end
+        end
+
+        context 'when not configuring a limit' do
+          before do
+            builder.build(TestConfig.override(rate_limiter: nil), request_metrics).to_app
+          end
+
+          it 'does not enable the RateLimiter middleware' do
+            expect(CloudFoundry::Middleware::RateLimiter).not_to have_received(:new)
+          end
+        end
+      end
+
       describe 'CEF logs' do
         before do
           allow(CloudFoundry::Middleware::CefLogs).to receive(:new)

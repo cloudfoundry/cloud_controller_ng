@@ -215,3 +215,6 @@ allowed_cors_domains:
 - http://*.inblue.net
 - http://talkoncorners.com
 - http://borrowedheaven.org
+
+rate_limiter:
+  default_limit: 2000

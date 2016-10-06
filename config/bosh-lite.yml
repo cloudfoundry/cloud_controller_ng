@@ -260,3 +260,6 @@ dea_advertisement_timeout_in_seconds: 15
 placement_top_stager_percentage: 10
 
 system_hostnames: ["api", "uaa", "login", "doppler", "loggregator", "hm9000"]
+
+rate_limiter:
+  default_limit: 2000
