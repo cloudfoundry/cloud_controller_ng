@@ -253,7 +253,7 @@ Sequel.migration do
 
       # prune orphaned droplets
       run <<-SQL
-        DELETE FROM droplets WHERE droplets.app_id NOT IN (SELECT id FROM processes)
+        DELETE FROM droplets WHERE NOT EXISTS (SELECT 1 FROM processes WHERE droplets.app_id = processes.id)
       SQL
 
       # prune additional droplets, each app will have only one droplet
@@ -336,13 +336,9 @@ Sequel.migration do
       # set current droplet on v3 app
       postgres_set_current_droplet_query = <<-SQL
         UPDATE apps
-        SET droplet_guid = current_droplet.guid
-        FROM droplets current_droplet, processes web_process
-        WHERE web_process.droplet_hash IS NOT NULL
-          AND web_process.app_guid = apps.guid
-          AND web_process.type = 'web'
-          AND current_droplet.app_guid = apps.guid
-          AND current_droplet.droplet_hash = web_process.droplet_hash
+          SET droplet_guid = droplets.guid
+        FROM droplets
+          WHERE droplets.app_guid = apps.guid
       SQL
 
       mysql_set_current_droplet_query = <<-SQL
