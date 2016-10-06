@@ -170,6 +170,24 @@ module VCAP::CloudController
               expect(last_response.status).to eq(204)
             end
           end
+
+          context 'when associated space is deleted' do
+            before do
+              put "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
+              expect(last_response.status).to eq(201)
+            end
+
+            after do
+              delete "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
+              expect(last_response.status).to eq(204)
+            end
+
+            it 'fails with DatabaseError' do
+              delete "/v2/spaces/#{space.guid}"
+              expect(last_response.status).to eq(500)
+              expect(decoded_response['error_code']).to match(/DatabaseError/)
+            end
+          end
         end
 
         context 'in organization not associated' do
