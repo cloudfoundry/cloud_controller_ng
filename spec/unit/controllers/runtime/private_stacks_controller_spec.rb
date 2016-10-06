@@ -175,17 +175,15 @@ module VCAP::CloudController
             before do
               put "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
               expect(last_response.status).to eq(201)
-            end
 
-            after do
-              delete "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
+              delete "/v2/spaces/#{space.guid}"
               expect(last_response.status).to eq(204)
             end
 
-            it 'fails with DatabaseError' do
-              delete "/v2/spaces/#{space.guid}"
-              expect(last_response.status).to eq(500)
-              expect(decoded_response['error_code']).to match(/DatabaseError/)
+            it 'deletes association for private stack with space' do
+              get "/v2/private_stacks/#{stack.guid}/spaces"
+              expect(last_response.status).to eq(200)
+              expect(decoded_response['total_results']).to eq(0)
             end
           end
         end
