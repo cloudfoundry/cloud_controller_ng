@@ -227,15 +227,6 @@ curl</a></li>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      environment_variables
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Environment variables set on the
-    container running your task. This field may be excluded based on a user&rsquo;s role.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
       memory_in_mb
       <span class="method-list-item-type">integer</span>
     </h4>
@@ -337,7 +328,6 @@ curl</a></li>
   "command": "rake db:migrate",
   "state": "RUNNING",
   "memory_in_mb": 512,
-  "environment_variables": {},
   "result": {
     "failure_reason": null
   },
@@ -361,9 +351,6 @@ curl</a></li>
 
 <p>This endpoint creates a new task.</p>
 
-<p>Environment variables specified in the request body will overwrite and be appended to the environment variables set on the app associated with your task.
-These overwrite and are appended to the app&rsquo;s running environment variable group.</p>
-
 <h4 id="body-parameters">Body Parameters</h4>
 
 <ul class="method-list-group">
@@ -384,15 +371,6 @@ These overwrite and are appended to the app&rsquo;s running environment variable
     </h4>
 
     <p class="method-list-item-description">User-facing name of the task</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-     environment_variables
-     <span class="method-list-item-type">optional</span>
-    </h4>
-    <p class="method-list-item-description">Environment variables passed to the
-    container running your task.</p>
-
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -434,7 +412,6 @@ These overwrite and are appended to the app&rsquo;s running environment variable
   "command": "rake db:migrate",
   "state": "RUNNING",
   "memory_in_mb": 512,
-  "environment_variables": {},
   "result": {
     "failure_reason": null
   },
@@ -456,8 +433,8 @@ These overwrite and are appended to the app&rsquo;s running environment variable
 
 </code></pre>
 
-<p>This endpoint retrieves a specific task. The <code>command</code> and <code>environment_variables</code>
-fields may be excluded in the response based on the user&rsquo;s role.</p>
+<p>This endpoint retrieves a specific task. The <code>command</code> field may be excluded
+in the response based on the user&rsquo;s role.</p>
 
 <h4 id="body-parameters">Body Parameters</h4>
 
@@ -489,7 +466,6 @@ fields may be excluded in the response based on the user&rsquo;s role.</p>
   "command": "rake db:migrate",
   "state": "CANCELING",
   "memory_in_mb": 512,
-  "environment_variables": {},
   "result": {
     "failure_reason": null
   },
@@ -611,8 +587,7 @@ fields may be excluded in the response based on the user&rsquo;s role.</p>
 
 </code></pre>
 
-<p>This endpoint retrieves the tasks the user has access to. The <code>command</code> and <code>environment_variables</code>
-fields are excluded in the response.</p>
+<p>This endpoint retrieves the tasks the user has access to. The <code>command</code> field is excluded in the response.</p>
 
 <h4 id="query-parameters">Query Parameters</h4>
 
@@ -755,7 +730,6 @@ fields are excluded in the response.</p>
   "command": "rake db:migrate",
   "state": "CANCELING",
   "memory_in_mb": 512,
-  "environment_variables": {},
   "result": {
     "failure_reason": null
   },
@@ -877,8 +851,8 @@ fields are excluded in the response.</p>
 
 </code></pre>
 
-<p>This endpoint retrieves the tasks the user has access to. The <code>command</code> and <code>environment_variables</code>
-fields may be excluded in the response based on the user&rsquo;s role.</p>
+<p>This endpoint retrieves the tasks the user has access to. The <code>command</code> field may be
+excluded in the response based on the user&rsquo;s role.</p>
 
 <h4 id="query-parameters">Query Parameters</h4>
 
