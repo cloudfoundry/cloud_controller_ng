@@ -754,3 +754,7 @@ properties:
   cc.rate_limiter.default_limit:
     description: "The number of requests a user or client is allowed to make for all endpoints that do not have a custom limit over the configured interval"
     default: 2000
+
+  cc.rate_limiter.reset_interval_in_minutes:
+    description: "The interval in minutes, after which, a user's available api requests will be reset"
+    default: 60

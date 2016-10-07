@@ -218,3 +218,4 @@ allowed_cors_domains:
 
 rate_limiter:
   default_limit: 2000
+  reset_interval_in_minutes: 60

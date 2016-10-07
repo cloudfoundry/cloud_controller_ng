@@ -37,11 +37,11 @@ module VCAP::CloudController
 
         context 'when configuring a limit' do
           before do
-            builder.build(TestConfig.override(rate_limiter: { default_limit: 123 }), request_metrics).to_app
+            builder.build(TestConfig.override(rate_limiter: { reset_interval_in_minutes: 60, default_limit: 123 }), request_metrics).to_app
           end
 
           it 'enables the RateLimiter middleware' do
-            expect(CloudFoundry::Middleware::RateLimiter).to have_received(:new).with(anything, 123)
+            expect(CloudFoundry::Middleware::RateLimiter).to have_received(:new).with(anything, 123, 60)
           end
         end
 
