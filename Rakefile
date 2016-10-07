@@ -4,10 +4,15 @@ require 'yaml'
 require 'sequel'
 require 'steno'
 require 'cloud_controller'
-require 'parallel_tests/tasks'
 require_relative 'lib/tasks/rake_config'
 
 Rails.application.load_tasks
+
+begin
+  require 'parallel_tests/tasks'
+rescue LoadError
+  #this isn't needed in a production environment so the gem will not exist
+end
 
 task default: ['spec:all', :rubocop_autocorrect]
 
