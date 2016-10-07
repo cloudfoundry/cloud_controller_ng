@@ -452,7 +452,6 @@ properties:
     description: "URL of the UAA server"
   uaa.ca_cert:
     description: "The certificate authority being used by UAA"
-    default: ""
   uaa.ssl.port:
     description: "The port used by UAA for ssl connections"
   cc.uaa.internal_url:

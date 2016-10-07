@@ -202,6 +202,9 @@ uaa:
   <% if_p("uaa.cc.token_secret") do |token_secret| %>
   symmetric_secret: "<%= token_secret %>"
   <% end %>
+  <% if_p("uaa.ca_cert") do %>
+  ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/uaa_ca.crt
+  <% end %>
 
 hm9000:
   url: <%= p("hm9000.url", "https://hm9000.#{system_domain}") %>
