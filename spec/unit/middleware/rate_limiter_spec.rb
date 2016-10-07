@@ -69,6 +69,13 @@ module CloudFoundry
           _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
           expect(response_headers['X-RateLimit-Remaining']).to eq('0')
         end
+
+        it 'denies the request' do
+          _, _, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+          status, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+          expect(status).to eq(429)
+          expect(response_headers['Retry-After']).to eq(response_headers['X-RateLimit-Reset'])
+        end
       end
 
       context 'with multiple servers' do

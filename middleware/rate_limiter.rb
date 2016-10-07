@@ -28,6 +28,11 @@ module CloudFoundry
           headers['X-RateLimit-Limit'] = @default_limit.to_s
           headers['X-RateLimit-Reset'] = request_count.valid_until.utc.to_i.to_s
           headers['X-RateLimit-Remaining'] = [0, @default_limit - request_count.count].max.to_s
+
+          if request_count.count > @default_limit
+            headers['Retry-After'] = headers['X-RateLimit-Reset']
+            return [429, headers, ['Rate Limit Exceeded']]
+          end
         end
         [status, headers, body]
       end
