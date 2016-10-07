@@ -16,6 +16,8 @@ rvm:
 
 before_script:
   - bundle exec rake db:create
+  - DB=mysql bundle exec rake parallel:create
+  - DB=postgres bundle exec rake parallel:create
 
 script:
   - bundle exec rake $TASKS
