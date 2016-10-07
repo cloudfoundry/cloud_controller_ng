@@ -4,7 +4,6 @@ require 'yaml'
 require 'sequel'
 require 'steno'
 require 'cloud_controller'
-require 'parallel_tests/tasks'
 require_relative 'lib/tasks/rake_config'
 
 Rails.application.load_tasks

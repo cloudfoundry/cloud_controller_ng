@@ -84,7 +84,7 @@ namespace :spec do
   end
 
   def run_specs(path)
-    sh "bundle exec parallel_rspec --single spec/integration/ -- #{path}"
+    sh "bundle exec rspec #{path} --require rspec/instafail --format RSpec::Instafail"
   end
 
   def run_docs(path="")
