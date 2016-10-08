@@ -21,7 +21,7 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::VcapRequestId
         use CloudFoundry::Middleware::SecurityContextSetter, configurer
         use CloudFoundry::Middleware::RequestLogs, Steno.logger('cc.api')
-        if HashUtils.dig(config, :rate_limiter, :default_limit)
+        if config[:rate_limiter][:enabled]
           use CloudFoundry::Middleware::RateLimiter, config[:rate_limiter][:default_limit], config[:rate_limiter][:reset_interval_in_minutes]
         end
 

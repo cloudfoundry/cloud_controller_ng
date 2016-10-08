@@ -410,5 +410,6 @@ bits_service:
   <% end %>
 
 rate_limiter:
+  enabled: <%= p("cc.rate_limiter.enabled") %>
   default_limit: <%= p("cc.rate_limiter.default_limit") %>
   reset_interval_in_minutes: <%= p("cc.rate_limiter.reset_interval_in_minutes") %>

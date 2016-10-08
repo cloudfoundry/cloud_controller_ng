@@ -262,5 +262,6 @@ placement_top_stager_percentage: 10
 system_hostnames: ["api", "uaa", "login", "doppler", "loggregator", "hm9000"]
 
 rate_limiter:
+  enabled: false
   default_limit: 2000
   reset_interval_in_minutes: 60

@@ -217,5 +217,6 @@ allowed_cors_domains:
 - http://borrowedheaven.org
 
 rate_limiter:
+  enabled: false
   default_limit: 2000
   reset_interval_in_minutes: 60
