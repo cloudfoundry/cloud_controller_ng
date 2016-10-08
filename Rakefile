@@ -11,7 +11,7 @@ Rails.application.load_tasks
 begin
   require 'parallel_tests/tasks'
 rescue LoadError
-  #this isn't needed in a production environment so the gem will not exist
+  # this isn't needed in a production environment so the gem will not exist
 end
 
 task default: ['spec:all', :rubocop_autocorrect]
