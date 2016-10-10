@@ -29,7 +29,7 @@ module CloudFoundry
           headers['X-RateLimit-Reset'] = request_count.valid_until.utc.to_i.to_s
           headers['X-RateLimit-Remaining'] = [0, @general_limit - request_count.count].max.to_s
 
-          if request_count.count > @general_limit
+          if request_count.count > @general_limit && !VCAP::CloudController::SecurityContext.admin? && !VCAP::CloudController::SecurityContext.admin_read_only?
             headers['Retry-After'] = headers['X-RateLimit-Reset']
             return [429, headers, ['Rate Limit Exceeded']]
           end

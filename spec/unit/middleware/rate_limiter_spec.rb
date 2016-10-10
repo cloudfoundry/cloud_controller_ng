@@ -60,6 +60,21 @@ module CloudFoundry
         expect(response_headers['X-RateLimit-Remaining']).to be_nil
       end
 
+      context 'when user has admin or admin_read_only scopes' do
+        let(:general_limit) { 1 }
+
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:admin_read_only?).and_return(true)
+        end
+        it 'does not rate limit' do
+          _, _, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+          _, _, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+          status, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+          expect(response_headers['X-RateLimit-Remaining']).to eq('0')
+          expect(status).to eq(200)
+        end
+      end
+
       context 'when reaching zero' do
         let(:general_limit) { 1 }
 
