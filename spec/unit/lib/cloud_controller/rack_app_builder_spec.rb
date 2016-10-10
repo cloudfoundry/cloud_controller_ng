@@ -37,7 +37,7 @@ module VCAP::CloudController
 
         context 'when configuring a limit' do
           before do
-            builder.build(TestConfig.override(rate_limiter: { reset_interval_in_minutes: 60, default_limit: 123, enabled: true }), request_metrics).to_app
+            builder.build(TestConfig.override(rate_limiter: { reset_interval_in_minutes: 60, general_limit: 123, enabled: true }), request_metrics).to_app
           end
 
           it 'enables the RateLimiter middleware' do
@@ -47,7 +47,7 @@ module VCAP::CloudController
 
         context 'when not configuring a limit' do
           before do
-            builder.build(TestConfig.override(rate_limiter: { enabled: false, default_limit: 100 }), request_metrics).to_app
+            builder.build(TestConfig.override(rate_limiter: { enabled: false, general_limit: 100 }), request_metrics).to_app
           end
 
           it 'does not enable the RateLimiter middleware' do

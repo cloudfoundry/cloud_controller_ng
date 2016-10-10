@@ -277,7 +277,7 @@ module VCAP::CloudController
 
         optional(:rate_limiter) => {
           enabled: bool,
-          optional(:default_limit) => Integer,
+          optional(:general_limit) => Integer,
           optional(:reset_interval_in_minutes) => Integer,
         },
       }
@@ -403,7 +403,7 @@ module VCAP::CloudController
         config[:minimum_candidate_stagers] = (config[:minimum_candidate_stagers] && config[:minimum_candidate_stagers] > 0) ? config[:minimum_candidate_stagers] : 5
         config[:bits_service] ||= { enabled: false }
         config[:rate_limiter] ||= { enabled: false }
-        config[:rate_limiter][:default_limit] ||= 2000
+        config[:rate_limiter][:general_limit] ||= 2000
         config[:rate_limiter][:reset_interval_in_minutes] ||= 60
 
         unless config.key?(:users_can_select_backend)

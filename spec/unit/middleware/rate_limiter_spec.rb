@@ -4,10 +4,10 @@ require 'request_logs'
 module CloudFoundry
   module Middleware
     RSpec.describe RateLimiter do
-      let(:middleware) { RateLimiter.new(app, default_limit, interval) }
+      let(:middleware) { RateLimiter.new(app, general_limit, interval) }
 
       let(:app) { double(:app, call: [200, {}, 'a body']) }
-      let(:default_limit) { 100 }
+      let(:general_limit) { 100 }
       let(:interval) { 60 }
 
       it 'adds a "X-RateLimit-Limit" header' do
@@ -61,7 +61,7 @@ module CloudFoundry
       end
 
       context 'when reaching zero' do
-        let(:default_limit) { 1 }
+        let(:general_limit) { 1 }
 
         it 'does not go lower than zero' do
           _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
@@ -79,7 +79,7 @@ module CloudFoundry
       end
 
       context 'with multiple servers' do
-        let(:other_middleware) { RateLimiter.new(app, default_limit, interval) }
+        let(:other_middleware) { RateLimiter.new(app, general_limit, interval) }
 
         it 'shares request count between servers' do
           _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })

@@ -1,9 +1,9 @@
 module CloudFoundry
   module Middleware
     class RateLimiter
-      def initialize(app, default_limit, interval)
+      def initialize(app, general_limit, interval)
         @app = app
-        @default_limit = default_limit
+        @general_limit = general_limit
         @interval = interval
       end
 
@@ -25,11 +25,11 @@ module CloudFoundry
             request_count.save
           end
 
-          headers['X-RateLimit-Limit'] = @default_limit.to_s
+          headers['X-RateLimit-Limit'] = @general_limit.to_s
           headers['X-RateLimit-Reset'] = request_count.valid_until.utc.to_i.to_s
-          headers['X-RateLimit-Remaining'] = [0, @default_limit - request_count.count].max.to_s
+          headers['X-RateLimit-Remaining'] = [0, @general_limit - request_count.count].max.to_s
 
-          if request_count.count > @default_limit
+          if request_count.count > @general_limit
             headers['Retry-After'] = headers['X-RateLimit-Reset']
             return [429, headers, ['Rate Limit Exceeded']]
           end
