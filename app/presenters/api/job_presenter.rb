@@ -38,11 +38,7 @@ class JobPresenter < ApiPresenter
   end
 
   def error_details
-    if job_has_exception?
-      YAML.load(@object.cf_api_error)
-    else
-      ErrorHasher::UNKNOWN_ERROR_HASH
-    end
+    YAML.load(@object.cf_api_error)
   end
 
   def job_exception_or_nil
