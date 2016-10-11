@@ -1,7 +1,7 @@
 require 'spec_helper'
 
-RSpec.describe ErrorHasher do
-  subject(:error_hasher) { ErrorHasher.new(error) }
+RSpec.describe V2ErrorHasher do
+  subject(:error_hasher) { V2ErrorHasher.new(error) }
 
   let(:unknown_error) do
     error = RuntimeError.new('fake message')
@@ -26,50 +26,6 @@ RSpec.describe ErrorHasher do
     error.set_backtrace('fake backtrace')
     allow(error).to receive(:to_h).and_return('arbritratry key' => 'arbritratry value', 'code' => 67890, 'source' => 'fake source')
     error
-  end
-
-  describe 'UNKNOWN_ERROR_HASH' do
-    it 'should be a minimal error hash' do
-      expect(ErrorHasher::UNKNOWN_ERROR_HASH).to have_key('code')
-      expect(ErrorHasher::UNKNOWN_ERROR_HASH).to have_key('description')
-      expect(ErrorHasher::UNKNOWN_ERROR_HASH).to have_key('error_code')
-    end
-  end
-
-  describe '#services_error?' do
-    subject { error_hasher.services_error? }
-    context 'for a StructuredError' do
-      let(:error) { services_error }
-      it { is_expected.to be true }
-    end
-
-    context 'for an ApiError' do
-      let(:error) { api_error }
-      it { is_expected.to be false }
-    end
-
-    context 'for an UnknownError' do
-      let(:error) { unknown_error }
-      it { is_expected.to be false }
-    end
-  end
-
-  describe '#api_error?' do
-    subject { error_hasher.api_error? }
-    context 'for a StructuredError' do
-      let(:error) { services_error }
-      it { is_expected.to be false }
-    end
-
-    context 'for an ApiError' do
-      let(:error) { api_error }
-      it { is_expected.to be true }
-    end
-
-    context 'for an UnknownError' do
-      let(:error) { unknown_error }
-      it { is_expected.to be false }
-    end
   end
 
   describe '#unsanitized_hash' do
@@ -163,14 +119,28 @@ RSpec.describe ErrorHasher do
     end
 
     context 'with an ApiError' do
-      let(:error) { api_error }
+      context 'when the error is a Errors::ApiError' do
+        let(:error) { api_error }
 
-      it 'uses a standard convention by default' do
-        expect(sanitized_hash).to eq({
-          'code' => 130001,
-          'description' => 'The domain is invalid: notadomain',
-          'error_code' => 'CF-DomainInvalid'
-        })
+        it 'uses a standard convention by default' do
+          expect(sanitized_hash).to eq({
+            'code' => 130001,
+            'description' => 'The domain is invalid: notadomain',
+            'error_code' => 'CF-DomainInvalid'
+          })
+        end
+      end
+
+      context 'when the error acts like an api error' do
+        let(:error) { CloudController::Errors::NotAuthenticated.new }
+
+        it 'uses a standard convention by default' do
+          expect(sanitized_hash).to eq({
+            'code' => 10002,
+            'description' => 'Authentication error',
+            'error_code' => 'CF-NotAuthenticated'
+          })
+        end
       end
     end
 

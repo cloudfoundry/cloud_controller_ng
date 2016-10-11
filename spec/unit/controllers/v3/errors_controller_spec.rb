@@ -7,7 +7,7 @@ RSpec.describe ErrorsController, type: :controller do
       get :not_found
 
       expect(response.status).to eq(404)
-      expect(response.body).to include('CF-NotFound')
+      expect(parsed_body['errors'].first['title']).to eq('CF-NotFound')
     end
   end
 
@@ -20,7 +20,7 @@ RSpec.describe ErrorsController, type: :controller do
       get :internal_error
 
       expect(response.status).to eq(500)
-      expect(response.body).to include('sad things')
+      expect(parsed_body['errors'].first['detail']).to eq('sad things')
     end
   end
 
@@ -29,7 +29,7 @@ RSpec.describe ErrorsController, type: :controller do
       get :bad_request
 
       expect(response.status).to eq(400)
-      expect(response.body).to include('CF-InvalidRequest')
+      expect(parsed_body['errors'].first['title']).to eq('CF-InvalidRequest')
     end
 
     context 'when the json is invalid' do
@@ -41,7 +41,7 @@ RSpec.describe ErrorsController, type: :controller do
         get :bad_request
 
         expect(response.status).to eq(400)
-        expect(response.body).to include('invalid request body')
+        expect(parsed_body['errors'].first['detail']).to eq('Request invalid due to parse error: invalid request body')
       end
     end
   end

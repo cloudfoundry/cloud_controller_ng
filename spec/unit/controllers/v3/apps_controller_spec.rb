@@ -916,7 +916,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           put :start, guid: app_model.guid
 
           response_body = parsed_body
-          expect(response_body['error_code']).to eq 'CF-NotAuthorized'
+          expect(response_body['errors'].first['title']).to eq 'CF-NotAuthorized'
           expect(response.status).to eq 403
         end
       end
@@ -930,7 +930,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           put :start, guid: app_model.guid
 
           response_body = parsed_body
-          expect(response_body['error_code']).to eq 'CF-ResourceNotFound'
+          expect(response_body['errors'].first['title']).to eq 'CF-ResourceNotFound'
           expect(response.status).to eq 404
         end
       end
@@ -944,7 +944,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           put :start, guid: app_model.guid
 
           response_body = parsed_body
-          expect(response_body['error_code']).to eq 'CF-NotAuthorized'
+          expect(response_body['errors'].first['title']).to eq 'CF-NotAuthorized'
           expect(response.status).to eq 403
         end
       end
@@ -959,7 +959,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         put :start, guid: app_model.guid
 
         response_body = parsed_body
-        expect(response_body['error_code']).to eq 'CF-ResourceNotFound'
+        expect(response_body['errors'].first['title']).to eq 'CF-ResourceNotFound'
         expect(response.status).to eq 404
       end
     end
@@ -969,7 +969,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         put :start, guid: 'meowmeowmeow'
 
         response_body = parsed_body
-        expect(response_body['error_code']).to eq 'CF-ResourceNotFound'
+        expect(response_body['errors'].first['title']).to eq 'CF-ResourceNotFound'
         expect(response.status).to eq 404
       end
     end
@@ -985,7 +985,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         put :start, guid: app_model.guid
 
         response_body = parsed_body
-        expect(response_body['error_code']).to eq 'CF-UnprocessableEntity'
+        expect(response_body['errors'].first['title']).to eq 'CF-UnprocessableEntity'
         expect(response.status).to eq 422
       end
     end

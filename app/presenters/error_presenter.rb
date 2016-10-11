@@ -1,7 +1,7 @@
-require 'presenters/error_hasher'
+require 'presenters/v2_error_hasher'
 
 class ErrorPresenter
-  def initialize(error, test_mode=false, error_hasher=ErrorHasher.new(error))
+  def initialize(error, test_mode=false, error_hasher=V2ErrorHasher.new(error))
     @error        = error
     @error_hasher = error_hasher
     @test_mode    = test_mode

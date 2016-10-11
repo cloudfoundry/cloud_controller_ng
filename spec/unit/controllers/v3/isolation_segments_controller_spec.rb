@@ -345,8 +345,8 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           delete :destroy, guid: isolation_segment_model1.guid
 
           expect(response.status).to eq 400
-          expect(parsed_body['error_code']).to eq('CF-AssociationNotEmpty')
-          expect(parsed_body['description']).to eq('Please delete the space associations for your isolation segment.')
+          expect(parsed_body['errors'].first['title']).to eq('CF-AssociationNotEmpty')
+          expect(parsed_body['errors'].first['detail']).to eq('Please delete the space associations for your isolation segment.')
         end
       end
     end

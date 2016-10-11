@@ -138,13 +138,13 @@ class ApplicationController < ActionController::Base
   end
 
   def handle_not_authenticated(error)
-    presenter = ErrorPresenter.new(error, Rails.env.test?)
+    presenter = ErrorPresenter.new(error, Rails.env.test?, V3ErrorHasher.new(error))
     logger.info(presenter.log_message)
     render status: presenter.response_code, json: presenter
   end
 
   def handle_api_error(error)
-    presenter = ErrorPresenter.new(error, Rails.env.test?)
+    presenter = ErrorPresenter.new(error, Rails.env.test?, V3ErrorHasher.new(error))
     logger.info(presenter.log_message)
     render status: presenter.response_code, json: presenter
   end
