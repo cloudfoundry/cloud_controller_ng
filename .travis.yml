@@ -13,6 +13,14 @@ cache: bundler
 # instead of using the .ruby-version file
 rvm:
   - 2.3.1
+addons:
+  apt:
+    packages:
+      - golang-1.6
+before_install:
+  - export GOPATH=~/go
+  - export PATH=$PATH:$GOPATH
+  - go get github.com/nats-io/gnatsd
 
 before_script:
   - bundle exec rake db:create
