@@ -4,7 +4,7 @@ require 'json'
 Sequel.migration do
   up do
     self[:service_bindings].each do |service_binding|
-      next if service_binding[:volume_mounts].empty?
+      next if service_binding[:volume_mounts].nil?
 
       mounts = JSON.parse(VCAP::CloudController::Encryptor.decrypt(service_binding[:volume_mounts], service_binding[:volume_mounts_salt]))
 
