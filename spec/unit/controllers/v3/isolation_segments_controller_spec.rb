@@ -372,7 +372,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(org.isolation_segment_model).to be_nil
         end
 
-        it 'removes all passsed orgs in the request' do
+        it 'removes all passed orgs in the request' do
           req_body[:data] << { guid: org_2.guid }
           post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
           expect(response.status).to eq 204
