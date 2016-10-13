@@ -3,7 +3,9 @@ source 'https://rubygems.org'
 gem 'addressable'
 gem 'railties', '~>4.2.7.1'
 gem 'rake'
-gem 'eventmachine', '~> 1.2.0'
+
+# nats wants to lock us to an older version. we already use eventmachine 1.0.9, so do not want a downgrade.
+gem 'eventmachine', '~> 1.0.9'
 
 # Note: We had to overwrite the Gemfile.lock to use this specific version of fog-google
 # that has not been updated in the fog gem. See https://www.pivotaltracker.com/story/show/128669549 for more info
@@ -26,7 +28,7 @@ gem 'membrane', '~> 1.0'
 gem 'httpclient'
 gem 'steno'
 gem 'cloudfront-signer'
-gem 'vcap_common', '~> 4.0.5'
+gem 'vcap_common', '~> 4.0.4'
 gem 'allowy'
 gem 'loggregator_emitter', '~> 5.0'
 gem 'delayed_job_sequel', git: 'https://github.com/cloudfoundry/delayed_job_sequel.git'
@@ -38,7 +40,11 @@ gem 'activemodel', '~> 4.2.7.1'
 gem 'actionpack', '~> 4.2.7.1'
 gem 'actionview', '~> 4.2.7.1'
 gem 'public_suffix'
-gem 'nats', '~> 0.8.0'
+
+# Requiring this particular commit to get a fix to a race condition when subscribing before a connection is made.
+# (see https://github.com/nats-io/ruby-nats/commit/3f3efc6bc41cc483f2d90cb9d401ba4aa3e727d3)
+# If a release newer than 0.5.1 is made that includes this commit, we may wish to switch to that.
+gem 'nats', git: 'https://github.com/nats-io/ruby-nats', ref: '8571cf9d685b6063002486614b66a28bad254a64'
 
 # We need to use https for git urls as the git protocol is blocked by various
 # firewalls
