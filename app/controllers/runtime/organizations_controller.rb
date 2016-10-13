@@ -62,7 +62,7 @@ module VCAP::CloudController
 
       @user_roles_collection_renderer.render_json(
         associated_controller,
-        OrganizationUserRolesFetcher.new.fetch(org),
+        OrganizationUserRolesFetcher.fetch(org, user_guid: user_guid_parameter),
         associated_path,
         opts,
         {},
@@ -218,6 +218,10 @@ module VCAP::CloudController
     define_routes
 
     private
+
+    def user_guid_parameter
+      @opts[:q][0].split(":")[1] if @opts[:q]
+    end
 
     def after_create(organization)
       return if SecurityContext.admin?
