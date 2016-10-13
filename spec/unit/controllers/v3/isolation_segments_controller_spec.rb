@@ -301,6 +301,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         it 'returns a 404' do
           post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
           expect(response.status).to eq 404
+          expect(response.body).to match(/Organization guids: \[\\\"bogus-guid\\\"\] cannot be found/)
         end
       end
 
@@ -438,6 +439,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
             req_body[:data] << { guid: org.guid }
             post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
             expect(response.status).to eq 404
+            expect(response.body).to match(/Organization guids: \[\\\"bad-guid\\\"\] cannot be found/)
 
             isolation_segment_model.reload
             org.reload
