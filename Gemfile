@@ -49,7 +49,7 @@ gem 'bits_service_client', github: 'cloudfoundry-incubator/bits-service-client'
 
 group :db do
   gem 'mysql2', '0.4.4'
-  gem 'pg', '0.16.0'
+  gem 'pg', '0.19.0'
 end
 
 group :operations do
