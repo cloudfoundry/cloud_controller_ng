@@ -97,6 +97,44 @@ module VCAP::CloudController
                   expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
                   expect(droplet.error).to match(/StagingError/)
                 end
+
+                context 'when a start is requested' do
+                  context 'and the app has a start command' do
+                    let(:runner) { instance_double(Diego::Runner, start: nil) }
+                    let!(:web_process) { App.make(app: app, type: 'web', command: 'start me', state: 'STARTED', metadata: {}) }
+
+                    before do
+                      success_response[:result][:execution_metadata] = 'black-box-string'
+                      allow(runners).to receive(:runner_for_app).and_return(runner)
+                    end
+
+                    it 'updates the droplet with the metadata' do
+                      subject.staging_complete(success_response, true)
+                      droplet.reload
+
+                      expect(droplet.process_types).to eq({})
+                      expect(droplet.execution_metadata).to eq('black-box-string')
+                      expect(droplet.buildpack_receipt_buildpack).to eq('lifecycle-bp')
+                      expect(droplet.buildpack_receipt_buildpack_guid).to eq(buildpack.guid)
+                      expect(droplet.buildpack_receipt_detect_output).to eq('INTERCAL')
+                    end
+                  end
+
+                  context 'when the app does not have a start command' do
+                    let(:runner) { instance_double(Diego::Runner, start: nil) }
+                    let!(:web_process) { App.make(app: app, type: 'web', state: 'STARTED', metadata: {}) }
+
+                    before do
+                      allow(runners).to receive(:runner_for_app).and_return(runner)
+                    end
+
+                    it 'gracefully sets process_types to an empty hash, and marks the droplet as failed' do
+                      subject.staging_complete(success_response, true)
+                      expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
+                      expect(droplet.error).to match(/StagingError/)
+                    end
+                  end
+                end
               end
 
               describe 'recording buildpack receipt' do

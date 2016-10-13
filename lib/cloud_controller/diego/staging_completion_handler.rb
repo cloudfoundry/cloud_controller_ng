@@ -77,8 +77,14 @@ module VCAP::CloudController
 
         raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') if droplet.in_final_state?
 
-        if payload[:result][:process_types].blank?
+        app = droplet.app
+        requires_procfile = with_start && payload[:result][:process_types].blank? && app.processes.first.command.blank?
+
+        if payload[:result][:process_types].blank? && !with_start
           payload[:error] = { message: 'No process types returned from stager', id: DEFAULT_STAGING_ERROR }
+          handle_failure(payload, with_start)
+        elsif requires_procfile
+          payload[:error] = { message: 'No process types returned from stager and user did not provide start command', id: DEFAULT_STAGING_ERROR }
           handle_failure(payload, with_start)
         else
           begin
@@ -88,7 +94,7 @@ module VCAP::CloudController
             logger.error(logger_prefix + 'saving-staging-result-failed', staging_guid: droplet.guid, response: payload, error: e.message)
           end
 
-          BitsExpiration.new.expire_droplets!(droplet.app)
+          BitsExpiration.new.expire_droplets!(app)
         end
       end
 
