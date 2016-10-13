@@ -53,7 +53,7 @@ module VCAP::CloudController
       context 'when the value is in the configuration' do
         let(:expected_limit) { 99 }
         before do
-          VCAP::CloudController::Config.config[:minimum_staging_disk_mb] = expected_limit
+          VCAP::CloudController::Config.config[:staging][:minimum_staging_disk_mb] = expected_limit
         end
 
         it 'returns the configured value' do
@@ -63,7 +63,7 @@ module VCAP::CloudController
 
       context 'when there is no configured value' do
         before do
-          VCAP::CloudController::Config.config[:minimum_staging_disk_mb] = nil
+          VCAP::CloudController::Config.config[:staging][:minimum_staging_disk_mb] = nil
         end
 
         it 'returns 4096' do
