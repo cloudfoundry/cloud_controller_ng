@@ -76,7 +76,7 @@ module VCAP::CloudController
           let(:params) do
             {
               data: [
-                { guid: 32.77 }
+                { 'guid' => 32.77 }
               ]
             }
           end

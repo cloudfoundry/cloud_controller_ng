@@ -15,7 +15,7 @@ module VCAP::CloudController
     validates_each :data do |record, attr, values|
       if values.is_a? Array
         values.each do |value|
-          guid = value[:guid] || value['guid']
+          guid = value['guid']
           record.errors.add attr, "#{guid} not a string" if !guid.is_a? String
         end
       end
