@@ -20,14 +20,14 @@ module CloudController
                      root_dir: nil,
                      min_size: nil,
                      max_size: nil,
-                     encryption: nil)
+                     storage_options: nil)
         @root_dir = root_dir
         @connection_config = connection_config
         @directory_key = directory_key
         @cdn = cdn
         @min_size = min_size || 0
         @max_size = max_size
-        @encryption = encryption
+        @storage_options = storage_options
       end
 
       def local?
@@ -65,9 +65,7 @@ module CloudController
             body: file,
             content_type: mime_type || 'application/zip',
             public: local?
-          }
-
-          options[:encryption] = @encryption if @encryption
+          }.merge(formatted_storage_options)
 
           files.create(options)
 
@@ -86,8 +84,7 @@ module CloudController
         source_file = file(source_key)
         raise FileNotFound if source_file.nil?
 
-        options = @encryption ? { 'x-amz-server-side-encryption' => @encryption } : {}
-        source_file.copy(@directory_key, partitioned_key(destination_key), options)
+        source_file.copy(@directory_key, partitioned_key(destination_key), formatted_storage_options)
 
         if local?
           dest_file = file(destination_key)
@@ -123,6 +120,15 @@ module CloudController
       end
 
       private
+
+      def formatted_storage_options
+        return {} unless @storage_options && @storage_options[:encryption]
+
+        opts = @storage_options.dup
+        encrypt_opt = opts.delete(:encryption)
+        opts['x-amz-server-side-encryption'] = encrypt_opt
+        opts
+      end
 
       def files
         dir.files

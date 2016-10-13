@@ -46,7 +46,7 @@ module CloudController
                                                           root_dir: anything,
                                                           min_size: anything,
                                                           max_size: anything,
-                                                          encryption: 'my organic algo')
+                                                          storage_options: { encryption: 'my organic algo' })
           end
         end
 
@@ -64,7 +64,7 @@ module CloudController
                                                           root_dir: anything,
                                                           min_size: anything,
                                                           max_size: anything,
-                                                          encryption: anything)
+                                                          storage_options: anything)
           end
         end
 

@@ -331,7 +331,7 @@ module CloudController
             context 'when encryption type is specified' do
               let(:client_with_encryption) { described_class.new(connection_config: connection_config,
                                                                  directory_key: directory_key,
-                                                                 encryption: 'my-algo')
+                                                                 storage_options: { encryption: 'my-algo' })
               }
 
               it 'passes the encryption options to aws' do
@@ -344,7 +344,7 @@ module CloudController
                                                              body: anything,
                                                              content_type: anything,
                                                              public: anything,
-                                                             encryption: 'my-algo')
+                                                             'x-amz-server-side-encryption' => 'my-algo')
               end
             end
 
@@ -353,7 +353,7 @@ module CloudController
                                                                  directory_key: directory_key)
               }
 
-              it 'passes the encryption options to aws' do
+              it 'does not pass the encryption options to aws' do
                 path = File.join(local_dir, 'empty_file.png')
                 FileUtils.touch(path)
 
@@ -433,7 +433,7 @@ module CloudController
             let(:client) do
               described_class.new(connection_config: connection_config,
                                   directory_key: directory_key,
-                                  encryption: encryption)
+                                  storage_options: { encryption: encryption, other: 'thing' })
             end
             let(:dest_file) { double(:file, copy: true, save: true, nil?: false) }
             let(:src_file) { double(:file, copy: true, nil?: false) }
@@ -446,7 +446,7 @@ module CloudController
             context 'when encryption type is specified' do
               it 'passes the encryption options to aws' do
                 client.cp_file_between_keys(src_key, dest_key)
-                options = { 'x-amz-server-side-encryption' => 'my-algo' }
+                options = { 'x-amz-server-side-encryption' => 'my-algo', other: 'thing' }
                 expect(src_file).to have_received(:copy).with('a-directory-key', 'xy/z7/xyz789', options)
               end
             end
@@ -454,7 +454,7 @@ module CloudController
             context 'when encryption type is not specified' do
               let(:encryption) { nil }
 
-              it 'passes the encryption options to aws' do
+              it 'does not pass the encryption options to aws' do
                 client.cp_file_between_keys(src_key, dest_key)
                 expect(src_file).to have_received(:copy).with('a-directory-key', 'xy/z7/xyz789', {})
               end
