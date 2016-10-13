@@ -29,11 +29,7 @@ class IsolationSegmentsController < ApplicationController
 
   def show
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
-    resource_not_found!(:isolation_segment) unless isolation_segment_model && (
-      roles.admin? ||
-      isolation_segment_model.spaces.any? { |space| can_read?(space.guid, space.organization.guid) } ||
-      isolation_segment_model.organizations.any? { |org| can_read_from_org?(org.guid) }
-    )
+    resource_not_found!(:isolation_segment) unless isolation_segment_model && can_read_isolation_segment?(isolation_segment_model)
 
     render status: :ok, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
   end
@@ -98,10 +94,7 @@ class IsolationSegmentsController < ApplicationController
 
   def relationships_orgs
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
-    resource_not_found!(:isolation_segment) unless isolation_segment_model && (
-      roles.admin? ||
-      isolation_segment_model.organizations.any? { |org| can_read_from_org?(org.guid) }
-    )
+    resource_not_found!(:isolation_segment) unless isolation_segment_model && can_list_organizations?(isolation_segment_model)
 
     fetcher = IsolationSegmentOrganizationsFetcher.new(isolation_segment_model)
     organizations = if roles.admin? || roles.admin_read_only?
@@ -115,11 +108,7 @@ class IsolationSegmentsController < ApplicationController
 
   def relationships_spaces
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
-    resource_not_found!(:isolation_segment) unless isolation_segment_model && (
-      roles.admin? ||
-      isolation_segment_model.spaces.any? { |space| can_read?(space.guid, space.organization.guid) } ||
-      isolation_segment_model.organizations.any? { |org| can_read_from_org?(org.guid) }
-    )
+    resource_not_found!(:isolation_segment) unless isolation_segment_model && can_read_isolation_segment?(isolation_segment_model)
 
     fetcher = IsolationSegmentSpacesFetcher.new(isolation_segment_model)
     spaces = if roles.admin? || roles.admin_read_only?
@@ -172,5 +161,15 @@ class IsolationSegmentsController < ApplicationController
     resources_not_found!("Organization guids: #{message.guids - organizations.map(&:guid)} cannot be found") unless organizations.length == message.guids.length
 
     [isolation_segment_model, organizations]
+  end
+
+  def can_read_isolation_segment?(isolation_segment)
+    roles.admin? ||
+      isolation_segment.spaces.any? { |space| can_read?(space.guid, space.organization.guid) } ||
+      isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
+  end
+
+  def can_list_organizations?(isolation_segment)
+    roles.admin? || isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
   end
 end
