@@ -49,7 +49,7 @@ module VCAP::CloudController
         begin
           droplet.class.db.transaction do
             droplet.lock!
-            droplet.fail_to_stage!(payload[:error][:id])
+            droplet.fail_to_stage!(payload[:error][:id], payload[:error][:message])
 
             if with_start
               V2::AppStop.stop(droplet.app, stagers)
@@ -78,13 +78,13 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') if droplet.in_final_state?
 
         app = droplet.app
-        requires_procfile = with_start && payload[:result][:process_types].blank? && app.processes.first.command.blank?
+        requires_start_command = with_start && payload[:result][:process_types].blank? && app.processes.first.command.blank?
 
         if payload[:result][:process_types].blank? && !with_start
           payload[:error] = { message: 'No process types returned from stager', id: DEFAULT_STAGING_ERROR }
           handle_failure(payload, with_start)
-        elsif requires_procfile
-          payload[:error] = { message: 'No process types returned from stager and user did not provide start command', id: DEFAULT_STAGING_ERROR }
+        elsif requires_start_command
+          payload[:error] = { message: 'Start command not specified', id: DEFAULT_STAGING_ERROR }
           handle_failure(payload, with_start)
         else
           begin

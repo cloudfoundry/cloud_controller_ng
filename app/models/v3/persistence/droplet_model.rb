@@ -115,12 +115,12 @@ module VCAP::CloudController
       self.state = STAGED_STATE
     end
 
-    def fail_to_stage!(reason='StagingError')
+    def fail_to_stage!(reason='StagingError', details='staging failed')
       reason = 'StagingError' unless STAGING_FAILED_REASONS.include?(reason)
 
       self.state             = FAILED_STATE
       self.error_id          = reason
-      self.error_description = CloudController::Errors::ApiError.new_from_details(reason, 'staging failed').message
+      self.error_description = CloudController::Errors::ApiError.new_from_details(reason, details).message
       save_changes(raise_on_save_failure: true)
     end
 
