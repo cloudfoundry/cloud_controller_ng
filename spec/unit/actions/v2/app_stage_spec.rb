@@ -75,6 +75,58 @@ module VCAP::CloudController
 
           expect(droplet_create).not_to have_received(:create_and_stage_without_event)
         end
+
+        describe 'handling DropletCreate errors' do
+          let(:process) { AppFactory.make }
+
+          context 'when DropletError error is raised' do
+            before do
+              allow(droplet_create).to receive(:create_and_stage_without_event).and_raise(DropletCreate::DropletError.new('some error'))
+            end
+
+            it 'translates it to an ApiError' do
+              expect { action.stage(process) }.to raise_error(CloudController::Errors::ApiError, /some error/) do |err|
+                expect(err.details.name).to eq('AppInvalid')
+              end
+            end
+          end
+
+          context 'when SpaceQuotaExceeded error is raised' do
+            before do
+              allow(droplet_create).to receive(:create_and_stage_without_event).and_raise(DropletCreate::SpaceQuotaExceeded.new)
+            end
+
+            it 'translates it to an ApiError' do
+              expect { action.stage(process) }.to raise_error(CloudController::Errors::ApiError) do |err|
+                expect(err.details.name).to eq('SpaceQuotaMemoryLimitExceeded')
+              end
+            end
+          end
+
+          context 'when OrgQuotaExceeded error is raised' do
+            before do
+              allow(droplet_create).to receive(:create_and_stage_without_event).and_raise(DropletCreate::OrgQuotaExceeded.new)
+            end
+
+            it 'translates it to an ApiError' do
+              expect { action.stage(process) }.to raise_error(CloudController::Errors::ApiError) do |err|
+                expect(err.details.name).to eq('AppMemoryQuotaExceeded')
+              end
+            end
+          end
+
+          context 'when DiskLimitExceeded error is raised' do
+            before do
+              allow(droplet_create).to receive(:create_and_stage_without_event).and_raise(DropletCreate::DiskLimitExceeded.new)
+            end
+
+            it 'translates it to an ApiError' do
+              expect { action.stage(process) }.to raise_error(CloudController::Errors::ApiError, /too much disk requested/) do |err|
+                expect(err.details.name).to eq('AppInvalid')
+              end
+            end
+          end
+        end
       end
     end
   end

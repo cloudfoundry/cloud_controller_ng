@@ -7,14 +7,11 @@ require 'repositories/droplet_event_repository'
 
 module VCAP::CloudController
   class DropletCreate
-    class InvalidPackage < StandardError
-    end
-    class SpaceQuotaExceeded < StandardError
-    end
-    class OrgQuotaExceeded < StandardError
-    end
-    class DiskLimitExceeded < StandardError
-    end
+    class DropletError < StandardError; end
+    class InvalidPackage < DropletError; end
+    class SpaceQuotaExceeded < DropletError; end
+    class OrgQuotaExceeded < DropletError; end
+    class DiskLimitExceeded < DropletError; end
 
     attr_reader :staging_response
 
