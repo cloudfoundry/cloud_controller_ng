@@ -5,7 +5,7 @@ module IntegrationSetup
   SLEEP_INTERVAL = 0.5
   def start_nats(opts={})
     port = opts.delete(:port) || 4222
-    @nats_pid = run_cmd("nats-server -V -D -p #{port}", opts)
+    @nats_pid = run_cmd("gnatsd -V -D -p #{port}", opts)
     wait_for_nats_to_start(port)
   end
 
