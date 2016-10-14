@@ -199,8 +199,9 @@ module VCAP::CloudController
     end
 
     def unset_default_isolation_segment(isolation_segment)
-      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'Space', 'Isolation Segment') unless
-      !isolation_segment_associated_with_space?(isolation_segment)
+      if isolation_segment_associated_with_space?(isolation_segment)
+        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'Space', 'Isolation Segment')
+      end
 
       if isolation_segment_models.length > 1 && isolation_segment_model == isolation_segment
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform',

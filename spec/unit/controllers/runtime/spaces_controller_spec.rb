@@ -1504,11 +1504,6 @@ module VCAP::CloudController
             organization.add_manager(user)
           end
 
-          # it 'fails with a 403' do
-          #   delete "/v2/spaces/#{space.guid}/isolation_segment"
-          #   expect(last_response.status).to eq 403
-          # end
-
           it 'successfully removes the isolation segment' do
             delete "/v2/spaces/#{space.guid}/isolation_segment"
             expect(last_response.status).to eq 200
@@ -1576,14 +1571,6 @@ module VCAP::CloudController
           before do
             organization.add_manager(user)
           end
-
-          # it 'fails with a 403' do
-          #   delete "/v2/spaces/#{space.guid}/isolation_segment"
-          #   expect(last_response.status).to eq 403
-
-          #   space.reload
-          #   expect(space.isolation_segment_model).to eq(isolation_segment_model)
-          # end
 
           it 'successfully removes the isolation segment' do
             delete "/v2/spaces/#{space.guid}/isolation_segment"

@@ -70,7 +70,6 @@ Rails.application.routes.draw do
   delete '/isolation_segments/:guid/relationships/organizations', to: 'isolation_segments#unassign_allowed_organizations'
 
   get '/isolation_segments/:guid/relationships/organizations', to: 'isolation_segments#relationships_orgs'
-  # To build these relationships. OrgManagers/Admins set the isolation segment on Spaces
   get '/isolation_segments/:guid/relationships/spaces', to: 'isolation_segments#relationships_spaces'
 
   # service_bindings

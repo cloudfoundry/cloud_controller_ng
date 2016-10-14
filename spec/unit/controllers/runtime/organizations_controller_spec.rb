@@ -331,7 +331,7 @@ module VCAP::CloudController
             expect(org.managers.count).to eq(0)
           end
 
-          it 'does not allow creation with a default isolation segment set' do
+          it 'does not set the default isolation segment on creation' do
             isolation_segment = IsolationSegmentModel.make
 
             post '/v2/organizations', MultiJson.dump({
