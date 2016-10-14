@@ -185,7 +185,7 @@ module VCAP::CloudController
       billing_enabled
     end
 
-    def default_isolation_segment(isolation_segment)
+    def default_isolation_segment=(isolation_segment)
       if isolation_segment_models.length == 1
         self.lock!
         self.update(isolation_segment_model: isolation_segment)
