@@ -132,10 +132,10 @@ end
 
     case ENV["DB"]
       when "postgres"
-        sh "#{passenv} psql #{host} #{port} #{user} -c 'create database #{db_config.name};'"
-        sh "#{passenv} psql #{host} #{port} #{user} -d #{db_config.name} -c 'CREATE EXTENSION IF NOT EXISTS citext'"
-        sh "#{passenv} psql #{host} #{port} #{user} -d #{db_config.name} -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto'"
-        sh "#{passenv} psql #{host} #{port} #{user} -d #{db_config.name} -c 'CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"'"
+        sh "#{passenv} psql -q #{host} #{port} #{user} -c 'create database #{db_config.name};'"
+        sh "#{passenv} psql -q #{host} #{port} #{user} -d #{db_config.name} -c 'CREATE EXTENSION IF NOT EXISTS citext; CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"; CREATE EXTENSION IF NOT EXISTS pgcrypto;'"
+        # sh %Q(#{passenv} psql -q #{host} #{port} #{user} -d #{db_config.name} -c 'CREATE EXTENSION IF NOT EXISTS citext; CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; CREATE EXTENSION IF NOT EXISTS pgcrypto;')
+        # sh "#{passenv} psql -q #{host} #{port} #{user} -d #{db_config.name} -c '"
       when "mysql"
         if ENV["TRAVIS"] == "true"
           sh "mysql -e 'create database #{db_config.name};' -u root"
@@ -155,7 +155,7 @@ end
 
     case ENV["DB"]
       when "postgres"
-        sh "#{passenv} psql #{host} #{port} #{user} -c 'drop database if exists #{db_config.name};'"
+        sh "#{passenv} psql -q #{host} #{port} #{user} -c 'drop database if exists #{db_config.name};'"
       when "mysql"
         if ENV["TRAVIS"] == "true"
           sh "mysql -e 'drop database if exists #{db_config.name};' -u root"
@@ -168,6 +168,10 @@ end
   end
 
   task recreate: %w[drop create]
+
+  namespace :parallel do
+    task recreate: %w[parallel:drop parallel:create]
+  end
 
   desc "Seed the database"
   task :seed do
