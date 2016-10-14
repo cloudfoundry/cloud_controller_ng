@@ -11,7 +11,7 @@ require 'new_relic_custom_attributes'
 module VCAP::CloudController
   class RackAppBuilder
     def build(config, request_metrics)
-      token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
+      token_decoder = VCAP::UaaTokenDecoder.new(config)
       configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
 
       logger = access_log(config)
