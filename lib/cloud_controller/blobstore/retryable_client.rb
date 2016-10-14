@@ -127,7 +127,7 @@ module CloudController
 
         @logger.debug("#{log_prefix}-retry",
           {
-            error:             e,
+            error:             e.message,
             remaining_retries: retries
           }.merge(log_data)
         )
