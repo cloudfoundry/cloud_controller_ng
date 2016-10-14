@@ -48,23 +48,17 @@ module VCAP
 
     def decode_token_with_asymmetric_key(auth_token)
       tries = 2
-      last_error = nil
-      while tries > 0
+      begin
         tries -= 1
-        asymmetric_key.value.each do |key|
-          begin
-            return decode_token_with_key(auth_token, pkey: key)
-          rescue CF::UAA::InvalidSignature => e
-            last_error = e
-          end
-        end
+        decode_token_with_key(auth_token, pkey: asymmetric_key.value)
+      rescue CF::UAA::InvalidSignature
         asymmetric_key.refresh
+        tries > 0 ? retry : raise
       end
-      raise last_error
     end
 
     def decode_token_with_key(auth_token, options)
-      options = { audience_ids: uaa_config[:resource_id] }.merge(options)
+      options = { audience_ids: config[:resource_id] }.merge(options)
       token = CF::UAA::TokenCoder.new(options).decode_at_reference_time(auth_token, Time.now.utc.to_i - @grace_period_in_seconds)
       expiration_time = token['exp'] || token[:exp]
       if expiration_time && expiration_time < Time.now.utc.to_i
@@ -74,20 +68,12 @@ module VCAP
     end
 
     def symmetric_key
-      uaa_config[:symmetric_secret]
-    end
-
-    def uaa_config
-      config[:uaa]
+      config[:symmetric_secret]
     end
 
     def asymmetric_key
-      ssl_options = {
-        skip_ssl_validation: config[:skip_cert_verify],
-        ssl_ca_file: uaa_config[:ca_file]
-      }
-      info = CF::UAA::Info.new(uaa_config[:internal_url], ssl_options)
-      @asymmetric_key ||= UaaVerificationKeys.new(info)
+      info = CF::UAA::Info.new(config[:url])
+      @asymmetric_key ||= UaaVerificationKey.new(config[:verification_key], info)
     end
   end
 end
