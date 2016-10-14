@@ -168,14 +168,6 @@ module VCAP::CloudController
             end
           end
         end
-
-        context 'when setting the default isolation segment' do
-          it 'must be in the allowed list' do
-          end
-
-          it 'can be updated' do
-          end
-        end
       end
     end
 

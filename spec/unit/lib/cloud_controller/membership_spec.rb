@@ -5,7 +5,6 @@ module VCAP::CloudController
     let(:user) { User.make }
     let!(:space) { Space.make(organization: organization) }
     let(:organization) { Organization.make }
-    let(:organization2) { Organization.make }
 
     let(:membership) { Membership.new(user) }
 

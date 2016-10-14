@@ -126,6 +126,7 @@ module VCAP::CloudController
 
       describe 'isolation segments' do
         let(:isolation_segment_model) { IsolationSegmentModel.make }
+        let(:isolation_segment_model2) { IsolationSegmentModel.make }
 
         context 'when setting the default isolation segment' do
           it 'raises an error if it is not in the allowed list' do
@@ -135,10 +136,13 @@ module VCAP::CloudController
             }.to raise_error(Sequel::ForeignKeyConstraintViolation)
           end
 
-          it 'must be in the allowed list' do
-          end
-
           it 'can be updated' do
+            isolation_segment_model.add_organization(org)
+            expect(org.isolation_segment_model).to eq(isolation_segment_model)
+
+            isolation_segment_model2.add_organization(org)
+            org.isolation_segment_model = isolation_segment_model2
+            expect(org.isolation_segment_model).to eq(isolation_segment_model2)
           end
         end
 
