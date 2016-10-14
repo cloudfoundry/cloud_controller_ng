@@ -549,6 +549,62 @@ module VCAP::CloudController
           [space_1, space_2].each(&:refresh)
           [space_1, space_2].each { |space| expect(space.auditors).not_to include(user) }
         end
+
+        context 'when the user also has other org roles' do
+          before do
+            org.add_manager(user)
+            org.add_billing_manager(user)
+            org.refresh
+          end
+
+          it 'should remove all org roles from the user' do
+            expect(org.users).to include(user)
+            expect(org.managers).to include(user)
+            expect(org.billing_managers).to include(user)
+
+            org.remove_user_recursive(user)
+
+            expect(org.users).to_not include(user)
+            expect(org.managers).to_not include(user)
+            expect(org.billing_managers).to_not include(user)
+            expect(user.reload.organizations).to_not include(org)
+          end
+        end
+
+        context 'when the user only has non-user org roles' do
+          let(:user) { User.make }
+          before do
+            org.add_manager(user)
+            org.add_auditor(user)
+          end
+
+          it 'should remove all roles' do
+            expect(org.managers).to include(user)
+            expect(org.auditors).to include(user)
+
+            org.remove_user_recursive(user)
+
+            expect(org.managers).to_not include(user)
+            expect(org.auditors).to_not include(user)
+            expect(user.reload.organizations).to_not include(org)
+          end
+        end
+
+        context 'when the user only has an org-user role' do
+          let(:user) { User.make }
+          before do
+            org.add_user(user)
+          end
+
+          it 'should remove that role' do
+            expect(org.users).to include(user)
+
+            org.remove_user_recursive(user)
+
+            expect(org.users).to_not include(user)
+            expect(user.reload.organizations).to_not include(org)
+          end
+        end
       end
     end
 

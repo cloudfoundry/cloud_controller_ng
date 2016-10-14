@@ -133,6 +133,11 @@
   http_code: 403
   message: "Cannot remove last Billing Manager in org"
 
+30006:
+  name: LastUserInOrg
+  http_code: 403
+  message: "Cannot remove last User in org"
+
 40001:
   name: SpaceInvalid
   http_code: 400

@@ -348,9 +348,10 @@ module VCAP::CloudController
       end
 
       context 'as an org user' do
-        it 'successfully removes itself' do
+        it 'can not remove itself' do
           delete "/v2/users/#{user.guid}/organizations/#{org.guid}"
-          expect(last_response.status).to eq(204)
+          expect(last_response.status).to eq(403)
+          expect(decoded_response['code']).to eq(30006)
         end
 
         context 'when acting on another org user' do

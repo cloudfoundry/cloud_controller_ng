@@ -59,6 +59,10 @@ module VCAP::CloudController
       if org.billing_managers.count == 1 && org.billing_managers[0].guid == user_guid
         raise CloudController::Errors::ApiError.new_from_details('LastBillingManagerInOrg')
       end
+
+      if org.users.count == 1 && org.users[0].guid == user_guid && org.managers.count <= 1 && org.billing_managers.count <= 1
+        raise CloudController::Errors::ApiError.new_from_details('LastUserInOrg')
+      end
     end
   end
 end

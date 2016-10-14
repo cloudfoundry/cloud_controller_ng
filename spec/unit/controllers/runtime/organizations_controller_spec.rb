@@ -464,33 +464,14 @@ module VCAP::CloudController
               context 'when the user is the last user in the org' do
                 let(:org_users) { [user.guid] }
 
-                it 'allows the user to remove themselves' do
-                  org.add_space(org_space_empty)
-                  expect(org.users).to include(user)
-                  delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
-                  expect(last_response.status).to eql(204)
-
-                  org.refresh
-                  expect(org.user_guids).not_to include(user.guid)
-                end
-              end
-            end
-
-            context 'as an organization manager' do
-              let(:org_managers) { [user.guid] }
-
-              before do
-                set_current_user(user)
-              end
-
-              context 'when the user is the last user in the org' do
-                let(:org_users) { [user.guid] }
-
-                it 'does not allow the user to remove themselves' do
+                it 'does NOT allow the user to remove themselves' do
                   org.add_space(org_space_empty)
                   expect(org.users).to include(user)
                   delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
                   expect(last_response.status).to eql(403)
+
+                  org.refresh
+                  expect(org.user_guids).to include(user.guid)
                 end
               end
             end
@@ -518,21 +499,42 @@ module VCAP::CloudController
               org.refresh
               expect(org.users).not_to include(user)
             end
+
+            it 'should remove all org roles from the user in the organization' do
+              org.add_space(org_space_full)
+              org.add_manager(user)
+              expect(org.users).to include(user)
+              expect(org.managers).to include(user)
+
+              delete "/v2/organizations/#{org.guid}/users/#{user.guid}?recursive=true"
+              expect(last_response.status).to eql(204)
+
+              org.refresh
+              expect(org.users).not_to include(user)
+              expect(org.managers).not_to include(user)
+            end
           end
 
           context 'multiple organizations' do
             let(:org_2) { Organization.make(user_guids: [user.guid]) }
             let(:org2_space) { Space.make(organization: org_2, developer_guids: [user.guid]) }
 
-            it 'should remove a user from one organization, but no the other' do
+            it 'should remove all user roles from one organization, but no the other' do
               org.add_space(org_space_full)
               org_2.add_space(org2_space)
               [org, org_2].each { |organization| expect(organization.users).to include(user) }
+              org.add_manager(user)
+              org.add_billing_manager(user)
+              expect(org.managers).to include(user)
+              expect(org.billing_managers).to include(user)
+
               delete "/v2/organizations/#{org.guid}/users/#{user.guid}?recursive=true"
               expect(last_response.status).to eql(204)
 
               [org, org_2].each(&:refresh)
               expect(org.users).not_to include(user)
+              expect(org.managers).not_to include(user)
+              expect(org.billing_managers).not_to include(user)
               expect(org_2.users).to include(user)
             end
 
@@ -547,6 +549,38 @@ module VCAP::CloudController
               [org_space_full, org2_space].each(&:refresh)
               ['developers', 'auditors', 'managers'].each { |type| expect(org_space_full.send(type)).not_to include(user) }
               expect(org2_space.developers).to include(user)
+            end
+          end
+        end
+
+        describe 'removing the last user' do
+          let(:org) { Organization.make }
+          let(:user) { User.make }
+
+          before do
+            org.add_user(user)
+          end
+
+          context 'as an admin' do
+            it 'is allowed' do
+              set_current_user_as_admin
+
+              delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
+              expect(last_response.status).to eq(204)
+              org.reload
+              expect(org.users).to_not include(user)
+            end
+          end
+
+          context 'as a user' do
+            it 'is not allowed' do
+              set_current_user(user)
+
+              delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
+              expect(last_response.status).to eq(403)
+              expect(decoded_response['code']).to eq(30006)
+              org.reload
+              expect(org.users).to include(user)
             end
           end
         end
@@ -970,7 +1004,6 @@ module VCAP::CloudController
         context 'as an admin' do
           it 'is allowed' do
             set_current_user_as_admin
-
             delete "/v2/organizations/#{org.guid}/billing_managers/#{billing_manager.guid}"
             expect(last_response.status).to eq(204)
           end

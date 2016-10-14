@@ -107,6 +107,11 @@ module VCAP::CloudController
       ([user.spaces, user.audited_spaces, user.managed_spaces].flatten & spaces).each do |space|
         user.remove_spaces space
       end
+
+      remove_user(user)
+      remove_manager(user)
+      remove_billing_manager(user)
+      remove_auditor(user)
     end
 
     def self.user_visibility_filter(user)
