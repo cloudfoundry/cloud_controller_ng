@@ -28,6 +28,10 @@ module VCAP::CloudController
         info[:routing_endpoint] = @config[:routing_api][:url]
       end
 
+      if @config[:loggregator] && @config[:loggregator][:url]
+        info[:logging_endpoint] = @config[:loggregator][:url]
+      end
+
       if @config[:doppler][:enabled]
         info[:doppler_logging_endpoint] = @config[:doppler][:url]
       end

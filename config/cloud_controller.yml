@@ -71,6 +71,7 @@ logging:
 
 loggregator:
   router: "127.0.0.1:3456"
+  url: "ws://loggregator.vcap.me:80"
 
 doppler:
   enabled: false
