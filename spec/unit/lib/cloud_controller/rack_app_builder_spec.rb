@@ -56,6 +56,32 @@ module VCAP::CloudController
         end
       end
 
+      describe 'New Relic custom attributes' do
+        before do
+          allow(CloudFoundry::Middleware::NewRelicCustomAttributes).to receive(:new)
+        end
+
+        context 'when new relic is enabled' do
+          before do
+            builder.build(TestConfig.override(newrelic_enabled: true), request_metrics).to_app
+          end
+
+          it 'enables the New Relic custom attribute middleware' do
+            expect(CloudFoundry::Middleware::NewRelicCustomAttributes).to have_received(:new)
+          end
+        end
+
+        context 'when new relic is NOT enabled' do
+          before do
+            builder.build(TestConfig.override(newrelic_enabled: false), request_metrics).to_app
+          end
+
+          it 'does NOT enable the New Relic custom attribute middleware' do
+            expect(CloudFoundry::Middleware::NewRelicCustomAttributes).not_to have_received(:new)
+          end
+        end
+      end
+
       describe 'CEF logs' do
         before do
           allow(CloudFoundry::Middleware::CefLogs).to receive(:new)

@@ -33,7 +33,7 @@ gem 'allowy'
 gem 'loggregator_emitter', '~> 5.0'
 gem 'delayed_job_sequel', git: 'https://github.com/cloudfoundry/delayed_job_sequel.git'
 gem 'thin'
-gem 'newrelic_rpm', '3.12.0.288'
+gem 'newrelic_rpm', '>= 3.12'
 gem 'clockwork', require: false
 gem 'statsd-ruby'
 gem 'activemodel'

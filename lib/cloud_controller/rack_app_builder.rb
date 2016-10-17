@@ -6,6 +6,7 @@ require 'request_logs'
 require 'cef_logs'
 require 'security_context_setter'
 require 'rate_limiter'
+require 'new_relic_custom_attributes'
 
 module VCAP::CloudController
   class RackAppBuilder
@@ -19,6 +20,7 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::RequestMetrics, request_metrics
         use CloudFoundry::Middleware::Cors, config[:allowed_cors_domains]
         use CloudFoundry::Middleware::VcapRequestId
+        use CloudFoundry::Middleware::NewRelicCustomAttributes if config[:newrelic_enabled]
         use CloudFoundry::Middleware::SecurityContextSetter, configurer
         use CloudFoundry::Middleware::RequestLogs, Steno.logger('cc.api')
         if config[:rate_limiter][:enabled]
