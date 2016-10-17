@@ -220,7 +220,7 @@ module VCAP::CloudController
     private
 
     def user_guid_parameter
-      @opts[:q][0].split(":")[1] if @opts[:q]
+      @opts[:q][0].split(':')[1] if @opts[:q]
     end
 
     def after_create(organization)
