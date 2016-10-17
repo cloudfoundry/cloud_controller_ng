@@ -55,9 +55,20 @@ module CloudFoundry
         end
       end
 
-      it 'does not do anything when the user is not logged it' do
+      it 'does not add "X-RateLimit-*" headers when the user is not logged it' do
         _, response_headers, _ = middleware.call({})
         expect(response_headers['X-RateLimit-Remaining']).to be_nil
+      end
+
+      it 'allows the request to continue' do
+        _, _, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+        expect(app).to have_received(:call)
+      end
+
+      it 'does not drop headers created in next middleware' do
+        allow(app).to receive(:call).and_return([200, { 'from' => 'wrapped-app' }, 'a body'])
+        _, headers, _ = middleware.call({})
+        expect(headers).to match(hash_including('from' => 'wrapped-app'))
       end
 
       context 'when user has admin or admin_read_only scopes' do
@@ -72,6 +83,7 @@ module CloudFoundry
           status, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
           expect(response_headers['X-RateLimit-Remaining']).to eq('0')
           expect(status).to eq(200)
+          expect(app).to have_received(:call).at_least(:once)
         end
       end
 
@@ -85,11 +97,26 @@ module CloudFoundry
           expect(response_headers['X-RateLimit-Remaining']).to eq('0')
         end
 
-        it 'denies the request' do
+        it 'returns 429 response with correct headers' do
           _, _, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
           status, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
           expect(status).to eq(429)
           expect(response_headers['Retry-After']).to eq(response_headers['X-RateLimit-Reset'])
+        end
+      end
+
+      context 'when limit exceeded' do
+        let(:general_limit) { 0 }
+
+        it 'ends the request' do
+          _, _, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+          expect(app).not_to have_received(:call)
+        end
+
+        it 'does not alter headers passed into this middleware' do
+          status, headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1', 'from' => 'passed-in-env' })
+          expect(status).to eq(429)
+          expect(headers).to match(hash_including('from' => 'passed-in-env'))
         end
       end
 

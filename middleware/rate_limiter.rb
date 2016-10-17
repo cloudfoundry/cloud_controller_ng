@@ -2,13 +2,14 @@ module CloudFoundry
   module Middleware
     class RateLimiter
       def initialize(app, general_limit, interval)
-        @app = app
+        @app           = app
         @general_limit = general_limit
-        @interval = interval
+        @interval      = interval
       end
 
       def call(env)
-        status, headers, body = @app.call(env)
+        rate_limit_headers = {}
+
         if env['cf.user_guid']
           request_count = VCAP::CloudController::RequestCount.find_or_create(user_guid: env['cf.user_guid']) do |created_request_count|
             created_request_count.valid_until = Time.now + @interval.minutes
@@ -16,25 +17,41 @@ module CloudFoundry
 
           request_count.db.transaction do
             request_count.lock!
-            if request_count.valid_until < Time.now
-              request_count.valid_until = Time.now + @interval.minutes
-              request_count.count = 0
-            end
 
+            reset_request_count(request_count) if reset_interval_expired(request_count)
             request_count.count += 1
             request_count.save
           end
 
-          headers['X-RateLimit-Limit'] = @general_limit.to_s
-          headers['X-RateLimit-Reset'] = request_count.valid_until.utc.to_i.to_s
-          headers['X-RateLimit-Remaining'] = [0, @general_limit - request_count.count].max.to_s
+          rate_limit_headers['X-RateLimit-Limit']     = @general_limit.to_s
+          rate_limit_headers['X-RateLimit-Reset']     = request_count.valid_until.utc.to_i.to_s
+          rate_limit_headers['X-RateLimit-Remaining'] = [0, @general_limit - request_count.count].max.to_s
 
-          if request_count.count > @general_limit && !VCAP::CloudController::SecurityContext.admin? && !VCAP::CloudController::SecurityContext.admin_read_only?
-            headers['Retry-After'] = headers['X-RateLimit-Reset']
-            return [429, headers, ['Rate Limit Exceeded']]
+          if exceeded_rate_limit(request_count) && not_admin
+            rate_limit_headers['Retry-After'] = rate_limit_headers['X-RateLimit-Reset']
+            return [429, env.merge(rate_limit_headers), ['Rate Limit Exceeded']]
           end
         end
-        [status, headers, body]
+
+        status, headers, body = @app.call(env)
+        [status, headers.merge(rate_limit_headers), body]
+      end
+
+      def exceeded_rate_limit(request_count)
+        request_count.count > @general_limit
+      end
+
+      def reset_interval_expired(request_count)
+        request_count.valid_until < Time.now
+      end
+
+      def reset_request_count(request_count)
+        request_count.valid_until = Time.now + @interval.minutes
+        request_count.count       = 0
+      end
+
+      def not_admin
+        !VCAP::CloudController::SecurityContext.admin? && !VCAP::CloudController::SecurityContext.admin_read_only?
       end
     end
   end
