@@ -82,7 +82,6 @@ logging:
 
 loggregator:
   router: 127.0.0.1:3457
-  url: wss://loggregator.bosh-lite.com:443
 
 doppler:
   enabled: false
