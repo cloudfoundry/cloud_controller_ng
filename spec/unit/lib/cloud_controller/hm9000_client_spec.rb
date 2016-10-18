@@ -41,6 +41,38 @@ module VCAP::CloudController
       JSON.parse(result.to_json)
     end
 
+    let(:app0instances) { 1 }
+    let(:app0) { AppFactory.make(instances: app0instances) }
+    let(:app1) { AppFactory.make(instances: 1) }
+    let(:app2) { AppFactory.make(instances: 1) }
+    let(:app0_request_should_fail) { false }
+    let(:hm9000_external_url) { 'https://myuser:mypass@some-hm9000-api:9492' }
+    let(:skip_cert_verify) { nil }
+
+    let(:hm9000_config) do
+      {
+        skip_cert_verify: skip_cert_verify,
+        flapping_crash_count_threshold: 3,
+        hm9000: {
+          url: 'https://some-hm9000-api:9492',
+          internal_url: 'https://hm9000.service.cf.internal:9492',
+        },
+        internal_api: {
+          auth_user: 'myuser',
+          auth_password: 'mypass'
+        }
+      }
+    end
+
+    let(:app_0_api_response) { generate_hm_api_response(app0, [{ index: 0, state: 'RUNNING' }]) }
+    let(:app_1_api_response) { generate_hm_api_response(app1, [{ index: 0, state: 'CRASHED' }]) }
+    let(:app_2_api_response) { generate_hm_api_response(app2, [{ index: 0, state: 'RUNNING' }]) }
+
+    let(:hm9000_url) { 'https://myuser:mypass@hm9000.service.cf.internal:9492' }
+    let(:legacy_client) { double(:legacy_client) }
+
+    subject(:hm9000_client) { VCAP::CloudController::Dea::HM9000::Client.new(legacy_client, hm9000_config) }
+
     shared_examples 'post_bulk_app_state request' do |method, args_array|
       let(:legacy_return_value) { double(:legacy_return_value) }
 
@@ -52,42 +84,85 @@ module VCAP::CloudController
                 end
       end
 
-      context 'when the request status is not 2XX' do
-        before do
-          stub_request(:post, "#{hm9000_url}/bulk_app_state").
-            to_return(status: 500)
-          stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 500)
-        end
-
-        it 'retries 3 times' do
-          subject.send(method, @args)
-          assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 3) do |req|
-            req.body = { droplet: app0.guid, version: app0.version }
-          end
-        end
-
-        context 'after 3 retries' do
+      context 'when the request fails' do
+        context' and the status is a 500' do
           before do
-            subject.send(method, @args)
+            stub_request(:post, "#{hm9000_url}/bulk_app_state").
+              to_return(status: 500)
+            stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 500)
           end
 
-          it 'tries the external address' do
-            assert_requested(:post, "#{hm9000_external_url}/bulk_app_state") do |req|
+          it 'retries 3 times' do
+            subject.send(method, @args)
+            assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 3) do |req|
               req.body = { droplet: app0.guid, version: app0.version }
             end
           end
 
-          it 'does try to use the internal address again on the next request' do
-            subject.send(method, @args)
-
-            # 3 times for the first call, 3 times for the next call
-            assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 6) do |req|
-              req.body = { droplet: app0.guid, version: app0.version }
+          context 'after 3 retries' do
+            before do
+              subject.send(method, @args)
             end
 
-            # once for the first call and once for the second call
-            assert_requested(:post, "#{hm9000_external_url}/bulk_app_state", times: 2) do |req|
+            it 'tries the external address' do
+              assert_requested(:post, "#{hm9000_external_url}/bulk_app_state") do |req|
+                req.body = { droplet: app0.guid, version: app0.version }
+              end
+            end
+
+            it 'does try to use the internal address again on the next request' do
+              subject.send(method, @args)
+
+              # 3 times for the first call, 3 times for the next call
+              assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 6) do |req|
+                req.body = { droplet: app0.guid, version: app0.version }
+              end
+
+              # once for the first call and once for the second call
+              assert_requested(:post, "#{hm9000_external_url}/bulk_app_state", times: 2) do |req|
+                req.body = { droplet: app0.guid, version: app0.version }
+              end
+            end
+          end
+        end
+
+        context 'and the status is a 401' do
+          before do
+            stub_request(:post, "#{hm9000_url}/bulk_app_state").
+              to_return(status: 401)
+            stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 401)
+          end
+
+          it 'retries 3 times' do
+            subject.send(method, @args)
+            assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 3) do |req|
               req.body = { droplet: app0.guid, version: app0.version }
+            end
+          end
+
+          context 'after 3 retries' do
+            before do
+              subject.send(method, @args)
+            end
+
+            it 'tries the external address' do
+              assert_requested(:post, "#{hm9000_external_url}/bulk_app_state") do |req|
+                req.body = { droplet: app0.guid, version: app0.version }
+              end
+            end
+
+            it 'does try to use the internal address again on the next request' do
+              subject.send(method, @args)
+
+              # 3 times for the first call, 3 times for the next call
+              assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 6) do |req|
+                req.body = { droplet: app0.guid, version: app0.version }
+              end
+
+              # once for the first call and once for the second call
+              assert_requested(:post, "#{hm9000_external_url}/bulk_app_state", times: 2) do |req|
+                req.body = { droplet: app0.guid, version: app0.version }
+              end
             end
           end
         end
@@ -132,38 +207,6 @@ module VCAP::CloudController
         end
       end
     end
-
-    let(:app0instances) { 1 }
-    let(:app0) { AppFactory.make(instances: app0instances) }
-    let(:app1) { AppFactory.make(instances: 1) }
-    let(:app2) { AppFactory.make(instances: 1) }
-    let(:app0_request_should_fail) { false }
-    let(:hm9000_external_url) { 'https://myuser:mypass@some-hm9000-api:9492' }
-    let(:skip_cert_verify) { nil }
-
-    let(:hm9000_config) do
-      {
-        skip_cert_verify: skip_cert_verify,
-        flapping_crash_count_threshold: 3,
-        hm9000: {
-          url: 'https://some-hm9000-api:9492',
-          internal_url: 'https://hm9000.service.cf.internal:9492',
-        },
-        internal_api: {
-          auth_user: 'myuser',
-          auth_password: 'mypass'
-        }
-      }
-    end
-
-    let(:app_0_api_response) { generate_hm_api_response(app0, [{ index: 0, state: 'RUNNING' }]) }
-    let(:app_1_api_response) { generate_hm_api_response(app1, [{ index: 0, state: 'CRASHED' }]) }
-    let(:app_2_api_response) { generate_hm_api_response(app2, [{ index: 0, state: 'RUNNING' }]) }
-
-    let(:hm9000_url) { 'https://myuser:mypass@hm9000.service.cf.internal:9492' }
-    let(:legacy_client) { double(:legacy_client) }
-
-    subject(:hm9000_client) { VCAP::CloudController::Dea::HM9000::Client.new(legacy_client, hm9000_config) }
 
     describe 'healthy_instances' do
       context 'with a single desired and running instance' do
