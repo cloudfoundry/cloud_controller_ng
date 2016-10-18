@@ -17,6 +17,7 @@ includes:
   - api_resources/tasks
   - introduction/introduction
   - concepts/concepts
+  - workflows/workflows
   - resources/header
   - resources/tasks/header
   - resources/tasks/object

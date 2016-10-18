@@ -1,0 +1,280 @@
+# Concepts
+
+## Authentication
+The Cloud Foundry V3 API is secured using OAuth 2. Clients are expected to present a valid bearer token via HTTP header: `Authorization: bearer <token>`
+
+Tokens can be obtained from the Cloud Foundry UAA server. For more information, see the [UAA API Documentation](http://docs.cloudfoundry.org/api/uaa/index.html)
+
+## Authorization
+
+Access to resources is determined by combining scopes in the OAuth2 Token with User Roles that are managed by the API. User Roles are currently managed by the [V2 API](http://apidocs.cloudfoundry.org/).
+
+#### OAuth2 Scopes
+
+Scope | Description
+---------- | -------
+cloud_controller.admin | This scope provides read and write access to all resources
+cloud_controller.admin_read_only | This scope provides read only access to all resources
+cloud_controller.read | This scope provides read access to resources based on user roles
+cloud_controller.write | This scope provides write access to resources based on user roles
+
+#### Cloud Foundry User Roles
+
+Role | Description
+---------- | -------
+SpaceManager | This role provides Space management access
+SpaceDeveloper | This role allows developers to create and manage apps and services in a Space
+SpaceAuditor | This role allows read-only access to a Space for auditing purposes
+
+## Status Codes
+
+Cloud Foundry V3 API uses a subset of HTTP response codes to indicate the success or failure of an API request.
+In general, codes in the 2xx range indicate success, codes in the 4xx range indicate an error that can potentially be fixed by correcting the request, and codes in the 5xx range indicate an error on the server side.
+
+HTTP Status Code | Description
+---------- | -------
+200 OK | The request completed successfully.
+201 Created | The request completed successfully and created a new resource.
+202 Accepted | The request will be completed asynchronously.
+204 No Content | The request completed successfully and did not return a body.
+400 Bad Request | The request has malformed or invalid data.
+401 Unauthenticated | The request requires an authenticated user.
+403 Forbidden | The request cannot be performed by the user.
+404 Not Found | The requested resource does not exist.
+422 Unprocessable Entity | The request cannot be performed.
+500 Internal Server Error	| An unexpected error occurred.
+502 Bad Gateway |	An upstream service caused the request to fail.
+
+## Resources
+
+A resource represents an individual object within the system, such as an app or a service. It is represented as a JSON object.
+
+A resource consists of several required resource fields and other attributes specific to the resource.
+
+### Required fields
+```
+Example Person Resource
+```
+
+```json
+{
+  "guid": "fd35633f-5c5c-4e4e-a5a9-0722c970a9d2",
+  "created_at": "2016-03-18T23:26:46Z",
+  "updated_at": "2016-10-17T20:00:42Z",
+  
+  "name": "Bob",
+  
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/people/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"
+    }
+  }
+}
+```
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guid
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">The unique identifier for the resource</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      created_at
+      <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">The ISO8601 compatible date and time when resource was created.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      updated_at
+      <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">The ISO8601 compatible date and time when resource was last updated.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      links
+      <span class="method-list-item-type"><%= link_to 'link object', '#the-link-object' %></span>
+    </h4>
+
+    <p class="method-list-item-description">Provide URLs to related resources and actions for the current resource.</p>
+  </li>
+</ul>
+
+### Links
+
+Links provide URLs to relationships and actions for a resource. Links are represented as a JSON object and will always contain at least a `self` link.
+
+Each link is keyed by its type and will include a `href` for the URL and an optional `method` for links that cannot be followed using `GET`.
+
+#### The link object
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      href
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">The absolute URL.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      method
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">An optional field containing the HTTP method to be used when following the URL.</p>
+  </li>
+</ul>
+
+## Errors
+
+### The error object
+An error response will always return a list of error objects in the `errors` field.
+
+```
+Example Error
+```
+
+```http
+HTTP/1.1 422 Unprocessable
+
+{
+  "errors": [
+    {
+      "code": 10008,
+      "title": "CF-UnprocessableEntity",
+      "detail": "The request is semantically invalid: something went wrong"
+    }
+  ]
+}
+```
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      code
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">A numeric code for this error</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      title
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Short description of the error.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      detail
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Detailed description of the error.</p>
+  </li>
+</ul>
+
+## Pagination
+
+Any request that can return multiple resources will be paginated and contain a `pagination` object and list of `resources`.
+Requests for multiple resources can use `page`, `per_page`, and `order_by` in addition to filters specific to the endpoint.
+
+### The pagination object
+```
+Example Paginated Response
+```
+
+```json
+{
+  "pagination": {
+    "total_results": 3,
+    "total_pages": 3,
+    "first": {
+      "href": "https://api.example.org/v3/people?page=1&per_page=1"
+    },
+    "last": {
+      "href": "https://api.example.org/v3/people?page=3&per_page=1"
+    },
+    "next": {
+      "href": "https://api.example.org/v3/people?page=2&per_page=1"
+    },
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "fd35633f-5c5c-4e4e-a5a9-0722c970a9d2",
+      "created_at": "2016-03-18T23:26:46Z",
+      "updated_at": "2016-10-17T20:00:42Z",
+
+      "name": "Bob",
+
+      "links": {
+        "self": {
+          "href": "https://api.example.org/v3/people/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"
+        }
+      }
+    }
+  ]
+}
+```
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      total_results
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">Total number of resources for all pages</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      total_pages
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">Total number of pages</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      first
+      <span class="method-list-item-type">link object</span>
+    </h4>
+
+    <p class="method-list-item-description">Link to the first page</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      last
+      <span class="method-list-item-type">link object</span>
+    </h4>
+
+    <p class="method-list-item-description">Link to the last page</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      next
+      <span class="method-list-item-type">link object</span>
+    </h4>
+
+    <p class="method-list-item-description">Link to the next page</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      previous
+      <span class="method-list-item-type">link object</span>
+    </h4>
+
+    <p class="method-list-item-description">Link to the previous page</p>
+  </li>
+</ul>
