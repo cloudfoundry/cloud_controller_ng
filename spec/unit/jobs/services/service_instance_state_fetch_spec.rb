@@ -5,15 +5,6 @@ module VCAP::CloudController
   module Jobs
     module Services
       RSpec.describe ServiceInstanceStateFetch do
-        let(:broker) { ServiceBroker.make }
-        let(:client_attrs) do
-          {
-            url: broker.broker_url,
-            auth_username: broker.auth_username,
-            auth_password: broker.auth_password,
-          }
-        end
-
         let(:proposed_service_plan) { ServicePlan.make }
         let(:service_instance) do
           operation = ServiceInstanceOperation.make(proposed_changes: {
@@ -26,6 +17,14 @@ module VCAP::CloudController
 
           service_instance.service_instance_operation = operation
           service_instance
+        end
+        let(:broker) { service_instance.service_broker }
+        let(:client_attrs) do
+          {
+            url: broker.broker_url,
+            auth_username: broker.auth_username,
+            auth_password: broker.auth_password,
+          }
         end
 
         let(:name) { 'fake-name' }
@@ -431,6 +430,36 @@ module VCAP::CloudController
               expect {
                 run_job(job)
               }.not_to raise_error
+            end
+          end
+
+          context 'when the service broker credentials have changed since the job was enqueued' do
+            it 'uses the updated credentials' do
+              updated_url      = 'http://new.url'
+              updated_username = 'new-username'
+              updated_password = 'new-password'
+
+              uri = URI(updated_url)
+              uri.user = updated_username
+              uri.password = updated_password
+              expected_url_pattern = %r{#{uri}/v2/service_instances/#{service_instance.guid}/last_operation}
+
+              stub_request(:get, expected_url_pattern).to_return(
+                status: status,
+                body: response.to_json
+              )
+
+              Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
+
+              broker.update({
+                broker_url:    updated_url,
+                auth_username: updated_username,
+                auth_password: updated_password
+              })
+
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              assert_requested :get, expected_url_pattern, times: 1
             end
           end
         end
