@@ -14,6 +14,7 @@ module VCAP::CloudController
             process = AppFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'process-name')
             v3_app_model.add_process(process)
             expected_hash = {
+              cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
               limits: {
                 mem: v2_app.memory,
                 disk: v2_app.disk_quota,
@@ -39,6 +40,7 @@ module VCAP::CloudController
         context 'when a v3 app is not associated' do
           it 'has the expected values' do
             expected_hash = {
+              cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
               limits: {
                 mem: v2_app.memory,
                 disk: v2_app.disk_quota,
@@ -62,11 +64,12 @@ module VCAP::CloudController
         end
       end
 
-      describe 'building has for a v3 AppModel' do
+      describe 'building hash for a v3 AppModel' do
         describe 'optional memory_limit, staging_disk_in_mb, file_descriptors and version' do
           context 'when memory_limit, staging_disk_in_mb, file_descriptors and version are supplied' do
             it 'builds hash with suppplied value' do
               expected_hash = {
+                cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
                 limits: {
                   mem: 1234,
                   disk: 5555,
@@ -98,6 +101,7 @@ module VCAP::CloudController
           context 'no values are supplied' do
             it 'omits the fields in the hash' do
               expected_hash = {
+                cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
                 limits: {},
                 application_id: v3_app_model.guid,
                 application_name: 'v3-app-name',
@@ -120,6 +124,7 @@ module VCAP::CloudController
         context 'when space is supplied' do
           it 'builds hash with suppplied value' do
             expected_hash = {
+              cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
               limits: {
                 mem: v2_app.memory,
                 disk: v2_app.disk_quota,
@@ -148,6 +153,7 @@ module VCAP::CloudController
         context 'when no space is supplied' do
           it "defaults to app's space" do
             expected_hash = {
+              cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
               limits: {
                 mem: v2_app.memory,
                 disk: v2_app.disk_quota,

@@ -790,6 +790,7 @@ RSpec.describe 'Apps' do
           'system_env_json'      => { 'VCAP_SERVICES' => {} },
           'application_env_json' => {
             'VCAP_APPLICATION' => {
+              'cf_api' => "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
               'limits' => {
                 'fds'  => 16384,
                 'mem'  => 1024,

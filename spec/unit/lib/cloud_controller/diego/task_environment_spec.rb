@@ -15,6 +15,7 @@ module VCAP::CloudController::Diego
 
     let(:expected_vcap_application) do
       {
+        cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
         limits:              {
           mem:  task.memory_in_mb,
           disk: staging_disk_in_mb,
@@ -78,6 +79,7 @@ module VCAP::CloudController::Diego
       context 'when the app has a route associated with it' do
         let(:expected_vcap_application) do
           {
+            cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
             limits:              {
               mem:  task.memory_in_mb,
               disk: staging_disk_in_mb,

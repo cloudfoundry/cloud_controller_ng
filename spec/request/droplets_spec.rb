@@ -77,6 +77,7 @@ RSpec.describe 'Droplets' do
           'MEMORY_LIMIT'     => '1024m',
           'VCAP_SERVICES'    => {},
           'VCAP_APPLICATION' => {
+            'cf_api' => "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
             'limits'              => { 'mem' => 1024, 'disk' => 4096, 'fds' => 16384 },
             'application_id'      => app_model.guid,
             'application_version' => 'whatuuid',

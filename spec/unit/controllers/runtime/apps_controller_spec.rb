@@ -1296,6 +1296,7 @@ module VCAP::CloudController
             expect(decoded_response['application_env_json']).to have_key('VCAP_APPLICATION')
             expect(decoded_response['application_env_json']).to match({
               'VCAP_APPLICATION' => {
+                'cf_api' => "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
                 'limits' => {
                   'mem'  => app_obj.memory,
                   'disk' => app_obj.disk_quota,
@@ -1530,6 +1531,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
           expect(decoded_response['application_env_json']).to match({
             'VCAP_APPLICATION' => {
+              'cf_api' => "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
               'limits' => {
                 'mem'  => app_obj.memory,
                 'disk' => app_obj.disk_quota,

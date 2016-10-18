@@ -30,7 +30,11 @@ module VCAP
 
       @space = @process.space if @space.nil?
 
+      my_uri        = URI::HTTP.build(host: VCAP::CloudController::Config.config[:external_domain])
+      my_uri.scheme = VCAP::CloudController::Config.config[:external_protocol]
+
       env_hash = {
+        cf_api: my_uri.to_s,
         limits: {},
         application_name: app_name,
         application_uris: uris,

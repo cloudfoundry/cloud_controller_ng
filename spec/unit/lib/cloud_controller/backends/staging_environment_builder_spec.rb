@@ -38,6 +38,7 @@ module VCAP::CloudController
               'MEMORY_LIMIT' => "#{memory_limit}m",
               'VCAP_SERVICES' => be_an_instance_of(Hash),
               'VCAP_APPLICATION' => {
+                cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
                 limits: {
                   mem: memory_limit,
                   disk: staging_disk_in_mb,
