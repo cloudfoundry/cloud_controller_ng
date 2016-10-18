@@ -5,12 +5,11 @@ module VCAP::CloudController
   module Jobs
     module Services
       RSpec.describe ServiceInstanceStateFetch do
-        let(:broker) { ServiceBroker.make }
         let(:client_attrs) do
           {
-            url: broker.broker_url,
-            auth_username: broker.auth_username,
-            auth_password: broker.auth_password,
+            url: 'bogus-url',
+            auth_username: 'noone',
+            auth_password: 'bad-password',
           }
         end
 
@@ -95,6 +94,7 @@ module VCAP::CloudController
 
         describe '#perform' do
           before do
+            broker = service_instance.service_broker
             uri = URI(broker.broker_url)
             uri.user = broker.auth_username
             uri.password = broker.auth_password
@@ -302,6 +302,7 @@ module VCAP::CloudController
 
             context 'due to an HttpRequestError' do
               before do
+                broker = service_instance.service_broker
                 uri = URI(broker.broker_url)
                 uri.user = broker.auth_username
                 uri.password = broker.auth_password
