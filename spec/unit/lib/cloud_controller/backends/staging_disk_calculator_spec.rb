@@ -60,16 +60,6 @@ module VCAP::CloudController
           expect(calculator.minimum_limit).to eq(expected_limit)
         end
       end
-
-      context 'when there is no configured value' do
-        before do
-          VCAP::CloudController::Config.config[:staging][:minimum_staging_disk_mb] = nil
-        end
-
-        it 'returns 4096' do
-          expect(calculator.minimum_limit).to eq(4096)
-        end
-      end
     end
 
     describe '#maximum_limit' do

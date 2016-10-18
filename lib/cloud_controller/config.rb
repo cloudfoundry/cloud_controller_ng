@@ -395,7 +395,6 @@ module VCAP::CloudController
         config[:dea_advertisement_timeout_in_seconds] ||= 10
         config[:placement_top_stager_percentage] ||= 10
         config[:staging][:minimum_staging_memory_mb] ||= 1024
-        config[:staging][:minimum_staging_disk_mb] ||= 4096
         config[:staging][:minimum_staging_file_descriptor_limit] ||= 16384
         config[:broker_client_timeout_seconds] ||= 60
         config[:broker_client_default_async_poll_interval_seconds] ||= 60

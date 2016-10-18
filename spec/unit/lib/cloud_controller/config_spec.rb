@@ -59,10 +59,6 @@ module VCAP::CloudController
           expect(config[:staging][:minimum_staging_memory_mb]).to eq(1024)
         end
 
-        it 'sets a default value for min staging disk' do
-          expect(config[:staging][:minimum_staging_disk_mb]).to eq(4096)
-        end
-
         it 'sets a default value for min staging file descriptor limit' do
           expect(config[:staging][:minimum_staging_file_descriptor_limit]).to eq(16384)
         end
