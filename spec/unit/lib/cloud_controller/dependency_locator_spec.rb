@@ -291,11 +291,11 @@ RSpec.describe CloudController::DependencyLocator do
   end
 
   describe '#username_lookup_uaa_client' do
-    it 'returns a uaa client with credentials for lookuping up usernames' do
+    it 'returns a uaa client with credentials for looking up usernames' do
       uaa_client = locator.username_lookup_uaa_client
       expect(uaa_client.client_id).to eq(config[:cloud_controller_username_lookup_client_name])
       expect(uaa_client.secret).to eq(config[:cloud_controller_username_lookup_client_secret])
-      expect(uaa_client.uaa_target).to eq(config[:uaa][:url])
+      expect(uaa_client.uaa_target).to eq(config[:uaa][:internal_url])
     end
 
     context 'when skip_cert_verify is true in the config' do
