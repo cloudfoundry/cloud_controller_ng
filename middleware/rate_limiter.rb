@@ -1,6 +1,7 @@
 module CloudFoundry
   module Middleware
     class RateLimiter
+      REQUEST_EXCEEDED_MESSAGE_BODY = 'Rate Limit Exceeded'.freeze
       def initialize(app, general_limit, interval)
         @app           = app
         @general_limit = general_limit
@@ -29,7 +30,9 @@ module CloudFoundry
 
           if exceeded_rate_limit(request_count) && not_admin
             rate_limit_headers['Retry-After'] = rate_limit_headers['X-RateLimit-Reset']
-            return [429, env.merge(rate_limit_headers), ['Rate Limit Exceeded']]
+            rate_limit_headers['Content-Type'] = 'text/plain; charset=utf-8'
+            rate_limit_headers['Content-Length'] = REQUEST_EXCEEDED_MESSAGE_BODY.length.to_s
+            return [429, rate_limit_headers, [REQUEST_EXCEEDED_MESSAGE_BODY]]
           end
         end
 

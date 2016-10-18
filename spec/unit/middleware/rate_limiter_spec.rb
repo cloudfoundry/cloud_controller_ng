@@ -17,7 +17,7 @@ module CloudFoundry
 
       it 'adds a "X-RateLimit-Reset" header per user' do
         Timecop.freeze do
-          valid_until = Time.now + interval.minutes
+          valid_until            = Time.now + interval.minutes
           _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
           expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
 
@@ -27,7 +27,7 @@ module CloudFoundry
           expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
 
           Timecop.travel(Time.now + 31.minutes)
-          valid_until = Time.now + 60.minutes
+          valid_until            = Time.now + 60.minutes
           _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
           expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
         end
@@ -78,8 +78,8 @@ module CloudFoundry
           allow(VCAP::CloudController::SecurityContext).to receive(:admin_read_only?).and_return(true)
         end
         it 'does not rate limit' do
-          _, _, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
-          _, _, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+          _, _, _                     = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+          _, _, _                     = middleware.call({ 'cf.user_guid' => 'user-id-1' })
           status, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
           expect(response_headers['X-RateLimit-Remaining']).to eq('0')
           expect(status).to eq(200)
@@ -96,27 +96,29 @@ module CloudFoundry
           _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
           expect(response_headers['X-RateLimit-Remaining']).to eq('0')
         end
-
-        it 'returns 429 response with correct headers' do
-          _, _, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
-          status, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
-          expect(status).to eq(429)
-          expect(response_headers['Retry-After']).to eq(response_headers['X-RateLimit-Reset'])
-        end
       end
 
       context 'when limit exceeded' do
         let(:general_limit) { 0 }
 
+        it 'returns 429 response' do
+          status, _, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+          expect(status).to eq(429)
+        end
+
+        it 'contains the correct headers' do
+          Timecop.freeze do
+            valid_until            = Time.now + interval.minutes
+            _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+            expect(response_headers['Retry-After']).to eq(valid_until.utc.to_i.to_s)
+            expect(response_headers['Content-Type']).to eq('text/plain; charset=utf-8')
+            expect(response_headers['Content-Length']).to eq(RateLimiter::REQUEST_EXCEEDED_MESSAGE_BODY.length.to_s)
+          end
+        end
+
         it 'ends the request' do
           _, _, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
           expect(app).not_to have_received(:call)
-        end
-
-        it 'does not alter headers passed into this middleware' do
-          status, headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1', 'from' => 'passed-in-env' })
-          expect(status).to eq(429)
-          expect(headers).to match(hash_including('from' => 'passed-in-env'))
         end
       end
 
