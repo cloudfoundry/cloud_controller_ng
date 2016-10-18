@@ -122,16 +122,8 @@ key features:</p>
 
 <h2 id="more-resources">More Resources</h2>
 
-<p>The API team is currently focused on getting to MVP for V3. As such, this documentation
-doesn&rsquo;t have all the information needed to interact with the V3 API. Here are a
-few resources that will help until we have everything documented here:</p>
-
 <ul>
-<li><a href="http://apidocs.cloudfoundry.org/">Cloud Foundry Version 2 Documentation</a></li>
-<li><a href="https://docs.google.com/document/d/1CCHDUa2UWRjXkxEdksX4M9BGQ8hBqiMys46wxeF5XE4/edit?usp=sharing">Tasks
-Proposal</a></li>
-<li><a href="https://cfsummit2016.sched.org/event/6ZkB/do-more-with-your-apps-unleashing-the-power-of-the-cloud-controller-v3-api-utako-ueda-daniel-wendorf-pivotal">Upcoming talk at Cloud Foundry
-Summit</a></li>
+<li><a href="http://apidocs.cloudfoundry.org/">Cloud Foundry V2 API Documentation</a></li>
 <li><a href="https://github.com/cloudfoundry/v3-cli-plugin">CF CLI V3 Plugin - Experimental</a></li>
 <li><a href="https://github.com/cloudfoundry/cloud_controller_ng/wiki/How-to-Create-an-App-Using-V3-of-the-CC-API">Push an app with cf
 curl</a></li>
@@ -142,43 +134,355 @@ curl</a></li>
 
 <h2 id="authentication">Authentication</h2>
 
-<p>Coming Soon</p>
+<p>The Cloud Foundry V3 API is secured using OAuth 2. Clients are expected to present a valid bearer token via HTTP header: <code class="prettyprint">Authorization: bearer &lt;token&gt;</code></p>
+
+<p>Tokens can be obtained from the Cloud Foundry UAA server. For more information, see the <a href="http://docs.cloudfoundry.org/api/uaa/index.html">UAA API Documentation</a></p>
 
 <h2 id="authorization">Authorization</h2>
 
-<p>Coming Soon</p>
+<p>Access to resources is determined by combining scopes in the OAuth2 Token with User Roles that are managed by the API. User Roles are currently managed by the <a href="http://apidocs.cloudfoundry.org/">V2 API</a>.</p>
 
-<h3 id="redacted-fields-see-below">Redacted Fields (see below)</h3>
+<h4 id="oauth2-scopes">OAuth2 Scopes</h4>
 
-<p>Coming Soon</p>
+<table><thead>
+<tr>
+<th>Scope</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>cloud_controller.admin</td>
+<td>This scope provides read and write access to all resources</td>
+</tr>
+<tr>
+<td>cloud_controller.admin_read_only</td>
+<td>This scope provides read only access to all resources</td>
+</tr>
+<tr>
+<td>cloud_controller.read</td>
+<td>This scope provides read access to resources based on user roles</td>
+</tr>
+<tr>
+<td>cloud_controller.write</td>
+<td>This scope provides write access to resources based on user roles</td>
+</tr>
+</tbody></table>
 
-<h2 id="errors">Errors</h2>
+<h4 id="cloud-foundry-user-roles">Cloud Foundry User Roles</h4>
 
-<p>Coming Soon</p>
+<table><thead>
+<tr>
+<th>Role</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>SpaceManager</td>
+<td>This role provides Space management access</td>
+</tr>
+<tr>
+<td>SpaceDeveloper</td>
+<td>This role allows developers to create and manage apps and services in a Space</td>
+</tr>
+<tr>
+<td>SpaceAuditor</td>
+<td>This role allows read-only access to a Space for auditing purposes</td>
+</tr>
+</tbody></table>
 
-<h2 id="pagination">Pagination</h2>
+<h2 id="status-codes">Status Codes</h2>
 
-<p>Coming Soon</p>
+<p>Cloud Foundry V3 API uses a subset of HTTP response codes to indicate the success or failure of an API request.
+In general, codes in the 2xx range indicate success, codes in the 4xx range indicate an error that can potentially be fixed by correcting the request, and codes in the 5xx range indicate an error on the server side.</p>
 
-<h2 id="responses">Responses</h2>
+<table><thead>
+<tr>
+<th>HTTP Status Code</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>200 OK</td>
+<td>The request completed successfully.</td>
+</tr>
+<tr>
+<td>201 Created</td>
+<td>The request completed successfully and created a new resource.</td>
+</tr>
+<tr>
+<td>202 Accepted</td>
+<td>The request will be completed asynchronously.</td>
+</tr>
+<tr>
+<td>204 No Content</td>
+<td>The request completed successfully and did not return a body.</td>
+</tr>
+<tr>
+<td>400 Bad Request</td>
+<td>The request has malformed or invalid data.</td>
+</tr>
+<tr>
+<td>401 Unauthenticated</td>
+<td>The request requires an authenticated user.</td>
+</tr>
+<tr>
+<td>403 Forbidden</td>
+<td>The request cannot be performed by the user.</td>
+</tr>
+<tr>
+<td>404 Not Found</td>
+<td>The requested resource does not exist.</td>
+</tr>
+<tr>
+<td>422 Unprocessable Entity</td>
+<td>The request cannot be performed.</td>
+</tr>
+<tr>
+<td>500 Internal Server Error</td>
+<td>An unexpected error occurred.</td>
+</tr>
+<tr>
+<td>502 Bad Gateway</td>
+<td>An upstream service caused the request to fail.</td>
+</tr>
+</tbody></table>
 
-<p>Coming Soon</p>
+<h2 id="resources">Resources</h2>
 
-<h3 id="status-codes">Status Codes</h3>
+<p>A resource represents an individual object within the system, such as an app or a service. It is represented as a JSON object.</p>
 
-<p>Coming Soon</p>
+<p>A resource consists of several required resource fields and other attributes specific to the resource.</p>
+
+<h3 id="required-fields">Required fields</h3>
+<pre class="highlight plaintext"><code>Example Person Resource
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
+
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bob"</span><span class="p">,</span><span class="w">
+
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/people/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guid
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">The unique identifier for the resource</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      created_at
+      <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">The ISO8601 compatible date and time when resource was created.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      updated_at
+      <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">The ISO8601 compatible date and time when resource was last updated.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      links
+      <span class="method-list-item-type"><a href="#the-link-object">link object</a></span>
+    </h4>
+
+    <p class="method-list-item-description">Provide URLs to related resources and actions for the current resource.</p>
+  </li>
+</ul>
 
 <h3 id="links">Links</h3>
 
-<p>Coming Soon</p>
+<p>Links provide URLs to relationships and actions for a resource. Links are represented as a JSON object and will always contain at least a <code class="prettyprint">self</code> link.</p>
 
-<h2 id="workflows">Workflows</h2>
+<p>Each link is keyed by its type and will include a <code class="prettyprint">href</code> for the URL and an optional <code class="prettyprint">method</code> for links that cannot be followed using <code class="prettyprint">GET</code>.</p>
 
-<p>Coming Soon</p>
+<h4 id="the-link-object">The link object</h4>
 
-<h3 id="push-v2-app-and-run-a-v3-task">Push V2 App and Run a V3 Task</h3>
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      href
+      <span class="method-list-item-type">string</span>
+    </h4>
 
-<p>Coming Soon</p>
+    <p class="method-list-item-description">The absolute URL.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      method
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">An optional field containing the HTTP method to be used when following the URL.</p>
+  </li>
+</ul>
+
+<h2 id="errors">Errors</h2>
+
+<h3 id="the-error-object">The error object</h3>
+
+<p>An error response will always return a list of error objects in the <code class="prettyprint">errors</code> field.</p>
+<pre class="highlight plaintext"><code>Example Error
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">422</span> <span class="ne">Unprocessable</span>
+
+{
+  "errors": [
+    {
+      "code": 10008,
+      "title": "CF-UnprocessableEntity",
+      "detail": "The request is semantically invalid: something went wrong"
+    }
+  ]
+}
+</code></pre>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      code
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">A numeric code for this error</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      title
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Short description of the error.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      detail
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Detailed description of the error.</p>
+  </li>
+</ul>
+
+<h2 id="pagination">Pagination</h2>
+
+<p>Any request that can return multiple resources will be paginated and contain a <code class="prettyprint">pagination</code> object and list of <code class="prettyprint">resources</code>.
+Requests for multiple resources can use <code class="prettyprint">page</code>, <code class="prettyprint">per_page</code>, and <code class="prettyprint">order_by</code> in addition to filters specific to the endpoint.</p>
+
+<h3 id="the-pagination-object">The pagination object</h3>
+<pre class="highlight plaintext"><code>Example Paginated Response
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/people?page=1&amp;per_page=1"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/people?page=3&amp;per_page=1"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/people?page=2&amp;per_page=1"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
+
+      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bob"</span><span class="p">,</span><span class="w">
+
+      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/people/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      total_results
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">Total number of resources for all pages</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      total_pages
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">Total number of pages</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      first
+      <span class="method-list-item-type">link object</span>
+    </h4>
+
+    <p class="method-list-item-description">Link to the first page</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      last
+      <span class="method-list-item-type">link object</span>
+    </h4>
+
+    <p class="method-list-item-description">Link to the last page</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      next
+      <span class="method-list-item-type">link object</span>
+    </h4>
+
+    <p class="method-list-item-description">Link to the next page</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      previous
+      <span class="method-list-item-type">link object</span>
+    </h4>
+
+    <p class="method-list-item-description">Link to the previous page</p>
+  </li>
+</ul>
+
+          <h1 id="workflows">Workflows</h1>
+
+<p>Many users will think of interactions with Cloud Foundry in terms of a single operation like <code class="prettyprint">cf push</code> in order to upload an application to the platform, have it compiled, and schedule it to be run.
+Performing a push operation actually requires a client to orchestrate several requests to the API to accomplish the entire operation.
+This section is meant to explain how clients can perform complex workflows using the API.</p>
+
+<h2 id="push-v2-app-and-run-a-v3-task">Push V2 App and Run a V3 Task</h2>
+
+<p>As of CF-245, a V2 Application is also available as a V3 Application, allowing a user to run a V3 Task against it.
+Given a V2 Application with guid <code class="prettyprint">4443bff6-69cf-46d6-96b8-d311aeda3567</code>, create a V3 Task with a POST request to <code class="prettyprint">/v3/apps/4443bff6-69cf-46d6-96b8-d311aeda3567/tasks</code>.
+For more information, see <a href="#create-a-task">Create a task</a>.</p>
 
           <h1 id="resources">Resources</h1>
 
