@@ -87,38 +87,67 @@ module CloudFoundry
         end
       end
 
-      context 'when reaching zero' do
-        let(:general_limit) { 1 }
-
-        it 'does not go lower than zero' do
-          _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
-          expect(response_headers['X-RateLimit-Remaining']).to eq('0')
-          _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
-          expect(response_headers['X-RateLimit-Remaining']).to eq('0')
-        end
-      end
-
       context 'when limit exceeded' do
         let(:general_limit) { 0 }
+        let(:path_info) { '/v2/foo' }
+        let(:middleware_env) do
+          { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info }
+        end
 
         it 'returns 429 response' do
-          status, _, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+          status, _, _ = middleware.call(middleware_env)
           expect(status).to eq(429)
+        end
+
+        it 'prevents "X-RateLimit-Remaining" from going lower than zero' do
+          _, response_headers, _ = middleware.call(middleware_env)
+          expect(response_headers['X-RateLimit-Remaining']).to eq('0')
+          _, response_headers, _ = middleware.call(middleware_env)
+          expect(response_headers['X-RateLimit-Remaining']).to eq('0')
         end
 
         it 'contains the correct headers' do
           Timecop.freeze do
+            error_presenter = instance_double(ErrorPresenter, to_hash: { foo: 'bar' })
+            allow(ErrorPresenter).to receive(:new).and_return(error_presenter)
+
             valid_until            = Time.now + interval.minutes
-            _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+            _, response_headers, _ = middleware.call(middleware_env)
             expect(response_headers['Retry-After']).to eq(valid_until.utc.to_i.to_s)
             expect(response_headers['Content-Type']).to eq('text/plain; charset=utf-8')
-            expect(response_headers['Content-Length']).to eq(RateLimiter::REQUEST_EXCEEDED_MESSAGE_BODY.length.to_s)
+            expect(response_headers['Content-Length']).to eq({ foo: 'bar' }.to_json.length.to_s)
           end
         end
 
         it 'ends the request' do
-          _, _, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+          _, _, _ = middleware.call(middleware_env)
           expect(app).not_to have_received(:call)
+        end
+
+        context 'when the path is /v2/*' do
+          it 'formats the response error in v2 format' do
+            _, _, body = middleware.call(middleware_env)
+            json_body = JSON.parse(body.first)
+            expect(json_body).to include(
+              'code' => 10013,
+              'description' => 'Rate Limit Exceeded',
+              'error_code' => 'CF-RateLimitExceeded',
+            )
+          end
+        end
+
+        context 'when the path is /v3/*' do
+          let(:path_info) { '/v3/foo' }
+
+          it 'formats the response error in v3 format' do
+            _, _, body = middleware.call(middleware_env)
+            json_body = JSON.parse(body.first)
+            expect(json_body['errors'].first).to include(
+              'code' => 10013,
+              'detail' => 'Rate Limit Exceeded',
+              'title' => 'CF-RateLimitExceeded',
+            )
+          end
         end
       end
 

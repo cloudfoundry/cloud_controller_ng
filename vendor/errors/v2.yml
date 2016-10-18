@@ -83,6 +83,11 @@
   http_code: 500
   message: "Cannot order by: %s"
 
+10013:
+  name: RateLimitExceeded
+  http_code: 429
+  message: "Rate Limit Exceeded"
+
 20001:
   name: UserInvalid
   http_code: 400

@@ -1,7 +1,6 @@
 module CloudFoundry
   module Middleware
     class RateLimiter
-      REQUEST_EXCEEDED_MESSAGE_BODY = 'Rate Limit Exceeded'.freeze
       def initialize(app, general_limit, interval)
         @app           = app
         @general_limit = general_limit
@@ -31,13 +30,24 @@ module CloudFoundry
           if exceeded_rate_limit(request_count) && not_admin
             rate_limit_headers['Retry-After'] = rate_limit_headers['X-RateLimit-Reset']
             rate_limit_headers['Content-Type'] = 'text/plain; charset=utf-8'
-            rate_limit_headers['Content-Length'] = REQUEST_EXCEEDED_MESSAGE_BODY.length.to_s
-            return [429, rate_limit_headers, [REQUEST_EXCEEDED_MESSAGE_BODY]]
+            message = rate_limit_error(env['PATH_INFO']).to_json
+            rate_limit_headers['Content-Length'] = message.length.to_s
+            return [429, rate_limit_headers, [message]]
           end
         end
 
         status, headers, body = @app.call(env)
         [status, headers.merge(rate_limit_headers), body]
+      end
+
+      def rate_limit_error(path)
+        api_error = CloudController::Errors::ApiError.new_from_details('RateLimitExceeded')
+        version = path[0..2]
+        if version == '/v2'
+          ErrorPresenter.new(api_error, Rails.env.test?, V2ErrorHasher.new(api_error)).to_hash
+        elsif version == '/v3'
+          ErrorPresenter.new(api_error, Rails.env.test?, V3ErrorHasher.new(api_error)).to_hash
+        end
       end
 
       def exceeded_rate_limit(request_count)
