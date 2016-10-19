@@ -165,7 +165,12 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('UserNotFound', username) unless user
 
         org = find_guid_and_validate_access(:update, guid)
-        org.send("remove_#{role}", user)
+
+        if recursive_delete? && role == :user
+          org.send("remove_#{role}_recursive", user)
+        else
+          org.send("remove_#{role}", user)
+        end
 
         [HTTP::NO_CONTENT]
       end

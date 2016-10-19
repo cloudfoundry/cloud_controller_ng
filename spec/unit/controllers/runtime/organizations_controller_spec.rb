@@ -1250,6 +1250,44 @@ module VCAP::CloudController
               expect(last_response.body).to be_empty
             end
           end
+
+          context 'when recursive delete is requested' do
+            let(:space) { Space.make(organization: org) }
+
+            before do
+              org.add_user(user)
+              org.add_manager(user)
+              space.add_developer(user)
+            end
+
+            if role == :user
+              it 'deletes other roles in org and child spaces' do
+                expect(org.users).to include(user)
+                expect(org.managers).to include(user)
+                expect(space.developers).to include(user)
+
+                delete "/v2/organizations/#{org.guid}/#{plural_role}?recursive=true", MultiJson.dump({ username: user.username })
+
+                org.reload
+                space.reload
+
+                expect(org.users).not_to include(user)
+                expect(org.managers).not_to include(user)
+                expect(space.developers).not_to include(user)
+              end
+            else
+              it 'ignores the recursive requests' do
+                expect(space.developers).to include(user)
+
+                delete "/v2/organizations/#{org.guid}/#{plural_role}?recursive=true", MultiJson.dump({ username: user.username })
+
+                org.reload
+                space.reload
+
+                expect(space.developers).to include(user)
+              end
+            end
+          end
         end
       end
     end
