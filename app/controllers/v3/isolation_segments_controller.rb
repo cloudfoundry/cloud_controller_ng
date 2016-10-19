@@ -30,8 +30,8 @@ class IsolationSegmentsController < ApplicationController
   end
 
   def show
-    isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
-    resource_not_found!(:isolation_segment) unless isolation_segment_model && can_read_isolation_segment?(isolation_segment_model)
+    isolation_segment_model = find_isolation_segment(params[:guid])
+    resource_not_found!(:isolation_segment) unless can_read_isolation_segment?(isolation_segment_model)
 
     render status: :ok, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
   end
@@ -55,8 +55,7 @@ class IsolationSegmentsController < ApplicationController
   def destroy
     unauthorized! unless roles.admin?
 
-    isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
-    resource_not_found!(:isolation_segment) unless isolation_segment_model
+    isolation_segment_model = find_isolation_segment(params[:guid])
 
     unprocessable!("Cannot delete the #{isolation_segment_model.name} Isolation Segment") if
       isolation_segment_model.guid.eql?(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
@@ -72,13 +71,11 @@ class IsolationSegmentsController < ApplicationController
   def update
     unauthorized! unless roles.admin?
 
-    isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
-    resource_not_found!(:isolation_segment) unless isolation_segment_model
-
+    isolation_segment_model = find_isolation_segment(params[:guid])
     unprocessable!("Cannot update the #{isolation_segment_model.name} Isolation Segment") if
       isolation_segment_model.guid.eql?(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
 
-    message = IsolationSegmentCreateMessage.create_from_http_request(params[:body])
+    message = IsolationSegmentUpdateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     isolation_segment_model.db.transaction do
@@ -95,8 +92,8 @@ class IsolationSegmentsController < ApplicationController
   end
 
   def relationships_orgs
-    isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
-    resource_not_found!(:isolation_segment) unless isolation_segment_model && can_list_organizations?(isolation_segment_model)
+    isolation_segment_model = find_isolation_segment(params[:guid])
+    resource_not_found!(:isolation_segment) unless can_list_organizations?(isolation_segment_model)
 
     fetcher = IsolationSegmentOrganizationsFetcher.new(isolation_segment_model)
     organizations = if roles.admin? || roles.admin_read_only?
@@ -109,8 +106,8 @@ class IsolationSegmentsController < ApplicationController
   end
 
   def relationships_spaces
-    isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
-    resource_not_found!(:isolation_segment) unless isolation_segment_model && can_read_isolation_segment?(isolation_segment_model)
+    isolation_segment_model = find_isolation_segment(params[:guid])
+    resource_not_found!(:isolation_segment) unless can_read_isolation_segment?(isolation_segment_model)
 
     fetcher = IsolationSegmentSpacesFetcher.new(isolation_segment_model)
     spaces = if roles.admin? || roles.admin_read_only?
@@ -181,5 +178,11 @@ class IsolationSegmentsController < ApplicationController
 
   def can_list_organizations?(isolation_segment)
     roles.admin? || isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
+  end
+
+  def find_isolation_segment(guid)
+    isolation_segment = IsolationSegmentModel.where(guid: guid).first
+    resource_not_found!(:isolation_segment) unless isolation_segment
+    isolation_segment
   end
 end
