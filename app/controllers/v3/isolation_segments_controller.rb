@@ -1,5 +1,6 @@
 require 'actions/isolation_segment_assign'
 require 'actions/isolation_segment_unassign'
+require 'actions/isolation_segment_update'
 require 'messages/isolation_segment_assign_org_message'
 require 'messages/isolation_segment_create_message'
 require 'messages/isolation_segment_update_message'
@@ -78,11 +79,7 @@ class IsolationSegmentsController < ApplicationController
     message = IsolationSegmentUpdateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    isolation_segment_model.db.transaction do
-      isolation_segment_model.lock!
-      isolation_segment_model.name = message.name if message.requested?(:name)
-      isolation_segment_model.save
-    end
+    IsolationSegmentUpdate.new.update(isolation_segment_model, message)
 
     isolation_segment_model.reload
 
