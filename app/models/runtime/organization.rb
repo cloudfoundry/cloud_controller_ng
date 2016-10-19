@@ -204,24 +204,6 @@ module VCAP::CloudController
       billing_enabled
     end
 
-    def unset_default_isolation_segment(isolation_segment)
-      if isolation_segment_associated_with_space?(isolation_segment)
-        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'Space', 'Isolation Segment')
-      end
-
-      if isolation_segment_models.length > 1 && isolation_segment_model == isolation_segment
-        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform',
-              "Removal of Isolation Segment #{isolation_segment.name} from Organization #{name}",
-              'This operation can only be completed if another Isolation Segment is set as the default')
-      end
-
-      if isolation_segment_models.length == 1
-        self.lock!
-        self.update(isolation_segment_model: nil)
-        self.save
-      end
-    end
-
     private
 
     def validate_quota_on_create
