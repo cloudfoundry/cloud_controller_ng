@@ -21,8 +21,10 @@ module CloudController
           end
 
           if obj.service_plan_id
-            service_plan_guid = VCAP::CloudController::ServicePlan.find(id: obj.service_plan_id).guid
-            obj_hash['service_plan_guid'] = service_plan_guid
+            service_plan = VCAP::CloudController::ServicePlan.find(id: obj.service_plan_id)
+            obj_hash['service_plan_guid'] = service_plan.guid
+            obj_hash['service_guid'] = service_plan.service.guid
+            rel_hash['service_url'] = "/v2/services/#{service_plan.service.guid}"
           end
 
           obj_hash.merge!(rel_hash)

@@ -35,7 +35,9 @@ module CloudController::Presenters::V2
           {
             'name'              => service_instance.name,
             'service_plan_guid' => service_plan.guid,
+            'service_guid'      => service_plan.service.guid,
             'relationship_url'  => 'http://relationship.example.com',
+            'service_url'       => "/v2/services/#{service_plan.service.guid}"
           }
         )
       end

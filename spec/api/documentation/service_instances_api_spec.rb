@@ -41,6 +41,7 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
 
     response_field 'name', 'The human-readable name of the service instance.'
     response_field 'credentials', 'The service broker-provided credentials to use this service.'
+    response_field 'service_guid', 'The service GUID that this service instance belongs to'
     response_field 'service_plan_guid', 'The service plan GUID that this service instance is utilizing.'
     response_field 'space_guid', 'The space GUID that this service instance belongs to.'
     response_field 'gateway_data', '',
@@ -57,6 +58,7 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
     response_field 'last_operation.updated_at', 'The timestamp that the Cloud Controller last checked the service instance state from the broker.'
     response_field 'space_url', 'The relative path to the space resource that this service instance belongs to.'
     response_field 'service_plan_url', 'The relative path to the service plan resource that this service instance belongs to.'
+    response_field 'service_url', 'The relative path to the service that this service instance belongs to.'
     response_field 'service_binding_url', 'The relative path to the service bindings that this service instance is bound to.'
     response_field 'routes_url', 'Routes bound to the service instance. Requests to these routes will be forwarded to the service instance.'
     response_field 'tags', 'A list of tags for the service instance'
