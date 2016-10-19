@@ -1,5 +1,5 @@
 GIT
-  remote: git://github.com/cloudfoundry-incubator/bits-service-client.git
+  remote: https://github.com/cloudfoundry-incubator/bits-service-client.git
   revision: 1f8f88c586ed5d10636841707a6e79b828baec7a
   specs:
     bits_service_client (0.2.0)

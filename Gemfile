@@ -51,7 +51,7 @@ gem 'nats', git: 'https://github.com/nats-io/ruby-nats', ref: '8571cf9d685b60630
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 gem 'cf-uaa-lib', git: 'https://github.com/cloudfoundry/cf-uaa-lib.git', ref: 'db8fe11b56a1d008131a7d757b49c8a00242b9ab'
 gem 'cf-message-bus', '~> 0.3.0'
-gem 'bits_service_client', github: 'cloudfoundry-incubator/bits-service-client'
+gem 'bits_service_client', git: 'https://github.com/cloudfoundry-incubator/bits-service-client.git'
 
 group :db do
   gem 'mysql2', '0.4.4'
