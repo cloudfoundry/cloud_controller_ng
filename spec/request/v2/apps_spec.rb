@@ -158,22 +158,22 @@ RSpec.describe 'Apps' do
                     'updated_at' => nil
                   },
                   'entity' => {
-                    'name'                         => space.name,
-                    'organization_guid'            => space.organization_guid,
-                    'space_quota_definition_guid'  => nil,
-                    'isolation_segment_guid'       => nil,
-                    'allow_ssh'                    => true,
-                    'organization_url'             => "/v2/organizations/#{space.organization_guid}",
-                    'developers_url'               => "/v2/spaces/#{space.guid}/developers",
-                    'managers_url'                 => "/v2/spaces/#{space.guid}/managers",
-                    'auditors_url'                 => "/v2/spaces/#{space.guid}/auditors",
-                    'apps_url'                     => "/v2/spaces/#{space.guid}/apps",
-                    'routes_url'                   => "/v2/spaces/#{space.guid}/routes",
-                    'domains_url'                  => "/v2/spaces/#{space.guid}/domains",
-                    'service_instances_url'        => "/v2/spaces/#{space.guid}/service_instances",
-                    'app_events_url'               => "/v2/spaces/#{space.guid}/app_events",
-                    'events_url'                   => "/v2/spaces/#{space.guid}/events",
-                    'security_groups_url'          => "/v2/spaces/#{space.guid}/security_groups"
+                    'name'                        => space.name,
+                    'organization_guid'           => space.organization_guid,
+                    'space_quota_definition_guid' => nil,
+                    'isolation_segment_guid'      => nil,
+                    'allow_ssh'                   => true,
+                    'organization_url'            => "/v2/organizations/#{space.organization_guid}",
+                    'developers_url'              => "/v2/spaces/#{space.guid}/developers",
+                    'managers_url'                => "/v2/spaces/#{space.guid}/managers",
+                    'auditors_url'                => "/v2/spaces/#{space.guid}/auditors",
+                    'apps_url'                    => "/v2/spaces/#{space.guid}/apps",
+                    'routes_url'                  => "/v2/spaces/#{space.guid}/routes",
+                    'domains_url'                 => "/v2/spaces/#{space.guid}/domains",
+                    'service_instances_url'       => "/v2/spaces/#{space.guid}/service_instances",
+                    'app_events_url'              => "/v2/spaces/#{space.guid}/app_events",
+                    'events_url'                  => "/v2/spaces/#{space.guid}/events",
+                    'security_groups_url'         => "/v2/spaces/#{space.guid}/security_groups"
                   }
                 },
                 'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
@@ -193,22 +193,22 @@ RSpec.describe 'Apps' do
                 'routes'                     => [
                   {
                     'metadata' => {
-                      'guid' => route.guid,
-                      'url' => "/v2/routes/#{route.guid}",
+                      'guid'       => route.guid,
+                      'url'        => "/v2/routes/#{route.guid}",
                       'created_at' => iso8601,
                       'updated_at' => nil
                     },
                     'entity' => {
-                      'host' => route.host,
-                      'path' => '',
-                      'domain_guid' => route.domain.guid,
-                      'space_guid' => space.guid,
+                      'host'                  => route.host,
+                      'path'                  => '',
+                      'domain_guid'           => route.domain.guid,
+                      'space_guid'            => space.guid,
                       'service_instance_guid' => nil,
-                      'port' => nil,
-                      'domain_url' => "/v2/private_domains/#{route.domain.guid}",
-                      'space_url' => "/v2/spaces/#{space.guid}",
-                      'apps_url' => "/v2/routes/#{route.guid}/apps",
-                      'route_mappings_url' => "/v2/routes/#{route.guid}/route_mappings"
+                      'port'                  => nil,
+                      'domain_url'            => "/v2/private_domains/#{route.domain.guid}",
+                      'space_url'             => "/v2/spaces/#{space.guid}",
+                      'apps_url'              => "/v2/routes/#{route.guid}/apps",
+                      'route_mappings_url'    => "/v2/routes/#{route.guid}/route_mappings"
                     }
                   }
                 ],
@@ -764,9 +764,9 @@ RSpec.describe 'Apps' do
 
     before do
       VCAP::CloudController::RouteMappingModel.make(
-        app:   process.app,
+        app:          process.app,
         process_type: process.type,
-        route: VCAP::CloudController::Route.make(space: space, host: 'potato', domain: VCAP::CloudController::SharedDomain.first)
+        route:        VCAP::CloudController::Route.make(space: space, host: 'potato', domain: VCAP::CloudController::SharedDomain.first)
       )
 
       group                  = VCAP::CloudController::EnvironmentVariableGroup.staging
@@ -790,8 +790,8 @@ RSpec.describe 'Apps' do
           'system_env_json'      => { 'VCAP_SERVICES' => {} },
           'application_env_json' => {
             'VCAP_APPLICATION' => {
-              'cf_api' => "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
-              'limits' => {
+              'cf_api'              => "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
+              'limits'              => {
                 'fds'  => 16384,
                 'mem'  => 1024,
                 'disk' => 1024
@@ -1352,7 +1352,7 @@ RSpec.describe 'Apps' do
     it 'uploads the application bits' do
       put "/v2/apps/#{process.guid}/droplet/upload", { droplet: valid_zip }, headers_for(user)
 
-      job = Delayed::Job.last
+      job             = Delayed::Job.last
       parsed_response = MultiJson.load(last_response.body)
 
       expect(last_response.status).to eq 201
@@ -1378,6 +1378,21 @@ RSpec.describe 'Apps' do
 
       expect(droplet.state).to eq(VCAP::CloudController::DropletModel::STAGED_STATE)
       expect(process.reload.current_droplet).to eq(droplet)
+    end
+  end
+
+  describe 'GET /v2/apps/:guid/permissions' do
+    let(:process) { VCAP::CloudController::AppFactory.make(space: space) }
+
+    it 'shows permissions' do
+      get "/v2/apps/#{process.guid}/permissions", nil, headers_for(user, { scopes: ['cloud_controller.user'] })
+
+      expect(last_response.status).to eq 200
+      expect(parsed_response).to be_a_response_like(
+        {
+          'manage' => true
+        }
+      )
     end
   end
 end

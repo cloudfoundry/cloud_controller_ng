@@ -39,6 +39,15 @@ module VCAP::CloudController
       read_with_token?(app)
     end
 
+    def read_permissions?(app)
+      return true if admin_user? || admin_read_only_user?
+      app.space.has_developer?(context.user)
+    end
+
+    def read_permissions_with_token?(app)
+      read_with_token?(app) || has_user_scope?
+    end
+
     def upload?(app)
       FeatureFlag.raise_unless_enabled!(:app_bits_upload)
       update?(app)
@@ -46,6 +55,12 @@ module VCAP::CloudController
 
     def upload_with_token?(_)
       admin_user? || has_write_scope?
+    end
+
+    private
+
+    def has_user_scope?
+      VCAP::CloudController::SecurityContext.scopes.include?('cloud_controller.user')
     end
   end
 end

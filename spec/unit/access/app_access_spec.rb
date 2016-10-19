@@ -28,6 +28,10 @@ module VCAP::CloudController
         expect(subject).to allow_op_on_object(:read_env, object)
         expect(subject).to allow_op_on_object(:upload, object)
       end
+
+      it 'allows the user to :read_permissions' do
+        expect(subject).to allow_op_on_object(:read_permissions, object)
+      end
     end
 
     context 'admin read only' do
@@ -36,6 +40,10 @@ module VCAP::CloudController
       before { FeatureFlag.make(name: 'app_bits_upload', enabled: false) }
 
       it_behaves_like :read_only_access
+
+      it 'allows the user to :read_permissions' do
+        expect(subject).to allow_op_on_object(:read_permissions, object)
+      end
 
       it 'does allows admin_read_only to :read_env' do
         expect(subject).to allow_op_on_object(:read_env, object)
@@ -55,6 +63,10 @@ module VCAP::CloudController
 
       it 'allows user change the diego flag' do
         expect { subject.read_for_update?(object, { 'diego' => true }) }.not_to raise_error
+      end
+
+      it 'allows the user to :read_permissions' do
+        expect(subject).to allow_op_on_object(:read_permissions, object)
       end
 
       context 'app_bits_upload FeatureFlag' do
@@ -103,6 +115,10 @@ module VCAP::CloudController
       it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
       end
+
+      it 'does not allow the user to :read_permissions' do
+        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+      end
     end
 
     context 'organization user' do
@@ -111,6 +127,10 @@ module VCAP::CloudController
 
       it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
+      end
+
+      it 'does not allow the user to :read_permissions' do
+        expect(subject).to_not allow_op_on_object(:read_permissions, object)
       end
     end
 
@@ -121,6 +141,10 @@ module VCAP::CloudController
       it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
       end
+
+      it 'does not allow the user to :read_permissions' do
+        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+      end
     end
 
     context 'billing manager' do
@@ -129,6 +153,10 @@ module VCAP::CloudController
 
       it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
+      end
+
+      it 'does not allow the user to :read_permissions' do
+        expect(subject).to_not allow_op_on_object(:read_permissions, object)
       end
     end
 
@@ -142,6 +170,10 @@ module VCAP::CloudController
       it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
       end
+
+      it 'does not allow the user to :read_permissions' do
+        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+      end
     end
 
     context 'space auditor' do
@@ -153,6 +185,10 @@ module VCAP::CloudController
 
       it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
+      end
+
+      it 'does not allow the user to :read_permissions' do
+        expect(subject).to_not allow_op_on_object(:read_permissions, object)
       end
     end
 

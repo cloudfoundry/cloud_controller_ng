@@ -340,6 +340,18 @@ module VCAP::CloudController
       [HTTP::NO_CONTENT]
     end
 
+    get '/v2/apps/:guid/permissions', :permissions
+    def permissions(guid)
+      find_guid_and_validate_access(:read_permissions, guid, App)
+      [HTTP::OK, {}, JSON.generate({ manage: true })]
+    rescue CloudController::Errors::ApiError => e
+      if e.name == 'NotAuthorized'
+        [HTTP::OK, {}, JSON.generate({ manage: false })]
+      else
+        raise e
+      end
+    end
+
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
       AppQuery.filtered_dataset_from_query_params(model, ds, qp, opts)
     end
