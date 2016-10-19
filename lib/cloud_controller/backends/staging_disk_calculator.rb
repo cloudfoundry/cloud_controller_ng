@@ -9,7 +9,7 @@ module VCAP::CloudController
     end
 
     def minimum_limit
-      Config.config[:staging][:minimum_staging_disk_mb]
+      Config.config[:staging][:minimum_staging_disk_mb] || 2048
     end
 
     def maximum_limit
