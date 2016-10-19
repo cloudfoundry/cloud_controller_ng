@@ -1,3 +1,5 @@
+require 'actions/isolation_segment_assign'
+require 'actions/isolation_segment_unassign'
 require 'messages/isolation_segment_assign_org_message'
 require 'messages/isolation_segment_create_message'
 require 'messages/isolation_segment_update_message'
@@ -127,7 +129,7 @@ class IsolationSegmentsController < ApplicationController
     isolation_segment_model.db.transaction do
       isolation_segment_model.lock!
       orgs.each do |org|
-        isolation_segment_model.add_organization(org)
+        organization_assigner.assign(isolation_segment_model, org)
       end
     end
 
@@ -141,7 +143,7 @@ class IsolationSegmentsController < ApplicationController
     isolation_segment_model.db.transaction do
       isolation_segment_model.lock!
       orgs.each do |org|
-        isolation_segment_model.remove_organization(org)
+        organization_unassigner.unassign(isolation_segment_model, org)
       end
     end
 
@@ -150,8 +152,16 @@ class IsolationSegmentsController < ApplicationController
 
   private
 
+  def organization_assigner
+    @organization_assigner ||= IsolationSegmentAssign.new
+  end
+
+  def organization_unassigner
+    @organization_unassigner ||= IsolationSegmentUnassign.new
+  end
+
   def organizations_lookup
-    isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
+    isolation_segment_model = IsolationSegmentModel.first(guid: params[:guid])
     resource_not_found!(:isolation_segment) unless isolation_segment_model
 
     message = IsolationSegmentAssignOrgMessage.create_from_http_request(params[:body])

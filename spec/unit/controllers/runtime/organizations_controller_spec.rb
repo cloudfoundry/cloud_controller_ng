@@ -201,6 +201,8 @@ module VCAP::CloudController
     end
 
     describe 'setting the default isolation segment' do
+      let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+
       let(:isolation_segment) { IsolationSegmentModel.make }
       let(:isolation_segment2) { IsolationSegmentModel.make }
 
@@ -251,8 +253,8 @@ module VCAP::CloudController
 
         context 'when the isolation segment is in the allowed list' do
           before do
-            isolation_segment.add_organization(org)
-            isolation_segment2.add_organization(org)
+            assigner.assign(isolation_segment, org)
+            assigner.assign(isolation_segment2, org)
             expect(org.isolation_segment_model).to eq(isolation_segment)
           end
 

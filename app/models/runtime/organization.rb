@@ -190,14 +190,6 @@ module VCAP::CloudController
       billing_enabled
     end
 
-    def default_isolation_segment=(isolation_segment)
-      if isolation_segment_models.length == 1
-        self.lock!
-        self.update(isolation_segment_model: isolation_segment)
-        self.save
-      end
-    end
-
     def unset_default_isolation_segment(isolation_segment)
       if isolation_segment_associated_with_space?(isolation_segment)
         raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'Space', 'Isolation Segment')
@@ -217,10 +209,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def isolation_segment_associated_with_space?(isolation_segment)
-      !Space.dataset.where(isolation_segment_model: isolation_segment, organization: self).empty?
-    end
 
     def validate_quota_on_create
       return if quota_definition

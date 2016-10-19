@@ -44,9 +44,10 @@ module CloudController::Presenters::V2
 
       context 'with isolation segments assigned' do
         let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+        let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
         before do
-          isolation_segment_model.add_organization(org)
+          assigner.assign(isolation_segment_model, org)
         end
 
         it 'displays the correct url' do

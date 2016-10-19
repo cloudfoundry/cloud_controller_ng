@@ -1,6 +1,8 @@
 # encoding: utf-8
 require 'spec_helper'
 
+require 'isolation_segment_assign'
+
 module VCAP::CloudController
   RSpec.describe Organization, type: :model do
     it { is_expected.to have_timestamp_columns }
@@ -63,10 +65,11 @@ module VCAP::CloudController
         let(:org) { Organization.make }
         let(:isolation_segment_model) { IsolationSegmentModel.make }
         let(:isolation_segment_model2) { IsolationSegmentModel.make }
+        let(:assigner) { IsolationSegmentAssign.new }
 
         before do
-          isolation_segment_model.add_organization(org)
-          isolation_segment_model2.add_organization(org)
+          assigner.assign(isolation_segment_model, org)
+          assigner.assign(isolation_segment_model2, org)
 
           expect(org.isolation_segment_model).to eq(isolation_segment_model)
           expect(org.isolation_segment_models).to match_array([isolation_segment_model, isolation_segment_model2])
@@ -127,6 +130,7 @@ module VCAP::CloudController
       describe 'isolation segments' do
         let(:isolation_segment_model) { IsolationSegmentModel.make }
         let(:isolation_segment_model2) { IsolationSegmentModel.make }
+        let(:assigner) { IsolationSegmentAssign.new }
 
         context 'when setting the default isolation segment' do
           it 'raises an error if it is not in the allowed list' do
@@ -137,10 +141,10 @@ module VCAP::CloudController
           end
 
           it 'can be updated' do
-            isolation_segment_model.add_organization(org)
+            assigner.assign(isolation_segment_model, org)
             expect(org.isolation_segment_model).to eq(isolation_segment_model)
 
-            isolation_segment_model2.add_organization(org)
+            assigner.assign(isolation_segment_model2, org)
             org.isolation_segment_model = isolation_segment_model2
             expect(org.isolation_segment_model).to eq(isolation_segment_model2)
           end
@@ -156,7 +160,7 @@ module VCAP::CloudController
 
         context 'when removing isolation segments from the allowed list' do
           before do
-            isolation_segment_model.add_organization(org)
+            assigner.assign(isolation_segment_model, org)
           end
 
           it 'removing raises an ApiError' do

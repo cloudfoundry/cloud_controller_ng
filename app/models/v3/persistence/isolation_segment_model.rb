@@ -14,9 +14,7 @@ module VCAP::CloudController
       left_primary_key: :guid,
       right_key: :organization_guid,
       right_primary_key: :guid,
-      join_table: :organizations_isolation_segments,
-      after_add: proc { |isolation_segment, org| org.default_isolation_segment=(isolation_segment) },
-      before_remove: proc { |isolation_segment, org| org.unset_default_isolation_segment(isolation_segment) }
+      join_table: :organizations_isolation_segments, without_guid_generation: true
 
     def validate
       validates_format ISOLATION_SEGMENT_MODEL_REGEX, :name, message: Sequel.lit('Isolation Segment names can only contain non-blank unicode characters')
