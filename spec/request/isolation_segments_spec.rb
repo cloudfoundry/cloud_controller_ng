@@ -342,61 +342,6 @@ RSpec.describe 'IsolationSegmentModels' do
         expect(parsed_response['resources'].map { |r| r['name'] }).to eq([models[3].name, models[5].name])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
-
-      context 'when the user is not an admin' do
-        let(:user_header) { headers_for(user) }
-
-        before do
-          org1.add_user(user)
-          models[0].add_organization(org1)
-          models[1].add_organization(org1)
-          models[2].add_organization(org2)
-        end
-
-        it 'filters by organizations to which the user has access and to which the segment has been assigned' do
-          get '/v3/isolation_segments', nil, user_header
-
-          parsed_response = MultiJson.load(last_response.body)
-          expect(last_response.status).to eq(200)
-
-          expected_response = {
-            'pagination' => {
-              'total_results' =>  2,
-              'total_pages'   =>  1,
-              'first'         =>  { 'href' => "#{link_prefix}/v3/isolation_segments?page=1&per_page=50" },
-              'last'          =>  { 'href' => "#{link_prefix}/v3/isolation_segments?page=1&per_page=50" },
-              'next'          =>  nil,
-              'previous'      =>  nil
-            },
-            'resources' => [
-              {
-                'guid'        =>  models[0].guid.to_s,
-                'name'        =>  models[0].name.to_s,
-                'created_at'  =>  iso8601,
-                'updated_at'  =>  nil,
-                'links'       =>  {
-                  'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[0].guid}" },
-                  'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[0].guid}/relationships/spaces" },
-                  'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[0].guid}/relationships/organizations" },
-                }
-              },
-              {
-                'guid'        =>  models[1].guid.to_s,
-                'name'        =>  models[1].name.to_s,
-                'created_at'  =>  iso8601,
-                'updated_at'  =>  nil,
-                'links'       =>  {
-                  'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[1].guid}" },
-                  'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[1].guid}/relationships/spaces" },
-                  'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[1].guid}/relationships/organizations" },
-                }
-              },
-            ]
-          }
-
-          expect(parsed_response).to be_a_response_like(expected_response)
-        end
-      end
     end
   end
 

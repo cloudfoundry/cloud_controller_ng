@@ -707,7 +707,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
             assigner.assign(isolation_segment2, org1)
           end
 
-          it 'allows the user to see the isolation segment' do
+          it 'allows the user to see only those isolation segments associated with their orgs' do
             get :index
 
             expect(response.status).to eq 200
