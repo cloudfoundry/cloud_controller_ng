@@ -17,10 +17,6 @@ module V3ErrorsHelper
     raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
   end
 
-  def method_not_allowed!(method, obj)
-    raise CloudController::Errors::ApiError.new_from_details('MethodNotAllowed', method, obj)
-  end
-
   def resources_not_found!(message)
     raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', message)
   end

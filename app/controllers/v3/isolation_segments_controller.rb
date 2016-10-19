@@ -58,7 +58,7 @@ class IsolationSegmentsController < ApplicationController
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
     resource_not_found!(:isolation_segment) unless isolation_segment_model
 
-    method_not_allowed!('DELETE', "the #{isolation_segment_model.name} Isolation Segment") if
+    unprocessable!("Cannot delete the #{isolation_segment_model.name} Isolation Segment") if
       isolation_segment_model.guid.eql?(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
 
     isolation_segment_model.db.transaction do
@@ -75,7 +75,7 @@ class IsolationSegmentsController < ApplicationController
     isolation_segment_model = IsolationSegmentModel.where(guid: params[:guid]).first
     resource_not_found!(:isolation_segment) unless isolation_segment_model
 
-    method_not_allowed!('PUT', "the #{isolation_segment_model.name} Isolation Segment") if
+    unprocessable!("Cannot update the #{isolation_segment_model.name} Isolation Segment") if
       isolation_segment_model.guid.eql?(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
 
     message = IsolationSegmentCreateMessage.create_from_http_request(params[:body])

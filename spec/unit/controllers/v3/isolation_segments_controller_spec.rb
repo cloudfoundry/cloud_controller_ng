@@ -900,14 +900,14 @@ RSpec.describe IsolationSegmentsController, type: :controller do
     it 'cannot be deleted' do
       delete :destroy, guid: shared_segment.guid
 
-      expect(response.status).to eq 405
+      expect(response.status).to eq 422
       expect(VCAP::CloudController::IsolationSegmentModel[guid: shared_segment.guid].exists?).to be true
     end
 
     it 'cannot be updated via API' do
       put :update, guid: shared_segment.guid, body: req_body
 
-      expect(response.status).to eq 405
+      expect(response.status).to eq 422
       expect(shared_segment.name).to eq(original_name)
     end
   end

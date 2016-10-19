@@ -15,8 +15,8 @@ module VCAP::CloudController
       right_key: :isolation_segment_guid,
       right_primary_key: :guid,
       join_table: :organizations_isolation_segments,
-      before_add: proc { raise CloudController::Errors::ApiError.new_from_details('OperationNotImplemented', 'add_isolation_segment', 'Organization') },
-      before_remove: proc { raise CloudController::Errors::ApiError.new_from_details('OperationNotImplemented', 'remove_isolation_segment', 'Organization') }
+      before_add: proc { cannot_create! },
+      before_remove: proc { cannot_update! }
 
     one_to_many :service_instances,
                 dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces) }
@@ -137,6 +137,20 @@ module VCAP::CloudController
             dataset.join_table(:inner, :organizations_auditors, organization_id: :id, user_id: user.id).select(:organizations__id)
           ).select(:id)
       }
+    end
+
+    def self.cannot_create!
+      raise CloudController::Errors::ApiError.new_from_details(
+        'UnprocessableEntity',
+        'Cannot create Organization<->Isolation Segment relationships via the Organizations endpoint'
+      )
+    end
+
+    def self.cannot_update!
+      raise CloudController::Errors::ApiError.new_from_details(
+        'UnprocessableEntity',
+        'Cannot delete Organization<->Isolation Segment relationships via the Organizations endpoint'
+      )
     end
 
     def before_destroy
