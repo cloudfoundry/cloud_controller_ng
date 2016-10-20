@@ -11,7 +11,7 @@ module VCAP::Services::SSO::UAA
     end
 
     describe '#modify_transaction' do
-      let(:uaa_uri) { VCAP::CloudController::Config.config[:uaa][:url] }
+      let(:uaa_uri) { VCAP::CloudController::Config.config[:uaa][:internal_url] }
       let(:tx_url) { uaa_uri + '/oauth/clients/tx/modify' }
       let(:auth_header) { 'bearer ACCESSTOKENSTUFF' }
       let(:token_info) { double('info', auth_header: auth_header) }
@@ -22,7 +22,7 @@ module VCAP::Services::SSO::UAA
         stub_request(:post, tx_url)
         VCAP::CloudController::Config.config[:skip_cert_verify] = skip_cert_verify
 
-        opts = { skip_ssl_validation: skip_cert_verify }
+        opts = { skip_ssl_validation: skip_cert_verify, ssl_ca_file: '/var/vcap/jobs/cloud_controller_ng/config/certs/uaa_ca.crt' }
         allow(CF::UAA::TokenIssuer).to receive(:new).with(uaa_uri, 'cc-service-dashboards', 'some-sekret', opts).
           and_return(token_issuer)
       end
@@ -221,7 +221,7 @@ module VCAP::Services::SSO::UAA
         end
 
         context 'without ssl' do
-          let(:uaa_uri) { 'http://localhost:8080/uaa' }
+          let(:uaa_uri) { 'http://uaa.service.cf.internal' }
 
           it 'sets use_ssl to false and does not set verify_mode' do
             changeset = [
@@ -237,7 +237,8 @@ module VCAP::Services::SSO::UAA
         end
 
         context 'with ssl' do
-          let(:uaa_uri) { 'https://localhost:8080/uaa' }
+          before { VCAP::CloudController::Config.config[:uaa][:internal_url] = 'https://uaa.service.cf.internal' }
+          let(:uaa_uri) { 'https://uaa.service.cf.internal' }
 
           it 'sets use_ssl to true' do
             changeset = [
