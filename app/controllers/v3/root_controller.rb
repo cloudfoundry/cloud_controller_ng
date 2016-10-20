@@ -9,6 +9,9 @@ class RootController < ActionController::Base
           tasks: {
             href: build_api_uri(path: '/tasks')
           },
+          apps: {
+            href: build_api_uri(path: '/apps')
+          },
           uaa: {
             href: VCAP::CloudController::Config.config[:uaa][:url]
           }
