@@ -11,9 +11,6 @@ class RootController < ActionController::Base
           },
           apps: {
             href: build_api_uri(path: '/apps')
-          },
-          uaa: {
-            href: VCAP::CloudController::Config.config[:uaa][:url]
           }
         }
       }, pretty: true)
