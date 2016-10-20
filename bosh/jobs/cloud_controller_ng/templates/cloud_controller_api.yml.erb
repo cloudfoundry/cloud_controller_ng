@@ -197,14 +197,11 @@ login:
 <% end %>
 uaa:
   url: <%= p("uaa.url", "#{scheme}://uaa.#{system_domain}") %>
-  internal_url: <%= "https://#{p("cc.uaa.internal_url")}:#{p("uaa.ssl.port")}" %>
   resource_id: <%= p("cc.uaa_resource_id") %>
   <% if_p("uaa.cc.token_secret") do |token_secret| %>
   symmetric_secret: "<%= token_secret %>"
   <% end %>
-  <% if_p("uaa.ca_cert") do %>
-  ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/uaa_ca.crt
-  <% end %>
+  verification_key: <%= p("uaa.jwt.verification_key") ? ("|\n      " + p("uaa.jwt.verification_key").gsub("\n", "\n      ")) : '~' %>
 
 hm9000:
   url: <%= p("hm9000.url", "https://hm9000.#{system_domain}") %>

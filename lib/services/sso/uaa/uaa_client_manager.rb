@@ -113,7 +113,7 @@ module VCAP::Services::SSO::UAA
     end
 
     def uaa_target
-      VCAP::CloudController::Config.config[:uaa][:internal_url]
+      VCAP::CloudController::Config.config[:uaa][:url]
     end
 
     def uaa_client_name
@@ -126,8 +126,7 @@ module VCAP::Services::SSO::UAA
 
     def uaa_connection_opts
       {
-        skip_ssl_validation: !verify_certs?,
-        ca_file: VCAP::CloudController::Config.config[:uaa][:ca_file]
+        skip_ssl_validation: !verify_certs?
       }
     end
   end
