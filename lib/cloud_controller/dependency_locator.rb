@@ -202,9 +202,10 @@ module CloudController
     def username_lookup_uaa_client
       client_id = @config[:cloud_controller_username_lookup_client_name]
       secret = @config[:cloud_controller_username_lookup_client_secret]
-      target = @config[:uaa][:url]
+      target = @config[:uaa][:internal_url]
       skip_cert_verify = @config[:skip_cert_verify]
-      UaaClient.new(target, client_id, secret, { skip_ssl_validation: skip_cert_verify })
+      ca_file = @config[:uaa][:ca_file]
+      UaaClient.new(target, client_id, secret, { skip_ssl_validation: skip_cert_verify, ca_file: ca_file })
     end
 
     def routing_api_client

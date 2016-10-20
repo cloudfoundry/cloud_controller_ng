@@ -1,6 +1,6 @@
 module UserHelpers
   def set_current_user(user, opts={})
-    token_decoder = VCAP::UaaTokenDecoder.new(TestConfig.config[:uaa])
+    token_decoder = VCAP::UaaTokenDecoder.new(TestConfig.config)
     header_token = user ? "bearer #{user_token(user, opts)}" : nil
     token_information = opts[:token] ? opts[:token] : token_decoder.decode_token(header_token)
     VCAP::CloudController::SecurityContext.set(user, token_information, header_token)
