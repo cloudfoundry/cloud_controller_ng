@@ -403,7 +403,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
           it 'cannot remove the default isolation segment' do
             post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-            expect(response.status).to eq 400
+            expect(response.status).to eq 422
           end
 
           context 'and we remove an isolation_segment that is not the default' do
@@ -428,9 +428,9 @@ RSpec.describe IsolationSegmentsController, type: :controller do
             isolation_segment_model.add_space(space)
           end
 
-          it 'returns a 400' do
+          it 'returns a 422' do
             post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-            expect(response.status).to eq 400
+            expect(response.status).to eq 422
           end
         end
 

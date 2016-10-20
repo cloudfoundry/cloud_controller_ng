@@ -84,7 +84,7 @@ class IsolationSegmentsController < ApplicationController
     isolation_segment_model.reload
 
     render status: :ok, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
-  rescue Sequel::ValidationFailed => e
+  rescue IsolationSegmentUpdate::InvalidIsolationSegment => e
     unprocessable!(e.message)
   end
 
@@ -142,6 +142,8 @@ class IsolationSegmentsController < ApplicationController
     end
 
     head :no_content
+  rescue IsolationSegmentUnassign::IsolationSegmentUnassignError => e
+    unprocessable!(e.message)
   end
 
   private

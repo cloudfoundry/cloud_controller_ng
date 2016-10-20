@@ -60,7 +60,7 @@ module VCAP::CloudController
         it 'does not remove the segment from the allowed list' do
           expect {
             subject.unassign(isolation_segment_model, org)
-          }.to raise_error CloudController::Errors::ApiError, 'Please delete the Space associations for your Isolation Segment.'
+          }.to raise_error IsolationSegmentUnassign::IsolationSegmentUnassignError, 'Please delete the Space associations for your Isolation Segment.'
 
           expect(org.isolation_segment_models).to eq([isolation_segment_model])
         end
@@ -92,7 +92,7 @@ module VCAP::CloudController
           it 'does not remove the default segment from the allowed list' do
             expect {
               subject.unassign(isolation_segment_model, org)
-            }.to raise_error CloudController::Errors::ApiError, /This operation can only be completed if another Isolation Segment is set as the default/
+            }.to raise_error IsolationSegmentUnassign::IsolationSegmentUnassignError, /This operation can only be completed if another Isolation Segment is set as the default/
 
             expect(org.isolation_segment_models).to match_array([
               isolation_segment_model,
@@ -113,7 +113,7 @@ module VCAP::CloudController
           it 'does not remove the segment from the allowed list' do
             expect {
               subject.unassign(isolation_segment_model, org)
-            }.to raise_error CloudController::Errors::ApiError, 'Please delete the Space associations for your Isolation Segment.'
+            }.to raise_error IsolationSegmentUnassign::IsolationSegmentUnassignError, 'Please delete the Space associations for your Isolation Segment.'
 
             expect(org.isolation_segment_models).to match_array([
               isolation_segment_model,
