@@ -1,0 +1,31 @@
+### Get an isolation segment
+
+```
+Definition
+```
+
+```http
+GET /v3/isolation_segments/:guid HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/isolation_egments/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :single_isolation_segment %>
+```
+
+This endpoint retrieves an isolation segment.
