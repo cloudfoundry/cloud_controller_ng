@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'request_logs'
 
 module CloudFoundry
   module Middleware
@@ -10,65 +9,170 @@ module CloudFoundry
       let(:general_limit) { 100 }
       let(:interval) { 60 }
 
-      it 'adds a "X-RateLimit-Limit" header' do
-        _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
-        expect(response_headers['X-RateLimit-Limit']).to eq('100')
-      end
+      let(:unauthenticated_env) { {some: 'env'} }
+      let(:user_1_env) { {'cf.user_guid' => 'user-id-1'} }
+      let(:user_2_env) { {'cf.user_guid' => 'user-id-2'} }
 
-      it 'adds a "X-RateLimit-Reset" header per user' do
-        Timecop.freeze do
-          valid_until            = Time.now + interval.minutes
-          _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
-          expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+      describe 'headers' do
+        describe 'X-RateLimit-Limit' do
+          it 'shows the user the total request limit' do
+            _, response_headers, _ = middleware.call(user_1_env)
+            expect(response_headers['X-RateLimit-Limit']).to eq('100')
 
-          Timecop.travel(Time.now + 30.minutes)
-
-          _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
-          expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
-
-          Timecop.travel(Time.now + 31.minutes)
-          valid_until            = Time.now + 60.minutes
-          _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
-          expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+            _, response_headers, _ = middleware.call(user_1_env)
+            expect(response_headers['X-RateLimit-Limit']).to eq('100')
+          end
         end
-      end
 
-      it 'adds a "X-RateLimit-Remaining" header per user' do
-        _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
-        expect(response_headers['X-RateLimit-Remaining']).to eq('99')
-        _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
-        expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+        describe 'X-RateLimit-Remaining' do
+          it 'shows the user the number of remaining requests' do
+            _, response_headers, _ = middleware.call(user_1_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('99')
 
-        _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-2' })
-        expect(response_headers['X-RateLimit-Remaining']).to eq('99')
-      end
+            _, response_headers, _ = middleware.call(user_1_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+          end
 
-      it 'resets "X-RateLimit-Remaining" after interval is over' do
-        Timecop.freeze do
-          _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
-          expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+          it 'tracks user\'s remaining requests independently' do
+            _, response_headers, _ = middleware.call(user_1_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+            _, response_headers, _ = middleware.call(user_1_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('98')
 
-          Timecop.travel(Time.now + 61.minutes)
+            _, response_headers, _ = middleware.call(user_2_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+          end
 
-          _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
-          expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+          it 'resets remaining requests after the interval is over' do
+            Timecop.freeze do
+              _, response_headers, _ = middleware.call(user_1_env)
+              expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+
+              Timecop.travel(Time.now + 61.minutes)
+
+              _, response_headers, _ = middleware.call(user_1_env)
+              expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+            end
+          end
         end
-      end
 
-      it 'does not add "X-RateLimit-*" headers when the user is not logged it' do
-        _, response_headers, _ = middleware.call({})
-        expect(response_headers['X-RateLimit-Remaining']).to be_nil
+        describe 'X-RateLimit-Reset' do
+          it 'shows the user when the interval will expire' do
+            Timecop.freeze do
+              valid_until = Time.now + interval.minutes
+              _, response_headers, _ = middleware.call(user_1_env)
+              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+
+              Timecop.travel(Time.now + 30.minutes)
+
+              _, response_headers, _ = middleware.call(user_1_env)
+              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+            end
+          end
+
+          it 'tracks users independently' do
+            Timecop.freeze do
+              valid_until = Time.now + interval.minutes
+              _, response_headers, _ = middleware.call(user_1_env)
+              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+
+              Timecop.travel(Time.now + 1.minutes)
+              valid_until_2 = Time.now + interval.minutes
+
+              _, response_headers, _ = middleware.call(user_2_env)
+              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until_2.utc.to_i.to_s)
+            end
+          end
+
+          it 'resets after the interval' do
+            Timecop.freeze do
+              valid_until = Time.now + interval.minutes
+              _, response_headers, _ = middleware.call(user_1_env)
+              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+
+              Timecop.travel(Time.now + 61.minutes)
+              valid_until = Time.now + 60.minutes
+              _, response_headers, _ = middleware.call(user_1_env)
+              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+            end
+          end
+        end
       end
 
       it 'allows the request to continue' do
-        _, _, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+        _, _, _ = middleware.call(user_1_env)
         expect(app).to have_received(:call)
       end
 
       it 'does not drop headers created in next middleware' do
-        allow(app).to receive(:call).and_return([200, { 'from' => 'wrapped-app' }, 'a body'])
+        allow(app).to receive(:call).and_return([200, {'from' => 'wrapped-app'}, 'a body'])
         _, headers, _ = middleware.call({})
         expect(headers).to match(hash_including('from' => 'wrapped-app'))
+      end
+
+      describe 'when the user is not logged in' do
+        describe 'when the user has a "HTTP_X_FORWARDED_FOR" header from proxy' do
+          let(:headers) { ActionDispatch::Http::Headers.new({'HTTP_X_FORWARDED_FOR' => 'forwarded_ip'}) }
+          let(:headers_2) { ActionDispatch::Http::Headers.new({'HTTP_X_FORWARDED_FOR' => 'forwarded_ip_2'}) }
+          let(:fake_request) { instance_double(ActionDispatch::Request, headers: headers, ip: 'proxy-ip') }
+          let(:fake_request_2) { instance_double(ActionDispatch::Request, headers: headers_2, ip: 'proxy-ip') }
+
+          before do
+          end
+
+          it 'identifies them by the "HTTP_X_FORWARDED_FOR" header' do
+
+            Timecop.freeze do
+              valid_until = Time.now + interval.minutes
+
+              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
+              _, response_headers, _ = middleware.call(unauthenticated_env)
+              expect(response_headers['X-RateLimit-Limit']).to eq('100')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+
+              _, response_headers, _ = middleware.call(unauthenticated_env)
+              expect(response_headers['X-RateLimit-Limit']).to eq('100')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+
+              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request_2)
+              _, response_headers, _ = middleware.call(unauthenticated_env)
+              expect(response_headers['X-RateLimit-Limit']).to eq('100')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+            end
+          end
+        end
+
+        describe 'when the there is no "HTTP_X_FORWARDED_FOR" header' do
+          let(:headers) { ActionDispatch::Http::Headers.new({'X_HEADER' => 'nope'}) }
+          let(:fake_request) { instance_double(ActionDispatch::Request, headers: headers, ip: 'some-ip') }
+          let(:fake_request_2) { instance_double(ActionDispatch::Request, headers: headers, ip: 'some-ip-2') }
+
+          it 'identifies them by the request id' do
+            Timecop.freeze do
+              valid_until = Time.now + interval.minutes
+
+              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
+              _, response_headers, _ = middleware.call(unauthenticated_env)
+              expect(response_headers['X-RateLimit-Limit']).to eq('100')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+
+              _, response_headers, _ = middleware.call(unauthenticated_env)
+              expect(response_headers['X-RateLimit-Limit']).to eq('100')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+
+              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request_2)
+              _, response_headers, _ = middleware.call(unauthenticated_env)
+              expect(response_headers['X-RateLimit-Limit']).to eq('100')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+            end
+          end
+        end
       end
 
       context 'when user has admin or admin_read_only scopes' do
@@ -78,9 +182,9 @@ module CloudFoundry
           allow(VCAP::CloudController::SecurityContext).to receive(:admin_read_only?).and_return(true)
         end
         it 'does not rate limit' do
-          _, _, _                     = middleware.call({ 'cf.user_guid' => 'user-id-1' })
-          _, _, _                     = middleware.call({ 'cf.user_guid' => 'user-id-1' })
-          status, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+          _, _, _ = middleware.call(user_1_env)
+          _, _, _ = middleware.call(user_1_env)
+          status, response_headers, _ = middleware.call(user_1_env)
           expect(response_headers['X-RateLimit-Remaining']).to eq('0')
           expect(status).to eq(200)
           expect(app).to have_received(:call).at_least(:once)
@@ -91,7 +195,7 @@ module CloudFoundry
         let(:general_limit) { 0 }
         let(:path_info) { '/v2/foo' }
         let(:middleware_env) do
-          { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info }
+          {'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info}
         end
 
         it 'returns 429 response' do
@@ -108,14 +212,14 @@ module CloudFoundry
 
         it 'contains the correct headers' do
           Timecop.freeze do
-            error_presenter = instance_double(ErrorPresenter, to_hash: { foo: 'bar' })
+            error_presenter = instance_double(ErrorPresenter, to_hash: {foo: 'bar'})
             allow(ErrorPresenter).to receive(:new).and_return(error_presenter)
 
-            valid_until            = Time.now + interval.minutes
+            valid_until = Time.now + interval.minutes
             _, response_headers, _ = middleware.call(middleware_env)
             expect(response_headers['Retry-After']).to eq(valid_until.utc.to_i.to_s)
             expect(response_headers['Content-Type']).to eq('text/plain; charset=utf-8')
-            expect(response_headers['Content-Length']).to eq({ foo: 'bar' }.to_json.length.to_s)
+            expect(response_headers['Content-Length']).to eq({foo: 'bar'}.to_json.length.to_s)
           end
         end
 
@@ -155,9 +259,9 @@ module CloudFoundry
         let(:other_middleware) { RateLimiter.new(app, general_limit, interval) }
 
         it 'shares request count between servers' do
-          _, response_headers, _ = middleware.call({ 'cf.user_guid' => 'user-id-1' })
+          _, response_headers, _ = middleware.call(user_1_env)
           expect(response_headers['X-RateLimit-Remaining']).to eq('99')
-          _, response_headers, _ = other_middleware.call({ 'cf.user_guid' => 'user-id-1' })
+          _, response_headers, _ = other_middleware.call(user_1_env)
           expect(response_headers['X-RateLimit-Remaining']).to eq('98')
         end
       end
