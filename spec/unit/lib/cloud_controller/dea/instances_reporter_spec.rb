@@ -169,14 +169,12 @@ module VCAP::CloudController
       end
 
       describe 'started apps that failed to stage' do
-        let(:staging_failed_apps) do
+        let!(:staging_failed_apps) do
           Array.new(3) do
             AppFactory.make(state: 'STARTED').tap do |a|
               a.latest_package.update(state: 'FAILED')
             end
           end
-        end
-        before do
         end
 
         it 'should return 0 instances for apps that failed to stage' do
