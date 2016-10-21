@@ -3,7 +3,7 @@ function try_to_curl {
     local max_attempts=$2
     local interval_in_seconds=$3
 
-    curl -s "$url" >/dev/null
+    curl -s -k "$url" >/dev/null
 
     found=$?
     blobstore_check_attempts=0
@@ -13,7 +13,7 @@ function try_to_curl {
         sleep $interval_in_seconds
         blobstore_check_attempts=$((blobstore_check_attempts+1))
 
-        curl -s "$url" <% if p('ssl.skip_cert_verify') %>-k<% end %> >/dev/null
+        curl -s -k "$url" >/dev/null
         found=$?
 
         if [[ blobstore_check_attempts -eq $max_attempts ]]; then
