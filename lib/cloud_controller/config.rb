@@ -279,6 +279,7 @@ module VCAP::CloudController
         optional(:rate_limiter) => {
           enabled: bool,
           optional(:general_limit) => Integer,
+          optional(:unauthenticated_limit) => Integer,
           optional(:reset_interval_in_minutes) => Integer,
         },
         :shared_isolation_segment_name => String

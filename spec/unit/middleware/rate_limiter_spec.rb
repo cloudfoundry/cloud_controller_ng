@@ -3,15 +3,22 @@ require 'spec_helper'
 module CloudFoundry
   module Middleware
     RSpec.describe RateLimiter do
-      let(:middleware) { RateLimiter.new(app, general_limit, interval) }
+      let(:middleware) { RateLimiter.new(
+        app,
+        general_limit: general_limit,
+        unauthenticated_limit: unauthenticated_limit,
+        interval: interval
+      )
+      }
 
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:general_limit) { 100 }
+      let(:unauthenticated_limit) { 10 }
       let(:interval) { 60 }
 
-      let(:unauthenticated_env) { {some: 'env'} }
-      let(:user_1_env) { {'cf.user_guid' => 'user-id-1'} }
-      let(:user_2_env) { {'cf.user_guid' => 'user-id-2'} }
+      let(:unauthenticated_env) { { some: 'env' } }
+      let(:user_1_env) { { 'cf.user_guid' => 'user-id-1' } }
+      let(:user_2_env) { { 'cf.user_guid' => 'user-id-2' } }
 
       describe 'headers' do
         describe 'X-RateLimit-Limit' do
@@ -105,70 +112,80 @@ module CloudFoundry
       end
 
       it 'does not drop headers created in next middleware' do
-        allow(app).to receive(:call).and_return([200, {'from' => 'wrapped-app'}, 'a body'])
+        allow(app).to receive(:call).and_return([200, { 'from' => 'wrapped-app' }, 'a body'])
         _, headers, _ = middleware.call({})
         expect(headers).to match(hash_including('from' => 'wrapped-app'))
       end
 
       describe 'when the user is not logged in' do
         describe 'when the user has a "HTTP_X_FORWARDED_FOR" header from proxy' do
-          let(:headers) { ActionDispatch::Http::Headers.new({'HTTP_X_FORWARDED_FOR' => 'forwarded_ip'}) }
-          let(:headers_2) { ActionDispatch::Http::Headers.new({'HTTP_X_FORWARDED_FOR' => 'forwarded_ip_2'}) }
+          let(:headers) { ActionDispatch::Http::Headers.new({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip' }) }
+          let(:headers_2) { ActionDispatch::Http::Headers.new({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip_2' }) }
           let(:fake_request) { instance_double(ActionDispatch::Request, headers: headers, ip: 'proxy-ip') }
           let(:fake_request_2) { instance_double(ActionDispatch::Request, headers: headers_2, ip: 'proxy-ip') }
 
-          before do
+          it 'uses unauthenticated_limit instead of general_limit' do
+            allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
+            _, response_headers, _ = middleware.call(unauthenticated_env)
+            expect(response_headers['X-RateLimit-Limit']).to eq('10')
+            expect(response_headers['X-RateLimit-Remaining']).to eq('9')
           end
 
           it 'identifies them by the "HTTP_X_FORWARDED_FOR" header' do
-
             Timecop.freeze do
               valid_until = Time.now + interval.minutes
 
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
               _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to eq('100')
-              expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+              expect(response_headers['X-RateLimit-Limit']).to eq('10')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('9')
               expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
 
               _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to eq('100')
-              expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+              expect(response_headers['X-RateLimit-Limit']).to eq('10')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('8')
               expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
 
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request_2)
               _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to eq('100')
-              expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+              expect(response_headers['X-RateLimit-Limit']).to eq('10')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('9')
               expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
             end
           end
         end
 
         describe 'when the there is no "HTTP_X_FORWARDED_FOR" header' do
-          let(:headers) { ActionDispatch::Http::Headers.new({'X_HEADER' => 'nope'}) }
+          let(:headers) { ActionDispatch::Http::Headers.new({ 'X_HEADER' => 'nope' }) }
           let(:fake_request) { instance_double(ActionDispatch::Request, headers: headers, ip: 'some-ip') }
           let(:fake_request_2) { instance_double(ActionDispatch::Request, headers: headers, ip: 'some-ip-2') }
 
-          it 'identifies them by the request id' do
+          it 'uses unauthenticated_limit instead of general_limit' do
+            allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
+            _, response_headers, _ = middleware.call(unauthenticated_env)
+            expect(response_headers['X-RateLimit-Limit']).to eq('10')
+            expect(response_headers['X-RateLimit-Remaining']).to eq('9')
+          end
+
+          it 'identifies them by the request ip' do
             Timecop.freeze do
               valid_until = Time.now + interval.minutes
 
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
               _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to eq('100')
-              expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+              expect(response_headers['X-RateLimit-Limit']).to eq('10')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('9')
               expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
 
               _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to eq('100')
-              expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+              expect(response_headers['X-RateLimit-Limit']).to eq('10')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('8')
               expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
 
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request_2)
               _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to eq('100')
-              expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+              expect(response_headers['X-RateLimit-Limit']).to eq('10')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('9')
               expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
             end
           end
@@ -195,7 +212,7 @@ module CloudFoundry
         let(:general_limit) { 0 }
         let(:path_info) { '/v2/foo' }
         let(:middleware_env) do
-          {'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info}
+          { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info }
         end
 
         it 'returns 429 response' do
@@ -212,14 +229,14 @@ module CloudFoundry
 
         it 'contains the correct headers' do
           Timecop.freeze do
-            error_presenter = instance_double(ErrorPresenter, to_hash: {foo: 'bar'})
+            error_presenter = instance_double(ErrorPresenter, to_hash: { foo: 'bar' })
             allow(ErrorPresenter).to receive(:new).and_return(error_presenter)
 
             valid_until = Time.now + interval.minutes
             _, response_headers, _ = middleware.call(middleware_env)
             expect(response_headers['Retry-After']).to eq(valid_until.utc.to_i.to_s)
             expect(response_headers['Content-Type']).to eq('text/plain; charset=utf-8')
-            expect(response_headers['Content-Length']).to eq({foo: 'bar'}.to_json.length.to_s)
+            expect(response_headers['Content-Length']).to eq({ foo: 'bar' }.to_json.length.to_s)
           end
         end
 
@@ -256,7 +273,13 @@ module CloudFoundry
       end
 
       context 'with multiple servers' do
-        let(:other_middleware) { RateLimiter.new(app, general_limit, interval) }
+        let(:other_middleware) { RateLimiter.new(
+          app,
+          general_limit: general_limit,
+          unauthenticated_limit: unauthenticated_limit,
+          interval: interval
+        )
+        }
 
         it 'shares request count between servers' do
           _, response_headers, _ = middleware.call(user_1_env)

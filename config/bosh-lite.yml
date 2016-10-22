@@ -265,4 +265,5 @@ system_hostnames: ["api", "uaa", "login", "doppler", "loggregator", "hm9000"]
 rate_limiter:
   enabled: false
   general_limit: 2000
+  unauthenticated_limit: 100
   reset_interval_in_minutes: 60
