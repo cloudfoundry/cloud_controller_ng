@@ -30,7 +30,7 @@ HTTP/1.1 200 OK
 
 <%= yield_content :isolation_segment_with_name, 'my_isolation_segment' %>
 ```
-This endpoint updates an isolation_segment.
+This endpoint updates an isolation_segment.  Only Admins can update isolation segments.
 
 #### Body Parameters
 
@@ -42,6 +42,6 @@ This endpoint updates an isolation_segment.
       <span class="method-list-item-type"/>
     </h4>
 
-    <p class="method-list-item-description">Name of the Isolation Segment.</p>
+    <p class="method-list-item-description">Name of the Isolation Segment.  The name must be unique across the entire system, and case is ignored when checking for uniqueness.</p>
   </li>
 </ul>

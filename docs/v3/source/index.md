@@ -58,6 +58,10 @@ includes:
   - experimental_resources/isolation_segments/update
   - experimental_resources/isolation_segments/delete
   - experimental_resources/isolation_segments/list
+  - experimental_resources/isolation_segments/assign
+  - experimental_resources/isolation_segments/unassign
+  - experimental_resources/isolation_segments/list_organizations
+  - experimental_resources/isolation_segments/list_spaces
   - experimental_resources/packages/header
   - experimental_resources/packages/object
   - experimental_resources/packages/create
