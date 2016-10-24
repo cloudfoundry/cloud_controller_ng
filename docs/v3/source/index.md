@@ -25,7 +25,6 @@ includes:
   - resources/tasks/get
   - resources/tasks/cancel
   - resources/tasks/list
-  - resources/tasks/app/cancel
   - resources/tasks/app/list
   - experimental_resources/header
   - experimental_resources/apps/header
