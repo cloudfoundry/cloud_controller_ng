@@ -29,8 +29,8 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :description }
-      it { is_expected.to import_attributes :name, :description }
+      it { is_expected.to export_attributes :name, :description, :is_private }
+      it { is_expected.to import_attributes :name, :description, :is_private }
     end
 
     describe '.configure' do
