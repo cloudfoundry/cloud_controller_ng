@@ -207,6 +207,7 @@ module VCAP::CloudController
   Stack.blueprint do
     name              { Sham.name }
     description       { Sham.description }
+    is_private        { nil }
   end
 
   # if you want to create an app with droplet, use AppFactory.make
