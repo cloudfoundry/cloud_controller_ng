@@ -17,6 +17,7 @@ module CloudFoundry
       let(:interval) { 60 }
 
       let(:unauthenticated_env) { { some: 'env' } }
+      let(:basic_auth_env) { { 'HTTP_AUTHORIZATION' => ActionController::HttpAuthentication::Basic.encode_credentials('user', 'pass') } }
       let(:user_1_env) { { 'cf.user_guid' => 'user-id-1' } }
       let(:user_2_env) { { 'cf.user_guid' => 'user-id-2' } }
 
@@ -118,11 +119,47 @@ module CloudFoundry
       end
 
       describe 'when the user is not logged in' do
+        describe 'when the user has basic auth credentials' do
+          it 'exempts them from rate limiting' do
+            _, response_headers, _ = middleware.call(basic_auth_env)
+            expect(response_headers['X-RateLimit-Limit']).to be_nil
+            expect(response_headers['X-RateLimit-Remaining']).to be_nil
+            expect(response_headers['X-RateLimit-Reset']).to be_nil
+          end
+        end
+
+        describe 'exempting internal endpoints' do
+          context 'when the user is hitting a path starting with "/internal"' do
+            let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/internal/pants/1234') }
+
+            it 'exempts them from rate limiting' do
+              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
+              _, response_headers, _ = middleware.call(unauthenticated_env)
+              expect(response_headers['X-RateLimit-Limit']).to be_nil
+              expect(response_headers['X-RateLimit-Remaining']).to be_nil
+              expect(response_headers['X-RateLimit-Reset']).to be_nil
+            end
+          end
+
+          context 'when the user is hitting containing, but NOT starting with "/internal"' do
+            let(:headers) { ActionDispatch::Http::Headers.new({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip' }) }
+            let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/pants/internal/1234', headers: headers) }
+
+            it 'rate limits them' do
+              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
+              _, response_headers, _ = middleware.call(unauthenticated_env)
+              expect(response_headers['X-RateLimit-Limit']).to_not be_nil
+              expect(response_headers['X-RateLimit-Remaining']).to_not be_nil
+              expect(response_headers['X-RateLimit-Reset']).to_not be_nil
+            end
+          end
+        end
+
         describe 'when the user has a "HTTP_X_FORWARDED_FOR" header from proxy' do
           let(:headers) { ActionDispatch::Http::Headers.new({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip' }) }
           let(:headers_2) { ActionDispatch::Http::Headers.new({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip_2' }) }
-          let(:fake_request) { instance_double(ActionDispatch::Request, headers: headers, ip: 'proxy-ip') }
-          let(:fake_request_2) { instance_double(ActionDispatch::Request, headers: headers_2, ip: 'proxy-ip') }
+          let(:fake_request) { instance_double(ActionDispatch::Request, headers: headers, ip: 'proxy-ip', fullpath: '/some/path') }
+          let(:fake_request_2) { instance_double(ActionDispatch::Request, headers: headers_2, ip: 'proxy-ip', fullpath: '/some/path') }
 
           it 'uses unauthenticated_limit instead of general_limit' do
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
@@ -157,8 +194,8 @@ module CloudFoundry
 
         describe 'when the there is no "HTTP_X_FORWARDED_FOR" header' do
           let(:headers) { ActionDispatch::Http::Headers.new({ 'X_HEADER' => 'nope' }) }
-          let(:fake_request) { instance_double(ActionDispatch::Request, headers: headers, ip: 'some-ip') }
-          let(:fake_request_2) { instance_double(ActionDispatch::Request, headers: headers, ip: 'some-ip-2') }
+          let(:fake_request) { instance_double(ActionDispatch::Request, headers: headers, ip: 'some-ip', fullpath: '/some/path') }
+          let(:fake_request_2) { instance_double(ActionDispatch::Request, headers: headers, ip: 'some-ip-2', fullpath: '/some/path') }
 
           it 'uses unauthenticated_limit instead of general_limit' do
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
