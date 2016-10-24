@@ -43,6 +43,38 @@ module VCAP::CloudController
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
 
+    def remove_related(guid, name, other_guid, find_model=model)
+      stack = model.first(guid: guid)
+      case name
+      when :organizations
+        org = VCAP::CloudController::Organization.first(guid: other_guid)
+        org.spaces.each do |space|
+          if stack.spaces.include?(space)
+            raise CloudController::Errors::ApiError.new_from_details(
+                    'InvalidRequest',
+                    'Unable to unassociate because an associated space exists'
+                  )
+          end
+        end
+      when :spaces
+        space = VCAP::CloudController::Space.first(guid: other_guid)
+        space.apps.each do |app|
+          if app.stack == stack
+            # if app.state == 'STARTED'
+              raise CloudController::Errors::ApiError.new_from_details(
+                      'InvalidRequest',
+                      'Unable to unassociate because an associated app exists'
+                    )
+            # end
+          end
+        end
+      else
+        raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'Unknown relationship')
+      end
+
+      do_related('remove', guid, name, other_guid, find_model)
+    end
+
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on(:name)
       if name_errors && name_errors.include?(:unique)
