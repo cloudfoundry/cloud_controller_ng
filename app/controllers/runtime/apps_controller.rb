@@ -184,8 +184,15 @@ module VCAP::CloudController
       BlobDispatcher.new(blobstore: @blobstore, controller: self)
     end
 
+    def before_create
+      space = VCAP::CloudController::Space[guid: request_attrs['space_guid']]
+      verify_enable_ssh(space)
+      verify_private_stack(space)
+    end
+
     def before_update(app)
       verify_enable_ssh(app.space)
+      verify_private_stack(app.space)
       updated_diego_flag = request_attrs['diego']
       ports = request_attrs['ports']
       ignore_empty_ports! if ports == []
@@ -215,6 +222,27 @@ module VCAP::CloudController
           'enable_ssh must be false due to global allow_ssh setting',
           )
       end
+    end
+
+    def verify_private_stack(space)
+      app_stack = VCAP::CloudController::Stack[guid: request_attrs['stack_guid']]
+      return true if app_stack.nil?
+      return true unless app_stack.private?
+      return true if app_stack.spaces.include?(space)
+      raise CloudController::Errors::ApiError.new_from_details(
+              'InvalidRequest',
+              "The private stack is not allowed for space #{space.name}",
+            )
+    end
+
+    def after_create(app)
+      record_app_create_value = @app_event_repository.record_app_create(
+        app,
+        app.space,
+        SecurityContext.current_user.guid,
+        SecurityContext.current_user_email,
+        request_attrs)
+      record_app_create_value if request_attrs
     end
 
     def after_update(app)
