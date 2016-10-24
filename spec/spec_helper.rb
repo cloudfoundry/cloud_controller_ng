@@ -16,6 +16,8 @@ require 'steno'
 require 'webmock/rspec'
 require 'cf_message_bus/mock_message_bus'
 
+require 'pry'
+
 require 'cloud_controller'
 require 'allowy/rspec'
 
