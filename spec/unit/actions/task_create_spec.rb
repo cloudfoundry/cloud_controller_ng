@@ -4,7 +4,7 @@ require 'actions/task_create'
 module VCAP::CloudController
   RSpec.describe TaskCreate do
     subject(:task_create_action) { described_class.new(config) }
-    let(:config) { {} }
+    let(:config) { { maximum_app_disk_in_mb: 4096 } }
 
     describe '#create' do
       let(:app) { AppModel.make }
@@ -12,7 +12,7 @@ module VCAP::CloudController
       let(:droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::STAGED_STATE) }
       let(:command) { 'bundle exec rake panda' }
       let(:name) { 'my_task_name' }
-      let(:message) { TaskCreateMessage.new name: name, command: command, memory_in_mb: 1024 }
+      let(:message) { TaskCreateMessage.new name: name, command: command, disk_in_mb: 2048, memory_in_mb: 1024 }
       let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
       let(:user_guid) { 'user-guid' }
       let(:user_email) { 'user-email' }
@@ -33,35 +33,9 @@ module VCAP::CloudController
         expect(task.droplet).to eq(droplet)
         expect(task.command).to eq(command)
         expect(task.name).to eq(name)
+        expect(task.disk_in_mb).to eq(2048)
         expect(task.memory_in_mb).to eq(1024)
         expect(TaskModel.count).to eq(1)
-      end
-
-      describe 'sequence id' do
-        it 'gives the task a sequence id' do
-          task = task_create_action.create(app, message, user_guid, user_email)
-
-          expect(task.sequence_id).to eq(1)
-        end
-
-        it 'increments the sequence id for each task' do
-          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(1)
-          app.reload
-          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(2)
-          app.reload
-          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(3)
-        end
-
-        it 'does not re-use task ids from deleted tasks' do
-          task_create_action.create(app, message, user_guid, user_email)
-          app.reload
-          task_create_action.create(app, message, user_guid, user_email)
-          app.reload
-          task = task_create_action.create(app, message, user_guid, user_email)
-          task.delete
-          app.reload
-          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(4)
-        end
       end
 
       it "sets the task state to 'PENDING'" do
@@ -93,15 +67,50 @@ module VCAP::CloudController
         expect(event.actee).to eq(app.guid)
       end
 
+      describe 'sequence id' do
+        it 'gives the task a sequence id' do
+          task = task_create_action.create(app, message, user_guid, user_email)
+
+          expect(task.sequence_id).to eq(1)
+        end
+
+        it 'increments the sequence id for each task' do
+          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(1)
+          app.reload
+          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(2)
+          app.reload
+          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(3)
+        end
+
+        it 'does not re-use task ids from deleted tasks' do
+          task_create_action.create(app, message, user_guid, user_email)
+          app.reload
+          task_create_action.create(app, message, user_guid, user_email)
+          app.reload
+          task = task_create_action.create(app, message, user_guid, user_email)
+          task.delete
+          app.reload
+          expect(task_create_action.create(app, message, user_guid, user_email).sequence_id).to eq(4)
+        end
+      end
+
       describe 'default values' do
         let(:message) { TaskCreateMessage.new name: name, command: command }
 
-        it 'sets memory_in_mb to configured :default_app_memory' do
-          config[:default_app_memory] = 1234
+        before { config[:default_app_memory] = 200 }
+
+        it 'sets disk_in_mb to configured :default_app_disk_in_mb' do
+          config[:default_app_disk_in_mb] = 200
 
           task = task_create_action.create(app, message, user_guid, user_email)
 
-          expect(task.memory_in_mb).to eq(1234)
+          expect(task.disk_in_mb).to eq(200)
+        end
+
+        it 'sets memory_in_mb to configured :default_app_memory' do
+          task = task_create_action.create(app, message, user_guid, user_email)
+
+          expect(task.memory_in_mb).to eq(200)
         end
       end
 
@@ -143,6 +152,16 @@ module VCAP::CloudController
           task = task_create_action.create(app, message, user_guid, user_email, droplet: custom_droplet)
 
           expect(task.droplet).to eq(custom_droplet)
+        end
+      end
+
+      context 'when the requested disk in mb is higher than the configured maximum' do
+        let(:config) { { maximum_app_disk_in_mb: 10 } }
+
+        it 'raises an error' do
+          expect {
+            task_create_action.create(app, message, user_guid, user_email)
+          }.to raise_error(TaskCreate::MaximumDiskExceeded, /Cannot request disk_in_mb greater than 10/)
         end
       end
     end

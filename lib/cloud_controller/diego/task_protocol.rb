@@ -24,7 +24,7 @@ module VCAP::CloudController
           'task_guid'           => task.guid,
           'log_guid'            => app.guid,
           'memory_mb'           => task.memory_in_mb,
-          'disk_mb'             => config[:default_app_disk_in_mb],
+          'disk_mb'             => task.disk_in_mb,
           'environment'         => envs_for_diego(app, task) || nil,
           'egress_rules'        => @egress_rules.running(app),
           'completion_callback' => task_completion_callback,

@@ -6,11 +6,12 @@ module VCAP::CloudController::Presenters::V3
     subject(:presenter) { TaskPresenter.new(task) }
     let(:task) {
       VCAP::CloudController::TaskModel.make(
-        failure_reason:        'sup dawg',
-        memory_in_mb:          2048,
-        updated_at:            Time.at(2),
-        created_at:            Time.at(1),
-        sequence_id:           5
+        failure_reason: 'sup dawg',
+        memory_in_mb:   2048,
+        disk_in_mb:     4048,
+        updated_at:     Time.at(2),
+        created_at:     Time.at(1),
+        sequence_id:    5
       )
     }
     let(:scheme) { TestConfig.config[:external_protocol] }
@@ -33,6 +34,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:state]).to eq(task.state)
         expect(result[:result][:failure_reason]).to eq 'sup dawg'
         expect(result[:memory_in_mb]).to eq(task.memory_in_mb)
+        expect(result[:disk_in_mb]).to eq(task.disk_in_mb)
         expect(result[:sequence_id]).to eq(5)
         expect(result[:created_at]).to eq(task.created_at.iso8601)
         expect(result[:updated_at]).to eq(task.updated_at.iso8601)
