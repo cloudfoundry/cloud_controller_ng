@@ -168,7 +168,7 @@ module VCAP::CloudController
 
           expect {
             app.update(instances: 2)
-          }.to raise_error(CloudController::Errors::ApiError)
+          }.to raise_error(CloudController::Errors::ApiError, /The app package hash is empty/)
 
           app.reload
           expect(app.instances).to eq(1)
