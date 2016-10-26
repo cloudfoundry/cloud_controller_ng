@@ -268,9 +268,9 @@ RSpec.describe CloudController::DependencyLocator do
       expect(renderer.collection_transformer).to be_a(VCAP::CloudController::UsernamePopulator)
     end
 
-    it 'uses the username_lookup_uaa_client for the populator' do
+    it 'uses the uaa_client for the populator' do
       uaa_client = double('uaa client')
-      expect(locator).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+      expect(locator).to receive(:uaa_client).and_return(uaa_client)
       renderer = locator.username_populating_collection_renderer
       expect(renderer.collection_transformer.uaa_client).to eq(uaa_client)
     end
@@ -290,9 +290,9 @@ RSpec.describe CloudController::DependencyLocator do
     end
   end
 
-  describe '#username_lookup_uaa_client' do
+  describe '#uaa_client' do
     it 'returns a uaa client with credentials for looking up usernames' do
-      uaa_client = locator.username_lookup_uaa_client
+      uaa_client = locator.uaa_client
       expect(uaa_client.client_id).to eq(config[:cloud_controller_username_lookup_client_name])
       expect(uaa_client.secret).to eq(config[:cloud_controller_username_lookup_client_secret])
       expect(uaa_client.uaa_target).to eq(config[:uaa][:internal_url])
@@ -302,7 +302,7 @@ RSpec.describe CloudController::DependencyLocator do
       before { TestConfig.override(skip_cert_verify: true) }
 
       it 'skips ssl validation to uaa' do
-        uaa_client = locator.username_lookup_uaa_client
+        uaa_client = locator.uaa_client
         expect(uaa_client.options[:skip_ssl_validation]).to be true
       end
     end
