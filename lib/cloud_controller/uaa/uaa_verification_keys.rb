@@ -1,4 +1,4 @@
-module VCAP
+module VCAP::CloudController
   class UaaVerificationKeys
     def initialize(info)
       @info = info

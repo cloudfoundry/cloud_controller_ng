@@ -5,7 +5,7 @@ module VCAP::CloudController
   module Security
     RSpec.describe SecurityContextConfigurer do
       let(:configurer) { SecurityContextConfigurer.new(token_decoder) }
-      let(:token_decoder) { double(VCAP::UaaTokenDecoder) }
+      let(:token_decoder) { double(VCAP::CloudController::UaaTokenDecoder) }
 
       describe '#configure' do
         let(:auth_token) { 'auth-token' }
@@ -89,7 +89,7 @@ module VCAP::CloudController
 
         context 'when the auth_token is invalid or expired' do
           before do
-            allow(token_decoder).to receive(:decode_token).with(auth_token).and_raise(VCAP::UaaTokenDecoder::BadToken)
+            allow(token_decoder).to receive(:decode_token).with(auth_token).and_raise(VCAP::CloudController::UaaTokenDecoder::BadToken)
             SecurityContext.set('value', 'another')
           end
 
