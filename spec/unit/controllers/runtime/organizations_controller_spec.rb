@@ -43,8 +43,13 @@ module VCAP::CloudController
             auditor_guids:                { type: '[string]' },
             app_event_guids:              { type: '[string]' },
             space_guids:                  { type: '[string]' },
-            space_quota_definition_guids: { type: '[string]' }
+            space_quota_definition_guids: { type: '[string]' },
+            default_isolation_segment_guid:       { type: 'string' }
           })
+      end
+
+      it 'can order by name and id when listing' do
+        expect(described_class.sortable_parameters).to match_array([:id, :name])
       end
     end
 
@@ -140,6 +145,164 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/organizations/:guid/isolation_segments' do
+      let(:space) { Space.make(organization: org) }
+      let(:user) { make_developer_for_space(space) }
+
+      before do
+        set_current_user(user)
+      end
+
+      it 'returns Unauthorized when the user cannot read from the org' do
+        set_current_user(User.make)
+        get "/v2/organizations/#{org.guid}/isolation_segments"
+
+        expect(last_response.status).to eq(403)
+        expect(decoded_response['error_code']).to match(/CF-NotAuthorized/)
+      end
+
+      context 'when no isolation segments have been assigned' do
+        it 'returns an empty list' do
+          get "/v2/organizations/#{org.guid}/isolation_segments"
+
+          expect(last_response.status).to eq(200)
+
+          expect(decoded_response['resources']).to be_empty
+        end
+      end
+
+      context 'when isolation segments have been assigned' do
+        let(:is1) { IsolationSegmentModel.make }
+        let(:is2) { IsolationSegmentModel.make }
+
+        before do
+          is1.add_organization(org)
+          is2.add_organization(org)
+        end
+
+        it 'returns list of the isolation segments' do
+          get "/v2/organizations/#{org.guid}/isolation_segments"
+
+          expect(last_response.status).to eq(200)
+
+          response_guids = decoded_response['resources'].map { |r| r['guid'] }
+          expect(response_guids).to eq([is1.guid, is2.guid])
+        end
+
+        it 'allows pagination of the response' do
+          get "/v2/organizations/#{org.guid}/isolation_segments?per_page=1"
+
+          expect(last_response.status).to eq(200)
+
+          response_guids = decoded_response['resources'].map { |r| r['guid'] }
+          expect(response_guids).to eq([is1.guid])
+        end
+      end
+    end
+
+    describe 'setting the default isolation segment' do
+      let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+
+      let(:isolation_segment) { IsolationSegmentModel.make }
+      let(:isolation_segment2) { IsolationSegmentModel.make }
+
+      context 'when the user is neither admin nor org manager' do
+        let(:space) { Space.make(organization: org) }
+        let!(:user) { set_current_user(make_developer_for_space(space)) }
+
+        before do
+          isolation_segment.add_organization(org)
+        end
+
+        it 'returns a 403' do
+          put "/v2/organizations/#{org.guid}", MultiJson.dump({
+            default_isolation_segment_guid: isolation_segment.guid
+          })
+
+          expect(last_response.status).to eq(403)
+          expect(decoded_response['error_code']).to match(/CF-NotAuthorized/)
+        end
+      end
+
+      context 'when the user is an org manager for the org' do
+        let(:user) { make_manager_for_org(org) }
+
+        before do
+          set_current_user(user)
+        end
+
+        context 'when the isolation segment does not exist' do
+          it 'returns a 400' do
+            put "/v2/organizations/#{org.guid}", MultiJson.dump({
+              default_isolation_segment_guid: 'bogus-guid'
+            })
+
+            expect(last_response.status).to eq(400)
+          end
+        end
+
+        context 'when the isolation segment is not in the allowed list' do
+          it 'returns a 400' do
+            put "/v2/organizations/#{org.guid}", MultiJson.dump({
+              default_isolation_segment_guid: isolation_segment.guid
+            })
+
+            expect(last_response.status).to eq(400)
+          end
+        end
+
+        context 'when the isolation segment is in the allowed list' do
+          before do
+            assigner.assign(isolation_segment, org)
+            assigner.assign(isolation_segment2, org)
+            expect(org.isolation_segment_model).to eq(isolation_segment)
+          end
+
+          it 'sets the isolation segment as the org default' do
+            put "/v2/organizations/#{org.guid}", MultiJson.dump({
+              default_isolation_segment_guid: isolation_segment2.guid
+            })
+
+            expect(last_response.status).to eq(201)
+            org.reload
+            expect(org.isolation_segment_model).to eq(isolation_segment2)
+          end
+
+          context 'when the segment is already the default isolation segment' do
+            it 'leaves the default unchanged' do
+              put "/v2/organizations/#{org.guid}", MultiJson.dump({
+                default_isolation_segment_guid: isolation_segment.guid
+              })
+
+              expect(last_response.status).to eq(201)
+              org.reload
+              expect(org.isolation_segment_model).to eq(isolation_segment)
+            end
+          end
+        end
+      end
+
+      context 'when the user is an admin' do
+        let(:user) { set_current_user(User.make) }
+
+        before do
+          set_current_user_as_admin
+          isolation_segment.add_organization(org)
+          isolation_segment2.add_organization(org)
+        end
+
+        it 'sets the isolation segment as the org default' do
+          put "/v2/organizations/#{org.guid}", MultiJson.dump({
+            default_isolation_segment_guid: isolation_segment2.guid
+          })
+
+          expect(last_response.status).to eq(201)
+          org.reload
+          expect(org.isolation_segment_model).to eq(isolation_segment2)
+        end
+      end
+    end
+
     describe 'POST /v2/organizations' do
       context 'when user_org_creation feature_flag is disabled' do
         before do
@@ -147,7 +310,7 @@ module VCAP::CloudController
         end
 
         context 'as a non admin' do
-          it 'returns FeatureDisabled' do
+          it 'returns NotAuthorized' do
             set_current_user(User.make)
 
             post '/v2/organizations', MultiJson.dump({ name: 'my-org-name' })
@@ -158,14 +321,29 @@ module VCAP::CloudController
         end
 
         context 'as an admin' do
-          it 'does not add creator as an org manager' do
+          before do
             set_current_user_as_admin
+          end
 
+          it 'does not add creator as an org manager' do
             post '/v2/organizations', MultiJson.dump({ name: 'my-org-name' })
 
             expect(last_response.status).to eq(201)
             org = Organization.find(name: 'my-org-name')
             expect(org.managers.count).to eq(0)
+          end
+
+          it 'does not set the default isolation segment on creation' do
+            isolation_segment = IsolationSegmentModel.make
+
+            post '/v2/organizations', MultiJson.dump({
+              name: 'my-org-name',
+              isolation_segment_guid: isolation_segment.guid
+            })
+
+            expect(last_response.status).to eq(201)
+            org = Organization.find(name: 'my-org-name')
+            expect(org.isolation_segment_model).to be_nil
           end
         end
       end
@@ -190,10 +368,6 @@ module VCAP::CloudController
           end
         end
       end
-    end
-
-    it 'can order by name and id when listing' do
-      expect(described_class.sortable_parameters).to match_array([:id, :name])
     end
 
     describe 'GET /v2/organizations/:guid/user_roles' do
@@ -1248,6 +1422,44 @@ module VCAP::CloudController
               expect(last_response.status).to eq(204)
               expect(org.reload.send(plural_role)).to_not include(user)
               expect(last_response.body).to be_empty
+            end
+          end
+
+          context 'when recursive delete is requested' do
+            let(:space) { Space.make(organization: org) }
+
+            before do
+              org.add_user(user)
+              org.add_manager(user)
+              space.add_developer(user)
+            end
+
+            if role == :user
+              it 'deletes other roles in org and child spaces' do
+                expect(org.users).to include(user)
+                expect(org.managers).to include(user)
+                expect(space.developers).to include(user)
+
+                delete "/v2/organizations/#{org.guid}/#{plural_role}?recursive=true", MultiJson.dump({ username: user.username })
+
+                org.reload
+                space.reload
+
+                expect(org.users).not_to include(user)
+                expect(org.managers).not_to include(user)
+                expect(space.developers).not_to include(user)
+              end
+            else
+              it 'ignores the recursive requests' do
+                expect(space.developers).to include(user)
+
+                delete "/v2/organizations/#{org.guid}/#{plural_role}?recursive=true", MultiJson.dump({ username: user.username })
+
+                org.reload
+                space.reload
+
+                expect(space.developers).to include(user)
+              end
             end
           end
         end

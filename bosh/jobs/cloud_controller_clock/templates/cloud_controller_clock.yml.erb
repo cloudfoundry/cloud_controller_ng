@@ -170,6 +170,7 @@ login:
 <% end %>
 uaa:
   url: <%= p("uaa.url", "#{scheme}://uaa.#{system_domain}") %>
+  internal_url: 'not-needed-by-clock'
   resource_id: <%= p("cc.uaa_resource_id") %>
   <% if_p("uaa.cc.token_secret") do |token_secret| %>
   symmetric_secret: "<%= token_secret %>"
@@ -194,6 +195,8 @@ maximum_health_check_timeout: <%= p("cc.maximum_health_check_timeout") %>
 
 runtimes_file: /var/vcap/jobs/cloud_controller_ng/config/runtimes.yml
 stacks_file: /var/vcap/jobs/cloud_controller_clock/config/stacks.yml
+
+shared_isolation_segment_name: <%= p("cc.shared_isolation_segment_name") %>
 
 quota_definitions:
   <% p("cc.quota_definitions").each do |name, quota_properties| %>

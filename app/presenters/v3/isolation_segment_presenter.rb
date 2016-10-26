@@ -6,11 +6,11 @@ module VCAP::CloudController
       class IsolationSegmentPresenter < BasePresenter
         def to_hash
           {
-            guid:       isolation_segment.guid,
-            name:       isolation_segment.name,
+            guid: isolation_segment.guid,
+            name: isolation_segment.name,
             created_at: isolation_segment.created_at,
             updated_at: isolation_segment.updated_at,
-            links:      build_links
+            links: build_links,
           }
         end
 
@@ -23,8 +23,9 @@ module VCAP::CloudController
         def build_links
           url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
           {
-            self:   { href: url_builder.build_url(path: "/v3/isolation_segments/#{isolation_segment.guid}") },
-            spaces: { href: url_builder.build_url(path: '/v2/spaces', query: "q=isolation_segment_guid:#{isolation_segment.guid}") },
+            self: { href: url_builder.build_url(path: "/v3/isolation_segments/#{isolation_segment.guid}") },
+            organizations: { href: url_builder.build_url(path: "/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations") },
+            spaces: { href: url_builder.build_url(path: "/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces") },
           }
         end
       end

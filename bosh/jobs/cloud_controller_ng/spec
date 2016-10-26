@@ -226,6 +226,14 @@ properties:
     default: 180
     description: "Maximum health check timeout (in seconds) that can be set for the app"
 
+  cc.shared_isolation_segment_name:
+    default: "shared"
+    description: |
+      Name of the shared isolation segment created at startup.
+      This field can be updated, but subject to the following caveat:
+         Using the name of an existing IS other than the default one will cause a deployment to fail.
+         To recover, redeploy using the old (current) name of the previous Isolation Segment.
+
   cc.stacks:
     default:
       - name: "cflinuxfs2"
@@ -454,9 +462,11 @@ properties:
     description: "The certificate authority being used by UAA"
   uaa.ssl.port:
     description: "The port used by UAA for ssl connections"
+  uaa.port:
+    description: "The port used by UAA for non-ssl connections"
   cc.uaa.internal_url:
     description: "The internal url used by UAA"
-    default: "uaa.service.cf.internal"
+    default: "https://uaa.service.cf.internal:8443"
   login.protocol:
     description: "http or https"
     default: "https"
@@ -625,7 +635,7 @@ properties:
     default: 1024
   dea_next.staging_disk_limit_mb:
     description: "Disk limit in mb for staging tasks"
-    default: 6144
+    default: 4096
   cc.staging_file_descriptor_limit:
     description: "File descriptor limit for staging tasks"
     default: 16384

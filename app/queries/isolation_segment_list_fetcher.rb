@@ -9,9 +9,8 @@ module VCAP::CloudController
       filter(dataset)
     end
 
-    def fetch_for_spaces(space_guids:)
-      isolation_segment_guids = Space.dataset.where(guid: space_guids).exclude(isolation_segment_guid: nil).select(:isolation_segment_guid)
-      dataset = IsolationSegmentModel.dataset.where(guid: isolation_segment_guids)
+    def fetch_for_organizations(org_guids:)
+      dataset = IsolationSegmentModel.dataset.where(organizations: Organization.where(guid: org_guids))
       filter(dataset)
     end
 

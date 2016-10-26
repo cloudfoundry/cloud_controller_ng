@@ -19,6 +19,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
       field :status, 'Status of the organization'
       field :quota_definition_guid, 'The guid of quota to associate with this organization', example_values: ['org-quota-def-guid']
       field :billing_enabled, 'If billing is enabled for this organization', deprecated: true
+      field :isolation_segment_guid, 'The guid for the default isolation segment', experimental: true
     end
 
     standard_model_list :organization, VCAP::CloudController::OrganizationsController do
@@ -86,6 +87,52 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
           expect(parsed_response['resources'].length).to eq(1)
           expect(parsed_response['resources'][0]['entity']['organization_roles']).
             to include('org_manager', 'org_auditor', 'billing_manager', 'org_user')
+        end
+      end
+    end
+
+    describe 'Isolation Segments (experimental)' do
+      let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+
+      before do
+        organization.add_manager(everything_user)
+        isolation_segment_model.add_organization(organization)
+      end
+
+      get '/v2/organizations/:guid/isolation_segments (experimental)' do
+        let(:scheme) { TestConfig.config[:external_protocol] }
+        let(:host) { TestConfig.config[:external_domain] }
+        let(:link_prefix) { "#{scheme}://#{host}" }
+
+        example 'get the associated Isolation Segments for the Organization' do
+          client.get "v2/organizations/#{organization.guid}/isolation_segments", {}, headers
+          expect(status).to eq(200)
+
+          expected_response = {
+            'pagination' => {
+              'total_results' =>  1,
+              'total_pages'   =>  1,
+              'first'         =>  { 'href' => "#{link_prefix}/v2/organizations/#{organization.guid}/isolation_segments?page=1&per_page=50" },
+              'last'          =>  { 'href' => "#{link_prefix}/v2/organizations/#{organization.guid}/isolation_segments?page=1&per_page=50" },
+              'next'          =>  nil,
+              'previous'      =>  nil
+            },
+            'resources' => [
+              {
+                'name'        => isolation_segment_model.name,
+                'guid'        => isolation_segment_model.guid,
+                'created_at'  => iso8601,
+                'updated_at'  => nil,
+                'links'       => {
+                  'self'          => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}" },
+                  'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations" },
+                  'spaces'        => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" },
+                }
+              }
+            ]
+          }
+
+          expect(parsed_response).to be_a_response_like(expected_response)
         end
       end
     end

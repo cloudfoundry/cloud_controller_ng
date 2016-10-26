@@ -453,6 +453,16 @@ module VCAP::CloudController
           expect(last_response.body).to include('bits have not been uploaded')
         end
       end
+
+      context 'when the space does not exist' do
+        it 'returns 404' do
+          set_current_user(admin_user, admin: true)
+
+          post '/v2/apps', MultiJson.dump({ name: 'maria', space_guid: 'no-existy' })
+
+          expect(last_response.status).to eq(404)
+        end
+      end
     end
 
     describe 'docker image credentials' do

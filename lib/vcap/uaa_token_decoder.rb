@@ -82,10 +82,10 @@ module VCAP
     end
 
     def asymmetric_key
-      ssl_options = {
-        skip_ssl_validation: config[:skip_cert_verify],
-        ssl_ca_file: uaa_config[:ca_file]
-      }
+      skip_cert_verify = !!config[:skip_cert_verify]
+      ssl_options = { skip_ssl_validation: skip_cert_verify }
+      ssl_options[:ssl_ca_file] = uaa_config[:ca_file] if !skip_cert_verify
+
       info = CF::UAA::Info.new(uaa_config[:internal_url], ssl_options)
       @asymmetric_key ||= UaaVerificationKeys.new(info)
     end

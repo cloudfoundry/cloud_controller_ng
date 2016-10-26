@@ -370,6 +370,52 @@ module VCAP::CloudController
       end
     end
 
+    describe '#org_guids_for_roles' do
+      context 'when the user has a role in the organization' do
+        context 'for org members' do
+          it 'returns all orgs in which the user is a member' do
+            organization.add_user(user)
+            guids = membership.org_guids_for_roles(Membership::ORG_MEMBER)
+            expect(guids).to eq([organization.guid])
+          end
+        end
+
+        context 'for org auditors' do
+          it 'returns all orgs in which the user is an auditor' do
+            organization.add_auditor(user)
+            guids = membership.org_guids_for_roles(Membership::ORG_AUDITOR)
+            expect(guids).to eq([organization.guid])
+          end
+        end
+
+        context 'for org managers' do
+          it 'returns all orgs in which the user is a manager' do
+            organization.add_manager(user)
+            guids = membership.org_guids_for_roles(Membership::ORG_MANAGER)
+            expect(guids).to eq([organization.guid])
+          end
+        end
+
+        context 'for org billing managers' do
+          it 'returns all orgs in which the user is a billing manager' do
+            organization.add_billing_manager(user)
+            guids = membership.org_guids_for_roles(Membership::ORG_BILLING_MANAGER)
+            expect(guids).to eq([organization.guid])
+          end
+        end
+      end
+
+      context 'when the user has no role in any organization' do
+        it 'should return an empty list' do
+          guids = membership.org_guids_for_roles([Membership::ORG_MEMBER,
+                                                  Membership::ORG_AUDITOR,
+                                                  Membership::ORG_BILLING_MANAGER,
+                                                  Membership::ORG_MANAGER])
+          expect(guids).to be_empty
+        end
+      end
+    end
+
     describe '#space_guids_for_roles' do
       let(:user) { User.make }
 

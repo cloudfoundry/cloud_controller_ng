@@ -27,6 +27,10 @@ module VCAP::CloudController
             meta: {
               version: VCAP::CloudController::Constants::API_VERSION_V3
             }
+          },
+
+          uaa: {
+            href: VCAP::CloudController::Config.config[:uaa][:url]
           }
         }
       }

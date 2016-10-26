@@ -15,6 +15,10 @@ module VCAP::CloudController
     describe '.merge_defaults' do
       context 'when no config values are provided' do
         let(:config) { Config.from_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml')) }
+        it 'sets the default isolation segment name' do
+          expect(config[:shared_isolation_segment_name]).to eq('shared')
+        end
+
         it 'sets default stacks_file' do
           expect(config[:stacks_file]).to eq(File.join(Config.config_dir, 'stacks.yml'))
         end
@@ -57,10 +61,6 @@ module VCAP::CloudController
 
         it 'sets a default value for min staging memory' do
           expect(config[:staging][:minimum_staging_memory_mb]).to eq(1024)
-        end
-
-        it 'sets a default value for min staging disk' do
-          expect(config[:staging][:minimum_staging_disk_mb]).to eq(4096)
         end
 
         it 'sets a default value for min staging file descriptor limit' do

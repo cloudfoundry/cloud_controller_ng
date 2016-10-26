@@ -281,6 +281,7 @@ module VCAP::CloudController
           optional(:general_limit) => Integer,
           optional(:reset_interval_in_minutes) => Integer,
         },
+        :shared_isolation_segment_name => String
       }
     end
 

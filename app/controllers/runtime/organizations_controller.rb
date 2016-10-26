@@ -1,5 +1,6 @@
 require 'actions/organization_delete'
 require 'queries/organization_user_roles_fetcher'
+require 'messages/isolation_segments_list_message'
 
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
@@ -18,6 +19,7 @@ module VCAP::CloudController
       attribute :name,            String
       attribute :billing_enabled, Message::Boolean, default: false
       attribute :status,          String, default: 'active'
+      attribute :default_isolation_segment_guid, String, default: nil, exclude_in: :create, optional_in: :update
 
       to_one :quota_definition, optional_in: :create
       to_many :spaces,           exclude_in: :create
@@ -48,6 +50,18 @@ module VCAP::CloudController
       else
         CloudController::Errors::ApiError.new_from_details('OrganizationInvalid', e.errors.full_messages)
       end
+    end
+
+    def before_update(obj)
+      if request_attrs['default_isolation_segment_guid']
+        isolation_segment_guids = obj.isolation_segment_models.map(&:guid)
+        unless isolation_segment_guids.include?(request_attrs['default_isolation_segment_guid'])
+          raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
+            "Organization does not have access to Isolation Segment with guid: #{request_attrs['default_isolation_segment_guid']}")
+        end
+      end
+
+      super(obj)
     end
 
     get '/v2/organizations/:guid/user_roles', :enumerate_user_roles
@@ -165,7 +179,12 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('UserNotFound', username) unless user
 
         org = find_guid_and_validate_access(:update, guid)
-        org.send("remove_#{role}", user)
+
+        if recursive_delete? && role == :user
+          org.send("remove_#{role}_recursive", user)
+        else
+          org.send("remove_#{role}", user)
+        end
 
         [HTTP::NO_CONTENT]
       end
@@ -212,6 +231,20 @@ module VCAP::CloudController
       controller_instance.add_warning('Endpoint removed')
       headers = { 'Location' => '/v2/private_domains/:domain_guid' }
       [HTTP::MOVED_PERMANENTLY, headers, 'Use DELETE /v2/private_domains/:domain_guid']
+    end
+
+    get '/v2/organizations/:guid/isolation_segments', :list_isolation_segments
+    def list_isolation_segments(guid)
+      org = find_guid_and_validate_access(:read, guid)
+
+      dataset = IsolationSegmentModel.dataset.where(organizations: org)
+      message = IsolationSegmentsListMessage.from_params(@params)
+
+      [HTTP::OK, MultiJson.dump(Presenters::V3::PaginatedListPresenter.new(
+        dataset: dataset,
+        path: "/v2/organizations/#{org.guid}/isolation_segments",
+        message: message
+      ).to_hash)]
     end
 
     define_messages

@@ -41,6 +41,12 @@ module VCAP::CloudController
           }
         )
       end
+
+      it 'returns a link to UAA' do
+        get '/'
+        hash = MultiJson.load(last_response.body)
+        expect(hash['links']['uaa']['href']).to eq(TestConfig.config[:uaa][:url])
+      end
     end
   end
 end

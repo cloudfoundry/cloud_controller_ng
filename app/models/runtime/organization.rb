@@ -5,6 +5,19 @@ module VCAP::CloudController
 
     one_to_many :spaces
 
+    many_to_one :isolation_segment_model,
+      primary_key: :guid,
+      key: :default_isolation_segment_guid
+
+    many_to_many :isolation_segment_models,
+      left_key: :organization_guid,
+      left_primary_key: :guid,
+      right_key: :isolation_segment_guid,
+      right_primary_key: :guid,
+      join_table: :organizations_isolation_segments,
+      before_add: proc { cannot_create! },
+      before_remove: proc { cannot_update! }
+
     one_to_many :service_instances,
                 dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces) }
 
@@ -95,7 +108,7 @@ module VCAP::CloudController
     export_attributes :name, :billing_enabled, :quota_definition_guid, :status
     import_attributes :name, :billing_enabled,
                       :user_guids, :manager_guids, :billing_manager_guids,
-                      :auditor_guids, :quota_definition_guid, :status
+                      :auditor_guids, :quota_definition_guid, :status, :default_isolation_segment_guid
 
     def remove_user(user)
       can_remove = ([user.spaces, user.audited_spaces, user.managed_spaces].flatten & spaces).empty?
@@ -124,6 +137,26 @@ module VCAP::CloudController
             dataset.join_table(:inner, :organizations_auditors, organization_id: :id, user_id: user.id).select(:organizations__id)
           ).select(:id)
       }
+    end
+
+    def self.cannot_create!
+      raise CloudController::Errors::ApiError.new_from_details(
+        'UnprocessableEntity',
+        'Cannot create Organization<->Isolation Segment relationships via the Organizations endpoint'
+      )
+    end
+
+    def self.cannot_update!
+      raise CloudController::Errors::ApiError.new_from_details(
+        'UnprocessableEntity',
+        'Cannot delete Organization<->Isolation Segment relationships via the Organizations endpoint'
+      )
+    end
+
+    def before_destroy
+      update(isolation_segment_model: nil)
+      remove_all_isolation_segment_models
+      super
     end
 
     def before_save

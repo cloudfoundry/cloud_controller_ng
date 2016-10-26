@@ -181,6 +181,14 @@ properties:
     default: 180
     description: "Maximum health check timeout (in seconds) that can be set for the app"
 
+  cc.shared_isolation_segment_name:
+    default: "shared"
+    description: |
+      Name of the shared isolation segment created at startup.
+      This field can be updated, but subject to the following caveat:
+         Using the name of an existing IS other than the default one will cause a deployment to fail.
+         To recover, redeploy using the old (current) name of the previous Isolation Segment.
+
   cc.stacks:
     default:
       - name: "cflinuxfs2"
@@ -387,6 +395,13 @@ properties:
     description: "Symmetric secret used to decode uaa tokens. Used for testing."
   uaa.url:
     description: "URL of the UAA server"
+  uaa.ssl.port:
+    description: "The port used by UAA for ssl connections"
+  uaa.port:
+    description: "The port used by UAA for non-ssl connections"
+  cc.uaa.internal_url:
+    description: "The internal url used by UAA"
+    default: "https://uaa.service.cf.internal:8443"
   login.protocol:
     description: "http or https"
     default: "https"

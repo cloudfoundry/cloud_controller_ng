@@ -19,6 +19,23 @@ module VCAP::CloudController
       member_guids.include?(space_guid) || member_guids.include?(org_guid)
     end
 
+    def org_guids_for_roles(roles)
+      roles = [roles] unless roles.is_a?(Array)
+
+      roles.map do |role|
+        case role
+        when ORG_MEMBER
+          @user.organizations.map(&:guid)
+        when ORG_AUDITOR
+          @user.audited_organizations.map(&:guid)
+        when ORG_BILLING_MANAGER
+          @user.billing_managed_organizations.map(&:guid)
+        when ORG_MANAGER
+          @user.managed_organizations.map(&:guid)
+        end
+      end.flatten.compact
+    end
+
     def space_guids_for_roles(roles)
       roles = [roles] unless roles.is_a?(Array)
 
