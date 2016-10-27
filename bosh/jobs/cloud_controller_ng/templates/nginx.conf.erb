@@ -77,6 +77,7 @@ http {
         <% p("cc.nginx_rate_limit_zones").each do |zone| %>
       location <%= zone['location'] %> {
         limit_req zone=<%= zone['name'] %> burst=<%= zone['burst'] %> nodelay;
+        proxy_pass                  http://cloud_controller;
       }
         <% end %>
       <% end %>
