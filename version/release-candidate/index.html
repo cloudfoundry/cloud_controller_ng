@@ -531,11 +531,19 @@ For more information, see <a href="#create-a-task">Create a task</a>.</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
+      disk_in_mb
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">Amount of disk to allocate for the task in MB.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
       memory_in_mb
       <span class="method-list-item-type">integer</span>
     </h4>
 
-    <p class="method-list-item-description">Maximum memory for the task in MB.</p>
+    <p class="method-list-item-description">Amount of memory to allocate for the task in MB.</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -632,6 +640,7 @@ For more information, see <a href="#create-a-task">Create a task</a>.</p>
   "command": "rake db:migrate",
   "state": "RUNNING",
   "memory_in_mb": 512,
+  "disk_in_mb": 1024,
   "result": {
     "failure_reason": null
   },
@@ -682,7 +691,15 @@ For more information, see <a href="#create-a-task">Create a task</a>.</p>
       <span class="method-list-item-type">optional</span>
     </h4>
 
-    <p class="method-list-item-description">Maximum memory for the task in MB. Defaults to operater-configurable &lsquo;default_app_memory&rsquo; when not specified.</p>
+    <p class="method-list-item-description">Amount of memory to allocate for the task in MB. Defaults to operater-configurable &lsquo;default_app_memory&rsquo; when not specified.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      disk_in_mb
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Amount of disk to allocate for the task in MB. Defaults to operater-configurable 'default_app_disk_in_mb&rsquo; when not specified.</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -716,6 +733,7 @@ For more information, see <a href="#create-a-task">Create a task</a>.</p>
   "command": "rake db:migrate",
   "state": "RUNNING",
   "memory_in_mb": 512,
+  "disk_in_mb": 1024,
   "result": {
     "failure_reason": null
   },
@@ -770,6 +788,7 @@ in the response based on the user&rsquo;s role.</p>
   "command": "rake db:migrate",
   "state": "CANCELING",
   "memory_in_mb": 512,
+  "disk_in_mb": 1024,
   "result": {
     "failure_reason": null
   },
@@ -844,6 +863,7 @@ in the response based on the user&rsquo;s role.</p>
       "name": "hello",
       "state": "SUCCEEDED",
       "memory_in_mb": 512,
+      "disk_in_mb": 1024,
       "result": {
         "failure_reason": null
       },
@@ -868,6 +888,7 @@ in the response based on the user&rsquo;s role.</p>
       "name": "migrate",
       "state": "FAILED",
       "memory_in_mb": 512,
+      "disk_in_mb": 1024,
       "result": {
         "failure_reason": "Exited with status 1"
       },
@@ -1049,6 +1070,7 @@ in the response based on the user&rsquo;s role.</p>
       "name": "hello",
       "state": "SUCCEEDED",
       "memory_in_mb": 512,
+      "disk_in_mb": 1024,
       "result": {
         "failure_reason": null
       },
@@ -1073,6 +1095,7 @@ in the response based on the user&rsquo;s role.</p>
       "name": "migrate",
       "state": "FAILED",
       "memory_in_mb": 512,
+      "disk_in_mb": 1024,
       "result": {
         "failure_reason": "Exited with status 1"
       },
