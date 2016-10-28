@@ -1,6 +1,6 @@
 require 'uaa/info'
 
-module VCAP::CloudController
+module VCAP
   class UaaTokenDecoder
     class BadToken < StandardError
     end

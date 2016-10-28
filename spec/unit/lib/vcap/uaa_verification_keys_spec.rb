@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'cloud_controller/uaa/uaa_verification_keys'
+require 'vcap/uaa_verification_keys'
 
-module VCAP::CloudController
+module VCAP
   RSpec.describe UaaVerificationKeys do
     subject { described_class.new(uaa_info) }
 

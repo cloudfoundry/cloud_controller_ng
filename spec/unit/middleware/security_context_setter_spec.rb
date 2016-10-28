@@ -11,7 +11,7 @@ module CloudFoundry
           'HTTP_AUTHORIZATION' => 'auth-token'
         }
       end
-      let(:token_decoder) { instance_double(VCAP::CloudController::UaaTokenDecoder) }
+      let(:token_decoder) { instance_double(VCAP::UaaTokenDecoder) }
       let(:security_context_configurer) { VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder) }
 
       describe '#call' do
