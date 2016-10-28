@@ -5,7 +5,7 @@ module VCAP::CloudController
     let(:url) { 'http://uaa.example.com' }
     let(:client_id) { 'client_id' }
     let(:secret) { 'secret_key' }
-    let(:uaa_options) { { skip_ssl_validation: false, ssl_ca_file: nil } }
+    let(:uaa_options) { { skip_ssl_validation: false } }
 
     let(:uaa_client) { UaaClient.new(url, client_id, secret) }
     let(:auth_header) { 'bearer STUFF' }
@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       context 'when skip_ssl_validation is true' do
-        let(:uaa_options) { { skip_ssl_validation: true, ssl_ca_file: nil } }
+        let(:uaa_options) { { skip_ssl_validation: true } }
         let(:uaa_client) { UaaClient.new(url, client_id, secret, uaa_options) }
 
         it 'skips ssl validation for TokenIssuer and Scim creation' do

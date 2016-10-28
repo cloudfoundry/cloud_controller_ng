@@ -51,8 +51,6 @@ hm9000:
 uaa:
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"
-  internal_url: "http://uaa.service.cf.internal"
-
 
 logging:
   level: fatal # Keep at fatal to avoid lots of extraneous output in tests
