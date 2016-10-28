@@ -6,6 +6,7 @@ AllCops:
   Exclude:
     - vendor/**/*
     - db/migrations/**/*
+    - lib/diego/bbs/models/*
 
 Lint/AmbiguousRegexpLiteral:
   Enabled: false

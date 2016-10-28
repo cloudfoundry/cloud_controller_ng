@@ -472,6 +472,7 @@ DEPENDENCIES
   addressable
   allowy
   awesome_print
+  beefcake
   bits_service_client!
   byebug
   cf-message-bus (~> 0.3.0)
