@@ -401,7 +401,7 @@ properties:
     description: "The port used by UAA for non-ssl connections"
   cc.uaa.internal_url:
     description: "The internal url used by UAA"
-    default: "https://uaa.service.cf.internal:8443"
+    default: "uaa.service.cf.internal"
   login.protocol:
     description: "http or https"
     default: "https"

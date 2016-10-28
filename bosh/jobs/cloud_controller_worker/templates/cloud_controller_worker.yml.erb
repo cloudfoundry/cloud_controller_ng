@@ -169,7 +169,7 @@ login:
 <% end %>
 uaa:
   url: <%= p("uaa.url", "#{scheme}://uaa.#{system_domain}") %>
-  internal_url: <%= p("cc.uaa.internal_url") %>
+  internal_url: <%= if p("ssl.skip_cert_verify") then "http://#{p("cc.uaa.internal_url")}:#{p("uaa.ssl.port")}" else "https://#{p("cc.uaa.internal_url")}:#{p("uaa.ssl.port")}" end %>
   resource_id: <%= p("cc.uaa_resource_id") %>
   <% if_p("uaa.cc.token_secret") do |token_secret| %>
   symmetric_secret: "<%= token_secret %>"
