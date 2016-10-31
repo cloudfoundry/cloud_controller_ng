@@ -232,7 +232,7 @@ properties:
       Name of the shared isolation segment created at startup.
       This field can be updated, but subject to the following caveat:
          Using the name of an existing IS other than the default one will cause a deployment to fail.
-         To recover, redeploy using the old (current) name of the previous Isolation Segment.
+         To recover, redeploy using the last valid Shared Isolation Segment name.
 
   cc.stacks:
     default:

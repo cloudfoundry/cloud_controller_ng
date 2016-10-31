@@ -59,6 +59,8 @@ module VCAP::CloudController
           raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
             "Organization does not have access to Isolation Segment with guid: #{request_attrs['default_isolation_segment_guid']}")
         end
+
+        obj.check_spaces_without_isolation_segments_empty!('Setting')
       end
 
       super(obj)
