@@ -30,7 +30,7 @@ module Diego
         let(:response_body) { 'not found' }
 
         it 'raises' do
-          expect { client.ping }.to raise_error(ClientError, /status: 404, body: not found/)
+          expect { client.ping }.to raise_error(ResponseError, /status: 404, body: not found/)
         end
       end
 
@@ -40,7 +40,7 @@ module Diego
         end
 
         it 'raises' do
-          expect { client.ping }.to raise_error(ClientError, /error message/)
+          expect { client.ping }.to raise_error(RequestError, /error message/)
         end
       end
 
@@ -79,7 +79,7 @@ module Diego
         let(:response_body) { 'not found' }
 
         it 'raises' do
-          expect { client.desire_task(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain') }.to raise_error(ClientError, /status: 404, body: not found/)
+          expect { client.desire_task(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain') }.to raise_error(ResponseError, /status: 404, body: not found/)
         end
       end
 
@@ -89,7 +89,7 @@ module Diego
         end
 
         it 'raises' do
-          expect { client.desire_task(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain') }.to raise_error(ClientError, /error message/)
+          expect { client.desire_task(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain') }.to raise_error(RequestError, /error message/)
         end
       end
 
@@ -159,7 +159,7 @@ module Diego
         let(:response_body) { 'not found' }
 
         it 'raises' do
-          expect { client.tasks }.to raise_error(ClientError, /status: 404, body: not found/)
+          expect { client.tasks }.to raise_error(ResponseError, /status: 404, body: not found/)
         end
       end
 
@@ -169,7 +169,7 @@ module Diego
         end
 
         it 'raises' do
-          expect { client.tasks }.to raise_error(ClientError, /error message/)
+          expect { client.tasks }.to raise_error(RequestError, /error message/)
         end
       end
 
@@ -213,7 +213,7 @@ module Diego
         let(:response_body) { 'not found' }
 
         it 'raises' do
-          expect { client.task_by_guid('some-guid') }.to raise_error(ClientError, /status: 404, body: not found/)
+          expect { client.task_by_guid('some-guid') }.to raise_error(ResponseError, /status: 404, body: not found/)
         end
       end
 
@@ -223,7 +223,7 @@ module Diego
         end
 
         it 'raises' do
-          expect { client.task_by_guid('some-guid') }.to raise_error(ClientError, /error message/)
+          expect { client.task_by_guid('some-guid') }.to raise_error(RequestError, /error message/)
         end
       end
 

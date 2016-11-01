@@ -4,6 +4,8 @@ require 'diego/routes'
 
 module Diego
   class Client
+    PROTOBUF_HEADER = { 'Content-Type'.freeze => 'application/x-protobuf'.freeze }.freeze
+
     def initialize(url:, ca_cert_file:, client_cert_file:, client_key_file:)
       @client = build_client(url, ca_cert_file, client_cert_file, client_key_file)
     end
@@ -22,7 +24,7 @@ module Diego
       encoded_task_request = protobuf_encode!(task_request)
 
       response = with_request_error_handling do
-        client.post(Routes::DESIRE_TASK, encoded_task_request, protobuf_header)
+        client.post(Routes::DESIRE_TASK, encoded_task_request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -34,7 +36,7 @@ module Diego
       encoded_request = protobuf_encode!(request)
 
       response = with_request_error_handling do
-        client.post(Routes::TASK_BY_GUID, encoded_request, protobuf_header)
+        client.post(Routes::TASK_BY_GUID, encoded_request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -46,7 +48,7 @@ module Diego
       encoded_request = protobuf_encode!(request)
 
       response = with_request_error_handling do
-        client.post(Routes::LIST_TASKS, encoded_request, protobuf_header)
+        client.post(Routes::LIST_TASKS, encoded_request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -60,7 +62,7 @@ module Diego
     def with_request_error_handling(&blk)
       yield
     rescue => e
-      raise ClientError.new(e.message)
+      raise RequestError.new(e.message)
     end
 
     def protobuf_encode!(object)
@@ -70,11 +72,7 @@ module Diego
     end
 
     def validate_status!(response:, statuses:)
-      raise ClientError.new("failed with status: #{response.status}, body: #{response.body}") unless statuses.include?(response.status)
-    end
-
-    def protobuf_header
-      { 'Content-Type' => 'application/x-protobuf' }
+      raise ResponseError.new("failed with status: #{response.status}, body: #{response.body}") unless statuses.include?(response.status)
     end
 
     def protobuf_decode!(message, protobuf_decoder)
