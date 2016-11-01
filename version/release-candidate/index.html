@@ -96,6 +96,11 @@
 
 
 
+          
+
+
+
+
 
           
 
@@ -584,7 +589,7 @@ For more information, see <a href="#create-a-task">Create a task</a>.</p>
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone when the app was created.
+    <p class="method-list-item-description">    The time with zone when the object was created.
 </p>
   </li>
 
@@ -597,7 +602,7 @@ For more information, see <a href="#create-a-task">Create a task</a>.</p>
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone with the package was last updated.
+    <p class="method-list-item-description">    The time with zone when the object was last updated.
 </p>
   </li>
 
@@ -1282,7 +1287,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone when the app was created.
+    <p class="method-list-item-description">    The time with zone when the object was created.
 </p>
   </li>
 
@@ -1295,7 +1300,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone with the package was last updated.
+    <p class="method-list-item-description">    The time with zone when the object was last updated.
 </p>
   </li>
 
@@ -2403,7 +2408,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone when the app was created.
+    <p class="method-list-item-description">    The time with zone when the object was created.
 </p>
   </li>
 
@@ -2416,7 +2421,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone with the package was last updated.
+    <p class="method-list-item-description">    The time with zone when the object was last updated.
 </p>
   </li>
 
@@ -3449,6 +3454,578 @@ environment variables listed on the source droplet.</p>
 
 </ul>
 
+          <h2 id="isolation-segments">Isolation Segments</h2>
+
+<p>Isolation Segments provide dedicated pools of resources to which apps can be deployed to isolate workloads.</p>
+
+          <div class='no-margin'></div>
+
+<h3 id="the-isolation_segment-object">The isolation_segment object</h3>
+
+<ul class="method-list-group">
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guid
+
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Unique GUID for the isolation_segment.
+</p>
+  </li>
+
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      name
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">An arbitrary name of the isolation segment.</p>
+  </li>
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      created_at
+
+        <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">    The time with zone when the object was created.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      updated_at
+
+        <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">    The time with zone when the object was last updated.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      links
+
+        <span class="method-list-item-type">object</span>
+    </h4>
+
+    <p class="method-list-item-description">    Links to related resources.
+</p>
+  </li>
+
+
+</ul>
+
+          <h3 id="create-an-isolation-segment">Create an isolation segment</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/isolation_segments</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "name": "my_segment"
+  }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
+
+{
+   "guid": "b19f6525-cbd3-4155-b156-dc0c2a431b4c",
+   "name": "an_isolation_segment",
+   "created_at": "2016-10-19T20:25:04Z",
+   "updated_at": null,
+   "links": {
+      "self": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c"
+      },
+      "spaces": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
+      },
+      "organizations": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"
+      }
+   }
+}
+
+</code></pre>
+
+<p>This endpoint creates a new isolation segment.  Only Admins can create isolation segments.</p>
+
+<h4 id="body-parameters">Body Parameters</h4>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      name
+
+      <span class="method-list-item-type method-list-item-type-required">required</span>
+    </h4>
+
+    <p class="method-list-item-description">Name of the Isolation Segment.  Isolation Segment names must be unique across the entire system, and case is ignored when checking for uniqueness.</p>
+  </li>
+</ul>
+
+          <h3 id="get-an-isolation-segment">Get an isolation segment</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/isolation_segments/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_egments/[guid]"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+
+{
+   "guid": "b19f6525-cbd3-4155-b156-dc0c2a431b4c",
+   "name": "an_isolation_segment",
+   "created_at": "2016-10-19T20:25:04Z",
+   "updated_at": null,
+   "links": {
+      "self": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c"
+      },
+      "spaces": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
+      },
+      "organizations": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"
+      }
+   }
+}
+
+</code></pre>
+
+<p>This endpoint retrieves an isolation segment.</p>
+
+          <h3 id="update-an-isolation-segment">Update an isolation segment</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/isolation_segments/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]"</span> <span class="se">\</span>
+  -X PUT <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "name": "my_isolation_segment"
+  }'</span> 
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+
+{
+   "guid": "b19f6525-cbd3-4155-b156-dc0c2a431b4c",
+   "name": "my_isolation_segment",
+   "created_at": "2016-10-19T20:25:04Z",
+   "updated_at": null,
+   "links": {
+      "self": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c"
+      },
+      "spaces": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
+      },
+      "organizations": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"
+      }
+   }
+}
+
+</code></pre>
+
+<p>This endpoint updates an isolation_segment.  Only Admins can update isolation segments.</p>
+
+<h4 id="body-parameters">Body Parameters</h4>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      name
+
+      <span class="method-list-item-type"/>
+    </h4>
+
+    <p class="method-list-item-description">Name of the Isolation Segment.  The name must be unique across the entire system, and case is ignored when checking for uniqueness.</p>
+  </li>
+</ul>
+
+          <h3 id="delete-an-isolation-segment">Delete an isolation segment</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">DELETE</span> <span class="nn">/v3/isolation_segments/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]"</span> <span class="se">\</span>
+  -X DELETE <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
+</code></pre>
+
+<p>This endpoint deletes an isolation segment.  An isolation segment cannot be deleted if it is still in the allowed list for any organization.  Only Admins can delete isolation segments.</p>
+
+          <h3 id="list-isolation-segments">List isolation segments</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/isolation_segments</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+
+{
+   "pagination": {
+      "total_results": 11,
+      "total_pages": 3,
+      "first": {
+         "href": "https://api.example.org/v3/isolation_segments?page=1&amp;per_page=5"
+      },
+      "last": {
+         "href": "https://api.example.org/v3/isolation_segments?page=3&amp;per_page=5"
+      },
+      "next": {
+         "href": "https://api.example.org/v3/isolation_segments?page=2&amp;per_page=5"
+      },
+      "previous": null
+   },
+   "resources": [
+      {
+         "guid": "b19f6525-cbd3-4155-b156-dc0c2a431b4c",
+         "name": "an_isolation_segment",
+         "created_at": "2016-10-19T20:25:04Z",
+         "updated_at": null,
+         "links": {
+            "self": {
+               "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c"
+            },
+            "spaces": {
+               "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
+            },
+            "organizations": {
+               "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"
+            }
+         }
+      },
+      {
+         "guid": "68d54d31-9b3a-463b-ba94-e8e4c32edbac",
+         "name": "an_isolation_segment1",
+         "created_at": "2016-10-19T20:29:19Z",
+         "updated_at": null,
+         "links": {
+            "self": {
+               "href": "https://api.example.org/v3/isolation_segments/68d54d31-9b3a-463b-ba94-e8e4c32edbac"
+            },
+            "spaces": {
+               "href": "https://api.example.org/v3/isolation_segments/68d54d31-9b3a-463b-ba94-e8e4c32edbac/relationships/spaces"
+            },
+            "organizations": {
+               "href": "https://api.example.org/v3/isolation_segments/68d54d31-9b3a-463b-ba94-e8e4c32edbac/relationships/organizations"
+            }
+         }
+      },
+      {
+         "guid": "ecdc67c3-a71e-43ff-bddf-048930b8cd03",
+         "name": "an_isolation_segment2",
+         "created_at": "2016-10-19T20:29:22Z",
+         "updated_at": null,
+         "links": {
+            "self": {
+               "href": "https://api.example.org/v3/isolation_segments/ecdc67c3-a71e-43ff-bddf-048930b8cd03"
+            },
+            "spaces": {
+               "href": "https://api.example.org/v3/isolation_segments/ecdc67c3-a71e-43ff-bddf-048930b8cd03/relationships/spaces"
+            },
+            "organizations": {
+               "href": "https://api.example.org/v3/isolation_segments/ecdc67c3-a71e-43ff-bddf-048930b8cd03/relationships/organizations"
+            }
+         }
+      },
+      {
+         "guid": "424c89e4-4353-46b7-9bf4-f90bd9bacac0",
+         "name": "an_isolation_segment3",
+         "created_at": "2016-10-19T20:29:27Z",
+         "updated_at": null,
+         "links": {
+            "self": {
+               "href": "https://api.example.org/v3/isolation_segments/424c89e4-4353-46b7-9bf4-f90bd9bacac0"
+            },
+            "spaces": {
+               "href": "https://api.example.org/v3/isolation_segments/424c89e4-4353-46b7-9bf4-f90bd9bacac0/relationships/spaces"
+            },
+            "organizations": {
+               "href": "https://api.example.org/v3/isolation_segments/424c89e4-4353-46b7-9bf4-f90bd9bacac0/relationships/organizations"
+            }
+         }
+      },
+      {
+         "guid": "0a79fcec-a648-4eb8-a6c3-2b5be39047c7",
+         "name": "an_isolation_segment4",
+         "created_at": "2016-10-19T20:29:33Z",
+         "updated_at": null,
+         "links": {
+            "spaces": {
+               "href": "https://api.example.org/v3/isolation_segments/0a79fcec-a648-4eb8-a6c3-2b5be39047c7/relationships/spaces"
+            },
+            "organizations": {
+               "href": "https://api.example.org/v3/isolation_segments/0a79fcec-a648-4eb8-a6c3-2b5be39047c7/relationships/organizations"
+            }
+         }
+      }
+   ]
+}
+
+</code></pre>
+
+<p>This endpoint retrieves all the isolation segments to which the user has access.  For admin, this is all the isolation segments in the system.  For an org manager, this is the isolation segments in the allowed list for any organization to which the user belongs.  For any other user, this is the isolation segments assigned to any spaces to which the user has access.</p>
+
+<h4 id="query-parameters">Query Parameters</h4>
+
+<ul class="method-list-group">
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of isolation_segment guids to filter by. <br>Example: <code>guids=guid1,guid2</code>
+</p>
+  </li>
+
+
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      names
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">array of strings</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of isolation segment names to filter by. <br>Example: <code>names=name1,name2</code></p>
+  </li>
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      page
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      per_page
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
+  </li>
+
+
+</ul>
+
+          <h3 id="entitle-one-or-more-organizations-for-an-isolation-segment">Entitle one or more organizations for an isolation segment</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/isolation_segments/:guid/relationships/organizations</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]/relationships/organizations"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "data": [
+      { "guid":"org-guid-1" },
+      { "guid":"org-guid-2" }
+    ]
+  }'</span> 
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">OK</span>
+
+{
+   "guid": "b19f6525-cbd3-4155-b156-dc0c2a431b4c",
+   "name": "an_isolation_segment",
+   "created_at": "2016-10-19T20:25:04Z",
+   "updated_at": null,
+   "links": {
+      "self": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c"
+      },
+      "spaces": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
+      },
+      "organizations": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"
+      }
+   }
+}
+
+</code></pre>
+
+<p>This endpoint entitles the specified organizations for the isolation segment.  Only Admins can entitle organizations for isolation segments.  If an organization is not already entitled for any other isolation segment, then this isolation segment automatically becomes the default for that organization.</p>
+
+<h4 id="body-parameters">Body Parameters</h4>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      data
+
+      <span class="method-list-item-type"/>
+    </h4>
+
+    <p class="method-list-item-description">Array of organizations, each specified by its guid, to be entitled.</p>
+  </li>
+</ul>
+
+          <h3 id="revoke-entitlement-to-isolation-segment-for-one-or-more-organizations">Revoke entitlement to isolation segment for one or more organizations</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">DELETE</span> <span class="nn">/v3/isolation_segments/:guid/relationships/organizations</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]/relationships/organizations"</span> <span class="se">\</span>
+  -X DELETE <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "data": [
+      { "guid":"org-guid-1" },
+      { "guid":"org-guid-2" }
+    ]
+  }'</span> 
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
+</code></pre>
+
+<p>This endpoint revokes the entitlements for the specified organizations to the isolation segment.  Only Admins can revoke isolation segment entitlements.  If the isolation segment is assigned to a space within an organization, the entitlement cannot be revoked.  If the isolation segment is the organization&rsquo;s default, and the organization has more than one isolation segment, the entitlement cannot be revoked.</p>
+
+<h4 id="body-parameters">Body Parameters</h4>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      data
+
+      <span class="method-list-item-type"/>
+    </h4>
+
+    <p class="method-list-item-description">Array of organizations, each specified by its guid, for which entitlement will be revoked.</p>
+  </li>
+</ul>
+
+          <h3 id="list-organizations-for-an-isolation-segment">List organizations for an isolation segment</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/isolation_segments/:guid/relationships/organizations</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/:guid/relationships/organizations"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+
+{
+  "data": [
+    {
+      "name": "org1",
+      "guid": "68d54d31-9b3a-463b-ba94-e8e4c32edbac",
+      "link": "/v2/organizations/68d54d31-9b3a-463b-ba94-e8e4c32edbac"
+    },
+    {
+      "name": "org2",
+      "guid": "b19f6525-cbd3-4155-b156-dc0c2a431b4c",
+      "link": "/v2/organizations/b19f6525-cbd3-4155-b156-dc0c2a431b4c"
+    }
+  ]
+}
+
+</code></pre>
+
+<p>This endpoint lists the organizations entitled for the isolation segment.  For an Admin, this will list all entitled organizations in the system.  For any other user, this will list only the entitled organizations to which the user belongs.</p>
+
+          <h3 id="list-spaces-for-an-isolation-segment">List spaces for an isolation segment</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/isolation_segments/:guid/relationships/spaces</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/:guid/relationships/spaces"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+
+{
+  "data": [
+    {
+      "name": "space1",
+      "guid": "68d54d31-9b3a-463b-ba94-e8e4c32edbac",
+      "link": "/v2/spaces/68d54d31-9b3a-463b-ba94-e8e4c32edbac"
+    },
+    {
+      "name": "space2",
+      "guid": "b19f6525-cbd3-4155-b156-dc0c2a431b4c",
+      "link": "/v2/spaces/b19f6525-cbd3-4155-b156-dc0c2a431b4c"
+    }
+  ]
+}
+
+</code></pre>
+
+<p>This endpoint lists the spaces to which the isolation segment is assigned.  For an Admin, this will list all associated spaces in the system.  For an org manager, this will list only those associated spaces belonging to orgs for which the user is a manager.  For any other user, this will list only those associated spaces to which the user has access.</p>
+
           <h2 id="packages">Packages</h2>
 
 <p>A package is an application&rsquo;s &lsquo;source code&rsquo;; either raw bits for your application or a pointer to these bits.</p>
@@ -3504,7 +4081,7 @@ environment variables listed on the source droplet.</p>
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone when the app was created.
+    <p class="method-list-item-description">    The time with zone when the object was created.
 </p>
   </li>
 
@@ -3517,7 +4094,7 @@ environment variables listed on the source droplet.</p>
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone with the package was last updated.
+    <p class="method-list-item-description">    The time with zone when the object was last updated.
 </p>
   </li>
 
@@ -4326,7 +4903,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone when the app was created.
+    <p class="method-list-item-description">    The time with zone when the object was created.
 </p>
   </li>
 
@@ -4339,7 +4916,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone with the package was last updated.
+    <p class="method-list-item-description">    The time with zone when the object was last updated.
 </p>
   </li>
 
@@ -5126,7 +5703,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone when the app was created.
+    <p class="method-list-item-description">    The time with zone when the object was created.
 </p>
   </li>
 
@@ -5139,7 +5716,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone with the package was last updated.
+    <p class="method-list-item-description">    The time with zone when the object was last updated.
 </p>
   </li>
 
@@ -5790,7 +6367,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone when the app was created.
+    <p class="method-list-item-description">    The time with zone when the object was created.
 </p>
   </li>
 
@@ -5803,7 +6380,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone with the package was last updated.
+    <p class="method-list-item-description">    The time with zone when the object was last updated.
 </p>
   </li>
 
@@ -6309,7 +6886,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone when the app was created.
+    <p class="method-list-item-description">    The time with zone when the object was created.
 </p>
   </li>
 
@@ -6322,7 +6899,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
         <span class="method-list-item-type">datetime</span>
     </h4>
 
-    <p class="method-list-item-description">    The time with zone with the package was last updated.
+    <p class="method-list-item-description">    The time with zone when the object was last updated.
 </p>
   </li>
 
