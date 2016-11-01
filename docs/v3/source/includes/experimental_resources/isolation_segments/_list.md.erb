@@ -1,0 +1,53 @@
+### List isolation segments
+
+```
+Definition
+```
+
+```http
+GET /v3/isolation_segments HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/isolation_segments" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :paginated_list_of_isolation_segments, '/v3/isolation_segments' %>
+```
+
+This endpoint retrieves all the isolation segments to which the user has access.  For admin, this is all the isolation segments in the system.  For an org manager, this is the isolation segments in the allowed list for any organization to which the user belongs.  For any other user, this is the isolation segments assigned to any spaces to which the user has access.
+
+#### Query Parameters
+
+<ul class="method-list-group">
+
+<%= yield_content :guids_query_param, 'isolation_segment'%>
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      names
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">array of strings</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of isolation segment names to filter by. <br>Example: <code>names=name1,name2</code></p>
+  </li>
+
+<%= yield_content :page_query_param %>
+
+<%= yield_content :per_page_query_param %>
+</ul>

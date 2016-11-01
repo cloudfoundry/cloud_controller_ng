@@ -1,0 +1,47 @@
+### Update an isolation segment
+
+```
+Definition
+```
+
+```http
+PUT /v3/isolation_segments/:guid HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/isolation_segments/[guid]" \
+  -X PUT \
+  -H "Authorization: bearer [token]" \
+  -d '{
+    "name": "my_isolation_segment"
+  }' 
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :isolation_segment_with_name, 'my_isolation_segment' %>
+```
+This endpoint updates an isolation_segment.  Only Admins can update isolation segments.
+
+#### Body Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      name
+
+      <span class="method-list-item-type"/>
+    </h4>
+
+    <p class="method-list-item-description">Name of the Isolation Segment.  The name must be unique across the entire system, and case is ignored when checking for uniqueness.</p>
+  </li>
+</ul>

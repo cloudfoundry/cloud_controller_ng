@@ -1,0 +1,29 @@
+### Delete an isolation segment
+
+```
+Definition
+```
+
+```http
+DELETE /v3/isolation_segments/:guid HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/isolation_segments/[guid]" \
+  -X DELETE \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 204 No Content
+```
+
+This endpoint deletes an isolation segment.  An isolation segment cannot be deleted if it is still in the allowed list for any organization.  Only Admins can delete isolation segments.

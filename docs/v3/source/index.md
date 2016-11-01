@@ -10,6 +10,7 @@ includes:
   - snippets/object_attributes
   - api_resources/apps
   - api_resources/droplets
+  - api_resources/isolation_segments
   - api_resources/packages
   - api_resources/processes
   - api_resources/route_mappings
@@ -49,6 +50,17 @@ includes:
   - experimental_resources/droplets/list
   - experimental_resources/droplets/app/list
   - experimental_resources/droplets/package/list
+  - experimental_resources/isolation_segments/header
+  - experimental_resources/isolation_segments/object
+  - experimental_resources/isolation_segments/create
+  - experimental_resources/isolation_segments/get
+  - experimental_resources/isolation_segments/update
+  - experimental_resources/isolation_segments/delete
+  - experimental_resources/isolation_segments/list
+  - experimental_resources/isolation_segments/assign
+  - experimental_resources/isolation_segments/unassign
+  - experimental_resources/isolation_segments/list_organizations
+  - experimental_resources/isolation_segments/list_spaces
   - experimental_resources/packages/header
   - experimental_resources/packages/object
   - experimental_resources/packages/create
