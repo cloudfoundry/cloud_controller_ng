@@ -55,15 +55,17 @@ module Diego
       protobuf_decode!(response.body, Bbs::Models::TasksResponse)
     end
 
+    def with_request_error_handling(&blk)
+      tries ||= 3
+      yield
+    rescue => e
+      retry unless (tries -= 1).zero?
+      raise RequestError.new(e.message)
+    end
+
     private
 
     attr_reader :client
-
-    def with_request_error_handling(&blk)
-      yield
-    rescue => e
-      raise RequestError.new(e.message)
-    end
 
     def protobuf_encode!(object)
       object.encode.to_s

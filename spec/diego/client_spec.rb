@@ -241,5 +241,24 @@ module Diego
         end
       end
     end
+
+    describe '#with_request_error_handling' do
+      it 'retries' do
+        tries = 0
+
+        client.with_request_error_handling do
+          tries += 1
+          raise 'error' if tries < 2
+        end
+
+        expect(tries).to be > 1
+      end
+
+      it 'raises an error after all retries fail' do
+        expect {
+          client.with_request_error_handling { raise 'error' }
+        }.to raise_error(RequestError)
+      end
+    end
   end
 end
