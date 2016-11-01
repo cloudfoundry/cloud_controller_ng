@@ -25,6 +25,7 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::RequestLogs, Steno.logger('cc.api')
         if config[:rate_limiter][:enabled]
           use CloudFoundry::Middleware::RateLimiter, {
+            logger: Steno.logger('cc.rate_limiter'),
             general_limit: config[:rate_limiter][:general_limit],
             unauthenticated_limit: config[:rate_limiter][:unauthenticated_limit],
             interval: config[:rate_limiter][:reset_interval_in_minutes]

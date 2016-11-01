@@ -48,6 +48,7 @@ module VCAP::CloudController
           it 'enables the RateLimiter middleware' do
             expect(CloudFoundry::Middleware::RateLimiter).to have_received(:new).with(
               anything,
+              logger: instance_of(Steno::Logger),
               general_limit: 123,
               unauthenticated_limit: 1,
               interval: 60

@@ -5,8 +5,9 @@ module CloudFoundry
     class RateLimiter
       include CloudFoundry::Middleware::ClientIp
 
-      def initialize(app, general_limit:, unauthenticated_limit:, interval:)
+      def initialize(app, logger:, general_limit:, unauthenticated_limit:, interval:)
         @app = app
+        @logger = logger
         @general_limit = general_limit
         @unauthenticated_limit = unauthenticated_limit
         @interval = interval
@@ -103,6 +104,8 @@ module CloudFoundry
       end
 
       def reset_request_count(request_count)
+        @logger.info("Resetting request count of #{request_count.count} for user '#{request_count.user_guid}'")
+
         request_count.valid_until = Time.now + @interval.minutes
         request_count.count = 0
       end

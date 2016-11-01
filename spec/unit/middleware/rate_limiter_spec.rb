@@ -3,18 +3,21 @@ require 'spec_helper'
 module CloudFoundry
   module Middleware
     RSpec.describe RateLimiter do
-      let(:middleware) { RateLimiter.new(
-        app,
-        general_limit: general_limit,
-        unauthenticated_limit: unauthenticated_limit,
-        interval: interval
-      )
-      }
+      let(:middleware) do
+        RateLimiter.new(
+          app,
+          logger:                logger,
+          general_limit:         general_limit,
+          unauthenticated_limit: unauthenticated_limit,
+          interval:              interval,
+        )
+      end
 
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:general_limit) { 100 }
       let(:unauthenticated_limit) { 10 }
       let(:interval) { 60 }
+      let(:logger) { double('logger', info: nil) }
 
       let(:unauthenticated_env) { { some: 'env' } }
       let(:basic_auth_env) { { 'HTTP_AUTHORIZATION' => ActionController::HttpAuthentication::Basic.encode_credentials('user', 'pass') } }
@@ -116,6 +119,16 @@ module CloudFoundry
         allow(app).to receive(:call).and_return([200, { 'from' => 'wrapped-app' }, 'a body'])
         _, headers, _ = middleware.call({})
         expect(headers).to match(hash_including('from' => 'wrapped-app'))
+      end
+
+      it 'logs the request count when the interval expires' do
+        Timecop.freeze do
+          _, _, _ = middleware.call(user_1_env)
+
+          Timecop.travel(Time.now + interval.minutes + 1.minute)
+          _, _, _ = middleware.call(user_1_env)
+          expect(logger).to have_received(:info).with "Resetting request count of 1 for user 'user-id-1'"
+        end
       end
 
       describe 'when the user is not logged in' do
@@ -271,7 +284,7 @@ module CloudFoundry
         end
       end
 
-      context 'when limit exceeded' do
+      context 'when limit has exceeded' do
         let(:general_limit) { 0 }
         let(:path_info) { '/v2/foo' }
         let(:middleware_env) do
@@ -336,13 +349,15 @@ module CloudFoundry
       end
 
       context 'with multiple servers' do
-        let(:other_middleware) { RateLimiter.new(
-          app,
-          general_limit: general_limit,
-          unauthenticated_limit: unauthenticated_limit,
-          interval: interval
-        )
-        }
+        let(:other_middleware) do
+          RateLimiter.new(
+            app,
+            logger:                logger,
+            general_limit:         general_limit,
+            unauthenticated_limit: unauthenticated_limit,
+            interval:              interval
+          )
+        end
 
         it 'shares request count between servers' do
           _, response_headers, _ = middleware.call(user_1_env)
