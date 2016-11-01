@@ -2344,7 +2344,7 @@ module VCAP::CloudController
       it 'succeeds and allows manage' do
         get "/v2/apps/#{app_obj.guid}/permissions"
         expect(last_response.status).to eq(200)
-        expect(parsed_response['manage']).to be_truthy
+        expect(parsed_response['manage']).to eq(true)
       end
 
       context 'when missing cloud_controller.user scope' do
@@ -2366,7 +2366,7 @@ module VCAP::CloudController
         it 'returns manage false' do
           get "/v2/apps/#{app_obj.guid}/permissions"
           expect(last_response.status).to eq(200)
-          expect(parsed_response['manage']).to be_falsey
+          expect(parsed_response['manage']).to eq(false)
         end
       end
 
