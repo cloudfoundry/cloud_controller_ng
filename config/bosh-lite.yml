@@ -277,8 +277,7 @@ diego:
     - "buildpack/windows2012R2:windows_app_lifecycle/windows_app_lifecycle.tgz"
     - "docker:docker_app_lifecycle/docker_app_lifecycle.tgz"
   bbs:
-    api_location: bbs.service.cf.internal:8889
+    url: https://bbs.service.cf.internal:8889
     key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.key
     cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.crt
     ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_ca.crt
-    require_ssl: true

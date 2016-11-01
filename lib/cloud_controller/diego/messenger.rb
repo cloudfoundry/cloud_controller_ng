@@ -6,9 +6,15 @@ module VCAP::CloudController
       def send_stage_request(config, staging_details)
         logger.info('staging.begin', package_guid: staging_details.package.guid)
 
-        staging_guid    = staging_details.droplet.guid
-        staging_message = protocol.stage_package_request(config, staging_details)
-        stager_client.stage(staging_guid, staging_message)
+        staging_guid = staging_details.droplet.guid
+
+        if HashUtils.dig(config, :diego, :temporary_local_staging) && staging_details.lifecycle.type == Lifecycles::BUILDPACK
+          task_definition = recipe_builder.build_staging_task(config, staging_details)
+          bbs_stager_client.stage(staging_guid, task_definition)
+        else
+          staging_message = protocol.stage_package_request(config, staging_details)
+          stager_client.stage(staging_guid, staging_message)
+        end
       end
 
       def send_stop_staging_request(staging_guid)
@@ -19,7 +25,7 @@ module VCAP::CloudController
       def send_desire_request(process, default_health_check_timeout)
         logger.info('desire.app.begin', app_guid: process.guid)
 
-        process_guid = ProcessGuid.from_process(process)
+        process_guid   = ProcessGuid.from_process(process)
         desire_message = protocol.desire_app_request(process, default_health_check_timeout)
         nsync_client.desire_app(process_guid, desire_message)
       end
@@ -48,8 +54,16 @@ module VCAP::CloudController
         @protocol ||= Protocol.new
       end
 
+      def recipe_builder
+        @recipe_builder ||= RecipeBuilder.new
+      end
+
       def stager_client
         CloudController::DependencyLocator.instance.stager_client
+      end
+
+      def bbs_stager_client
+        CloudController::DependencyLocator.instance.bbs_stager_client
       end
 
       def nsync_client

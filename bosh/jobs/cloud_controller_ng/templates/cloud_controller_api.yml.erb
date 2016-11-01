@@ -421,8 +421,7 @@ diego:
   use_privileged_containers_for_staging: <%= p("cc.diego.use_privileged_containers_for_staging") %>
   lifecycle_bundles: <%= p("cc.diego.lifecycle_bundles") %>
   bbs:
-    api_location: <%= p("cc.diego.bbs.api_location") %>
+    url: <%= p("cc.diego.bbs.url") %>
     key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.key
     cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.crt
     ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_ca.crt
-    require_ssl: <%= p("cc.diego.bbs.require_ssl") %>

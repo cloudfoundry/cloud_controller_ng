@@ -292,11 +292,10 @@ module VCAP::CloudController
           lifecycle_bundles:                     [String],
 
           bbs: {
-            api_location: String,
-            ca_file:      String,
-            cert_file:    String,
-            key_file:     String,
-            require_ssl:  bool,
+            url:         String,
+            ca_file:     String,
+            cert_file:   String,
+            key_file:    String,
           }
         },
       }

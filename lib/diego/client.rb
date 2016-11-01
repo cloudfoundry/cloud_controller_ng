@@ -20,7 +20,7 @@ module Diego
     end
 
     def desire_task(task_definition:, domain:, task_guid:)
-      task_request = Bbs::Models::DesireTaskRequest.new(task_definition: task_definition, domain: domain, task_guid: task_guid)
+      task_request         = Bbs::Models::DesireTaskRequest.new(task_definition: task_definition, domain: domain, task_guid: task_guid)
       encoded_task_request = protobuf_encode!(task_request)
 
       response = with_request_error_handling do
@@ -84,7 +84,10 @@ module Diego
     end
 
     def build_client(url, ca_cert_file, client_cert_file, client_key_file)
-      client = HTTPClient.new(base_url: url)
+      client                 = HTTPClient.new(base_url: url)
+      client.connect_timeout = 10
+      client.send_timeout    = 10
+      client.receive_timeout = 10
       client.ssl_config.set_client_cert_file(client_cert_file, client_key_file)
       client.ssl_config.set_trust_ca(ca_cert_file)
       client
