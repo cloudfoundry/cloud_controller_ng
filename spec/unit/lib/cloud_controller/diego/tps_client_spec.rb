@@ -8,9 +8,9 @@ module VCAP::CloudController::Diego
     let(:process_guid) { "#{app.guid}-#{app.version}" }
     let(:process_guid2) { "#{app2.guid}-#{app2.version}" }
 
-    let(:tps_status_url) { "#{TestConfig.config[:diego_tps_url]}/v1/actual_lrps/#{process_guid}" }
-    let(:tps_stats_url) { "#{TestConfig.config[:diego_tps_url]}/v1/actual_lrps/#{process_guid}/stats" }
-    let(:tps_bulk_status_url) { "#{TestConfig.config[:diego_tps_url]}/v1/bulk_actual_lrp_status?guids=#{process_guid},#{process_guid2}" }
+    let(:tps_status_url) { "#{TestConfig.config[:diego][:tps_url]}/v1/actual_lrps/#{process_guid}" }
+    let(:tps_stats_url) { "#{TestConfig.config[:diego][:tps_url]}/v1/actual_lrps/#{process_guid}/stats" }
+    let(:tps_bulk_status_url) { "#{TestConfig.config[:diego][:tps_url]}/v1/bulk_actual_lrp_status?guids=#{process_guid},#{process_guid2}" }
 
     subject(:client) { TPSClient.new(TestConfig.config) }
 
@@ -85,7 +85,7 @@ module VCAP::CloudController::Diego
 
       context 'when there is no tps url' do
         before do
-          TestConfig.override(diego_tps_url: nil)
+          TestConfig.override(diego: { tps_url: nil })
         end
 
         it 'raises InstancesUnavailable' do
@@ -177,7 +177,7 @@ module VCAP::CloudController::Diego
 
       context 'when there is no tps url' do
         before do
-          TestConfig.override(diego_tps_url: nil)
+          TestConfig.override(diego: { tps_url: nil })
         end
 
         it 'raises InstancesUnavailable' do
@@ -264,7 +264,7 @@ module VCAP::CloudController::Diego
 
       context 'when there is no tps url' do
         before do
-          TestConfig.override(diego_tps_url: nil)
+          TestConfig.override(diego: { tps_url: nil })
         end
 
         it 'raises InstancesUnavailable' do

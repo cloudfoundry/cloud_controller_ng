@@ -224,9 +224,6 @@ cloud_controller_username_lookup_client_secret: cloud-controller-username-lookup
 users_can_select_backend: true
 allow_app_ssh_access: true
 default_to_diego_backend: false
-diego_nsync_url: http://10.244.16.14:8787
-diego_stager_url: http://10.244.16.14:8888
-diego_tps_url: http://10.244.16.14:1518
 
 skip_cert_verify: true
 
@@ -266,3 +263,22 @@ rate_limiter:
   general_limit: 2000
   unauthenticated_limit: 100
   reset_interval_in_minutes: 60
+
+diego:
+  temporary_local_staging: false
+  nsync_url: http://10.244.16.14:8787
+  stager_url: http://10.244.16.14:8888
+  tps_url: http://10.244.16.14:1518
+  file_server_url: http://10.244.16.14:8080
+  cc_uploader_url: http://10.244.16.14:9090
+  use_privileged_containers_for_staging: false
+  lifecycle_bundles:
+    - "buildpack/cflinuxfs2:buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
+    - "buildpack/windows2012R2:windows_app_lifecycle/windows_app_lifecycle.tgz"
+    - "docker:docker_app_lifecycle/docker_app_lifecycle.tgz"
+  bbs:
+    api_location: bbs.service.cf.internal:8889
+    key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.key
+    cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.crt
+    ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_ca.crt
+    require_ssl: true

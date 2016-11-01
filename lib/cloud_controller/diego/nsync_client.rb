@@ -6,7 +6,7 @@ module VCAP::CloudController
     class NsyncClient
       def initialize(config)
         @config = config
-        @url = URI(config[:diego_nsync_url]) if config[:diego_nsync_url]
+        @url = URI(config[:diego][:nsync_url]) if HashUtils.dig(config, :diego, :nsync_url)
       end
 
       def desire_task(task)

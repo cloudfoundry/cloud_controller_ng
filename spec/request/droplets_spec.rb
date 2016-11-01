@@ -50,7 +50,7 @@ RSpec.describe 'Droplets' do
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:v3_app_buildpack_cache_upload_url).and_return('some-string')
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_download_url).and_return('some-string')
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_droplet_upload_url).and_return('some-string')
-      stub_request(:put, "#{TestConfig.config[:diego_stager_url]}/v1/staging/whatuuid").
+      stub_request(:put, "#{TestConfig.config[:diego][:stager_url]}/v1/staging/whatuuid").
         to_return(status: 202, body: diego_staging_response.to_json)
       stub_const('SecureRandom', double(:sr, uuid: 'whatuuid', hex: '8-octetx'))
     end
@@ -436,7 +436,7 @@ RSpec.describe 'Droplets' do
     let!(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, app_guid: app_model.guid) }
 
     before do
-      stub_request(:delete, /#{TestConfig.config[:diego_stager_url]}/).to_return(status: 202)
+      stub_request(:delete, /#{TestConfig.config[:diego][:stager_url]}/).to_return(status: 202)
     end
 
     it 'deletes a droplet' do

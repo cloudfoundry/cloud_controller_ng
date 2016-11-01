@@ -250,8 +250,6 @@ module VCAP::CloudController
         optional(:placement_top_stager_percentage) => Integer,
         optional(:minimum_candidate_stagers) => Integer,
 
-        optional(:diego_stager_url) => String,
-        optional(:diego_tps_url) => String,
         optional(:users_can_select_backend) => bool,
         optional(:default_to_diego_backend) => bool,
         optional(:routing_api) => {
@@ -281,7 +279,26 @@ module VCAP::CloudController
           optional(:unauthenticated_limit) => Integer,
           optional(:reset_interval_in_minutes) => Integer,
         },
-        :shared_isolation_segment_name => String
+        :shared_isolation_segment_name => String,
+
+        optional(:diego) => {
+          temporary_local_staging:               bool,
+          nsync_url:                             String,
+          stager_url:                            String,
+          tps_url:                               String,
+          file_server_url:                       String,
+          cc_uploader_url:                       String,
+          use_privileged_containers_for_staging: bool,
+          lifecycle_bundles:                     [String],
+
+          bbs: {
+            api_location: String,
+            ca_file:      String,
+            cert_file:    String,
+            key_file:     String,
+            require_ssl:  bool,
+          }
+        },
       }
     end
 

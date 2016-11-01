@@ -319,9 +319,6 @@ uaa_client_scope: <%= p("uaa.clients.cc-service-dashboards.scope") %>
 users_can_select_backend: <%= p("cc.users_can_select_backend") %>
 allow_app_ssh_access: <%= p("cc.allow_app_ssh_access") %>
 default_to_diego_backend: <%= p("cc.default_to_diego_backend") %>
-diego_nsync_url: <%= p("cc.diego.nsync_url") %>
-diego_stager_url: <%= p("cc.diego.stager_url") %>
-diego_tps_url: <%= p("cc.diego.tps_url") %>
 
 <% if_p("ssl.skip_cert_verify") do |skip_cert_verify|%>
 skip_cert_verify: <%= skip_cert_verify %>

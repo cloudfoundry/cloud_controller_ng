@@ -354,7 +354,7 @@ module VCAP::CloudController
               stub_request(:delete, service_binding_url_pattern).to_return(status: 200, body: {}.to_json)
 
               expect {
-                stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}").to_return(status: 500)
+                stub_request(:put, "#{TestConfig.config[:diego][:nsync_url]}/v1/apps/#{process_guid}").to_return(status: 500)
                 manager.create_route_service_instance_binding(route.guid, service_instance.guid, arbitrary_parameters, route_services_enabled)
               }.to raise_error(CloudController::Errors::ApiError, /desire app failed: 500/i)
             end
@@ -394,7 +394,7 @@ module VCAP::CloudController
           RouteMappingModel.make(app: app.app, route: route, process_type: app.type)
 
           process_guid = Diego::ProcessGuid.from_process(app)
-          stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}").to_return(status: 202)
+          stub_request(:put, "#{TestConfig.config[:diego][:nsync_url]}/v1/apps/#{process_guid}").to_return(status: 202)
         end
 
         it 'unbinds the route and service instance', isolation: :truncation do

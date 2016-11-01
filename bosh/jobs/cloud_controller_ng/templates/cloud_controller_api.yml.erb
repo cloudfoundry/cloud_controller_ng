@@ -360,9 +360,6 @@ cloud_controller_username_lookup_client_secret: <%= p("uaa.clients.cloud_control
 users_can_select_backend: <%= p("cc.users_can_select_backend") %>
 allow_app_ssh_access: <%= p("cc.allow_app_ssh_access") %>
 default_to_diego_backend: <%= p("cc.default_to_diego_backend") %>
-diego_nsync_url: <%= p("cc.diego.nsync_url") %>
-diego_stager_url: <%= p("cc.diego.stager_url") %>
-diego_tps_url: <%= p("cc.diego.tps_url") %>
 
 <% if_p("ssl.skip_cert_verify") do |skip_cert_verify|%>
 skip_cert_verify: <%= skip_cert_verify %>
@@ -413,3 +410,19 @@ rate_limiter:
   general_limit: <%= p("cc.rate_limiter.general_limit") %>
   unauthenticated_limit: <%= p("cc.rate_limiter.unauthenticated_limit") %>
   reset_interval_in_minutes: <%= p("cc.rate_limiter.reset_interval_in_minutes") %>
+
+diego:
+  temporary_local_staging: <%= p("cc.diego.temporary_local_staging") %>
+  nsync_url: <%= p("cc.diego.nsync_url") %>
+  stager_url: <%= p("cc.diego.stager_url") %>
+  tps_url: <%= p("cc.diego.tps_url") %>
+  file_server_url: <%= p("cc.diego.file_server_url") %>
+  cc_uploader_url: <%= p("cc.diego.cc_uploader_url") %>
+  use_privileged_containers_for_staging: <%= p("cc.diego.use_privileged_containers_for_staging") %>
+  lifecycle_bundles: <%= p("cc.diego.lifecycle_bundles") %>
+  bbs:
+    api_location: <%= p("cc.diego.bbs.api_location") %>
+    key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.key
+    cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.crt
+    ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_ca.crt
+    require_ssl: <%= p("cc.diego.bbs.require_ssl") %>
