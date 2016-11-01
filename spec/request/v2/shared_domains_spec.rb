@@ -39,7 +39,7 @@ RSpec.describe 'SharedDomains' do
                 'guid'       => /\w+/,
                 'url'        => %r{/v2/shared_domains/},
                 'created_at' => iso8601,
-                'updated_at' => nil
+                'updated_at' => iso8601
               },
               'entity' => {
                 'name'              => 'customer-app-domain1.com',
@@ -52,7 +52,7 @@ RSpec.describe 'SharedDomains' do
                 'guid'       => /\w+/,
                 'url'        => %r{/v2/shared_domains/},
                 'created_at' => iso8601,
-                'updated_at' => nil
+                'updated_at' => iso8601
               },
               'entity' => {
                 'name'              => 'customer-app-domain2.com',
@@ -65,7 +65,7 @@ RSpec.describe 'SharedDomains' do
                 'guid'       => domain.guid,
                 'url'        => "/v2/shared_domains/#{domain.guid}",
                 'created_at' => iso8601,
-                'updated_at' => nil
+                'updated_at' => iso8601
               },
               'entity' => {
                 'name'              => domain.name,
@@ -93,7 +93,7 @@ RSpec.describe 'SharedDomains' do
             'guid'       => domain.guid,
             'url'        => "/v2/shared_domains/#{domain.guid}",
             'created_at' => iso8601,
-            'updated_at' => nil
+            'updated_at' => iso8601
           },
           'entity' => {
             'name'              => domain.name,
@@ -119,7 +119,7 @@ RSpec.describe 'SharedDomains' do
           'guid'       => domain.guid,
           'url'        => "/v2/shared_domains/#{domain.guid}",
           'created_at' => iso8601,
-          'updated_at' => nil
+          'updated_at' => iso8601
         },
         'entity' => {
           'name'              => 'meow.mc.meowerson.com',

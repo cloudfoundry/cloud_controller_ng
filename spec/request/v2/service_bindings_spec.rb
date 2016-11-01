@@ -38,7 +38,7 @@ RSpec.describe 'ServiceBindings' do
                 'guid'       => service_binding1.guid,
                 'url'        => "/v2/service_bindings/#{service_binding1.guid}",
                 'created_at' => iso8601,
-                'updated_at' => nil
+                'updated_at' => iso8601
               },
               'entity' => {
                 'app_guid'              => process1.guid,
@@ -58,7 +58,7 @@ RSpec.describe 'ServiceBindings' do
                 'guid'       => service_binding2.guid,
                 'url'        => "/v2/service_bindings/#{service_binding2.guid}",
                 'created_at' => iso8601,
-                'updated_at' => nil
+                'updated_at' => iso8601
               },
               'entity' => {
                 'app_guid'              => process2.guid,
@@ -109,7 +109,7 @@ RSpec.describe 'ServiceBindings' do
                   'guid'       => service_binding1.guid,
                   'url'        => "/v2/service_bindings/#{service_binding1.guid}",
                   'created_at' => iso8601,
-                  'updated_at' => nil
+                  'updated_at' => iso8601
                 },
                 'entity' => {
                   'app_guid'              => process1.guid,
@@ -126,7 +126,7 @@ RSpec.describe 'ServiceBindings' do
                       'guid'       => process1.guid,
                       'url'        => "/v2/apps/#{process1.guid}",
                       'created_at' => iso8601,
-                      'updated_at' => nil
+                      'updated_at' => iso8601
                     },
                     'entity' => {
                       'name'                       => process1.name,
@@ -174,7 +174,7 @@ RSpec.describe 'ServiceBindings' do
                       'guid'       => service_instance.guid,
                       'url'        => "/v2/service_instances/#{service_instance.guid}",
                       'created_at' => iso8601,
-                      'updated_at' => nil
+                      'updated_at' => iso8601
                     },
                     'entity' => {
                       'name'                 => service_instance.name,
@@ -241,7 +241,7 @@ RSpec.describe 'ServiceBindings' do
             'guid'       => service_binding1.guid,
             'url'        => "/v2/service_bindings/#{service_binding1.guid}",
             'created_at' => iso8601,
-            'updated_at' => nil
+            'updated_at' => iso8601
           },
           'entity' => {
             'app_guid'              => process1.guid,
@@ -301,7 +301,7 @@ RSpec.describe 'ServiceBindings' do
             'guid'       => service_binding.guid,
             'url'        => "/v2/service_bindings/#{service_binding.guid}",
             'created_at' => iso8601,
-            'updated_at' => nil
+            'updated_at' => iso8601
           },
           'entity' => {
             'app_guid'              => process.guid,

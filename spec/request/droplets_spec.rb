@@ -94,7 +94,7 @@ RSpec.describe 'Droplets' do
         'staging_disk_in_mb'    => 4096,
         'result'                => nil,
         'created_at'            => iso8601,
-        'updated_at'            => nil,
+        'updated_at'            => iso8601,
         'links'                 => {
           'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{created_droplet.guid}" },
           'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
@@ -786,7 +786,7 @@ RSpec.describe 'Droplets' do
         'result'                => nil,
         'environment_variables' => {},
         'created_at'            => iso8601,
-        'updated_at'            => nil,
+        'updated_at'            => iso8601,
         'links'                 => {
           'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{copied_droplet.guid}" },
           'package'                => nil,

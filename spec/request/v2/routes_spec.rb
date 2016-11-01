@@ -39,7 +39,7 @@ RSpec.describe 'Routes' do
               'guid'       => route.guid,
               'url'        => "/v2/routes/#{route.guid}",
               'created_at' => iso8601,
-              'updated_at' => nil
+              'updated_at' => iso8601
             },
             'entity' => {
               'host'                  => route.host,
@@ -79,7 +79,7 @@ RSpec.describe 'Routes' do
                 'guid'       => route.guid,
                 'url'        => "/v2/routes/#{route.guid}",
                 'created_at' => iso8601,
-                'updated_at' => nil
+                'updated_at' => iso8601
               },
               'entity' => {
                 'host'                  => route.host,
@@ -94,7 +94,7 @@ RSpec.describe 'Routes' do
                     'guid'       => domain.guid,
                     'url'        => "/v2/shared_domains/#{domain.guid}",
                     'created_at' => iso8601,
-                    'updated_at' => nil
+                    'updated_at' => iso8601
                   },
                   'entity' => {
                     'name'              => domain.name,
@@ -108,7 +108,7 @@ RSpec.describe 'Routes' do
                     'guid'       => space.guid,
                     'url'        => "/v2/spaces/#{space.guid}",
                     'created_at' => iso8601,
-                    'updated_at' => nil
+                    'updated_at' => iso8601
                   },
                   'entity' => {
                     'name'                         => space.name,
@@ -136,7 +136,7 @@ RSpec.describe 'Routes' do
                       'guid'       => process.guid,
                       'url'        => "/v2/apps/#{process.guid}",
                       'created_at' => iso8601,
-                      'updated_at' => nil,
+                      'updated_at' => iso8601,
                     },
                     'entity' => {
                       'name'                       => process.name,
@@ -203,7 +203,7 @@ RSpec.describe 'Routes' do
               'guid'       => route.guid,
               'url'        => "/v2/routes/#{route.guid}",
               'created_at' => iso8601,
-              'updated_at' => nil
+              'updated_at' => iso8601
             },
             'entity' => {
               'host'                  => route.host,
@@ -257,7 +257,7 @@ RSpec.describe 'Routes' do
                 'guid'       => route_mapping.guid,
                 'url'        => "/v2/route_mappings/#{route_mapping.guid}",
                 'created_at' => iso8601,
-                'updated_at' => nil
+                'updated_at' => iso8601
               },
               'entity' => {
                 'app_port'   => nil,

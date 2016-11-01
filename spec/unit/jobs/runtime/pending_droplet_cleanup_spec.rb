@@ -48,56 +48,27 @@ module VCAP::CloudController
           end
         end
 
-        context 'with droplets which are staging or processing upload but have no updated_at (db specific)' do
+        context 'when the droplets were created recently' do
           let!(:droplet1) { DropletModel.make(state: DropletModel::STAGING_STATE) }
           let!(:droplet2) { DropletModel.make(state: DropletModel::STAGING_STATE) }
           let!(:droplet3) { DropletModel.make(state: DropletModel::PROCESSING_UPLOAD_STATE) }
-          let(:null_timestamp) do
-            if droplet1.db.database_type == :postgres
-              nil
-            else
-              '0000-00-00 00:00:00'
-            end
+
+          before do
+            droplet1.this.update(updated_at: non_expired_time, created_at: non_expired_time)
+            droplet2.this.update(updated_at: non_expired_time, created_at: non_expired_time)
+            droplet3.this.update(updated_at: non_expired_time, created_at: non_expired_time)
           end
 
-          context 'when the droplets were created too long ago' do
-            before do
-              droplet1.this.update(updated_at: null_timestamp, created_at: expired_time)
-              droplet2.this.update(updated_at: null_timestamp, created_at: expired_time)
-              droplet3.this.update(updated_at: null_timestamp, created_at: expired_time)
-
-              expect(droplet1.reload.updated_at).to be_nil
-              expect(droplet2.reload.updated_at).to be_nil
-              expect(droplet3.reload.updated_at).to be_nil
-            end
-
-            it 'fails them' do
+          it 'does NOT fail them' do
+            expect {
               cleanup_job.perform
+            }.not_to change {
+              [droplet1.reload.updated_at, droplet2.reload.updated_at, droplet3.reload.updated_at]
+            }
 
-              expect(droplet1.reload.failed?).to be_truthy
-              expect(droplet2.reload.failed?).to be_truthy
-              expect(droplet3.reload.failed?).to be_truthy
-            end
-          end
-
-          context 'when the droplets were created recently' do
-            before do
-              droplet1.this.update(updated_at: null_timestamp, created_at: non_expired_time)
-              droplet2.this.update(updated_at: null_timestamp, created_at: non_expired_time)
-              droplet3.this.update(updated_at: null_timestamp, created_at: non_expired_time)
-
-              expect(droplet1.reload.updated_at).to be_nil
-              expect(droplet2.reload.updated_at).to be_nil
-              expect(droplet3.reload.updated_at).to be_nil
-            end
-
-            it 'does NOT fail them' do
-              cleanup_job.perform
-
-              expect(droplet1.reload.failed?).to be_falsey
-              expect(droplet2.reload.failed?).to be_falsey
-              expect(droplet3.reload.failed?).to be_falsey
-            end
+            expect(droplet1.reload.failed?).to be_falsey
+            expect(droplet2.reload.failed?).to be_falsey
+            expect(droplet3.reload.failed?).to be_falsey
           end
         end
 
@@ -105,9 +76,6 @@ module VCAP::CloudController
           droplet1 = DropletModel.make(state: DropletModel::STAGING_STATE)
           droplet2 = DropletModel.make(state: DropletModel::STAGING_STATE)
           droplet3 = DropletModel.make(state: DropletModel::PROCESSING_UPLOAD_STATE)
-          droplet1.this.update(updated_at: non_expired_time)
-          droplet2.this.update(updated_at: non_expired_time)
-          droplet3.this.update(updated_at: non_expired_time)
 
           cleanup_job.perform
 

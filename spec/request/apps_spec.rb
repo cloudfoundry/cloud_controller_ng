@@ -47,7 +47,7 @@ RSpec.describe 'Apps' do
           }
         },
         'created_at'              => iso8601,
-        'updated_at'              => nil,
+        'updated_at'              => iso8601,
         'environment_variables'   => { 'open' => 'source' },
         'links'                   => {
           'self'                   => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}" },
@@ -111,7 +111,7 @@ RSpec.describe 'Apps' do
             'data' => {}
           },
           'created_at'              => iso8601,
-          'updated_at'              => nil,
+          'updated_at'              => iso8601,
           'environment_variables'   => { 'open' => 'source' },
           'links'                   => {
             'self'                   => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}" },

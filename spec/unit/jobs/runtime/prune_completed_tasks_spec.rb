@@ -22,51 +22,57 @@ module VCAP::CloudController
 
       describe '#perform' do
         context 'when tasks are older than the cutoff age' do
-          let(:task_age) { Time.now.utc - (cutoff_age_in_days + 1).days }
+          let(:time_after_expiration) { Time.now.utc + (cutoff_age_in_days + 1).days }
 
           it 'deletes succeeded and failed tasks' do
-            failed_task    = TaskModel.make(state: TaskModel::FAILED_STATE, updated_at: task_age)
-            succeeded_task = TaskModel.make(state: TaskModel::SUCCEEDED_STATE, updated_at: task_age)
+            failed_task    = TaskModel.make(state: TaskModel::FAILED_STATE)
+            succeeded_task = TaskModel.make(state: TaskModel::SUCCEEDED_STATE)
 
-            expect(failed_task.exists?).to be_truthy
-            expect(succeeded_task.exists?).to be_truthy
-            job.perform
-            expect(failed_task.exists?).to be_falsey
-            expect(succeeded_task.exists?).to be_falsey
+            Timecop.travel(time_after_expiration) do
+              expect(failed_task.exists?).to be_truthy
+              expect(succeeded_task.exists?).to be_truthy
+              job.perform
+              expect(failed_task.exists?).to be_falsey
+              expect(succeeded_task.exists?).to be_falsey
+            end
           end
 
           it 'does not delete pending or running tasks' do
-            running_task = TaskModel.make(state: TaskModel::RUNNING_STATE, updated_at: task_age)
-            pending_task = TaskModel.make(state: TaskModel::PENDING_STATE, updated_at: task_age)
+            running_task = TaskModel.make(state: TaskModel::RUNNING_STATE)
+            pending_task = TaskModel.make(state: TaskModel::PENDING_STATE)
 
-            expect(running_task.exists?).to be_truthy
-            expect(pending_task.exists?).to be_truthy
-            job.perform
-            expect(running_task.exists?).to be_truthy
-            expect(pending_task.exists?).to be_truthy
+            Timecop.travel(time_after_expiration) do
+              expect(running_task.exists?).to be_truthy
+              expect(pending_task.exists?).to be_truthy
+              job.perform
+              expect(running_task.exists?).to be_truthy
+              expect(pending_task.exists?).to be_truthy
+            end
           end
         end
 
         context 'when tasks are younger than the cutoff age' do
-          let(:task_age) { Time.now.utc - (cutoff_age_in_days - 1).days }
+          let(:time_before_expiration) { Time.now.utc + (cutoff_age_in_days - 1).days }
 
           it 'does not delete succeeded, failed, pending, or running tasks' do
-            running_task   = TaskModel.make(state: TaskModel::RUNNING_STATE, updated_at: task_age)
-            pending_task   = TaskModel.make(state: TaskModel::PENDING_STATE, updated_at: task_age)
-            failed_task    = TaskModel.make(state: TaskModel::FAILED_STATE, updated_at: task_age)
-            succeeded_task = TaskModel.make(state: TaskModel::SUCCEEDED_STATE, updated_at: task_age)
+            running_task   = TaskModel.make(state: TaskModel::RUNNING_STATE)
+            pending_task   = TaskModel.make(state: TaskModel::PENDING_STATE)
+            failed_task    = TaskModel.make(state: TaskModel::FAILED_STATE)
+            succeeded_task = TaskModel.make(state: TaskModel::SUCCEEDED_STATE)
 
-            expect(running_task.exists?).to be_truthy
-            expect(pending_task.exists?).to be_truthy
-            expect(failed_task.exists?).to be_truthy
-            expect(succeeded_task.exists?).to be_truthy
+            Timecop.travel(time_before_expiration) do
+              expect(running_task.exists?).to be_truthy
+              expect(pending_task.exists?).to be_truthy
+              expect(failed_task.exists?).to be_truthy
+              expect(succeeded_task.exists?).to be_truthy
 
-            job.perform
+              job.perform
 
-            expect(failed_task.exists?).to be_truthy
-            expect(succeeded_task.exists?).to be_truthy
-            expect(running_task.exists?).to be_truthy
-            expect(pending_task.exists?).to be_truthy
+              expect(failed_task.exists?).to be_truthy
+              expect(succeeded_task.exists?).to be_truthy
+              expect(running_task.exists?).to be_truthy
+              expect(pending_task.exists?).to be_truthy
+            end
           end
         end
       end

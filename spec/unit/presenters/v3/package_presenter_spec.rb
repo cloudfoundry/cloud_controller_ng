@@ -5,7 +5,7 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe PackagePresenter do
     describe '#to_hash' do
       let(:result) { PackagePresenter.new(package).to_hash }
-      let(:package) { VCAP::CloudController::PackageModel.make(type: 'package_type', created_at: Time.at(1), updated_at: Time.at(2)) }
+      let(:package) { VCAP::CloudController::PackageModel.make(type: 'package_type') }
       let(:scheme) { TestConfig.config[:external_protocol] }
       let(:host) { TestConfig.config[:external_domain] }
       let(:link_prefix) { "#{scheme}://#{host}" }
@@ -21,8 +21,8 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:state]).to eq(package.state)
         expect(result[:data][:error]).to eq(package.error)
         expect(result[:data][:hash]).to eq({ type: 'sha1', value: package.package_hash })
-        expect(result[:created_at]).to eq('1970-01-01T00:00:01Z')
-        expect(result[:updated_at]).to eq('1970-01-01T00:00:02Z')
+        expect(result[:created_at]).to eq(package.created_at)
+        expect(result[:updated_at]).to eq(package.updated_at)
         expect(result[:links]).to include(links)
       end
 

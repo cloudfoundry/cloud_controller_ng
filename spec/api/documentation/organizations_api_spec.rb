@@ -122,7 +122,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
                 'name'        => isolation_segment_model.name,
                 'guid'        => isolation_segment_model.guid,
                 'created_at'  => iso8601,
-                'updated_at'  => nil,
+                'updated_at'  => iso8601,
                 'links'       => {
                   'self'          => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}" },
                   'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations" },

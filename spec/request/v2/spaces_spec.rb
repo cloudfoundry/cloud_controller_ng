@@ -28,7 +28,7 @@ RSpec.describe 'Spaces' do
             'guid' => space.guid,
             'url' => "/v2/spaces/#{space.guid}",
             'created_at' => iso8601,
-            'updated_at' => nil
+            'updated_at' => iso8601
           },
           'entity' => {
             'name' => space.name,

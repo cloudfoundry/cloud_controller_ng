@@ -9,7 +9,6 @@ module VCAP::CloudController::Presenters::V3
     let(:censored_volume_mounts) { [{ 'container_dir' => '/a/reasonable/path' }] }
     let(:service_binding) { VCAP::CloudController::ServiceBinding.make(
       created_at: Time.at(1),
-      updated_at: Time.at(2),
       credentials: credentials,
       syslog_drain_url: 'syslog:/syslog.com',
       volume_mounts: volume_mounts)
@@ -34,7 +33,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:data].to_hash[:syslog_drain_url]).to eq(service_binding.syslog_drain_url)
         expect(result[:data].to_hash[:volume_mounts]).to eq(censored_volume_mounts)
         expect(result[:created_at]).to eq('1970-01-01T00:00:01Z')
-        expect(result[:updated_at]).to eq('1970-01-01T00:00:02Z')
+        expect(result[:updated_at]).to eq(service_binding.updated_at)
         expect(result[:links]).to include(:self)
         expect(result[:links]).to include(:service_instance)
         expect(result[:links]).to include(:app)

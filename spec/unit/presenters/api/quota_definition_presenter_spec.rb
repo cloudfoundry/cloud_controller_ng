@@ -10,7 +10,7 @@ RSpec.describe QuotaDefinitionPresenter do
         metadata: {
           guid: quota_definition.guid,
           created_at: quota_definition.created_at.iso8601,
-          updated_at: nil,
+          updated_at: quota_definition.updated_at.iso8601,
         },
         entity: {
           name: quota_definition.name,

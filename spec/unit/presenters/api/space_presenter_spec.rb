@@ -10,7 +10,7 @@ RSpec.describe SpacePresenter do
         metadata: {
           guid: space.guid,
           created_at: space.created_at.iso8601,
-          updated_at: nil,
+          updated_at: space.updated_at.iso8601,
         },
         entity: {
           name: space.name

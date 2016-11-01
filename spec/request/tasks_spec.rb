@@ -78,7 +78,7 @@ RSpec.describe 'Tasks' do
             },
             'droplet_guid' => task1.droplet.guid,
             'created_at'   => iso8601,
-            'updated_at'   => nil,
+            'updated_at'   => iso8601,
             'links'        => {
               'self' => {
                 'href' => "#{link_prefix}/v3/tasks/#{task1.guid}"
@@ -103,7 +103,7 @@ RSpec.describe 'Tasks' do
             },
             'droplet_guid' => task2.droplet.guid,
             'created_at'   => iso8601,
-            'updated_at'   => nil,
+            'updated_at'   => iso8601,
             'links'        => {
               'self' => {
                 'href' => "#{link_prefix}/v3/tasks/#{task2.guid}"
@@ -200,7 +200,7 @@ RSpec.describe 'Tasks' do
         },
         'droplet_guid' => task.droplet.guid,
         'created_at'   => iso8601,
-        'updated_at'   => nil,
+        'updated_at'   => iso8601,
         'links'        => {
           'self' => {
             'href' => "#{link_prefix}/v3/tasks/#{task_guid}"
@@ -311,7 +311,7 @@ RSpec.describe 'Tasks' do
               },
               'droplet_guid' => task1.droplet.guid,
               'created_at'   => iso8601,
-              'updated_at'   => nil,
+              'updated_at'   => iso8601,
               'links'        => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/tasks/#{task1.guid}"
@@ -337,7 +337,7 @@ RSpec.describe 'Tasks' do
               },
               'droplet_guid' => task2.droplet.guid,
               'created_at'   => iso8601,
-              'updated_at'   => nil,
+              'updated_at'   => iso8601,
               'links'        => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/tasks/#{task2.guid}"

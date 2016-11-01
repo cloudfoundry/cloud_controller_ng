@@ -63,7 +63,7 @@ RSpec.describe 'Processes' do
               }
             },
             'created_at'   => iso8601,
-            'updated_at'   => nil,
+            'updated_at'   => iso8601,
             'links'        => {
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}" },
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}/scale", 'method' => 'PUT' },
@@ -87,7 +87,7 @@ RSpec.describe 'Processes' do
               }
             },
             'created_at'   => iso8601,
-            'updated_at'   => nil,
+            'updated_at'   => iso8601,
             'links'        => {
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}" },
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}/scale", 'method' => 'PUT' },
@@ -298,7 +298,7 @@ RSpec.describe 'Processes' do
           }
         },
         'created_at'   => iso8601,
-        'updated_at'   => nil,
+        'updated_at'   => iso8601,
         'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
@@ -683,7 +683,7 @@ RSpec.describe 'Processes' do
               }
             },
             'created_at'   => iso8601,
-            'updated_at'   => nil,
+            'updated_at'   => iso8601,
             'links'        => {
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}" },
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/scale", 'method' => 'PUT' },
@@ -707,7 +707,7 @@ RSpec.describe 'Processes' do
               }
             },
             'created_at'   => iso8601,
-            'updated_at'   => nil,
+            'updated_at'   => iso8601,
             'links'        => {
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}" },
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}/scale", 'method' => 'PUT' },
@@ -803,7 +803,7 @@ RSpec.describe 'Processes' do
           }
         },
         'created_at'   => iso8601,
-        'updated_at'   => nil,
+        'updated_at'   => iso8601,
         'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },

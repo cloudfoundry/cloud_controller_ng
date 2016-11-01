@@ -24,7 +24,7 @@ RSpec.describe 'IsolationSegmentModels' do
         'name'       => 'my_segment',
         'guid'       => created_isolation_segment.guid,
         'created_at' => iso8601,
-        'updated_at' => nil,
+        'updated_at' => iso8601,
         'links'      => {
           'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{created_isolation_segment.guid}" },
           'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{created_isolation_segment.guid}/relationships/spaces" },
@@ -115,7 +115,7 @@ RSpec.describe 'IsolationSegmentModels' do
         'name'       => isolation_segment.name,
         'guid'       => isolation_segment.guid,
         'created_at' => iso8601,
-        'updated_at' => nil,
+        'updated_at' => iso8601,
         'links'      => {
           'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
           'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces" },
@@ -164,7 +164,7 @@ RSpec.describe 'IsolationSegmentModels' do
           'name'       => isolation_segment_model.name,
           'guid'       => isolation_segment_model.guid,
           'created_at' => iso8601,
-          'updated_at' => nil,
+          'updated_at' => iso8601,
           'links'      => {
             'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}" },
             'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" },
@@ -196,7 +196,7 @@ RSpec.describe 'IsolationSegmentModels' do
           'name'       => isolation_segment_model.name,
           'guid'       => isolation_segment_model.guid,
           'created_at' => iso8601,
-          'updated_at' => nil,
+          'updated_at' => iso8601,
           'links'      => {
             'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}" },
             'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" },
@@ -235,7 +235,7 @@ RSpec.describe 'IsolationSegmentModels' do
             'name'       => 'shared',
             'guid'       => shared_guid,
             'created_at' => iso8601,
-            'updated_at' => nil,
+            'updated_at' => iso8601,
             'links'      => {
               'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{shared_guid}" },
               'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{shared_guid}/relationships/spaces" },
@@ -281,7 +281,7 @@ RSpec.describe 'IsolationSegmentModels' do
               'guid'        =>  models[1].guid.to_s,
               'name'        =>  models[1].name.to_s,
               'created_at'  =>  iso8601,
-              'updated_at'  =>  nil,
+              'updated_at'  =>  iso8601,
               'links'       =>  {
                 'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[1].guid}" },
                 'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[1].guid}/relationships/spaces" },
@@ -292,7 +292,7 @@ RSpec.describe 'IsolationSegmentModels' do
               'guid'        =>  models[2].guid.to_s,
               'name'        =>  models[2].name.to_s,
               'created_at'  =>  iso8601,
-              'updated_at'  =>  nil,
+              'updated_at'  =>  iso8601,
               'links'       =>  {
                 'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[2].guid}" },
                 'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[2].guid}/relationships/spaces" },

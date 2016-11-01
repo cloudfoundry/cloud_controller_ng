@@ -17,7 +17,11 @@ module VCAP::CloudController
       end
 
       context 'diego' do
-        let!(:process) { AppFactory.make(diego: true) }
+        let!(:process) do
+          app_process = AppFactory.make(diego: true)
+          app_process.this.update(updated_at: Time.now - 1.day)
+          app_process.reload
+        end
 
         it 'updates the version' do
           expect { handler.update_route_information }.to change { process.reload.updated_at }

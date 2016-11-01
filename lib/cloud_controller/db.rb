@@ -62,7 +62,7 @@ Sequel::Model.raise_on_typecast_failure = false
 
 Sequel::Model.plugin :association_dependencies
 Sequel::Model.plugin :dirty
-Sequel::Model.plugin :timestamps
+Sequel::Model.plugin :timestamps, update_on_create: true
 Sequel::Model.plugin :validation_helpers
 
 Sequel::Database.extension(:current_datetime_timestamp)

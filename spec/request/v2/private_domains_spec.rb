@@ -40,7 +40,7 @@ RSpec.describe 'PrivateDomains' do
                 'guid'       => domain.guid,
                 'url'        => "/v2/private_domains/#{domain.guid}",
                 'created_at' => iso8601,
-                'updated_at' => nil
+                'updated_at' => iso8601
               },
               'entity' => {
                 'name' => domain.name,
@@ -69,7 +69,7 @@ RSpec.describe 'PrivateDomains' do
             'guid'       => domain.guid,
             'url'        => "/v2/private_domains/#{domain.guid}",
             'created_at' => iso8601,
-            'updated_at' => nil
+            'updated_at' => iso8601
           },
           'entity' => {
             'name' => domain.name,
@@ -96,7 +96,7 @@ RSpec.describe 'PrivateDomains' do
           'guid'       => domain.guid,
           'url'        => "/v2/private_domains/#{domain.guid}",
           'created_at' => iso8601,
-          'updated_at' => nil
+          'updated_at' => iso8601
         },
         'entity' => {
           'name' => 'meow.mc.meowerson.com',

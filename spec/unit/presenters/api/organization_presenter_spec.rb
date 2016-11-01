@@ -16,7 +16,7 @@ RSpec.describe OrganizationPresenter do
         metadata: {
           guid: org.guid,
           created_at: org.created_at.iso8601,
-          updated_at: nil,
+          updated_at: org.updated_at.iso8601,
         },
         entity: {
           name: org.name,

@@ -53,7 +53,7 @@ RSpec.describe 'v3 service bindings' do
             ]
           },
           'created_at' => iso8601,
-          'updated_at' => nil,
+          'updated_at' => iso8601,
           'links'      => {
             'self' => {
               'href' => "#{link_prefix}/v3/service_bindings/#{guid}"
@@ -135,7 +135,7 @@ RSpec.describe 'v3 service bindings' do
             'volume_mounts' => []
           },
           'created_at' => iso8601,
-          'updated_at' => nil,
+          'updated_at' => iso8601,
           'links'      => {
             'self' => {
               'href' => "#{link_prefix}/v3/service_bindings/#{guid}"
@@ -248,7 +248,7 @@ RSpec.describe 'v3 service bindings' do
           'volume_mounts' => [{ 'container_dir' => 'some-path' }]
         },
         'created_at' => iso8601,
-        'updated_at' => nil,
+        'updated_at' => iso8601,
         'links'      => {
           'self' => {
             'href' => "#{link_prefix}/v3/service_bindings/#{service_binding.guid}"
@@ -327,7 +327,7 @@ RSpec.describe 'v3 service bindings' do
               'volume_mounts' => [{ 'container_dir' => 'some-path' }]
             },
             'created_at' => iso8601,
-            'updated_at' => nil,
+            'updated_at' => iso8601,
             'links'      => {
               'self' => {
                 'href' => "#{link_prefix}/v3/service_bindings/#{service_binding1.guid}"
@@ -351,7 +351,7 @@ RSpec.describe 'v3 service bindings' do
               'volume_mounts' => [{ 'container_dir' => 'some-path' }]
             },
             'created_at' => iso8601,
-            'updated_at' => nil,
+            'updated_at' => iso8601,
             'links'      => {
               'self' => {
                 'href' => "#{link_prefix}/v3/service_bindings/#{service_binding2.guid}"

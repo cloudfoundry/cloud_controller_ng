@@ -24,7 +24,7 @@ RSpec.describe 'RouteMappings' do
           'guid'       => route_mapping.guid,
           'url'        => "/v2/route_mappings/#{route_mapping.guid}",
           'created_at' => iso8601,
-          'updated_at' => nil
+          'updated_at' => iso8601
         },
         'entity' => {
           'app_port'   => nil,
@@ -104,7 +104,7 @@ RSpec.describe 'RouteMappings' do
                 'guid'       => route_mapping1.guid,
                 'url'        => "/v2/route_mappings/#{route_mapping1.guid}",
                 'created_at' => iso8601,
-                'updated_at' => nil
+                'updated_at' => iso8601
               },
               'entity' => {
                 'app_port'   => nil,
@@ -119,7 +119,7 @@ RSpec.describe 'RouteMappings' do
                 'guid'       => route_mapping2.guid,
                 'url'        => "/v2/route_mappings/#{route_mapping2.guid}",
                 'created_at' => iso8601,
-                'updated_at' => nil
+                'updated_at' => iso8601
               },
               'entity' => {
                 'app_port'   => nil,
@@ -169,7 +169,7 @@ RSpec.describe 'RouteMappings' do
           'guid'       => route_mapping.guid,
           'url'        => "/v2/route_mappings/#{route_mapping.guid}",
           'created_at' => iso8601,
-          'updated_at' => nil
+          'updated_at' => iso8601
         },
         'entity' => {
           'app_port'   => 9090,

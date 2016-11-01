@@ -195,7 +195,7 @@ db: &db
 login:
   url: <%= p("login.url", "#{scheme}://login.#{system_domain}") %>
 <% end %>
-uaa:
+uaa :
   url: <%= p("uaa.url", "#{scheme}://uaa.#{system_domain}") %>
   resource_id: <%= p("cc.uaa_resource_id") %>
   <% if_p("uaa.cc.token_secret") do |token_secret| %>

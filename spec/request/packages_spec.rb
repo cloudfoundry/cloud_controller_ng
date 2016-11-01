@@ -42,7 +42,7 @@ RSpec.describe 'Packages' do
           },
           'state'      => 'READY',
           'created_at' => iso8601,
-          'updated_at' => nil,
+          'updated_at' => iso8601,
           'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
             'app'  => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
@@ -99,7 +99,7 @@ RSpec.describe 'Packages' do
           },
           'state'      => 'READY',
           'created_at' => iso8601,
-          'updated_at' => nil,
+          'updated_at' => iso8601,
           'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
             'app'  => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
@@ -171,7 +171,7 @@ RSpec.describe 'Packages' do
             },
             'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
             'created_at' => iso8601,
-            'updated_at' => nil,
+            'updated_at' => iso8601,
             'links' => {
               'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}" },
               'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}/upload", 'method' => 'POST' },
@@ -189,7 +189,7 @@ RSpec.describe 'Packages' do
             },
             'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
             'created_at' => iso8601,
-            'updated_at' => nil,
+            'updated_at' => iso8601,
             'links' => {
               'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
               'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/upload", 'method' => 'POST' },
@@ -326,7 +326,7 @@ RSpec.describe 'Packages' do
             },
             'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
             'created_at' => iso8601,
-            'updated_at' => nil,
+            'updated_at' => iso8601,
             'links' => {
               'self'   => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}" },
               'upload' => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}/upload", 'method' => 'POST' },
@@ -343,7 +343,7 @@ RSpec.describe 'Packages' do
             },
             'state'      => VCAP::CloudController::PackageModel::READY_STATE,
             'created_at' => iso8601,
-            'updated_at' => nil,
+            'updated_at' => iso8601,
             'links' => {
               'self' => { 'href' => "#{link_prefix}/v3/packages/#{docker_package.guid}" },
               'app'  => { 'href' => "#{link_prefix}/v3/apps/#{docker_package.app_guid}" },
@@ -559,7 +559,7 @@ RSpec.describe 'Packages' do
         },
         'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
         'created_at' => iso8601,
-        'updated_at' => nil,
+        'updated_at' => iso8601,
         'links' => {
           'self'   => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
           'upload' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/upload", 'method' => 'POST' },

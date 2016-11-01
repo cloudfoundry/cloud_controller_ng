@@ -36,7 +36,7 @@ RSpec.describe 'Route Mappings' do
         'guid'       => route_mapping.guid,
         'app_port'   => 8888,
         'created_at' => iso8601,
-        'updated_at' => nil,
+        'updated_at' => iso8601,
 
         'links'      => {
           'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping.guid}" },
@@ -104,7 +104,7 @@ RSpec.describe 'Route Mappings' do
             'guid'       => route_mapping1.guid,
             'app_port'   => nil,
             'created_at' => iso8601,
-            'updated_at' => nil,
+            'updated_at' => iso8601,
 
             'links'      => {
               'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping1.guid}" },
@@ -117,7 +117,7 @@ RSpec.describe 'Route Mappings' do
             'guid'       => route_mapping2.guid,
             'app_port'   => nil,
             'created_at' => iso8601,
-            'updated_at' => nil,
+            'updated_at' => iso8601,
 
             'links'      => {
               'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping2.guid}" },
@@ -201,7 +201,7 @@ RSpec.describe 'Route Mappings' do
         'guid'       => route_mapping.guid,
         'app_port'   => 8888,
         'created_at' => iso8601,
-        'updated_at' => nil,
+        'updated_at' => iso8601,
 
         'links'      => {
           'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping.guid}" },
@@ -271,7 +271,7 @@ RSpec.describe 'Route Mappings' do
             'guid'       => route_mapping1.guid,
             'app_port'   => nil,
             'created_at' => iso8601,
-            'updated_at' => nil,
+            'updated_at' => iso8601,
 
             'links'      => {
               'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping1.guid}" },
@@ -284,7 +284,7 @@ RSpec.describe 'Route Mappings' do
             'guid'       => route_mapping2.guid,
             'app_port'   => nil,
             'created_at' => iso8601,
-            'updated_at' => nil,
+            'updated_at' => iso8601,
 
             'links'      => {
               'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping2.guid}" },

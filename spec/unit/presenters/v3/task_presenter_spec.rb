@@ -5,14 +5,15 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe TaskPresenter do
     subject(:presenter) { TaskPresenter.new(task) }
     let(:task) {
-      VCAP::CloudController::TaskModel.make(
+      task = VCAP::CloudController::TaskModel.make(
         failure_reason: 'sup dawg',
         memory_in_mb:   2048,
         disk_in_mb:     4048,
-        updated_at:     Time.at(2),
         created_at:     Time.at(1),
         sequence_id:    5
       )
+      task.this.update(updated_at: Time.at(2))
+      task.reload
     }
     let(:scheme) { TestConfig.config[:external_protocol] }
     let(:host) { TestConfig.config[:external_domain] }

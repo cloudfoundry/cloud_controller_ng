@@ -38,7 +38,7 @@ RSpec.describe 'Apps' do
               'guid'       => process.guid,
               'url'        => "/v2/apps/#{process.guid}",
               'created_at' => iso8601,
-              'updated_at' => nil
+              'updated_at' => iso8601
             },
             'entity' => {
               'name'                       => process.name,
@@ -115,7 +115,7 @@ RSpec.describe 'Apps' do
                 'guid'       => process.guid,
                 'url'        => "/v2/apps/#{process.guid}",
                 'created_at' => iso8601,
-                'updated_at' => nil,
+                'updated_at' => iso8601,
               },
               'entity' => {
                 'name'                       => process.name,
@@ -155,7 +155,7 @@ RSpec.describe 'Apps' do
                     'guid'       => space.guid,
                     'url'        => "/v2/spaces/#{space.guid}",
                     'created_at' => iso8601,
-                    'updated_at' => nil
+                    'updated_at' => iso8601
                   },
                   'entity' => {
                     'name'                        => space.name,
@@ -182,7 +182,7 @@ RSpec.describe 'Apps' do
                     'guid'       => process.stack.guid,
                     'url'        => "/v2/stacks/#{process.stack.guid}",
                     'created_at' => iso8601,
-                    'updated_at' => nil
+                    'updated_at' => iso8601
                   },
                   'entity' => {
                     'name'        => process.stack.name,
@@ -196,7 +196,7 @@ RSpec.describe 'Apps' do
                       'guid'       => route.guid,
                       'url'        => "/v2/routes/#{route.guid}",
                       'created_at' => iso8601,
-                      'updated_at' => nil
+                      'updated_at' => iso8601
                     },
                     'entity' => {
                       'host'                  => route.host,
@@ -220,7 +220,7 @@ RSpec.describe 'Apps' do
                       'guid'       => service_binding.guid,
                       'url'        => "/v2/service_bindings/#{service_binding.guid}",
                       'created_at' => iso8601,
-                      'updated_at' => nil
+                      'updated_at' => iso8601
                     },
                     'entity' => {
                       'app_guid'              => process.guid,
@@ -324,7 +324,7 @@ RSpec.describe 'Apps' do
             'guid'       => process.guid,
             'url'        => "/v2/apps/#{process.guid}",
             'created_at' => iso8601,
-            'updated_at' => nil
+            'updated_at' => iso8601
           },
           'entity' => {
             'name'                       => 'app-name',
@@ -398,7 +398,7 @@ RSpec.describe 'Apps' do
             'guid'       => process.guid,
             'url'        => "/v2/apps/#{process.guid}",
             'created_at' => iso8601,
-            'updated_at' => nil
+            'updated_at' => iso8601
           },
           'entity' => {
             'name'                       => 'maria',
@@ -461,7 +461,7 @@ RSpec.describe 'Apps' do
               'guid'       => process.guid,
               'url'        => "/v2/apps/#{process.guid}",
               'created_at' => iso8601,
-              'updated_at' => nil
+              'updated_at' => iso8601
             },
             'entity' => {
               'name'                       => 'maria',
@@ -1189,7 +1189,7 @@ RSpec.describe 'Apps' do
                 'guid'       => route.guid,
                 'url'        => "/v2/routes/#{route.guid}",
                 'created_at' => iso8601,
-                'updated_at' => nil
+                'updated_at' => iso8601
               },
               'entity' => {
                 'host'                  => 'youdontknowme',
@@ -1315,7 +1315,7 @@ RSpec.describe 'Apps' do
                 'guid'       => route_mapping.guid,
                 'url'        => "/v2/route_mappings/#{route_mapping.guid}",
                 'created_at' => iso8601,
-                'updated_at' => nil
+                'updated_at' => iso8601
               },
               'entity' => {
                 'app_port'   => nil,

@@ -216,13 +216,10 @@ module VCAP::CloudController
       before { set_current_user_as_admin }
 
       it 'updates the data' do
-        expect(model.updated_at).to be_nil
-
         put "/v2/test_models/#{model.guid}", MultiJson.dump({ unique_value: 'new value' })
 
         expect(last_response.status).to eq(201)
         model.reload
-        expect(model.updated_at).not_to be_nil
         expect(model.unique_value).to eq('new value')
         expect(decoded_response['entity']['unique_value']).to eq('new value')
       end

@@ -11,25 +11,14 @@ module VCAP::CloudController
         end
 
         def perform
-          null_timestamp = null_timestamp_for_db(DropletModel.db.database_type)
           DropletModel.
             where(state: [DropletModel::STAGING_STATE, DropletModel::PROCESSING_UPLOAD_STATE]).
-            where(
-              (updated_at_past_threshold & Sequel.~({ updated_at: null_timestamp })) |
-                (created_at_past_threshold & { updated_at: null_timestamp })
-            ).
+            where(updated_at_past_threshold).
             update(
               state:      DropletModel::FAILED_STATE,
               error_id:   'StagingTimeExpired',
               updated_at: Sequel::CURRENT_TIMESTAMP
             )
-        end
-
-        def null_timestamp_for_db(db_type)
-          {
-            postgres: nil,
-            mysql: '0000-00-00 00:00:00'
-          }[db_type]
         end
 
         def job_name_in_configuration

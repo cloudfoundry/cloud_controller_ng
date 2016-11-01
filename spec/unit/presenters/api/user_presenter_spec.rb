@@ -10,7 +10,7 @@ RSpec.describe UserPresenter do
         metadata: {
             guid: user.guid,
             created_at: user.created_at.iso8601,
-            updated_at: nil,
+            updated_at: user.updated_at.iso8601,
         },
         entity: {
             admin: true,
