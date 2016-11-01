@@ -17,11 +17,12 @@ module Diego
       protobuf_decode!(response.body, Bbs::Models::PingResponse)
     end
 
-    def desire_task(task)
-      encoded_task = protobuf_encode!(task)
+    def desire_task(task_definition:, domain:, task_guid:)
+      task_request = Bbs::Models::DesireTaskRequest.new(task_definition: task_definition, domain: domain, task_guid: task_guid)
+      encoded_task_request = protobuf_encode!(task_request)
 
       response = with_request_error_handling do
-        client.post(Routes::DESIRE_TASK, encoded_task, protobuf_header)
+        client.post(Routes::DESIRE_TASK, encoded_task_request, protobuf_header)
       end
 
       validate_status!(response: response, statuses: [200])

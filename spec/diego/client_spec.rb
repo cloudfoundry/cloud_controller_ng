@@ -56,20 +56,20 @@ module Diego
     describe '#desire_task' do
       let(:response_body) { Bbs::Models::TaskResponse.new(error: nil).encode.to_s }
       let(:response_status) { 200 }
-      let(:task) { Bbs::Models::Task.new(task_guid: SecureRandom.uuid) }
+      let(:task_definition) { Bbs::Models::TaskDefinition.new }
 
       before do
         stub_request(:post, 'https://bbs.example.com:4443/v1/tasks/desire.r2').to_return(status: response_status, body: response_body)
       end
 
       it 'returns a task response' do
-        expected_task = task.dup
+        expected_task_request = Bbs::Models::DesireTaskRequest.new(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain')
 
-        response = client.desire_task(task)
+        response = client.desire_task(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain')
 
         expect(response.error).to be_nil
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/desire.r2').with(
-                 body:    expected_task.encode.to_s,
+                 body:    expected_task_request.encode.to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -79,7 +79,7 @@ module Diego
         let(:response_body) { 'not found' }
 
         it 'raises' do
-          expect { client.desire_task(task) }.to raise_error(ClientError, /status: 404, body: not found/)
+          expect { client.desire_task(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain') }.to raise_error(ClientError, /status: 404, body: not found/)
         end
       end
 
@@ -89,7 +89,7 @@ module Diego
         end
 
         it 'raises' do
-          expect { client.desire_task(task) }.to raise_error(ClientError, /error message/)
+          expect { client.desire_task(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain') }.to raise_error(ClientError, /error message/)
         end
       end
 
@@ -97,15 +97,13 @@ module Diego
         let(:response_body) { 'potato' }
 
         it 'raises' do
-          expect { client.desire_task(task) }.to raise_error(DecodeError)
+          expect { client.desire_task(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain') }.to raise_error(DecodeError)
         end
       end
 
       context 'when the task cannot be encoded' do
-        let(:task) { nil }
-
         it 'raises' do
-          expect { client.desire_task(task) }.to raise_error(EncodeError)
+          expect { client.desire_task(task_definition: 4, task_guid: 'task_guid', domain: 'domain') }.to raise_error(EncodeError)
         end
       end
     end
