@@ -1,21 +1,20 @@
 module VCAP::CloudController
   class IsolationSegmentAssign
-    def assign(isolation_segment, organization)
+    def assign(isolation_segment, organizations)
       isolation_segment.db.transaction do
-        isolation_segment.add_organization(organization)
+        isolation_segment.lock!
 
-        if organization.isolation_segment_models.length == 1
-          set_default_segment(isolation_segment, organization)
+        organizations.sort! { |o1, o2| o1.guid <=> o2.guid }.each do |org|
+          org.lock!
+          isolation_segment.add_organization(org)
+
+          if org.default_isolation_segment_model.nil?
+            if isolation_segment.guid.eql?(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
+              org.update(default_isolation_segment_model: isolation_segment)
+            end
+          end
         end
       end
-    end
-
-    private
-
-    def set_default_segment(isolation_segment, organization)
-      organization.lock!
-      organization.update(isolation_segment_model: isolation_segment)
-      organization.save
     end
   end
 end

@@ -36,7 +36,7 @@ RSpec.describe 'IsolationSegmentModels' do
     end
   end
 
-  describe 'GET /v3/isolation_segments/:guid/organizations' do
+  describe 'GET /v3/isolation_segments/:guid/relationships/organizations' do
     let(:org1) { VCAP::CloudController::Organization.make }
     let(:org2) { VCAP::CloudController::Organization.make }
     let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
@@ -65,7 +65,7 @@ RSpec.describe 'IsolationSegmentModels' do
     end
   end
 
-  describe 'GET /v3/isolation_segments/:guid/spaces' do
+  describe 'GET /v3/isolation_segments/:guid/relationships/spaces' do
     let(:space1) { VCAP::CloudController::Space.make }
     let(:space2) { VCAP::CloudController::Space.make }
     let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
@@ -147,6 +147,7 @@ RSpec.describe 'IsolationSegmentModels' do
       delete "/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations", unassign_request, user_header
 
       expect(last_response.status).to eq(204)
+      expect(isolation_segment.organizations).to include(org1)
     end
   end
 

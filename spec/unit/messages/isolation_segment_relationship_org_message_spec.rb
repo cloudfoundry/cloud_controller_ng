@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'messages/isolation_segment_assign_org_message'
+require 'messages/isolation_segment_relationship_org_message'
 
 module VCAP::CloudController
-  RSpec.describe IsolationSegmentAssignOrgMessage do
+  RSpec.describe IsolationSegmentRelationshipOrgMessage do
     describe '.create_from_http_request' do
       let(:body) {
         {
@@ -13,15 +13,15 @@ module VCAP::CloudController
         }
       }
 
-      it 'returns the correct IsolationSegmentAssignOrgMessage' do
-        message = IsolationSegmentAssignOrgMessage.create_from_http_request(body)
+      it 'returns the correct IsolationSegmentRelationshipOrgMessage' do
+        message = IsolationSegmentRelationshipOrgMessage.create_from_http_request(body)
 
-        expect(message).to be_a(IsolationSegmentAssignOrgMessage)
+        expect(message).to be_a(IsolationSegmentRelationshipOrgMessage)
         expect(message.guids).to eq(['some-guid', 'some-guid-2'])
       end
 
       it 'converts requested keys to symbols' do
-        message = IsolationSegmentAssignOrgMessage.create_from_http_request(body)
+        message = IsolationSegmentRelationshipOrgMessage.create_from_http_request(body)
 
         expect(message.requested?(:data)).to be_truthy
       end
@@ -36,7 +36,7 @@ module VCAP::CloudController
         end
 
         it 'returns an error' do
-          message = IsolationSegmentAssignOrgMessage.new(params)
+          message = IsolationSegmentRelationshipOrgMessage.new(params)
 
           expect(message).to_not be_valid
           expect(message.errors[:data]).to include("can't be blank")
@@ -51,7 +51,7 @@ module VCAP::CloudController
         end
 
         it 'returns an error' do
-          message = IsolationSegmentAssignOrgMessage.new(params)
+          message = IsolationSegmentRelationshipOrgMessage.new(params)
 
           expect(message).to_not be_valid
           expect(message.errors[:data]).to include('must be an array')
@@ -66,7 +66,7 @@ module VCAP::CloudController
         }
 
         it 'is not valid' do
-          message = IsolationSegmentAssignOrgMessage.new(params)
+          message = IsolationSegmentRelationshipOrgMessage.new(params)
 
           expect(message).to_not be_valid
           expect(message.errors[:base]).to include("Unknown field(s): 'unexpected'")
@@ -82,7 +82,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            message = IsolationSegmentAssignOrgMessage.new(params)
+            message = IsolationSegmentRelationshipOrgMessage.new(params)
 
             expect(message).not_to be_valid
             expect(message.errors[:data]).to include('32.77 not a string')

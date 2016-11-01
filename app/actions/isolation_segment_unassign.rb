@@ -2,20 +2,19 @@ module VCAP::CloudController
   class IsolationSegmentUnassign
     class IsolationSegmentUnassignError < StandardError; end
 
-    def unassign(isolation_segment, organization)
-      space_association_error! if segment_associated_with_space?(isolation_segment, organization)
+    def unassign(isolation_segment, organizations)
+      isolation_segment.db.transaction do
+        isolation_segment.lock!
 
-      segment_guids = organization.isolation_segment_models.map(&:guid)
+        organizations.sort! { |o1, o2| o1.guid <=> o2.guid }.each do |org|
+          org.lock!
+          space_association_error! if segment_associated_with_space?(isolation_segment, org)
 
-      if multiple_remaining_segments?(segment_guids) && is_default_segment?(isolation_segment, organization)
-        delete_default_error!(isolation_segment, organization)
+          unset_default_segment(isolation_segment, org)
+
+          isolation_segment.remove_organization(org)
+        end
       end
-
-      if single_remaining_segment?(segment_guids) && segment_guids.include?(isolation_segment.guid)
-        unset_default_segment(organization)
-      end
-
-      isolation_segment.remove_organization(organization)
     end
 
     private
@@ -25,31 +24,19 @@ module VCAP::CloudController
     end
 
     def is_default_segment?(isolation_segment, organization)
-      organization.isolation_segment_model == isolation_segment
+      organization.default_isolation_segment_model == isolation_segment
     end
 
-    def multiple_remaining_segments?(segment_guids)
-      segment_guids.length > 1
-    end
+    def unset_default_segment(isolation_segment, organization)
+      if is_default_segment?(isolation_segment, organization)
+        organization.check_spaces_without_isolation_segments_empty!('Removing')
 
-    def single_remaining_segment?(segment_guids)
-      segment_guids.length == 1
-    end
-
-    def unset_default_segment(organization)
-      organization.lock!
-      organization.update(default_isolation_segment_guid: nil)
+        organization.update(default_isolation_segment_guid: nil)
+      end
     end
 
     def space_association_error!
       raise IsolationSegmentUnassignError.new('Please delete the Space associations for your Isolation Segment.')
-    end
-
-    def delete_default_error!(isolation_segment, organization)
-      raise IsolationSegmentUnassignError.new(
-        "Removal of Isolation Segment #{isolation_segment.name} from Organization #{organization.name} could not be completed: " \
-          'This operation can only be completed if another Isolation Segment is set as the default'
-      )
     end
   end
 end

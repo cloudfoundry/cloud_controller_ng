@@ -47,7 +47,9 @@ module CloudController::Presenters::V2
         let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
         before do
-          assigner.assign(isolation_segment_model, org)
+          assigner.assign(isolation_segment_model, [org])
+          org.update(default_isolation_segment_model: isolation_segment_model)
+          org.reload
         end
 
         it 'displays the correct url' do

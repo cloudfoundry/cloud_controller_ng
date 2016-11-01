@@ -18,7 +18,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :billing_managers, class: User }
       it { is_expected.to have_associated :auditors, class: User }
       it { is_expected.to have_associated :space_quota_definitions, associated_instance: ->(org) { SpaceQuotaDefinition.make(organization: org) } }
-      it { is_expected.to have_associated :isolation_segment_model, class: IsolationSegmentModel }
+      it { is_expected.to have_associated :default_isolation_segment_model, class: IsolationSegmentModel }
 
       it 'has associated owned_private domains' do
         domain = PrivateDomain.make
@@ -68,10 +68,12 @@ module VCAP::CloudController
         let(:assigner) { IsolationSegmentAssign.new }
 
         before do
-          assigner.assign(isolation_segment_model, org)
-          assigner.assign(isolation_segment_model2, org)
+          assigner.assign(isolation_segment_model, [org])
+          assigner.assign(isolation_segment_model2, [org])
+          org.update(default_isolation_segment_model: isolation_segment_model)
+          org.reload
 
-          expect(org.isolation_segment_model).to eq(isolation_segment_model)
+          expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
           expect(org.isolation_segment_models).to match_array([isolation_segment_model, isolation_segment_model2])
         end
 
@@ -135,18 +137,20 @@ module VCAP::CloudController
         context 'when setting the default isolation segment' do
           it 'raises an error if it is not in the allowed list' do
             expect {
-              org.isolation_segment_model = isolation_segment_model
+              org.default_isolation_segment_model = isolation_segment_model
               org.save
             }.to raise_error(Sequel::ForeignKeyConstraintViolation)
           end
 
           it 'can be updated' do
-            assigner.assign(isolation_segment_model, org)
-            expect(org.isolation_segment_model).to eq(isolation_segment_model)
+            assigner.assign(isolation_segment_model, [org])
+            org.update(default_isolation_segment_model: isolation_segment_model)
+            org.reload
+            expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
 
-            assigner.assign(isolation_segment_model2, org)
-            org.isolation_segment_model = isolation_segment_model2
-            expect(org.isolation_segment_model).to eq(isolation_segment_model2)
+            assigner.assign(isolation_segment_model2, [org])
+            org.default_isolation_segment_model = isolation_segment_model2
+            expect(org.default_isolation_segment_model).to eq(isolation_segment_model2)
           end
         end
 
@@ -160,14 +164,32 @@ module VCAP::CloudController
 
         context 'when removing isolation segments from the allowed list' do
           before do
-            assigner.assign(isolation_segment_model, org)
+            assigner.assign(isolation_segment_model, [org])
           end
 
           it 'removing raises an ApiError' do
             expect {
               org.remove_isolation_segment_model(isolation_segment_model)
             }.to raise_error(CloudController::Errors::ApiError)
-            expect(org.isolation_segment_model).to eq(isolation_segment_model)
+          end
+        end
+      end
+
+      describe '#check_spaces_without_isolation_segments_empty!' do
+        it 'does not raise an error' do
+          expect { org.check_spaces_without_isolation_segments_empty!('Setting') }.to_not raise_error
+        end
+
+        context 'when there are spaces without an isolation segment that contain apps' do
+          before do
+            AppModel.make(space: Space.make(organization: org))
+          end
+
+          it 'raises an UnableToPerform error' do
+            expect { org.check_spaces_without_isolation_segments_empty!('Setting') }.to raise_error(
+              CloudController::Errors::ApiError,
+              /Setting default Isolation Segment/
+            )
           end
         end
       end

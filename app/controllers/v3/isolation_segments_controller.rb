@@ -1,12 +1,15 @@
 require 'actions/isolation_segment_assign'
 require 'actions/isolation_segment_unassign'
 require 'actions/isolation_segment_update'
-require 'messages/isolation_segment_assign_org_message'
+
+require 'messages/isolation_segment_relationship_org_message'
 require 'messages/isolation_segment_create_message'
 require 'messages/isolation_segment_update_message'
 require 'messages/isolation_segments_list_message'
+
 require 'presenters/v3/isolation_segment_presenter'
 require 'presenters/v3/relationship_presenter'
+
 require 'queries/isolation_segment_list_fetcher'
 require 'queries/isolation_segment_organizations_fetcher'
 require 'queries/isolation_segment_spaces_fetcher'
@@ -120,12 +123,7 @@ class IsolationSegmentsController < ApplicationController
     unauthorized! unless roles.admin?
     isolation_segment_model, orgs = organizations_lookup
 
-    isolation_segment_model.db.transaction do
-      isolation_segment_model.lock!
-      orgs.each do |org|
-        organization_assigner.assign(isolation_segment_model, org)
-      end
-    end
+    organization_assigner.assign(isolation_segment_model, orgs)
 
     render status: :created, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
   end
@@ -134,12 +132,7 @@ class IsolationSegmentsController < ApplicationController
     unauthorized! unless roles.admin?
     isolation_segment_model, orgs = organizations_lookup
 
-    isolation_segment_model.db.transaction do
-      isolation_segment_model.lock!
-      orgs.each do |org|
-        organization_unassigner.unassign(isolation_segment_model, org)
-      end
-    end
+    organization_unassigner.unassign(isolation_segment_model, orgs)
 
     head :no_content
   rescue IsolationSegmentUnassign::IsolationSegmentUnassignError => e
@@ -160,7 +153,7 @@ class IsolationSegmentsController < ApplicationController
     isolation_segment_model = IsolationSegmentModel.first(guid: params[:guid])
     resource_not_found!(:isolation_segment) unless isolation_segment_model
 
-    message = IsolationSegmentAssignOrgMessage.create_from_http_request(params[:body])
+    message = IsolationSegmentRelationshipOrgMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     organizations = Organization.where(guid: message.guids).all
@@ -180,7 +173,7 @@ class IsolationSegmentsController < ApplicationController
   end
 
   def find_isolation_segment(guid)
-    isolation_segment = IsolationSegmentModel.where(guid: guid).first
+    isolation_segment = IsolationSegmentModel.first(guid: guid)
     resource_not_found!(:isolation_segment) unless isolation_segment
     isolation_segment
   end

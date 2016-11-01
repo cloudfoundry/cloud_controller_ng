@@ -61,8 +61,7 @@ module VCAP::CloudController
         let(:org_2) { Organization.make }
 
         it 'allows one isolation segment to be referenced by multiple organizations' do
-          assigner.assign(isolation_segment_model, org_1)
-          assigner.assign(isolation_segment_model, org_2)
+          assigner.assign(isolation_segment_model, [org_1, org_2])
 
           expect(isolation_segment_model.organizations).to include(org_1, org_2)
           expect(org_1.isolation_segment_models).to include(isolation_segment_model)
@@ -72,8 +71,8 @@ module VCAP::CloudController
         it 'allows multiple isolation segments to be applied to one organization' do
           isolation_segment_model_2 = IsolationSegmentModel.make
 
-          assigner.assign(isolation_segment_model, org_1)
-          assigner.assign(isolation_segment_model_2, org_1)
+          assigner.assign(isolation_segment_model, [org_1])
+          assigner.assign(isolation_segment_model_2, [org_1])
 
           expect(isolation_segment_model.organizations).to include(org_1)
           expect(isolation_segment_model_2.organizations).to include(org_1)
@@ -83,15 +82,15 @@ module VCAP::CloudController
         context 'when adding isolation segments to the allowed list' do
           context 'and one isolation segment is in allowed list' do
             before do
-              assigner.assign(isolation_segment_model, org)
+              assigner.assign(isolation_segment_model, [org])
             end
 
             it 'can be removed' do
-              unassigner.unassign(isolation_segment_model, org)
+              unassigner.unassign(isolation_segment_model, [org])
 
               expect(isolation_segment_model.organizations).to be_empty
               expect(org.isolation_segment_models).to be_empty
-              expect(org.isolation_segment_model).to be_nil
+              expect(org.default_isolation_segment_model).to be_nil
             end
           end
         end
@@ -162,7 +161,7 @@ module VCAP::CloudController
       let(:org) { Organization.make }
 
       it 'raises an error if still assigned to any orgs' do
-        assigner.assign(isolation_segment_model, org)
+        assigner.assign(isolation_segment_model, [org])
         expect { isolation_segment_model.destroy }.to raise_error(CloudController::Errors::ApiError, /Please delete the Organization associations for your Isolation Segment/)
       end
 
