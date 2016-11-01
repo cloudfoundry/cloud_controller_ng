@@ -230,9 +230,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
 
         expect(response.status).to eq 201
-
         expect(parsed_body['guid']).to eq(isolation_segment_model.guid)
-
         expect(isolation_segment_model.organizations).to include(org)
       end
 

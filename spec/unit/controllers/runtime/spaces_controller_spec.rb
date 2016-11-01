@@ -1582,7 +1582,7 @@ module VCAP::CloudController
         end
 
         context 'when the space does not contain apps' do
-          context 'as an admin who is not a manager' do
+          context 'and we have permission' do
             before do
               set_current_user_as_admin
             end
@@ -1596,51 +1596,7 @@ module VCAP::CloudController
             end
           end
 
-          context 'as an org manager' do
-            before do
-              organization.add_manager(user)
-            end
-
-            it 'successfully removes the isolation segment' do
-              delete "/v2/spaces/#{space.guid}/isolation_segment"
-              expect(last_response.status).to eq 200
-
-              space.reload
-              expect(space.isolation_segment_model).to be_nil
-            end
-          end
-
-          context 'as a developer' do
-            before do
-              space.organization.add_user(user)
-              space.add_developer(user)
-            end
-
-            it 'fails with a 403' do
-              delete "/v2/spaces/#{space.guid}/isolation_segment"
-              expect(last_response.status).to eq 403
-
-              space.reload
-              expect(space.isolation_segment_model).to eq(isolation_segment_model)
-            end
-          end
-
-          context 'as a space manager' do
-            before do
-              space.organization.add_user(user)
-              space.add_manager(user)
-            end
-
-            it 'fails with a 403' do
-              delete "/v2/spaces/#{space.guid}/isolation_segment"
-              expect(last_response.status).to eq 403
-
-              space.reload
-              expect(space.isolation_segment_model).to eq(isolation_segment_model)
-            end
-          end
-
-          context 'as an auditor' do
+          context 'and we do not have permission' do
             before do
               space.organization.add_user(user)
               space.add_auditor(user)
@@ -1661,7 +1617,7 @@ module VCAP::CloudController
             AppModel.make(space: space)
           end
 
-          context 'as an admin who is not a manager' do
+          context 'and we have permission' do
             before do
               set_current_user_as_admin
             end
@@ -1675,51 +1631,7 @@ module VCAP::CloudController
             end
           end
 
-          context 'as an org manager' do
-            before do
-              organization.add_manager(user)
-            end
-
-            it 'returns a 400' do
-              delete "/v2/spaces/#{space.guid}/isolation_segment"
-              expect(last_response.status).to eq 400
-
-              space.reload
-              expect(space.isolation_segment_model).to eq(isolation_segment_model)
-            end
-          end
-
-          context 'as a developer' do
-            before do
-              space.organization.add_user(user)
-              space.add_developer(user)
-            end
-
-            it 'fails with a 403' do
-              delete "/v2/spaces/#{space.guid}/isolation_segment"
-              expect(last_response.status).to eq 403
-
-              space.reload
-              expect(space.isolation_segment_model).to eq(isolation_segment_model)
-            end
-          end
-
-          context 'as a space manager' do
-            before do
-              space.organization.add_user(user)
-              space.add_manager(user)
-            end
-
-            it 'fails with a 403' do
-              delete "/v2/spaces/#{space.guid}/isolation_segment"
-              expect(last_response.status).to eq 403
-
-              space.reload
-              expect(space.isolation_segment_model).to eq(isolation_segment_model)
-            end
-          end
-
-          context 'as an auditor' do
+          context 'and we do not have permission' do
             before do
               space.organization.add_user(user)
               space.add_auditor(user)

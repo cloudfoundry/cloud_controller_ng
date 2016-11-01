@@ -200,7 +200,7 @@ module VCAP::CloudController
       space = find_guid(guid)
       check_isolation_segment_access!(space)
 
-      check_space_is_empty!(space)
+      check_space_is_empty!(space, "Removing")
 
       space.db.transaction do
         space.lock!
@@ -215,7 +215,7 @@ module VCAP::CloudController
       if request_attrs['isolation_segment_guid']
         check_isolation_segment_access!(obj)
 
-        check_space_is_empty!(obj)
+        check_space_is_empty!(obj, "Adding")
 
         isolation_segment_guids = obj.organization.isolation_segment_models.map(&:guid)
         unless isolation_segment_guids.include?(request_attrs['isolation_segment_guid'])
@@ -230,10 +230,10 @@ module VCAP::CloudController
 
     private
 
-    def check_space_is_empty!(space)
+    def check_space_is_empty!(space, action)
       raise CloudController::Errors::ApiError.new_from_details(
         'UnableToPerform',
-        'Adding the Isolation Segment to the Space',
+        "#{action} the Isolation Segment to the Space",
         'Cannot change the Isolation Segment for a Space containing Apps') unless space.app_models.empty?
     end
 

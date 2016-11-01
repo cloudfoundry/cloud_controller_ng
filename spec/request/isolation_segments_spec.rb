@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'isolation_segment_assign'
 
 RSpec.describe 'IsolationSegmentModels' do
   let(:user) { VCAP::CloudController::User.make }
@@ -7,6 +8,7 @@ RSpec.describe 'IsolationSegmentModels' do
   let(:scheme) { TestConfig.config[:external_protocol] }
   let(:host) { TestConfig.config[:external_domain] }
   let(:link_prefix) { "#{scheme}://#{host}" }
+  let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
   describe 'POST /v3/isolation_segments' do
     it 'creates an isolation segment' do
@@ -42,8 +44,7 @@ RSpec.describe 'IsolationSegmentModels' do
     let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
 
     before do
-      isolation_segment_model.add_organization(org1)
-      isolation_segment_model.add_organization(org2)
+      assigner.assign(isolation_segment_model, [org1, org2])
     end
 
     it 'returns the organization guids assigned' do
@@ -133,8 +134,7 @@ RSpec.describe 'IsolationSegmentModels' do
     let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
 
     before do
-      isolation_segment.add_organization(org1)
-      isolation_segment.add_organization(org2)
+      assigner.assign(isolation_segment, [org1, org2])
     end
 
     it 'removes the organization from the isolation segment' do
