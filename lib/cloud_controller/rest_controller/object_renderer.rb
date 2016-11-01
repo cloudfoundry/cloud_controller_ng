@@ -65,7 +65,7 @@ module VCAP::CloudController::RestController
 
     def default_visibility_filter
       user = VCAP::CloudController::SecurityContext.current_user
-      admin = VCAP::CloudController::SecurityContext.admin?
+      admin = VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
       proc { |ds| ds.filter(ds.model.user_visibility(user, admin)) }
     end
   end
