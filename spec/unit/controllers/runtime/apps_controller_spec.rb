@@ -2335,19 +2335,97 @@ module VCAP::CloudController
     describe 'GET /v2/apps/:guid/permissions' do
       let(:app_obj) { AppFactory.make(space: space) }
       let(:space) { Space.make }
-      let(:user) { make_developer_for_space(space) }
+      let(:user)  { User.make }
 
       before do
-        set_current_user(user, { scopes: ['cloud_controller.user'] })
+        space.organization.add_user(user)
       end
 
-      it 'succeeds and allows manage' do
-        get "/v2/apps/#{app_obj.guid}/permissions"
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['manage']).to eq(true)
+      context 'when the user is a SpaceDeveloper' do
+        before do
+          space.add_developer(user)
+          set_current_user(user, { scopes: ['cloud_controller.user'] })
+        end
+
+        it 'succeeds and present data reading permissions' do
+          get "/v2/apps/#{app_obj.guid}/permissions"
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['read_sensitive_data']).to eq(true)
+          expect(parsed_response['read_basic_data']).to eq(true)
+        end
+      end
+
+      context 'when the user is a OrgManager' do
+        before do
+          app_obj.organization.add_manager(user)
+          set_current_user(user, { scopes: ['cloud_controller.user'] })
+        end
+
+        it 'succeeds and present data reading permissions' do
+          get "/v2/apps/#{app_obj.guid}/permissions"
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['read_sensitive_data']).to eq(false)
+          expect(parsed_response['read_basic_data']).to eq(true)
+        end
+      end
+
+      context 'when the user is a BillingManager' do
+        before do
+          space.organization.add_billing_manager(user)
+          set_current_user(user, { scopes: ['cloud_controller.user'] })
+        end
+
+        it 'fails with a 403' do
+          get "/v2/apps/#{app_obj.guid}/permissions"
+          expect(last_response.status).to eq(403)
+          expect(decoded_response['description']).to include('You are not authorized to perform the requested action')
+        end
+      end
+
+      context 'when the user is a OrgAuditor' do
+        before do
+          space.organization.add_auditor(user)
+          set_current_user(user, { scopes: ['cloud_controller.user'] })
+        end
+
+        it 'fails with a 403' do
+          get "/v2/apps/#{app_obj.guid}/permissions"
+          expect(last_response.status).to eq(403)
+          expect(decoded_response['description']).to include('You are not authorized to perform the requested action')
+        end
+      end
+
+      context 'when the user is a SpaceManager' do
+        before do
+          space.add_manager(user)
+          set_current_user(user, { scopes: ['cloud_controller.user'] })
+        end
+
+        it 'succeeds and present data reading permissions' do
+          get "/v2/apps/#{app_obj.guid}/permissions"
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['read_sensitive_data']).to eq(false)
+          expect(parsed_response['read_basic_data']).to eq(true)
+        end
+      end
+
+      context 'when the user is a SpaceAuditor' do
+        before do
+          space.add_auditor(user)
+          set_current_user(user, { scopes: ['cloud_controller.user'] })
+        end
+
+        it 'succeeds and present data reading permissions' do
+          get "/v2/apps/#{app_obj.guid}/permissions"
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['read_sensitive_data']).to eq(false)
+          expect(parsed_response['read_basic_data']).to eq(true)
+        end
       end
 
       context 'when missing cloud_controller.user scope' do
+        let(:user) { make_developer_for_space(space) }
+
         before do
           set_current_user(user, { scopes: [] })
         end
@@ -2355,18 +2433,6 @@ module VCAP::CloudController
         it 'returns 403' do
           get "/v2/apps/#{app_obj.guid}/permissions"
           expect(last_response.status).to eq(403)
-        end
-      end
-
-      context 'when the user is not a SpaceDeveloper for the app and cloud_controller.user scope is present' do
-        before do
-          set_current_user(User.make, { scopes: ['cloud_controller.user'] })
-        end
-
-        it 'returns manage false' do
-          get "/v2/apps/#{app_obj.guid}/permissions"
-          expect(last_response.status).to eq(200)
-          expect(parsed_response['manage']).to eq(false)
         end
       end
 

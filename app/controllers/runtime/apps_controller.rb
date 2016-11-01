@@ -343,10 +343,28 @@ module VCAP::CloudController
     get '/v2/apps/:guid/permissions', :permissions
     def permissions(guid)
       find_guid_and_validate_access(:read_permissions, guid, App)
-      [HTTP::OK, {}, JSON.generate({ manage: true })]
+
+      [HTTP::OK, {}, JSON.generate({
+        read_sensitive_data: true,
+        read_basic_data: true
+      })]
+
     rescue CloudController::Errors::ApiError => e
       if e.name == 'NotAuthorized'
-        [HTTP::OK, {}, JSON.generate({ manage: false })]
+        app = find_guid(guid, App)
+        membership = VCAP::CloudController::Membership.new(current_user)
+
+        if membership.has_any_roles?(VCAP::CloudController::Membership::ORG_BILLING_MANAGER, app.organization.guid, nil) ||
+          membership.has_any_roles?(VCAP::CloudController::Membership::ORG_AUDITOR, app.organization.guid, nil)
+          [HTTP::FORBIDDEN, {}, JSON.generate({
+            description: 'You are not authorized to perform the requested action'
+          })]
+        else
+          [HTTP::OK, {}, JSON.generate({
+            read_sensitive_data: false,
+            read_basic_data: true
+          })]
+        end
       else
         raise e
       end
