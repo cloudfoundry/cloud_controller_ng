@@ -155,6 +155,32 @@ module CloudFoundry
           end
         end
 
+        describe 'exempting root endpoints' do
+          context 'when the user is hitting a root path /' do
+            let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/') }
+
+            it 'exempts them from rate limiting' do
+              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
+              _, response_headers, _ = middleware.call(unauthenticated_env)
+              expect(response_headers['X-RateLimit-Limit']).to be_nil
+              expect(response_headers['X-RateLimit-Remaining']).to be_nil
+              expect(response_headers['X-RateLimit-Reset']).to be_nil
+            end
+          end
+
+          context 'when the user is hitting a root path /v2/info"' do
+            let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v2/info') }
+
+            it 'exempts them from rate limiting' do
+              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
+              _, response_headers, _ = middleware.call(unauthenticated_env)
+              expect(response_headers['X-RateLimit-Limit']).to be_nil
+              expect(response_headers['X-RateLimit-Remaining']).to be_nil
+              expect(response_headers['X-RateLimit-Reset']).to be_nil
+            end
+          end
+        end
+
         describe 'when the user has a "HTTP_X_FORWARDED_FOR" header from proxy' do
           let(:headers) { ActionDispatch::Http::Headers.new({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip' }) }
           let(:headers_2) { ActionDispatch::Http::Headers.new({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip_2' }) }

@@ -43,7 +43,11 @@ module CloudFoundry
 
       def skip_rate_limiting?(env, request)
         auth = Rack::Auth::Basic::Request.new(env)
-        basic_auth?(auth) || internal_api?(request)
+        basic_auth?(auth) || internal_api?(request) || root_api?(request)
+      end
+
+      def root_api?(request)
+        request.fullpath.match(%r{^/$}) || request.fullpath.match(%r{^/v2/info$})
       end
 
       def internal_api?(request)
