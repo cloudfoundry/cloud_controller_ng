@@ -47,8 +47,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
     context 'when the segment has been assigned to orgs' do
       before do
-        assigner.assign(isolation_segment_model, org1)
-        assigner.assign(isolation_segment_model, org2)
+        assigner.assign(isolation_segment_model, [org1, org2])
       end
 
       context 'when the user is an admin' do
@@ -145,8 +144,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
     context 'when the segment has been associated with spaces' do
       before do
-        assigner.assign(isolation_segment_model, org1)
-        assigner.assign(isolation_segment_model, org2)
+        assigner.assign(isolation_segment_model, [org1, org2])
         isolation_segment_model.add_space(space1)
         isolation_segment_model.add_space(space2)
         isolation_segment_model.add_space(space3)
@@ -232,9 +230,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
 
         expect(response.status).to eq 201
-
         expect(parsed_body['guid']).to eq(isolation_segment_model.guid)
-
         expect(isolation_segment_model.organizations).to include(org)
       end
 
@@ -283,34 +279,18 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           }
         end
 
-        it 'does not assign any of the valid orgs' do
+        it 'does not assign any of the valid orgs and returns a 404' do
           post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
           expect(response.status).to eq 404
 
           expect(isolation_segment_model.organizations).to be_empty
-          expect(org.isolation_segment_model).to be_nil
-        end
-      end
-
-      context 'when the organization does not exist' do
-        let(:req_body) do
-          {
-            data: [
-              { guid: 'bogus-guid' }
-            ]
-          }
-        end
-
-        it 'returns a 404' do
-          post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-          expect(response.status).to eq 404
-          expect(response.body).to match(/Organization guids: \[\\\"bogus-guid\\\"\] cannot be found/)
+          expect(org.default_isolation_segment_model).to be_nil
         end
       end
 
       context 'when the isolation segment has already been assigned to the specified organization' do
         before do
-          assigner.assign(isolation_segment_model, org)
+          assigner.assign(isolation_segment_model, [org])
         end
 
         it 'returns a 201 and leaves the existing assignment intact' do
@@ -353,113 +333,22 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         set_current_user_as_admin
       end
 
-      context 'and no orgs have been assigned to the isolation segment' do
-        it 'removes the org from the isolation segment' do
-          post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-          expect(response.status).to eq 204
-        end
+      it 'unassigns Isolation Segments from the org' do
+        post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+        expect(response.status).to eq 204
       end
 
-      context 'and an org has been assigned to the isolation segment' do
+      context 'when an IsolationSegmentUnassignError is raised from the action' do
+        let(:unassigner) { double('unassigner') }
+
         before do
-          assigner.assign(isolation_segment_model, org)
+          allow(VCAP::CloudController::IsolationSegmentUnassign).to receive(:new).and_return(unassigner)
+          allow(unassigner).to receive(:unassign).and_raise(VCAP::CloudController::IsolationSegmentUnassign::IsolationSegmentUnassignError.new('error'))
         end
 
-        it 'removes the org from the isolation segment' do
+        it 'returns an unprocessable error' do
           post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-          expect(response.status).to eq 204
-
-          isolation_segment_model.reload
-          org.reload
-          expect(isolation_segment_model.organizations).to be_empty
-          expect(org.isolation_segment_models).to be_empty
-          expect(org.isolation_segment_model).to be_nil
-        end
-
-        it 'removes all passed orgs in the request' do
-          assigner.assign(isolation_segment_model, org_2)
-          req_body[:data] << { guid: org_2.guid }
-          post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-          expect(response.status).to eq 204
-
-          isolation_segment_model.reload
-          expect(isolation_segment_model.organizations).to be_empty
-        end
-
-        it 'removes only the orgs passed in the request' do
-          assigner.assign(isolation_segment_model, org_2)
-          post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-          expect(response.status).to eq 204
-
-          isolation_segment_model.reload
-          expect(isolation_segment_model.organizations.map(&:guid)).to eq([org_2.guid])
-        end
-
-        context 'when there are multiple isolation segments in an organizations allowed list' do
-          before do
-            isolation_segment_model_2 = VCAP::CloudController::IsolationSegmentModel.make
-            assigner.assign(isolation_segment_model_2, org)
-          end
-
-          it 'cannot remove the default isolation segment' do
-            post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-            expect(response.status).to eq 422
-          end
-
-          context 'and we remove an isolation_segment that is not the default' do
-            let(:req_body) do
-              {
-                data: [
-                  { guid: org_2.guid }
-                ]
-              }
-            end
-
-            it 'succeeds' do
-              post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-              expect(response.status).to eq 204
-            end
-          end
-        end
-
-        context 'and a space belonging to the org is assigned the isolation segment' do
-          before do
-            space = VCAP::CloudController::Space.make(organization: org)
-            isolation_segment_model.add_space(space)
-          end
-
-          it 'returns a 422' do
-            post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-            expect(response.status).to eq 422
-          end
-        end
-
-        context 'and an organization in the request body does not exist' do
-          let(:req_body) do
-            {
-              data: [
-                { guid: 'bad-guid' }
-              ]
-            }
-          end
-
-          it 'fails with a 404' do
-            post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-            expect(response.status).to eq 404
-          end
-
-          it 'does not remove the valid assignments from the request body' do
-            req_body[:data] << { guid: org.guid }
-            post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-            expect(response.status).to eq 404
-            expect(response.body).to match(/Organization guids: \[\\\"bad-guid\\\"\] cannot be found/)
-
-            isolation_segment_model.reload
-            org.reload
-            expect(isolation_segment_model.organizations).to eq([org])
-            expect(org.isolation_segment_models).to eq([isolation_segment_model])
-            expect(org.isolation_segment_model).to eq(isolation_segment_model)
-          end
+          expect(response.status).to eq 422
         end
       end
 
@@ -585,7 +474,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       context "and the user is an org user for an org in the isolation segment's allowed list" do
         before do
           org1.add_user(user)
-          assigner.assign(isolation_segment, org1)
+          assigner.assign(isolation_segment, [org1])
         end
 
         it 'allows the user to see the isolation segment' do
@@ -703,8 +592,8 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         context 'and the org is associated with an isolation segment' do
           before do
-            assigner.assign(isolation_segment1, org1)
-            assigner.assign(isolation_segment2, org1)
+            assigner.assign(isolation_segment1, [org1])
+            assigner.assign(isolation_segment2, [org1])
           end
 
           it 'allows the user to see only those isolation segments associated with their orgs' do

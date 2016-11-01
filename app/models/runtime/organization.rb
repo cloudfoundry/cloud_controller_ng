@@ -5,7 +5,8 @@ module VCAP::CloudController
 
     one_to_many :spaces
 
-    many_to_one :isolation_segment_model,
+    many_to_one :default_isolation_segment_model,
+      class: 'VCAP::CloudController::IsolationSegmentModel',
       primary_key: :guid,
       key: :default_isolation_segment_guid
 
@@ -154,7 +155,7 @@ module VCAP::CloudController
     end
 
     def before_destroy
-      update(isolation_segment_model: nil)
+      update(default_isolation_segment_model: nil)
       remove_all_isolation_segment_models
       super
     end
@@ -202,6 +203,15 @@ module VCAP::CloudController
 
     def billing_enabled?
       billing_enabled
+    end
+
+    def check_spaces_without_isolation_segments_empty!(action)
+      Space.dataset.where(isolation_segment_guid: nil, organization: self).each do |space|
+        raise CloudController::Errors::ApiError.new_from_details(
+          'UnableToPerform',
+          "#{action} default Isolation Segment",
+          "Please delete all Apps from Space #{space.name} first.") unless space.app_models.empty?
+      end
     end
 
     private

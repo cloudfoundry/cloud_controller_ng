@@ -12,7 +12,7 @@ module CloudController
             'billing_enabled' => org.billing_enabled,
             'quota_definition_guid' => org.quota_definition_guid,
             'status' => org.status,
-            'default_isolation_segment_guid' => org.isolation_segment_model ? org.isolation_segment_model.guid : nil
+            'default_isolation_segment_guid' => org.default_isolation_segment_model ? org.default_isolation_segment_model.guid : nil
           }
 
           entity['isolation_segment_url'] = "/v2/organizations/#{org.guid}/isolation_segments" unless org.isolation_segment_models.empty?

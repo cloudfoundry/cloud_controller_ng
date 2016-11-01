@@ -253,9 +253,11 @@ module VCAP::CloudController
 
         context 'when the isolation segment is in the allowed list' do
           before do
-            assigner.assign(isolation_segment, org)
-            assigner.assign(isolation_segment2, org)
-            expect(org.isolation_segment_model).to eq(isolation_segment)
+            assigner.assign(isolation_segment, [org])
+            assigner.assign(isolation_segment2, [org])
+            org.update(default_isolation_segment_model: isolation_segment)
+            org.reload
+            expect(org.default_isolation_segment_model).to eq(isolation_segment)
           end
 
           it 'sets the isolation segment as the org default' do
@@ -265,7 +267,7 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(201)
             org.reload
-            expect(org.isolation_segment_model).to eq(isolation_segment2)
+            expect(org.default_isolation_segment_model).to eq(isolation_segment2)
           end
 
           context 'when the segment is already the default isolation segment' do
@@ -276,7 +278,24 @@ module VCAP::CloudController
 
               expect(last_response.status).to eq(201)
               org.reload
-              expect(org.isolation_segment_model).to eq(isolation_segment)
+              expect(org.default_isolation_segment_model).to eq(isolation_segment)
+            end
+          end
+
+          context 'when the org has a space with no assigned segment and the space contains apps' do
+            before do
+              space = Space.make(organization: org)
+              AppModel.make(space: space)
+            end
+
+            it 'returns a 400 and does not change the default isolation segment' do
+              put "/v2/organizations/#{org.guid}", MultiJson.dump({
+                default_isolation_segment_guid: isolation_segment2.guid
+              })
+
+              expect(last_response.status).to eq(400)
+              org.reload
+              expect(org.default_isolation_segment_model).to eq(isolation_segment)
             end
           end
         end
@@ -298,7 +317,7 @@ module VCAP::CloudController
 
           expect(last_response.status).to eq(201)
           org.reload
-          expect(org.isolation_segment_model).to eq(isolation_segment2)
+          expect(org.default_isolation_segment_model).to eq(isolation_segment2)
         end
       end
     end
@@ -343,7 +362,7 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(201)
             org = Organization.find(name: 'my-org-name')
-            expect(org.isolation_segment_model).to be_nil
+            expect(org.default_isolation_segment_model).to be_nil
           end
         end
       end
