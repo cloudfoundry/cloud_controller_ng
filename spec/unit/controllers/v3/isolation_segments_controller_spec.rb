@@ -160,7 +160,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(response.status).to eq 200
 
           guids = parsed_body['data'].map { |r| r['guid'] }
-          expect(guids).to eq([space1.guid, space2.guid, space3.guid])
+          expect(guids).to match([space1.guid, space2.guid, space3.guid])
         end
       end
 
@@ -185,7 +185,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
               expect(response.status).to eq 200
 
               guids = parsed_body['data'].map { |r| r['guid'] }
-              expect(guids).to eq([space1.guid, space3.guid])
+              expect(guids).to match([space1.guid, space3.guid])
             end
           end
 
