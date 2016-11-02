@@ -421,7 +421,7 @@ diego:
   use_privileged_containers_for_staging: <%= p("cc.diego.use_privileged_containers_for_staging") %>
   lifecycle_bundles: <%= p("cc.diego.lifecycle_bundles") %>
   insecure_docker_registry_list: <%= p("cc.diego.insecure_docker_registry_list") %>
-  docker_staging_stack: <%= p("cc.docker_staging_stack") %>
+  docker_staging_stack: <%= p("cc.diego.docker_staging_stack") %>
   bbs:
     url: <%= p("cc.diego.bbs.url") %>
     key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.key
