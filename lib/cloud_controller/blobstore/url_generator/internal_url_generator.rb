@@ -15,7 +15,9 @@ module CloudController
 
       def admin_buildpack_download_url(buildpack)
         blob = @admin_buildpack_blobstore.blob(buildpack.key)
-        raise CloudController::Errors::ApiError.new_from_details('StagingError', "Failed fetching buildpack #{buildpack.name}. Try specifying your specific buildpack when pushing your application.") unless blob
+
+        message = "Failed fetching buildpack #{buildpack.name}. Try specifying your specific buildpack when pushing your application."
+        raise CloudController::Errors::ApiError.new_from_details('StagingError', message) unless blob
 
         url_for_blob(blob)
       end
