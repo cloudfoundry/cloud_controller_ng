@@ -8,7 +8,7 @@ module VCAP::CloudController
 
         staging_guid = staging_details.droplet.guid
 
-        if HashUtils.dig(config, :diego, :temporary_local_staging) && staging_details.lifecycle.type == Lifecycles::BUILDPACK
+        if HashUtils.dig(config, :diego, :temporary_local_staging)
           task_definition = recipe_builder.build_staging_task(config, staging_details)
           bbs_stager_client.stage(staging_guid, task_definition)
         else

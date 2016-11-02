@@ -802,6 +802,12 @@ properties:
     - "buildpack/cflinuxfs2:buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
     - "buildpack/windows2012R2:windows_app_lifecycle/windows_app_lifecycle.tgz"
     - "docker:docker_app_lifecycle/docker_app_lifecycle.tgz"
+  cc.diego.insecure_docker_registry_list:
+    description: "An array of insecure Docker registries in the form of <HOSTNAME|IP>:PORT"
+    default: []
+  cc.diego.docker_staging_stack:
+    description: "stack to use for staging Docker applications"
+    default: "cflinuxfs2"
 
   cc.diego.temporary_local_staging:
     description: "Temporary flag to enable staging directly to the bbs from cc"

@@ -3,12 +3,10 @@ require 'spec_helper'
 module VCAP::CloudController
   module Diego
     RSpec.describe RecipeBuilder do
-      subject(:protocol) { RecipeBuilder.new }
+      subject(:recipe_builder) { RecipeBuilder.new }
 
       describe '#build_staging_task' do
         let(:app) { AppModel.make(guid: 'banana-guid') }
-        let(:package) { PackageModel.make(app: app) }
-        let(:droplet) { DropletModel.make(:buildpack, package: package, app: app) }
         let(:staging_details) do
           Diego::StagingDetails.new.tap do |details|
             details.droplet               = droplet
@@ -39,10 +37,13 @@ module VCAP::CloudController
               cc_uploader_url:                       'http://cc-uploader.example.com',
               file_server_url:                       'http://file-server.example.com',
               stager_url:                            'http://stager.example.com',
+              docker_staging_stack:                  'docker-stack',
+              insecure_docker_registry_list:         ['registry-1', 'registry-2'],
               lifecycle_bundles:                     [
                 'buildpack/potato-stack:my_potato_life.tgz',
                 'buildpack/valid_url:http://example.com',
-                'buildpack/invalid_url:ftp://example.com'
+                'buildpack/invalid_url:ftp://example.com',
+                'docker:docker_stack.tgz'
               ],
             },
           }
@@ -51,6 +52,21 @@ module VCAP::CloudController
         let(:external_port) { '7777' }
         let(:user) { 'user' }
         let(:password) { 'password' }
+        let(:rule_dns_everywhere) do
+          ::Diego::Bbs::Models::SecurityGroupRule.new(
+            protocol:     'udp',
+            destinations: ['0.0.0.0/0'],
+            ports:        [53]
+          )
+        end
+        let(:rule_http_everywhere) do
+          ::Diego::Bbs::Models::SecurityGroupRule.new(
+            protocol:     'tcp',
+            destinations: ['0.0.0.0/0'],
+            ports:        [80],
+            log:          true
+          )
+        end
 
         before do
           allow(LifecycleProtocol).to receive(:protocol_for_type).with(lifecycle_type).and_return(lifecycle_protocol)
@@ -60,6 +76,9 @@ module VCAP::CloudController
         end
 
         context 'with a buildpack backend' do
+          let(:droplet) { DropletModel.make(:buildpack, package: package, app: app) }
+          let(:package) { PackageModel.make(app: app) }
+
           let(:build_artifacts_cache_download_uri) { 'http://build_artifacts_cache_download_uri.example.com/path/to/bits' }
           let(:lifecycle_type) { 'buildpack' }
           let(:stack) { 'potato-stack' }
@@ -162,25 +181,8 @@ module VCAP::CloudController
             )
           end
 
-          let(:rule_dns_everywhere) do
-            ::Diego::Bbs::Models::SecurityGroupRule.new(
-              protocol:     'udp',
-              destinations: ['0.0.0.0/0'],
-              ports:        [53]
-            )
-          end
-
-          let(:rule_http_everywhere) do
-            ::Diego::Bbs::Models::SecurityGroupRule.new(
-              protocol:     'tcp',
-              destinations: ['0.0.0.0/0'],
-              ports:        [80],
-              log:          true
-            )
-          end
-
           it 'constructs a TaskDefinition with staging instructions' do
-            result = protocol.build_staging_task(config, staging_details)
+            result = recipe_builder.build_staging_task(config, staging_details)
 
             expect(result.root_fs).to eq('preloaded:potato-stack')
             expect(result.log_guid).to eq('banana-guid')
@@ -226,19 +228,19 @@ module VCAP::CloudController
           end
 
           it 'sets the completion callback to the stager callback url' do
-            result = protocol.build_staging_task(config, staging_details)
+            result = recipe_builder.build_staging_task(config, staging_details)
             expect(result.completion_callback_url).to eq("http://stager.example.com/v1/staging/#{droplet.guid}/completed")
           end
 
           it 'gives the task a TrustedSystemCertificatesPath' do
-            result = protocol.build_staging_task(config, staging_details)
+            result = recipe_builder.build_staging_task(config, staging_details)
             expect(result.trusted_system_certificates_path).to eq('/etc/cf-system-certificates')
           end
 
           it 'determines skip cert verify from config' do
             config[:skip_cert_verify] = true
 
-            result = protocol.build_staging_task(config, staging_details)
+            result = recipe_builder.build_staging_task(config, staging_details)
 
             actions    = actions_from_task_definition(result)
             run_action = actions[2].run_action
@@ -246,15 +248,15 @@ module VCAP::CloudController
           end
 
           it 'sets the LANG' do
-            result = protocol.build_staging_task(config, staging_details)
+            result = recipe_builder.build_staging_task(config, staging_details)
 
             env = ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: 'en_US.UTF-8')
             expect(result.environment_variables).to eq([env])
           end
 
           it 'always includes CF_STACK in the run action' do
-            result = protocol.build_staging_task(config, staging_details)
-            env = ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CF_STACK', value: 'potato-stack')
+            result = recipe_builder.build_staging_task(config, staging_details)
+            env    = ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CF_STACK', value: 'potato-stack')
 
             run_action = actions_from_task_definition(result)[2][:run_action]
             expect(run_action[:env]).to include(env)
@@ -264,7 +266,7 @@ module VCAP::CloudController
             let(:stack) { 'not-there' }
 
             it 'returns an error' do
-              expect { protocol.build_staging_task(config, staging_details) }.to raise_error(CloudController::Errors::ApiError, /no compiler defined for requested stack/)
+              expect { recipe_builder.build_staging_task(config, staging_details) }.to raise_error(CloudController::Errors::ApiError, /no compiler defined for requested stack/)
             end
           end
 
@@ -272,7 +274,7 @@ module VCAP::CloudController
             let(:build_artifacts_cache_download_uri) { nil }
 
             it 'does not include a download action for it' do
-              result = protocol.build_staging_task(config, staging_details)
+              result = recipe_builder.build_staging_task(config, staging_details)
 
               actions = actions_from_task_definition(result)
               expect(actions.count).to eq(3)
@@ -295,7 +297,7 @@ module VCAP::CloudController
             end
 
             it 'uses it in the cached dependency' do
-              result = protocol.build_staging_task(config, staging_details)
+              result = recipe_builder.build_staging_task(config, staging_details)
               expect(result.cached_dependencies).to eq([lifecycle_stack_cached_dependency])
             end
 
@@ -303,7 +305,7 @@ module VCAP::CloudController
               let(:stack) { 'invalid_url' }
 
               it 'raises an error for an invalid url' do
-                expect { protocol.build_staging_task(config, staging_details) }.to raise_error(CloudController::Errors::ApiError, /invalid compiler URI/)
+                expect { recipe_builder.build_staging_task(config, staging_details) }.to raise_error(CloudController::Errors::ApiError, /invalid compiler URI/)
               end
             end
           end
@@ -331,7 +333,7 @@ module VCAP::CloudController
             end
 
             it 'does not download admin buildpacks and skips detect' do
-              result = protocol.build_staging_task(config, staging_details)
+              result = recipe_builder.build_staging_task(config, staging_details)
 
               actions = actions_from_task_definition(result)
               expect(actions[2].run_action).to eq(run_staging_action)
@@ -366,7 +368,7 @@ module VCAP::CloudController
             end
 
             it 'sets skip detect to false' do
-              result = protocol.build_staging_task(config, staging_details)
+              result = recipe_builder.build_staging_task(config, staging_details)
 
               actions = actions_from_task_definition(result)
               expect(actions[2].run_action).to eq(run_staging_action)
@@ -375,7 +377,130 @@ module VCAP::CloudController
         end
 
         context 'with a docker backend' do
+          let(:droplet) { DropletModel.make(:docker, package: package, app: app) }
+          let(:package) { PackageModel.make(:docker, app: app) }
+
           let(:lifecycle_type) { 'docker' }
+          let(:lifecycle_protocol) do
+            instance_double(VCAP::CloudController::Diego::Docker::LifecycleProtocol,
+              lifecycle_data: {
+                docker_image: 'docker/image',
+                # docker_login_server: docker_login_server,
+                # docker_user:         docker_user,
+                # docker_password:     docker_password,
+                # docker_email:        docker_email
+              }
+            )
+          end
+
+          it 'sets the log guid' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+            expect(result.log_guid).to eq('banana-guid')
+          end
+
+          it 'sets the log source' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+            expect(result.log_source).to eq('STG')
+          end
+
+          it 'sets the result file' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+            expect(result.result_file).to eq('/tmp/docker-result/result.json')
+          end
+
+          it 'sets privileged container to the config value' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+            expect(result.privileged).to be(false)
+          end
+
+          it 'sets the legacy download user' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+            expect(result.legacy_download_user).to eq('vcap')
+          end
+
+          it 'sets the annotation' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+
+            annotation = JSON.parse(result.annotation)
+            expect(annotation['lifecycle']).to eq(lifecycle_type)
+            expect(annotation['completion_callback']).to eq("http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}" \
+                                   "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}")
+          end
+
+          it 'sets the cached dependencies' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+
+            lifecycle_cached_dependency = ::Diego::Bbs::Models::CachedDependency.new(
+              from:      'http://file-server.example.com/v1/static/docker_stack.tgz',
+              to:        '/tmp/docker_app_lifecycle',
+              cache_key: 'docker-lifecycle',
+            )
+
+            expect(result.cached_dependencies).to match_array([lifecycle_cached_dependency])
+          end
+
+          it 'sets the memory' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+            expect(result.memory_mb).to eq(42)
+          end
+
+          it 'sets the disk' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+            expect(result.disk_mb).to eq(51)
+          end
+
+          it 'sets the egress rules' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+
+            expect(result.egress_rules).to eq([
+              rule_dns_everywhere,
+              rule_http_everywhere
+            ])
+          end
+
+          it 'sets the rootfs' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+            expect(result.root_fs).to eq('preloaded:docker-stack')
+          end
+
+          it 'sets the completion callback' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+            expect(result.completion_callback_url).to eq("http://stager.example.com/v1/staging/#{droplet.guid}/completed")
+          end
+
+          it 'sets the trusted cert path' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+            expect(result.trusted_system_certificates_path).to eq('/etc/cf-system-certificates')
+          end
+
+          it 'sets the timeout' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+            expect(result.trusted_system_certificates_path).to eq('/etc/cf-system-certificates')
+          end
+
+          it 'sets the run action' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+
+            run_action = ::Diego::Bbs::Models::RunAction.new(
+              path:            '/tmp/docker_app_lifecycle/builder',
+              args:            [
+                '-outputMetadataJSONFilename=/tmp/docker-result/result.json',
+                '-dockerRef=docker/image',
+                '-insecureDockerRegistries=registry-1,registry-2'
+              ],
+              user:            'vcap',
+              resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: 30),
+              env:             [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'nightshade_fruit', value: 'potato')],
+            )
+
+            actions              = actions_from_task_definition(result)
+            emit_progress_action = actions[0].emit_progress_action
+            expect(emit_progress_action.start_message).to eq('Staging...')
+            expect(emit_progress_action.success_message).to eq('Staging Complete')
+            expect(emit_progress_action.failure_message_prefix).to eq('Staging Failed')
+
+            expect(emit_progress_action.action.run_action).to eq(run_action)
+          end
         end
 
         def actions_from_task_definition(task_definition)
