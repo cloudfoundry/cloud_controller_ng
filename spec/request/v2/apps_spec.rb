@@ -1384,16 +1384,32 @@ RSpec.describe 'Apps' do
   describe 'GET /v2/apps/:guid/permissions' do
     let(:process) { VCAP::CloudController::AppFactory.make(space: space) }
 
-    it 'shows permissions' do
-      get "/v2/apps/#{process.guid}/permissions", nil, headers_for(user, { scopes: ['cloud_controller.user'] })
+    context 'when the scope is cloud_controller.read' do
+      it 'shows permissions' do
+        get "/v2/apps/#{process.guid}/permissions", nil, headers_for(user, { scopes: ['cloud_controller.read'] })
 
-      expect(last_response.status).to eq 200
-      expect(parsed_response).to be_a_response_like(
-        {
-          'read_sensitive_data' => true,
-          'read_basic_data' => true
-        }
-      )
+        expect(last_response.status).to eq 200
+        expect(parsed_response).to be_a_response_like(
+          {
+            'read_sensitive_data' => true,
+            'read_basic_data' => true
+          }
+        )
+      end
+    end
+
+    context 'when the scope is cloud_controller.user' do
+      it 'shows permissions' do
+        get "/v2/apps/#{process.guid}/permissions", nil, headers_for(user, { scopes: ['cloud_controller.user'] })
+
+        expect(last_response.status).to eq 200
+        expect(parsed_response).to be_a_response_like(
+          {
+            'read_sensitive_data' => true,
+            'read_basic_data' => true
+          }
+        )
+      end
     end
   end
 end

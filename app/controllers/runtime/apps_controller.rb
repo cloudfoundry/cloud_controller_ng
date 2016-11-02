@@ -351,20 +351,14 @@ module VCAP::CloudController
 
     rescue CloudController::Errors::ApiError => e
       if e.name == 'NotAuthorized'
-        app = find_guid(guid, App)
         membership = VCAP::CloudController::Membership.new(current_user)
 
-        if membership.has_any_roles?(VCAP::CloudController::Membership::ORG_BILLING_MANAGER, app.organization.guid, nil) ||
-          membership.has_any_roles?(VCAP::CloudController::Membership::ORG_AUDITOR, app.organization.guid, nil)
-          [HTTP::FORBIDDEN, {}, JSON.generate({
-            description: 'You are not authorized to perform the requested action'
-          })]
-        else
-          [HTTP::OK, {}, JSON.generate({
-            read_sensitive_data: false,
-            read_basic_data: true
-          })]
-        end
+        return forbidden_response_for_permissions if access_forbidden?(find_guid(guid, App), membership)
+
+        [HTTP::OK, {}, JSON.generate({
+          read_sensitive_data: false,
+          read_basic_data: true
+        })]
       else
         raise e
       end
@@ -380,5 +374,16 @@ module VCAP::CloudController
 
     define_messages
     define_routes
+
+    def forbidden_response_for_permissions
+      [HTTP::FORBIDDEN, {}, JSON.generate({
+        description: 'You are not authorized to perform the requested action'
+      })]
+    end
+
+    def access_forbidden?(app, membership)
+      membership.has_any_roles?(VCAP::CloudController::Membership::ORG_BILLING_MANAGER, app.organization.guid, nil) ||
+        membership.has_any_roles?(VCAP::CloudController::Membership::ORG_AUDITOR, app.organization.guid, nil)
+    end
   end
 end
