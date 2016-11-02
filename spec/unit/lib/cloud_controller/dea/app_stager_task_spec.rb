@@ -733,6 +733,7 @@ module VCAP::CloudController
               let(:buildpack_key) { admin_buildpack.key }
               before do
                 app.app.lifecycle_data.update(buildpack: admin_buildpack.name)
+                allow(AdminBuildpacksPresenter).to receive(:enabled_buildpacks)
               end
 
               it 'saves the buildpack name' do

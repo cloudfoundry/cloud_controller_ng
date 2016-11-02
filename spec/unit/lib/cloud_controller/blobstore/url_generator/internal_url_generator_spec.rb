@@ -51,8 +51,10 @@ module CloudController
             allow(admin_buildpack_blobstore).to receive(:blob).and_return(nil)
           end
 
-          it 'returns nil' do
-            expect(url_generator.admin_buildpack_download_url(buildpack)).to be_nil
+          it 'raises a StagingError' do
+            expect {
+              url_generator.admin_buildpack_download_url(buildpack)
+            }.to raise_error(CloudController::Errors::ApiError, /Staging error:/)
           end
         end
 

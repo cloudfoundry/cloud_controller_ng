@@ -161,21 +161,12 @@ module VCAP::CloudController
               end
             end
           end
-
-          context 'when a buildpack has missing bits' do
-            it 'does not include the buildpack' do
-              Buildpack.make(key: 'd key', position: 5)
-
-              request = staging_message.staging_request(app, task_id)
-              admin_buildpacks = request[:admin_buildpacks]
-              expect(admin_buildpacks).to have(2).items
-              expect(admin_buildpacks).to_not include(key: 'd key', url: nil)
-            end
-          end
         end
       end
 
       it 'includes the key of an admin buildpack when the app has a buildpack specified' do
+        allow(AdminBuildpacksPresenter).to receive(:enabled_buildpacks)
+
         buildpack = Buildpack.make
         app.app.lifecycle_data.update(buildpack: buildpack.name)
 
@@ -184,6 +175,7 @@ module VCAP::CloudController
       end
 
       it "doesn't include the custom buildpack url keys when the app has a buildpack specified" do
+        allow(AdminBuildpacksPresenter).to receive(:enabled_buildpacks)
         buildpack = Buildpack.make
         app.app.lifecycle_data.update(buildpack: buildpack.name)
 
