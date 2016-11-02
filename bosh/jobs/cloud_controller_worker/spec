@@ -146,15 +146,6 @@ properties:
     description: "User name used by Diego to access internal endpoints"
   cc.internal_api_password:
     description: "Password used by Diego to access internal endpoints"
-  cc.diego.nsync_url:
-    default: http://nsync.service.cf.internal:8787
-    description: "URL of the Diego nsync service"
-  cc.diego.stager_url:
-    default: http://stager.service.cf.internal:8888
-    description: "URL of the Diego stager service"
-  cc.diego.tps_url:
-    default: http://tps.service.cf.internal:1518
-    description: "URL of the Diego tps service"
 
   cc.uaa_resource_id:
     default: "cloud_controller,cloud_controller_service_permissions"
@@ -581,3 +572,45 @@ properties:
   cc.bits_service.private_endpoint:
     description: "Private url for the bits-service service"
     default: ""
+
+  cc.diego.bbs.url:
+    description: "URL of the BBS Server"
+    default: https://bbs.service.cf.internal:8889
+  cc.diego.bbs.ca_cert:
+    description: "PEM-encoded CA certificate for communication with the BBS"
+    default: "temporary default, remove with temporary_local_staging"
+  cc.diego.bbs.client_cert:
+    description: "PEM-encoded server certificate for communication with the BBS"
+    default: "temporary default, remove with temporary_local_staging"
+  cc.diego.bbs.client_key:
+    description: "PEM-encoded server key for communication with the BBS"
+    default: "temporary default, remove with temporary_local_staging"
+
+  cc.diego.nsync_url:
+    default: http://nsync.service.cf.internal:8787
+    description: "URL of the Diego nsync service"
+  cc.diego.stager_url:
+    default: http://stager.service.cf.internal:8888
+    description: "URL of the Diego stager service"
+  cc.diego.tps_url:
+    default: http://tps.service.cf.internal:1518
+    description: "URL of the Diego tps service"
+  cc.diego.file_server_url:
+    description: "URL of file server"
+    default: http://file-server.service.cf.internal:8080
+  cc.diego.cc_uploader_url:
+    description: "URL of cc uploader"
+    default: http://cc-uploader.service.cf.internal:9090
+  cc.diego.use_privileged_containers_for_staging:
+    description: "Whether or not to use privileged containers for staging tasks."
+    default: false
+  cc.diego.lifecycle_bundles:
+    description: "List of lifecycle bundles arguments for different stacks in form 'lifecycle-name:path/to/bundle'"
+    default:
+    - "buildpack/cflinuxfs2:buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
+    - "buildpack/windows2012R2:windows_app_lifecycle/windows_app_lifecycle.tgz"
+    - "docker:docker_app_lifecycle/docker_app_lifecycle.tgz"
+
+  cc.diego.temporary_local_staging:
+    description: "Temporary flag to enable staging directly to the bbs from cc"
+    default: false

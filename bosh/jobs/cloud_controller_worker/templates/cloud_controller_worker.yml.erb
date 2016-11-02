@@ -339,3 +339,18 @@ bits_service:
   public_endpoint: <%= p("cc.bits_service.public_endpoint") %>
   private_endpoint: <%= p("cc.bits_service.private_endpoint") %>
   <% end %>
+
+diego:
+  temporary_local_staging: <%= p("cc.diego.temporary_local_staging") %>
+  nsync_url: <%= p("cc.diego.nsync_url") %>
+  stager_url: <%= p("cc.diego.stager_url") %>
+  tps_url: <%= p("cc.diego.tps_url") %>
+  file_server_url: <%= p("cc.diego.file_server_url") %>
+  cc_uploader_url: <%= p("cc.diego.cc_uploader_url") %>
+  use_privileged_containers_for_staging: <%= p("cc.diego.use_privileged_containers_for_staging") %>
+  lifecycle_bundles: <%= p("cc.diego.lifecycle_bundles") %>
+  bbs:
+    url: <%= p("cc.diego.bbs.url") %>
+    key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.key
+    cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.crt
+    ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_ca.crt
