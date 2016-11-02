@@ -69,7 +69,7 @@
     <h2>Retrieving permissions on an App</h2>
     <h3>GET /v2/apps/:guid/permissions</h3>
       <p class="explanation">
-        A cloud_controller.user scope is required to access this endpoint. The user is allowed to manage the app if they are a SpaceDeveloper.
+        A cloud_controller.user scope is required to access this endpoint. The user has access to sensitive data and insensitive data about the app if they are a SpaceDeveloper. Access is denied (Forbidden: 403) for organization BillingManager and Auditor. For all other organization and space roles with cloud_controller.user scope, access to insensitive data about the app is allowed.
       </p>
 
       <h3>Request</h3>
@@ -99,7 +99,8 @@ Cookie: </pre>
           <h4>Body</h4>
 
           <pre class="response body">{
-  "manage": true
+  "read_sensitive_data": true,
+  "read_basic_data": true
 }</pre>
 
         <h4>Headers</h4>
