@@ -1,4 +1,4 @@
-Thanks for contributing to the cloud_controller_ng. To speed up the process of reviewing your pull request please provide us with:
+Thanks for contributing to cloud_controller_ng. To speed up the process of reviewing your pull request please provide us with:
 
 * A short explanation of the proposed change:
 
