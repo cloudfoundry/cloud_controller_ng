@@ -1390,7 +1390,8 @@ RSpec.describe 'Apps' do
       expect(last_response.status).to eq 200
       expect(parsed_response).to be_a_response_like(
         {
-          'manage' => true
+          'read_sensitive_data' => true,
+          'read_basic_data' => true
         }
       )
     end
