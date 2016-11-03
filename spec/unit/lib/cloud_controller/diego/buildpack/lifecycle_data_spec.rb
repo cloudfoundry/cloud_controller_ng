@@ -59,7 +59,9 @@ module VCAP::CloudController
                 data.public_send("#{key}=", nil)
                 expect {
                   data.message
-                }.to raise_error(Membrane::SchemaValidationError)
+                }.to raise_error(
+                  Membrane::SchemaValidationError, /{ #{key} => Expected instance of (String|Array), given an instance of NilClass }/
+                )
               end
             end
           end

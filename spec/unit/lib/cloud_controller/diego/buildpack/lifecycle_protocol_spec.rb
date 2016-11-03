@@ -106,6 +106,32 @@ module VCAP
                 expect(bp).to include(url: buildpack, skip_detect: true)
               end
             end
+
+            context 'when the generated message has invalid data' do
+              context 'when the package is missing a download uri (probably due to blobstore outages)' do
+                before do
+                  allow(blobstore_url_generator).to receive(:package_download_url).and_return(nil)
+                end
+
+                it 'raises an InvalidDownloadUri error' do
+                  expect {
+                    lifecycle_protocol.lifecycle_data(staging_details)
+                  }.to raise_error LifecycleProtocol::InvalidDownloadUri, /Failed to get blobstore download url for package #{staging_details.package.guid}/
+                end
+              end
+
+              context 'when the message is invalid for other reasons' do
+                before do
+                  allow(blobstore_url_generator).to receive(:droplet_upload_url).and_return(nil)
+                end
+
+                it 're-raises the error' do
+                  expect {
+                    lifecycle_protocol.lifecycle_data(staging_details)
+                  }.to raise_error Membrane::SchemaValidationError, '{ droplet_upload_uri => Expected instance of String, given an instance of NilClass }'
+                end
+              end
+            end
           end
 
           describe '#desired_app_message' do

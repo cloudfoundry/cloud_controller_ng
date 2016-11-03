@@ -6,6 +6,8 @@ module VCAP
     module Diego
       module Buildpack
         class LifecycleProtocol
+          class InvalidDownloadUri < StandardError; end
+
           def initialize(blobstore_url_generator=::CloudController::DependencyLocator.instance.blobstore_url_generator)
             @blobstore_url_generator = blobstore_url_generator
             @buildpack_entry_generator = BuildpackEntryGenerator.new(@blobstore_url_generator)
@@ -27,6 +29,12 @@ module VCAP
             lifecycle_data.stack                              = staging_details.lifecycle.staging_stack
 
             lifecycle_data.message
+          rescue Membrane::SchemaValidationError => e
+            if e.message =~ /app_bits_download_uri/
+              raise InvalidDownloadUri.new("Failed to get blobstore download url for package #{staging_details.package.guid}")
+            else
+              raise e
+            end
           end
 
           def desired_app_message(process)
