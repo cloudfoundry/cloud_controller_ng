@@ -348,13 +348,18 @@ module VCAP::CloudController
         read_sensitive_data: true,
         read_basic_data: true
       })]
-
     rescue CloudController::Errors::ApiError => e
       if e.name == 'NotAuthorized'
+        app = find_guid(guid, App)
         membership = VCAP::CloudController::Membership.new(current_user)
 
-        app = find_guid(guid, App)
-        raise e if access_forbidden?(app, membership) || no_access_to_app?(app, membership)
+        basic_access = [
+          VCAP::CloudController::Membership::SPACE_MANAGER,
+          VCAP::CloudController::Membership::SPACE_AUDITOR,
+          VCAP::CloudController::Membership::ORG_MANAGER,
+        ]
+
+        raise e unless membership.has_any_roles?(basic_access, app.space.guid, app.organization.guid)
 
         [HTTP::OK, {}, JSON.generate({
           read_sensitive_data: false,
@@ -375,16 +380,5 @@ module VCAP::CloudController
 
     define_messages
     define_routes
-
-    def access_forbidden?(app, membership)
-      membership.has_any_roles?(VCAP::CloudController::Membership::ORG_BILLING_MANAGER, nil, app.organization.guid) ||
-        membership.has_any_roles?(VCAP::CloudController::Membership::ORG_AUDITOR, nil, app.organization.guid)
-    end
-
-    def no_access_to_app?(app, membership)
-      !membership.has_any_roles?(VCAP::CloudController::Membership::SPACE_MANAGER, app.space.guid, nil) &&
-        !membership.has_any_roles?(VCAP::CloudController::Membership::ORG_MANAGER, nil, app.organization.guid) &&
-        !membership.has_any_roles?(VCAP::CloudController::Membership::SPACE_AUDITOR, app.space.guid, nil)
-    end
   end
 end
