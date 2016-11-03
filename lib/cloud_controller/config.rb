@@ -289,7 +289,7 @@ module VCAP::CloudController
           file_server_url:                       String,
           cc_uploader_url:                       String,
           use_privileged_containers_for_staging: bool,
-          lifecycle_bundles:                     [String],
+          lifecycle_bundles:                     Hash,
 
           bbs: {
             url:         String,

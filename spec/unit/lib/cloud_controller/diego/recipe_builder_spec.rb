@@ -39,12 +39,12 @@ module VCAP::CloudController
               stager_url:                            'http://stager.example.com',
               docker_staging_stack:                  'docker-stack',
               insecure_docker_registry_list:         ['registry-1', 'registry-2'],
-              lifecycle_bundles:                     [
-                'buildpack/potato-stack:my_potato_life.tgz',
-                'buildpack/valid_url:http://example.com',
-                'buildpack/invalid_url:ftp://example.com',
-                'docker:docker_stack.tgz'
-              ],
+              lifecycle_bundles:                     {
+                'buildpack/potato-stack': 'my_potato_life.tgz',
+                'buildpack/valid_url': 'http://example.com',
+                'buildpack/invalid_url': 'ftp://example.com',
+                'docker': 'docker_stack.tgz'
+              },
             },
           }
         end
@@ -174,10 +174,7 @@ module VCAP::CloudController
               ],
               user:            'vcap',
               resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: 30),
-              env:             [
-                ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'nightshade_fruit', value: 'potato'),
-                ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CF_STACK', value: 'potato-stack'),
-              ],
+              env:             [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'nightshade_fruit', value: 'potato')],
             )
           end
 
@@ -202,16 +199,19 @@ module VCAP::CloudController
                                    "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}")
 
             actions = actions_from_task_definition(result)
-            expect(actions[0].download_action).to eq(download_app_package_action)
-            expect(actions[1].download_action).to eq(download_build_artifacts_cache_action)
-            expect(actions[2].run_action).to eq(run_staging_action)
 
-            emit_progress_action = actions[3].emit_progress_action
+            parallel_download_action = actions[0].parallel_action
+            expect(parallel_download_action.actions[0].download_action).to eq(download_app_package_action)
+            expect(parallel_download_action.actions[1].download_action).to eq(download_build_artifacts_cache_action)
+
+            expect(actions[1].run_action).to eq(run_staging_action)
+
+            emit_progress_action = actions[2].emit_progress_action
             expect(emit_progress_action.start_message).to eq('Uploading droplet, build artifacts cache...')
             expect(emit_progress_action.success_message).to eq('Uploading complete')
             expect(emit_progress_action.failure_message_prefix).to eq('Uploading failed')
 
-            parallel_upload_action = actions[3].emit_progress_action.action
+            parallel_upload_action = actions[2].emit_progress_action.action
             expect(parallel_upload_action.parallel_action).to_not be_nil
             upload_actions = parallel_upload_action.parallel_action.actions
             expect(upload_actions[0].upload_action).to eq(upload_droplet_action)
@@ -243,7 +243,7 @@ module VCAP::CloudController
             result = recipe_builder.build_staging_task(config, staging_details)
 
             actions    = actions_from_task_definition(result)
-            run_action = actions[2].run_action
+            run_action = actions[1].run_action
             expect(run_action.args).to include('-skipCertVerify=true')
           end
 
@@ -252,14 +252,6 @@ module VCAP::CloudController
 
             env = ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: 'en_US.UTF-8')
             expect(result.environment_variables).to eq([env])
-          end
-
-          it 'always includes CF_STACK in the run action' do
-            result = recipe_builder.build_staging_task(config, staging_details)
-            env    = ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CF_STACK', value: 'potato-stack')
-
-            run_action = actions_from_task_definition(result)[2][:run_action]
-            expect(run_action[:env]).to include(env)
           end
 
           context 'when no compiler is defined for the requested stack in backend configuration' do
@@ -277,9 +269,10 @@ module VCAP::CloudController
               result = recipe_builder.build_staging_task(config, staging_details)
 
               actions = actions_from_task_definition(result)
-              expect(actions.count).to eq(3)
-              expect(actions[0].download_action).to eq(download_app_package_action)
-              expect(actions[1].run_action).to eq(run_staging_action)
+
+              parallel_download_action = actions[0].parallel_action
+              expect(parallel_download_action.actions.count).to eq(1)
+              expect(parallel_download_action.actions[0].download_action).to eq(download_app_package_action)
             end
           end
 
@@ -325,10 +318,7 @@ module VCAP::CloudController
                 ],
                 user:            'vcap',
                 resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: 30),
-                env:             [
-                  ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'nightshade_fruit', value: 'potato'),
-                  ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CF_STACK', value: 'potato-stack'),
-                ],
+                env:             [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'nightshade_fruit', value: 'potato')],
               )
             end
 
@@ -336,7 +326,7 @@ module VCAP::CloudController
               result = recipe_builder.build_staging_task(config, staging_details)
 
               actions = actions_from_task_definition(result)
-              expect(actions[2].run_action).to eq(run_staging_action)
+              expect(actions[1].run_action).to eq(run_staging_action)
 
               expect(result.cached_dependencies).to eq([lifecycle_stack_cached_dependency])
             end
@@ -360,10 +350,7 @@ module VCAP::CloudController
                 ],
                 user:            'vcap',
                 resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: 30),
-                env:             [
-                  ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'nightshade_fruit', value: 'potato'),
-                  ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CF_STACK', value: 'potato-stack'),
-                ],
+                env:             [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'nightshade_fruit', value: 'potato')],
               )
             end
 
@@ -371,8 +358,18 @@ module VCAP::CloudController
               result = recipe_builder.build_staging_task(config, staging_details)
 
               actions = actions_from_task_definition(result)
-              expect(actions[2].run_action).to eq(run_staging_action)
+              expect(actions[1].run_action).to eq(run_staging_action)
             end
+          end
+
+          def actions_from_task_definition(task_definition)
+            timeout_action = task_definition.action.timeout_action
+            expect(timeout_action).not_to be_nil
+            expect(timeout_action.timeout_ms).to eq(90 * 1000)
+            serial_action = timeout_action.action.serial_action
+            expect(serial_action).not_to be_nil
+            expect(serial_action.actions).not_to be_empty
+            serial_action.actions
           end
         end
 
@@ -385,10 +382,6 @@ module VCAP::CloudController
             instance_double(VCAP::CloudController::Diego::Docker::LifecycleProtocol,
               lifecycle_data: {
                 docker_image: 'docker/image',
-                # docker_login_server: docker_login_server,
-                # docker_user:         docker_user,
-                # docker_password:     docker_password,
-                # docker_email:        docker_email
               }
             )
           end
@@ -405,7 +398,7 @@ module VCAP::CloudController
 
           it 'sets the result file' do
             result = recipe_builder.build_staging_task(config, staging_details)
-            expect(result.result_file).to eq('/tmp/docker-result/result.json')
+            expect(result.result_file).to eq('/tmp/result.json')
           end
 
           it 'sets privileged container to the config value' do
@@ -484,7 +477,7 @@ module VCAP::CloudController
             run_action = ::Diego::Bbs::Models::RunAction.new(
               path:            '/tmp/docker_app_lifecycle/builder',
               args:            [
-                '-outputMetadataJSONFilename=/tmp/docker-result/result.json',
+                '-outputMetadataJSONFilename=/tmp/result.json',
                 '-dockerRef=docker/image',
                 '-insecureDockerRegistries=registry-1,registry-2'
               ],
@@ -493,24 +486,17 @@ module VCAP::CloudController
               env:             [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'nightshade_fruit', value: 'potato')],
             )
 
-            actions              = actions_from_task_definition(result)
-            emit_progress_action = actions[0].emit_progress_action
+            timeout_action = result.action.timeout_action
+            expect(timeout_action).not_to be_nil
+            expect(timeout_action.timeout_ms).to eq(90 * 1000)
+
+            emit_progress_action = timeout_action.action.emit_progress_action
             expect(emit_progress_action.start_message).to eq('Staging...')
             expect(emit_progress_action.success_message).to eq('Staging Complete')
             expect(emit_progress_action.failure_message_prefix).to eq('Staging Failed')
 
             expect(emit_progress_action.action.run_action).to eq(run_action)
           end
-        end
-
-        def actions_from_task_definition(task_definition)
-          timeout_action = task_definition.action.timeout_action
-          expect(timeout_action).not_to be_nil
-          expect(timeout_action.timeout_ms).to eq(90 * 1000)
-          serial_action = timeout_action.action.serial_action
-          expect(serial_action).not_to be_nil
-          expect(serial_action.actions).not_to be_empty
-          serial_action.actions
         end
       end
     end

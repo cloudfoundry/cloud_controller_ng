@@ -419,7 +419,7 @@ diego:
   file_server_url: <%= p("cc.diego.file_server_url") %>
   cc_uploader_url: <%= p("cc.diego.cc_uploader_url") %>
   use_privileged_containers_for_staging: <%= p("cc.diego.use_privileged_containers_for_staging") %>
-  lifecycle_bundles: <%= p("cc.diego.lifecycle_bundles") %>
+  lifecycle_bundles: <%= p("cc.diego.lifecycle_bundles").to_json %>
   insecure_docker_registry_list: <%= p("cc.diego.insecure_docker_registry_list") %>
   docker_staging_stack: <%= p("cc.diego.docker_staging_stack") %>
   bbs:

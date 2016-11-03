@@ -348,7 +348,7 @@ diego:
   file_server_url: <%= p("cc.diego.file_server_url") %>
   cc_uploader_url: <%= p("cc.diego.cc_uploader_url") %>
   use_privileged_containers_for_staging: <%= p("cc.diego.use_privileged_containers_for_staging") %>
-  lifecycle_bundles: <%= p("cc.diego.lifecycle_bundles") %>
+  lifecycle_bundles: <%= p("cc.diego.lifecycle_bundles").to_json %>
   bbs:
     url: <%= p("cc.diego.bbs.url") %>
     key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.key
