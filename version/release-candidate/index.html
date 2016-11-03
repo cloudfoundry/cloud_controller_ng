@@ -485,9 +485,16 @@ This section is meant to explain how clients can perform complex workflows using
 
 <h2 id="push-v2-app-and-run-a-v3-task">Push V2 App and Run a V3 Task</h2>
 
-<p>As of CF-245, a V2 Application is also available as a V3 Application, allowing a user to run a V3 Task against it.
-Given a V2 Application with guid <code class="prettyprint">4443bff6-69cf-46d6-96b8-d311aeda3567</code>, create a V3 Task with a POST request to <code class="prettyprint">/v3/apps/4443bff6-69cf-46d6-96b8-d311aeda3567/tasks</code>.
-For more information, see <a href="#create-a-task">Create a task</a>.</p>
+<p>As of CF-245, a V2 Application is also available as a V3 Application, allowing a user to run a V3 Task against it.</p>
+
+<ol>
+<li>Push an application: <code class="prettyprint">cf push v3-tasks-sample</code></li>
+<li>Construct a task creation curl: <code class="prettyprint">cf curl /v3/apps/$(cf app v3-tasks-sample --guid)/tasks -X POST -d &#39;{&quot;command&quot;:&quot;echo foo; sleep 5; echo bar;&quot;}&#39;</code></li>
+<li>Get logs from task: <code class="prettyprint">cf logs v3-tasks-sample --recent</code></li>
+<li>Check task state: <code class="prettyprint">cf curl /v3/apps/$(cf app v3-tasks-sample --guid)/tasks</code></li>
+</ol>
+
+<p>For more information, see <a href="#create-a-task">Create a task</a>.</p>
 
           <h1 id="resources">Resources</h1>
 
