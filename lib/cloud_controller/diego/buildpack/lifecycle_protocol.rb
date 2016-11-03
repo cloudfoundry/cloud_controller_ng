@@ -31,6 +31,7 @@ module VCAP
             lifecycle_data.message
           rescue Membrane::SchemaValidationError => e
             if e.message =~ /app_bits_download_uri/
+              logger.error "app_bits_download_uri is nil for package #{staging_details.package.guid}"
               raise InvalidDownloadUri.new("Failed to get blobstore download url for package #{staging_details.package.guid}")
             else
               raise e
@@ -43,6 +44,12 @@ module VCAP
               'droplet_uri' => @blobstore_url_generator.unauthorized_perma_droplet_download_url(process),
               'droplet_hash' => process.current_droplet.droplet_hash,
             }
+          end
+
+          private
+
+          def logger
+            @logger ||= Steno.logger('cc.diego.tr')
           end
         end
       end
