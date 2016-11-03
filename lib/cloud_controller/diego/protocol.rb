@@ -33,6 +33,7 @@ module VCAP::CloudController
         staging_request.lifecycle           = lifecycle_type
         staging_request.lifecycle_data      = lifecycle_data
         staging_request.completion_callback = staging_completion_callback(staging_details, config)
+        staging_request.isolation_segment   = staging_details.isolation_segment if staging_details.isolation_segment
 
         staging_request.message
       end
@@ -45,7 +46,7 @@ module VCAP::CloudController
         env = Environment.new(process, EnvironmentVariableGroup.running.environment_json).as_json
         logger.debug2("running environment: #{env.map { |e| e['name'] }}")
 
-        {
+        msg = {
           'process_guid'                    => ProcessGuid.from_process(process),
           'memory_mb'                       => process.memory,
           'disk_mb'                         => process.disk_quota,
@@ -67,6 +68,18 @@ module VCAP::CloudController
           'network'                         => ContainerNetworkInfo.new(process).to_h,
           'volume_mounts'                   => AppVolumeMounts.new(process.app)
         }.merge(LifecycleProtocol.protocol_for_type(process.app.lifecycle_type).desired_app_message(process))
+
+        shared_segment = VCAP::CloudController::IsolationSegmentModel.shared_segment
+
+        if process.space.isolation_segment_model
+          if process.space.isolation_segment_model.guid != shared_segment.guid
+            msg['isolation_segment'] = process.space.isolation_segment_model.name
+          end
+        elsif process.space.organization.default_isolation_segment_model && process.space.organization.default_isolation_segment_model.guid != shared_segment.guid
+          msg['isolation_segment'] = process.space.organization.default_isolation_segment_model.name
+        end
+
+        msg
       end
 
       private

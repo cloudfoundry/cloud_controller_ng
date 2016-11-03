@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Diego
     class StagingRequest
-      attr_accessor :app_id, :file_descriptors, :memory_mb, :disk_mb, :environment
+      attr_accessor :app_id, :file_descriptors, :memory_mb, :disk_mb, :environment, :isolation_segment
       attr_accessor :egress_rules, :timeout, :log_guid, :lifecycle, :lifecycle_data, :completion_callback
 
       def message
@@ -18,6 +18,7 @@ module VCAP::CloudController
         }
         message[:lifecycle_data] = lifecycle_data if lifecycle_data
         message[:egress_rules]   = egress_rules if egress_rules
+        message[:isolation_segment] = isolation_segment if isolation_segment
 
         schema.validate(message)
         message
@@ -41,6 +42,7 @@ module VCAP::CloudController
             lifecycle:                String,
             optional(:lifecycle_data) => Hash,
             completion_callback:      String,
+            optional(:isolation_segment) => String,
           }
         end
       end
