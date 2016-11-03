@@ -159,6 +159,7 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:org) { space.organization }
       let(:user) { User.make }
+      let(:event_type) { 'audit.user.space_auditor_remove' }
 
       before do
         set_current_user(user)
@@ -171,6 +172,12 @@ module VCAP::CloudController
         it 'succeeds' do
           delete "/v2/users/#{user.guid}/audited_spaces/#{space.guid}"
           expect(last_response.status).to eq(204)
+        end
+        
+        it 'creates an appropriate event' do
+          delete "/v2/users/#{user.guid}/audited_spaces/#{space.guid}"
+          event = Event.find(type: event_type, actee: user.guid)
+          expect(event).not_to be_nil
         end
       end
 
@@ -205,6 +212,12 @@ module VCAP::CloudController
           it 'succeeds' do
             delete "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
             expect(last_response.status).to eq(204)
+          end
+          
+          it 'creates an appropriate event' do
+            delete "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
+            event = Event.find(type: event_type, actee: other_user.guid)
+            expect(event).not_to be_nil
           end
         end
       end
@@ -425,6 +438,7 @@ module VCAP::CloudController
       let(:org) { space.organization }
       let(:user) { User.make }
       let(:other_user) { User.make }
+      let(:event_type) { 'audit.user.space_manager_remove' }
 
       before do
         set_current_user(user)
@@ -446,12 +460,24 @@ module VCAP::CloudController
             delete "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
             expect(last_response.status).to eq(204)
           end
+
+          it 'creates an appropriate event' do
+            delete "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
+            event = Event.find(type: event_type, actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
         end
 
         context 'when acting on oneself' do
           it 'succeeds' do
             delete "/v2/users/#{user.guid}/managed_spaces/#{space.guid}"
             expect(last_response.status).to eq(204)
+          end
+
+          it 'creates an appropriate event' do
+            delete "/v2/users/#{user.guid}/managed_spaces/#{space.guid}"
+            event = Event.find(type: event_type, actee: user.guid)
+            expect(event).not_to be_nil
           end
         end
       end
@@ -470,6 +496,7 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:org) { space.organization }
       let(:user) { User.make }
+      let(:event_type) { 'audit.user.space_developer_remove' }
 
       before do
         set_current_user(user)
@@ -483,6 +510,12 @@ module VCAP::CloudController
           expect(last_response.status).to eq(204)
           expect(Space.all).to include(space)
         end
+
+        it 'creates an appropriate event' do
+            delete "/v2/users/#{user.guid}/spaces/#{space.guid}"
+            event = Event.find(type: event_type, actee: user.guid)
+            expect(event).not_to be_nil
+          end
       end
 
       context 'when acting on another user' do
@@ -514,6 +547,12 @@ module VCAP::CloudController
           it 'succeeds' do
             delete "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
             expect(last_response.status).to eq(204)
+          end
+          
+          it 'creates an appropriate event' do
+            delete "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
+            event = Event.find(type: event_type, actee: other_user.guid)
+            expect(event).not_to be_nil
           end
         end
       end

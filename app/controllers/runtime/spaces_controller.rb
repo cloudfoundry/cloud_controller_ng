@@ -4,7 +4,7 @@ require 'queries/space_user_roles_fetcher'
 module VCAP::CloudController
   class SpacesController < RestController::ModelController
     def self.dependencies
-      [:space_event_repository, :username_and_roles_populating_collection_renderer, :username_lookup_uaa_client, :services_event_repository]
+      [:space_event_repository, :username_and_roles_populating_collection_renderer, :username_lookup_uaa_client, :services_event_repository, :user_event_repository]
     end
 
     define_attributes do
@@ -43,6 +43,7 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @space_event_repository = dependencies.fetch(:space_event_repository)
+      @user_event_repository = dependencies.fetch(:user_event_repository)
       @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
       @username_lookup_uaa_client = dependencies.fetch(:username_lookup_uaa_client)
       @services_event_repository = dependencies.fetch(:services_event_repository)
@@ -140,6 +141,7 @@ module VCAP::CloudController
     [:manager, :developer, :auditor].each do |role|
       plural_role = role.to_s.pluralize
 
+      put "/v2/spaces/:guid/#{plural_role}/:user_id", "add_#{role}_by_user_id".to_sym
       put "/v2/spaces/:guid/#{plural_role}", "add_#{role}_by_username".to_sym
 
       define_method("add_#{role}_by_username") do |guid|
@@ -156,12 +158,13 @@ module VCAP::CloudController
         end
         raise CloudController::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
 
-        user = User.where(guid: user_id).first || User.create(guid: user_id)
+        add_role(guid, role, user_id, username)
+      end
 
-        space = find_guid_and_validate_access(:update, guid)
-        space.send("add_#{role}", user)
+      define_method("add_#{role}_by_user_id") do |guid, user_id|
+        username = @username_lookup_uaa_client.usernames_for_ids([user_id])[user_id]
 
-        [HTTP::CREATED, object_renderer.render_json(self.class, space, @opts)]
+        add_role(guid, role, user_id, username ? username : '')
       end
     end
 
@@ -169,6 +172,7 @@ module VCAP::CloudController
       plural_role = role.to_s.pluralize
 
       delete "/v2/spaces/:guid/#{plural_role}", "remove_#{role}_by_username".to_sym
+      delete "/v2/spaces/:guid/#{plural_role}/:user_id", "remove_#{role}_by_user_id".to_sym
 
       define_method("remove_#{role}_by_username") do |guid|
         FeatureFlag.raise_unless_enabled!(:unset_roles_by_username)
@@ -189,9 +193,22 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('UserNotFound', username) unless user
 
         space = find_guid_and_validate_access(:update, guid)
-        space.send("remove_#{role}", user)
+        remove_role(space, role, user_id, username)
 
         [HTTP::OK, object_renderer.render_json(self.class, space, @opts)]
+      end
+
+      define_method("remove_#{role}_by_user_id") do |guid, user_id|
+        if user_id == SecurityContext.current_user.guid
+          space = Space.first(guid: guid)
+        else
+          space = find_guid_and_validate_access(:update, guid)
+        end
+
+        username = @username_lookup_uaa_client.usernames_for_ids([user_id])[user_id]
+        remove_role(space, role, user_id, username ? username : '')
+
+        [HTTP::NO_CONTENT, nil]
       end
     end
 
@@ -235,6 +252,29 @@ module VCAP::CloudController
         'UnableToPerform',
         "#{action} the Isolation Segment to the Space",
         'Cannot change the Isolation Segment for a Space containing Apps') unless space.app_models.empty?
+    end
+
+    def add_role(guid, role, user_id, username)
+      user = User.first(guid: user_id) || User.create(guid: user_id)
+
+      user.username = username
+
+      space = find_guid_and_validate_access(:update, guid)
+      space.send("add_#{role}", user)
+
+      @user_event_repository.record_space_role_add(space, user, role, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+
+      [HTTP::CREATED, object_renderer.render_json(self.class, space, @opts)]
+    end
+
+    def remove_role(space, role, user_id, username)
+      user = User.first(guid: user_id)
+      raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', "User with guid #{user_id} not found") unless user
+      user.username = username
+
+      space.send("remove_#{role}", user)
+
+      @user_event_repository.record_space_role_remove(space, user, role, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
     end
 
     def after_create(space)
