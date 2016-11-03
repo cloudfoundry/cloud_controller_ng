@@ -353,7 +353,8 @@ module VCAP::CloudController
       if e.name == 'NotAuthorized'
         membership = VCAP::CloudController::Membership.new(current_user)
 
-        return forbidden_response_for_permissions if access_forbidden?(find_guid(guid, App), membership)
+        app = find_guid(guid, App)
+        raise e if access_forbidden?(app, membership) || no_access_to_app?(app, membership)
 
         [HTTP::OK, {}, JSON.generate({
           read_sensitive_data: false,
@@ -375,15 +376,15 @@ module VCAP::CloudController
     define_messages
     define_routes
 
-    def forbidden_response_for_permissions
-      [HTTP::FORBIDDEN, {}, JSON.generate({
-        description: 'You are not authorized to perform the requested action'
-      })]
+    def access_forbidden?(app, membership)
+      membership.has_any_roles?(VCAP::CloudController::Membership::ORG_BILLING_MANAGER, nil, app.organization.guid) ||
+        membership.has_any_roles?(VCAP::CloudController::Membership::ORG_AUDITOR, nil, app.organization.guid)
     end
 
-    def access_forbidden?(app, membership)
-      membership.has_any_roles?(VCAP::CloudController::Membership::ORG_BILLING_MANAGER, app.organization.guid, nil) ||
-        membership.has_any_roles?(VCAP::CloudController::Membership::ORG_AUDITOR, app.organization.guid, nil)
+    def no_access_to_app?(app, membership)
+      !membership.has_any_roles?(VCAP::CloudController::Membership::SPACE_MANAGER, app.space.guid, nil) &&
+        !membership.has_any_roles?(VCAP::CloudController::Membership::ORG_MANAGER, nil, app.organization.guid) &&
+        !membership.has_any_roles?(VCAP::CloudController::Membership::SPACE_AUDITOR, app.space.guid, nil)
     end
   end
 end

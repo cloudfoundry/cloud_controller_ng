@@ -2378,6 +2378,8 @@ module VCAP::CloudController
         it 'fails with a 403' do
           get "/v2/apps/#{app_obj.guid}/permissions"
           expect(last_response.status).to eq(403)
+          expect(decoded_response['code']).to eq(10003)
+          expect(decoded_response['error_code']).to eq('CF-NotAuthorized')
           expect(decoded_response['description']).to include('You are not authorized to perform the requested action')
         end
       end
@@ -2391,6 +2393,8 @@ module VCAP::CloudController
         it 'fails with a 403' do
           get "/v2/apps/#{app_obj.guid}/permissions"
           expect(last_response.status).to eq(403)
+          expect(decoded_response['code']).to eq(10003)
+          expect(decoded_response['error_code']).to eq('CF-NotAuthorized')
           expect(decoded_response['description']).to include('You are not authorized to perform the requested action')
         end
       end
@@ -2433,6 +2437,21 @@ module VCAP::CloudController
         it 'returns 403' do
           get "/v2/apps/#{app_obj.guid}/permissions"
           expect(last_response.status).to eq(403)
+        end
+      end
+
+      context 'when the user is not part of the org or space' do
+        before do
+          new_user = User.make
+          set_current_user(new_user)
+        end
+
+        it 'returns 403' do
+          get "/v2/apps/#{app_obj.guid}/permissions"
+          expect(last_response.status).to eq(403)
+          expect(decoded_response['code']).to eq(10003)
+          expect(decoded_response['error_code']).to eq('CF-NotAuthorized')
+          expect(decoded_response['description']).to include('You are not authorized to perform the requested action')
         end
       end
 
