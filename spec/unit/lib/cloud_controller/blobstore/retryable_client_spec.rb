@@ -19,7 +19,7 @@ module CloudController
       let(:logger) { instance_double(Steno::Logger, debug: nil) }
       let(:log_prefix) { 'cc.retryable' }
       let(:log_data) { { some: 'error' } }
-      let(:num_retries) { 3 }
+      let(:num_retries) { 4 }
 
       class RetryableError < StandardError
       end
@@ -28,6 +28,27 @@ module CloudController
         let(:deletable_blob) { instance_double(DavBlob, key: nil) }
 
         it_behaves_like 'a blobstore client'
+      end
+
+      describe '#blob' do
+        it 'wraps the blob from the client in a RetryableBlob' do
+          wrapped_blob = instance_double(Blob)
+          allow(wrapped_client).to receive(:blob).and_return(wrapped_blob)
+
+          blob = client.blob('my-key')
+          expect(blob).to be_a(RetryableBlob)
+          expect(blob.num_retries).to eq(num_retries)
+          expect(blob.retryable_errors).to eq([RetryableError])
+          expect(blob.wrapped_blob).to eq(wrapped_blob)
+          expect(blob.logger).to eq(logger)
+        end
+
+        it 'returns nil if blob to wrap is nil' do
+          wrapped_blob = nil
+          allow(wrapped_client).to receive(:blob).and_return(wrapped_blob)
+
+          expect(client.blob('my-key')).to be_nil
+        end
       end
 
       describe 'retries' do

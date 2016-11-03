@@ -1,3 +1,5 @@
+require 'cloud_controller/blobstore/retryable_blob'
+
 module CloudController
   module Blobstore
     class RetryableClient
@@ -112,7 +114,8 @@ module CloudController
             key: key
           }
         }) do
-          @wrapped_client.blob(key)
+          blob = @wrapped_client.blob(key)
+          RetryableBlob.new(blob: blob, errors: @retryable_errors, logger: @logger, num_retries: @num_retries) if blob
         end
       end
 
