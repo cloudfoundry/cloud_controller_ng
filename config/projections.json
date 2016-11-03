@@ -13,6 +13,7 @@
   "app/repositories/*.rb": {"type": "unit", "alternate": "spec/unit/repositories/{}_spec.rb"},
   "middleware/*.rb": {"type": "unit", "alternate": "spec/unit/middleware/{}_spec.rb"},
   "lib/cloud_controller/*.rb": {"type":"unit", "alternate": "spec/unit/lib/cloud_controller/{}_spec.rb"},
+  "lib/services/*.rb": {"type":"unit", "alternate": "spec/unit/lib/services/{}_spec.rb"},
   "spec/unit/*_spec.rb": {"alternate": "app/{}.rb"},
   "spec/unit/middleware/*_spec.rb": {"alternate": "middleware/{}.rb"},
   "spec/unit/lib/*_spec.rb": {"alternate": "lib/{}.rb"}
