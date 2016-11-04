@@ -11,6 +11,7 @@ require 'models/v3/persistence/isolation_segment_model'
 
 require 'models/runtime/security_group'
 require 'models/runtime/security_groups_space'
+require 'models/runtime/staging_security_groups_space'
 require 'models/runtime/app_usage_event'
 require 'models/runtime/auto_detection_buildpack'
 require 'models/runtime/app_event'

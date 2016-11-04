@@ -224,6 +224,23 @@ module VCAP::CloudController
         end
       end
 
+      describe 'staging_security_groups' do
+        let!(:associated_sg) { SecurityGroup.make }
+        let!(:unassociated_sg) { SecurityGroup.make }
+        let!(:default_sg) { SecurityGroup.make(staging_default: true) }
+        let!(:another_default_sg) { SecurityGroup.make(staging_default: true) }
+        let!(:space) { Space.make(staging_security_group_guids: [associated_sg.guid, default_sg.guid]) }
+
+        it 'returns security groups associated with the space, and the defaults' do
+          expect(space.staging_security_groups).to match_array [associated_sg, default_sg, another_default_sg]
+        end
+
+        it 'works when eager loading' do
+          eager_space = Space.eager(:staging_security_groups).all.first
+          expect(eager_space.staging_security_groups).to match_array [associated_sg, default_sg, another_default_sg]
+        end
+      end
+
       context 'bad relationships' do
         subject(:space) { Space.make }
 
