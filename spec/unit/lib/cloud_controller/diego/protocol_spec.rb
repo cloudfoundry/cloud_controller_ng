@@ -11,6 +11,10 @@ module VCAP::CloudController
       def desired_app_message(_)
         { 'more' => 'data', 'start_command' => '/usr/local/bin/party' }
       end
+
+      def action_builder(_, _)
+        nil
+      end
     end
 
     RSpec.describe FakeLifecycleProtocol do

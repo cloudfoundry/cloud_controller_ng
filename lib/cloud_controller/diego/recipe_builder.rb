@@ -1,6 +1,6 @@
 require 'diego/action_builder'
-require 'cloud_controller/diego/buildpack/staging_action_builder'
-require 'cloud_controller/diego/docker/staging_action_builder'
+require 'cloud_controller/diego/lifecycle_bundle_uri_generator'
+require 'cloud_controller/diego/bbs_environment_builder'
 
 module VCAP::CloudController
   module Diego
@@ -12,15 +12,8 @@ module VCAP::CloudController
       end
 
       def build_staging_task(config, staging_details)
-        staging_env    = build_staging_env(staging_details)
         lifecycle_type = staging_details.droplet.lifecycle_type
-        lifecycle_data = LifecycleProtocol.protocol_for_type(lifecycle_type).lifecycle_data(staging_details)
-
-        action_builder = if lifecycle_type == Lifecycles::BUILDPACK
-                           Buildpack::StagingActionBuilder.new(config, lifecycle_data, staging_details, staging_env)
-                         elsif lifecycle_type == Lifecycles::DOCKER
-                           Docker::StagingActionBuilder.new(config, lifecycle_data, staging_env)
-                         end
+        action_builder = LifecycleProtocol.protocol_for_type(lifecycle_type).action_builder(config, staging_details)
 
         ::Diego::Bbs::Models::TaskDefinition.new(
           log_guid:                         staging_details.package.app_guid,
@@ -43,12 +36,7 @@ module VCAP::CloudController
         )
       end
 
-      def build_staging_env(staging_details)
-        env = VCAP::CloudController::Diego::NormalEnvHashToDiegoEnvArrayPhilosopher.muse(staging_details.environment_variables)
-        env.map do |i|
-          ::Diego::Bbs::Models::EnvironmentVariable.new(name: i['name'], value: i['value'])
-        end
-      end
+      private
 
       def generate_annotation(config, lifecycle_type, staging_details)
         {
@@ -75,8 +63,6 @@ module VCAP::CloudController
           )
         end
       end
-
-      private
 
       def staging_completion_callback(staging_details, config)
         auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"

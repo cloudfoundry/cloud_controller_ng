@@ -1,5 +1,6 @@
 require 'cloud_controller/diego/buildpack/lifecycle_data'
 require 'cloud_controller/diego/buildpack/buildpack_entry_generator'
+require 'cloud_controller/diego/buildpack/staging_action_builder'
 
 module VCAP
   module CloudController
@@ -36,6 +37,10 @@ module VCAP
             else
               raise e
             end
+          end
+
+          def action_builder(config, staging_details)
+            StagingActionBuilder.new(config, staging_details, lifecycle_data(staging_details))
           end
 
           def desired_app_message(process)

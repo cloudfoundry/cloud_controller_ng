@@ -1,6 +1,7 @@
 RSpec.shared_examples_for 'a lifecycle protocol' do
   let(:process) { double(:process) }
   let(:staging_details) { double(:staging_details) }
+  let(:config) { double(:config) }
 
   it 'provides lifecycle data' do
     lifecycle_data = lifecycle_protocol.lifecycle_data(staging_details)
@@ -11,5 +12,9 @@ RSpec.shared_examples_for 'a lifecycle protocol' do
     desired_app_message = lifecycle_protocol.desired_app_message(process)
     expect(desired_app_message).to be_a(Hash)
     expect(desired_app_message).to have_key('start_command')
+  end
+
+  it 'provides an action builder' do
+    expect { lifecycle_protocol.action_builder(config, staging_details) }.not_to raise_error
   end
 end

@@ -4,13 +4,12 @@ module VCAP::CloudController
       class StagingActionBuilder
         include ::Diego::ActionBuilder
 
-        attr_reader :config, :lifecycle_data, :staging_details, :env
+        attr_reader :config, :lifecycle_data, :staging_details
 
-        def initialize(config, lifecycle_data, staging_details, env)
+        def initialize(config, staging_details, lifecycle_data)
           @config          = config
           @lifecycle_data  = lifecycle_data
           @staging_details = staging_details
-          @env             = env
         end
 
         def action
@@ -31,16 +30,18 @@ module VCAP::CloudController
             )
           end
 
+          skip_detect = lifecycle_data[:buildpacks].count == 1 && !!lifecycle_data[:buildpacks].first[:skip_detect]
+
           stage_action = ::Diego::Bbs::Models::RunAction.new(
             path:            '/tmp/lifecycle/builder',
             user:            'vcap',
             args:            [
               "-buildpackOrder=#{lifecycle_data[:buildpacks].map { |i| i[:key] }.join(',')}",
               "-skipCertVerify=#{config[:skip_cert_verify]}",
-              "-skipDetect=#{!!lifecycle_data[:buildpacks].first[:skip_detect]}",
+              "-skipDetect=#{skip_detect}",
             ],
             resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: config[:staging][:minimum_staging_file_descriptor_limit]),
-            env:             env
+            env:             BbsEnvironmentBuilder.build(staging_details.environment_variables)
           )
 
           upload_actions = [
@@ -74,7 +75,7 @@ module VCAP::CloudController
         def cached_dependencies
           dependencies = [
             ::Diego::Bbs::Models::CachedDependency.new(
-              from:      lifecycle_cached_dependency_uri,
+              from:      LifecycleBundleUriGenerator.uri(config[:diego][:lifecycle_bundles][lifecycle_bundle_key]),
               to:        '/tmp/lifecycle',
               cache_key: "buildpack-#{stack}-lifecycle",
             )
@@ -104,23 +105,8 @@ module VCAP::CloudController
 
         private
 
-        def lifecycle_cached_dependency_uri
-          lifecycle_bundle = config[:diego][:lifecycle_bundles]["buildpack/#{stack}".to_sym]
-
-          raise CloudController::Errors::ApiError.new_from_details('StagerError', 'staging failed: no compiler defined for requested stack') unless lifecycle_bundle
-
-          lifecycle_bundle_url = URI(lifecycle_bundle)
-
-          case lifecycle_bundle_url.scheme
-          when 'http', 'https'
-            lifecycle_cached_dependency_uri = lifecycle_bundle_url
-          when nil
-            lifecycle_cached_dependency_uri = URI(config[:diego][:file_server_url])
-            lifecycle_cached_dependency_uri.path = "/v1/static/#{lifecycle_bundle}"
-          else
-            raise CloudController::Errors::ApiError.new_from_details('StagerError', 'staging failed: invalid compiler URI')
-          end
-          lifecycle_cached_dependency_uri.to_s
+        def lifecycle_bundle_key
+          "buildpack/#{lifecycle_data[:stack]}".to_sym
         end
 
         def upload_buildpack_artifacts_cache_uri

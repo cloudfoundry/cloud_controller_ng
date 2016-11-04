@@ -4,18 +4,17 @@ module VCAP::CloudController
       class StagingActionBuilder
         include ::Diego::ActionBuilder
 
-        attr_reader :config, :lifecycle_data, :env
+        attr_reader :config, :staging_details
 
-        def initialize(config, lifecycle_data, env)
-          @config         = config
-          @lifecycle_data = lifecycle_data
-          @env            = env
+        def initialize(config, staging_details)
+          @config          = config
+          @staging_details = staging_details
         end
 
         def action
           run_args = [
             "-outputMetadataJSONFilename=#{STAGING_RESULT_FILE}",
-            "-dockerRef=#{lifecycle_data[:docker_image]}",
+            "-dockerRef=#{staging_details.package.image}",
           ]
 
           if config[:diego][:insecure_docker_registry_list].count > 0
@@ -28,7 +27,7 @@ module VCAP::CloudController
             user:            'vcap',
             args:            run_args,
             resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: config[:staging][:minimum_staging_file_descriptor_limit]),
-            env:             env
+            env:             BbsEnvironmentBuilder.build(staging_details.environment_variables)
           )
 
           emit_progress(
@@ -42,7 +41,7 @@ module VCAP::CloudController
         def cached_dependencies
           [
             ::Diego::Bbs::Models::CachedDependency.new(
-              from:      lifecycle_cached_dependency_uri,
+              from:      LifecycleBundleUriGenerator.uri(config[:diego][:lifecycle_bundles][:docker]),
               to:        '/tmp/docker_app_lifecycle',
               cache_key: 'docker-lifecycle',
             )
@@ -54,27 +53,6 @@ module VCAP::CloudController
         end
 
         def task_environment_variables
-        end
-
-        private
-
-        def lifecycle_cached_dependency_uri
-          lifecycle_bundle = config[:diego][:lifecycle_bundles][:docker]
-
-          raise CloudController::Errors::ApiError.new_from_details('StagerError', 'staging failed: no compiler defined for requested stack') unless lifecycle_bundle
-
-          lifecycle_bundle_url = URI(lifecycle_bundle)
-
-          case lifecycle_bundle_url.scheme
-          when 'http', 'https'
-            lifecycle_cached_dependency_uri = lifecycle_bundle_url
-          when nil
-            lifecycle_cached_dependency_uri = URI(config[:diego][:file_server_url])
-            lifecycle_cached_dependency_uri.path = "/v1/static/#{lifecycle_bundle}"
-          else
-            raise CloudController::Errors::ApiError.new_from_details('StagerError', 'staging failed: invalid compiler URI')
-          end
-          lifecycle_cached_dependency_uri.to_s
         end
       end
     end

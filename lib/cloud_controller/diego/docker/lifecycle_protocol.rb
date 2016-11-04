@@ -1,4 +1,5 @@
 require 'cloud_controller/diego/docker/lifecycle_data'
+require 'cloud_controller/diego/docker/staging_action_builder'
 
 module VCAP
   module CloudController
@@ -17,6 +18,10 @@ module VCAP
             end
 
             lifecycle_data.message
+          end
+
+          def action_builder(config, staging_details)
+            StagingActionBuilder.new(config, staging_details)
           end
 
           def desired_app_message(process)
