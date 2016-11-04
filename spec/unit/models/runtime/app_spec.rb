@@ -780,6 +780,18 @@ module VCAP::CloudController
           expect(app.reload.database_uri).to be_nil
         end
       end
+
+      context 'when the service binding credentials is nil' do
+        before do
+          banana_service_plan     = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
+          banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
+          ServiceBinding.make(app: parent_app, service_instance: banana_service_instance, credentials: nil)
+        end
+
+        it 'returns nil' do
+          expect(app.reload.database_uri).to be_nil
+        end
+      end
     end
 
     describe 'metadata' do

@@ -417,8 +417,10 @@ module VCAP::CloudController
     end
 
     def database_uri
-      service_uris = service_bindings.map { |binding| binding.credentials['uri'] }.compact
-      DatabaseUriGenerator.new(service_uris).database_uri
+      service_binding_uris = service_bindings.map do |binding|
+        binding.credentials['uri'] if binding.credentials.present?
+      end.compact
+      DatabaseUriGenerator.new(service_binding_uris).database_uri
     end
 
     def validate_space(space)
