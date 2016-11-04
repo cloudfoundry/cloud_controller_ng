@@ -20,15 +20,15 @@ module Diego
     end
 
     def desire_task(task_definition:, domain:, task_guid:)
-      task_request         = Bbs::Models::DesireTaskRequest.new(task_definition: task_definition, domain: domain, task_guid: task_guid)
-      encoded_task_request = protobuf_encode!(task_request)
+      request         = Bbs::Models::DesireTaskRequest.new(task_definition: task_definition, domain: domain, task_guid: task_guid)
+      encoded_request = protobuf_encode!(request)
 
       response = with_request_error_handling do
-        client.post(Routes::DESIRE_TASK, encoded_task_request, PROTOBUF_HEADER)
+        client.post(Routes::DESIRE_TASK, encoded_request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
-      protobuf_decode!(response.body, Bbs::Models::TaskResponse)
+      protobuf_decode!(response.body, Bbs::Models::TaskLifecycleResponse)
     end
 
     def task_by_guid(task_guid)
@@ -53,6 +53,18 @@ module Diego
 
       validate_status!(response: response, statuses: [200])
       protobuf_decode!(response.body, Bbs::Models::TasksResponse)
+    end
+
+    def cancel_task(task_guid)
+      request         = Bbs::Models::TaskGuidRequest.new(task_guid: task_guid)
+      encoded_request = protobuf_encode!(request)
+
+      response = with_request_error_handling do
+        client.post(Routes::CANCEL_TASK, encoded_request, PROTOBUF_HEADER)
+      end
+
+      validate_status!(response: response, statuses: [200])
+      protobuf_decode!(response.body, Bbs::Models::TaskLifecycleResponse)
     end
 
     def with_request_error_handling(&blk)

@@ -8,7 +8,7 @@ module VCAP::CloudController
 
         staging_guid = staging_details.droplet.guid
 
-        if HashUtils.dig(config, :diego, :temporary_local_staging)
+        if do_local_staging
           task_definition = recipe_builder.build_staging_task(config, staging_details)
           bbs_stager_client.stage(staging_guid, task_definition)
         else
@@ -19,7 +19,12 @@ module VCAP::CloudController
 
       def send_stop_staging_request(staging_guid)
         logger.info('staging.stop', staging_guid: staging_guid)
-        stager_client.stop_staging(staging_guid)
+
+        if do_local_staging
+          bbs_stager_client.stop_staging(staging_guid)
+        else
+          stager_client.stop_staging(staging_guid)
+        end
       end
 
       def send_desire_request(process, default_health_check_timeout)
@@ -45,6 +50,10 @@ module VCAP::CloudController
       end
 
       private
+
+      def do_local_staging
+        !!HashUtils.dig(Config.config, :diego, :temporary_local_staging)
+      end
 
       def logger
         @logger ||= Steno.logger('cc.diego.messenger')

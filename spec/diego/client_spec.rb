@@ -54,7 +54,7 @@ module Diego
     end
 
     describe '#desire_task' do
-      let(:response_body) { Bbs::Models::TaskResponse.new(error: nil).encode.to_s }
+      let(:response_body) { Bbs::Models::TaskLifecycleResponse.new(error: nil).encode.to_s }
       let(:response_status) { 200 }
       let(:task_definition) { Bbs::Models::TaskDefinition.new }
 
@@ -62,7 +62,7 @@ module Diego
         stub_request(:post, 'https://bbs.example.com:4443/v1/tasks/desire.r2').to_return(status: response_status, body: response_body)
       end
 
-      it 'returns a task response' do
+      it 'returns a task lifecycle response' do
         expected_task_request = Bbs::Models::DesireTaskRequest.new(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain')
 
         response = client.desire_task(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain')
@@ -238,6 +238,60 @@ module Diego
       context 'when encoding the request fails' do
         it 'raises' do
           expect { client.task_by_guid(51) }.to raise_error(EncodeError)
+        end
+      end
+    end
+
+    describe '#cancel_task' do
+      let(:response_body) { Bbs::Models::TaskLifecycleResponse.new(error: nil).encode.to_s }
+      let(:response_status) { 200 }
+
+      before do
+        stub_request(:post, 'https://bbs.example.com:4443/v1/tasks/cancel').to_return(status: response_status, body: response_body)
+      end
+
+      it 'returns a task lifecycle response' do
+        expected_cancel_request = Bbs::Models::TaskGuidRequest.new(task_guid: 'some-guid')
+
+        response = client.cancel_task('some-guid')
+
+        expect(response.error).to be_nil
+        expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/cancel').with(
+                 body:    expected_cancel_request.encode.to_s,
+                 headers: { 'Content-Type' => 'application/x-protobuf' }
+        )).to have_been_made
+      end
+
+      context 'when it does not return successfully' do
+        let(:response_status) { 404 }
+        let(:response_body) { 'not found' }
+
+        it 'raises' do
+          expect { client.cancel_task('some-guid') }.to raise_error(ResponseError, /status: 404, body: not found/)
+        end
+      end
+
+      context 'when it fails to make the request' do
+        before do
+          stub_request(:post, 'https://bbs.example.com:4443/v1/tasks/cancel').to_raise(StandardError.new('error message'))
+        end
+
+        it 'raises' do
+          expect { client.cancel_task('some-guid') }.to raise_error(RequestError, /error message/)
+        end
+      end
+
+      context 'when decoding the response fails' do
+        let(:response_body) { 'potato' }
+
+        it 'raises' do
+          expect { client.cancel_task('some-guid') }.to raise_error(DecodeError)
+        end
+      end
+
+      context 'when the task guid request cannot be encoded' do
+        it 'raises' do
+          expect { client.cancel_task(4) }.to raise_error(EncodeError)
         end
       end
     end

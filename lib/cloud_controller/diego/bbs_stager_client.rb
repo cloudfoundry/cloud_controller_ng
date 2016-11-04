@@ -26,6 +26,24 @@ module VCAP::CloudController
         nil
       end
 
+      def stop_staging(staging_guid)
+        logger.info('stop.staging.request', staging_guid: staging_guid)
+
+        begin
+          response = client.cancel_task(staging_guid)
+        rescue ::Diego::Error => e
+          raise CloudController::Errors::ApiError.new_from_details('StagerUnavailable', e)
+        end
+
+        logger.info('stop.staging.response', staging_guid: staging_guid, error: response.error)
+
+        if response.error
+          raise CloudController::Errors::ApiError.new_from_details('StagerError', "stop staging failed: #{response.error.message}")
+        end
+
+        nil
+      end
+
       private
 
       attr_reader :client
