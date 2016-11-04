@@ -15,6 +15,7 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:service_guid) }
       it { expect(described_class).to be_queryable_by(:service_instance_guid) }
       it { expect(described_class).to be_queryable_by(:service_broker_guid) }
+      it { expect(described_class).to be_queryable_by(:unique_id) }
     end
 
     describe 'Attributes' do

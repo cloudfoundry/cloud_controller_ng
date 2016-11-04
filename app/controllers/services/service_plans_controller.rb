@@ -11,7 +11,7 @@ module VCAP::CloudController
       attribute :public, Message::Boolean, default: true
     end
 
-    query_parameters :active, :service_guid, :service_instance_guid, :service_broker_guid
+    query_parameters :active, :service_guid, :service_instance_guid, :service_broker_guid, :unique_id
     # added :service_broker_guid here for readability, it is actually implemented as a search filter
     # in the #get_filtered_dataset_for_enumeration method because ModelControl does not support
     # searching on parameters that are not directly associated with the model
