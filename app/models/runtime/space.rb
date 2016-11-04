@@ -60,6 +60,33 @@ module VCAP::CloudController
       end
     }
 
+    many_to_many :staging_security_groups,
+    class: 'VCAP::CloudController::SecurityGroup',
+    join_table: 'staging_security_groups_spaces',
+    left_key: :staging_space_id,
+    right_key: :staging_security_group_id,
+    dataset: -> {
+      SecurityGroup.left_join(:staging_security_groups_spaces, staging_security_group_id: :id).
+        where(Sequel.or(staging_security_groups_spaces__staging_space_id: id, security_groups__staging_default: true))
+    },
+    eager_loader: ->(spaces_map) {
+      space_ids = spaces_map[:id_map].keys
+      # Set all associations to nil so if no records are found, we don't do another query when somebody tries to load the association
+      spaces_map[:rows].each { |space| space.associations[:staging_security_groups] = [] }
+
+      default_security_groups = SecurityGroup.where(staging_default: true).all
+
+      StagingSecurityGroupsSpace.where(staging_space_id: space_ids).eager(:security_group).all do |security_group_space|
+        space = spaces_map[:id_map][security_group_space.staging_space_id].first
+        space.associations[:staging_security_groups] << security_group_space.security_group
+      end
+
+      spaces_map[:rows].each do |space|
+        space.associations[:staging_security_groups] += default_security_groups
+        space.associations[:staging_security_groups].uniq!
+      end
+    }
+
     one_to_many :app_events,
       dataset: -> { AppEvent.filter(app: apps) }
 

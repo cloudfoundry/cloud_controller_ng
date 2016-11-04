@@ -126,7 +126,8 @@ RSpec.describe 'Routes' do
                     'service_instances_url'        => "/v2/spaces/#{space.guid}/service_instances",
                     'app_events_url'               => "/v2/spaces/#{space.guid}/app_events",
                     'events_url'                   => "/v2/spaces/#{space.guid}/events",
-                    'security_groups_url'          => "/v2/spaces/#{space.guid}/security_groups"
+                    'security_groups_url'          => "/v2/spaces/#{space.guid}/security_groups",
+                    'staging_security_groups_url'  => "/v2/spaces/#{space.guid}/staging_security_groups"
                   }
                 },
                 'apps_url'              => "/v2/routes/#{route.guid}/apps",

@@ -5,6 +5,7 @@ module VCAP::CloudController
       attribute :rules, [Hash], default: []
 
       to_many :spaces
+      to_many :staging_spaces
     end
 
     query_parameters :name

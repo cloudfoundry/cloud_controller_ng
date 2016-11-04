@@ -23,6 +23,7 @@ module VCAP::CloudController
       to_many :app_events,              link_only: true, exclude_in: [:create, :update], route_for: :get
       to_many :events,                  link_only: true, exclude_in: [:create, :update], route_for: :get
       to_many :security_groups
+      to_many :staging_security_groups
       to_one :space_quota_definition, optional_in: [:create], exclude_in: [:update]
     end
 

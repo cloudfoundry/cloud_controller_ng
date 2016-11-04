@@ -13,7 +13,8 @@ module VCAP::CloudController
         expect(described_class).to have_creatable_attributes({
           name: { type: 'string', required: true },
           rules: { type: '[hash]', default: [] },
-          space_guids: { type: '[string]' }
+          space_guids: { type: '[string]' },
+          staging_space_guids: { type: '[string]' },
         })
       end
 
@@ -21,7 +22,8 @@ module VCAP::CloudController
         expect(described_class).to have_updatable_attributes({
           name: { type: 'string' },
           rules: { type: '[hash]' },
-          space_guids: { type: '[string]' }
+          space_guids: { type: '[string]' },
+          staging_space_guids: { type: '[string]' },
         })
       end
     end
@@ -29,7 +31,10 @@ module VCAP::CloudController
     describe 'Associations' do
       describe 'nested routes' do
         it do
-          expect(described_class).to have_nested_routes({ spaces: [:get, :put, :delete] })
+          expect(described_class).to have_nested_routes({
+            spaces: [:get, :put, :delete],
+            staging_spaces: [:get, :put, :delete],
+          })
         end
       end
     end

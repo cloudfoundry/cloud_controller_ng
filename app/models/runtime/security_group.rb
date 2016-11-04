@@ -13,6 +13,11 @@ module VCAP::CloudController
     serialize_attributes :json, :rules
 
     many_to_many :spaces
+    many_to_many :staging_spaces,
+      class: 'VCAP::CloudController::Space',
+      join_table: 'staging_security_groups_spaces',
+      right_key: :staging_space_id,
+      left_key: :staging_security_group_id
 
     add_association_dependencies spaces: :nullify
 

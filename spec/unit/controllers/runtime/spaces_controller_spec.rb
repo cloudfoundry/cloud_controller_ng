@@ -15,32 +15,34 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(described_class).to have_creatable_attributes({
-          name:                   { type: 'string', required: true },
-          allow_ssh:              { type: 'bool', default: true },
-          isolation_segment_guid: { type: 'string', default: nil, required: false },
-          organization_guid:      { type: 'string', required: true },
-          developer_guids:        { type: '[string]' },
-          manager_guids:          { type: '[string]' },
-          auditor_guids:          { type: '[string]' },
-          domain_guids:           { type: '[string]' },
-          service_instance_guids: { type: '[string]' },
-          security_group_guids:   { type: '[string]' },
-          space_quota_definition_guid: { type: 'string' }
+          name:                         { type: 'string', required: true },
+          allow_ssh:                    { type: 'bool', default: true },
+          isolation_segment_guid:       { type: 'string', default: nil, required: false },
+          organization_guid:            { type: 'string', required: true },
+          developer_guids:              { type: '[string]' },
+          manager_guids:                { type: '[string]' },
+          auditor_guids:                { type: '[string]' },
+          domain_guids:                 { type: '[string]' },
+          service_instance_guids:       { type: '[string]' },
+          security_group_guids:         { type: '[string]' },
+          staging_security_group_guids: { type: '[string]' },
+          space_quota_definition_guid:  { type: 'string' }
         })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-          name:                   { type: 'string' },
-          allow_ssh:              { type: 'bool' },
-          isolation_segment_guid: { type: 'string', required: false },
-          organization_guid:      { type: 'string' },
-          developer_guids:        { type: '[string]' },
-          manager_guids:          { type: '[string]' },
-          auditor_guids:          { type: '[string]' },
-          domain_guids:           { type: '[string]' },
-          service_instance_guids: { type: '[string]' },
-          security_group_guids:   { type: '[string]' },
+          name:                         { type: 'string' },
+          allow_ssh:                    { type: 'bool' },
+          isolation_segment_guid:       { type: 'string', required: false },
+          organization_guid:            { type: 'string' },
+          developer_guids:              { type: '[string]' },
+          manager_guids:                { type: '[string]' },
+          auditor_guids:                { type: '[string]' },
+          domain_guids:                 { type: '[string]' },
+          service_instance_guids:       { type: '[string]' },
+          security_group_guids:         { type: '[string]' },
+          staging_security_group_guids: { type: '[string]' },
         })
       end
     end
@@ -134,16 +136,17 @@ module VCAP::CloudController
       it do
         expect(described_class).to have_nested_routes(
           {
-            developers:        [:get, :put, :delete],
-            managers:          [:get, :put, :delete],
-            auditors:          [:get, :put, :delete],
-            apps:              [:get],
-            routes:            [:get],
-            domains:           [:get, :put, :delete],
-            service_instances: [:get],
-            app_events:        [:get],
-            events:            [:get],
-            security_groups:   [:get, :put, :delete],
+            developers:              [:get, :put, :delete],
+            managers:                [:get, :put, :delete],
+            auditors:                [:get, :put, :delete],
+            apps:                    [:get],
+            routes:                  [:get],
+            domains:                 [:get, :put, :delete],
+            service_instances:       [:get],
+            app_events:              [:get],
+            events:                  [:get],
+            security_groups:         [:get, :put, :delete],
+            staging_security_groups: [:get, :put, :delete],
           })
       end
 
