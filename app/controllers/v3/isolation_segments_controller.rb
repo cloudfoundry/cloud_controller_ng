@@ -76,8 +76,6 @@ class IsolationSegmentsController < ApplicationController
     unauthorized! unless roles.admin?
 
     isolation_segment_model = find_isolation_segment(params[:guid])
-    unprocessable!("Cannot update the #{isolation_segment_model.name} Isolation Segment") if
-      isolation_segment_model.guid.eql?(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
 
     message = IsolationSegmentUpdateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
