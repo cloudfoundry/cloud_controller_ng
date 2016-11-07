@@ -15,7 +15,7 @@ module CloudController
             'default_isolation_segment_guid' => org.default_isolation_segment_model ? org.default_isolation_segment_model.guid : nil
           }
 
-          entity['isolation_segment_url'] = "/v2/organizations/#{org.guid}/isolation_segments" unless org.isolation_segment_models.empty?
+          entity['isolation_segment_url'] = "/v3/isolation_segments?organization_guids=#{org.guid}" unless org.isolation_segment_models.empty?
 
           entity.merge!(RelationsPresenter.new.to_hash(controller, org, opts, depth, parents, orphans))
 

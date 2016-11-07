@@ -56,7 +56,7 @@ module CloudController::Presenters::V2
           actual_entity_hash = org_presenter.entity_hash(controller, org, opts, depth, parents, orphans)
 
           expect(actual_entity_hash['default_isolation_segment_guid']).to eq(isolation_segment_model.guid)
-          expect(actual_entity_hash['isolation_segment_url']).to eq "/v2/organizations/#{org.guid}/isolation_segments"
+          expect(actual_entity_hash['isolation_segment_url']).to eq "/v3/isolation_segments?organization_guids=#{org.guid}"
           expect(relations_presenter).to have_received(:to_hash).with(controller, org, opts, depth, parents, orphans)
         end
       end

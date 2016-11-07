@@ -2,7 +2,7 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class IsolationSegmentsListMessage < ListMessage
-    ALLOWED_KEYS = [:names, :guids, :page, :per_page, :order_by, :order_direction].freeze
+    ALLOWED_KEYS = [:names, :guids, :page, :per_page, :order_by, :order_direction, :organization_guids].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 
@@ -10,6 +10,7 @@ module VCAP::CloudController
 
     validates :names, array: true, allow_nil: true
     validates :guids, array: true, allow_nil: true
+    validates :organization_guids, array: true, allow_nil: true
 
     def initialize(params={})
       super(params.symbolize_keys)
@@ -21,7 +22,7 @@ module VCAP::CloudController
 
     def self.from_params(params)
       opts = params.dup
-      %w(names guids).each do |attribute|
+      %w(names guids organization_guids).each do |attribute|
         to_array! opts, attribute
       end
       new(opts.symbolize_keys)

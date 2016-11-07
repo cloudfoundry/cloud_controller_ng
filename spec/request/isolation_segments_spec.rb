@@ -343,6 +343,32 @@ RSpec.describe 'IsolationSegmentModels' do
         expect(parsed_response['resources'].map { |r| r['name'] }).to eq([models[3].name, models[5].name])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
+
+      context 'and isolation segments are assigned to orgs' do
+        before do
+          assigner.assign(models[1], [org1])
+          assigner.assign(models[2], [org2])
+        end
+
+        it 'filters by organization guids' do
+          get "/v3/isolation_segments?organization_guids=#{org1.guid}%2C#{org2.guid}", nil, user_header
+
+          expected_pagination = {
+            'total_results' =>  2,
+            'total_pages'   =>  1,
+            'first'         =>  { 'href' => "#{link_prefix}/v3/isolation_segments?organization_guids=#{org1.guid}%2C#{org2.guid}&page=1&per_page=50" },
+            'last'          =>  { 'href' => "#{link_prefix}/v3/isolation_segments?organization_guids=#{org1.guid}%2C#{org2.guid}&page=1&per_page=50" },
+            'next'          =>  nil,
+            'previous'      =>  nil
+          }
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['name'] }).to eq([models[1].name, models[2].name])
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+      end
     end
   end
 

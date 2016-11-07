@@ -145,61 +145,6 @@ module VCAP::CloudController
       end
     end
 
-    describe 'GET /v2/organizations/:guid/isolation_segments' do
-      let(:space) { Space.make(organization: org) }
-      let(:user) { make_developer_for_space(space) }
-
-      before do
-        set_current_user(user)
-      end
-
-      it 'returns Unauthorized when the user cannot read from the org' do
-        set_current_user(User.make)
-        get "/v2/organizations/#{org.guid}/isolation_segments"
-
-        expect(last_response.status).to eq(403)
-        expect(decoded_response['error_code']).to match(/CF-NotAuthorized/)
-      end
-
-      context 'when no isolation segments have been assigned' do
-        it 'returns an empty list' do
-          get "/v2/organizations/#{org.guid}/isolation_segments"
-
-          expect(last_response.status).to eq(200)
-
-          expect(decoded_response['resources']).to be_empty
-        end
-      end
-
-      context 'when isolation segments have been assigned' do
-        let(:is1) { IsolationSegmentModel.make }
-        let(:is2) { IsolationSegmentModel.make }
-
-        before do
-          is1.add_organization(org)
-          is2.add_organization(org)
-        end
-
-        it 'returns list of the isolation segments' do
-          get "/v2/organizations/#{org.guid}/isolation_segments"
-
-          expect(last_response.status).to eq(200)
-
-          response_guids = decoded_response['resources'].map { |r| r['guid'] }
-          expect(response_guids).to eq([is1.guid, is2.guid])
-        end
-
-        it 'allows pagination of the response' do
-          get "/v2/organizations/#{org.guid}/isolation_segments?per_page=1"
-
-          expect(last_response.status).to eq(200)
-
-          response_guids = decoded_response['resources'].map { |r| r['guid'] }
-          expect(response_guids).to eq([is1.guid])
-        end
-      end
-    end
-
     describe 'setting the default isolation segment' do
       let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
