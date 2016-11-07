@@ -1,75 +1,77 @@
-## Generated from evacuation.proto for models
-require "beefcake"
+# encoding: utf-8
 
+##
+# This file is auto-generated. DO NOT EDIT!
+#
+require 'protobuf/message'
+
+
+##
+# Imports
+#
+require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
+require 'actual_lrp.pb'
+require 'error.pb'
 
 module Diego
   module Bbs
     module Models
 
+      ##
+      # Message Classes
+      #
+      class EvacuationResponse < ::Protobuf::Message; end
+      class EvacuateClaimedActualLRPRequest < ::Protobuf::Message; end
+      class EvacuateRunningActualLRPRequest < ::Protobuf::Message; end
+      class EvacuateStoppedActualLRPRequest < ::Protobuf::Message; end
+      class EvacuateCrashedActualLRPRequest < ::Protobuf::Message; end
+      class RemoveEvacuatingActualLRPRequest < ::Protobuf::Message; end
+      class RemoveEvacuatingActualLRPResponse < ::Protobuf::Message; end
+
+
+      ##
+      # Message Fields
+      #
       class EvacuationResponse
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Error, :error, 1
+        optional :bool, :keep_container, 2
       end
 
       class EvacuateClaimedActualLRPRequest
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::ActualLRPKey, :actual_lrp_key, 1
+        optional ::Diego::Bbs::Models::ActualLRPInstanceKey, :actual_lrp_instance_key, 2
       end
 
       class EvacuateRunningActualLRPRequest
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::ActualLRPKey, :actual_lrp_key, 1
+        optional ::Diego::Bbs::Models::ActualLRPInstanceKey, :actual_lrp_instance_key, 2
+        optional ::Diego::Bbs::Models::ActualLRPNetInfo, :actual_lrp_net_info, 3
+        optional :uint64, :ttl, 4
       end
 
       class EvacuateStoppedActualLRPRequest
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::ActualLRPKey, :actual_lrp_key, 1
+        optional ::Diego::Bbs::Models::ActualLRPInstanceKey, :actual_lrp_instance_key, 2
       end
 
       class EvacuateCrashedActualLRPRequest
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::ActualLRPKey, :actual_lrp_key, 1
+        optional ::Diego::Bbs::Models::ActualLRPInstanceKey, :actual_lrp_instance_key, 2
+        optional :string, :error_message, 3
       end
 
       class RemoveEvacuatingActualLRPRequest
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::ActualLRPKey, :actual_lrp_key, 1
+        optional ::Diego::Bbs::Models::ActualLRPInstanceKey, :actual_lrp_instance_key, 2
       end
 
       class RemoveEvacuatingActualLRPResponse
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Error, :error, 1
       end
 
-      class EvacuationResponse
-        optional :error, Error, 1
-        optional :keep_container, :bool, 2
-      end
-
-      class EvacuateClaimedActualLRPRequest
-        optional :actual_lrp_key, ActualLRPKey, 1
-        optional :actual_lrp_instance_key, ActualLRPInstanceKey, 2
-      end
-
-      class EvacuateRunningActualLRPRequest
-        optional :actual_lrp_key, ActualLRPKey, 1
-        optional :actual_lrp_instance_key, ActualLRPInstanceKey, 2
-        optional :actual_lrp_net_info, ActualLRPNetInfo, 3
-        optional :ttl, :uint64, 4
-      end
-
-      class EvacuateStoppedActualLRPRequest
-        optional :actual_lrp_key, ActualLRPKey, 1
-        optional :actual_lrp_instance_key, ActualLRPInstanceKey, 2
-      end
-
-      class EvacuateCrashedActualLRPRequest
-        optional :actual_lrp_key, ActualLRPKey, 1
-        optional :actual_lrp_instance_key, ActualLRPInstanceKey, 2
-        optional :error_message, :string, 3
-      end
-
-      class RemoveEvacuatingActualLRPRequest
-        optional :actual_lrp_key, ActualLRPKey, 1
-        optional :actual_lrp_instance_key, ActualLRPInstanceKey, 2
-      end
-
-      class RemoveEvacuatingActualLRPResponse
-        optional :error, Error, 1
-      end
     end
+
   end
+
 end
+

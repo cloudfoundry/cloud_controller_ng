@@ -1,41 +1,53 @@
-## Generated from security_group.proto for models
-require "beefcake"
+# encoding: utf-8
 
+##
+# This file is auto-generated. DO NOT EDIT!
+#
+require 'protobuf/message'
+
+
+##
+# Imports
+#
+require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
 
 module Diego
   module Bbs
     module Models
 
+      ##
+      # Message Classes
+      #
+      class PortRange < ::Protobuf::Message; end
+      class ICMPInfo < ::Protobuf::Message; end
+      class SecurityGroupRule < ::Protobuf::Message; end
+
+
+      ##
+      # Message Fields
+      #
       class PortRange
-        include Beefcake::Message
+        optional :uint32, :start, 1
+        optional :uint32, :end, 2
       end
 
       class ICMPInfo
-        include Beefcake::Message
+        optional :int32, :type, 1
+        optional :int32, :code, 2
       end
 
       class SecurityGroupRule
-        include Beefcake::Message
+        optional :string, :protocol, 1
+        repeated :string, :destinations, 2
+        repeated :uint32, :ports, 3
+        optional ::Diego::Bbs::Models::PortRange, :port_range, 4
+        optional ::Diego::Bbs::Models::ICMPInfo, :icmp_info, 5
+        optional :bool, :log, 6
       end
 
-      class PortRange
-        optional :start, :uint32, 1
-        optional :end, :uint32, 2
-      end
-
-      class ICMPInfo
-        optional :type, :int32, 1
-        optional :code, :int32, 2
-      end
-
-      class SecurityGroupRule
-        optional :protocol, :string, 1
-        repeated :destinations, :string, 2
-        repeated :ports, :uint32, 3
-        optional :port_range, PortRange, 4
-        optional :icmp_info, ICMPInfo, 5
-        optional :log, :bool, 6
-      end
     end
+
   end
+
 end
+

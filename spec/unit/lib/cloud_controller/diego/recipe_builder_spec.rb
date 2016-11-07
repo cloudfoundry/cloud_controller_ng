@@ -11,7 +11,7 @@ module VCAP::CloudController
           Diego::StagingDetails.new.tap do |details|
             details.droplet               = droplet
             details.package               = package
-            details.environment_variables = { 'nightshade_fruit' => 'potato' }
+            details.environment_variables = [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'nightshade_fruit', value: 'potato')]
             details.staging_memory_in_mb  = 42
             details.staging_disk_in_mb    = 51
             details.start_after_staging   = true
@@ -64,13 +64,15 @@ module VCAP::CloudController
           let(:package) { PackageModel.make(app: app) }
 
           let(:buildpack_staging_action) { ::Diego::Bbs::Models::RunAction.new }
+          let(:lifecycle_environment_variables) { [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'the-buildpack-env-var', value: 'the-buildpack-value')] }
+          let(:lifecycle_cached_dependencies) { [::Diego::Bbs::Models::CachedDependency.new(name: 'buildpack_cached_deps')] }
           let(:lifecycle_action_builder) do
             instance_double(
               Buildpack::StagingActionBuilder,
               stack:                      'potato-stack',
               action:                     buildpack_staging_action,
-              task_environment_variables: 'the-buildpack-env-vars',
-              cached_dependencies:        'buildpack-cached-deps',
+              task_environment_variables: lifecycle_environment_variables,
+              cached_dependencies:        lifecycle_cached_dependencies,
             )
           end
 
@@ -90,7 +92,7 @@ module VCAP::CloudController
 
             expect(result.root_fs).to eq('preloaded:potato-stack')
             expect(result.log_guid).to eq('banana-guid')
-            expect(result.metrics_guid).to be_nil
+            expect(result.metrics_guid).to eq('')
             expect(result.log_source).to eq('STG')
             expect(result.result_file).to eq('/tmp/result.json')
             expect(result.privileged).to be(false)
@@ -116,7 +118,7 @@ module VCAP::CloudController
               rule_http_everywhere
             ])
 
-            expect(result.cached_dependencies).to eq('buildpack-cached-deps')
+            expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
           end
 
           it 'sets the completion callback to the stager callback url' do
@@ -131,7 +133,7 @@ module VCAP::CloudController
 
           it 'sets the env vars' do
             result = recipe_builder.build_staging_task(config, staging_details)
-            expect(result.environment_variables).to eq('the-buildpack-env-vars')
+            expect(result.environment_variables).to eq(lifecycle_environment_variables)
           end
         end
 
@@ -141,13 +143,15 @@ module VCAP::CloudController
 
           let(:docker_staging_action) { ::Diego::Bbs::Models::RunAction.new }
           let(:lifecycle_type) { 'docker' }
+          let(:lifecycle_environment_variables) { [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'the-docker-env-var', value: 'the-docker-value')] }
+          let(:lifecycle_cached_dependencies) { [::Diego::Bbs::Models::CachedDependency.new(name: 'docker_cached_deps')] }
           let(:lifecycle_action_builder) do
             instance_double(
               Docker::StagingActionBuilder,
               stack:                      'docker-stack',
               action:                     docker_staging_action,
-              task_environment_variables: 'the-docker-env-vars',
-              cached_dependencies:        'docker-cached-deps',
+              task_environment_variables: lifecycle_environment_variables,
+              cached_dependencies:        lifecycle_cached_dependencies,
             )
           end
 
@@ -191,7 +195,7 @@ module VCAP::CloudController
 
           it 'sets the cached dependencies' do
             result = recipe_builder.build_staging_task(config, staging_details)
-            expect(result.cached_dependencies).to eq('docker-cached-deps')
+            expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
           end
 
           it 'sets the memory' do

@@ -1,86 +1,82 @@
-## Generated from desired_lrp_requests.proto for models
-require "beefcake"
+# encoding: utf-8
 
+##
+# This file is auto-generated. DO NOT EDIT!
+#
+require 'protobuf/message'
+
+
+##
+# Imports
+#
+require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
+require 'desired_lrp.pb'
+require 'error.pb'
 
 module Diego
   module Bbs
     module Models
 
+      ##
+      # Message Classes
+      #
+      class DesiredLRPLifecycleResponse < ::Protobuf::Message; end
+      class DesiredLRPsResponse < ::Protobuf::Message; end
+      class DesiredLRPsRequest < ::Protobuf::Message; end
+      class DesiredLRPResponse < ::Protobuf::Message; end
+      class DesiredLRPSchedulingInfosResponse < ::Protobuf::Message; end
+      class DesiredLRPByProcessGuidRequest < ::Protobuf::Message; end
+      class DesireLRPRequest < ::Protobuf::Message; end
+      class UpdateDesiredLRPRequest < ::Protobuf::Message; end
+      class RemoveDesiredLRPRequest < ::Protobuf::Message; end
+
+
+      ##
+      # Message Fields
+      #
       class DesiredLRPLifecycleResponse
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Error, :error, 1
       end
 
       class DesiredLRPsResponse
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Error, :error, 1
+        repeated ::Diego::Bbs::Models::DesiredLRP, :desired_lrps, 2
       end
 
       class DesiredLRPsRequest
-        include Beefcake::Message
+        optional :string, :domain, 1
       end
 
       class DesiredLRPResponse
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Error, :error, 1
+        optional ::Diego::Bbs::Models::DesiredLRP, :desired_lrp, 2
       end
 
       class DesiredLRPSchedulingInfosResponse
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Error, :error, 1
+        repeated ::Diego::Bbs::Models::DesiredLRPSchedulingInfo, :desired_lrp_scheduling_infos, 2
       end
 
       class DesiredLRPByProcessGuidRequest
-        include Beefcake::Message
+        optional :string, :process_guid, 1
       end
 
       class DesireLRPRequest
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::DesiredLRP, :desired_lrp, 1
       end
 
       class UpdateDesiredLRPRequest
-        include Beefcake::Message
+        optional :string, :process_guid, 1
+        optional ::Diego::Bbs::Models::DesiredLRPUpdate, :update, 2
       end
 
       class RemoveDesiredLRPRequest
-        include Beefcake::Message
+        optional :string, :process_guid, 1
       end
 
-      class DesiredLRPLifecycleResponse
-        optional :error, Error, 1
-      end
-
-      class DesiredLRPsResponse
-        optional :error, Error, 1
-        repeated :desired_lrps, DesiredLRP, 2
-      end
-
-      class DesiredLRPsRequest
-        optional :domain, :string, 1
-      end
-
-      class DesiredLRPResponse
-        optional :error, Error, 1
-        optional :desired_lrp, DesiredLRP, 2
-      end
-
-      class DesiredLRPSchedulingInfosResponse
-        optional :error, Error, 1
-        repeated :desired_lrp_scheduling_infos, DesiredLRPSchedulingInfo, 2
-      end
-
-      class DesiredLRPByProcessGuidRequest
-        optional :process_guid, :string, 1
-      end
-
-      class DesireLRPRequest
-        optional :desired_lrp, DesiredLRP, 1
-      end
-
-      class UpdateDesiredLRPRequest
-        optional :process_guid, :string, 1
-        optional :update, DesiredLRPUpdate, 2
-      end
-
-      class RemoveDesiredLRPRequest
-        optional :process_guid, :string, 1
-      end
     end
+
   end
+
 end
+

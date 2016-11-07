@@ -1,120 +1,106 @@
-## Generated from actual_lrp_requests.proto for models
-require "beefcake"
+# encoding: utf-8
 
-require_relative 'error.pb'
+##
+# This file is auto-generated. DO NOT EDIT!
+#
+require 'protobuf/message'
+
+
+##
+# Imports
+#
+require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
+require 'actual_lrp.pb'
+require 'error.pb'
 
 module Diego
   module Bbs
     module Models
 
+      ##
+      # Message Classes
+      #
+      class ActualLRPLifecycleResponse < ::Protobuf::Message; end
+      class ActualLRPGroupsResponse < ::Protobuf::Message; end
+      class ActualLRPGroupResponse < ::Protobuf::Message; end
+      class ActualLRPGroupsRequest < ::Protobuf::Message; end
+      class ActualLRPGroupsByProcessGuidRequest < ::Protobuf::Message; end
+      class ActualLRPGroupByProcessGuidAndIndexRequest < ::Protobuf::Message; end
+      class ClaimActualLRPRequest < ::Protobuf::Message; end
+      class StartActualLRPRequest < ::Protobuf::Message; end
+      class CrashActualLRPRequest < ::Protobuf::Message; end
+      class FailActualLRPRequest < ::Protobuf::Message; end
+      class RetireActualLRPRequest < ::Protobuf::Message; end
+      class RemoveActualLRPRequest < ::Protobuf::Message; end
+
+
+      ##
+      # Message Fields
+      #
       class ActualLRPLifecycleResponse
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Error, :error, 1
       end
 
       class ActualLRPGroupsResponse
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Error, :error, 1
+        repeated ::Diego::Bbs::Models::ActualLRPGroup, :actual_lrp_groups, 2
       end
 
       class ActualLRPGroupResponse
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Error, :error, 1
+        optional ::Diego::Bbs::Models::ActualLRPGroup, :actual_lrp_group, 2
       end
 
       class ActualLRPGroupsRequest
-        include Beefcake::Message
+        optional :string, :domain, 1
+        optional :string, :cell_id, 2
       end
 
       class ActualLRPGroupsByProcessGuidRequest
-        include Beefcake::Message
+        optional :string, :process_guid, 1
       end
 
       class ActualLRPGroupByProcessGuidAndIndexRequest
-        include Beefcake::Message
+        optional :string, :process_guid, 1
+        optional :int32, :index, 2
       end
 
       class ClaimActualLRPRequest
-        include Beefcake::Message
+        optional :string, :process_guid, 1
+        optional :int32, :index, 2
+        optional ::Diego::Bbs::Models::ActualLRPInstanceKey, :actual_lrp_instance_key, 3
       end
 
       class StartActualLRPRequest
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::ActualLRPKey, :actual_lrp_key, 1
+        optional ::Diego::Bbs::Models::ActualLRPInstanceKey, :actual_lrp_instance_key, 2
+        optional ::Diego::Bbs::Models::ActualLRPNetInfo, :actual_lrp_net_info, 3
       end
 
       class CrashActualLRPRequest
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::ActualLRPKey, :actual_lrp_key, 1
+        optional ::Diego::Bbs::Models::ActualLRPInstanceKey, :actual_lrp_instance_key, 2
+        optional :string, :error_message, 3
       end
 
       class FailActualLRPRequest
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::ActualLRPKey, :actual_lrp_key, 1
+        optional :string, :error_message, 2
       end
 
       class RetireActualLRPRequest
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::ActualLRPKey, :actual_lrp_key, 1
       end
 
       class RemoveActualLRPRequest
-        include Beefcake::Message
+        optional :string, :process_guid, 1
+        optional :int32, :index, 2
+        optional ::Diego::Bbs::Models::ActualLRPInstanceKey, :actual_lrp_instance_key, 3
       end
 
-      class ActualLRPLifecycleResponse
-        optional :error, Error, 1
-      end
-
-      class ActualLRPGroupsResponse
-        optional :error, Error, 1
-        repeated :actual_lrp_groups, ActualLRPGroup, 2
-      end
-
-      class ActualLRPGroupResponse
-        optional :error, Error, 1
-        optional :actual_lrp_group, ActualLRPGroup, 2
-      end
-
-      class ActualLRPGroupsRequest
-        optional :domain, :string, 1
-        optional :cell_id, :string, 2
-      end
-
-      class ActualLRPGroupsByProcessGuidRequest
-        optional :process_guid, :string, 1
-      end
-
-      class ActualLRPGroupByProcessGuidAndIndexRequest
-        optional :process_guid, :string, 1
-        optional :index, :int32, 2
-      end
-
-      class ClaimActualLRPRequest
-        optional :process_guid, :string, 1
-        optional :index, :int32, 2
-        optional :actual_lrp_instance_key, ActualLRPInstanceKey, 3
-      end
-
-      class StartActualLRPRequest
-        optional :actual_lrp_key, ActualLRPKey, 1
-        optional :actual_lrp_instance_key, ActualLRPInstanceKey, 2
-        optional :actual_lrp_net_info, ActualLRPNetInfo, 3
-      end
-
-      class CrashActualLRPRequest
-        optional :actual_lrp_key, ActualLRPKey, 1
-        optional :actual_lrp_instance_key, ActualLRPInstanceKey, 2
-        optional :error_message, :string, 3
-      end
-
-      class FailActualLRPRequest
-        optional :actual_lrp_key, ActualLRPKey, 1
-        optional :error_message, :string, 2
-      end
-
-      class RetireActualLRPRequest
-        optional :actual_lrp_key, ActualLRPKey, 1
-      end
-
-      class RemoveActualLRPRequest
-        optional :process_guid, :string, 1
-        optional :index, :int32, 2
-        optional :actual_lrp_instance_key, ActualLRPInstanceKey, 3
-      end
     end
+
   end
+
 end
+

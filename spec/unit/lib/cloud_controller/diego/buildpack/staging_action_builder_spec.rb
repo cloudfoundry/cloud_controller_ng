@@ -41,10 +41,11 @@ module VCAP::CloudController
           }
         end
         let(:buildpacks) { [] }
+        let(:generated_environment) { [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'generated-environment', value: 'generated-value')] }
 
         before do
           allow(LifecycleBundleUriGenerator).to receive(:uri).with('the-buildpack-bundle').and_return('generated-uri')
-          allow(BbsEnvironmentBuilder).to receive(:build).with(env).and_return('generated-environment')
+          allow(BbsEnvironmentBuilder).to receive(:build).with(env).and_return(generated_environment)
         end
 
         describe '#action' do
@@ -96,7 +97,7 @@ module VCAP::CloudController
               ],
               user:            'vcap',
               resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: 4),
-              env:             'generated-environment',
+              env:             generated_environment,
             )
           end
 

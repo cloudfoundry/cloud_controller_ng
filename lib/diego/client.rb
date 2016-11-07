@@ -20,11 +20,10 @@ module Diego
     end
 
     def desire_task(task_definition:, domain:, task_guid:)
-      request         = Bbs::Models::DesireTaskRequest.new(task_definition: task_definition, domain: domain, task_guid: task_guid)
-      encoded_request = protobuf_encode!(request)
+      request = protobuf_encode!({ task_definition: task_definition, domain: domain, task_guid: task_guid }, Bbs::Models::DesireTaskRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::DESIRE_TASK, encoded_request, PROTOBUF_HEADER)
+        client.post(Routes::DESIRE_TASK, request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -32,11 +31,10 @@ module Diego
     end
 
     def task_by_guid(task_guid)
-      request         = Bbs::Models::TaskByGuidRequest.new(task_guid: task_guid)
-      encoded_request = protobuf_encode!(request)
+      request = protobuf_encode!({ task_guid: task_guid }, Bbs::Models::TaskByGuidRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::TASK_BY_GUID, encoded_request, PROTOBUF_HEADER)
+        client.post(Routes::TASK_BY_GUID, request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -44,11 +42,10 @@ module Diego
     end
 
     def tasks(domain: nil, cell_id: nil)
-      request         = Bbs::Models::TasksRequest.new(domain: domain, cell_id: cell_id)
-      encoded_request = protobuf_encode!(request)
+      request = protobuf_encode!({ domain: domain, cell_id: cell_id }, Bbs::Models::TasksRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::LIST_TASKS, encoded_request, PROTOBUF_HEADER)
+        client.post(Routes::LIST_TASKS, request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -56,11 +53,10 @@ module Diego
     end
 
     def cancel_task(task_guid)
-      request         = Bbs::Models::TaskGuidRequest.new(task_guid: task_guid)
-      encoded_request = protobuf_encode!(request)
+      request = protobuf_encode!({ task_guid: task_guid }, Bbs::Models::TaskGuidRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::CANCEL_TASK, encoded_request, PROTOBUF_HEADER)
+        client.post(Routes::CANCEL_TASK, request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -79,8 +75,8 @@ module Diego
 
     attr_reader :client
 
-    def protobuf_encode!(object)
-      object.encode.to_s
+    def protobuf_encode!(object, encoder)
+      encoder.encode(object)
     rescue => e
       raise EncodeError.new(e.message)
     end

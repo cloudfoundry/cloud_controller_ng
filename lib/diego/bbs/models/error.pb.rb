@@ -1,52 +1,72 @@
-## Generated from error.proto for models
-require "beefcake"
+# encoding: utf-8
 
+##
+# This file is auto-generated. DO NOT EDIT!
+#
+require 'protobuf/message'
+
+
+##
+# Imports
+#
+require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
 
 module Diego
   module Bbs
     module Models
 
-      class Error
-        include Beefcake::Message
-
-        module Type
-          UnknownError                            = 0
-          InvalidDomain                           = 1
-          UnkownVersion                           = 2
-          InvalidRecord                           = 3
-          InvalidRequest                          = 4
-          InvalidResponse                         = 5
-          InvalidProtobufMessage                  = 6
-          InvalidJSON                             = 7
-          FailedToOpenEnvelope                    = 8
-          InvalidStateTransition                  = 9
-          Unauthorized                            = 10
-          ResourceConflict                        = 11
-          ResourceExists                          = 12
-          ResourceNotFound                        = 13
-          RouterError                             = 14
-          ActualLRPCannotBeClaimed                = 15
-          ActualLRPCannotBeStarted                = 16
-          ActualLRPCannotBeCrashed                = 17
-          ActualLRPCannotBeFailed                 = 18
-          ActualLRPCannotBeRemoved                = 19
-          ActualLRPCannotBeStopped                = 20
-          ActualLRPCannotBeUnclaimed              = 21
-          ActualLRPCannotBeEvacuated              = 22
-          DesiredLRPCannotBeUpdated               = 23
-          RunningOnDifferentCell                  = 24
-          DesiredLRPSchedulingInfoCannotBeUpdated = 25
-          GUIDGeneration                          = 26
-          Deserialize                             = 27
-          Deadlock                                = 28
-          Unrecoverable                           = 29
+      ##
+      # Message Classes
+      #
+      class Error < ::Protobuf::Message
+        class Type < ::Protobuf::Enum
+          define :UnknownError, 0
+          define :InvalidDomain, 1
+          define :UnkownVersion, 2
+          define :InvalidRecord, 3
+          define :InvalidRequest, 4
+          define :InvalidResponse, 5
+          define :InvalidProtobufMessage, 6
+          define :InvalidJSON, 7
+          define :FailedToOpenEnvelope, 8
+          define :InvalidStateTransition, 9
+          define :Unauthorized, 10
+          define :ResourceConflict, 11
+          define :ResourceExists, 12
+          define :ResourceNotFound, 13
+          define :RouterError, 14
+          define :ActualLRPCannotBeClaimed, 15
+          define :ActualLRPCannotBeStarted, 16
+          define :ActualLRPCannotBeCrashed, 17
+          define :ActualLRPCannotBeFailed, 18
+          define :ActualLRPCannotBeRemoved, 19
+          define :ActualLRPCannotBeStopped, 20
+          define :ActualLRPCannotBeUnclaimed, 21
+          define :ActualLRPCannotBeEvacuated, 22
+          define :DesiredLRPCannotBeUpdated, 23
+          define :RunningOnDifferentCell, 24
+          define :DesiredLRPSchedulingInfoCannotBeUpdated, 25
+          define :GUIDGeneration, 26
+          define :Deserialize, 27
+          define :Deadlock, 28
+          define :Unrecoverable, 29
         end
+
       end
 
+
+
+      ##
+      # Message Fields
+      #
       class Error
-        optional :type, Error::Type, 1
-        optional :message, :string, 2
+        optional ::Diego::Bbs::Models::Error::Type, :type, 1
+        optional :string, :message, 2
       end
+
     end
+
   end
+
 end
+

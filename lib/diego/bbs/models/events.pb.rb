@@ -1,72 +1,74 @@
-## Generated from events.proto for models
-require "beefcake"
+# encoding: utf-8
 
+##
+# This file is auto-generated. DO NOT EDIT!
+#
+require 'protobuf/message'
+
+
+##
+# Imports
+#
+require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
+require 'actual_lrp.pb'
+require 'desired_lrp.pb'
 
 module Diego
   module Bbs
     module Models
 
+      ##
+      # Message Classes
+      #
+      class ActualLRPCreatedEvent < ::Protobuf::Message; end
+      class ActualLRPChangedEvent < ::Protobuf::Message; end
+      class ActualLRPRemovedEvent < ::Protobuf::Message; end
+      class DesiredLRPCreatedEvent < ::Protobuf::Message; end
+      class DesiredLRPChangedEvent < ::Protobuf::Message; end
+      class DesiredLRPRemovedEvent < ::Protobuf::Message; end
+      class ActualLRPCrashedEvent < ::Protobuf::Message; end
+
+
+      ##
+      # Message Fields
+      #
       class ActualLRPCreatedEvent
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::ActualLRPGroup, :actual_lrp_group, 1
       end
 
       class ActualLRPChangedEvent
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::ActualLRPGroup, :before, 1
+        optional ::Diego::Bbs::Models::ActualLRPGroup, :after, 2
       end
 
       class ActualLRPRemovedEvent
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::ActualLRPGroup, :actual_lrp_group, 1
       end
 
       class DesiredLRPCreatedEvent
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::DesiredLRP, :desired_lrp, 1
       end
 
       class DesiredLRPChangedEvent
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::DesiredLRP, :before, 1
+        optional ::Diego::Bbs::Models::DesiredLRP, :after, 2
       end
 
       class DesiredLRPRemovedEvent
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::DesiredLRP, :desired_lrp, 1
       end
 
       class ActualLRPCrashedEvent
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::ActualLRPKey, :actual_lrp_key, 1
+        optional ::Diego::Bbs::Models::ActualLRPInstanceKey, :actual_lrp_instance_key, 2
+        optional :int32, :crash_count, 3
+        optional :string, :crash_reason, 4
+        optional :int64, :since, 5
       end
 
-      class ActualLRPCreatedEvent
-        optional :actual_lrp_group, ActualLRPGroup, 1
-      end
-
-      class ActualLRPChangedEvent
-        optional :before, ActualLRPGroup, 1
-        optional :after, ActualLRPGroup, 2
-      end
-
-      class ActualLRPRemovedEvent
-        optional :actual_lrp_group, ActualLRPGroup, 1
-      end
-
-      class DesiredLRPCreatedEvent
-        optional :desired_lrp, DesiredLRP, 1
-      end
-
-      class DesiredLRPChangedEvent
-        optional :before, DesiredLRP, 1
-        optional :after, DesiredLRP, 2
-      end
-
-      class DesiredLRPRemovedEvent
-        optional :desired_lrp, DesiredLRP, 1
-      end
-
-      class ActualLRPCrashedEvent
-        optional :actual_lrp_key, ActualLRPKey, 1
-        optional :actual_lrp_instance_key, ActualLRPInstanceKey, 2
-        optional :crash_count, :int32, 3
-        optional :crash_reason, :string, 4
-        optional :since, :int64, 5
-      end
     end
+
   end
+
 end
+

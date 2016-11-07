@@ -1,140 +1,122 @@
-## Generated from task_requests.proto for models
-require "beefcake"
+# encoding: utf-8
+
+##
+# This file is auto-generated. DO NOT EDIT!
+#
+require 'protobuf/message'
+
+
+##
+# Imports
+#
+require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
+require 'task.pb'
+require 'error.pb'
 
 module Diego
   module Bbs
     module Models
 
+      ##
+      # Message Classes
+      #
+      class TaskLifecycleResponse < ::Protobuf::Message; end
+      class DesireTaskRequest < ::Protobuf::Message; end
+      class StartTaskRequest < ::Protobuf::Message; end
+      class StartTaskResponse < ::Protobuf::Message; end
+      class FailTaskRequest < ::Protobuf::Message; end
+      class TaskGuidRequest < ::Protobuf::Message; end
+      class CompleteTaskRequest < ::Protobuf::Message; end
+      class TaskCallbackResponse < ::Protobuf::Message; end
+      class ConvergeTasksRequest < ::Protobuf::Message; end
+      class ConvergeTasksResponse < ::Protobuf::Message; end
+      class TasksRequest < ::Protobuf::Message; end
+      class TasksResponse < ::Protobuf::Message; end
+      class TaskByGuidRequest < ::Protobuf::Message; end
+      class TaskResponse < ::Protobuf::Message; end
+
+
+      ##
+      # Message Fields
+      #
       class TaskLifecycleResponse
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Error, :error, 1
       end
 
       class DesireTaskRequest
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::TaskDefinition, :task_definition, 1
+        optional :string, :task_guid, 2
+        optional :string, :domain, 3
       end
 
       class StartTaskRequest
-        include Beefcake::Message
+        optional :string, :task_guid, 1
+        optional :string, :cell_id, 2
       end
 
       class StartTaskResponse
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Error, :error, 1
+        optional :bool, :should_start, 2
       end
 
       class FailTaskRequest
-        include Beefcake::Message
+        optional :string, :task_guid, 1
+        optional :string, :failure_reason, 2
       end
 
       class TaskGuidRequest
-        include Beefcake::Message
+        optional :string, :task_guid, 1
       end
 
       class CompleteTaskRequest
-        include Beefcake::Message
+        optional :string, :task_guid, 1
+        optional :string, :cell_id, 2
+        optional :bool, :failed, 3
+        optional :string, :failure_reason, 4
+        optional :string, :result, 5
       end
 
       class TaskCallbackResponse
-        include Beefcake::Message
+        optional :string, :task_guid, 1
+        optional :bool, :failed, 2
+        optional :string, :failure_reason, 3
+        optional :string, :result, 4
+        optional :string, :annotation, 5
+        optional :int64, :created_at, 6
       end
 
       class ConvergeTasksRequest
-        include Beefcake::Message
+        optional :int64, :kick_task_duration, 1
+        optional :int64, :expire_pending_task_duration, 2
+        optional :int64, :expire_completed_task_duration, 3
       end
 
       class ConvergeTasksResponse
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Error, :error, 1
       end
 
       class TasksRequest
-        include Beefcake::Message
+        optional :string, :domain, 1
+        optional :string, :cell_id, 2
       end
 
       class TasksResponse
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Error, :error, 1
+        repeated ::Diego::Bbs::Models::Task, :tasks, 2
       end
 
       class TaskByGuidRequest
-        include Beefcake::Message
+        optional :string, :task_guid, 1
       end
 
       class TaskResponse
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Error, :error, 1
+        optional ::Diego::Bbs::Models::Task, :task, 2
       end
 
-      class TaskLifecycleResponse
-        optional :error, Error, 1
-      end
-
-      class DesireTaskRequest
-        optional :task_definition, TaskDefinition, 1
-        optional :task_guid, :string, 2
-        optional :domain, :string, 3
-      end
-
-      class StartTaskRequest
-        optional :task_guid, :string, 1
-        optional :cell_id, :string, 2
-      end
-
-      class StartTaskResponse
-        optional :error, Error, 1
-        optional :should_start, :bool, 2
-      end
-
-      class FailTaskRequest
-        optional :task_guid, :string, 1
-        optional :failure_reason, :string, 2
-      end
-
-      class TaskGuidRequest
-        optional :task_guid, :string, 1
-      end
-
-      class CompleteTaskRequest
-        optional :task_guid, :string, 1
-        optional :cell_id, :string, 2
-        optional :failed, :bool, 3
-        optional :failure_reason, :string, 4
-        optional :result, :string, 5
-      end
-
-      class TaskCallbackResponse
-        optional :task_guid, :string, 1
-        optional :failed, :bool, 2
-        optional :failure_reason, :string, 3
-        optional :result, :string, 4
-        optional :annotation, :string, 5
-        optional :created_at, :int64, 6
-      end
-
-      class ConvergeTasksRequest
-        optional :kick_task_duration, :int64, 1
-        optional :expire_pending_task_duration, :int64, 2
-        optional :expire_completed_task_duration, :int64, 3
-      end
-
-      class ConvergeTasksResponse
-        optional :error, Error, 1
-      end
-
-      class TasksRequest
-        optional :domain, :string, 1
-        optional :cell_id, :string, 2
-      end
-
-      class TasksResponse
-        optional :error, Error, 1
-        repeated :tasks, Task, 2
-      end
-
-      class TaskByGuidRequest
-        optional :task_guid, :string, 1
-      end
-
-      class TaskResponse
-        optional :error, Error, 1
-        optional :task, Task, 2
-      end
     end
+
   end
+
 end
+

@@ -1,19 +1,37 @@
-## Generated from environment_variables.proto for models
-require "beefcake"
+# encoding: utf-8
 
+##
+# This file is auto-generated. DO NOT EDIT!
+#
+require 'protobuf/message'
+
+
+##
+# Imports
+#
+require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
 
 module Diego
   module Bbs
     module Models
 
+      ##
+      # Message Classes
+      #
+      class EnvironmentVariable < ::Protobuf::Message; end
+
+
+      ##
+      # Message Fields
+      #
       class EnvironmentVariable
-        include Beefcake::Message
+        optional :string, :name, 1
+        optional :string, :value, 2
       end
 
-      class EnvironmentVariable
-        optional :name, :string, 1
-        optional :value, :string, 2
-      end
     end
+
   end
+
 end
+

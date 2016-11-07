@@ -1,45 +1,62 @@
-## Generated from volume_mount.proto for models
-require "beefcake"
+# encoding: utf-8
+
+##
+# This file is auto-generated. DO NOT EDIT!
+#
+require 'protobuf/message'
+
+
+##
+# Imports
+#
+require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
 
 module Diego
   module Bbs
     module Models
 
-      module DeprecatedBindMountMode
-        RO = 0
-        RW = 1
+      ##
+      # Enum Classes
+      #
+      class DeprecatedBindMountMode < ::Protobuf::Enum
+        define :RO, 0
+        define :RW, 1
       end
 
+
+      ##
+      # Message Classes
+      #
+      class SharedDevice < ::Protobuf::Message; end
+      class VolumeMount < ::Protobuf::Message; end
+      class VolumePlacement < ::Protobuf::Message; end
+
+
+      ##
+      # Message Fields
+      #
       class SharedDevice
-        include Beefcake::Message
+        optional :string, :volume_id, 1
+        optional :string, :mount_config, 2
       end
 
       class VolumeMount
-        include Beefcake::Message
+        optional :string, :deprecated_volume_id, 2, :deprecated => true
+        optional ::Diego::Bbs::Models::DeprecatedBindMountMode, :deprecated_mode, 4, :deprecated => true
+        optional :bytes, :deprecated_config, 5, :deprecated => true
+        optional :string, :driver, 1
+        optional :string, :container_dir, 3
+        optional :string, :mode, 6
+        optional ::Diego::Bbs::Models::SharedDevice, :shared, 7
       end
 
       class VolumePlacement
-        include Beefcake::Message
+        repeated :string, :driver_names, 1
       end
 
-      class SharedDevice
-        optional :volume_id, :string, 1
-        optional :mount_config, :string, 2
-      end
-
-      class VolumeMount
-        optional :deprecated_volume_id, :string, 2
-        optional :deprecated_mode, DeprecatedBindMountMode, 4
-        optional :deprecated_config, :bytes, 5
-        optional :driver, :string, 1
-        optional :container_dir, :string, 3
-        optional :mode, :string, 6
-        optional :shared, SharedDevice, 7
-      end
-
-      class VolumePlacement
-        repeated :driver_names, :string, 1
-      end
     end
+
   end
+
 end
+

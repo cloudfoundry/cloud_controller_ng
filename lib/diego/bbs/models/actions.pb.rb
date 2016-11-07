@@ -1,138 +1,125 @@
-## Generated from actions.proto for models
-require "beefcake"
+# encoding: utf-8
 
-require_relative 'environment_variables.pb'
+##
+# This file is auto-generated. DO NOT EDIT!
+#
+require 'protobuf/message'
 
+
+##
+# Imports
+#
+require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
+require 'environment_variables.pb'
 
 module Diego
   module Bbs
     module Models
 
+      ##
+      # Message Classes
+      #
+      class Action < ::Protobuf::Message; end
+      class DownloadAction < ::Protobuf::Message; end
+      class UploadAction < ::Protobuf::Message; end
+      class RunAction < ::Protobuf::Message; end
+      class TimeoutAction < ::Protobuf::Message; end
+      class EmitProgressAction < ::Protobuf::Message; end
+      class TryAction < ::Protobuf::Message; end
+      class ParallelAction < ::Protobuf::Message; end
+      class SerialAction < ::Protobuf::Message; end
+      class CodependentAction < ::Protobuf::Message; end
+      class ResourceLimits < ::Protobuf::Message; end
+
+
+      ##
+      # Message Fields
+      #
       class Action
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::DownloadAction, :download_action, 1
+        optional ::Diego::Bbs::Models::UploadAction, :upload_action, 2
+        optional ::Diego::Bbs::Models::RunAction, :run_action, 3
+        optional ::Diego::Bbs::Models::TimeoutAction, :timeout_action, 4
+        optional ::Diego::Bbs::Models::EmitProgressAction, :emit_progress_action, 5
+        optional ::Diego::Bbs::Models::TryAction, :try_action, 6
+        optional ::Diego::Bbs::Models::ParallelAction, :parallel_action, 7
+        optional ::Diego::Bbs::Models::SerialAction, :serial_action, 8
+        optional ::Diego::Bbs::Models::CodependentAction, :codependent_action, 9
       end
 
       class DownloadAction
-        include Beefcake::Message
+        optional :string, :artifact, 1
+        optional :string, :from, 2
+        optional :string, :to, 3
+        optional :string, :cache_key, 4
+        optional :string, :log_source, 5
+        optional :string, :user, 6
+        optional :string, :checksum_algorithm, 7
+        optional :string, :checksum_value, 8
       end
 
       class UploadAction
-        include Beefcake::Message
+        optional :string, :artifact, 1
+        optional :string, :from, 2
+        optional :string, :to, 3
+        optional :string, :log_source, 4
+        optional :string, :user, 5
       end
 
       class RunAction
-        include Beefcake::Message
+        optional :string, :path, 1
+        repeated :string, :args, 2
+        optional :string, :dir, 3
+        repeated ::Diego::Bbs::Models::EnvironmentVariable, :env, 4
+        optional ::Diego::Bbs::Models::ResourceLimits, :resource_limits, 5
+        optional :string, :user, 6
+        optional :string, :log_source, 7
+        optional :bool, :suppress_log_output, 8
       end
 
       class TimeoutAction
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Action, :action, 1
+        optional :int64, :deprecated_timeout_ns, 2, :deprecated => true
+        optional :string, :log_source, 3
+        optional :int64, :timeout_ms, 4
       end
 
       class EmitProgressAction
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Action, :action, 1
+        optional :string, :start_message, 2
+        optional :string, :success_message, 3
+        optional :string, :failure_message_prefix, 4
+        optional :string, :log_source, 5
       end
 
       class TryAction
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::Action, :action, 1
+        optional :string, :log_source, 2
       end
 
       class ParallelAction
-        include Beefcake::Message
+        repeated ::Diego::Bbs::Models::Action, :actions, 1
+        optional :string, :log_source, 2
       end
 
       class SerialAction
-        include Beefcake::Message
+        repeated ::Diego::Bbs::Models::Action, :actions, 1
+        optional :string, :log_source, 2
       end
 
       class CodependentAction
-        include Beefcake::Message
+        repeated ::Diego::Bbs::Models::Action, :actions, 1
+        optional :string, :log_source, 2
       end
 
       class ResourceLimits
-        include Beefcake::Message
+        optional :uint64, :nofile, 1
+        optional :uint64, :nproc, 2
       end
 
-      class Action
-        optional :download_action, DownloadAction, 1
-        optional :upload_action, UploadAction, 2
-        optional :run_action, RunAction, 3
-        optional :timeout_action, TimeoutAction, 4
-        optional :emit_progress_action, EmitProgressAction, 5
-        optional :try_action, TryAction, 6
-        optional :parallel_action, ParallelAction, 7
-        optional :serial_action, SerialAction, 8
-        optional :codependent_action, CodependentAction, 9
-      end
-
-      class DownloadAction
-        optional :artifact, :string, 1
-        optional :from, :string, 2
-        optional :to, :string, 3
-        optional :cache_key, :string, 4
-        optional :log_source, :string, 5
-        optional :user, :string, 6
-        optional :checksum_algorithm, :string, 7
-        optional :checksum_value, :string, 8
-      end
-
-      class UploadAction
-        optional :artifact, :string, 1
-        optional :from, :string, 2
-        optional :to, :string, 3
-        optional :log_source, :string, 4
-        optional :user, :string, 5
-      end
-
-      class RunAction
-        optional :path, :string, 1
-        repeated :args, :string, 2
-        optional :dir, :string, 3
-        repeated :env, EnvironmentVariable, 4
-        optional :resource_limits, ResourceLimits, 5
-        optional :user, :string, 6
-        optional :log_source, :string, 7
-        optional :suppress_log_output, :bool, 8
-      end
-
-      class TimeoutAction
-        optional :action, Action, 1
-        optional :deprecated_timeout_ns, :int64, 2
-        optional :log_source, :string, 3
-        optional :timeout_ms, :int64, 4
-      end
-
-      class EmitProgressAction
-        optional :action, Action, 1
-        optional :start_message, :string, 2
-        optional :success_message, :string, 3
-        optional :failure_message_prefix, :string, 4
-        optional :log_source, :string, 5
-      end
-
-      class TryAction
-        optional :action, Action, 1
-        optional :log_source, :string, 2
-      end
-
-      class ParallelAction
-        repeated :actions, Action, 1
-        optional :log_source, :string, 2
-      end
-
-      class SerialAction
-        repeated :actions, Action, 1
-        optional :log_source, :string, 2
-      end
-
-      class CodependentAction
-        repeated :actions, Action, 1
-        optional :log_source, :string, 2
-      end
-
-      class ResourceLimits
-        optional :nofile, :uint64, 1
-        optional :nproc, :uint64, 2
-      end
     end
+
   end
+
 end
+

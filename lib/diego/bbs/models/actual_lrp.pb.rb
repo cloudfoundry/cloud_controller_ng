@@ -1,74 +1,76 @@
-## Generated from actual_lrp.proto for models
-require "beefcake"
+# encoding: utf-8
 
-require_relative 'modification_tag.pb'
+##
+# This file is auto-generated. DO NOT EDIT!
+#
+require 'protobuf/message'
 
+
+##
+# Imports
+#
+require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
+require 'modification_tag.pb'
 
 module Diego
   module Bbs
     module Models
 
+      ##
+      # Message Classes
+      #
+      class ActualLRPGroup < ::Protobuf::Message; end
+      class PortMapping < ::Protobuf::Message; end
+      class ActualLRPKey < ::Protobuf::Message; end
+      class ActualLRPInstanceKey < ::Protobuf::Message; end
+      class ActualLRPNetInfo < ::Protobuf::Message; end
+      class ActualLRP < ::Protobuf::Message; end
+
+
+      ##
+      # Message Fields
+      #
       class ActualLRPGroup
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::ActualLRP, :instance, 1
+        optional ::Diego::Bbs::Models::ActualLRP, :evacuating, 2
       end
 
       class PortMapping
-        include Beefcake::Message
+        optional :uint32, :container_port, 1
+        optional :uint32, :host_port, 2
       end
 
       class ActualLRPKey
-        include Beefcake::Message
+        optional :string, :process_guid, 1
+        optional :int32, :index, 2
+        optional :string, :domain, 3
       end
 
       class ActualLRPInstanceKey
-        include Beefcake::Message
+        optional :string, :instance_guid, 1
+        optional :string, :cell_id, 2
       end
 
       class ActualLRPNetInfo
-        include Beefcake::Message
+        optional :string, :address, 1
+        repeated ::Diego::Bbs::Models::PortMapping, :ports, 2
       end
 
       class ActualLRP
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::ActualLRPKey, :actual_lrp_key, 1
+        optional ::Diego::Bbs::Models::ActualLRPInstanceKey, :actual_lrp_instance_key, 2
+        optional ::Diego::Bbs::Models::ActualLRPNetInfo, :actual_lrp_net_info, 3
+        optional :int32, :crash_count, 4
+        optional :string, :crash_reason, 5
+        optional :string, :state, 6
+        optional :string, :placement_error, 7
+        optional :int64, :since, 8
+        optional ::Diego::Bbs::Models::ModificationTag, :modification_tag, 9
       end
 
-      class ActualLRPGroup
-        optional :instance, ActualLRP, 1
-        optional :evacuating, ActualLRP, 2
-      end
-
-      class PortMapping
-        optional :container_port, :uint32, 1
-        optional :host_port, :uint32, 2
-      end
-
-      class ActualLRPKey
-        optional :process_guid, :string, 1
-        optional :index, :int32, 2
-        optional :domain, :string, 3
-      end
-
-      class ActualLRPInstanceKey
-        optional :instance_guid, :string, 1
-        optional :cell_id, :string, 2
-      end
-
-      class ActualLRPNetInfo
-        optional :address, :string, 1
-        repeated :ports, PortMapping, 2
-      end
-
-      class ActualLRP
-        optional :actual_lrp_key, ActualLRPKey, 1
-        optional :actual_lrp_instance_key, ActualLRPInstanceKey, 2
-        optional :actual_lrp_net_info, ActualLRPNetInfo, 3
-        optional :crash_count, :int32, 4
-        optional :crash_reason, :string, 5
-        optional :state, :string, 6
-        optional :placement_error, :string, 7
-        optional :since, :int64, 8
-        optional :modification_tag, ModificationTag, 9
-      end
     end
+
   end
+
 end
+

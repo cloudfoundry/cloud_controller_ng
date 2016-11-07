@@ -1,141 +1,140 @@
-## Generated from desired_lrp.proto for models
-require "beefcake"
+# encoding: utf-8
 
-require_relative 'actions.pb'
-require_relative 'cached_dependency.pb'
-require_relative 'environment_variables.pb'
-require_relative 'modification_tag.pb'
-require_relative 'network.pb'
-require_relative 'security_group.pb'
-require_relative 'volume_mount.pb'
+##
+# This file is auto-generated. DO NOT EDIT!
+#
+require 'protobuf/message'
 
+
+##
+# Imports
+#
+require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
+require 'modification_tag.pb'
+require 'actions.pb'
+require 'cached_dependency.pb'
+require 'security_group.pb'
+require 'environment_variables.pb'
+require 'volume_mount.pb'
+require 'network.pb'
 
 module Diego
   module Bbs
     module Models
 
+      ##
+      # Message Classes
+      #
+      class DesiredLRPSchedulingInfo < ::Protobuf::Message; end
+      class DesiredLRPRunInfo < ::Protobuf::Message; end
+      class Proto_routes < ::Protobuf::Message
+        class RoutesEntry < ::Protobuf::Message; end
+
+      end
+
+      class DesiredLRPUpdate < ::Protobuf::Message; end
+      class DesiredLRPKey < ::Protobuf::Message; end
+      class DesiredLRPResource < ::Protobuf::Message; end
+      class DesiredLRP < ::Protobuf::Message; end
+
+
+      ##
+      # Message Fields
+      #
       class DesiredLRPSchedulingInfo
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::DesiredLRPKey, :desired_lrp_key, 1
+        optional :string, :annotation, 2
+        optional :int32, :instances, 3
+        optional ::Diego::Bbs::Models::DesiredLRPResource, :desired_lrp_resource, 4
+        optional :bytes, :routes, 5
+        optional ::Diego::Bbs::Models::ModificationTag, :modification_tag, 6
+        optional ::Diego::Bbs::Models::VolumePlacement, :volume_placement, 7
+        repeated :string, :PlacementTags, 8
       end
 
       class DesiredLRPRunInfo
-        include Beefcake::Message
+        optional ::Diego::Bbs::Models::DesiredLRPKey, :desired_lrp_key, 1
+        repeated ::Diego::Bbs::Models::EnvironmentVariable, :environment_variables, 2
+        optional ::Diego::Bbs::Models::Action, :setup, 3
+        optional ::Diego::Bbs::Models::Action, :action, 4
+        optional ::Diego::Bbs::Models::Action, :monitor, 5
+        optional :uint32, :deprecated_start_timeout_s, 6, :deprecated => true
+        optional :bool, :privileged, 7
+        optional :uint32, :cpu_weight, 8
+        repeated :uint32, :ports, 9
+        repeated ::Diego::Bbs::Models::SecurityGroupRule, :egress_rules, 10
+        optional :string, :log_source, 11
+        optional :string, :metrics_guid, 12
+        optional :int64, :created_at, 13
+        repeated ::Diego::Bbs::Models::CachedDependency, :cached_dependencies, 14
+        optional :string, :legacy_download_user, 15
+        optional :string, :trusted_system_certificates_path, 16
+        repeated ::Diego::Bbs::Models::VolumeMount, :volume_mounts, 17
+        optional ::Diego::Bbs::Models::Network, :network, 18
+        optional :int64, :start_timeout_ms, 19
       end
 
-      class ProtoRoutes
-        include Beefcake::Message
-
+      class Proto_routes
         class RoutesEntry
-          include Beefcake::Message
+          optional :string, :key, 1
+          optional :bytes, :value, 2
         end
+
+        repeated ::Diego::Bbs::Models::Proto_routes::RoutesEntry, :routes, 1
       end
 
       class DesiredLRPUpdate
-        include Beefcake::Message
+        optional :int32, :instances, 1
+        optional :bytes, :routes, 2
+        optional :string, :annotation, 3
       end
 
       class DesiredLRPKey
-        include Beefcake::Message
+        optional :string, :process_guid, 1
+        optional :string, :domain, 2
+        optional :string, :log_guid, 3
       end
 
       class DesiredLRPResource
-        include Beefcake::Message
+        optional :int32, :memory_mb, 1
+        optional :int32, :disk_mb, 2
+        optional :string, :root_fs, 3
       end
 
       class DesiredLRP
-        include Beefcake::Message
+        optional :string, :process_guid, 1
+        optional :string, :domain, 2
+        optional :string, :root_fs, 3
+        optional :int32, :instances, 4
+        repeated ::Diego::Bbs::Models::EnvironmentVariable, :environment_variables, 5
+        optional ::Diego::Bbs::Models::Action, :setup, 6
+        optional ::Diego::Bbs::Models::Action, :action, 7
+        optional :int64, :start_timeout_ms, 27
+        optional :uint32, :deprecated_start_timeout_s, 8, :deprecated => true
+        optional ::Diego::Bbs::Models::Action, :monitor, 9
+        optional :int32, :disk_mb, 10
+        optional :int32, :memory_mb, 11
+        optional :uint32, :cpu_weight, 12
+        optional :bool, :privileged, 13
+        repeated :uint32, :ports, 14
+        optional :bytes, :routes, 15
+        optional :string, :log_source, 16
+        optional :string, :log_guid, 17
+        optional :string, :metrics_guid, 18
+        optional :string, :annotation, 19
+        repeated ::Diego::Bbs::Models::SecurityGroupRule, :egress_rules, 20
+        optional ::Diego::Bbs::Models::ModificationTag, :modification_tag, 21
+        repeated ::Diego::Bbs::Models::CachedDependency, :cached_dependencies, 22
+        optional :string, :legacy_download_user, 23
+        optional :string, :trusted_system_certificates_path, 24
+        repeated ::Diego::Bbs::Models::VolumeMount, :volume_mounts, 25
+        optional ::Diego::Bbs::Models::Network, :network, 26
+        repeated :string, :PlacementTags, 28
       end
 
-      class DesiredLRPSchedulingInfo
-        optional :desired_lrp_key, DesiredLRPKey, 1
-        optional :annotation, :string, 2
-        optional :instances, :int32, 3
-        optional :desired_lrp_resource, DesiredLRPResource, 4
-        optional :routes, :bytes, 5
-        optional :modification_tag, ModificationTag, 6
-        optional :volume_placement, VolumePlacement, 7
-        repeated :PlacementTags, :string, 8
-      end
-
-      class DesiredLRPRunInfo
-        optional :desired_lrp_key, DesiredLRPKey, 1
-        repeated :environment_variables, EnvironmentVariable, 2
-        optional :setup, Action, 3
-        optional :action, Action, 4
-        optional :monitor, Action, 5
-        optional :deprecated_start_timeout_s, :uint32, 6
-        optional :privileged, :bool, 7
-        optional :cpu_weight, :uint32, 8
-        repeated :ports, :uint32, 9
-        repeated :egress_rules, SecurityGroupRule, 10
-        optional :log_source, :string, 11
-        optional :metrics_guid, :string, 12
-        optional :created_at, :int64, 13
-        repeated :cached_dependencies, CachedDependency, 14
-        optional :legacy_download_user, :string, 15
-        optional :trusted_system_certificates_path, :string, 16
-        repeated :volume_mounts, VolumeMount, 17
-        optional :network, Network, 18
-        optional :start_timeout_ms, :int64, 19
-      end
-
-      class ProtoRoutes
-
-        class RoutesEntry
-          optional :key, :string, 1
-          optional :value, :bytes, 2
-        end
-        repeated :routes, ProtoRoutes::RoutesEntry, 1
-      end
-
-      class DesiredLRPUpdate
-        optional :instances, :int32, 1
-        optional :routes, :bytes, 2
-        optional :annotation, :string, 3
-      end
-
-      class DesiredLRPKey
-        optional :process_guid, :string, 1
-        optional :domain, :string, 2
-        optional :log_guid, :string, 3
-      end
-
-      class DesiredLRPResource
-        optional :memory_mb, :int32, 1
-        optional :disk_mb, :int32, 2
-        optional :root_fs, :string, 3
-      end
-
-      class DesiredLRP
-        optional :process_guid, :string, 1
-        optional :domain, :string, 2
-        optional :root_fs, :string, 3
-        optional :instances, :int32, 4
-        repeated :environment_variables, EnvironmentVariable, 5
-        optional :setup, Action, 6
-        optional :action, Action, 7
-        optional :start_timeout_ms, :int64, 27
-        optional :deprecated_start_timeout_s, :uint32, 8
-        optional :monitor, Action, 9
-        optional :disk_mb, :int32, 10
-        optional :memory_mb, :int32, 11
-        optional :cpu_weight, :uint32, 12
-        optional :privileged, :bool, 13
-        repeated :ports, :uint32, 14
-        optional :routes, :bytes, 15
-        optional :log_source, :string, 16
-        optional :log_guid, :string, 17
-        optional :metrics_guid, :string, 18
-        optional :annotation, :string, 19
-        repeated :egress_rules, SecurityGroupRule, 20
-        optional :modification_tag, ModificationTag, 21
-        repeated :cached_dependencies, CachedDependency, 22
-        optional :legacy_download_user, :string, 23
-        optional :trusted_system_certificates_path, :string, 24
-        repeated :volume_mounts, VolumeMount, 25
-        optional :network, Network, 26
-        repeated :PlacementTags, :string, 28
-      end
     end
+
   end
+
 end
+

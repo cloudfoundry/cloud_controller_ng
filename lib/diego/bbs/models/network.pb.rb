@@ -1,27 +1,45 @@
-## Generated from network.proto for models
-require "beefcake"
+# encoding: utf-8
 
+##
+# This file is auto-generated. DO NOT EDIT!
+#
+require 'protobuf/message'
+
+
+##
+# Imports
+#
+require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
 
 module Diego
   module Bbs
     module Models
 
-      class Network
-        include Beefcake::Message
+      ##
+      # Message Classes
+      #
+      class Network < ::Protobuf::Message
+        class PropertiesEntry < ::Protobuf::Message; end
 
-        class PropertiesEntry
-          include Beefcake::Message
-        end
       end
 
-      class Network
 
+
+      ##
+      # Message Fields
+      #
+      class Network
         class PropertiesEntry
-          optional :key, :string, 1
-          optional :value, :string, 2
+          optional :string, :key, 1
+          optional :string, :value, 2
         end
-        repeated :properties, Network::PropertiesEntry, 1
+
+        repeated ::Diego::Bbs::Models::Network::PropertiesEntry, :properties, 1
       end
+
     end
+
   end
+
 end
+

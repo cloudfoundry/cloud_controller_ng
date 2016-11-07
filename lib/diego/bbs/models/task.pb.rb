@@ -1,63 +1,86 @@
-## Generated from task.proto for models
-require "beefcake"
+# encoding: utf-8
 
+##
+# This file is auto-generated. DO NOT EDIT!
+#
+require 'protobuf/message'
+
+
+##
+# Imports
+#
+require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
+require 'actions.pb'
+require 'environment_variables.pb'
+require 'security_group.pb'
+require 'cached_dependency.pb'
+require 'volume_mount.pb'
+require 'network.pb'
 
 module Diego
   module Bbs
     module Models
 
-      class TaskDefinition
-        include Beefcake::Message
-      end
-
-      class Task
-        include Beefcake::Message
-
-        module State
-          Invalid   = 0
-          Pending   = 1
-          Running   = 2
-          Completed = 3
-          Resolving = 4
+      ##
+      # Message Classes
+      #
+      class TaskDefinition < ::Protobuf::Message; end
+      class Task < ::Protobuf::Message
+        class State < ::Protobuf::Enum
+          define :Invalid, 0
+          define :Pending, 1
+          define :Running, 2
+          define :Completed, 3
+          define :Resolving, 4
         end
+
       end
 
+
+
+      ##
+      # Message Fields
+      #
       class TaskDefinition
-        optional :root_fs, :string, 1
-        repeated :environment_variables, EnvironmentVariable, 2
-        optional :action, Action, 3
-        optional :disk_mb, :int32, 4
-        optional :memory_mb, :int32, 5
-        optional :cpu_weight, :uint32, 6
-        optional :privileged, :bool, 7
-        optional :log_source, :string, 8
-        optional :log_guid, :string, 9
-        optional :metrics_guid, :string, 10
-        optional :result_file, :string, 11
-        optional :completion_callback_url, :string, 12
-        optional :annotation, :string, 13
-        repeated :egress_rules, SecurityGroupRule, 14
-        repeated :cached_dependencies, CachedDependency, 15
-        optional :legacy_download_user, :string, 16
-        optional :trusted_system_certificates_path, :string, 17
-        repeated :volume_mounts, VolumeMount, 18
-        optional :network, Network, 19
-        repeated :PlacementTags, :string, 20
+        optional :string, :root_fs, 1
+        repeated ::Diego::Bbs::Models::EnvironmentVariable, :environment_variables, 2
+        optional ::Diego::Bbs::Models::Action, :action, 3
+        optional :int32, :disk_mb, 4
+        optional :int32, :memory_mb, 5
+        optional :uint32, :cpu_weight, 6
+        optional :bool, :privileged, 7
+        optional :string, :log_source, 8
+        optional :string, :log_guid, 9
+        optional :string, :metrics_guid, 10
+        optional :string, :result_file, 11
+        optional :string, :completion_callback_url, 12
+        optional :string, :annotation, 13
+        repeated ::Diego::Bbs::Models::SecurityGroupRule, :egress_rules, 14
+        repeated ::Diego::Bbs::Models::CachedDependency, :cached_dependencies, 15
+        optional :string, :legacy_download_user, 16
+        optional :string, :trusted_system_certificates_path, 17
+        repeated ::Diego::Bbs::Models::VolumeMount, :volume_mounts, 18
+        optional ::Diego::Bbs::Models::Network, :network, 19
+        repeated :string, :PlacementTags, 20
       end
 
       class Task
-        optional :task_definition, TaskDefinition, 1
-        optional :task_guid, :string, 2
-        optional :domain, :string, 3
-        optional :created_at, :int64, 4
-        optional :updated_at, :int64, 5
-        optional :first_completed_at, :int64, 6
-        optional :state, Task::State, 7
-        optional :cell_id, :string, 8
-        optional :result, :string, 9
-        optional :failed, :bool, 10
-        optional :failure_reason, :string, 11
+        optional ::Diego::Bbs::Models::TaskDefinition, :task_definition, 1
+        optional :string, :task_guid, 2
+        optional :string, :domain, 3
+        optional :int64, :created_at, 4
+        optional :int64, :updated_at, 5
+        optional :int64, :first_completed_at, 6
+        optional ::Diego::Bbs::Models::Task::State, :state, 7
+        optional :string, :cell_id, 8
+        optional :string, :result, 9
+        optional :bool, :failed, 10
+        optional :string, :failure_reason, 11
       end
+
     end
+
   end
+
 end
+

@@ -298,6 +298,7 @@ GEM
     membrane (1.1.0)
     memoist (0.15.0)
     method_source (0.8.2)
+    middleware (0.1.0)
     mime-types (2.6.2)
     mini_portile2 (2.1.0)
     minitest (5.9.1)
@@ -319,6 +320,11 @@ GEM
     pg (0.19.0)
     posix-spawn (0.3.11)
     powerpack (0.1.1)
+    protobuf (3.6.12)
+      activesupport (>= 3.2)
+      middleware
+      thor
+      thread_safe
     pry (0.10.4)
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
@@ -472,7 +478,6 @@ DEPENDENCIES
   addressable
   allowy
   awesome_print
-  beefcake
   bits_service_client!
   byebug
   cf-message-bus (~> 0.3.0)
@@ -500,6 +505,7 @@ DEPENDENCIES
   nokogiri (~> 1.6.8)
   parallel_tests
   pg (= 0.19.0)
+  protobuf
   pry-byebug
   public_suffix
   rack-test
