@@ -6,6 +6,7 @@ module VCAP::CloudController
   RSpec.describe IsolationSegmentUnassign do
     let(:assigner) { IsolationSegmentAssign.new }
     let(:isolation_segment_model) { IsolationSegmentModel.make }
+    let(:isolation_segment_model_2) { IsolationSegmentModel.make }
     let(:org) { Organization.make }
     let(:org2) { Organization.make }
 
@@ -48,14 +49,38 @@ module VCAP::CloudController
           org.update(default_isolation_segment_model: isolation_segment_model)
         end
 
-        it 'can remove the Organization from the isolation segment' do
-          subject.unassign(isolation_segment_model, [org])
-          expect(isolation_segment_model.organizations).to eq([org2])
+        context 'when there is only one isolation segments for an organization' do
+          it 'can remove the Organization from the Isolation Segment' do
+            subject.unassign(isolation_segment_model, [org])
+            expect(isolation_segment_model.organizations).to eq([org2])
+          end
+
+          it "removes the organization's default Isolation Segment" do
+            subject.unassign(isolation_segment_model, [org])
+            expect(org.default_isolation_segment_model).to be_nil
+          end
         end
 
-        it "removes the organization's default Isolation Segment" do
-          subject.unassign(isolation_segment_model, [org])
-          expect(org.default_isolation_segment_model).to be_nil
+        context 'when there are multiple IS for an organization' do
+          before do
+            assigner.assign(isolation_segment_model_2, [org])
+          end
+
+          it 'cannot remove the Organization from the isolation segment' do
+            expect {
+              subject.unassign(isolation_segment_model, [org])
+            }.to raise_error IsolationSegmentUnassign::IsolationSegmentUnassignError, /Please change the default Isolation Segment/
+
+            expect(isolation_segment_model.organizations).to contain_exactly(org, org2)
+          end
+
+          it "does not remove the organization's default Isolation Segment" do
+            expect {
+              subject.unassign(isolation_segment_model, [org])
+            }.to raise_error IsolationSegmentUnassign::IsolationSegmentUnassignError, /Please change the default Isolation Segment/
+
+            expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+          end
         end
 
         context 'and the Organization has a space assigned' do
@@ -76,7 +101,7 @@ module VCAP::CloudController
                 subject.unassign(isolation_segment_model, [org])
               }.to raise_error IsolationSegmentUnassign::IsolationSegmentUnassignError, 'Please delete the Space associations for your Isolation Segment.'
 
-              expect(isolation_segment_model.organizations).to include(org, org2)
+              expect(isolation_segment_model.organizations).to contain_exactly(org, org2)
             end
           end
 
@@ -91,7 +116,7 @@ module VCAP::CloudController
                   subject.unassign(isolation_segment_model, [org])
                 }.to raise_error CloudController::Errors::ApiError, /Removing default Isolation Segment could not be completed/
 
-                expect(isolation_segment_model.organizations).to include(org, org2)
+                expect(isolation_segment_model.organizations).to contain_exactly(org, org2)
               end
             end
           end
@@ -116,7 +141,7 @@ module VCAP::CloudController
               subject.unassign(isolation_segment_model, [org])
             }.to raise_error IsolationSegmentUnassign::IsolationSegmentUnassignError, 'Please delete the Space associations for your Isolation Segment.'
 
-            expect(isolation_segment_model.organizations).to include(org, org2)
+            expect(isolation_segment_model.organizations).to contain_exactly(org, org2)
           end
         end
 
@@ -127,7 +152,7 @@ module VCAP::CloudController
 
           it 'removes the Organization form the Isolation Segment' do
             subject.unassign(isolation_segment_model, [org])
-            expect(isolation_segment_model.organizations).to include(org2)
+            expect(isolation_segment_model.organizations).to eq([org2])
           end
         end
       end
