@@ -61,7 +61,13 @@ module VCAP::CloudController
         def post_bulk_app_state(body, use_internal_address=true)
           uri = use_internal_address ? URI(@config[:hm9000][:internal_url]) : URI(@config[:hm9000][:url])
           uri.path = '/bulk_app_state'
-          http_client.post(uri, body)
+          response = http_client.post(uri, body)
+
+          if response.status == 401
+            logger.error('authentication failed connecting to hm9000', { response: response.body })
+          end
+
+          response
         end
 
         def http_client
@@ -72,6 +78,7 @@ module VCAP::CloudController
             skip_cert_verify = @config[:skip_cert_verify]
 
             if username && password
+              @http_client.force_basic_auth = true
               @http_client.set_auth(nil, username, password)
             end
             @http_client.ssl_config.verify_mode = skip_cert_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
