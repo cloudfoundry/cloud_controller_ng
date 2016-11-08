@@ -352,10 +352,11 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
       let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
       let(:isolation_segment_model2) { VCAP::CloudController::IsolationSegmentModel.make }
       let(:org_manager) { VCAP::CloudController::User.make }
+      let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
       before do
-        isolation_segment_model.add_organization(space.organization)
-        isolation_segment_model2.add_organization(space.organization)
+        assigner.assign(isolation_segment_model, [space.organization])
+        assigner.assign(isolation_segment_model2, [space.organization])
         space.isolation_segment_guid = isolation_segment_model.guid
         space.organization.add_manager(org_manager)
         allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ org_manager.guid => 'manager@example.com' })

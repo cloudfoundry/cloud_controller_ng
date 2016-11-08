@@ -14,9 +14,10 @@ module VCAP::CloudController
     let(:space2) { VCAP::CloudController::Space.make(organization: org2) }
     let(:space3) { VCAP::CloudController::Space.make(organization: org2) }
 
+    let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+
     before do
-      isolation_segment_model.add_organization(org1)
-      isolation_segment_model.add_organization(org2)
+      assigner.assign(isolation_segment_model, [org1, org2])
       isolation_segment_model.add_space(space1)
       isolation_segment_model.add_space(space2)
       isolation_segment_model.add_space(space3)

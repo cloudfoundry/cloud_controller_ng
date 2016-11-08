@@ -1269,12 +1269,13 @@ module VCAP::CloudController
       let(:isolation_segment_model) { IsolationSegmentModel.make }
       let(:organization) { Organization.make }
       let(:space) { Space.make(organization: organization) }
+      let(:assigner) { IsolationSegmentAssign.new }
 
       context 'associating an isolation_segment' do
         context 'when the space contains no apps' do
           context 'when the owning organization has access to the segment' do
             before do
-              isolation_segment_model.add_organization(organization)
+              assigner.assign(isolation_segment_model, [organization])
             end
 
             context 'as an admin who is not a manager' do
@@ -1350,7 +1351,7 @@ module VCAP::CloudController
           before do
             AppModel.make(space: space)
             set_current_user_as_admin
-            isolation_segment_model.add_organization(organization)
+            assigner.assign(isolation_segment_model, [organization])
           end
 
           context 'when the space is not already associated with an isolation segment' do
@@ -1509,13 +1510,14 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/spaces/:guid/isolation_segment' do
+      let(:assigner) { IsolationSegmentAssign.new }
       let(:user) { set_current_user(User.make) }
       let(:isolation_segment_model) { IsolationSegmentModel.make }
       let(:organization) { Organization.make }
       let(:space) { Space.make(organization: organization) }
 
       before do
-        isolation_segment_model.add_organization(organization)
+        assigner.assign(isolation_segment_model, [organization])
       end
 
       context 'when the space is not associated to an isolation segment' do

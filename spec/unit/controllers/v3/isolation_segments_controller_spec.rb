@@ -125,7 +125,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         context "and the user belongs to an org in the isolation segment's allowed list" do
           before do
-            isolation_segment_model.add_organization(org1)
+            assigner.assign(isolation_segment_model, [org1])
             org1.add_user(user)
             space.add_developer(user)
           end

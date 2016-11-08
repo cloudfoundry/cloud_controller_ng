@@ -3,6 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::OrganizationsController do
     let(:org) { Organization.make }
+    let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:name) }
@@ -146,7 +147,6 @@ module VCAP::CloudController
     end
 
     describe 'setting the default isolation segment' do
-      let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
       let(:isolation_segment) { IsolationSegmentModel.make }
       let(:isolation_segment2) { IsolationSegmentModel.make }
@@ -156,7 +156,7 @@ module VCAP::CloudController
         let!(:user) { set_current_user(make_developer_for_space(space)) }
 
         before do
-          isolation_segment.add_organization(org)
+          assigner.assign(isolation_segment, [org])
         end
 
         it 'returns a 403' do
@@ -251,8 +251,8 @@ module VCAP::CloudController
 
         before do
           set_current_user_as_admin
-          isolation_segment.add_organization(org)
-          isolation_segment2.add_organization(org)
+          assigner.assign(isolation_segment, [org])
+          assigner.assign(isolation_segment2, [org])
         end
 
         it 'sets the isolation segment as the org default' do
