@@ -70,7 +70,7 @@ module VCAP::CloudController
 
         before do
           allow(LifecycleProtocol).to receive(:protocol_for_type).and_return(fake_lifecycle_protocol)
-          allow(egress_rules).to receive(:staging).and_return(['staging_egress_rule'])
+          expect(egress_rules).to receive(:staging).with(app_guid: app.guid).and_return(['staging_egress_rule'])
         end
 
         it 'contains the correct payload for staging a package' do

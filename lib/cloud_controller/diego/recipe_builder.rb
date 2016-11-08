@@ -26,7 +26,7 @@ module VCAP::CloudController
           cpu_weight:                       STAGING_TASK_CPU_WEIGHT,
           legacy_download_user:             STAGING_LEGACY_DOWNLOAD_USER,
           completion_callback_url:          stager_callback_url(config, staging_details),
-          egress_rules:                     generate_egress_rules,
+          egress_rules:                     generate_egress_rules(staging_details),
           trusted_system_certificates_path: STAGING_TRUSTED_SYSTEM_CERT_PATH,
 
           root_fs:                          "preloaded:#{action_builder.stack}",
@@ -51,8 +51,8 @@ module VCAP::CloudController
         stager_completion_callback_url.to_s
       end
 
-      def generate_egress_rules
-        @egress_rules.staging.map do |rule|
+      def generate_egress_rules(staging_details)
+        @egress_rules.staging(app_guid: staging_details.package.app_guid).map do |rule|
           ::Diego::Bbs::Models::SecurityGroupRule.new(
             protocol:     rule['protocol'],
             destinations: rule['destinations'],

@@ -53,10 +53,20 @@ module VCAP::CloudController
             log:          true
           )
         end
+        let(:rule_staging_specific) do
+          ::Diego::Bbs::Models::SecurityGroupRule.new(
+            protocol:     'tcp',
+            destinations: ['0.0.0.0/0'],
+            ports:        [443],
+            log:          true
+          )
+        end
 
         before do
           SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }], staging_default: true)
           SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }], staging_default: true)
+          security_group = SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }], staging_default: false)
+          security_group.add_staging_space(app.space)
         end
 
         context 'with a buildpack backend' do
@@ -113,9 +123,10 @@ module VCAP::CloudController
 
             expect(timeout_action.action.run_action).to eq(buildpack_staging_action)
 
-            expect(result.egress_rules).to eq([
+            expect(result.egress_rules).to match_array([
               rule_dns_everywhere,
-              rule_http_everywhere
+              rule_http_everywhere,
+              rule_staging_specific,
             ])
 
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
@@ -211,9 +222,10 @@ module VCAP::CloudController
           it 'sets the egress rules' do
             result = recipe_builder.build_staging_task(config, staging_details)
 
-            expect(result.egress_rules).to eq([
+            expect(result.egress_rules).to match_array([
               rule_dns_everywhere,
-              rule_http_everywhere
+              rule_http_everywhere,
+              rule_staging_specific,
             ])
           end
 

@@ -6,6 +6,9 @@ module VCAP::CloudController
       subject(:egress_rules) { described_class.new }
 
       describe '#staging' do
+        let(:space) { VCAP::CloudController::Space.make }
+        let(:process) { VCAP::CloudController::AppFactory.make(space: space) }
+
         before do
           SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '8080-9090', 'destination' => '198.41.191.47/1' }], staging_default: true)
           SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '8080,9090', 'destination' => '198.41.191.48/1', 'log' => true }], staging_default: true)
@@ -15,7 +18,7 @@ module VCAP::CloudController
         end
 
         it 'includes egress information for default staging security groups' do
-          expect(egress_rules.staging).to match_array([
+          expect(egress_rules.staging(app_guid: process.app.guid)).to match_array([
             { 'protocol' => 'udp', 'port_range' => { 'start' => 8080, 'end' => 9090 }, 'destinations' => ['198.41.191.47/1'] },
             { 'protocol' => 'tcp', 'ports' => [8080, 9090], 'destinations' => ['198.41.191.48/1'], 'log' => true },
             { 'protocol' => 'tcp', 'ports' => [443], 'destinations' => ['198.41.191.49/1'] },
@@ -24,8 +27,21 @@ module VCAP::CloudController
         end
 
         it 'orders the rules with logged rules last' do
-          logged = egress_rules.staging.drop_while { |rule| !rule['log'] }
+          logged = egress_rules.staging(app_guid: process.app.guid).drop_while { |rule| !rule['log'] }
           expect(logged).to have(1).items
+        end
+
+        context 'when the app space has staging security groups' do
+          before do
+            security_group = SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '8081-9090', 'destination' => '198.41.191.50/1' }], staging_default: false)
+            security_group.add_staging_space(space)
+          end
+
+          it 'includes security groups associated with the space for staging' do
+            expect(egress_rules.staging(app_guid: process.app.guid)).to include(
+              { 'protocol' => 'udp', 'port_range' => { 'start' => 8081, 'end' => 9090 }, 'destinations' => ['198.41.191.50/1'] },
+            )
+          end
         end
       end
 

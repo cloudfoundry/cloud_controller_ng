@@ -28,7 +28,7 @@ module VCAP::CloudController
         staging_request.memory_mb           = staging_details.staging_memory_in_mb
         staging_request.disk_mb             = staging_details.staging_disk_in_mb
         staging_request.file_descriptors    = config[:staging][:minimum_staging_file_descriptor_limit]
-        staging_request.egress_rules        = @egress_rules.staging
+        staging_request.egress_rules        = @egress_rules.staging(app_guid: staging_details.package.app_guid)
         staging_request.timeout             = config[:staging][:timeout_in_seconds]
         staging_request.lifecycle           = lifecycle_type
         staging_request.lifecycle_data      = lifecycle_data

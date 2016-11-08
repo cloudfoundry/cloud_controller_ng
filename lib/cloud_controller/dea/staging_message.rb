@@ -19,7 +19,7 @@ module VCAP::CloudController
           buildpack_cache_upload_uri:   @blobstore_url_generator.buildpack_cache_upload_url(app.app.guid, app.stack.name),
           start_message:                start_app_message(app),
           admin_buildpacks:             admin_buildpacks,
-          egress_network_rules:         staging_egress_rules,
+          egress_network_rules:         staging_egress_rules(app),
           accepts_http:                 @config[:dea_client] ? true : false
         }
       end
@@ -53,9 +53,8 @@ module VCAP::CloudController
         ServiceBindingPresenter.new(service_binding, include_instance: true).to_hash
       end
 
-      def staging_egress_rules
-        staging_security_groups = SecurityGroup.where(staging_default: true).all
-        EgressNetworkRulesPresenter.new(staging_security_groups).to_array
+      def staging_egress_rules(app)
+        EgressNetworkRulesPresenter.new(app.space.staging_security_groups).to_array
       end
 
       def admin_buildpacks

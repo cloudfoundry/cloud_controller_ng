@@ -1,8 +1,9 @@
 module VCAP::CloudController
   module Diego
     class EgressRules
-      def staging
-        staging_security_groups = SecurityGroup.where(staging_default: true).all
+      def staging(app_guid:)
+        space = VCAP::CloudController::AppModel.find(guid: app_guid).space
+        staging_security_groups = space.staging_security_groups
         order_rules(staging_security_groups.map(&:rules).flatten)
       end
 

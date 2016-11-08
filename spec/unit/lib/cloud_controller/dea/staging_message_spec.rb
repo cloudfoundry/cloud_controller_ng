@@ -8,12 +8,6 @@ module VCAP::CloudController
     let(:log_id) { 'log-id' }
     let(:staging_message) { Dea::StagingMessage.new(config_hash, blobstore_url_generator) }
 
-    before do
-      SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '8080-9090', 'destination' => '198.41.191.47/1' }], staging_default: true)
-      SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '8080-9090', 'destination' => '198.41.191.48/1' }], staging_default: true)
-      SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '80',        'destination' => '0.0.0.0/0' }], staging_default: false)
-    end
-
     describe '.staging_request' do
       let(:app) { AppFactory.make }
 
@@ -21,6 +15,12 @@ module VCAP::CloudController
         3.times do
           ServiceBinding.make(app: app.app, service_instance: ManagedServiceInstance.make(space: app.space))
         end
+
+        SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '8080-9090', 'destination' => '198.41.191.47/1' }], staging_default: true)
+        SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '80',        'destination' => '0.0.0.0/0' }], staging_default: false)
+
+        space_specific_security_group = SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '8080-9090', 'destination' => '198.41.191.48/1' }], staging_default: false)
+        app.space.add_staging_security_group(space_specific_security_group)
       end
 
       it 'includes app guid, task id, download/upload uris, stack name, and accepts_http flag' do
