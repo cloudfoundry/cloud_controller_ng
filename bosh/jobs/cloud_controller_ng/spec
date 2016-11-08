@@ -112,6 +112,9 @@ properties:
   cc.info.custom:
     description: "Custom attribute keys and values for /v2/info endpoint"
 
+  cc.nginx.ip:
+    description: "IP for nginx"
+    default: ""
   cc.external_port:
     description: "External Cloud Controller port"
     default: 9022

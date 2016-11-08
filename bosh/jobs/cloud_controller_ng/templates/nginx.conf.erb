@@ -49,7 +49,12 @@ http {
   }
 
   server {
+  <% if p("cc.nginx.ip").empty? %>
     listen    <%= p("cc.external_port") %>;
+  <% else %>
+    listen    <%= p("cc.nginx.ip") %>:<%= p("cc.external_port") %>;
+  <% end %>
+
     server_name  _;
     server_name_in_redirect off;
     <% if p("request_timeout_in_seconds").to_i > 0 %>

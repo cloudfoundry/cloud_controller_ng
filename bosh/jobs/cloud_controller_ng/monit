@@ -28,7 +28,11 @@ check process cloud_controller_ng
   if totalmem > <%= p("cc.thresholds.api.alert_if_above_mb") %> Mb for 3 cycles then alert
   if totalmem > <%= p("cc.thresholds.api.restart_if_consistently_above_mb") %> Mb for 15 cycles then exec "/var/vcap/jobs/cloud_controller_ng/bin/restart_drain"
   if totalmem > <%= p("cc.thresholds.api.restart_if_above_mb") %> Mb for 3 cycles then exec "/var/vcap/jobs/cloud_controller_ng/bin/restart_drain"
+<% if p('cc.nginx.ip').empty? %>
   if failed host <%= discover_external_ip %> port <%= p("cc.external_port") %> protocol http
+<% else %>
+  if failed host <%= p('cc.nginx.ip') %> port <%= p("cc.external_port") %> protocol http
+<% end %>
       and request '/v2/info'
       with timeout 60 seconds for 5 cycles
   then restart
