@@ -41,6 +41,7 @@ RSpec.describe 'ServiceInstances' do
               'entity'   => {
                 'name'                 => service_instance.name,
                 'credentials'          => service_instance.credentials,
+                'service_guid'         => service_instance.service.guid,
                 'service_plan_guid'    => service_plan.guid,
                 'space_guid'           => service_instance.space_guid,
                 'gateway_data'         => service_instance.gateway_data,
@@ -49,6 +50,7 @@ RSpec.describe 'ServiceInstances' do
                 'last_operation'       => service_instance.last_operation,
                 'tags'                 => service_instance.tags,
                 'space_url'            => "/v2/spaces/#{space.guid}",
+                'service_url'          => "/v2/services/#{service_instance.service.guid}",
                 'service_plan_url'     => "/v2/service_plans/#{service_plan.guid}",
                 'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
                 'service_keys_url'     => "/v2/service_instances/#{service_instance.guid}/service_keys",
@@ -82,6 +84,7 @@ RSpec.describe 'ServiceInstances' do
               'entity'   => {
                 'name'                 => service_instance.name,
                 'credentials'          => service_instance.credentials,
+                'service_guid'         => service_instance.service.guid,
                 'service_plan_guid'    => service_plan.guid,
                 'space_guid'           => service_instance.space_guid,
                 'gateway_data'         => service_instance.gateway_data,
@@ -90,6 +93,7 @@ RSpec.describe 'ServiceInstances' do
                 'last_operation'       => service_instance.last_operation,
                 'tags'                 => service_instance.tags,
                 'space_url'            => "/v2/spaces/#{space.guid}",
+                'service_url'          => "/v2/services/#{service_instance.service.guid}",
                 'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
                 'service_keys_url'     => "/v2/service_instances/#{service_instance.guid}/service_keys",
                 'routes_url'           => "/v2/service_instances/#{service_instance.guid}/routes"
@@ -121,6 +125,7 @@ RSpec.describe 'ServiceInstances' do
               'entity'   => {
                 'name'                 => service_instance.name,
                 'credentials'          => service_instance.credentials,
+                'service_guid'         => service_instance.service.guid,
                 'service_plan_guid'    => service_plan.guid,
                 'space_guid'           => service_instance.space_guid,
                 'gateway_data'         => service_instance.gateway_data,
@@ -129,6 +134,7 @@ RSpec.describe 'ServiceInstances' do
                 'last_operation'       => service_instance.last_operation,
                 'tags'                 => service_instance.tags,
                 'space_url'            => "/v2/spaces/#{space.guid}",
+                'service_url'          => "/v2/services/#{service_instance.service.guid}",
                 'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
                 'service_keys_url'     => "/v2/service_instances/#{service_instance.guid}/service_keys",
                 'routes_url'           => "/v2/service_instances/#{service_instance.guid}/routes"
