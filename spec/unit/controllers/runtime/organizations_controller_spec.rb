@@ -147,7 +147,6 @@ module VCAP::CloudController
     end
 
     describe 'setting the default isolation segment' do
-
       let(:isolation_segment) { IsolationSegmentModel.make }
       let(:isolation_segment2) { IsolationSegmentModel.make }
 

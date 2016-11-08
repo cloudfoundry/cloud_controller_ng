@@ -156,5 +156,19 @@ module VCAP::CloudController
         }.to raise_error(Sequel::ValidationFailed)
       end
     end
+
+    describe '#is_shared_segment?' do
+      it 'returns false' do
+        expect(isolation_segment_model.is_shared_segment?).to be false
+      end
+
+      context 'when the guids match' do
+        let(:isolation_segment_model) { IsolationSegmentModel.first(guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID) }
+
+        it 'returns true' do
+          expect(isolation_segment_model.is_shared_segment?).to be true
+        end
+      end
+    end
   end
 end

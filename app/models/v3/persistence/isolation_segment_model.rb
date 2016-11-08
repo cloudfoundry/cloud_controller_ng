@@ -22,8 +22,8 @@ module VCAP::CloudController
       validates_unique [:name], message: Sequel.lit('Isolation Segment names are case insensitive and must be unique')
     end
 
-    def self.shared_segment
-      @shared_segment ||= IsolationSegmentModel.first(guid: SHARED_ISOLATION_SEGMENT_GUID)
+    def is_shared_segment?
+      guid == SHARED_ISOLATION_SEGMENT_GUID
     end
   end
 end
