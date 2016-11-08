@@ -741,20 +741,6 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(response.status).to eq 404
         end
       end
-
-      context 'when the isolation segment is still associated to spaces' do
-        before do
-          VCAP::CloudController::Space.make(isolation_segment_guid: isolation_segment_model1.guid)
-        end
-
-        it 'returns a 400' do
-          delete :destroy, guid: isolation_segment_model1.guid
-
-          expect(response.status).to eq 400
-          expect(parsed_body['errors'].first['title']).to eq('CF-AssociationNotEmpty')
-          expect(parsed_body['errors'].first['detail']).to eq('Please delete the space associations for your isolation segment.')
-        end
-      end
     end
 
     context 'when the user is not admin' do

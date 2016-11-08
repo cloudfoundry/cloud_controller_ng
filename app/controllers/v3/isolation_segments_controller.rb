@@ -1,6 +1,7 @@
 require 'actions/isolation_segment_assign'
 require 'actions/isolation_segment_unassign'
 require 'actions/isolation_segment_update'
+require 'actions/isolation_segment_delete'
 
 require 'messages/isolation_segment_relationship_org_message'
 require 'messages/isolation_segment_create_message'
@@ -60,14 +61,7 @@ class IsolationSegmentsController < ApplicationController
     unauthorized! unless roles.admin?
 
     isolation_segment_model = find_isolation_segment(params[:guid])
-
-    unprocessable!("Cannot delete the #{isolation_segment_model.name} Isolation Segment") if
-      isolation_segment_model.guid.eql?(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
-
-    isolation_segment_model.db.transaction do
-      isolation_segment_model.lock!
-      isolation_segment_model.destroy
-    end
+    IsolationSegmentDelete.new.delete(isolation_segment_model)
 
     head :no_content
   end

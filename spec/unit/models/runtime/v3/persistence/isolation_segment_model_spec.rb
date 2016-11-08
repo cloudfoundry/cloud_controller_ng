@@ -156,19 +156,5 @@ module VCAP::CloudController
         }.to raise_error(Sequel::ValidationFailed)
       end
     end
-
-    describe '#before_destroy' do
-      let(:org) { Organization.make }
-
-      it 'raises an error if still assigned to any orgs' do
-        assigner.assign(isolation_segment_model, [org])
-        expect { isolation_segment_model.destroy }.to raise_error(CloudController::Errors::ApiError, /Please delete the Organization associations for your Isolation Segment/)
-      end
-
-      it 'raises an error if there are still spaces associated' do
-        Space.make(isolation_segment_guid: isolation_segment_model.guid)
-        expect { isolation_segment_model.destroy }.to raise_error(CloudController::Errors::ApiError, /Please delete the space/)
-      end
-    end
   end
 end

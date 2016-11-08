@@ -22,12 +22,6 @@ module VCAP::CloudController
       validates_unique [:name], message: Sequel.lit('Isolation Segment names are case insensitive and must be unique')
     end
 
-    def before_destroy
-      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'space', 'isolation segment') unless spaces.empty?
-      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'Organization', 'Isolation Segment') unless organizations.empty?
-      super
-    end
-
     def self.shared_segment
       @shared_segment ||= IsolationSegmentModel.first(guid: SHARED_ISOLATION_SEGMENT_GUID)
     end
