@@ -43,6 +43,25 @@ module VCAP::CloudController::RestController
           expect(result).to be_instance_of(String)
         end
       end
+
+      describe 'object transformer' do
+        let(:instance) { VCAP::CloudController::TestModel.make }
+        let(:object_transformer) { double(:object_transformer) }
+
+        before do
+          renderer_opts[:object_transformer] = object_transformer
+        end
+
+        it 'accepts an optional object transformer that can mutate the rendered object' do
+          expect(object_transformer).to receive(:transform) do |object|
+            expect(object).to eq(instance)
+            object.unique_value = 'bar'
+          end
+
+          result = MultiJson.load(subject.render_json(controller, instance, opts))
+          expect(result['entity']['unique_value']).to eq('bar')
+        end
+      end
     end
   end
 end

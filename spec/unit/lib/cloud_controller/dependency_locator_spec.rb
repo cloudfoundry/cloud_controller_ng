@@ -202,7 +202,7 @@ RSpec.describe CloudController::DependencyLocator do
     it 'returns paginated collection renderer configured via config' do
       eager_loader = instance_of(VCAP::CloudController::RestController::SecureEagerLoader)
       serializer = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
-      opts = { max_inline_relations_depth: 100_002 }
+      opts = { max_inline_relations_depth: 100_002, object_transformer: nil }
 
       TestConfig.override(renderer: opts)
 
@@ -259,6 +259,20 @@ RSpec.describe CloudController::DependencyLocator do
         and_return(renderer)
 
       expect(locator.large_paginated_collection_renderer).to eq(renderer)
+    end
+  end
+
+  describe '#username_populating_object_renderer' do
+    it 'returns UsernamePopulator transformer' do
+      renderer = locator.username_populating_object_renderer
+      expect(renderer.object_transformer).to be_a(VCAP::CloudController::UsernamePopulator)
+    end
+
+    it 'uses the username_lookup_uaa_client for the populator' do
+      uaa_client = double('uaa client')
+      expect(locator).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+      renderer = locator.username_populating_object_renderer
+      expect(renderer.object_transformer.uaa_client).to eq(uaa_client)
     end
   end
 

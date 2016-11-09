@@ -89,6 +89,43 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/users' do
+      let(:greg) { User.make }
+      let(:timothy) { User.make }
+
+      before { set_current_user(greg, admin: true) }
+
+      before do
+        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({
+          greg.guid => 'Greg',
+          timothy.guid => 'Timothy'
+        })
+      end
+
+      it 'includes the usernames' do
+        get '/v2/users'
+        users = parsed_response['resources']
+        expect(users[0]['entity']['username']).to eq('Greg')
+        expect(users[1]['entity']['username']).to eq('Timothy')
+      end
+    end
+
+    describe 'GET /v2/users/:guid' do
+      let(:greg) { User.make }
+
+      before do
+        set_current_user(greg, admin: true)
+        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({
+          greg.guid => 'Greg',
+        })
+      end
+
+      it 'includes the username' do
+        get "/v2/users/#{greg.guid}"
+        expect(parsed_response['entity']['username']).to eq('Greg')
+      end
+    end
+
     describe 'GET /v2/users/:guid/organizations' do
       let(:mgr) { User.make }
       let(:user) { User.make }

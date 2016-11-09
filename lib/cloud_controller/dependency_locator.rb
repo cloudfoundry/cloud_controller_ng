@@ -176,12 +176,11 @@ module CloudController
     end
 
     def object_renderer
-      eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
-      serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new
+      create_object_renderer
+    end
 
-      VCAP::CloudController::RestController::ObjectRenderer.new(eager_loader, serializer, {
-        max_inline_relations_depth: @config[:renderer][:max_inline_relations_depth],
-      })
+    def username_populating_object_renderer
+      create_object_renderer(object_transformer: UsernamePopulator.new(username_lookup_uaa_client))
     end
 
     def paginated_collection_renderer
@@ -281,6 +280,17 @@ module CloudController
       )
 
       VCAP::CloudController::Diego::BbsStagerClient.new(bbs_client)
+    end
+
+    def create_object_renderer(opts={})
+      eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
+      serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new
+      object_transformer = opts[:object_transformer]
+
+      VCAP::CloudController::RestController::ObjectRenderer.new(eager_loader, serializer, {
+        max_inline_relations_depth: @config[:renderer][:max_inline_relations_depth],
+        object_transformer: object_transformer
+      })
     end
 
     def create_paginated_collection_renderer(opts={})

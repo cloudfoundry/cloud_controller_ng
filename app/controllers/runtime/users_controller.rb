@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class UsersController < RestController::ModelController
     def self.dependencies
-      [:username_populating_collection_renderer]
+      [:username_populating_collection_renderer, :username_populating_object_renderer]
     end
 
     define_attributes do
@@ -39,6 +39,7 @@ module VCAP::CloudController
 
     def inject_dependencies(dependencies)
       super
+      @object_renderer = dependencies[:username_populating_object_renderer]
       @collection_renderer = dependencies[:username_populating_collection_renderer]
     end
 
