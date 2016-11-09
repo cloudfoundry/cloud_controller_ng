@@ -67,7 +67,6 @@ module VCAP::CloudController
       it { is_expected.to have_associated :default_users, class: User }
       it { is_expected.to have_associated :domains, class: SharedDomain }
       it { is_expected.to have_associated :space_quota_definition, associated_instance: ->(space) { SpaceQuotaDefinition.make(organization: space.organization) } }
-      it { is_expected.to have_associated :isolation_segment_model, class: IsolationSegmentModel }
 
       describe 'space_quota_definition' do
         subject(:space) { Space.make }
@@ -238,6 +237,82 @@ module VCAP::CloudController
         it 'works when eager loading' do
           eager_space = Space.eager(:staging_security_groups).all.first
           expect(eager_space.staging_security_groups).to match_array [associated_sg, default_sg, another_default_sg]
+        end
+      end
+
+      describe 'isolation_segment_models' do
+        let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+        let(:space) { Space.make }
+        let(:isolation_segment_model) { IsolationSegmentModel.make }
+
+        context 'adding an isolation segment' do
+          context 'and the space has apps' do
+            before do
+              AppModel.make(space: space)
+            end
+
+            it 'raises an error' do
+              expect {
+                space.update(isolation_segment_model: isolation_segment_model)
+              }.to raise_error(CloudController::Errors::ApiError, /Adding the Isolation Segment to the Space/)
+              space.reload
+
+              expect(space.isolation_segment_model).to be_nil
+            end
+          end
+
+          context "and the Space's org does not have the isolation segment" do
+            it 'raises UnableToPerform' do
+              expect {
+                space.update(isolation_segment_model: isolation_segment_model)
+              }.to raise_error(CloudController::Errors::ApiError, /Only Isolation Segments in the Organization's allowed list can be used./)
+              space.reload
+
+              expect(space.isolation_segment_model).to be_nil
+            end
+          end
+
+          context "and the Space's org has the Isolation Segment" do
+            before do
+              assigner.assign(isolation_segment_model, [space.organization])
+            end
+
+            it 'adds the isolation segment' do
+              space.update(isolation_segment_guid: isolation_segment_model.guid)
+              space.reload
+
+              expect(space.isolation_segment_model).to eq(isolation_segment_model)
+            end
+          end
+        end
+
+        context 'removing an isolation segment' do
+          before do
+            assigner.assign(isolation_segment_model, [space.organization])
+            space.update(isolation_segment_model: isolation_segment_model)
+          end
+
+          it 'removes the isolation segment' do
+            space.update(isolation_segment_model: nil)
+            space.reload
+
+            expect(space.isolation_segment_model).to be_nil
+          end
+
+          context 'and the space has an app' do
+            before do
+              AppModel.make(space: space)
+            end
+
+            it 'raises an error' do
+              expect {
+                space.update(isolation_segment_model: nil)
+              }.to raise_error(CloudController::Errors::ApiError, /Removing the Isolation Segment from the Space/)
+              space.reload
+
+              expect(space.isolation_segment_model).to eq(isolation_segment_model)
+            end
+          end
         end
       end
 

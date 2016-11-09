@@ -13,7 +13,8 @@ module VCAP::CloudController
 
     many_to_one :isolation_segment_model,
        primary_key: :guid,
-       key: :isolation_segment_guid
+       key: :isolation_segment_guid,
+       before_set: :validate_isolation_segment
 
     define_user_group :developers, reciprocal: :spaces, before_add: :validate_developer
     define_user_group :managers, reciprocal: :managed_spaces, before_add: :validate_manager
@@ -163,6 +164,14 @@ module VCAP::CloudController
       end
     end
 
+    def validate_isolation_segment(isolation_segment_model)
+      if isolation_segment_model
+        validate_isolation_segment_set(isolation_segment_model)
+      else
+        validate_isolation_segment_unset
+      end
+    end
+
     def validate_developer(user)
       raise InvalidDeveloperRelation.new(user.guid) unless in_organization?(user)
     end
@@ -235,6 +244,27 @@ module VCAP::CloudController
 
     def running_and_pending_tasks_count
       tasks_dataset.where(state: [TaskModel::PENDING_STATE, TaskModel::RUNNING_STATE]).count
+    end
+
+    def validate_isolation_segment_set(isolation_segment_model)
+      raise CloudController::Errors::ApiError.new_from_details(
+        'UnableToPerform',
+        'Adding the Isolation Segment to the Space',
+        'Cannot change the Isolation Segment for a Space containing Apps') unless app_models.empty?
+
+      isolation_segment_guids = organization.isolation_segment_models.map(&:guid)
+      unless isolation_segment_guids.include?(isolation_segment_model.guid)
+        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform',
+                                                                 'Adding the Isolation Segment to the Space',
+                                                                 "Only Isolation Segments in the Organization's allowed list can be used.")
+      end
+    end
+
+    def validate_isolation_segment_unset
+      raise CloudController::Errors::ApiError.new_from_details(
+        'UnableToPerform',
+        'Removing the Isolation Segment from the Space',
+        'Cannot change the Isolation Segment for a Space containing Apps') unless app_models.empty?
     end
   end
 end

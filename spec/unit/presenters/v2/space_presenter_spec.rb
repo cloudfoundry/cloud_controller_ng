@@ -10,6 +10,7 @@ module CloudController::Presenters::V2
     let(:orphans) { 'orphans' }
     let(:relations_presenter) { instance_double(RelationsPresenter, to_hash: relations_hash) }
     let(:relations_hash) { { 'relationship_key' => 'relationship_value' } }
+    let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
     describe '#entity_hash' do
       before do
@@ -25,10 +26,14 @@ module CloudController::Presenters::V2
           name: 'no_unicorns_no_rainbows',
           organization: organization,
           space_quota_definition: space_quota_definition,
-          isolation_segment_model: isolation_segment_model,
           allow_ssh: true
           )
         }
+
+        before do
+          assigner.assign(isolation_segment_model, [organization])
+          space.update(isolation_segment_model: isolation_segment_model)
+        end
 
         it 'returns the space entity and associated urls' do
           expected_entity_hash = {

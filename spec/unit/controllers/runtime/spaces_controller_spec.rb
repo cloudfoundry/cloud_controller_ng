@@ -1,4 +1,5 @@
 require 'spec_helper'
+
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::SpacesController do
     let(:organization_one) { Organization.make }
@@ -1272,118 +1273,20 @@ module VCAP::CloudController
       let(:assigner) { IsolationSegmentAssign.new }
 
       context 'associating an isolation_segment' do
-        context 'when the space contains no apps' do
-          context 'when the owning organization has access to the segment' do
-            before do
-              assigner.assign(isolation_segment_model, [organization])
-            end
-
-            context 'as an admin who is not a manager' do
-              before do
-                set_current_user_as_admin
-              end
-
-              it 'associates the isolation segment' do
-                put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: isolation_segment_model.guid })
-                expect(last_response.status).to eq 201
-
-                space.reload
-                expect(space.isolation_segment_model).to eq(isolation_segment_model)
-              end
-            end
-
-            context 'as an org manager' do
-              before do
-                space.organization.add_manager(user)
-              end
-
-              it 'associates the isolation segment' do
-                put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: isolation_segment_model.guid })
-                expect(last_response.status).to eq 201
-
-                space.reload
-                expect(space.isolation_segment_model).to eq(isolation_segment_model)
-              end
-            end
-
-            context 'as a developer' do
-              before do
-                space.organization.add_user(user)
-                space.add_developer(user)
-              end
-
-              it 'fails with a 403' do
-                put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: isolation_segment_model.guid })
-                expect(last_response.status).to eq 403
-                expect(space.isolation_segment_model).to be_nil
-              end
-            end
-
-            context 'as a space manager' do
-              before do
-                space.organization.add_user(user)
-                space.add_manager(user)
-              end
-
-              it 'fails with a 403' do
-                put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: isolation_segment_model.guid })
-                expect(last_response.status).to eq 403
-                expect(space.isolation_segment_model).to be_nil
-              end
-            end
-
-            context 'as an auditor' do
-              before do
-                space.organization.add_user(user)
-                space.add_auditor(user)
-              end
-
-              it 'fails with a 403' do
-                put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: isolation_segment_model.guid })
-                expect(last_response.status).to eq 403
-                expect(space.isolation_segment_model).to be_nil
-              end
-            end
-          end
+        before do
+          assigner.assign(isolation_segment_model, [organization])
         end
 
-        context 'when the space contains apps' do
-          before do
-            AppModel.make(space: space)
-            set_current_user_as_admin
-            assigner.assign(isolation_segment_model, [organization])
-          end
-
-          context 'when the space is not already associated with an isolation segment' do
-            it 'returns a 400' do
-              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: isolation_segment_model.guid })
-              expect(last_response.status).to eq 400
-            end
-          end
-
-          context 'when the space is already associated with an isolation segment' do
-            before do
-              space.isolation_segment_model = isolation_segment_model
-            end
-
-            it 'returns a 400' do
-              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: isolation_segment_model.guid })
-              expect(last_response.status).to eq 400
-            end
-          end
-        end
-
-        context 'when the owning organization does not have access to the segment' do
+        context 'when assigning the isolation segment' do
           context 'as an admin who is not a manager' do
             before do
               set_current_user_as_admin
             end
 
-            it 'returns a 400 and a CF-InvalidRelation error' do
-              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
+            it 'returns a 200' do
+              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: isolation_segment_model.guid })
 
-              expect(last_response.status).to eq 400
-              expect(decoded_response['error_code']).to eq 'CF-UnableToPerform'
+              expect(last_response.status).to eq 201
             end
           end
 
@@ -1392,50 +1295,12 @@ module VCAP::CloudController
               space.organization.add_manager(user)
             end
 
-            it 'returns a 400 and a CF-InvalidRelation error' do
-              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
+            it 'returns a 201' do
+              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: isolation_segment_model.guid })
 
-              expect(last_response.status).to eq 400
-              expect(decoded_response['error_code']).to eq 'CF-UnableToPerform'
-            end
-          end
-
-          context 'as a developer' do
-            before do
-              space.organization.add_user(user)
-              space.add_developer(user)
-            end
-
-            it 'returns a 403' do
-              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
-
-              expect(last_response.status).to eq 403
-            end
-          end
-
-          context 'as a space manager' do
-            before do
-              space.organization.add_user(user)
-              space.add_manager(user)
-            end
-
-            it 'returns a 403' do
-              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
-
-              expect(last_response.status).to eq 403
-            end
-          end
-
-          context 'as an auditor' do
-            before do
-              space.organization.add_user(user)
-              space.add_auditor(user)
-            end
-
-            it 'returns a 403' do
-              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
-
-              expect(last_response.status).to eq 403
+              expect(last_response.status).to eq 201
+              space.reload
+              expect(space.isolation_segment_model).to eq(isolation_segment_model)
             end
           end
         end
@@ -1446,11 +1311,11 @@ module VCAP::CloudController
               set_current_user_as_admin
             end
 
-            it 'returns a 400 and a CF-InvalidRelation error' do
+            it 'returns a 404 ResourceNotFound error' do
               put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
 
-              expect(last_response.status).to eq 400
-              expect(decoded_response['error_code']).to eq 'CF-UnableToPerform'
+              expect(last_response.status).to eq 404
+              expect(decoded_response['error_code']).to eq 'CF-ResourceNotFound'
             end
           end
 
@@ -1459,51 +1324,51 @@ module VCAP::CloudController
               space.organization.add_manager(user)
             end
 
-            it 'returns a 400 and a CF-InvalidRelation error' do
+            it 'returns a 404 ResourceNotFound error' do
               put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
 
-              expect(last_response.status).to eq 400
-              expect(decoded_response['error_code']).to eq 'CF-UnableToPerform'
+              expect(last_response.status).to eq 404
+              expect(decoded_response['error_code']).to eq 'CF-ResourceNotFound'
             end
           end
+        end
 
-          context 'as a developer' do
-            before do
-              space.organization.add_user(user)
-              space.add_developer(user)
-            end
-
-            it 'returns a 403' do
-              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
-
-              expect(last_response.status).to eq 403
-            end
+        context 'as a developer' do
+          before do
+            space.organization.add_user(user)
+            space.add_developer(user)
           end
 
-          context 'as a space manager' do
-            before do
-              space.organization.add_user(user)
-              space.add_manager(user)
-            end
+          it 'returns a 403' do
+            put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
 
-            it 'returns a 403' do
-              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
+            expect(last_response.status).to eq 403
+          end
+        end
 
-              expect(last_response.status).to eq 403
-            end
+        context 'as a space manager' do
+          before do
+            space.organization.add_user(user)
+            space.add_manager(user)
           end
 
-          context 'as an auditor' do
-            before do
-              space.organization.add_user(user)
-              space.add_auditor(user)
-            end
+          it 'returns a 403' do
+            put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
 
-            it 'returns a 403' do
-              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
+            expect(last_response.status).to eq 403
+          end
+        end
 
-              expect(last_response.status).to eq 403
-            end
+        context 'as an auditor' do
+          before do
+            space.organization.add_user(user)
+            space.add_auditor(user)
+          end
+
+          it 'returns a 403' do
+            put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
+
+            expect(last_response.status).to eq 403
           end
         end
       end
@@ -1518,6 +1383,42 @@ module VCAP::CloudController
 
       before do
         assigner.assign(isolation_segment_model, [organization])
+      end
+
+      context 'as a developer' do
+        before do
+          space.organization.add_user(user)
+          space.add_developer(user)
+        end
+
+        it 'fails with a 403' do
+          delete "/v2/spaces/#{space.guid}/isolation_segment"
+          expect(last_response.status).to eq 403
+        end
+      end
+
+      context 'as a space manager' do
+        before do
+          space.organization.add_user(user)
+          space.add_manager(user)
+        end
+
+        it 'fails with a 403' do
+          delete "/v2/spaces/#{space.guid}/isolation_segment"
+          expect(last_response.status).to eq 403
+        end
+      end
+
+      context 'as an auditor' do
+        before do
+          space.organization.add_user(user)
+          space.add_auditor(user)
+        end
+
+        it 'fails with a 403' do
+          delete "/v2/spaces/#{space.guid}/isolation_segment"
+          expect(last_response.status).to eq 403
+        end
       end
 
       context 'when the space is not associated to an isolation segment' do
@@ -1542,42 +1443,6 @@ module VCAP::CloudController
             expect(last_response.status).to eq 200
           end
         end
-
-        context 'as a developer' do
-          before do
-            space.organization.add_user(user)
-            space.add_developer(user)
-          end
-
-          it 'fails with a 403' do
-            delete "/v2/spaces/#{space.guid}/isolation_segment"
-            expect(last_response.status).to eq 403
-          end
-        end
-
-        context 'as a space manager' do
-          before do
-            space.organization.add_user(user)
-            space.add_manager(user)
-          end
-
-          it 'fails with a 403' do
-            delete "/v2/spaces/#{space.guid}/isolation_segment"
-            expect(last_response.status).to eq 403
-          end
-        end
-
-        context 'as an auditor' do
-          before do
-            space.organization.add_user(user)
-            space.add_auditor(user)
-          end
-
-          it 'fails with a 403' do
-            delete "/v2/spaces/#{space.guid}/isolation_segment"
-            expect(last_response.status).to eq 403
-          end
-        end
       end
 
       context 'when a space is associated with an isolation segment' do
@@ -1600,21 +1465,6 @@ module VCAP::CloudController
               expect(space.isolation_segment_model).to be_nil
             end
           end
-
-          context 'and we do not have permission' do
-            before do
-              space.organization.add_user(user)
-              space.add_auditor(user)
-            end
-
-            it 'fails with a 403' do
-              delete "/v2/spaces/#{space.guid}/isolation_segment"
-              expect(last_response.status).to eq 403
-
-              space.reload
-              expect(space.isolation_segment_model).to eq(isolation_segment_model)
-            end
-          end
         end
 
         context 'when the space contains apps' do
@@ -1630,21 +1480,6 @@ module VCAP::CloudController
             it 'returns a 400' do
               delete "/v2/spaces/#{space.guid}/isolation_segment"
               expect(last_response.status).to eq 400
-
-              space.reload
-              expect(space.isolation_segment_model).to eq(isolation_segment_model)
-            end
-          end
-
-          context 'and we do not have permission' do
-            before do
-              space.organization.add_user(user)
-              space.add_auditor(user)
-            end
-
-            it 'fails with a 403' do
-              delete "/v2/spaces/#{space.guid}/isolation_segment"
-              expect(last_response.status).to eq 403
 
               space.reload
               expect(space.isolation_segment_model).to eq(isolation_segment_model)
