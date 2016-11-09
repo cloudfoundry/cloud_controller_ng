@@ -20,7 +20,7 @@ module VCAP::CloudController
       attribute :docker_credentials_json, Hash,             default: {}, redact_in: [:create, :update]
       attribute :debug,                   String,           default: nil
       attribute :disk_quota,              Integer,          default: nil
-      attribute :environment_json,        Hash,             default: {}
+      attribute :environment_json,        Hash,             default: {}, redact_in: [:create, :update]
       attribute :health_check_type,       String,           default: 'port'
       attribute :health_check_timeout,    Integer,          default: nil
       attribute :instances,               Integer,          default: 1
