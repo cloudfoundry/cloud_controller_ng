@@ -49,7 +49,7 @@ function exists_on_ref {
 function display_pre_release_branches_with_sha {
   declare search_sha=$1
 
-  declare -a branches=("origin/ci-passed" "origin/master" )
+  declare -a branches=("origin/ci-passed" "origin/master" "origin/develop")
   local branch
   local result
 
