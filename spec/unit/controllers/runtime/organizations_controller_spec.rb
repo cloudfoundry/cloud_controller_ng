@@ -1231,6 +1231,7 @@ module VCAP::CloudController
         plural_role = role.to_s.pluralize
         describe "PUT /v2/organizations/:guid/#{plural_role}" do
           let(:user) { User.make(username: 'larry_the_user') }
+          let(:event_type) { "audit.user.organization_#{role}_add" }
 
           before do
             allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
@@ -1285,6 +1286,18 @@ module VCAP::CloudController
             expect(decoded_response['code']).to eq(20005)
           end
 
+          it 'creates an audit.user.organization_role_add when a role is associated to a space' do
+            before_event = Event.find(type: event_type, actee: user.guid)
+            expect(before_event).to be_nil
+
+            put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+            event = Event.find(type: event_type, actee: user.guid)
+            expect(event).not_to be_nil
+            expect(event.organization_guid).to eq(org.guid)
+            expect(event.actor_name).to eq(SecurityContext.current_user_email)
+          end
+
           context 'when the feature flag "set_roles_by_username" is disabled' do
             before do
               FeatureFlag.new(name: 'set_roles_by_username', enabled: false).save
@@ -1316,6 +1329,7 @@ module VCAP::CloudController
         plural_role = role.to_s.pluralize
         describe "DELETE /v2/organizations/:guid/#{plural_role}" do
           let(:user) { User.make(username: 'larry_the_user') }
+          let(:event_type) { "audit.user.organization_#{role}_remove" }
 
           before do
             allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
@@ -1363,6 +1377,18 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(501)
             expect(decoded_response['code']).to eq(20005)
+          end
+
+          it 'creates an event of type audit.user.organization_role_remove when a user-role association is removed from the organization' do
+            before_event = Event.find(type: event_type, actee: user.guid)
+            expect(before_event).to be_nil
+
+            delete "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+            event = Event.find(type: event_type, actee: user.guid)
+            expect(event).not_to be_nil
+            expect(event.organization_guid).to eq(org.guid)
+            expect(event.actor_name).to eq(SecurityContext.current_user_email)
           end
 
           context 'when the feature flag "set_roles_by_username" is disabled' do
@@ -1424,6 +1450,106 @@ module VCAP::CloudController
 
                 expect(space.developers).to include(user)
               end
+            end
+          end
+        end
+      end
+    end
+
+    describe 'adding user roles by user guid' do
+      [:user, :manager, :billing_manager, :auditor].each do |role|
+        plural_role = role.to_s.pluralize
+        describe "PUT /v2/organizations/:guid/#{plural_role}/:user_id" do
+          let(:user) { User.make(username: 'larry_the_user') }
+          let(:other_user) { User.make(username: 'joe_the_user') }
+          let(:event_type) { "audit.user.organization_#{role}_add" }
+
+          before do
+            set_current_user(user)
+          end
+
+          context 'as an admin' do
+            before do
+              set_current_user_as_admin
+            end
+
+            it "makes the user a #{role} and generates an appropriate event" do
+              before_event = Event.find(type: event_type, actee: other_user.guid)
+              expect(before_event).to be_nil
+              put "/v2/organizations/#{org.guid}/#{plural_role}/#{other_user.guid}"
+
+              expect(last_response.status).to eq(201)
+              expect(org.send(plural_role)).to include(other_user)
+              expect(decoded_response['metadata']['guid']).to eq(org.guid)
+
+              event = Event.find(type: event_type, actee: other_user.guid)
+              expect(event).to_not be_nil
+              expect(event.organization_guid).to eq(org.guid)
+            end
+          end
+
+          context 'as a regular user' do
+            before do
+              org.add_user(user)
+            end
+
+            it 'returns a 403 and does not generate any event' do
+              put "/v2/organizations/#{org.guid}/#{plural_role}/#{other_user.guid}"
+
+              expect(last_response.status).to eq(403)
+
+              event = Event.find(type: event_type, actee: other_user.guid)
+              expect(event).to be_nil
+            end
+          end
+        end
+      end
+    end
+
+    describe 'removing user roles by user_id' do
+      [:user, :manager, :billing_manager, :auditor].each do |role|
+        plural_role = role.to_s.pluralize
+        describe "DELETE /v2/organizations/:guid/#{plural_role}/:user_id" do
+          let(:user) { User.make(username: 'larry_the_user') }
+          let(:other_user) { User.make(username: 'joe_the_user') }
+          let(:event_type) { "audit.user.organization_#{role}_remove" }
+
+          before do
+            set_current_user(user)
+            org.send("add_#{role}", other_user)
+          end
+
+          context 'as an admin' do
+            before do
+              set_current_user_as_admin
+            end
+
+            it "removes #{role} from the user and generates an appropriate event" do
+              before_event = Event.find(type: event_type, actee: other_user.guid)
+              expect(before_event).to be_nil
+              delete "/v2/organizations/#{org.guid}/#{plural_role}/#{other_user.guid}"
+
+              expect(last_response.status).to eq(204)
+              expect(org.send(plural_role)).to_not include(user)
+
+              event = Event.find(type: event_type, actee: other_user.guid)
+              expect(event).to_not be_nil
+              expect(event.organization_guid).to eq(org.guid)
+            end
+          end
+
+          context 'as a regular user' do
+            before do
+              org.add_user(user)
+            end
+
+            it 'returns a 403 and does not generate any event' do
+              delete "/v2/organizations/#{org.guid}/#{plural_role}/#{other_user.guid}"
+
+              expect(last_response.status).to eq(403)
+
+              event = Event.find(type: event_type, actee: other_user.guid)
+              expect(event).to be_nil
             end
           end
         end

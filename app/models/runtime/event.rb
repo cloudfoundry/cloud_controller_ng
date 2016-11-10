@@ -1,5 +1,6 @@
 module VCAP::CloudController
   class Event < Sequel::Model
+    class EventValidationError < StandardError; end
     plugin :serialization
 
     many_to_one :space, primary_key: :guid, key: :space_guid, without_guid_generation: true
@@ -30,9 +31,18 @@ module VCAP::CloudController
     end
 
     def denormalize_space_and_org_guids
-      return if space_guid && organization_guid
-      self.space_guid = space.guid
-      self.organization_guid = space.organization.guid
+      # If we have both guids, return.
+      # If we have a space, get the guids off of it.
+      # If we have only an org, get the org guid from it.
+      # Raise.
+      if (space_guid && organization_guid) || organization_guid
+        return
+      elsif space
+        self.space_guid = space.guid
+        self.organization_guid = space.organization.guid
+      else
+        raise EventValidationError.new('A Space or an organization_guid must be supplied when creating an Event.')
+      end
     end
 
     def self.user_visibility_filter(user)

@@ -84,6 +84,22 @@ module VCAP::CloudController
       api.dispatch(:add_space_role, id, :spaces, space_guid)
     end
 
+    put "#{path_guid}/organizations/:org_guid" do |api, id, org_guid|
+      api.dispatch(:add_organization_role, id, :organizations, org_guid)
+    end
+
+    put "#{path_guid}/audited_organizations/:org_guid" do |api, id, org_guid|
+      api.dispatch(:add_organization_role, id, :audited_organizations, org_guid)
+    end
+
+    put "#{path_guid}/managed_organizations/:org_guid" do |api, id, org_guid|
+      api.dispatch(:add_organization_role, id, :managed_organizations, org_guid)
+    end
+
+    put "#{path_guid}/billing_managed_organizations/:org_guid" do |api, id, org_guid|
+      api.dispatch(:add_organization_role, id, :billing_managed_organizations, org_guid)
+    end
+
     define_messages
     define_routes
 
@@ -91,11 +107,19 @@ module VCAP::CloudController
     def remove_related(related_guid, name, user_guid, find_model=model)
       response = super(related_guid, name, user_guid, find_model)
       user = User.first(guid: user_guid)
-      user.username = ''
+      user.username = '' unless user.username
 
       if find_model == Space
         @user_event_repository.record_space_role_remove(
           Space.first(guid: related_guid),
+          user,
+          name.to_s.singularize,
+          SecurityContext.current_user,
+          SecurityContext.current_user_email,
+          {})
+      elsif find_model == Organization
+        @user_event_repository.record_organization_role_remove(
+          Organization.first(guid: related_guid),
           user,
           name.to_s.singularize,
           SecurityContext.current_user,
@@ -120,6 +144,26 @@ module VCAP::CloudController
              end
 
       @user_event_repository.record_space_role_add(Space.first(guid: space_guid), user, role, SecurityContext.current_user, SecurityContext.current_user_email)
+
+      response
+    end
+
+    def add_organization_role(user_guid, relationship, org_guid)
+      response = add_related(user_guid, relationship, org_guid, User)
+      user = User.first(guid: user_guid)
+      user.username = ''
+
+      role = if relationship.eql?(:billing_managed_organizations)
+               'billing_manager'
+             elsif relationship.eql?(:audited_organizations)
+               'auditor'
+             elsif relationship.eql?(:managed_organizations)
+               'manager'
+             else
+               'user'
+             end
+
+      @user_event_repository.record_organization_role_add(Organization.first(guid: org_guid), user, role, SecurityContext.current_user, SecurityContext.current_user_email)
 
       response
     end
