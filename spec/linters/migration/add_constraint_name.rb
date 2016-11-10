@@ -2,7 +2,8 @@ module RuboCop
   module Cop
     module Migration
       class AddConstraintName < RuboCop::Cop::Cop
-        MSG = 'please name your constraint'.freeze
+        # Postgres and MySQL have different naming conventions, so if we need to remove them we cannot predict accurately what the constraint name would be.
+        MSG = 'Please name your constraint.'.freeze
 
         def on_block(node)
           node.each_descendant(:send) do |send_node|
