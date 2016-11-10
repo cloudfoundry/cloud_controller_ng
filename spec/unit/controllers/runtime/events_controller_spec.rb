@@ -58,11 +58,13 @@ module VCAP::CloudController
 
       context 'as an org auditor' do
         before do
-          @space_a.organization.add_auditor(@user_a)
+          # @space_a.organization.add_auditor(@user_a)
+          @org_a.add_auditor(@user_a)
+          expect(@user_a.spaces).to be_empty
           set_current_user(@user_a)
         end
 
-        it 'includes only events from space visible to the user' do
+        it 'includes only events from organizations in which the user is an auditor' do
           get '/v2/events'
 
           parsed_body = MultiJson.load(last_response.body)
