@@ -13,7 +13,7 @@ Sequel.migration do
       Integer :droplet_id, null: false
       foreign_key [:droplet_id], :v3_droplets, name: :fk_tasks_droplet_id
 
-      if self.class.name.match /mysql/i
+      if self.class.name =~ /mysql/i
         table_name = tables.find { |t| t =~ /tasks/ }
         run "ALTER TABLE `#{table_name}` CONVERT TO CHARACTER SET utf8;"
       end

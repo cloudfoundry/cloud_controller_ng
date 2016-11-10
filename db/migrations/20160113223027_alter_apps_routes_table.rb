@@ -17,9 +17,9 @@ Sequel.migration do
       add_column :guid, String
     end
 
-    if self.class.name.match(/mysql/i)
+    if self.class.name =~ /mysql/i
       run 'update apps_routes set guid=UUID();'
-    elsif self.class.name.match(/postgres/i)
+    elsif self.class.name =~ /postgres/i
       run 'CREATE OR REPLACE FUNCTION get_uuid()
       RETURNS TEXT AS $$
       BEGIN
@@ -55,7 +55,7 @@ Sequel.migration do
 
       add_index [:app_id, :route_id], unique: true, name: :ar_app_id_route_id_index
     end
-    if self.class.name.match(/postgres/i)
+    if self.class.name =~ /postgres/i
       run 'drop function if exists get_uuid();'
     end
   end

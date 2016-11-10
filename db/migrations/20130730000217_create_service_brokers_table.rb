@@ -6,7 +6,7 @@ Sequel.migration do
       String :broker_url, null: false
       String :token,       null: false
 
-      index :name,        unique: true
+      index :name, unique: true
       index :broker_url, unique: true
     end
   end

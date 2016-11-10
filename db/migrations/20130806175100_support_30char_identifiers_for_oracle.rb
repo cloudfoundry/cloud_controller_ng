@@ -1,5 +1,4 @@
 # Copyright (c) 2009-2012 VMware, Inc.
-# rubocop:disable Metrics/LineLength
 # rubocop:disable Lint/ShadowingOuterLocalVariable
 
 def rename_foreign_key_internal(db, alter_table, table, current_name, new_name, &block)
@@ -7,14 +6,14 @@ def rename_foreign_key_internal(db, alter_table, table, current_name, new_name, 
   db.foreign_key_list(table).each do |fk|
     if fk[:name] && fk[:name] == current_name
       alter_table.drop_constraint current_name, type: :foreign_key
-      block.call(db, alter_table) unless block.nil?
+      yield(db, alter_table) unless block.nil?
       alter_table.add_foreign_key fk[:columns], fk[:table], name: new_name
       processed = true
     end
   end
   # Since Sqlite doesn't return fk names let's just not rename them but still rename the nested index.
   if !processed
-    block.call(db, alter_table) unless block.nil?
+    yield(db, alter_table) unless block.nil?
   end
 end
 

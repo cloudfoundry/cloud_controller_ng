@@ -29,10 +29,10 @@ Sequel.migration do
     spaces
     stacks
     users
-  )
+  ).freeze
 
   up do
-    if self.class.name.match /mysql/i
+    if self.class.name =~ /mysql/i
       TABLE_NAMES.each do |table|
         run <<-SQL
         ALTER TABLE #{table} MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
@@ -42,7 +42,7 @@ Sequel.migration do
   end
 
   down do
-    if self.class.name.match /mysql/i
+    if self.class.name =~ /mysql/i
       TABLE_NAMES.each do |table|
         run <<-SQL
         ALTER TABLE #{table} MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;

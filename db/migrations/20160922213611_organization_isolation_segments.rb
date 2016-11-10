@@ -10,14 +10,14 @@ Sequel.migration do
     end
 
     collate_opts = {}
-    if self.class.name.match(/mysql/i)
+    if self.class.name =~ /mysql/i
       collate_opts[:collate] = :utf8_bin
     end
 
     alter_table :organizations do
       add_column :default_isolation_segment_guid, String, collate_opts
 
-      add_foreign_key [:guid, :default_isolation_segment_guid], :organizations_isolation_segments, :name => 'organizations_isolation_segments_pk'
+      add_foreign_key [:guid, :default_isolation_segment_guid], :organizations_isolation_segments, name: 'organizations_isolation_segments_pk'
     end
   end
 

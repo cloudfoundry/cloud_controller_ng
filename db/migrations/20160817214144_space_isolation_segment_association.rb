@@ -1,12 +1,12 @@
 Sequel.migration do
   up do
     collate_opts = {}
-    if self.class.name.match(/mysql/i)
+    if self.class.name =~ /mysql/i
       collate_opts[:collate] = :utf8_bin
     end
 
     alter_table :isolation_segments do
-      if self.class.name.match(/mysql/i)
+      if self.class.name =~ /mysql/i
         table_name = tables.find { |t| t =~ /isolation_segments/ }
         run "ALTER TABLE `#{table_name}` CONVERT TO CHARACTER SET utf8;"
       end

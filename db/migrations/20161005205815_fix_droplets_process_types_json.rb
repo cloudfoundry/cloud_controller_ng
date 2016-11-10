@@ -23,7 +23,11 @@ Sequel.migration do
           ids << c[0]
         end
 
-        @db["UPDATE droplets SET process_types = (CASE #{cases.join(' ')} ELSE process_types END) WHERE id IN (#{id_place_holders.join(',')})", *(@batched_commands.flatten), *ids].update
+        @db[<<-SQL, *@batched_commands.flatten, *ids].update
+          UPDATE droplets
+          SET process_types = (CASE #{cases.join(' ')} ELSE process_types END)
+          WHERE id IN (#{id_place_holders.join(',')})
+        SQL
       end
 
       @batched_commands = []

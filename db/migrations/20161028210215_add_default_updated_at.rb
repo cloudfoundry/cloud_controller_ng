@@ -36,7 +36,7 @@ Sequel.migration do
     ]
 
     tables_to_migrate.each do |table|
-      self[table].where(:updated_at => nil).update(:updated_at=>:created_at)
+      self[table].where(updated_at: nil).update(updated_at: :created_at)
     end
   end
 end
