@@ -4,6 +4,7 @@ if ENV['CODECLIMATE_REPO_TOKEN'] && ENV['COVERAGE']
   require 'codeclimate-test-reporter'
   CodeClimate::TestReporter.start
 end
+ENV['PB_IGNORE_DEPRECATIONS'] = 'true'
 
 require 'fakefs/safe'
 require 'machinist/sequel'

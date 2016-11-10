@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'diego/action_builder'
 
 module Diego
