@@ -14,7 +14,7 @@ Sequel.migration do
   down do
     alter_table :route_mappings do
       drop_constraint(:route_mappings_app_guid_route_guid_process_type_app_port_key, type: :unique)
-      add_unique_constraint [:app_guid, :route_guid, :process_type]
+      add_unique_constraint [:app_guid, :route_guid, :process_type], name: :route_mappings_app_guid_route_guid_process_type_key
     end
 
     drop_column :route_mappings, :app_port
