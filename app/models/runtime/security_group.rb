@@ -34,6 +34,7 @@ module VCAP::CloudController
         [:spaces, user.spaces_dataset],
         [:spaces, user.managed_spaces_dataset],
         [:spaces, user.audited_spaces_dataset],
+        [:staging_spaces, user.managed_spaces_dataset],
         [:running_default, true],
         [:spaces, Space.where(space_id:
                               user.managed_organizations_dataset.

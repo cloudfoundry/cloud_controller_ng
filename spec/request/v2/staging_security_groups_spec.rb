@@ -71,6 +71,28 @@ RSpec.describe 'Staging Security Groups' do
     end
   end
 
+  describe 'GET /v2/security_groups/:guid/staging_spaces/:space_guid' do
+    let(:org) { VCAP::CloudController::Organization.make }
+    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+    let(:user) { VCAP::CloudController::User.make }
+
+    before do
+      space.organization.add_user(user)
+      space.add_manager(user)
+
+      put "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil, admin_headers_for(user)
+      expect(last_response.status).to eq(201)
+      security_group.reload
+      space.reload
+    end
+
+    it 'allows a space manager to read the security group with the space during staging' do
+      get "/v2/security_groups/#{security_group.guid}/staging_spaces", nil, headers_for(user)
+      expect(last_response.status).to eq(200)
+    end
+  end
+
   describe 'DELETE /v2/security_groups/:guid/staging_spaces/:space_guid' do
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
