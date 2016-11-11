@@ -32,7 +32,7 @@ module VCAP::CloudController
       end
 
       context '#error(job, exception)' do
-        let(:job) { double('Job').as_null_object }
+        let(:job) { double('Job', guid: 'gregid').as_null_object }
         let(:error_presenter) { instance_double(ErrorPresenter, to_hash: 'sanitized exception hash').as_null_object }
         let(:background_logger) { instance_double(Steno::Logger).as_null_object }
 
@@ -49,7 +49,7 @@ module VCAP::CloudController
 
           it 'logs the unsanitized information' do
             expect(Steno).to receive(:logger).with('cc.background').and_return(background_logger)
-            expect(background_logger).to receive(:info).with('log message')
+            expect(background_logger).to receive(:info).with('log message', job_guid: 'gregid')
             exception_catching_job.error(job, 'exception')
           end
         end
@@ -61,7 +61,7 @@ module VCAP::CloudController
 
           it 'logs the unsanitized information as an error' do
             expect(Steno).to receive(:logger).with('cc.background').and_return(background_logger)
-            expect(background_logger).to receive(:error).with('log message')
+            expect(background_logger).to receive(:error).with('log message', job_guid: 'gregid')
             exception_catching_job.error(job, 'exception')
           end
         end
@@ -78,7 +78,7 @@ module VCAP::CloudController
           allow(error_presenter).to receive(:client_error?).and_return(true)
           expect(handler).to receive(:error).with(job, 'exception')
           expect(Steno).to receive(:logger).with('cc.background').and_return(background_logger)
-          expect(background_logger).to receive(:info).with('log message')
+          expect(background_logger).to receive(:info).with('log message', job_guid: 'gregid')
           exception_catching_job.error(job, 'exception')
         end
 

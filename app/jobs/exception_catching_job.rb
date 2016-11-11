@@ -11,7 +11,7 @@ module VCAP::CloudController
 
       def error(job, e)
         error_presenter = ErrorPresenter.new(e)
-        log_error(error_presenter)
+        log_error(error_presenter, job)
         save_error(error_presenter, job)
         super(job, e)
       end
@@ -24,11 +24,11 @@ module VCAP::CloudController
         job.save
       end
 
-      def log_error(error_presenter)
+      def log_error(error_presenter, job)
         if error_presenter.client_error?
-          logger.info(error_presenter.log_message)
+          logger.info(error_presenter.log_message, job_guid: job.guid)
         else
-          logger.error(error_presenter.log_message)
+          logger.error(error_presenter.log_message, job_guid: job.guid)
         end
       end
 
