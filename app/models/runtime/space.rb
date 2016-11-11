@@ -13,8 +13,7 @@ module VCAP::CloudController
 
     many_to_one :isolation_segment_model,
        primary_key: :guid,
-       key: :isolation_segment_guid,
-       before_set: :validate_isolation_segment
+       key: :isolation_segment_guid
 
     define_user_group :developers, reciprocal: :spaces, before_add: :validate_developer
     define_user_group :managers, reciprocal: :managed_spaces, before_add: :validate_manager
@@ -161,6 +160,10 @@ module VCAP::CloudController
 
       if space_quota_definition && space_quota_definition.organization.guid != organization.guid
         errors.add(:space_quota_definition, :invalid_organization)
+      end
+
+      if column_changed?(:isolation_segment_guid)
+        validate_isolation_segment(isolation_segment_model)
       end
     end
 

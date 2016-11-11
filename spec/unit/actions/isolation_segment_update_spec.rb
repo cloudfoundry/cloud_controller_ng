@@ -78,11 +78,9 @@ module VCAP::CloudController
           end
 
           context 'and a space contains apps' do
-            before do
-              AppModel.make(space: space)
-            end
-
             it 'fails' do
+              AppModel.make(space: space)
+
               message = IsolationSegmentUpdateMessage.new
               expect {
                 subject.update isolation_segment, message
@@ -95,7 +93,8 @@ module VCAP::CloudController
               before do
                 assigner.assign(isolation_segment2, [org])
                 space.update(isolation_segment_guid: isolation_segment2.guid)
-                space.reload
+
+                AppModel.make(space: space)
               end
 
               it 'updates the name of the isolation segment' do

@@ -72,6 +72,7 @@ RSpec.describe 'IsolationSegmentModels' do
     let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
 
     before do
+      assigner.assign(isolation_segment_model, [space1.organization, space2.organization])
       isolation_segment_model.add_space(space1)
       isolation_segment_model.add_space(space2)
     end
@@ -181,8 +182,8 @@ RSpec.describe 'IsolationSegmentModels' do
       let(:user_header) { headers_for(user) }
 
       before do
-        space.isolation_segment_guid = isolation_segment_model.guid
-        space.save
+        assigner.assign(isolation_segment_model, [space.organization])
+        space.update(isolation_segment_guid: isolation_segment_model.guid)
         space.organization.add_user(user)
         space.add_developer(user)
       end

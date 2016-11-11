@@ -6,6 +6,7 @@ require 'isolation_segment_unassign'
 module VCAP::CloudController
   RSpec.describe IsolationSegmentModel do
     let(:isolation_segment_model) { IsolationSegmentModel.make }
+    let(:isolation_segment_model_2) { IsolationSegmentModel.make }
 
     let(:assigner) { IsolationSegmentAssign.new }
     let(:unassigner) { IsolationSegmentUnassign.new }
@@ -14,6 +15,11 @@ module VCAP::CloudController
       describe 'spaces' do
         let(:space_1) { Space.make }
         let(:space_2) { Space.make }
+
+        before do
+          assigner.assign(isolation_segment_model, [space_1.organization, space_2.organization])
+          assigner.assign(isolation_segment_model_2, [space_1.organization, space_2.organization])
+        end
 
         it 'one isolation_segment can reference a single spaces' do
           isolation_segment_model.add_space(space_1)
@@ -32,8 +38,6 @@ module VCAP::CloudController
         end
 
         it 'multiple isolation_segments cannot reference the same space' do
-          isolation_segment_model_2 = IsolationSegmentModel.make
-
           isolation_segment_model.add_space(space_1)
           isolation_segment_model_2.add_space(space_1)
 

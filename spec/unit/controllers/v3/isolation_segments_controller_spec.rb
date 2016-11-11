@@ -484,28 +484,28 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(parsed_body['guid']).to eq(isolation_segment.guid)
           expect(parsed_body['name']).to eq(isolation_segment.name)
         end
-      end
 
-      context 'and the user is registered to a space' do
-        before do
-          allow_user_read_access(user, space: space)
-          stub_readable_space_guids_for(user, space)
-        end
-
-        context 'and the space is associated to an isolation segment' do
+        context 'and the user is registered to a space' do
           before do
-            isolation_segment.add_space(space)
+            allow_user_read_access(user, space: space)
+            stub_readable_space_guids_for(user, space)
           end
 
-          it 'allows the user to see the isolation segment' do
-            get :show, guid: isolation_segment.guid
+          context 'and the space is associated to an isolation segment' do
+            before do
+              isolation_segment.add_space(space)
+            end
 
-            expect(response.status).to eq 200
-            expect(parsed_body['guid']).to eq(isolation_segment.guid)
-            expect(parsed_body['name']).to eq(isolation_segment.name)
-            expect(parsed_body['links']['self']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}")
-            expect(parsed_body['links']['organizations']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations")
-            expect(parsed_body['links']['spaces']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces")
+            it 'allows the user to see the isolation segment' do
+              get :show, guid: isolation_segment.guid
+
+              expect(response.status).to eq 200
+              expect(parsed_body['guid']).to eq(isolation_segment.guid)
+              expect(parsed_body['name']).to eq(isolation_segment.name)
+              expect(parsed_body['links']['self']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}")
+              expect(parsed_body['links']['organizations']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations")
+              expect(parsed_body['links']['spaces']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces")
+            end
           end
         end
       end
