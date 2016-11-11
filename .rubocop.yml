@@ -8,7 +8,7 @@ AllCops:
     - '**/Rakefile'
   Exclude:
     - vendor/**/*
-    - lib/diego/bbs/models/*
+    - lib/diego/bbs/models/**/*
 
 Lint/AmbiguousRegexpLiteral:
   Enabled: false
