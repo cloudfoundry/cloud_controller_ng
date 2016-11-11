@@ -54,13 +54,9 @@ module VCAP::CloudController
 
     def before_update(obj)
       if request_attrs['default_isolation_segment_guid']
-        isolation_segment_guids = obj.isolation_segment_models.map(&:guid)
-        unless isolation_segment_guids.include?(request_attrs['default_isolation_segment_guid'])
-          raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
-            "Organization does not have access to Isolation Segment with guid: #{request_attrs['default_isolation_segment_guid']}")
-        end
-
-        obj.check_spaces_without_isolation_segments_empty!('Setting')
+        raise CloudController::Errors::ApiError.new_from_details(
+          'ResourceNotFound',
+          'Could not find Isolation Segment to set as the default.') unless IsolationSegmentModel.first(guid: request_attrs['default_isolation_segment_guid'])
       end
 
       super(obj)

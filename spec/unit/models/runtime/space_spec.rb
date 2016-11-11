@@ -253,7 +253,7 @@ module VCAP::CloudController
 
             it 'raises an error' do
               expect {
-                space.update(isolation_segment_model: isolation_segment_model)
+                space.update(isolation_segment_guid: isolation_segment_model.guid)
               }.to raise_error(CloudController::Errors::ApiError, /Adding the Isolation Segment to the Space/)
               space.reload
 

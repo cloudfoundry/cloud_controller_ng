@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'pry'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::OrganizationsController do
@@ -176,12 +177,12 @@ module VCAP::CloudController
         end
 
         context 'when the isolation segment does not exist' do
-          it 'returns a 400' do
+          it 'returns a 404' do
             put "/v2/organizations/#{org.guid}", MultiJson.dump({
               default_isolation_segment_guid: 'bogus-guid'
             })
 
-            expect(last_response.status).to eq(400)
+            expect(last_response.status).to eq(404)
           end
         end
 
@@ -221,23 +222,6 @@ module VCAP::CloudController
               })
 
               expect(last_response.status).to eq(201)
-              org.reload
-              expect(org.default_isolation_segment_model).to eq(isolation_segment)
-            end
-          end
-
-          context 'when the org has a space with no assigned segment and the space contains apps' do
-            before do
-              space = Space.make(organization: org)
-              AppModel.make(space: space)
-            end
-
-            it 'returns a 400 and does not change the default isolation segment' do
-              put "/v2/organizations/#{org.guid}", MultiJson.dump({
-                default_isolation_segment_guid: isolation_segment2.guid
-              })
-
-              expect(last_response.status).to eq(400)
               org.reload
               expect(org.default_isolation_segment_model).to eq(isolation_segment)
             end
