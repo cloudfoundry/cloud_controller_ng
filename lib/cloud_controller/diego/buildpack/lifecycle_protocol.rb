@@ -39,7 +39,7 @@ module VCAP
             end
           end
 
-          def action_builder(config, staging_details)
+          def staging_action_builder(config, staging_details)
             StagingActionBuilder.new(config, staging_details, lifecycle_data(staging_details))
           end
 

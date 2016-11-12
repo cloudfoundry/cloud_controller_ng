@@ -37,7 +37,12 @@ module VCAP::CloudController
         task_event_repository.record_task_create(task, user_guid, user_email)
       end
 
-      dependency_locator.nsync_client.desire_task(task)
+      if config[:diego] && config[:diego][:temporary_local_staging] && task.app.lifecycle_type == Lifecycles::BUILDPACK
+        task_definition = Diego::RecipeBuilder.new.build_app_task(config, task)
+        dependency_locator.bbs_task_client.desire_task(task.guid, task_definition, 'cf-tasks')
+      else
+        dependency_locator.nsync_client.desire_task(task)
+      end
 
       task
     rescue Sequel::ValidationFailed => e

@@ -3,7 +3,27 @@ require 'cloud_controller/diego/constants'
 
 module VCAP::CloudController
   module Diego
-    class BbsStagerClient
+    class BbsTaskClient
+      def desire_task(task_guid, task_definition, domain)
+        logger.info('task.request', task_guid: task_guid)
+
+        begin
+          response = client.desire_task(task_guid: task_guid, task_definition: task_definition, domain: domain)
+        rescue ::Diego::Error => e
+          raise CloudController::Errors::ApiError.new_from_details('TaskWorkersUnavailable', e)
+        end
+
+        logger.info('task.response', task_guid: task_guid, error: response.error)
+
+        if response.error
+          raise CloudController::Errors::ApiError.new_from_details('TaskError', "task failed: #{response.error.message}")
+        end
+
+        nil
+      end
+    end
+
+    class BbsStagingClient
       def initialize(client)
         @client = client
       end
@@ -49,7 +69,7 @@ module VCAP::CloudController
       attr_reader :client
 
       def logger
-        @logger ||= Steno.logger('cc.stager.client')
+        @logger ||= Steno.logger('cc.bbs.staging-client')
       end
     end
   end

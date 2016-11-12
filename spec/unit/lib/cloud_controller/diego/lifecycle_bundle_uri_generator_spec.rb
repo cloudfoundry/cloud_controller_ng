@@ -12,7 +12,7 @@ module VCAP::CloudController
       end
 
       it 'returns an error when passed nil' do
-        expect { described_class.uri(nil) }.to raise_error(CloudController::Errors::ApiError, /no compiler defined for requested stack/)
+        expect { described_class.uri(nil) }.to raise_error(VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack, /no compiler defined for requested stack/)
       end
 
       it 'returns back a full url' do
@@ -20,7 +20,9 @@ module VCAP::CloudController
       end
 
       it 'raises an error for a non http or https url' do
-        expect { described_class.uri('ftp://bundle.example.com') }.to raise_error(CloudController::Errors::ApiError, /invalid compiler URI/)
+        expect {
+          described_class.uri('ftp://bundle.example.com')
+        }.to raise_error(VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidCompiler, /invalid compiler URI/)
       end
     end
   end

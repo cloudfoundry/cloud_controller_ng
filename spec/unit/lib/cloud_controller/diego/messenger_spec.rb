@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'cloud_controller/diego/bbs_stager_client'
+require 'cloud_controller/diego/bbs_staging_client'
 
 module VCAP::CloudController
   module Diego
@@ -8,13 +8,13 @@ module VCAP::CloudController
 
       let(:stager_client) { instance_double(StagerClient) }
       let(:nsync_client) { instance_double(NsyncClient) }
-      let(:bbs_stager_client) { instance_double(BbsStagerClient) }
+      let(:bbs_staging_client) { instance_double(BbsStagingClient) }
       let(:config) { TestConfig.config }
       let(:protocol) { instance_double(Diego::Protocol) }
       let(:recipe_builder) { instance_double(Diego::RecipeBuilder) }
 
       before do
-        CloudController::DependencyLocator.instance.register(:bbs_stager_client, bbs_stager_client)
+        CloudController::DependencyLocator.instance.register(:bbs_staging_client, bbs_staging_client)
         CloudController::DependencyLocator.instance.register(:stager_client, stager_client)
         CloudController::DependencyLocator.instance.register(:nsync_client, nsync_client)
         allow(Diego::Protocol).to receive(:new).and_return(protocol)
@@ -50,14 +50,14 @@ module VCAP::CloudController
             TestConfig.override(diego: { temporary_local_staging: true })
             staging_details.lifecycle = instance_double(BuildpackLifecycle, type: Lifecycles::BUILDPACK)
             allow(recipe_builder).to receive(:build_staging_task).and_return(message)
-            allow(bbs_stager_client).to receive(:stage)
+            allow(bbs_staging_client).to receive(:stage)
           end
 
           it 'sends the staging message to the bbs' do
             messenger.send_stage_request(config, staging_details)
 
             expect(recipe_builder).to have_received(:build_staging_task).with(config, staging_details)
-            expect(bbs_stager_client).to have_received(:stage).with(staging_guid, message)
+            expect(bbs_staging_client).to have_received(:stage).with(staging_guid, message)
           end
         end
       end

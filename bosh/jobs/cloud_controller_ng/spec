@@ -793,6 +793,9 @@ properties:
   cc.diego.cc_uploader_url:
     description: "URL of cc uploader"
     default: http://cc-uploader.service.cf.internal:9090
+  cc.diego.use_privileged_containers_for_running:
+    description: "Whether or not to use privileged containers for running buildpack apps and tasks."
+    default: false
   cc.diego.use_privileged_containers_for_staging:
     description: "Whether or not to use privileged containers for staging tasks."
     default: false

@@ -10,7 +10,7 @@ module VCAP::CloudController
 
         if do_local_staging
           task_definition = recipe_builder.build_staging_task(config, staging_details)
-          bbs_stager_client.stage(staging_guid, task_definition)
+          bbs_staging_client.stage(staging_guid, task_definition)
         else
           staging_message = protocol.stage_package_request(config, staging_details)
           stager_client.stage(staging_guid, staging_message)
@@ -21,7 +21,7 @@ module VCAP::CloudController
         logger.info('staging.stop', staging_guid: staging_guid)
 
         if do_local_staging
-          bbs_stager_client.stop_staging(staging_guid)
+          bbs_staging_client.stop_staging(staging_guid)
         else
           stager_client.stop_staging(staging_guid)
         end
@@ -71,8 +71,8 @@ module VCAP::CloudController
         CloudController::DependencyLocator.instance.stager_client
       end
 
-      def bbs_stager_client
-        CloudController::DependencyLocator.instance.bbs_stager_client
+      def bbs_staging_client
+        CloudController::DependencyLocator.instance.bbs_staging_client
       end
 
       def nsync_client
