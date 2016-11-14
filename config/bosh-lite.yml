@@ -265,12 +265,13 @@ rate_limiter:
   reset_interval_in_minutes: 60
 
 diego:
-  temporary_local_staging: false
+  temporary_local_staging: true
   nsync_url: http://10.244.16.14:8787
   stager_url: http://10.244.16.14:8888
   tps_url: http://10.244.16.14:1518
   file_server_url: http://10.244.16.14:8080
   cc_uploader_url: http://10.244.16.14:9090
+  use_privileged_containers_for_running: false
   use_privileged_containers_for_staging: false
   lifecycle_bundles:
     "buildpack/cflinuxfs2": "buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"

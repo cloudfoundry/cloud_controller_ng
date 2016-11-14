@@ -49,7 +49,7 @@ module VCAP::CloudController
       attr_reader :client
 
       def logger
-        @logger ||= Steno.logger('cc.stager.client')
+        @logger ||= Steno.logger('cc.bbs.stager_client')
       end
     end
   end

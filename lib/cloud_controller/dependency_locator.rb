@@ -9,6 +9,7 @@ require 'cloud_controller/blob_sender/default_blob_sender'
 require 'cloud_controller/blob_sender/missing_blob_handler'
 require 'cloud_controller/diego/stager_client'
 require 'cloud_controller/diego/bbs_stager_client'
+require 'cloud_controller/diego/bbs_task_client'
 require 'cloud_controller/diego/tps_client'
 require 'cloud_controller/diego/messenger'
 require 'cloud_controller/blobstore/client_provider'
@@ -63,6 +64,10 @@ module CloudController
 
     def bbs_stager_client
       @dependencies[:bbs_stager_client] || register(:bbs_stager_client, build_bbs_stager_client)
+    end
+
+    def bbs_task_client
+      @dependencies[:bbs_task_client] || register(:bbs_task_client, build_bbs_task_client)
     end
 
     def tps_client
@@ -280,6 +285,17 @@ module CloudController
       )
 
       VCAP::CloudController::Diego::BbsStagerClient.new(bbs_client)
+    end
+
+    def build_bbs_task_client
+      bbs_client = ::Diego::Client.new(
+        url:              HashUtils.dig(@config, :diego, :bbs, :url),
+        ca_cert_file:     HashUtils.dig(@config, :diego, :bbs, :ca_file),
+        client_cert_file: HashUtils.dig(@config, :diego, :bbs, :cert_file),
+        client_key_file:  HashUtils.dig(@config, :diego, :bbs, :key_file)
+      )
+
+      VCAP::CloudController::Diego::BbsTaskClient.new(bbs_client)
     end
 
     def create_object_renderer(opts={})

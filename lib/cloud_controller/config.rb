@@ -288,6 +288,7 @@ module VCAP::CloudController
           tps_url:                               String,
           file_server_url:                       String,
           cc_uploader_url:                       String,
+          use_privileged_containers_for_running: bool,
           use_privileged_containers_for_staging: bool,
           lifecycle_bundles:                     Hash,
 

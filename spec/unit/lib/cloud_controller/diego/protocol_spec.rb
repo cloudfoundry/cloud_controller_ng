@@ -12,7 +12,7 @@ module VCAP::CloudController
         { 'more' => 'data', 'start_command' => '/usr/local/bin/party' }
       end
 
-      def action_builder(_, _)
+      def staging_action_builder(_, _)
         nil
       end
     end

@@ -14,7 +14,7 @@ RSpec.shared_examples_for 'a lifecycle protocol' do
     expect(desired_app_message).to have_key('start_command')
   end
 
-  it 'provides an action builder' do
-    expect { lifecycle_protocol.action_builder(config, staging_details) }.not_to raise_error
+  it 'provides a staging action builder' do
+    expect { lifecycle_protocol.staging_action_builder(config, staging_details) }.not_to raise_error
   end
 end

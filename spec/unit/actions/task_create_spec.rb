@@ -14,13 +14,16 @@ module VCAP::CloudController
       let(:name) { 'my_task_name' }
       let(:message) { TaskCreateMessage.new name: name, command: command, disk_in_mb: 2048, memory_in_mb: 1024 }
       let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
+      let(:bbs_client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient) }
       let(:user_guid) { 'user-guid' }
       let(:user_email) { 'user-email' }
 
       before do
         locator = CloudController::DependencyLocator.instance
         allow(locator).to receive(:nsync_client).and_return(client)
+        allow(locator).to receive(:bbs_task_client).and_return(bbs_client)
         allow(client).to receive(:desire_task).and_return(nil)
+        allow(bbs_client).to receive(:desire_task).and_return(nil)
 
         app.droplet = droplet
         app.save
@@ -44,10 +47,64 @@ module VCAP::CloudController
         expect(task.state).to eq(TaskModel::PENDING_STATE)
       end
 
-      it 'tells diego to make the task' do
-        task = task_create_action.create(app, message, user_guid, user_email)
+      describe 'desiring the task from Diego' do
+        context 'when using the bridge' do
+          it 'tells nsync to make the task' do
+            task = task_create_action.create(app, message, user_guid, user_email)
 
-        expect(client).to have_received(:desire_task).with(task)
+            expect(client).to have_received(:desire_task).with(task)
+          end
+        end
+
+        context 'when talking directly to BBS' do
+          let(:task_definition) { instance_double(::Diego::Bbs::Models::TaskDefinition) }
+          let(:recipe_builder) { instance_double(Diego::RecipeBuilder) }
+
+          before do
+            config[:diego] = {
+              temporary_local_staging: true
+            }
+            allow(recipe_builder).to receive(:build_app_task).with(config, instance_of(TaskModel)).and_return(task_definition)
+            allow(Diego::RecipeBuilder).to receive(:new).and_return(recipe_builder)
+          end
+
+          it 'builds a recipe for the task and desires the task from BBS' do
+            task = task_create_action.create(app, message, user_guid, user_email)
+
+            expect(bbs_client).to have_received(:desire_task).with(task.guid, task_definition, 'cf-tasks')
+          end
+
+          it 'updates the task to be running' do
+            task = task_create_action.create(app, message, user_guid, user_email)
+
+            expect(task.state).to eq(TaskModel::RUNNING_STATE)
+          end
+
+          describe 'task errors' do
+            it 'catches InvalidDownloadUri and wraps it in an API error' do
+              allow(recipe_builder).to receive(:build_app_task).and_raise(Diego::RecipeBuilder::InvalidDownloadUri.new('error message'))
+              expect {
+                task_create_action.create(app, message, user_guid, user_email)
+              }.to raise_error CloudController::Errors::ApiError, /Task failed: error message/
+            end
+
+            describe 'lifecycle bundle errors from recipe builder' do
+              it 'catches InvalidStack and wraps it in an API error' do
+                allow(recipe_builder).to receive(:build_app_task).and_raise(Diego::LifecycleBundleUriGenerator::InvalidStack.new('error message'))
+                expect {
+                  task_create_action.create(app, message, user_guid, user_email)
+                }.to raise_error CloudController::Errors::ApiError, /Task failed: error message/
+              end
+
+              it 'catches InvalidCompiler and wraps it in an API error' do
+                allow(recipe_builder).to receive(:build_app_task).and_raise(Diego::LifecycleBundleUriGenerator::InvalidCompiler.new('error message'))
+                expect {
+                  task_create_action.create(app, message, user_guid, user_email)
+                }.to raise_error CloudController::Errors::ApiError, /Task failed: error message/
+              end
+            end
+          end
+        end
       end
 
       it 'creates an app usage event for TASK_STARTED' do

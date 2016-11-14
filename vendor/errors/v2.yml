@@ -626,7 +626,7 @@
 170019:
   name: TaskError
   http_code: 500
-  message: "task failed: %s"
+  message: "Task failed: %s"
 
 170020:
   name: TaskWorkersUnavailable
