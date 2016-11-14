@@ -161,6 +161,25 @@ module VCAP::CloudController
       end
     end
 
+    describe '#before_destroy' do
+      let(:org) { Organization.make }
+
+      before do
+        assigner.assign(isolation_segment_model, [org])
+      end
+
+      it 'raises an error if still assigned to any orgs' do
+        expect { isolation_segment_model.destroy }.to raise_error(CloudController::Errors::ApiError, /Please delete the Organization associations for your Isolation Segment/)
+        expect { isolation_segment_model.reload }.to_not raise_error
+      end
+
+      it 'raises an error if there are still spaces associated' do
+        Space.make(organization: org, isolation_segment_guid: isolation_segment_model.guid)
+        expect { isolation_segment_model.destroy }.to raise_error(CloudController::Errors::ApiError, /Please delete the Space associations/)
+        expect { isolation_segment_model.reload }.to_not raise_error
+      end
+    end
+
     describe '#is_shared_segment?' do
       it 'returns false' do
         expect(isolation_segment_model.is_shared_segment?).to be false
