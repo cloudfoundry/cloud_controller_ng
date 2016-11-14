@@ -1,12 +1,12 @@
 require 'spec_helper'
-require 'cloud_controller/diego/bbs_staging_client'
+require 'cloud_controller/diego/bbs_stager_client'
 
 module VCAP::CloudController::Diego
-  RSpec.describe BbsStagingClient do
+  RSpec.describe StagerClient do
     let(:staging_guid) { 'staging-guid' }
     let(:bbs_client) { instance_double(::Diego::Client) }
 
-    subject(:client) { BbsStagingClient.new(bbs_client) }
+    subject(:client) { BbsStagerClient.new(bbs_client) }
 
     describe '#stage' do
       let(:staging_message) { instance_double(::Diego::Bbs::Models::TaskDefinition) }

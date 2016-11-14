@@ -20,7 +20,7 @@ module VCAP
             lifecycle_data.message
           end
 
-          def staging_action_builder(config, staging_details)
+          def action_builder(config, staging_details)
             StagingActionBuilder.new(config, staging_details)
           end
 

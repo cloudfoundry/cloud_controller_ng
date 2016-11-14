@@ -228,7 +228,6 @@ diego:
   tps_url: http://tps.service.cf.internal:1518
   file_server_url: http://file-server.service.cf.internal:8080
   cc_uploader_url: http://cc-uploader.service.cf.internal:9090
-  use_privileged_containers_for_running: false
   use_privileged_containers_for_staging: false
   lifecycle_bundles:
     "buildpack/cflinuxfs2": "buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
