@@ -250,17 +250,17 @@ module VCAP::CloudController
     end
 
     def validate_isolation_segment_set(isolation_segment_model)
-      raise CloudController::Errors::ApiError.new_from_details(
-        'UnableToPerform',
-        'Adding the Isolation Segment to the Space',
-        'Cannot change the Isolation Segment for a Space containing Apps') unless app_models.empty?
-
       isolation_segment_guids = organization.isolation_segment_models.map(&:guid)
       unless isolation_segment_guids.include?(isolation_segment_model.guid)
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform',
                                                                  'Adding the Isolation Segment to the Space',
                                                                  "Only Isolation Segments in the Organization's allowed list can be used.")
       end
+
+      raise CloudController::Errors::ApiError.new_from_details(
+        'UnableToPerform',
+        'Adding the Isolation Segment to the Space',
+        'Cannot change the Isolation Segment for a Space containing Apps') unless app_models.empty?
     end
 
     def validate_isolation_segment_unset

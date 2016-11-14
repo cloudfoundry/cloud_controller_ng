@@ -231,7 +231,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         expect(response.status).to eq 201
         expect(parsed_body['guid']).to eq(isolation_segment_model.guid)
-        expect(isolation_segment_model.organizations).to include(org)
+        expect(isolation_segment_model.organizations).to contain_exactly(org)
       end
 
       it 'assigns multiple organizations to the isolation segment' do
@@ -242,11 +242,9 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         expect(parsed_body['guid']).to eq(isolation_segment_model.guid)
 
-        # need to reload the orgs because the default isolation segment get set
-        # This also means that the updated at time is on our ors
         org.reload
         org_2.reload
-        expect(isolation_segment_model.organizations).to include(org, org_2)
+        expect(isolation_segment_model.organizations).to contain_exactly(org, org_2)
       end
 
       context 'when the isolation segment does not exist' do

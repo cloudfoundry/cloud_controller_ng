@@ -16,6 +16,9 @@ module VCAP::CloudController
       right_key: :isolation_segment_guid,
       right_primary_key: :guid,
       join_table: :organizations_isolation_segments,
+      # These are needed because we do not set the default isolation segment
+      # for an organization. This happens as part of the action on an
+      # Isolation Segment.
       before_add: proc { cannot_create! },
       before_remove: proc { cannot_update! }
 
@@ -214,6 +217,8 @@ module VCAP::CloudController
       billing_enabled
     end
 
+    private
+
     def check_spaces_without_isolation_segments_empty!(action)
       Space.dataset.where(isolation_segment_guid: nil, organization: self).each do |space|
         raise CloudController::Errors::ApiError.new_from_details(
@@ -222,8 +227,6 @@ module VCAP::CloudController
           "Please delete all Apps from Space #{space.name} first.") unless space.app_models.empty?
       end
     end
-
-    private
 
     def validate_default_isolation_segment(isolation_segment_model)
       if isolation_segment_model

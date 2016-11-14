@@ -1,6 +1,5 @@
 require 'actions/organization_delete'
 require 'queries/organization_user_roles_fetcher'
-require 'messages/isolation_segments_list_message'
 
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController

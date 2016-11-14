@@ -154,25 +154,6 @@ module VCAP::CloudController
         end
       end
 
-      describe '#check_spaces_without_isolation_segments_empty!' do
-        it 'does not raise an error' do
-          expect { org.check_spaces_without_isolation_segments_empty!('Setting') }.to_not raise_error
-        end
-
-        context 'when there are spaces without an isolation segment that contain apps' do
-          before do
-            AppModel.make(space: Space.make(organization: org))
-          end
-
-          it 'raises an UnableToPerform error' do
-            expect { org.check_spaces_without_isolation_segments_empty!('Setting') }.to raise_error(
-              CloudController::Errors::ApiError,
-              /Setting default Isolation Segment/
-            )
-          end
-        end
-      end
-
       describe 'space_quota_definitions' do
         it 'adds when in this org' do
           quota = SpaceQuotaDefinition.make(organization: org)
@@ -289,17 +270,31 @@ module VCAP::CloudController
               end
 
               context 'and a space has an app' do
-                before do
-                  AppModel.make(space: space)
-                end
-
                 it 'raises an UnableToPerform exception and does not set the default' do
+                  AppModel.make(space: space)
                   expect {
                     org.update(default_isolation_segment_guid: isolation_segment_model.guid)
                   }.to raise_error(CloudController::Errors::ApiError, /Setting default Isolation Segment/)
 
                   org.reload
                   expect(org.default_isolation_segment_model).to eq(nil)
+                end
+
+                context 'and the space has an assigned isolation segment' do
+                  let(:isolation_segment_model2) { IsolationSegmentModel.make }
+
+                  before do
+                    assigner.assign(isolation_segment_model2, [org])
+                    space.update(isolation_segment_model: isolation_segment_model2)
+                    AppModel.make(space: space)
+                  end
+
+                  it 'sets the default Isolation Segment' do
+                    org.update(default_isolation_segment_model: isolation_segment_model)
+                    org.reload
+
+                    expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+                  end
                 end
               end
             end
