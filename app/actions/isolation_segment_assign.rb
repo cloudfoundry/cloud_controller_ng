@@ -4,7 +4,7 @@ module VCAP::CloudController
       isolation_segment.db.transaction do
         isolation_segment.lock!
 
-        organizations.sort! { |o1, o2| o1.guid <=> o2.guid }.each do |org|
+        organizations.sort! { |o1, o2| o1.id <=> o2.id }.each do |org|
           org.lock!
           isolation_segment.add_organization(org)
 

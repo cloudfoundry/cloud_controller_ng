@@ -8,14 +8,22 @@ module VCAP::CloudController
     let(:org2) { Organization.make }
 
     it 'sorts the organizations passed in for assignment' do
-      org.update(guid: 'b')
-      org2.update(guid: 'a')
+      rval = Random.new.rand(1..2)
 
-      org.reload
-      org2.reload
+      if (rval == 1)
+        org2.reload
+        org.reload
 
-      expect(isolation_segment_model).to receive(:add_organization).with(org2).ordered
-      expect(isolation_segment_model).to receive(:add_organization).with(org).ordered
+        expect(isolation_segment_model).to receive(:add_organization).with(org2).ordered
+        expect(isolation_segment_model).to receive(:add_organization).with(org).ordered
+      else
+        org.reload
+        org2.reload
+
+        expect(isolation_segment_model).to receive(:add_organization).with(org).ordered
+        expect(isolation_segment_model).to receive(:add_organization).with(org2).ordered
+      end
+
       subject.assign(isolation_segment_model, [org, org2])
     end
 
