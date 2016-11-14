@@ -73,6 +73,88 @@ module VCAP::CloudController
           end
         end
 
+        describe 'isolation segments' do
+          let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+          let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+          let(:isolation_segment_model_2) { VCAP::CloudController::IsolationSegmentModel.make }
+          let(:shared_isolation_segment) { VCAP::CloudController::IsolationSegmentModel.shared_segment }
+          let(:org) { task.space.organization }
+          let(:result) { JSON.parse(protocol.task_request(task, config)) }
+
+          let(:app) { AppModel.make }
+          let(:droplet) { DropletModel.make(:buildpack, app_guid: app.guid, droplet_hash: 'some_hash') }
+
+          before do
+            app.buildpack_lifecycle_data = BuildpackLifecycleDataModel.make
+            app.save
+          end
+
+          context 'when the org has a default' do
+            context 'and the default is the shared isolation segments' do
+              before do
+                assigner.assign(shared_isolation_segment, [org])
+              end
+
+              it 'does not set an isolation segment' do
+                expect(result['isolation_segment']).to be_nil
+              end
+            end
+
+            context 'and the default is not the shared isolation segment' do
+              before do
+                assigner.assign(isolation_segment_model, [org])
+                org.update(default_isolation_segment_model: isolation_segment_model)
+              end
+
+              it 'sets the isolation segment' do
+                expect(result['isolation_segment']).to eq(isolation_segment_model.name)
+              end
+
+              context 'and the space from that org has an isolation segment' do
+                context 'and the isolation segment is the shared isolation segment' do
+                  before do
+                    assigner.assign(shared_isolation_segment, [org])
+                    task.space.isolation_segment_model = shared_isolation_segment
+                    task.space.save
+                  end
+
+                  it 'does not set the isolation segment' do
+                    expect(result['isolation_segment']).to be_nil
+                  end
+                end
+
+                context 'and the isolation segment is not the shared or the default' do
+                  before do
+                    assigner.assign(isolation_segment_model_2, [org])
+                    task.space.isolation_segment_model = isolation_segment_model_2
+                    task.space.save
+                  end
+
+                  it 'sets the IS from the space' do
+                    expect(result['isolation_segment']).to eq(isolation_segment_model_2.name)
+                  end
+                end
+              end
+            end
+          end
+
+          context 'when the org does not have a default' do
+            context 'and the space from that org has an isolation segment' do
+              context 'and the isolation segment is not the shared isolation segment' do
+                before do
+                  assigner.assign(isolation_segment_model, [org])
+                  task.space.isolation_segment_model = isolation_segment_model
+                  task.space.save
+                end
+
+                it 'sets the isolation segment' do
+                  expect(result['isolation_segment']).to eq(isolation_segment_model.name)
+                end
+              end
+            end
+          end
+        end
+
         context 'the task has a docker file droplet' do
           let(:app) { AppModel.make(:docker) }
           let(:droplet) { DropletModel.make(:docker, app: app, environment_variables: { 'foo' => 'bar' }, docker_receipt_image: 'cloudfoundry/capi-docker') }

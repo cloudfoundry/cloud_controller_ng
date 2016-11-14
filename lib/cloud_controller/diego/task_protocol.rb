@@ -46,6 +46,17 @@ module VCAP::CloudController
           )
         end
 
+        shared_segment = VCAP::CloudController::IsolationSegmentModel.shared_segment
+
+        if task.space.isolation_segment_model
+          if task.space.isolation_segment_model.guid != shared_segment.guid
+            result['isolation_segment'] = task.space.isolation_segment_model.name
+          end
+        elsif task.space.organization.default_isolation_segment_model &&
+          task.space.organization.default_isolation_segment_model.guid != shared_segment.guid
+          result['isolation_segment'] = task.space.organization.default_isolation_segment_model.name
+        end
+
         result.to_json
       end
 
