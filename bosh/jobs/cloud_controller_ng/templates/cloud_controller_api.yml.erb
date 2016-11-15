@@ -19,7 +19,11 @@
 %>
 ---
 #Actually NGX host and port
+<% if p('cc.nginx.ip').empty? %>
 local_route: <%= discover_external_ip %>
+<% else %>
+local_route: <%= p('cc.nginx.ip') %>
+<% end %>
 external_port: <%= p("cc.external_port") %>
 internal_service_hostname: <%= p("cc.internal_service_hostname") %>
 
