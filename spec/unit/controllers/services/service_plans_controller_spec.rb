@@ -149,6 +149,24 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET', '/v2/service_plans/:guid' do
+      let(:service_plan) { ServicePlan.make }
+
+      it 'returns the plan' do
+        set_current_user_as_admin
+
+        get "/v2/service_plans/#{service_plan.guid}"
+
+        expect(last_response.status).to eq 200
+
+        metadata = decoded_response.fetch('metadata')
+        expect(metadata['guid']).to eq service_plan.guid
+
+        entity = decoded_response.fetch('entity')
+        expect(entity['service_guid']).to eq service_plan.service.guid
+      end
+    end
+
     describe 'GET', '/v2/service_plans' do
       before do
         @services = {
