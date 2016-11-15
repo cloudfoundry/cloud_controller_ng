@@ -6,6 +6,8 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:timestamp) }
       it { expect(described_class).to be_queryable_by(:type) }
       it { expect(described_class).to be_queryable_by(:actee) }
+      it { expect(described_class).to be_queryable_by(:space_guid) }
+      it { expect(described_class).to be_queryable_by(:organization_guid) }
     end
 
     describe 'GET /v2/events' do
