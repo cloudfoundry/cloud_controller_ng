@@ -8,6 +8,7 @@ module VCAP::CloudController
         {
           'names'              => 'name1,name2',
           'guids'              => 'guid1,guid2',
+          'organization_guids' => 'o-guid1,o-guid2',
           'page'               => 1,
           'per_page'           => 5,
           'order_by'           => 'created_at'
@@ -20,6 +21,7 @@ module VCAP::CloudController
         expect(message).to be_a(IsolationSegmentsListMessage)
         expect(message.names).to eq(['name1', 'name2'])
         expect(message.guids).to eq(['guid1', 'guid2'])
+        expect(message.organization_guids).to eq(['o-guid1', 'o-guid2'])
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
@@ -30,6 +32,7 @@ module VCAP::CloudController
 
         expect(message.requested?(:names)).to be_truthy
         expect(message.requested?(:guids)).to be_truthy
+        expect(message.requested?(:organization_guids)).to be_truthy
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
         expect(message.requested?(:order_by)).to be_truthy
@@ -41,6 +44,7 @@ module VCAP::CloudController
         {
             names:              ['name1', 'name2'],
             guids:              ['guid1', 'guid2'],
+            organization_guids:  ['o-guid1', 'o-guid2'],
             page:               1,
             per_page:           5,
             order_by:           'created_at',
@@ -48,7 +52,7 @@ module VCAP::CloudController
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names, :guids]
+        expected_params = [:names, :guids, :organization_guids]
         expect(IsolationSegmentsListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -59,6 +63,7 @@ module VCAP::CloudController
           IsolationSegmentsListMessage.new({
               names:              [],
               guids:              [],
+              organization_guids: [],
               page:               1,
               per_page:           5,
               order_by:           'created_at',

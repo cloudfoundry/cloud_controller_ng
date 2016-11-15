@@ -25,6 +25,10 @@ module VCAP::CloudController
         dataset = dataset.where("#{IsolationSegmentModel.table_name}__name".to_sym => @message.names)
       end
 
+      if @message.requested?(:organization_guids)
+        dataset = dataset.where(organizations: Organization.where(guid: @message.organization_guids))
+      end
+
       dataset
     end
   end

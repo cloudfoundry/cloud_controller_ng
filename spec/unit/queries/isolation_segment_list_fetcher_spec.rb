@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'isolation_segment_assign'
 require 'queries/isolation_segment_list_fetcher'
 require 'messages/isolation_segments_list_message'
 
@@ -16,10 +17,12 @@ module VCAP::CloudController
     let(:org2) { VCAP::CloudController::Organization.make }
     let(:org3) { VCAP::CloudController::Organization.make }
 
+    let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+
     before do
-      isolation_segment_model_1.add_organization(org1)
-      isolation_segment_model_2.add_organization(org2)
-      isolation_segment_model_3.add_organization(org3)
+      assigner.assign(isolation_segment_model_1, [org1])
+      assigner.assign(isolation_segment_model_2, [org2])
+      assigner.assign(isolation_segment_model_3, [org3])
     end
 
     describe '#fetch_all' do
@@ -41,7 +44,6 @@ module VCAP::CloudController
 
           it 'filters by guids' do
             isolation_segment_models = fetcher.fetch_all.all
-
             expect(isolation_segment_models).to contain_exactly(isolation_segment_model_1)
           end
         end
@@ -51,8 +53,16 @@ module VCAP::CloudController
 
           it 'filters by names and ignores case' do
             isolation_segment_models = fetcher.fetch_all.all
-
             expect(isolation_segment_models).to contain_exactly(isolation_segment_model_2, isolation_segment_model_3)
+          end
+        end
+
+        context 'by organization guids' do
+          let(:filters) { { organization_guids: [org1.guid, org2.guid] } }
+
+          it 'filters by organization guids' do
+            isolation_segment_models = fetcher.fetch_all.all
+            expect(isolation_segment_models).to contain_exactly(isolation_segment_model_1, isolation_segment_model_2)
           end
         end
       end
@@ -66,13 +76,11 @@ module VCAP::CloudController
 
       it 'fetches only those isolation segments associated with the specified orgs' do
         isolation_segment_models = fetcher.fetch_for_organizations(org_guids: [org1.guid, org2.guid]).all
-
         expect(isolation_segment_models).to contain_exactly(isolation_segment_model_1, isolation_segment_model_2)
       end
 
       it 'returns no isolation segments when the list of org guids is empty' do
         isolation_segment_models = fetcher.fetch_for_organizations(org_guids: []).all
-
         expect(isolation_segment_models).to be_empty
       end
 
@@ -81,7 +89,6 @@ module VCAP::CloudController
 
         it 'filters by names and ignores case' do
           isolation_segment_models = fetcher.fetch_for_organizations(org_guids: [org1.guid, org2.guid]).all
-
           expect(isolation_segment_models).to contain_exactly(isolation_segment_model_2)
         end
       end
@@ -91,7 +98,15 @@ module VCAP::CloudController
 
         it 'filters by guids' do
           isolation_segment_models = fetcher.fetch_for_organizations(org_guids: [org1.guid, org2.guid]).all
+          expect(isolation_segment_models).to contain_exactly(isolation_segment_model_1)
+        end
+      end
 
+      context 'by organization guids' do
+        let(:filters) { { organization_guids: [org1.guid] } }
+
+        it 'filters by organization guids' do
+          isolation_segment_models = fetcher.fetch_for_organizations(org_guids: [org1.guid, org2.guid]).all
           expect(isolation_segment_models).to contain_exactly(isolation_segment_model_1)
         end
       end

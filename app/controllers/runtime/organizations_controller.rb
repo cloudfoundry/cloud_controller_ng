@@ -235,20 +235,6 @@ module VCAP::CloudController
       [HTTP::MOVED_PERMANENTLY, headers, 'Use DELETE /v2/private_domains/:domain_guid']
     end
 
-    get '/v2/organizations/:guid/isolation_segments', :list_isolation_segments
-    def list_isolation_segments(guid)
-      org = find_guid_and_validate_access(:read, guid)
-
-      dataset = IsolationSegmentModel.dataset.where(organizations: org)
-      message = IsolationSegmentsListMessage.from_params(@params)
-
-      [HTTP::OK, MultiJson.dump(Presenters::V3::PaginatedListPresenter.new(
-        dataset: dataset,
-        path: "/v2/organizations/#{org.guid}/isolation_segments",
-        message: message
-      ).to_hash)]
-    end
-
     define_messages
     define_routes
 
