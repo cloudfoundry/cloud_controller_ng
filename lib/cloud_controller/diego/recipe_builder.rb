@@ -104,7 +104,7 @@ module VCAP::CloudController
 
         diego_envs
       end
-      
+
       def find_staging_isolation_segment(staging_details)
         iso_seg = ''
         if staging_details.isolation_segment
