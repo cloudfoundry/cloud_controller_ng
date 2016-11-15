@@ -149,7 +149,11 @@ module VCAP::CloudController
         self.last_operation.destroy
       end
 
-      self.service_instance_operation = ServiceInstanceOperation.new(last_operation)
+      # it is important to create the service instance operation with the service instance
+      # instead of doing self.service_instance_operation = x
+      # because mysql will deadlock when requests happen concurrently otherwise.
+      ServiceInstanceOperation.create(last_operation.merge(service_instance_id: self.id))
+      self.service_instance_operation(true) # reload service_instance_operation association
     end
 
     def update_service_instance(attributes_to_update)
