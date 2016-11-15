@@ -102,6 +102,16 @@ module VCAP::CloudController
       staging_details.environment_variables = environment_variables
       staging_details.lifecycle             = lifecycle
 
+      shared_segment = VCAP::CloudController::IsolationSegmentModel.shared_segment
+
+      if space.isolation_segment_model
+        if space.isolation_segment_model.guid != shared_segment.guid
+          staging_details.isolation_segment = space.isolation_segment_model.name
+        end
+      elsif org.default_isolation_segment_model && org.default_isolation_segment_model.guid != shared_segment.guid
+        staging_details.isolation_segment = org.default_isolation_segment_model.name
+      end
+
       staging_details
     end
 

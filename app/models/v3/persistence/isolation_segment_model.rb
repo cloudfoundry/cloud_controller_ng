@@ -27,5 +27,9 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'Organization', 'Isolation Segment') unless organizations.empty?
       super
     end
+
+    def self.shared_segment
+      @shared_segment ||= IsolationSegmentModel.first(guid: SHARED_ISOLATION_SEGMENT_GUID)
+    end
   end
 end
