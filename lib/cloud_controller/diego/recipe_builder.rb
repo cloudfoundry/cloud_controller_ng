@@ -1,5 +1,6 @@
 require 'diego/action_builder'
 require 'cloud_controller/diego/lifecycle_bundle_uri_generator'
+require 'cloud_controller/diego/buildpack/task_action_builder'
 require 'cloud_controller/diego/bbs_environment_builder'
 
 module VCAP::CloudController
@@ -31,6 +32,9 @@ module VCAP::CloudController
           cache_key: "buildpack-#{stack}-lifecycle",
         )]
 
+        task_action_builder = VCAP::CloudController::Diego::Buildpack::TaskActionBuilder.new
+        action = task_action_builder.action task, { droplet_download_uri: download_url }
+
         ::Diego::Bbs::Models::TaskDefinition.new(
           completion_callback_url: task_completion_callback,
           cpu_weight: 25,
@@ -43,26 +47,8 @@ module VCAP::CloudController
           privileged: config[:diego][:use_privileged_containers_for_running],
           environment_variables: envs_for_diego(task.app, task),
           trusted_system_certificates_path: STAGING_TRUSTED_SYSTEM_CERT_PATH,
-
           root_fs: "preloaded:#{stack}",
-          action: serial([
-            ::Diego::Bbs::Models::DownloadAction.new(
-              from: download_url,
-              to: '.',
-              cache_key: '',
-              user: 'vcap',
-              checksum_algorithm: 'sha1',
-              checksum_value: task.droplet.droplet_hash
-            ),
-            ::Diego::Bbs::Models::RunAction.new(
-              user: 'vcap',
-              path: '/tmp/lifecycle/launcher',
-              args: ['app', task.command, ''],
-              log_source:  log_source,
-              resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
-              env: envs_for_diego(task.app, task)
-            ),
-          ]),
+          action: action,
           cached_dependencies: cached_dependencies,
           volume_mounts: generate_volume_mounts(app_volume_mounts)
         )

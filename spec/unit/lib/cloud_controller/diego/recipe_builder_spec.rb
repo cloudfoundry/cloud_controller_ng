@@ -323,7 +323,14 @@ module VCAP::CloudController
           let(:droplet) { DropletModel.make(:buildpack, package: package, app: app, buildpack_receipt_stack_name: 'potato-stack') }
           let(:package) { PackageModel.make(app: app) }
 
-          let(:lifecycle_environment_variables) { [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'the-buildpack-env-var', value: 'the-buildpack-value')] }
+          let(:buildpack_task_action) { ::Diego::Bbs::Models::Action.new }
+
+          let(:lifecycle_environment_variables) { [
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APPLICATION', value: '{"greg":"pants"}'),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'MEMORY_LIMIT', value: '256m'),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_SERVICES', value: '{}'),
+          ]
+          }
           let(:lifecycle_cached_dependencies) { [::Diego::Bbs::Models::CachedDependency.new(
             from:      'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url',
             to:        '/tmp/lifecycle',
@@ -332,6 +339,10 @@ module VCAP::CloudController
           }
 
           before do
+            task_action_builder = instance_double(VCAP::CloudController::Diego::Buildpack::TaskActionBuilder)
+            allow(task_action_builder).to receive(:action).and_return(buildpack_task_action)
+            allow(VCAP::CloudController::Diego::Buildpack::TaskActionBuilder).to receive(:new).and_return(task_action_builder)
+
             allow(recipe_builder).to receive(:envs_for_diego).with(app, task_details).and_return(lifecycle_environment_variables)
           end
 
@@ -353,24 +364,7 @@ module VCAP::CloudController
             expect(result.trusted_system_certificates_path).to eq('/etc/cf-system-certificates')
             expect(result.log_source).to eq('APP/TASK/potato-task')
 
-            actions = result.action.serial_action.actions
-            expect(actions.length).to eq(2)
-            expect(actions[0].download_action).to eq(::Diego::Bbs::Models::DownloadAction.new(
-                                                       from: 'www.droplet.url',
-                                                       to: '.',
-                                                       cache_key: '',
-                                                       user: 'vcap',
-                                                       checksum_algorithm: 'sha1',
-                                                       checksum_value: droplet.droplet_hash,
-            ))
-            expect(actions[1].run_action).to eq(::Diego::Bbs::Models::RunAction.new(
-                                                  user: 'vcap',
-                                                  path: '/tmp/lifecycle/launcher',
-                                                  args: ['app', 'bin/start', ''],
-                                                  log_source: 'APP/TASK/potato-task',
-                                                  env: lifecycle_environment_variables,
-                                                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new
-            ))
+            expect(result.action).to eq(buildpack_task_action)
             expect(result.legacy_download_user).to eq('vcap')
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
 

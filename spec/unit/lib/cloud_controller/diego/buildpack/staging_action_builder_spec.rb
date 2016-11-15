@@ -108,7 +108,7 @@ module VCAP::CloudController
             ]
           end
 
-          it 'returns the correct docker staging action structure' do
+          it 'returns the correct buildpack staging action structure' do
             result = builder.action
 
             serial_action = result.serial_action
