@@ -89,6 +89,7 @@ module VCAP::CloudController
           action:                           timeout(action_builder.action, timeout_ms: config[:staging][:timeout_in_seconds].to_i * 1000),
           environment_variables:            action_builder.task_environment_variables,
           cached_dependencies:              action_builder.cached_dependencies,
+          PlacementTags:                    [find_staging_isolation_segment(staging_details)],
         )
       end
 
@@ -102,6 +103,14 @@ module VCAP::CloudController
         logger.debug2("task environment: #{diego_envs.map(&:name)}")
 
         diego_envs
+      end
+      
+      def find_staging_isolation_segment(staging_details)
+        iso_seg = ''
+        if staging_details.isolation_segment
+          iso_seg = staging_details.isolation_segment.name
+        end
+        iso_seg
       end
 
       def generate_annotation(config, lifecycle_type, staging_details)

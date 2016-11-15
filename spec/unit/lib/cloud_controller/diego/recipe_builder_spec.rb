@@ -7,6 +7,7 @@ module VCAP::CloudController
 
       describe '#build_staging_task' do
         let(:app) { AppModel.make(guid: 'banana-guid') }
+        let(:isolation_segment) { IsolationSegmentModel.make(name: 'potato-segment') }
         let(:staging_details) do
           Diego::StagingDetails.new.tap do |details|
             details.droplet               = droplet
@@ -15,6 +16,7 @@ module VCAP::CloudController
             details.staging_memory_in_mb  = 42
             details.staging_disk_in_mb    = 51
             details.start_after_staging   = true
+            details.isolation_segment     = isolation_segment
           end
         end
         let(:config) do
@@ -130,6 +132,7 @@ module VCAP::CloudController
             ])
 
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
+            expect(result.PlacementTags[0]).to eq(isolation_segment.name)
           end
 
           it 'sets the completion callback to the stager callback url' do
@@ -255,6 +258,12 @@ module VCAP::CloudController
             expect(timeout_action.timeout_ms).to eq(90 * 1000)
 
             expect(timeout_action.action.run_action).to eq(docker_staging_action)
+          end
+
+          it 'sets the placement tags' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+
+            expect(result.PlacementTags[0]).to eq(isolation_segment.name)
           end
         end
       end
