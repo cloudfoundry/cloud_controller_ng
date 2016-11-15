@@ -52,6 +52,7 @@ module VCAP::Services::ServiceBrokers
                 'name'        => plan_name,
                 'description' => plan_description,
                 'free'        => false,
+                'bindable'    => true,
               }.merge(plan_metadata_hash)
             ]
           }.merge(service_metadata_hash)
@@ -156,7 +157,8 @@ module VCAP::Services::ServiceBrokers
           'extra' => '{"cost":"0.0"}',
           'unique_id' => service_plan.unique_id,
           'public' => service_plan.public,
-          'active' => service_plan.active
+          'active' => service_plan.active,
+          'bindable' => true,
         })
       end
 
@@ -270,6 +272,7 @@ module VCAP::Services::ServiceBrokers
           expect(plan.description).to eq(plan_description)
 
           expect(plan.free).to be false
+          expect(plan.bindable).to be true
         end
 
         context 'and a plan already exists' do
@@ -277,7 +280,8 @@ module VCAP::Services::ServiceBrokers
             VCAP::CloudController::ServicePlan.make(
               service: service,
               unique_id: plan_id,
-              free: true
+              free: true,
+              bindable: false
             )
           end
 
@@ -285,6 +289,7 @@ module VCAP::Services::ServiceBrokers
             expect(plan.name).to_not eq(plan_name)
             expect(plan.description).to_not eq(plan_description)
             expect(plan.free).to be true
+            expect(plan.bindable).to be false
 
             expect {
               service_manager.sync_services_and_plans(catalog)
@@ -294,6 +299,32 @@ module VCAP::Services::ServiceBrokers
             expect(plan.name).to eq(plan_name)
             expect(plan.description).to eq(plan_description)
             expect(plan.free).to be false
+            expect(plan.bindable).to be true
+          end
+
+          it 'creates service audit events for each service plan updated' do
+            service_manager.sync_services_and_plans(catalog)
+
+            service_plan = VCAP::CloudController::ServicePlan.last
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_plan.update')
+            expect(event.type).to eq('audit.service_plan.update')
+            expect(event.actor_type).to eq('service_broker')
+            expect(event.actor).to eq(broker.guid)
+            expect(event.actor_name).to eq(broker.name)
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(service_plan.guid)
+            expect(event.actee_type).to eq('service_plan')
+            expect(event.actee_name).to eq(plan_name)
+            expect(event.space_guid).to eq('')
+            expect(event.organization_guid).to eq('')
+            expect(event.metadata).to include({
+              'name' => service_plan.name,
+              'description' => service_plan.description,
+              'extra' => '{"cost":"0.0"}',
+              'bindable' => true,
+              'free' => false,
+            })
           end
 
           context 'when the plan is public' do

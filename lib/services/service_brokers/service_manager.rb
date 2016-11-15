@@ -62,6 +62,7 @@ module VCAP::Services::ServiceBrokers
           name:        catalog_plan.name,
           description: catalog_plan.description,
           free:        catalog_plan.free,
+          bindable:    catalog_plan.bindable,
           active:      true,
           extra:       catalog_plan.metadata ? catalog_plan.metadata.to_json : nil
         })

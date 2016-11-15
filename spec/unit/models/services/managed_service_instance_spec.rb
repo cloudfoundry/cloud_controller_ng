@@ -487,17 +487,16 @@ module VCAP::CloudController
     end
 
     describe '#bindable?' do
-      let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
-      let(:service_plan) { ServicePlan.make(service: service) }
+      let(:service_instance) { ManagedServiceInstance.make }
 
-      context 'when the service is bindable' do
-        let(:service) { Service.make(bindable: true) }
+      context 'when the service plan is bindable' do
+        before { expect(service_instance.service_plan).to receive(:bindable?).and_return(true) }
 
         specify { expect(service_instance).to be_bindable }
       end
 
-      context 'when the service is not bindable' do
-        let(:service) { Service.make(bindable: false) }
+      context 'when the service plan is not bindable' do
+        before { expect(service_instance.service_plan).to receive(:bindable?).and_return(false) }
 
         specify { expect(service_instance).not_to be_bindable }
       end

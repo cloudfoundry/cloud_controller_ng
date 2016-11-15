@@ -268,28 +268,38 @@ module VCAP::CloudController
           end
         end
 
-        context 'when attempting to bind to an unbindable service' do
-          before do
-            instance.service.bindable = false
-            instance.service.save
-
-            req = {
-              app_guid: app_obj.guid,
-              service_instance_guid: instance.guid
-            }.to_json
-
-            post '/v2/service_bindings', req
-          end
-
+        shared_examples 'UnbindableServiceInstance' do
           it 'raises UnbindableService error' do
+            post '/v2/service_bindings', req.to_json
+
             hash_body = JSON.parse(last_response.body)
             expect(hash_body['error_code']).to eq('CF-UnbindableService')
             expect(last_response).to have_status_code(400)
           end
 
           it 'does not send a bind request to broker' do
+            post '/v2/service_bindings', req.to_json
+
             expect(a_request(:put, bind_url_regex(service_instance: instance))).to_not have_been_made
           end
+        end
+
+        context 'when it is an instance of an unbindable service' do
+          before do
+            instance.service.bindable = false
+            instance.service.save
+          end
+
+          it_behaves_like 'UnbindableServiceInstance'
+        end
+
+        context 'when it is an instance of an unbindable service plan' do
+          before do
+            instance.service_plan.bindable = false
+            instance.service_plan.save
+          end
+
+          it_behaves_like 'UnbindableServiceInstance'
         end
 
         context 'when the app does not exist' do

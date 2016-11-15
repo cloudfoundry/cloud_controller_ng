@@ -45,8 +45,8 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :active }
-      it { is_expected.to import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public }
+      it { is_expected.to export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable, :active }
+      it { is_expected.to import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable }
     end
 
     describe '#save' do
@@ -190,16 +190,48 @@ module VCAP::CloudController
     end
 
     describe '#bindable?' do
-      let(:service_plan) { ServicePlan.make(service: service) }
+      let(:service_plan) { ServicePlan.make(service: service, bindable: plan_bindable) }
 
-      context 'when the service is bindable' do
-        let(:service) { Service.make(bindable: true) }
-        specify { expect(service_plan).to be_bindable }
+      context 'when the plan does not specify if it is bindable' do
+        let(:plan_bindable) { nil }
+
+        context 'and the service is bindable' do
+          let(:service) { Service.make(bindable: true) }
+          specify { expect(service_plan).to be_bindable }
+        end
+
+        context 'and the service is unbindable' do
+          let(:service) { Service.make(bindable: false) }
+          specify { expect(service_plan).not_to be_bindable }
+        end
       end
 
-      context 'when the service is unbindable' do
-        let(:service) { Service.make(bindable: false) }
-        specify { expect(service_plan).not_to be_bindable }
+      context 'when the plan is explicitly set to not be bindable' do
+        let(:plan_bindable) { false }
+
+        context 'and the service is bindable' do
+          let(:service) { Service.make(bindable: true) }
+          specify { expect(service_plan).not_to be_bindable }
+        end
+
+        context 'and the service is unbindable' do
+          let(:service) { Service.make(bindable: false) }
+          specify { expect(service_plan).not_to be_bindable }
+        end
+      end
+
+      context 'when the plan is explicitly set to be bindable' do
+        let(:plan_bindable) { true }
+
+        context 'and the service is bindable' do
+          let(:service) { Service.make(bindable: true) }
+          specify { expect(service_plan).to be_bindable }
+        end
+
+        context 'and the service is unbindable' do
+          let(:service) { Service.make(bindable: false) }
+          specify { expect(service_plan).to be_bindable }
+        end
       end
     end
 

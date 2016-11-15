@@ -6,9 +6,11 @@ module VCAP::CloudController
 
     add_association_dependencies service_plan_visibilities: :destroy
 
-    export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :active
+    export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable, :active
 
-    import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public
+    export_attributes_from_methods bindable: :bindable?
+
+    import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable
 
     strip_attributes :name
 
@@ -54,6 +56,7 @@ module VCAP::CloudController
     end
 
     def bindable?
+      return bindable unless bindable.nil?
       service.bindable?
     end
 
