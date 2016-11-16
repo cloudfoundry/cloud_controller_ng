@@ -286,3 +286,10 @@ diego:
     ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_ca.crt
 
 shared_isolation_segment_name: shared
+
+bits_service:
+  enabled: false
+  public_endpoint: http://bits-service.bosh-lite.com
+  private_endpoint: http://bits-service.service.cf.internal
+  username: admin
+  password: admin
