@@ -12,9 +12,10 @@ module VCAP::CloudController
             details.droplet = droplet
             details.package = package
             details.environment_variables = [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'nightshade_fruit', value: 'potato')]
-            details.staging_memory_in_mb = 42
-            details.staging_disk_in_mb = 51
-            details.start_after_staging = true
+            details.staging_memory_in_mb  = 42
+            details.staging_disk_in_mb    = 51
+            details.start_after_staging   = true
+            details.isolation_segment     = isolation_segment
           end
         end
         let(:config) do
@@ -34,6 +35,7 @@ module VCAP::CloudController
             },
           }
         end
+        let(:isolation_segment) { IsolationSegmentModel.make(name: 'potato-segment') }
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
         let(:external_port) { '7777' }
         let(:user) { 'user' }
@@ -130,6 +132,7 @@ module VCAP::CloudController
             ])
 
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
+            expect(result.PlacementTags).to eq(['potato-segment'])
           end
 
           it 'sets the completion callback to the stager callback url' do
@@ -145,6 +148,16 @@ module VCAP::CloudController
           it 'sets the env vars' do
             result = recipe_builder.build_staging_task(config, staging_details)
             expect(result.environment_variables).to eq(lifecycle_environment_variables)
+          end
+
+          context 'when there is no isolation segment' do
+            let(:isolation_segment) { nil }
+
+            it 'sets PlacementTags to  an empty array' do
+              result = recipe_builder.build_staging_task(config, staging_details)
+
+              expect(result.PlacementTags).to eq([])
+            end
           end
         end
 
@@ -252,6 +265,12 @@ module VCAP::CloudController
             expect(timeout_action.timeout_ms).to eq(90 * 1000)
 
             expect(timeout_action.action.run_action).to eq(docker_staging_action)
+          end
+
+          it 'sets the PlacementTags' do
+            result = recipe_builder.build_staging_task(config, staging_details)
+
+            expect(result.PlacementTags).to eq(['potato-segment'])
           end
         end
       end
