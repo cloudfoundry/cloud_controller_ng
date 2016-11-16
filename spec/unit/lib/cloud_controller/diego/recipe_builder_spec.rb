@@ -340,10 +340,10 @@ module VCAP::CloudController
 
           before do
             task_action_builder = instance_double(VCAP::CloudController::Diego::Buildpack::TaskActionBuilder)
-            allow(task_action_builder).to receive(:action).and_return(buildpack_task_action)
             allow(VCAP::CloudController::Diego::Buildpack::TaskActionBuilder).to receive(:new).and_return(task_action_builder)
 
-            allow(recipe_builder).to receive(:envs_for_diego).with(app, task_details).and_return(lifecycle_environment_variables)
+            allow(task_action_builder).to receive(:action).and_return(buildpack_task_action)
+            allow(task_action_builder).to receive(:task_environment_variables).and_return(lifecycle_environment_variables)
           end
 
           it 'constructs a TaskDefinition with app task instructions' do

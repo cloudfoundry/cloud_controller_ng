@@ -32,9 +32,7 @@ module VCAP::CloudController
           cache_key: "buildpack-#{stack}-lifecycle",
         )]
 
-        task_action_builder = VCAP::CloudController::Diego::Buildpack::TaskActionBuilder.new
-        action = task_action_builder.action task, { droplet_download_uri: download_url }
-
+        task_action_builder = VCAP::CloudController::Diego::Buildpack::TaskActionBuilder.new task
         ::Diego::Bbs::Models::TaskDefinition.new(
           completion_callback_url: task_completion_callback,
           cpu_weight: 25,
@@ -45,10 +43,10 @@ module VCAP::CloudController
           log_source: log_source,
           memory_mb: task.memory_in_mb,
           privileged: config[:diego][:use_privileged_containers_for_running],
-          environment_variables: envs_for_diego(task.app, task),
+          environment_variables: task_action_builder.task_environment_variables,
           trusted_system_certificates_path: STAGING_TRUSTED_SYSTEM_CERT_PATH,
           root_fs: "preloaded:#{stack}",
-          action: action,
+          action: task_action_builder.action(droplet_download_uri: download_url),
           cached_dependencies: cached_dependencies,
           volume_mounts: generate_volume_mounts(app_volume_mounts)
         )
@@ -80,14 +78,12 @@ module VCAP::CloudController
 
       private
 
-      def envs_for_diego(app, task)
-        running_envs = VCAP::CloudController::EnvironmentVariableGroup.running.environment_json
-        envs         = VCAP::CloudController::Diego::TaskEnvironment.new(app, task, app.space, running_envs).build
-        diego_envs   = VCAP::CloudController::Diego::BbsEnvironmentBuilder.build(envs)
-
-        logger.debug2("task environment: #{diego_envs.map(&:name)}")
-
-        diego_envs
+      def find_staging_isolation_segment(staging_details)
+        iso_seg = ''
+        if staging_details.isolation_segment
+          iso_seg = staging_details.isolation_segment.name
+        end
+        iso_seg
       end
 
       def generate_annotation(config, lifecycle_type, staging_details)

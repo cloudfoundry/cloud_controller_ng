@@ -6,7 +6,11 @@ module VCAP::CloudController
       class TaskActionBuilder
         include ::Diego::ActionBuilder
 
-        def action(task, lifecycle_data)
+        def initialize(task)
+          @task = task
+        end
+
+        def action(lifecycle_data)
           serial([
             ::Diego::Bbs::Models::DownloadAction.new(
               from: lifecycle_data[:droplet_download_uri],
@@ -27,7 +31,13 @@ module VCAP::CloudController
           ])
         end
 
+        def task_environment_variables
+          envs_for_diego task
+        end
+
         private
+
+        attr_reader :task
 
         def envs_for_diego(task)
           app = task.app
