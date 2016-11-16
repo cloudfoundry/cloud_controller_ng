@@ -243,7 +243,8 @@ module VCAP::CloudController
                                                                  "Could not find Isolation Segment with guid: #{isolation_segment_model.guid}")
       end
 
-      check_spaces_without_isolation_segments_empty!('Setting')
+      check_spaces_without_isolation_segments_empty!('Setting') unless initial_value(:default_isolation_segment_guid).eql?(nil) &&
+        isolation_segment_model.is_shared_segment?
     end
 
     def validate_default_isolation_segment_unset

@@ -19,9 +19,10 @@ module VCAP::CloudController
 
     let(:lifecycle) { BuildpackLifecycle.new(package, staging_message) }
     let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
-    let(:app) { AppModel.make }
-    let(:space) { app.space }
+
+    let(:space) { Space.make }
     let(:org) { space.organization }
+    let(:app) { AppModel.make(space: space) }
 
     let(:staging_message) { DropletCreateMessage.create_from_http_request(request) }
 
@@ -114,7 +115,9 @@ module VCAP::CloudController
           let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
           let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
           let(:isolation_segment_model_2) { VCAP::CloudController::IsolationSegmentModel.make }
-          let(:shared_isolation_segment) { VCAP::CloudController::IsolationSegmentModel.shared_segment }
+          let(:shared_isolation_segment) {
+            VCAP::CloudController::IsolationSegmentModel.first(guid: VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
+          }
 
           context 'when the org has a default' do
             context 'and the default is the shared isolation segments' do

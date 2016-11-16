@@ -69,13 +69,11 @@ module VCAP::CloudController
           'volume_mounts'                   => AppVolumeMounts.new(process.app)
         }.merge(LifecycleProtocol.protocol_for_type(process.app.lifecycle_type).desired_app_message(process))
 
-        shared_segment = VCAP::CloudController::IsolationSegmentModel.shared_segment
-
         if process.space.isolation_segment_model
-          if process.space.isolation_segment_model.guid != shared_segment.guid
+          if !process.space.isolation_segment_model.is_shared_segment?
             msg['isolation_segment'] = process.space.isolation_segment_model.name
           end
-        elsif process.space.organization.default_isolation_segment_model && process.space.organization.default_isolation_segment_model.guid != shared_segment.guid
+        elsif process.space.organization.default_isolation_segment_model && !process.space.organization.default_isolation_segment_model.is_shared_segment?
           msg['isolation_segment'] = process.space.organization.default_isolation_segment_model.name
         end
 

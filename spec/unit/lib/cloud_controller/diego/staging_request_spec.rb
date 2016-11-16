@@ -70,13 +70,11 @@ module VCAP::CloudController::Diego
 
       context "when the app's space is associated with an isolation segment" do
         before do
-          isolation_segment_model.add_space(app.space)
-          staging_payload[:isolation_segment] = app.space.isolation_segment_model.name
+          staging_request.isolation_segment = 'segment-name'
         end
 
         it 'includes the isolation_segment name in the message' do
-          staging_request.isolation_segment = app.space.isolation_segment_model.name
-          expect(staging_request.message[:isolation_segment]).to eq(staging_payload[:isolation_segment])
+          expect(staging_request.message[:isolation_segment]).to eq('segment-name')
         end
       end
 

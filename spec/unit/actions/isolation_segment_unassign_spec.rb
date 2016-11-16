@@ -13,7 +13,7 @@ module VCAP::CloudController
     it 'sorts the organizations passed in for unassignment' do
       rval = Random.new.rand(1..2)
 
-      if (rval == 1)
+      if rval == 1
         org.reload
         org2.reload
 

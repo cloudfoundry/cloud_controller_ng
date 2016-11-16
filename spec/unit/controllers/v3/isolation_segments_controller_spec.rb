@@ -755,7 +755,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
   describe 'default shared isolation segment' do
     let(:shared_segment) do
-      VCAP::CloudController::IsolationSegmentModel[guid: VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID]
+      VCAP::CloudController::IsolationSegmentModel.first(guid: VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
     end
 
     let!(:original_name) { shared_segment.name }
@@ -774,7 +774,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       delete :destroy, guid: shared_segment.guid
 
       expect(response.status).to eq 422
-      expect(VCAP::CloudController::IsolationSegmentModel[guid: shared_segment.guid].exists?).to be true
+      expect(VCAP::CloudController::IsolationSegmentModel.first(guid: shared_segment.guid).exists?).to be true
     end
 
     it 'cannot be updated via API' do

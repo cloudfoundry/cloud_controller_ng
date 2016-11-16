@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'pry'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::OrganizationsController do
