@@ -8,24 +8,14 @@ module VCAP::CloudController
     class RecipeBuilder
       include ::Diego::ActionBuilder
 
-      class InvalidDownloadUri < StandardError; end
-
       def initialize
         @egress_rules = Diego::EgressRules.new
       end
 
       def build_app_task(config, task)
-        log_source = "APP/TASK/#{task.name}"
-        blobstore_url_generator  = CloudController::DependencyLocator.instance.blobstore_url_generator
         task_completion_callback = VCAP::CloudController::Diego::TaskCompletionCallbackGenerator.new(config).generate(task)
-
-        download_url = blobstore_url_generator.droplet_download_url(task.droplet)
-        raise InvalidDownloadUri.new("Failed to get blobstore download url for droplet #{task.droplet.guid}") unless download_url
-
         app_volume_mounts = VCAP::CloudController::Diego::Protocol::AppVolumeMounts.new(task.app).as_json
-
-        lifecycle_data = { droplet_download_uri: download_url, stack: task.app.lifecycle_data.stack }
-        task_action_builder = VCAP::CloudController::Diego::Buildpack::TaskActionBuilder.new task, lifecycle_data, config
+        task_action_builder = LifecycleProtocol.protocol_for_type(task.droplet.lifecycle_type).task_action_builder(config, task)
 
         ::Diego::Bbs::Models::TaskDefinition.new(
           completion_callback_url: task_completion_callback,
@@ -34,7 +24,7 @@ module VCAP::CloudController
           egress_rules: generate_running_egress_rules(task.app),
           legacy_download_user: STAGING_LEGACY_DOWNLOAD_USER,
           log_guid: task.app.guid,
-          log_source: log_source,
+          log_source: "APP/TASK/#{task.name}",
           memory_mb: task.memory_in_mb,
           privileged: config[:diego][:use_privileged_containers_for_running],
           environment_variables: task_action_builder.task_environment_variables,

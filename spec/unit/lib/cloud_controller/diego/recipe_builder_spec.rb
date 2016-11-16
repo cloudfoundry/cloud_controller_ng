@@ -261,7 +261,7 @@ module VCAP::CloudController
 
       describe '#build_app_task' do
         let(:app) { AppModel.make(guid: 'banana-guid') }
-        let(:task_details) do
+        let(:task) do
           TaskModel.create(
             name:                 'potato-task',
             state:                 TaskModel::PENDING_STATE,
@@ -312,7 +312,6 @@ module VCAP::CloudController
           app.space.add_security_group(
             SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }])
           )
-          allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return('www.droplet.url')
         end
 
         let(:buildpack_task_action) { ::Diego::Bbs::Models::Action.new }
@@ -323,13 +322,6 @@ module VCAP::CloudController
         ]
         }
 
-        let(:task_action_builder) { instance_double(VCAP::CloudController::Diego::Buildpack::TaskActionBuilder, {
-          action: buildpack_task_action,
-          task_environment_variables: lifecycle_environment_variables,
-          stack: 'potato-stack',
-          cached_dependencies: lifecycle_cached_dependencies,
-        }) }
-
         let(:lifecycle_cached_dependencies) { [::Diego::Bbs::Models::CachedDependency.new(
           from:      'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url',
           to:        '/tmp/lifecycle',
@@ -337,18 +329,33 @@ module VCAP::CloudController
         )]
         }
 
-        before do
-          allow(VCAP::CloudController::Diego::Buildpack::TaskActionBuilder).to receive(:new).and_return(task_action_builder)
-          app.update(buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(stack: 'potato-stack'))
-        end
-
         context 'with a buildpack backend' do
           let(:droplet) { DropletModel.make(:buildpack, package: package, app: app) }
           let(:package) { PackageModel.make(app: app) }
 
+          let(:lifecycle_action_builder) do
+            instance_double(
+              Buildpack::TaskActionBuilder,
+              action: buildpack_task_action,
+              task_environment_variables: lifecycle_environment_variables,
+              stack: 'potato-stack',
+              cached_dependencies: lifecycle_cached_dependencies,
+            )
+          end
+
+          let(:lifecycle_protocol) do
+            instance_double(VCAP::CloudController::Diego::Buildpack::LifecycleProtocol,
+              task_action_builder: lifecycle_action_builder
+            )
+          end
+
+          before do
+            allow(LifecycleProtocol).to receive(:protocol_for_type).with('buildpack').and_return(lifecycle_protocol)
+          end
+
           it 'constructs a TaskDefinition with app task instructions' do
-            result = recipe_builder.build_app_task(config, task_details)
-            expected_callback_url = "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task_details.guid}/completed"
+            result = recipe_builder.build_app_task(config, task)
+            expected_callback_url = "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed"
 
             expect(result.log_guid).to eq(app.guid)
             expect(result.memory_mb).to eq(2048)
@@ -370,21 +377,6 @@ module VCAP::CloudController
 
             expect(result.metrics_guid).to eq('')
             expect(result.cpu_weight).to eq(25)
-          end
-
-          context 'when the blobstore_url_generator returns nil' do
-            before do
-              allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return(nil)
-            end
-
-            it 'returns an error' do
-              expect {
-                recipe_builder.build_app_task(config, task_details)
-              }.to raise_error(
-                VCAP::CloudController::Diego::RecipeBuilder::InvalidDownloadUri,
-                /Failed to get blobstore download url for droplet #{droplet.guid}/
-              )
-            end
           end
 
           describe 'volume mounts' do
@@ -427,7 +419,7 @@ module VCAP::CloudController
               end
 
               it 'desires the mount' do
-                result = recipe_builder.build_app_task(config, task_details)
+                result = recipe_builder.build_app_task(config, task)
                 expect(result.volume_mounts).to eq([
                   ::Diego::Bbs::Models::VolumeMount.new(
                     driver: 'cephfs',

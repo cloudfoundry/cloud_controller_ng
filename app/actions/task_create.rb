@@ -46,7 +46,7 @@ module VCAP::CloudController
       end
 
       task
-    rescue Diego::RecipeBuilder::InvalidDownloadUri,
+    rescue Diego::Buildpack::LifecycleProtocol::InvalidDownloadUri,
            Diego::LifecycleBundleUriGenerator::InvalidStack,
            Diego::LifecycleBundleUriGenerator::InvalidCompiler => e
       raise CloudController::Errors::ApiError.new_from_details('TaskError', e.message)

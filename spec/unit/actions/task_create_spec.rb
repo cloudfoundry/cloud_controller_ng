@@ -82,7 +82,7 @@ module VCAP::CloudController
 
           describe 'task errors' do
             it 'catches InvalidDownloadUri and wraps it in an API error' do
-              allow(recipe_builder).to receive(:build_app_task).and_raise(Diego::RecipeBuilder::InvalidDownloadUri.new('error message'))
+              allow(recipe_builder).to receive(:build_app_task).and_raise(Diego::Buildpack::LifecycleProtocol::InvalidDownloadUri.new('error message'))
               expect {
                 task_create_action.create(app, message, user_guid, user_email)
               }.to raise_error CloudController::Errors::ApiError, /Task failed: error message/

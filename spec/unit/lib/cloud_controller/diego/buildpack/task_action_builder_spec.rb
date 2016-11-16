@@ -5,7 +5,7 @@ module VCAP::CloudController
   module Diego
     module Buildpack
       RSpec.describe TaskActionBuilder do
-        subject(:builder) { described_class.new(task, lifecycle_data, config) }
+        subject(:builder) { described_class.new(config, task, lifecycle_data) }
 
         let(:config) do
           {
@@ -31,7 +31,7 @@ module VCAP::CloudController
         let(:download_uri) { 'http://download_droplet.example.com' }
         let(:lifecycle_data) do
           {
-            droplet_download_uri: download_uri,
+            droplet_uri: download_uri,
             stack: stack
           }
         end

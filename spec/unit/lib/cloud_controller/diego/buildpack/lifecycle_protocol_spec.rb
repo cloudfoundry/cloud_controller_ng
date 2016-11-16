@@ -57,7 +57,6 @@ module VCAP
               )
             end
 
-            let(:buildpack_generator) { BuildpackEntryGenerator.new(blobstore_url_generator) }
             let(:buildpack) { nil }
             let(:buildpack_info) { BuildpackInfo.new(buildpack, VCAP::CloudController::Buildpack.find(name: buildpack)) }
 
@@ -183,6 +182,88 @@ module VCAP
               it 'uses the droplet detected start command' do
                 start_command = lifecycle_protocol.desired_app_message(process)['start_command']
                 expect(start_command).to eq('command from droplet')
+              end
+            end
+          end
+
+          describe '#staging_action_builder' do
+            let(:config) { { some: 'config' } }
+            let(:package) { PackageModel.make }
+            let(:droplet) { DropletModel.make }
+            let(:staging_details) do
+              StagingDetails.new.tap do |details|
+                details.lifecycle = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: 'some buildpack info')
+                details.package = package
+                details.droplet = droplet
+              end
+            end
+
+            let(:blobstore_url_generator) do
+              instance_double(
+                ::CloudController::Blobstore::UrlGenerator,
+                package_download_url: 'package_download_url',
+                buildpack_cache_download_url: 'buildpack_cache_download_url',
+                buildpack_cache_upload_url: 'buildpack_cache_upload_url',
+                droplet_upload_url: 'droplet_upload_url'
+              )
+            end
+
+            before do
+              allow_any_instance_of(BuildpackEntryGenerator).to receive(:buildpack_entries).and_return(['buildpacks'])
+            end
+
+            it 'returns a StagingActionBuilder' do
+              staging_action_builder = instance_double(StagingActionBuilder)
+              allow(StagingActionBuilder).to receive(:new).and_return staging_action_builder
+
+              expect(lifecycle_protocol.staging_action_builder(config, staging_details)).to be staging_action_builder
+
+              expect(StagingActionBuilder).to have_received(:new).with(config, staging_details, hash_including({
+                app_bits_download_uri: 'package_download_url',
+                build_artifacts_cache_download_uri: 'buildpack_cache_download_url',
+                buildpacks: ['buildpacks'],
+                stack: 'potato-stack',
+                build_artifacts_cache_upload_uri: 'buildpack_cache_upload_url',
+                droplet_upload_uri: 'droplet_upload_url',
+              }))
+            end
+          end
+
+          describe '#task_action_builder' do
+            let(:droplet_download_url) { 'www.droplet.com' }
+            let(:blobstore_url_generator) do
+              instance_double(
+                ::CloudController::Blobstore::UrlGenerator,
+                droplet_download_url: droplet_download_url
+              )
+            end
+            let(:task) { TaskModel.make }
+            let(:config) { { some: 'config' } }
+
+            it 'returns a TaskActionBuilder' do
+              task.app.update(buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(stack: 'potato-stack'))
+
+              task_action_builder = instance_double(TaskActionBuilder)
+              allow(TaskActionBuilder).to receive(:new).and_return task_action_builder
+
+              expect(lifecycle_protocol.task_action_builder(config, task)).to be task_action_builder
+
+              expect(TaskActionBuilder).to have_received(:new).with(config, task, {
+                droplet_uri: 'www.droplet.com',
+                stack: 'potato-stack'
+              })
+            end
+
+            context 'when the blobstore_url_generator returns nil' do
+              let(:droplet_download_url) { nil }
+
+              it 'returns an error' do
+                expect {
+                  lifecycle_protocol.task_action_builder(config, task)
+                }.to raise_error(
+                  VCAP::CloudController::Diego::Buildpack::LifecycleProtocol::InvalidDownloadUri,
+                  /Failed to get blobstore download url for droplet #{task.droplet.guid}/
+                )
               end
             end
           end

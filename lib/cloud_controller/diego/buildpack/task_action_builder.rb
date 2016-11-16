@@ -6,16 +6,16 @@ module VCAP::CloudController
       class TaskActionBuilder
         include ::Diego::ActionBuilder
 
-        def initialize(task, lifecycle_data, config)
+        def initialize(config, task, lifecycle_data)
+          @config = config
           @task = task
           @lifecycle_data = lifecycle_data
-          @config = config
         end
 
         def action
           serial([
             ::Diego::Bbs::Models::DownloadAction.new(
-              from: lifecycle_data[:droplet_download_uri],
+              from: lifecycle_data[:droplet_uri],
               to: '.',
               cache_key: '',
               user: 'vcap',

@@ -43,6 +43,10 @@ module VCAP
             StagingActionBuilder.new(config, staging_details, lifecycle_data(staging_details))
           end
 
+          def task_action_builder(config, task)
+            TaskActionBuilder.new(config, task, task_lifecycle_data(task))
+          end
+
           def desired_app_message(process)
             {
               'start_command' => process.command.nil? ? process.detected_start_command : process.command,
@@ -52,6 +56,19 @@ module VCAP
           end
 
           private
+
+          def task_lifecycle_data(task)
+            {
+              droplet_uri: droplet_download_uri(task),
+              stack: task.app.lifecycle_data.stack
+            }
+          end
+
+          def droplet_download_uri(task)
+            download_url = @blobstore_url_generator.droplet_download_url(task.droplet)
+            raise InvalidDownloadUri.new("Failed to get blobstore download url for droplet #{task.droplet.guid}") unless download_url
+            download_url
+          end
 
           def logger
             @logger ||= Steno.logger('cc.diego.tr')
