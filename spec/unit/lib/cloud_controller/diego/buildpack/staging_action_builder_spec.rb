@@ -168,7 +168,7 @@ module VCAP::CloudController
         end
 
         describe '#cached_dependencies' do
-          it 'always returns the builpdack lifecycle bundle dependency' do
+          it 'always returns the buildpack lifecycle bundle dependency' do
             result = builder.cached_dependencies
             expect(result).to include(
               ::Diego::Bbs::Models::CachedDependency.new(

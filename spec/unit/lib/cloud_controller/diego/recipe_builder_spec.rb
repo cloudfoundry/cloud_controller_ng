@@ -275,19 +275,15 @@ module VCAP::CloudController
         end
         let(:config) do
           {
-            external_port:             external_port,
+            external_port: external_port,
             internal_service_hostname: internal_service_hostname,
-            internal_api:              {
-              auth_user:     user,
+            internal_api: {
+              auth_user: user,
               auth_password: password
             },
-            staging:                   {
-              timeout_in_seconds: 90,
-            },
-            diego:                     {
-              lifecycle_bundles:                     { 'buildpack/potato-stack': 'potato_lifecycle_bundle_url' },
-              use_privileged_containers_for_staging: false,
-              stager_url:                            'http://stager.example.com',
+            diego: {
+              lifecycle_bundles: { 'buildpack/potato-stack': 'potato_lifecycle_bundle_url' },
+              use_privileged_containers_for_running: false
             },
           }
         end
@@ -319,32 +315,36 @@ module VCAP::CloudController
           allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return('www.droplet.url')
         end
 
+        let(:buildpack_task_action) { ::Diego::Bbs::Models::Action.new }
+        let(:lifecycle_environment_variables) { [
+          ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APPLICATION', value: '{"greg":"pants"}'),
+          ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'MEMORY_LIMIT', value: '256m'),
+          ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_SERVICES', value: '{}'),
+        ]
+        }
+
+        let(:task_action_builder) { instance_double(VCAP::CloudController::Diego::Buildpack::TaskActionBuilder, {
+          action: buildpack_task_action,
+          task_environment_variables: lifecycle_environment_variables,
+          stack: 'potato-stack',
+          cached_dependencies: lifecycle_cached_dependencies,
+        }) }
+
+        let(:lifecycle_cached_dependencies) { [::Diego::Bbs::Models::CachedDependency.new(
+          from:      'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url',
+          to:        '/tmp/lifecycle',
+          cache_key: 'buildpack-potato-stack-lifecycle',
+        )]
+        }
+
+        before do
+          allow(VCAP::CloudController::Diego::Buildpack::TaskActionBuilder).to receive(:new).and_return(task_action_builder)
+          app.update(buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(stack: 'potato-stack'))
+        end
+
         context 'with a buildpack backend' do
-          let(:droplet) { DropletModel.make(:buildpack, package: package, app: app, buildpack_receipt_stack_name: 'potato-stack') }
+          let(:droplet) { DropletModel.make(:buildpack, package: package, app: app) }
           let(:package) { PackageModel.make(app: app) }
-
-          let(:buildpack_task_action) { ::Diego::Bbs::Models::Action.new }
-
-          let(:lifecycle_environment_variables) { [
-            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APPLICATION', value: '{"greg":"pants"}'),
-            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'MEMORY_LIMIT', value: '256m'),
-            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_SERVICES', value: '{}'),
-          ]
-          }
-          let(:lifecycle_cached_dependencies) { [::Diego::Bbs::Models::CachedDependency.new(
-            from:      'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url',
-            to:        '/tmp/lifecycle',
-            cache_key: 'buildpack-potato-stack-lifecycle',
-          )]
-          }
-
-          before do
-            task_action_builder = instance_double(VCAP::CloudController::Diego::Buildpack::TaskActionBuilder)
-            allow(VCAP::CloudController::Diego::Buildpack::TaskActionBuilder).to receive(:new).and_return(task_action_builder)
-
-            allow(task_action_builder).to receive(:action).and_return(buildpack_task_action)
-            allow(task_action_builder).to receive(:task_environment_variables).and_return(lifecycle_environment_variables)
-          end
 
           it 'constructs a TaskDefinition with app task instructions' do
             result = recipe_builder.build_app_task(config, task_details)
@@ -384,15 +384,6 @@ module VCAP::CloudController
                 VCAP::CloudController::Diego::RecipeBuilder::InvalidDownloadUri,
                 /Failed to get blobstore download url for droplet #{droplet.guid}/
               )
-            end
-          end
-
-          context 'when the requested stack is not in the configured lifecycle bundles' do
-            let(:droplet) { DropletModel.make(:buildpack, package: package, app: app, buildpack_receipt_stack_name: 'leek-stack') }
-            it 'returns an error' do
-              expect {
-                recipe_builder.build_app_task(config, task_details)
-              }.to raise_error VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack
             end
           end
 

@@ -15,8 +15,6 @@ module VCAP::CloudController
       end
 
       def build_app_task(config, task)
-        stack = task.droplet.buildpack_receipt_stack_name
-        lifecycle_bundle_key = "buildpack/#{stack}".to_sym
         log_source = "APP/TASK/#{task.name}"
         blobstore_url_generator  = CloudController::DependencyLocator.instance.blobstore_url_generator
         task_completion_callback = VCAP::CloudController::Diego::TaskCompletionCallbackGenerator.new(config).generate(task)
@@ -26,13 +24,9 @@ module VCAP::CloudController
 
         app_volume_mounts = VCAP::CloudController::Diego::Protocol::AppVolumeMounts.new(task.app).as_json
 
-        cached_dependencies = [::Diego::Bbs::Models::CachedDependency.new(
-          from: LifecycleBundleUriGenerator.uri(config[:diego][:lifecycle_bundles][lifecycle_bundle_key]),
-          to: '/tmp/lifecycle',
-          cache_key: "buildpack-#{stack}-lifecycle",
-        )]
+        lifecycle_data = { droplet_download_uri: download_url, stack: task.app.lifecycle_data.stack }
+        task_action_builder = VCAP::CloudController::Diego::Buildpack::TaskActionBuilder.new task, lifecycle_data, config
 
-        task_action_builder = VCAP::CloudController::Diego::Buildpack::TaskActionBuilder.new task
         ::Diego::Bbs::Models::TaskDefinition.new(
           completion_callback_url: task_completion_callback,
           cpu_weight: 25,
@@ -45,9 +39,9 @@ module VCAP::CloudController
           privileged: config[:diego][:use_privileged_containers_for_running],
           environment_variables: task_action_builder.task_environment_variables,
           trusted_system_certificates_path: STAGING_TRUSTED_SYSTEM_CERT_PATH,
-          root_fs: "preloaded:#{stack}",
-          action: task_action_builder.action(droplet_download_uri: download_url),
-          cached_dependencies: cached_dependencies,
+          root_fs: "preloaded:#{task_action_builder.stack}",
+          action: task_action_builder.action,
+          cached_dependencies: task_action_builder.cached_dependencies,
           volume_mounts: generate_volume_mounts(app_volume_mounts)
         )
       end

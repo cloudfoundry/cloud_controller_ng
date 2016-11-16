@@ -5,8 +5,17 @@ module VCAP::CloudController
   module Diego
     module Buildpack
       RSpec.describe TaskActionBuilder do
-        subject(:builder) { described_class.new task }
+        subject(:builder) { described_class.new(task, lifecycle_data, config) }
 
+        let(:config) do
+          {
+            diego: {
+              lifecycle_bundles: {
+                'buildpack/potato-stack': 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url'
+              }
+            }
+          }
+        end
         let(:task) { TaskModel.make command: command, name: 'my-task' }
         let(:command) { 'echo "hello"' }
 
@@ -19,6 +28,14 @@ module VCAP::CloudController
         end
 
         let(:environment_json) { { RIZ: 'shirt' }.to_json }
+        let(:download_uri) { 'http://download_droplet.example.com' }
+        let(:lifecycle_data) do
+          {
+            droplet_download_uri: download_uri,
+            stack: stack
+          }
+        end
+        let(:stack) { 'potato-stack' }
 
         before do
           VCAP::CloudController::EnvironmentVariableGroup.running.update(environment_json: environment_json)
@@ -30,9 +47,6 @@ module VCAP::CloudController
         end
 
         describe '#action' do
-          let(:download_uri) { 'http://download_droplet.example.com' }
-          let(:lifecycle_data) { { droplet_download_uri: download_uri } }
-
           let(:download_app_droplet_action) do
             ::Diego::Bbs::Models::DownloadAction.new(
               from: download_uri,
@@ -56,7 +70,7 @@ module VCAP::CloudController
           end
 
           it 'returns the correct buildpack task action structure' do
-            result = builder.action(lifecycle_data)
+            result = builder.action
 
             serial_action = result.serial_action
             actions       = serial_action.actions
@@ -75,6 +89,34 @@ module VCAP::CloudController
               ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_SERVICES', value: '{}')
             ])
             expect(VCAP::CloudController::Diego::TaskEnvironment).to have_received(:new).with(task.app, task, task.app.space, environment_json)
+          end
+        end
+
+        describe '#stack' do
+          it 'returns the stack' do
+            expect(builder.stack).to eq('potato-stack')
+          end
+        end
+
+        describe '#cached_dependencies' do
+          it 'returns a cached dependency for the correct lifecycle given the stack' do
+            expect(builder.cached_dependencies).to eq([
+              ::Diego::Bbs::Models::CachedDependency.new(
+                from:      'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url',
+                to:        '/tmp/lifecycle',
+                cache_key: 'buildpack-potato-stack-lifecycle',
+              )
+            ])
+          end
+
+          context 'when the requested stack is not in the configured lifecycle bundles' do
+            let(:stack) { 'leek-stack' }
+
+            it 'returns an error' do
+              expect {
+                builder.cached_dependencies
+              }.to raise_error VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack
+            end
           end
         end
       end

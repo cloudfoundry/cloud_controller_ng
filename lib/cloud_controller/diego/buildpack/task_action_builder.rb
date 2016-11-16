@@ -6,11 +6,13 @@ module VCAP::CloudController
       class TaskActionBuilder
         include ::Diego::ActionBuilder
 
-        def initialize(task)
+        def initialize(task, lifecycle_data, config)
           @task = task
+          @lifecycle_data = lifecycle_data
+          @config = config
         end
 
-        def action(lifecycle_data)
+        def action
           serial([
             ::Diego::Bbs::Models::DownloadAction.new(
               from: lifecycle_data[:droplet_download_uri],
@@ -26,7 +28,7 @@ module VCAP::CloudController
               args: ['app', task.command, ''],
               log_source: "APP/TASK/#{task.name}",
               resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
-              env: envs_for_diego(task)
+              env: task_environment_variables
             ),
           ])
         end
@@ -35,9 +37,22 @@ module VCAP::CloudController
           envs_for_diego task
         end
 
+        def stack
+          lifecycle_data[:stack]
+        end
+
+        def cached_dependencies
+          lifecycle_bundle_key = "buildpack/#{stack}".to_sym
+          [::Diego::Bbs::Models::CachedDependency.new(
+            from: LifecycleBundleUriGenerator.uri(config[:diego][:lifecycle_bundles][lifecycle_bundle_key]),
+            to: '/tmp/lifecycle',
+            cache_key: "buildpack-#{stack}-lifecycle",
+          )]
+        end
+
         private
 
-        attr_reader :task
+        attr_reader :task, :lifecycle_data, :config
 
         def envs_for_diego(task)
           app = task.app
