@@ -281,9 +281,9 @@ diego:
   docker_staging_stack: 'cflinuxfs2'
   bbs:
     url: https://bbs.service.cf.internal:8889
-    key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.key
-    cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.crt
-    ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_ca.crt
+    key_file: spec/fixtures/certs/bbs_client.key
+    cert_file: spec/fixtures/certs/bbs_client.crt
+    ca_file: spec/fixtures/certs/bbs_ca.crt
 
 shared_isolation_segment_name: shared
 
