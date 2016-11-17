@@ -13,3 +13,15 @@ line_number=$(cat /etc/hosts | grep -n "blobstore.service.cf.internal" | cut -d 
 if [[ -n "${line_number}" ]]; then
   sed "${line_number}d" /etc/hosts | sudo tee /etc/hosts > /dev/null
 fi
+
+line_number=$(cat /etc/hosts | grep -n "bits-service.service.cf.internal" | cut -d : -f 1)
+
+if [[ -n "${line_number}" ]]; then
+  sed "${line_number}d" /etc/hosts | sudo tee /etc/hosts > /dev/null
+fi
+
+line_number=$(cat /etc/hosts | grep -n "bits-service.bosh-lite.com" | cut -d : -f 1)
+
+if [[ -n "${line_number}" ]]; then
+  sed "${line_number}d" /etc/hosts | sudo tee /etc/hosts > /dev/null
+fi
