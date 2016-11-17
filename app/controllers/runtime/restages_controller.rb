@@ -18,7 +18,7 @@ module VCAP::CloudController
     post "#{path_guid}/restage", :restage
 
     def restage(guid)
-      process = find_guid_and_validate_access(:read, guid)
+      process = find_guid_and_validate_access(:read_for_update, guid)
 
       model.db.transaction do
         process.app.lock!

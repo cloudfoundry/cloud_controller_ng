@@ -6,9 +6,13 @@ module VCAP::CloudController
     before { CloudController::DependencyLocator.instance.register(:app_event_repository, app_event_repository) }
 
     describe 'POST /v2/apps/:id/restage' do
-      let!(:application) { AppFactory.make }
-
       subject(:restage_request) { post "/v2/apps/#{application.guid}/restage", {} }
+      let!(:application) { AppFactory.make }
+      let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
+
+      before do
+        allow(V2::AppStage).to receive(:new).and_return(app_stage)
+      end
 
       before do
         set_current_user(account)
@@ -23,13 +27,17 @@ module VCAP::CloudController
         end
       end
 
+      context 'as a space auditor' do
+        let(:account) { make_auditor_for_space(application.space) }
+
+        it 'should return 403' do
+          restage_request
+          expect(last_response.status).to eq(403)
+        end
+      end
+
       context 'as a developer' do
         let(:account) { make_developer_for_space(application.space) }
-        let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
-
-        before do
-          allow(V2::AppStage).to receive(:new).and_return(app_stage)
-        end
 
         it 'removes the current droplet from the app' do
           expect(application.current_droplet).not_to be_nil
@@ -68,19 +76,13 @@ module VCAP::CloudController
         end
 
         context 'with a Docker app' do
+          let!(:application) { AppFactory.make(docker_image: 'some-image') }
+
           before do
             FeatureFlag.create(name: 'diego_docker', enabled: true)
           end
 
-          let!(:docker_app) { AppFactory.make(docker_image: 'some-image') }
-
-          subject(:restage_request) { post("/v2/apps/#{docker_app.guid}/restage", {}) }
-
           context 'when there are validation errors' do
-            before do
-              allow_any_instance_of(VCAP::CloudController::RestagesController).to receive(:find_guid_and_validate_access).with(:read, docker_app.guid).and_return(docker_app)
-            end
-
             context 'when Docker is disabled' do
               before do
                 FeatureFlag.find(name: 'diego_docker').update(enabled: false)
@@ -88,7 +90,6 @@ module VCAP::CloudController
 
               it 'correctly propagates the error' do
                 restage_request
-
                 expect(last_response.status).to eq(400)
                 expect(decoded_response['code']).to eq(320003)
                 expect(decoded_response['description']).to match(/Docker support has not been enabled./)
