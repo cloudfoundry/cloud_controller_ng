@@ -2,6 +2,7 @@ require 'diego/action_builder'
 require 'cloud_controller/diego/lifecycle_bundle_uri_generator'
 require 'cloud_controller/diego/buildpack/task_action_builder'
 require 'cloud_controller/diego/bbs_environment_builder'
+require 'cloud_controller/diego/task_cpu_weight_calculator'
 
 module VCAP::CloudController
   module Diego
@@ -19,7 +20,7 @@ module VCAP::CloudController
 
         ::Diego::Bbs::Models::TaskDefinition.new(
           completion_callback_url: task_completion_callback,
-          cpu_weight: 25,
+          cpu_weight: cpu_weight(task),
           disk_mb: task.disk_in_mb,
           egress_rules: generate_running_egress_rules(task.app),
           legacy_download_user: STAGING_LEGACY_DOWNLOAD_USER,
@@ -61,6 +62,10 @@ module VCAP::CloudController
       end
 
       private
+
+      def cpu_weight(task)
+        TaskCpuWeightCalculator.new(memory_in_mb: task.memory_in_mb).calculate
+      end
 
       def find_staging_isolation_segment(staging_details)
         iso_seg = ''

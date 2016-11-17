@@ -351,6 +351,8 @@ module VCAP::CloudController
 
           before do
             allow(LifecycleProtocol).to receive(:protocol_for_type).with('buildpack').and_return(lifecycle_protocol)
+            calculator = instance_double(TaskCpuWeightCalculator, calculate: 25)
+            allow(TaskCpuWeightCalculator).to receive(:new).with(memory_in_mb: task.memory_in_mb).and_return(calculator)
           end
 
           it 'constructs a TaskDefinition with app task instructions' do
