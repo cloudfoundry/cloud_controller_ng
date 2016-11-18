@@ -519,7 +519,8 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         unique_id:   'guid',
         free:        true,
         public:      true,
-        active:      true
+        active:      true,
+        bindable:    true
       )
       service_event_repository.with_service_plan_event(new_plan) do
         new_plan.save
@@ -543,7 +544,8 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
           'extra'        => new_plan.extra,
           'unique_id'    => new_plan.unique_id,
           'public'       => new_plan.public,
-          'active'       => new_plan.active
+          'active'       => new_plan.active,
+          'bindable'     => new_plan.bindable
         }
       }
     end
