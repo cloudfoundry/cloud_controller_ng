@@ -54,6 +54,10 @@ properties:
     description: "IP port of Cloud Foundry NATS server"
   nats.machines:
     description: "IP of each NATS cluster member."
+  nats.max_reconnect_attempts:
+    description: "Max number of NATS reconnect tries"
+  nats.dont_randomize_servers:
+    description: "Don't randomize NATS servers"
 
   nfs_server.address:
     description: "NFS server for droplets and apps (not used in an AWS deploy, use s3 instead)"
