@@ -2,8 +2,9 @@
 local_route: 127.0.0.1
 external_port: 8181
 pid_filename: /tmp/cloud_controller.pid
-message_bus_servers:
-  - nats://127.0.0.1:4222
+message_bus:
+  servers:
+    - nats://127.0.0.1:4222
 
 external_protocol: http
 external_domain: api2.vcap.me
