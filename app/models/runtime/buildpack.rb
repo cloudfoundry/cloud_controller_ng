@@ -51,6 +51,10 @@ module VCAP::CloudController
       !!locked
     end
 
+    def enabled?
+      !!enabled
+    end
+
     def staging_message
       { buildpack_key: self.key }
     end

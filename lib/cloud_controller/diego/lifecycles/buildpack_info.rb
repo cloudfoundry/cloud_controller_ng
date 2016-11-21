@@ -12,6 +12,10 @@ module VCAP::CloudController
       !buildpack_record.nil?
     end
 
+    def buildpack_enabled?
+      buildpack_record.enabled?
+    end
+
     def to_s
       if @buildpack_url
         @buildpack_url

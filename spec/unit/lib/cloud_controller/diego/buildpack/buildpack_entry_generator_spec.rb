@@ -13,10 +13,10 @@ module VCAP::CloudController
 
         let(:blobstore_url_generator) { double('fake url generator') }
 
-        before do
-          VCAP::CloudController::Buildpack.create(name: 'java', key: 'java-buildpack-key', position: 1)
-          VCAP::CloudController::Buildpack.create(name: 'ruby', key: 'ruby-buildpack-key', position: 2)
+        let!(:java_buildpack) { VCAP::CloudController::Buildpack.create(name: 'java', key: 'java-buildpack-key', position: 1) }
+        let!(:ruby_buildpack) { VCAP::CloudController::Buildpack.create(name: 'ruby', key: 'ruby-buildpack-key', position: 2) }
 
+        before do
           allow(blobstore_url_generator).to receive(:app_package_download_url).and_return(app_package_download_url)
           allow(blobstore_url_generator).to receive(:admin_buildpack_download_url).and_return(admin_buildpack_download_url)
           allow(blobstore_url_generator).to receive(:buildpack_cache_download_url).and_return(build_artifacts_cache_download_uri)
@@ -59,6 +59,16 @@ module VCAP::CloudController
               expect(buildpack_entry_generator.buildpack_entries(buildpack_info)).to eq([
                 { name: 'java', key: 'java-buildpack-key', url: admin_buildpack_download_url, skip_detect: true }
               ])
+            end
+
+            context 'when the buildpack is disabled' do
+              before do
+                java_buildpack.update(enabled: false)
+              end
+
+              it 'fails fast with a clear error' do
+                expect { buildpack_entry_generator.buildpack_entries(buildpack_info) }.to raise_error /Unsupported buildpack type/
+              end
             end
           end
 

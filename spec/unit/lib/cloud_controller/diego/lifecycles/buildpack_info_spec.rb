@@ -42,6 +42,24 @@ module VCAP::CloudController
       end
     end
 
+    describe '#buildpack_enabled?' do
+      context 'when the buildpack is enabled' do
+        let(:buildpack_record) { Buildpack.make enabled: true }
+
+        it 'is true' do
+          expect(info.buildpack_enabled?).to be_truthy
+        end
+      end
+
+      context 'when the buildpack is NOT enabled' do
+        let(:buildpack_record) { Buildpack.make enabled: false }
+
+        it 'is false' do
+          expect(info.buildpack_enabled?).to be_falsey
+        end
+      end
+    end
+
     describe '#to_s' do
       context 'when it is a url' do
         let(:buildpack_name_or_url) { 'http://totally.a.url' }
