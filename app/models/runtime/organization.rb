@@ -257,7 +257,7 @@ module VCAP::CloudController
     end
 
     def validate_add_private_stack(stack)
-      return if stack.is_private && (! suspended?)
+      return if stack.is_private && !suspended?
       raise AssociationError.new
     end
   end

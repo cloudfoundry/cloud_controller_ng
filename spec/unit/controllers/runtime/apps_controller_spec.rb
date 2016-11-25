@@ -2486,7 +2486,7 @@ module VCAP::CloudController
       it 'creates app with public stack' do
         set_current_user(space_developer)
 
-        post "/v2/apps", MultiJson.dump(initial_hash.merge({ stack_guid: stack.guid }))
+        post '/v2/apps', MultiJson.dump(initial_hash.merge({ stack_guid: stack.guid }))
         expect(last_response).to have_status_code(201)
         expect(entity['stack_guid']).to eq(stack.guid)
       end
@@ -2500,7 +2500,7 @@ module VCAP::CloudController
         it 'creates app with private stack' do
           set_current_user(space_developer)
 
-          post "/v2/apps", MultiJson.dump(initial_hash.merge({ stack_guid: private_stack.guid }))
+          post '/v2/apps', MultiJson.dump(initial_hash.merge({ stack_guid: private_stack.guid }))
           expect(last_response).to have_status_code(201)
           expect(entity['stack_guid']).to eq(private_stack.guid)
         end
@@ -2508,7 +2508,7 @@ module VCAP::CloudController
         it 'changes app to use private stack' do
           set_current_user(space_developer)
 
-          post "/v2/apps", MultiJson.dump(initial_hash)
+          post '/v2/apps', MultiJson.dump(initial_hash)
           expect(last_response).to have_status_code(201)
           app_url = metadata['url']
 
@@ -2522,7 +2522,7 @@ module VCAP::CloudController
         it 'fails to create app with private stack' do
           set_current_user(space_developer)
 
-          post "/v2/apps", MultiJson.dump(initial_hash.merge({ stack_guid: private_stack.guid }))
+          post '/v2/apps', MultiJson.dump(initial_hash.merge({ stack_guid: private_stack.guid }))
           expect(last_response).to have_status_code(400)
           expect(decoded_response['description']).to match(/The request is invalid/)
           expect(decoded_response['error_code']).to match(/InvalidRequest/)
@@ -2531,7 +2531,7 @@ module VCAP::CloudController
         it 'fails to change app to use private stack' do
           set_current_user(space_developer)
 
-          post "/v2/apps", MultiJson.dump(initial_hash)
+          post '/v2/apps', MultiJson.dump(initial_hash)
           expect(last_response).to have_status_code(201)
           app_url = metadata['url']
 

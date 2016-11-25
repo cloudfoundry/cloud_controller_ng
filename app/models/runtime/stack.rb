@@ -129,12 +129,12 @@ module VCAP::CloudController
     private
 
     def validate_add_organization(organization)
-      return if is_private && (! organization.suspended?)
+      return if is_private && !organization.suspended?
       raise AssociationError.new
     end
 
     def validate_add_space(space)
-      return if is_private && (! space.organization.suspended?) && organizations.include?(space.organization)
+      return if is_private && !space.organization.suspended? && organizations.include?(space.organization)
       raise AssociationError.new
     end
 

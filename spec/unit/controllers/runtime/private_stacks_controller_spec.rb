@@ -35,7 +35,7 @@ module VCAP::CloudController
     end
 
     describe 'create' do
-      let(:stack_name) { "newprivatestack" }
+      let(:stack_name) { 'newprivatestack' }
       before { set_current_user_as_admin }
 
       context 'when parameter is_private is not given' do
@@ -154,7 +154,7 @@ module VCAP::CloudController
             end
 
             it 'fails to unassociate private stack with space' do
-              post "/v2/apps", MultiJson.dump(name: 'app', space_guid: space.guid, stack_guid: stack.guid)
+              post '/v2/apps', MultiJson.dump(name: 'app', space_guid: space.guid, stack_guid: stack.guid)
               expect(last_response.status).to eq(201)
               app_guid = metadata['guid']
 
@@ -189,7 +189,7 @@ module VCAP::CloudController
         end
 
         context 'in organization not associated' do
-          let(:space) { space = Space.make }
+          let(:space) { Space.make }
 
           it 'cannot be associated' do
             put "/v2/private_stacks/#{stack.guid}/spaces/#{space.guid}"
@@ -214,7 +214,7 @@ module VCAP::CloudController
 
       it 'returns StackNameTaken errors on unique name errors' do
         Stack.make(name: 'foo')
-        post '/v2/private_stacks', MultiJson.dump({ name: "foo" })
+        post '/v2/private_stacks', MultiJson.dump({ name: 'foo' })
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['description']).to match(/name is taken/)

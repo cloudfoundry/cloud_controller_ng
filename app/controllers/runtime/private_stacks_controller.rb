@@ -51,21 +51,19 @@ module VCAP::CloudController
         org.spaces.each do |space|
           if stack.spaces.include?(space)
             raise CloudController::Errors::ApiError.new_from_details(
-                    'InvalidRequest',
-                    'Unable to unassociate because an associated space exists'
-                  )
+              'InvalidRequest',
+              'Unable to unassociate because an associated space exists'
+              )
           end
         end
       when :spaces
         space = VCAP::CloudController::Space.first(guid: other_guid)
         space.apps.each do |app|
           if app.stack == stack
-            # if app.state == 'STARTED'
-              raise CloudController::Errors::ApiError.new_from_details(
-                      'InvalidRequest',
-                      'Unable to unassociate because an associated app exists'
-                    )
-            # end
+            raise CloudController::Errors::ApiError.new_from_details(
+              'InvalidRequest',
+              'Unable to unassociate because an associated app exists'
+              )
           end
         end
       else

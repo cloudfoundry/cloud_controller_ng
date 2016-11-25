@@ -230,9 +230,9 @@ module VCAP::CloudController
       return true unless app_stack.private?
       return true if app_stack.spaces.include?(space)
       raise CloudController::Errors::ApiError.new_from_details(
-              'InvalidRequest',
-              "The private stack is not allowed for space #{space.name}",
-            )
+        'InvalidRequest',
+        "The private stack is not allowed for space #{space.name}",
+        )
     end
 
     def after_create(app)
