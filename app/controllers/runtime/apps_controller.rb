@@ -185,7 +185,7 @@ module VCAP::CloudController
     end
 
     def before_create
-      space = VCAP::CloudController::Space[guid: request_attrs['space_guid']]
+      space = find_guid(request_attrs['space_guid'], Space)
       verify_enable_ssh(space)
       verify_private_stack(space)
     end
@@ -277,8 +277,7 @@ module VCAP::CloudController
       @request_attrs = self.class::CreateMessage.decode(body).extract(stringify_keys: true)
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: redact_attributes(:create, request_attrs)
 
-      space = find_guid(request_attrs['space_guid'], Space)
-      verify_enable_ssh(space)
+      before_create
 
       creator = V2::AppCreate.new(access_validator: self)
       process = creator.create(request_attrs)
