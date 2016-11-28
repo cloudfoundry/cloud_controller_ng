@@ -213,8 +213,9 @@ module VCAP::CloudController
       if request_attrs['isolation_segment_guid']
         check_org_update_access!(space)
 
-        raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Isolation Segment not found') if
-          IsolationSegmentModel.where(guid: request_attrs['isolation_segment_guid']).empty?
+        if IsolationSegmentModel.where(guid: request_attrs['isolation_segment_guid']).empty?
+          raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Isolation Segment not found')
+        end
       end
 
       super(space)

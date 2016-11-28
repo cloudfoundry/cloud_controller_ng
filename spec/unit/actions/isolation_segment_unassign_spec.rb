@@ -10,24 +10,18 @@ module VCAP::CloudController
     let(:org) { Organization.make }
     let(:org2) { Organization.make }
 
-    it 'sorts the organizations passed in for unassignment' do
-      rval = Random.new.rand(1..2)
-
-      if rval == 1
-        org.reload
-        org2.reload
-
-        expect(isolation_segment_model).to receive(:remove_organization).with(org).ordered
-        expect(isolation_segment_model).to receive(:remove_organization).with(org2).ordered
-      else
-        org2.reload
-        org.reload
-
+    describe 'sorting the organizations passed in for assignment' do
+      it 'sorts them correctly when org2 has a lower index than org' do
         expect(isolation_segment_model).to receive(:remove_organization).with(org2).ordered
         expect(isolation_segment_model).to receive(:remove_organization).with(org).ordered
+        subject.unassign(isolation_segment_model, [org, org2])
       end
 
-      subject.unassign(isolation_segment_model, [org, org2])
+      it 'sorts them correctly when org has a lower index than org2' do
+        expect(isolation_segment_model).to receive(:remove_organization).with(org).ordered
+        expect(isolation_segment_model).to receive(:remove_organization).with(org2).ordered
+        subject.unassign(isolation_segment_model, [org, org2])
+      end
     end
 
     context 'when an Isolation Segment is not assigned to any Orgs' do
