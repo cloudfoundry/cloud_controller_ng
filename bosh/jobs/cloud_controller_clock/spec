@@ -548,3 +548,9 @@ properties:
   cc.bits_service.private_endpoint:
     description: "Private url for the bits-service service"
     default: ""
+  cc.bits_service.username:
+    description: "Username for the bits-service"
+    default: ""
+  cc.bits_service.password:
+    description: "Password for the bits-service"
+    default: ""
