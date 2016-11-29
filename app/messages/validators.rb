@@ -38,7 +38,9 @@ module VCAP::CloudController::Validators
         record.errors.add(attribute, 'must be a hash')
       else
         value.each_key do |key|
-          if key =~ /^VCAP_/i
+          if key.length < 1
+            record.errors.add(attribute, 'key must be a minimum length of 1')
+          elsif key =~ /^VCAP_/i
             record.errors.add(attribute, 'cannot start with VCAP_')
           elsif key =~ /^VMC/i
             record.errors.add(attribute, 'cannot start with VMC_')

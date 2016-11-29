@@ -178,6 +178,12 @@ module VCAP::CloudController::Validators
         expect(fake_class.valid?).to be_falsey
         expect(fake_class.errors[:field]).to include 'cannot set PORT'
       end
+
+      it 'does not allow variables with zero key length' do
+        fake_class = environment_variables_class.new field: { '': 'el lunes nos ponemos camisetas naranjas' }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'key must be a minimum length of 1'
+      end
     end
 
     describe 'LifecycleValidator' do
