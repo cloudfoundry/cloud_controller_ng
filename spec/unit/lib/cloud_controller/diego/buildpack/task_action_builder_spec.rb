@@ -94,7 +94,7 @@ module VCAP::CloudController
 
         describe '#stack' do
           it 'returns the stack' do
-            expect(builder.stack).to eq('potato-stack')
+            expect(builder.stack).to eq('preloaded:potato-stack')
           end
         end
 

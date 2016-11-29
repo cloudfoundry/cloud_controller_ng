@@ -30,7 +30,7 @@ module VCAP::CloudController
           privileged: config[:diego][:use_privileged_containers_for_running],
           environment_variables: task_action_builder.task_environment_variables,
           trusted_system_certificates_path: STAGING_TRUSTED_SYSTEM_CERT_PATH,
-          root_fs: "preloaded:#{task_action_builder.stack}",
+          root_fs: task_action_builder.stack,
           action: task_action_builder.action,
           cached_dependencies: task_action_builder.cached_dependencies,
           volume_mounts: generate_volume_mounts(app_volume_mounts)

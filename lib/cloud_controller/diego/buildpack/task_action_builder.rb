@@ -38,21 +38,25 @@ module VCAP::CloudController
         end
 
         def stack
-          lifecycle_data[:stack]
+          "preloaded:#{lifecycle_stack}"
         end
 
         def cached_dependencies
-          lifecycle_bundle_key = "buildpack/#{stack}".to_sym
+          lifecycle_bundle_key = "buildpack/#{lifecycle_stack}".to_sym
           [::Diego::Bbs::Models::CachedDependency.new(
             from: LifecycleBundleUriGenerator.uri(config[:diego][:lifecycle_bundles][lifecycle_bundle_key]),
             to: '/tmp/lifecycle',
-            cache_key: "buildpack-#{stack}-lifecycle",
+            cache_key: "buildpack-#{lifecycle_stack}-lifecycle",
           )]
         end
 
         private
 
         attr_reader :task, :lifecycle_data, :config
+
+        def lifecycle_stack
+          lifecycle_data[:stack]
+        end
 
         def envs_for_diego(task)
           app = task.app

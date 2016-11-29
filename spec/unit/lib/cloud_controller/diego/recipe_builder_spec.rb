@@ -338,7 +338,7 @@ module VCAP::CloudController
               Buildpack::TaskActionBuilder,
               action: buildpack_task_action,
               task_environment_variables: lifecycle_environment_variables,
-              stack: 'potato-stack',
+              stack: 'preloaded:potato-stack',
               cached_dependencies: lifecycle_cached_dependencies,
             )
           end
