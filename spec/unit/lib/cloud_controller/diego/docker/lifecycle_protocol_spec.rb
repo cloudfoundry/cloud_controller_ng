@@ -21,8 +21,8 @@ module VCAP
 
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
-                details.droplet   = droplet
-                details.package   = package
+                details.droplet = droplet
+                details.package = package
                 details.lifecycle = instance_double(VCAP::CloudController::DockerLifecycle)
               end
             end
@@ -33,8 +33,8 @@ module VCAP
             let(:droplet) { DropletModel.make(package_guid: package.guid) }
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
-                details.droplet   = droplet
-                details.package   = package
+                details.droplet = droplet
+                details.package = package
                 details.lifecycle = instance_double(VCAP::CloudController::DockerLifecycle)
               end
             end
@@ -65,13 +65,13 @@ module VCAP
 
               it 'sets docker credentials if the web process has docker credentials' do
                 App.make(
-                  app:                     droplet.app,
-                  type:                    'web',
+                  app: droplet.app,
+                  type: 'web',
                   docker_credentials_json: {
                     docker_login_server: 'login-server',
-                    docker_user:         'user',
-                    docker_password:     'password',
-                    docker_email:        'email',
+                    docker_user: 'user',
+                    docker_password: 'password',
+                    docker_email: 'email',
                   }
                 )
 
@@ -101,6 +101,26 @@ module VCAP
             it 'uses the droplet receipt image' do
               message = lifecycle_protocol.desired_app_message(process)
               expect(message['docker_image']).to eq('the-image')
+            end
+          end
+
+          describe '#task_action_builder' do
+            let(:config) { {} }
+            let(:droplet) { DropletModel.make(:docker, docker_receipt_image: 'repository/the-image') }
+            let(:task) { TaskModel.make(droplet: droplet) }
+            let(:lifecycle_data) do
+              {
+                droplet_path: 'repository/the-image',
+              }
+            end
+
+            it 'creates a diego TaskActionBuilder' do
+              expect(VCAP::CloudController::Diego::Docker::TaskActionBuilder).to receive(:new).with(
+                config,
+                task,
+                lifecycle_data,
+              )
+              lifecycle_protocol.task_action_builder(config, task)
             end
           end
         end

@@ -1,65 +1,52 @@
 require 'diego/action_builder'
+require 'cloud_controller/diego/docker/docker_uri_converter'
 
 module VCAP::CloudController
   module Diego
-    module Buildpack
+    module Docker
       class TaskActionBuilder
-        include ::Diego::ActionBuilder
-
         def initialize(config, task, lifecycle_data)
-          @config = config
           @task = task
           @lifecycle_data = lifecycle_data
+          @config = config
         end
 
         def action
-          serial([
-            ::Diego::Bbs::Models::DownloadAction.new(
-              from: lifecycle_data[:droplet_uri],
-              to: '.',
-              cache_key: '',
-              user: 'vcap',
-              checksum_algorithm: 'sha1',
-              checksum_value: task.droplet.droplet_hash
-            ),
+          ::Diego::ActionBuilder.action(
             ::Diego::Bbs::Models::RunAction.new(
-              user: 'vcap',
+              user: 'root',
               path: '/tmp/lifecycle/launcher',
-              args: ['app', task.command, ''],
+              args: ['app', task.command, '{}'],
               log_source: "APP/TASK/#{task.name}",
               resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
-              env: task_environment_variables
-            ),
-          ])
+              env: task_environment_variables,
+            )
+          )
         end
 
         def task_environment_variables
-          envs_for_diego task
+          envs_for_diego(task)
         end
 
         def stack
-          "preloaded:#{lifecycle_stack}"
+          DockerURIConverter.new.convert(lifecycle_data[:droplet_path])
+        end
+
+        def lifecycle_bundle_key
+          'docker'.to_sym
         end
 
         def cached_dependencies
           [::Diego::Bbs::Models::CachedDependency.new(
             from: LifecycleBundleUriGenerator.uri(config[:diego][:lifecycle_bundles][lifecycle_bundle_key]),
             to: '/tmp/lifecycle',
-            cache_key: "buildpack-#{lifecycle_stack}-lifecycle",
+            cache_key: 'docker-lifecycle',
           )]
-        end
-
-        def lifecycle_bundle_key
-          "buildpack/#{lifecycle_stack}".to_sym
         end
 
         private
 
-        attr_reader :task, :lifecycle_data, :config
-
-        def lifecycle_stack
-          lifecycle_data[:stack]
-        end
+        attr_reader :config, :task, :lifecycle_data
 
         def envs_for_diego(task)
           app = task.app

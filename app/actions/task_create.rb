@@ -37,7 +37,7 @@ module VCAP::CloudController
         task_event_repository.record_task_create(task, user_guid, user_email)
       end
 
-      if bypass_bridge?(task)
+      if bypass_bridge?
         task_definition = Diego::RecipeBuilder.new.build_app_task(config, task)
         dependency_locator.bbs_task_client.desire_task(task.guid, task_definition, 'cf-tasks')
         mark_task_as_running(task)
@@ -58,8 +58,8 @@ module VCAP::CloudController
 
     attr_reader :config
 
-    def bypass_bridge?(task)
-      config[:diego] && config[:diego][:temporary_local_staging] && task.app.lifecycle_type == Lifecycles::BUILDPACK
+    def bypass_bridge?
+      config[:diego] && config[:diego][:temporary_local_staging]
     end
 
     def use_requested_name_or_generate_name(message)

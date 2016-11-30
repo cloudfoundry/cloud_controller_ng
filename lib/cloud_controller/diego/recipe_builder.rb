@@ -1,6 +1,7 @@
 require 'diego/action_builder'
 require 'cloud_controller/diego/lifecycle_bundle_uri_generator'
 require 'cloud_controller/diego/buildpack/task_action_builder'
+require 'cloud_controller/diego/docker/task_action_builder'
 require 'cloud_controller/diego/bbs_environment_builder'
 require 'cloud_controller/diego/task_cpu_weight_calculator'
 
@@ -28,12 +29,12 @@ module VCAP::CloudController
           log_source: "APP/TASK/#{task.name}",
           memory_mb: task.memory_in_mb,
           privileged: config[:diego][:use_privileged_containers_for_running],
-          environment_variables: task_action_builder.task_environment_variables,
           trusted_system_certificates_path: STAGING_TRUSTED_SYSTEM_CERT_PATH,
-          root_fs: task_action_builder.stack,
+          volume_mounts: generate_volume_mounts(app_volume_mounts),
           action: task_action_builder.action,
           cached_dependencies: task_action_builder.cached_dependencies,
-          volume_mounts: generate_volume_mounts(app_volume_mounts)
+          root_fs: task_action_builder.stack,
+          environment_variables: task_action_builder.task_environment_variables,
         )
       end
 
