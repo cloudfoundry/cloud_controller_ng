@@ -27,7 +27,8 @@ module VCAP::CloudController
             'VCAP_APPLICATION' => vcap_application,
             'MEMORY_LIMIT'     => "#{@task.memory_in_mb}m"
           }).
-          merge(SystemEnvPresenter.new(@app.service_bindings).system_env.stringify_keys)
+          merge(SystemEnvPresenter.new(@app.service_bindings).system_env.stringify_keys).
+          merge({ 'DATABASE_URL' => @app.database_uri })
       end
 
       private

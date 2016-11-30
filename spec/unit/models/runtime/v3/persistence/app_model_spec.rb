@@ -180,5 +180,60 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#database_uri' do
+      let(:parent_app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }, space: space) }
+      let(:app) { App.make(app: parent_app) }
+
+      context 'when there are database-like services' do
+        before do
+          sql_service_plan     = ServicePlan.make(service: Service.make(label: 'elephantsql-n/a'))
+          sql_service_instance = ManagedServiceInstance.make(space: space, service_plan: sql_service_plan, name: 'elephantsql-vip-uat')
+          ServiceBinding.make(app: parent_app, service_instance: sql_service_instance, credentials: { 'uri' => 'mysql://foo.com' })
+
+          banana_service_plan     = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
+          banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
+          ServiceBinding.make(app: parent_app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
+        end
+
+        it 'returns database uri' do
+          expect(app.reload.database_uri).to eq('mysql2://foo.com')
+        end
+      end
+
+      context 'when there are non-database-like services' do
+        before do
+          banana_service_plan     = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
+          banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
+          ServiceBinding.make(app: parent_app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
+
+          uncredentialed_service_plan     = ServicePlan.make(service: Service.make(label: 'mysterious-n/a'))
+          uncredentialed_service_instance = ManagedServiceInstance.make(space: space, service_plan: uncredentialed_service_plan, name: 'mysterious-mystery')
+          ServiceBinding.make(app: parent_app, service_instance: uncredentialed_service_instance, credentials: {})
+        end
+
+        it 'returns nil' do
+          expect(app.reload.database_uri).to be_nil
+        end
+      end
+
+      context 'when there are no services' do
+        it 'returns nil' do
+          expect(app.reload.database_uri).to be_nil
+        end
+      end
+
+      context 'when the service binding credentials is nil' do
+        before do
+          banana_service_plan     = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
+          banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
+          ServiceBinding.make(app: parent_app, service_instance: banana_service_instance, credentials: nil)
+        end
+
+        it 'returns nil' do
+          expect(app.reload.database_uri).to be_nil
+        end
+      end
+    end
   end
 end

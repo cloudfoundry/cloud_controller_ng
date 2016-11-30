@@ -109,6 +109,16 @@ module VCAP::CloudController::Diego
           expect(TaskEnvironment.new(app, task, space).build).to include({ 'VCAP_APPLICATION' => expected_vcap_application })
         end
       end
+
+      context 'when the app has a database_uri' do
+        before do
+          allow(app).to receive(:database_uri).and_return('fake-database-uri')
+        end
+        it 'includes DATABASE_URL' do
+          constructed_envs = TaskEnvironment.new(app, task, space).build
+          expect(constructed_envs).to include({ 'DATABASE_URL' => 'fake-database-uri' })
+        end
+      end
     end
   end
 end

@@ -1,3 +1,5 @@
+require 'cloud_controller/database_uri_generator'
+
 module VCAP::CloudController
   class AppModel < Sequel::Model(:apps)
     include Serializer
@@ -46,6 +48,13 @@ module VCAP::CloudController
     def lifecycle_data
       return buildpack_lifecycle_data if self.buildpack_lifecycle_data
       DockerLifecycleDataModel.new
+    end
+
+    def database_uri
+      service_binding_uris = service_bindings.map do |binding|
+        binding.credentials['uri'] if binding.credentials.present?
+      end.compact
+      DatabaseUriGenerator.new(service_binding_uris).database_uri
     end
 
     def staging_in_progress?
