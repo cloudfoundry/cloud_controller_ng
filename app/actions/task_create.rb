@@ -59,7 +59,7 @@ module VCAP::CloudController
     attr_reader :config
 
     def bypass_bridge?
-      config[:diego] && config[:diego][:temporary_local_staging]
+      config[:diego] && config[:diego][:temporary_local_tasks]
     end
 
     def use_requested_name_or_generate_name(message)

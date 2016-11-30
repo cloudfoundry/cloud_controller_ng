@@ -283,6 +283,7 @@ module VCAP::CloudController
 
         optional(:diego) => {
           temporary_local_staging:               bool,
+          temporary_local_tasks:                 bool,
           nsync_url:                             String,
           stager_url:                            String,
           tps_url:                               String,

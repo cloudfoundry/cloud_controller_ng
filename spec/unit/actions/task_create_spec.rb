@@ -62,7 +62,7 @@ module VCAP::CloudController
 
           before do
             config[:diego] = {
-              temporary_local_staging: true
+              temporary_local_tasks: true
             }
             allow(recipe_builder).to receive(:build_app_task).with(config, instance_of(TaskModel)).and_return(task_definition)
             allow(Diego::RecipeBuilder).to receive(:new).and_return(recipe_builder)
