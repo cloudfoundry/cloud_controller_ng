@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'cloud_controller/diego/buildpack/task_action_builder'
 
 module VCAP::CloudController
   module Diego
@@ -27,7 +26,6 @@ module VCAP::CloudController
           ]
         end
 
-        let(:environment_json) { { RIZ: 'shirt' }.to_json }
         let(:download_uri) { 'http://download_droplet.example.com' }
         let(:lifecycle_data) do
           {
@@ -38,12 +36,7 @@ module VCAP::CloudController
         let(:stack) { 'potato-stack' }
 
         before do
-          VCAP::CloudController::EnvironmentVariableGroup.running.update(environment_json: environment_json)
-          task_environment = instance_double(VCAP::CloudController::Diego::TaskEnvironment)
-          allow(task_environment).to receive(:build).and_return(
-            { 'VCAP_APPLICATION' => { greg: 'pants' }, 'MEMORY_LIMIT' => '256m', 'VCAP_SERVICES' => {} }
-          )
-          allow(VCAP::CloudController::Diego::TaskEnvironment).to receive(:new).and_return(task_environment)
+          allow(VCAP::CloudController::Diego::TaskEnvironmentVariableCollector).to receive(:for_task).and_return(generated_environment)
         end
 
         describe '#action' do
@@ -83,12 +76,8 @@ module VCAP::CloudController
 
         describe '#task_environment_variables' do
           it 'returns task environment variables' do
-            expect(builder.task_environment_variables).to match_array([
-              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APPLICATION', value: '{"greg":"pants"}'),
-              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'MEMORY_LIMIT', value: '256m'),
-              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_SERVICES', value: '{}')
-            ])
-            expect(VCAP::CloudController::Diego::TaskEnvironment).to have_received(:new).with(task.app, task, task.app.space, environment_json)
+            expect(builder.task_environment_variables).to match_array(generated_environment)
+            expect(VCAP::CloudController::Diego::TaskEnvironmentVariableCollector).to have_received(:for_task).with(task)
           end
         end
 

@@ -1,5 +1,6 @@
 require 'diego/action_builder'
 require 'cloud_controller/diego/docker/docker_uri_converter'
+require 'cloud_controller/diego/task_environment_variable_collector'
 
 module VCAP::CloudController
   module Diego
@@ -25,7 +26,7 @@ module VCAP::CloudController
         end
 
         def task_environment_variables
-          envs_for_diego(task)
+          TaskEnvironmentVariableCollector.for_task task
         end
 
         def stack
@@ -47,21 +48,6 @@ module VCAP::CloudController
         private
 
         attr_reader :config, :task, :lifecycle_data
-
-        def envs_for_diego(task)
-          app = task.app
-          running_envs = VCAP::CloudController::EnvironmentVariableGroup.running.environment_json
-          envs = VCAP::CloudController::Diego::TaskEnvironment.new(app, task, app.space, running_envs).build
-          diego_envs = VCAP::CloudController::Diego::BbsEnvironmentBuilder.build(envs)
-
-          logger.debug2("task environment: #{diego_envs.map(&:name)}")
-
-          diego_envs
-        end
-
-        def logger
-          @logger ||= Steno.logger('cc.diego.tr')
-        end
       end
     end
   end
