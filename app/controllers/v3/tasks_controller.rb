@@ -63,7 +63,7 @@ class TasksController < ApplicationController
 
     unauthorized! unless can_write?(space.guid)
 
-    TaskCancel.new.cancel(task: task, user: current_user, email: current_user_email)
+    TaskCancel.new(configuration).cancel(task: task, user: current_user, email: current_user_email)
 
     render status: :accepted, json: Presenters::V3::TaskPresenter.new(task.reload)
   rescue TaskCancel::InvalidCancel => e

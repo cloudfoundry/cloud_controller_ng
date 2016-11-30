@@ -57,6 +57,47 @@ module VCAP::CloudController::Diego
     end
 
     describe '#cancel_task' do
+      before do
+        allow(bbs_client).to receive(:cancel_task).and_return(::Diego::Bbs::Models::TaskLifecycleResponse.new)
+      end
+
+      it 'cancels the task' do
+        client.cancel_task(task_guid)
+        expect(bbs_client).to have_received(:cancel_task).with(task_guid)
+      end
+
+      context 'when bbs client errors' do
+        before do
+          allow(bbs_client).to receive(:cancel_task).and_raise(::Diego::Error.new('boom'))
+        end
+
+        it 'raises an api error' do
+          expect {
+            client.cancel_task(task_guid)
+          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+            expect(e.name).to eq('TaskWorkersUnavailable')
+          end
+        end
+      end
+
+      context 'when bbs returns a response with an error' do
+        before do
+          allow(bbs_client).to receive(:cancel_task).and_return(
+            ::Diego::Bbs::Models::TaskLifecycleResponse.new(
+              error: ::Diego::Bbs::Models::Error.new(
+                type:    ::Diego::Bbs::Models::Error::Type::InvalidRecord,
+                message: 'error message'
+              )))
+        end
+
+        it 'raises an api error' do
+          expect {
+            client.cancel_task(task_guid)
+          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+            expect(e.name).to eq('TaskError')
+          end
+        end
+      end
     end
   end
 end
