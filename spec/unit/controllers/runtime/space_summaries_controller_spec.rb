@@ -36,7 +36,7 @@ module VCAP::CloudController
 
       it 'returns the space apps' do
         get "/v2/spaces/#{space.guid}/summary"
-        expected_app_hash = [{
+        expected_app_hash = {
           guid: app_obj.guid,
           urls: [first_route.uri, second_route.uri],
           routes: [
@@ -44,11 +44,11 @@ module VCAP::CloudController
             second_route.as_summary_json
           ],
           service_count: 2,
-          service_names: [first_service.name, second_service.name],
           running_instances: 5
-        }.merge(app_obj.to_hash)]
+        }.merge(app_obj.to_hash)
 
-        expect(decoded_response['apps']).to eq(MultiJson.load(MultiJson.dump(expected_app_hash)))
+        expect(decoded_response['apps'][0]).to include(MultiJson.load(MultiJson.dump(expected_app_hash)))
+        expect(decoded_response['apps'][0]['service_names']).to match_array([first_service.name, second_service.name])
       end
 
       it 'returns the space services' do
