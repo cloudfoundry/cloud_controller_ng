@@ -728,6 +728,84 @@ module VCAP::CloudController
       end
     end
 
+    describe '.user_visibility_filter' do
+      let(:security_group) { SecurityGroup.make }
+      let(:space) { Space.make }
+      let(:user) { User.make }
+
+      subject(:filtered_security_groups) do
+        SecurityGroup.where(SecurityGroup.user_visibility_filter(user))
+      end
+
+      before do
+        space.organization.add_user(user)
+      end
+
+      it 'includes running security groups associated to spaces where the user is a developer' do
+        space.add_developer(user)
+        space.add_security_group(security_group)
+        expect(filtered_security_groups).to contain_exactly(security_group)
+      end
+
+      it 'includes running security groups associated to spaces where the user is a manager' do
+        space.add_manager(user)
+        space.add_security_group(security_group)
+        expect(filtered_security_groups).to contain_exactly(security_group)
+      end
+
+      it 'includes running security groups associated to spaces where the user is a auditor' do
+        space.add_auditor(user)
+        space.add_security_group(security_group)
+        expect(filtered_security_groups).to contain_exactly(security_group)
+      end
+
+      it 'includes running security groups associated to spaces where the user is an organization manager' do
+        space.organization.add_manager(user)
+        space.add_security_group(security_group)
+        expect(filtered_security_groups).to contain_exactly(security_group)
+      end
+
+      it 'includes staging security groups associated to spaces where the user is a developer' do
+        space.add_developer(user)
+        space.add_staging_security_group(security_group)
+        expect(filtered_security_groups).to contain_exactly(security_group)
+      end
+
+      it 'includes staging security groups associated to spaces where the user is a manager' do
+        space.add_manager(user)
+        space.add_staging_security_group(security_group)
+        expect(filtered_security_groups).to contain_exactly(security_group)
+      end
+
+      it 'includes staging security groups associated to spaces where the user is a auditor' do
+        space.add_auditor(user)
+        space.add_staging_security_group(security_group)
+        expect(filtered_security_groups).to contain_exactly(security_group)
+      end
+
+      it 'includes staging security groups associated to spaces where the user is an organization manager' do
+        space.organization.add_manager(user)
+        space.add_staging_security_group(security_group)
+        expect(filtered_security_groups).to contain_exactly(security_group)
+      end
+
+      it 'includes security groups that are the running default' do
+        security_group.running_default = true
+        security_group.save
+        expect(filtered_security_groups).to contain_exactly(security_group)
+      end
+
+      it 'includes security groups that are the staging default' do
+        security_group.staging_default = true
+        security_group.save
+        expect(filtered_security_groups).to contain_exactly(security_group)
+      end
+
+      it 'excludes all other security groups' do
+        expect(filtered_security_groups).not_to include(security_group)
+      end
+    end
+
     describe 'Serialization' do
       it { is_expected.to export_attributes :name, :rules, :running_default, :staging_default }
       it { is_expected.to import_attributes :name, :rules, :running_default, :staging_default, :space_guids }

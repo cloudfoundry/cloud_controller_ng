@@ -86,5 +86,170 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'spaces' do
+      let(:user) { User.make }
+      let(:org) { Organization.make(user_guids: [user.guid]) }
+      let(:space) { Space.make(organization: org) }
+      let(:security_group) { SecurityGroup.make }
+
+      before do
+        set_current_user(user)
+      end
+
+      context 'as admin' do
+        before do
+          set_current_user_as_admin(user: user)
+        end
+
+        it 'works for staging security groups' do
+          put "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 201
+
+          get "/v2/security_groups/#{security_group.guid}/staging_spaces", nil
+          expect(last_response.status).to eq 200
+          expect(last_response.body).to include(space.guid)
+
+          delete "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 204
+        end
+
+        it 'works for running security groups' do
+          put "/v2/spaces/#{space.guid}/security_groups/#{security_group.guid}", nil
+          expect(last_response.status).to eq 201
+
+          get "/v2/security_groups/#{security_group.guid}/spaces", nil
+          expect(last_response.status).to eq 200
+          expect(last_response.body).to include(space.guid)
+
+          delete "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 204
+        end
+      end
+
+      context 'as org manager' do
+        before do
+          org.add_manager(user)
+        end
+
+        it 'works for staging security groups' do
+          put "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+
+          get "/v2/security_groups/#{security_group.guid}/staging_spaces", nil
+          expect(last_response.status).to eq 403
+
+          delete "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+        end
+
+        it 'works for running security groups' do
+          put "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+
+          get "/v2/security_groups/#{security_group.guid}/spaces", nil
+          expect(last_response.status).to eq 403
+
+          delete "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+        end
+      end
+
+      context 'as space manager' do
+        before do
+          space.add_manager(user)
+        end
+
+        it 'works for staging security groups' do
+          put "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+
+          space.add_staging_security_group(security_group)
+
+          get "/v2/security_groups/#{security_group.guid}/staging_spaces", nil
+          expect(last_response.status).to eq 200
+          expect(last_response.body).to include(space.guid)
+
+          delete "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+        end
+
+        it 'works for running security groups' do
+          put "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+
+          space.add_security_group(security_group)
+
+          get "/v2/security_groups/#{security_group.guid}/spaces", nil
+          expect(last_response.status).to eq 200
+          expect(last_response.body).to include(space.guid)
+
+          delete "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+        end
+      end
+
+      context 'as space developer' do
+        before do
+          space.add_developer(user)
+        end
+
+        it 'works for staging security groups' do
+          put "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+
+          space.add_staging_security_group(security_group)
+
+          get "/v2/security_groups/#{security_group.guid}/staging_spaces", nil
+          expect(last_response.status).to eq 200
+          expect(last_response.body).to include(space.guid)
+
+          delete "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+        end
+
+        it 'works for running security groups' do
+          put "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+
+          space.add_security_group(security_group)
+
+          get "/v2/security_groups/#{security_group.guid}/spaces", nil
+          expect(last_response.status).to eq 200
+          expect(last_response.body).to include(space.guid)
+
+          delete "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+        end
+      end
+
+      context 'as space auditor' do
+        before do
+          space.add_auditor(user)
+        end
+
+        it 'works for staging security groups' do
+          put "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+
+          get "/v2/security_groups/#{security_group.guid}/staging_spaces", nil
+          expect(last_response.status).to eq 403
+
+          delete "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+        end
+
+        it 'works for running security groups' do
+          put "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+
+          get "/v2/security_groups/#{security_group.guid}/spaces", nil
+          expect(last_response.status).to eq 403
+
+          delete "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
+          expect(last_response.status).to eq 403
+        end
+      end
+    end
   end
 end
