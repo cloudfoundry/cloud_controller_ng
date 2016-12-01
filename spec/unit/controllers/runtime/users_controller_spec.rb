@@ -595,196 +595,195 @@ module VCAP::CloudController
       end
     end
 
-    describe 'PUT /v2/users/:guid/audited_spaces/:space_guid' do
+    describe 'assigning space roles' do
+      let(:other_user) { User.make }
       let(:space) { Space.make }
       let(:org) { space.organization }
       let(:user) { User.make }
-      let(:event_type) { 'audit.user.space_auditor_add' }
-      let(:other_user) { User.make }
-
-      let(:expected_response) {
-        {
-          'metadata' => {
-            'guid' => other_user.guid,
-            'url' => "/v2/users/#{other_user.guid}",
-            'created_at' => iso8601,
-            'updated_at' => iso8601
-          },
-          'entity' => {
-            'admin' => false,
-            'active' => false,
-            'default_space_guid' => nil,
-            'spaces_url' => "/v2/users/#{other_user.guid}/spaces",
-            'organizations_url' => "/v2/users/#{other_user.guid}/organizations",
-            'managed_organizations_url' => "/v2/users/#{other_user.guid}/managed_organizations",
-            'billing_managed_organizations_url' => "/v2/users/#{other_user.guid}/billing_managed_organizations",
-            'audited_organizations_url' => "/v2/users/#{other_user.guid}/audited_organizations",
-            'managed_spaces_url' => "/v2/users/#{other_user.guid}/managed_spaces",
-            'audited_spaces_url' => "/v2/users/#{other_user.guid}/audited_spaces"
-          }
-        }
-      }
 
       before do
-        set_current_user(user)
-        org.add_user(user)
-        org.add_manager(user)
-        space.add_manager(user)
-        org.add_user(other_user)
+        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({other_user.guid => other_user.username})
       end
 
-      it 'fails with 403' do
-        put "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
-        expect(last_response.status).to eq(403)
-        expect(decoded_response['code']).to eq(10003)
-      end
+      describe 'PUT /v2/users/:guid/audited_spaces/:space_guid' do
+        let(:event_type) { 'audit.user.space_auditor_add' }
 
-      context 'as an admin' do
+        let(:expected_response) {
+          {
+            'metadata' => {
+              'guid' => other_user.guid,
+              'url' => "/v2/users/#{other_user.guid}",
+              'created_at' => iso8601,
+              'updated_at' => iso8601
+            },
+            'entity' => {
+              'admin' => false,
+              'active' => false,
+              'default_space_guid' => nil,
+              'spaces_url' => "/v2/users/#{other_user.guid}/spaces",
+              'organizations_url' => "/v2/users/#{other_user.guid}/organizations",
+              'managed_organizations_url' => "/v2/users/#{other_user.guid}/managed_organizations",
+              'billing_managed_organizations_url' => "/v2/users/#{other_user.guid}/billing_managed_organizations",
+              'audited_organizations_url' => "/v2/users/#{other_user.guid}/audited_organizations",
+              'managed_spaces_url' => "/v2/users/#{other_user.guid}/managed_spaces",
+              'audited_spaces_url' => "/v2/users/#{other_user.guid}/audited_spaces"
+            }
+          }
+        }
+
         before do
-          set_current_user_as_admin
+          set_current_user(user)
+          org.add_user(user)
+          org.add_manager(user)
+          space.add_manager(user)
+          org.add_user(other_user)
         end
 
-        it 'succeeds' do
+        it 'fails with 403' do
           put "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
-          expect(last_response.status).to eq(201)
-          expect(space.auditors).to include(other_user)
-          expect(decoded_response).to be_a_response_like(expected_response)
+          expect(last_response.status).to eq(403)
+          expect(decoded_response['code']).to eq(10003)
         end
 
-        it 'creates an appropriate event' do
-          put "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
-          event = Event.find(type: event_type, actee: other_user.guid)
-          expect(event).not_to be_nil
+        context 'as an admin' do
+          before do
+            set_current_user_as_admin
+          end
+
+          it 'succeeds' do
+            put "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
+            expect(last_response.status).to eq(201)
+            expect(space.auditors).to include(other_user)
+            expect(decoded_response).to be_a_response_like(expected_response)
+          end
+
+          it 'creates an appropriate event' do
+            put "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
+            event = Event.find(type: event_type, actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
         end
       end
-    end
 
-    describe 'PUT /v2/users/:guid/managed_spaces/:space_guid' do
-      let(:space) { Space.make }
-      let(:org) { space.organization }
-      let(:user) { User.make }
-      let(:event_type) { 'audit.user.space_manager_add' }
-      let(:other_user) { User.make }
+      describe 'PUT /v2/users/:guid/managed_spaces/:space_guid' do
+        let(:event_type) { 'audit.user.space_manager_add' }
 
-      let(:expected_response) {
-        {
-          'metadata' => {
-            'guid' => other_user.guid,
-            'url' => "/v2/users/#{other_user.guid}",
-            'created_at' => iso8601,
-            'updated_at' => iso8601
-          },
-          'entity' => {
-            'admin' => false,
-            'active' => false,
-            'default_space_guid' => nil,
-            'spaces_url' => "/v2/users/#{other_user.guid}/spaces",
-            'organizations_url' => "/v2/users/#{other_user.guid}/organizations",
-            'managed_organizations_url' => "/v2/users/#{other_user.guid}/managed_organizations",
-            'billing_managed_organizations_url' => "/v2/users/#{other_user.guid}/billing_managed_organizations",
-            'audited_organizations_url' => "/v2/users/#{other_user.guid}/audited_organizations",
-            'managed_spaces_url' => "/v2/users/#{other_user.guid}/managed_spaces",
-            'audited_spaces_url' => "/v2/users/#{other_user.guid}/audited_spaces"
+        let(:expected_response) {
+          {
+            'metadata' => {
+              'guid' => other_user.guid,
+              'url' => "/v2/users/#{other_user.guid}",
+              'created_at' => iso8601,
+              'updated_at' => iso8601
+            },
+            'entity' => {
+              'admin' => false,
+              'active' => false,
+              'default_space_guid' => nil,
+              'spaces_url' => "/v2/users/#{other_user.guid}/spaces",
+              'organizations_url' => "/v2/users/#{other_user.guid}/organizations",
+              'managed_organizations_url' => "/v2/users/#{other_user.guid}/managed_organizations",
+              'billing_managed_organizations_url' => "/v2/users/#{other_user.guid}/billing_managed_organizations",
+              'audited_organizations_url' => "/v2/users/#{other_user.guid}/audited_organizations",
+              'managed_spaces_url' => "/v2/users/#{other_user.guid}/managed_spaces",
+              'audited_spaces_url' => "/v2/users/#{other_user.guid}/audited_spaces"
+            }
           }
         }
-      }
 
-      before do
-        set_current_user(user)
-        org.add_user(user)
-        org.add_manager(user)
-        space.add_manager(user)
-        org.add_user(other_user)
-      end
-
-      it 'fails with 403' do
-        put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
-        expect(last_response.status).to eq(403)
-        expect(decoded_response['code']).to eq(10003)
-      end
-
-      context 'as an admin' do
         before do
-          set_current_user_as_admin
+          set_current_user(user)
+          org.add_user(user)
+          org.add_manager(user)
+          space.add_manager(user)
+          org.add_user(other_user)
         end
 
-        it 'succeeds' do
+        it 'fails with 403' do
           put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
-          expect(last_response.status).to eq(201)
-          space.reload
-          expect(space.managers).to include(other_user)
-          expect(decoded_response).to be_a_response_like(expected_response)
+          expect(last_response.status).to eq(403)
+          expect(decoded_response['code']).to eq(10003)
         end
 
-        it 'creates an appropriate event' do
-          put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
-          event = Event.find(type: event_type, actee: other_user.guid)
-          expect(event).not_to be_nil
+        context 'as an admin' do
+          before do
+            set_current_user_as_admin
+          end
+
+          it 'succeeds' do
+            put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
+            expect(last_response.status).to eq(201)
+            space.reload
+            expect(space.managers).to include(other_user)
+            expect(decoded_response).to be_a_response_like(expected_response)
+          end
+
+          it 'creates an appropriate event' do
+            put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
+            event = Event.find(type: event_type, actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
         end
       end
-    end
 
-    describe 'PUT /v2/users/:guid/spaces/:space_guid' do
-      let(:space) { Space.make }
-      let(:org) { space.organization }
-      let(:user) { User.make }
-      let(:event_type) { 'audit.user.space_developer_add' }
-      let(:other_user) { User.make }
+      describe 'PUT /v2/users/:guid/spaces/:space_guid' do
+        let(:event_type) { 'audit.user.space_developer_add' }
 
-      let(:expected_response) {
-        {
-          'metadata' => {
-            'guid' => other_user.guid,
-            'url' => "/v2/users/#{other_user.guid}",
-            'created_at' => iso8601,
-            'updated_at' => iso8601
-          },
-          'entity' => {
-            'admin' => false,
-            'active' => false,
-            'default_space_guid' => nil,
-            'spaces_url' => "/v2/users/#{other_user.guid}/spaces",
-            'organizations_url' => "/v2/users/#{other_user.guid}/organizations",
-            'managed_organizations_url' => "/v2/users/#{other_user.guid}/managed_organizations",
-            'billing_managed_organizations_url' => "/v2/users/#{other_user.guid}/billing_managed_organizations",
-            'audited_organizations_url' => "/v2/users/#{other_user.guid}/audited_organizations",
-            'managed_spaces_url' => "/v2/users/#{other_user.guid}/managed_spaces",
-            'audited_spaces_url' => "/v2/users/#{other_user.guid}/audited_spaces"
+        let(:expected_response) {
+          {
+            'metadata' => {
+              'guid' => other_user.guid,
+              'url' => "/v2/users/#{other_user.guid}",
+              'created_at' => iso8601,
+              'updated_at' => iso8601
+            },
+            'entity' => {
+              'admin' => false,
+              'active' => false,
+              'default_space_guid' => nil,
+              'spaces_url' => "/v2/users/#{other_user.guid}/spaces",
+              'organizations_url' => "/v2/users/#{other_user.guid}/organizations",
+              'managed_organizations_url' => "/v2/users/#{other_user.guid}/managed_organizations",
+              'billing_managed_organizations_url' => "/v2/users/#{other_user.guid}/billing_managed_organizations",
+              'audited_organizations_url' => "/v2/users/#{other_user.guid}/audited_organizations",
+              'managed_spaces_url' => "/v2/users/#{other_user.guid}/managed_spaces",
+              'audited_spaces_url' => "/v2/users/#{other_user.guid}/audited_spaces"
+            }
           }
         }
-      }
 
-      before do
-        set_current_user(user)
-        org.add_user(user)
-        org.add_manager(user)
-        space.add_manager(user)
-        org.add_user(other_user)
-      end
-
-      it 'fails with 403' do
-        put "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
-        expect(last_response.status).to eq(403)
-        expect(decoded_response['code']).to eq(10003)
-      end
-
-      context 'as an admin' do
         before do
-          set_current_user_as_admin
+          set_current_user(user)
+          org.add_user(user)
+          org.add_manager(user)
+          space.add_manager(user)
+          org.add_user(other_user)
         end
 
-        it 'succeeds' do
+        it 'fails with 403' do
           put "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
-          expect(last_response.status).to eq(201)
-          space.reload
-          expect(space.developers).to include(other_user)
-          expect(decoded_response).to be_a_response_like(expected_response)
+          expect(last_response.status).to eq(403)
+          expect(decoded_response['code']).to eq(10003)
         end
 
-        it 'creates an appropriate event' do
-          put "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
-          event = Event.find(type: event_type, actee: other_user.guid)
-          expect(event).not_to be_nil
+        context 'as an admin' do
+          before do
+            set_current_user_as_admin
+          end
+
+          it 'succeeds' do
+            put "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
+            expect(last_response.status).to eq(201)
+            space.reload
+            expect(space.developers).to include(other_user)
+            expect(decoded_response).to be_a_response_like(expected_response)
+          end
+
+          it 'creates an appropriate event' do
+            put "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
+            event = Event.find(type: event_type, actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
         end
       end
     end
