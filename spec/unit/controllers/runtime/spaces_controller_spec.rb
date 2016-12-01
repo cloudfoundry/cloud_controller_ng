@@ -604,12 +604,12 @@ module VCAP::CloudController
     end
 
     describe 'audit events' do
-      let(:organization) { Organization.make }
+      let(:space) { Space.make }
 
       before { set_current_user_as_admin }
 
       it 'logs audit.space.create when creating a space' do
-        request_body = { organization_guid: organization.guid, name: 'space_name' }.to_json
+        request_body = { organization_guid: space.organization.guid, name: 'space_name' }.to_json
         post '/v2/spaces', request_body
 
         expect(last_response).to have_status_code(201)
@@ -617,38 +617,34 @@ module VCAP::CloudController
         new_space_guid = decoded_response['metadata']['guid']
         event = Event.find(type: 'audit.space.create', actee: new_space_guid)
         expect(event).not_to be_nil
+
         expect(event.actor_name).to eq(SecurityContext.current_user_email)
-        expect(event.metadata['request']).to include('organization_guid' => organization.guid, 'name' => 'space_name')
+        expect(event.metadata['request']).to include('organization_guid' => space.organization.guid, 'name' => 'space_name')
       end
 
       it 'logs audit.space.update when updating a space' do
-        space = Space.make
         request_body = { name: 'new_space_name' }.to_json
         put "/v2/spaces/#{space.guid}", request_body
 
         expect(last_response).to have_status_code(201)
 
-        space_guid = decoded_response['metadata']['guid']
-        event = Event.find(type: 'audit.space.update', actee: space_guid)
+        event = Event.find(type: 'audit.space.update', actee: space.guid)
         expect(event).not_to be_nil
         expect(event.actor_name).to eq(SecurityContext.current_user_email)
         expect(event.metadata['request']).to eq('name' => 'new_space_name')
       end
 
       it 'logs audit.space.delete-request when deleting a space' do
-        space = Space.make
-        organization_guid = space.organization.guid
-        space_guid = space.guid
-        delete "/v2/spaces/#{space_guid}?recursive=true"
+        delete "/v2/spaces/#{space.guid}?recursive=true"
 
         expect(last_response).to have_status_code(204)
 
-        event = Event.find(type: 'audit.space.delete-request', actee: space_guid)
+        event = Event.find(type: 'audit.space.delete-request', actee: space.guid)
         expect(event).not_to be_nil
         expect(event.metadata['request']).to eq('recursive' => true)
-        expect(event.space_guid).to eq(space_guid)
+        expect(event.space_guid).to eq(space.guid)
         expect(event.actor_name).to eq(SecurityContext.current_user_email)
-        expect(event.organization_guid).to eq(organization_guid)
+        expect(event.organization_guid).to eq(space.organization.guid)
       end
     end
 
@@ -1042,6 +1038,10 @@ module VCAP::CloudController
       let(:org_user_guids) { [mgr.guid, developer.guid] }
       let(:space_auditor_guids) { [] }
 
+      before do
+        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).with([developer.guid]).and_return({ developer.guid => developer.username })
+      end
+
       context 'as admin who is not a developer or manager' do
         before do
           set_current_user_as_admin(user: User.make)
@@ -1080,6 +1080,10 @@ module VCAP::CloudController
           let(:dev) { User.make }
           let(:space_dev_guids) { [dev.guid, developer.guid] }
           let(:org_user_guids) { [mgr.guid, developer.guid, dev.guid] }
+
+          before do
+            allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).with([dev.guid]).and_return({ dev.guid => dev.username })
+          end
 
           it 'fails with a 403' do
             delete "/v2/spaces/#{space.guid}/developers/#{dev.guid}"
@@ -1121,6 +1125,10 @@ module VCAP::CloudController
       let(:space_manager_guids) { [manager.guid] }
       let(:space_auditor_guids) { [] }
 
+      before do
+        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).with([manager.guid]).and_return({ manager.guid => manager.username })
+      end
+
       context 'as admin who is not a developer or manager' do
         before do
           set_current_user_as_admin(user: User.make)
@@ -1161,6 +1169,10 @@ module VCAP::CloudController
           let(:space_manager_guids) { [mgr.guid, manager.guid] }
           let(:org_user_guids) { [manager.guid, mgr.guid, developer.guid] }
 
+          before do
+            allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).with([mgr.guid]).and_return({ mgr.guid => mgr.username })
+          end
+
           it 'successfully removes the manager' do
             delete "/v2/spaces/#{space.guid}/managers/#{mgr.guid}"
             expect(last_response).to have_status_code(204)
@@ -1199,6 +1211,10 @@ module VCAP::CloudController
       let(:org_user_guids) { [manager.guid, auditor.guid] }
       let(:space_manager_guids) { [manager.guid] }
       let(:space_auditor_guids) { [auditor.guid] }
+
+      before do
+        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).with([auditor.guid]).and_return({ auditor.guid => auditor.username })
+      end
 
       context 'as admin who is not a manager' do
         before do
@@ -1254,6 +1270,10 @@ module VCAP::CloudController
           let(:auditor2) { User.make }
           let(:space_auditor_guids) { [auditor.guid, auditor2.guid] }
           let(:org_user_guids) { [manager.guid, auditor.guid, auditor2.guid] }
+
+          before do
+            allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).with([auditor2.guid]).and_return({ auditor2.guid => auditor2.username })
+          end
 
           it 'fails with a 403' do
             delete "/v2/spaces/#{space.guid}/auditors/#{auditor2.guid}"
@@ -1826,6 +1846,7 @@ module VCAP::CloudController
         plural_role = role.to_s.pluralize
         describe "PUT /v2/spaces/:guid/#{plural_role}" do
           let(:user) { User.make(username: 'larry_the_user') }
+          let(:event_type) { "audit.user.space_#{role}_add" }
 
           before do
             allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
@@ -1873,6 +1894,16 @@ module VCAP::CloudController
             expect(decoded_response['code']).to eq(20005)
           end
 
+          it 'logs audit.space.role.add when a role is associated to a space' do
+            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+            event = Event.find(type: event_type, actee: user.guid)
+            expect(event).not_to be_nil
+            expect(event.space_guid).to eq(space_one.guid)
+            expect(event.actor_name).to eq(SecurityContext.current_user_email)
+            expect(event.organization_guid).to eq(space_one.organization.guid)
+          end
+
           context 'when the feature flag "set_roles_by_username" is disabled' do
             before do
               FeatureFlag.new(name: 'set_roles_by_username', enabled: false).save
@@ -1903,6 +1934,7 @@ module VCAP::CloudController
         plural_role = role.to_s.pluralize
         describe "DELETE /v2/spaces/:guid/#{plural_role}" do
           let(:user) { User.make(username: 'larry_the_user') }
+          let(:event_type) { "audit.user.space_#{role}_remove" }
 
           before do
             allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
@@ -1953,6 +1985,16 @@ module VCAP::CloudController
             expect(decoded_response['code']).to eq(20005)
           end
 
+          it 'logs audit.space.role.remove when a user-role association is removed from a space' do
+            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+            event = Event.find(type: event_type, actee: user.guid)
+            expect(event).not_to be_nil
+            expect(event.space_guid).to eq(space_one.guid)
+            expect(event.actor_name).to eq(SecurityContext.current_user_email)
+            expect(event.organization_guid).to eq(space_one.organization.guid)
+          end
+
           context 'when the feature flag "unset_roles_by_username" is disabled' do
             before do
               FeatureFlag.new(name: 'unset_roles_by_username', enabled: false).save
@@ -1975,6 +2017,103 @@ module VCAP::CloudController
               expect(space_one.reload.send(plural_role)).to_not include(user)
               expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
             end
+          end
+        end
+      end
+    end
+
+    describe 'adding user roles by user_id' do
+      [:manager, :developer, :auditor].each do |role|
+        plural_role = role.to_s.pluralize
+        describe "PUT /v2/spaces/:guid/#{plural_role}/:user_guid" do
+          let(:user) { User.make(username: 'larry_the_user') }
+          let(:space) { Space.make }
+          let(:event_type) { "audit.user.space_#{role}_add" }
+
+          before do
+            space.organization.add_user(user)
+            set_current_user_as_admin
+            allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({ user.guid => user.username })
+          end
+
+          it "makes the user a space #{role}" do
+            put "/v2/spaces/#{space.guid}/#{plural_role}/#{user.guid}"
+
+            expect(last_response.status).to eq(201)
+            expect(space.send(plural_role)).to include(user)
+            expect(decoded_response['metadata']['guid']).to eq(space.guid)
+          end
+
+          it 'verifies the user has update access to the space' do
+            expect_any_instance_of(SpacesController).to receive(:find_guid_and_validate_access).with(:update, space.guid).and_call_original
+            put "/v2/spaces/#{space.guid}/#{plural_role}/#{user.guid}"
+          end
+
+          it 'returns a 400 when the user does not exist' do
+            put "/v2/spaces/#{space.guid}/#{plural_role}/bogus-user-id"
+
+            expect(last_response.status).to eq(400)
+            expect(decoded_response['code']).to eq(1002)
+          end
+
+          it 'logs audit.space.role.add when a role is associated to a space' do
+            put "/v2/spaces/#{space.guid}/#{plural_role}/#{user.guid}"
+
+            event = Event.find(type: event_type, actee: user.guid)
+            expect(event).not_to be_nil
+            expect(event.space_guid).to eq(space.guid)
+            expect(event.actor_name).to eq(SecurityContext.current_user_email)
+            expect(event.organization_guid).to eq(space.organization.guid)
+          end
+        end
+      end
+    end
+
+    describe 'removing user roles by user_id' do
+      [:manager, :developer, :auditor].each do |role|
+        plural_role = role.to_s.pluralize
+        describe "DELETE /v2/spaces/:guid/#{plural_role}/:user_guid" do
+          let(:user) { User.make(username: 'larry_the_user') }
+          let(:space) { Space.make }
+          let(:event_type) { "audit.user.space_#{role}_remove" }
+
+          before do
+            space.organization.add_user(user)
+            space.send("add_#{role}", user)
+            set_current_user_as_admin
+            allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).with([user.guid]).and_return({ user.guid => user.username })
+          end
+
+          it "unsets the user as a space #{role}" do
+            expect(space.send(plural_role)).to include(user)
+
+            delete "/v2/spaces/#{space.guid}/#{plural_role}/#{user.guid}"
+
+            expect(last_response.status).to eq(204)
+            expect(space.reload.send(plural_role)).to_not include(user)
+          end
+
+          it 'verifies the user has update access to the space' do
+            expect_any_instance_of(SpacesController).to receive(:find_guid_and_validate_access).with(:update, space.guid).and_call_original
+            delete "/v2/spaces/#{space.guid}/#{plural_role}/#{user.guid}"
+          end
+
+          it 'returns a 400 when the user does not exist in CC' do
+            allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({})
+            delete "/v2/spaces/#{space.guid}/#{plural_role}/bogus-user-id"
+
+            expect(last_response.status).to eq(400)
+            expect(decoded_response['code']).to eq(1002)
+          end
+
+          it 'logs audit.space.role.remove when a user-role association is removed from a space' do
+            delete "/v2/spaces/#{space.guid}/#{plural_role}/#{user.guid}"
+
+            event = Event.find(type: event_type, actee: user.guid)
+            expect(event).not_to be_nil
+            expect(event.space_guid).to eq(space.guid)
+            expect(event.actor_name).to eq(SecurityContext.current_user_email)
+            expect(event.organization_guid).to eq(space.organization.guid)
           end
         end
       end
