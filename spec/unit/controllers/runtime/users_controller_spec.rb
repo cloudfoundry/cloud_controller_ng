@@ -602,7 +602,7 @@ module VCAP::CloudController
       let(:user) { User.make }
 
       before do
-        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({other_user.guid => other_user.username})
+        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({ other_user.guid => other_user.username })
       end
 
       describe 'PUT /v2/users/:guid/audited_spaces/:space_guid' do
