@@ -432,6 +432,9 @@ properties:
   cc.allow_app_ssh_access:
     default: true
     description: "Allow users to change the value of the app-level allow_ssh attribute"
+  cc.default_app_ssh_access:
+    default: true
+    description: "When ssh is allowed and not explicitly set in the application, new applications will start with ssh service enabled"
   cc.flapping_crash_count_threshold:
     default: 3
     description: "The threshold of crashes after which the app is marked as flapping"
