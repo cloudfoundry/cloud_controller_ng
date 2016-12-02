@@ -8,6 +8,7 @@
 language: ruby
 bundler_args: --deployment --without development
 cache: bundler
+sudo: required
 
 # Travis cannot find the binary for Ruby 2.3, so we specifically choose 2.3.1
 # instead of using the .ruby-version file
