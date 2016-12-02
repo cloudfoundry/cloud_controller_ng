@@ -15,7 +15,7 @@ module VCAP::CloudController
           disk_mb: app_request['disk_mb'],
           memory_mb: app_request['memory_mb'],
           privileged: false,
-          ports: app_request['ports'],
+          ports: extract_exposed_ports(app_request),
           log_source: LRP_LOG_SOURCE,
           log_guid: app_request['log_guid'],
           metrics_guid: app_request['log_guid'],
@@ -47,7 +47,7 @@ module VCAP::CloudController
         tcp_ports = execution_metadata['ports'].select { |port| port['protocol'] == 'tcp' }
         fail MissingAppPort if tcp_ports.empty?
 
-        tcp_ports.map { |port| port['port'] }
+        tcp_ports.map { |port| port['port'].to_i }
       end
 
       def generate_app_action(app_request)

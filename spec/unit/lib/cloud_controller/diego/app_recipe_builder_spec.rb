@@ -287,9 +287,15 @@ module VCAP::CloudController
               ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '3'),
             ]
           end
+
           it 'sets PORT to the first TCP port entry from execution_metadata' do
             lrp = builder.build_app_lrp(config, app_details_from_protocol)
             expect(lrp.action).to eq(expected_action)
+          end
+
+          it 'sets the lrp ports to all tcp port entries from execution metadata' do
+            lrp = builder.build_app_lrp(config, app_details_from_protocol)
+            expect(lrp.ports).to eq([3, 4])
           end
 
           context 'when the ports array does not contain any TCP entries' do
