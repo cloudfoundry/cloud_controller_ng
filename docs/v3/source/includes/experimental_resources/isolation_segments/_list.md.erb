@@ -47,6 +47,8 @@ This endpoint retrieves all the isolation segments to which the user has access.
     <p class="method-list-item-description">Comma-delimited list of isolation segment names to filter by. <br>Example: <code>names=name1,name2</code></p>
   </li>
 
+<%= yield_content :organization_guids_query_param %>
+
 <%= yield_content :page_query_param %>
 
 <%= yield_content :per_page_query_param %>
