@@ -53,10 +53,14 @@ module VCAP::CloudController
     end
 
     def copy_buildpack_droplet(new_droplet)
-      new_droplet.buildpack_lifecycle_data = BuildpackLifecycleDataModel.new(
+      # it is important to create the lifecycle model with the app instead of doing app.buildpack_lifecycle_data_model = x
+      # because mysql will deadlock when requests happen concurrently otherwise.
+      BuildpackLifecycleDataModel.create(
         stack:     @source_droplet.buildpack_lifecycle_data.stack,
-        buildpack: @source_droplet.buildpack_lifecycle_data.buildpack
+        buildpack: @source_droplet.buildpack_lifecycle_data.buildpack,
+        droplet:   new_droplet,
       )
+      new_droplet.buildpack_lifecycle_data(true) # reload buildpack_lifecycle_data association
 
       copy_job = Jobs::V3::DropletBitsCopier.new(@source_droplet.guid, new_droplet.guid)
       Jobs::Enqueuer.new(copy_job, queue: 'cc-generic').enqueue
