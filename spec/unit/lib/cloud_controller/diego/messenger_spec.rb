@@ -64,9 +64,10 @@ module VCAP::CloudController
 
       describe '#send_desire_request' do
         let(:process) { App.new }
-        let(:default_health_check_timeout) { 9999 }
+        let(:default_health_check_timeout) { 99 }
         let(:process_guid) { ProcessGuid.from_process(process) }
         let(:message) { { desire: 'message' } }
+        let(:config) { { default_health_check_timeout: default_health_check_timeout } }
 
         before do
           allow(protocol).to receive(:desire_app_request).and_return(message)
@@ -74,10 +75,30 @@ module VCAP::CloudController
         end
 
         it 'sends a desire app request' do
-          messenger.send_desire_request(process, default_health_check_timeout)
+          messenger.send_desire_request(process, config)
 
           expect(protocol).to have_received(:desire_app_request).with(process, default_health_check_timeout)
           expect(nsync_client).to have_received(:desire_app).with(process_guid, message)
+        end
+
+        context 'when configured to start an app directly to diego' do
+          let(:bbs_apps_client) { instance_double(BbsAppsClient, desire_app: nil) }
+          let(:app_recipe_builder) { instance_double(Diego::AppRecipeBuilder, build_app_lrp: build_lrp) }
+          let(:build_lrp) { instance_double(::Diego::Bbs::Models::DesiredLRP) }
+
+          before do
+            CloudController::DependencyLocator.instance.register(:bbs_apps_client, bbs_apps_client)
+            TestConfig.override(diego: { temporary_local_apps: true })
+
+            allow(Diego::AppRecipeBuilder).to receive(:new).and_return(app_recipe_builder)
+          end
+
+          it 'sends the staging message to the bbs' do
+            messenger.send_desire_request(process, config)
+
+            expect(app_recipe_builder).to have_received(:build_app_lrp).with(config, message.as_json)
+            expect(bbs_apps_client).to have_received(:desire_app).with(build_lrp)
+          end
         end
       end
 

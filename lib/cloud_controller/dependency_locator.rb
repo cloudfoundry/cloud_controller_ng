@@ -8,7 +8,10 @@ require 'cloud_controller/upload_handler'
 require 'cloud_controller/blob_sender/nginx_blob_sender'
 require 'cloud_controller/blob_sender/default_blob_sender'
 require 'cloud_controller/blob_sender/missing_blob_handler'
+require 'cloud_controller/diego/recipe_builder'
+require 'cloud_controller/diego/app_recipe_builder'
 require 'cloud_controller/diego/stager_client'
+require 'cloud_controller/diego/bbs_apps_client'
 require 'cloud_controller/diego/bbs_stager_client'
 require 'cloud_controller/diego/bbs_task_client'
 require 'cloud_controller/diego/tps_client'
@@ -61,6 +64,10 @@ module CloudController
 
     def stager_client
       @dependencies[:stager_client] || raise('stager_client not set')
+    end
+
+    def bbs_apps_client
+      @dependencies[:bbs_apps_client] || register(:bbs_apps_client, build_bbs_apps_client)
     end
 
     def bbs_stager_client
@@ -290,6 +297,17 @@ module CloudController
       )
 
       VCAP::CloudController::Diego::BbsStagerClient.new(bbs_client)
+    end
+
+    def build_bbs_apps_client
+      bbs_client = ::Diego::Client.new(
+        url:              HashUtils.dig(@config, :diego, :bbs, :url),
+        ca_cert_file:     HashUtils.dig(@config, :diego, :bbs, :ca_file),
+        client_cert_file: HashUtils.dig(@config, :diego, :bbs, :cert_file),
+        client_key_file:  HashUtils.dig(@config, :diego, :bbs, :key_file)
+      )
+
+      VCAP::CloudController::Diego::BbsAppsClient.new(bbs_client)
     end
 
     def build_bbs_task_client

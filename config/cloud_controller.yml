@@ -224,6 +224,7 @@ rate_limiter:
 diego:
   temporary_local_staging: false
   temporary_local_tasks: false
+  temporary_local_apps: false
   nsync_url: http://nsync.service.cf.internal:8787
   stager_url: http://stager.service.cf.internal:8888
   tps_url: http://tps.service.cf.internal:1518

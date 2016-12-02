@@ -27,12 +27,17 @@ module VCAP::CloudController
         end
       end
 
-      def send_desire_request(process, default_health_check_timeout)
+      def send_desire_request(process, config)
         logger.info('desire.app.begin', app_guid: process.guid)
 
         process_guid   = ProcessGuid.from_process(process)
-        desire_message = protocol.desire_app_request(process, default_health_check_timeout)
-        nsync_client.desire_app(process_guid, desire_message)
+        desire_message = protocol.desire_app_request(process, config[:default_health_check_timeout])
+        if bypass_bridge?
+          desired_lrp = app_recipe_builder.build_app_lrp(config, desire_message.as_json)
+          bbs_apps_client.desire_app(desired_lrp)
+        else
+          nsync_client.desire_app(process_guid, desire_message)
+        end
       end
 
       def send_stop_index_request(process, index)
@@ -67,8 +72,16 @@ module VCAP::CloudController
         @recipe_builder ||= RecipeBuilder.new
       end
 
+      def app_recipe_builder
+        @app_recipe_builder ||= AppRecipeBuilder.new
+      end
+
       def stager_client
         CloudController::DependencyLocator.instance.stager_client
+      end
+
+      def bbs_apps_client
+        CloudController::DependencyLocator.instance.bbs_apps_client
       end
 
       def bbs_stager_client
@@ -77,6 +90,10 @@ module VCAP::CloudController
 
       def nsync_client
         CloudController::DependencyLocator.instance.nsync_client
+      end
+
+      def bypass_bridge?
+        !!HashUtils.dig(Config.config, :diego, :temporary_local_apps)
       end
     end
   end

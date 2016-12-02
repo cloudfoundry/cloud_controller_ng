@@ -1,7 +1,6 @@
 require 'cloud_controller/dea/stager'
 require 'cloud_controller/diego/stager'
 require 'cloud_controller/diego/protocol'
-require 'cloud_controller/diego/recipe_builder'
 require 'cloud_controller/diego/buildpack/staging_completion_handler'
 require 'cloud_controller/diego/buildpack/lifecycle_protocol'
 require 'cloud_controller/diego/docker/lifecycle_protocol'

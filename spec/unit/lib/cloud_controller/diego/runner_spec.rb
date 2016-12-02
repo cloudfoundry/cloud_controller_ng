@@ -7,8 +7,13 @@ module VCAP::CloudController
       let(:process) { AppFactory.make(state: 'STARTED') }
       let(:protocol) { instance_double(Diego::Protocol, desire_app_message: {}) }
       let(:default_health_check_timeout) { 9999 }
+      let(:config) do
+        {
+          default_health_check_timeout: default_health_check_timeout,
+        }
+      end
 
-      subject(:runner) { Runner.new(process, default_health_check_timeout) }
+      subject(:runner) { Runner.new(process, config) }
 
       before do
         runner.messenger = messenger
@@ -18,7 +23,7 @@ module VCAP::CloudController
       describe '#scale' do
         context 'when the app is started' do
           it 'desires an app, relying on its state to convey the change' do
-            expect(messenger).to receive(:send_desire_request).with(process, default_health_check_timeout)
+            expect(messenger).to receive(:send_desire_request).with(process, config)
             runner.scale
           end
         end
@@ -39,7 +44,7 @@ module VCAP::CloudController
         end
 
         it 'desires an app, relying on its state to convey the change' do
-          expect(messenger).to have_received(:send_desire_request).with(process, default_health_check_timeout)
+          expect(messenger).to have_received(:send_desire_request).with(process, config)
         end
       end
 
@@ -70,7 +75,7 @@ module VCAP::CloudController
       describe '#update_routes' do
         context 'when the app is started' do
           it 'desires an app, relying on its state to convey the change' do
-            expect(messenger).to receive(:send_desire_request).with(process, default_health_check_timeout)
+            expect(messenger).to receive(:send_desire_request).with(process, config)
             runner.update_routes
           end
         end

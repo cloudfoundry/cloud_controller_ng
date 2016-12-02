@@ -626,3 +626,6 @@ properties:
   cc.diego.temporary_local_tasks:
     description: "Temporary flag to run tasks directly to the bbs from cc"
     default: false
+  cc.diego.temporary_local_apps:
+    description: "Temporary flag to manage app state directly to the bbs from cc"
+    default: false

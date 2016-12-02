@@ -103,7 +103,7 @@ module VCAP::CloudController
     private
 
     def diego_runner(app)
-      Diego::Runner.new(app, @config[:default_health_check_timeout])
+      Diego::Runner.new(app, @config)
     end
 
     def dea_runner(app)

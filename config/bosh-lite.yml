@@ -267,6 +267,7 @@ rate_limiter:
 diego:
   temporary_local_staging: true
   temporary_local_tasks: true
+  temporary_local_apps: true
   nsync_url: http://10.244.16.14:8787
   stager_url: http://10.244.16.14:8888
   tps_url: http://10.244.16.14:1518

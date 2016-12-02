@@ -69,7 +69,7 @@ module Diego
 
         expect(response.error).to be_nil
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/desire.r2').with(
-                 body:    expected_task_request.encode.to_s,
+                 body: expected_task_request.encode.to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -123,7 +123,7 @@ module Diego
 
         expect(response.error).to be_nil
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/list.r2').with(
-                 body:    expected_request.encode.to_s,
+                 body: expected_request.encode.to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -136,7 +136,7 @@ module Diego
 
           expect(response.error).to be_nil
           expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/list.r2').with(
-                   body:    expected_request.encode.to_s,
+                   body: expected_request.encode.to_s,
                    headers: { 'Content-Type' => 'application/x-protobuf' }
           )).to have_been_made
         end
@@ -148,7 +148,7 @@ module Diego
 
           expect(response.error).to be_nil
           expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/list.r2').with(
-                   body:    expected_request.encode.to_s,
+                   body: expected_request.encode.to_s,
                    headers: { 'Content-Type' => 'application/x-protobuf' }
           )).to have_been_made
         end
@@ -203,7 +203,7 @@ module Diego
 
         expect(response.error).to be_nil
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/get_by_task_guid.r2').with(
-                 body:    expected_request.encode.to_s,
+                 body: expected_request.encode.to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -257,7 +257,7 @@ module Diego
 
         expect(response.error).to be_nil
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/cancel').with(
-                 body:    expected_cancel_request.encode.to_s,
+                 body: expected_cancel_request.encode.to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -292,6 +292,61 @@ module Diego
       context 'when the task guid request cannot be encoded' do
         it 'raises' do
           expect { client.cancel_task(4) }.to raise_error(EncodeError)
+        end
+      end
+    end
+
+    describe '#desire_lrp' do
+      let(:response_body) { Bbs::Models::DesiredLRPResponse.new(error: nil).encode.to_s }
+      let(:response_status) { 200 }
+      let(:lrp) { ::Diego::Bbs::Models::DesiredLRP.new }
+
+      before do
+        stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/desire.r2').to_return(status: response_status, body: response_body)
+      end
+
+      it 'returns a Desired LRP Response' do
+        expected_desire_lrp_request = Bbs::Models::DesireLRPRequest.new(desired_lrp: lrp)
+
+        response = client.desire_lrp(lrp)
+
+        expect(response.error).to be_nil
+        expect(a_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/desire.r2').with(
+                 body: expected_desire_lrp_request.encode.to_s,
+                 headers: { 'Content-Type' => 'application/x-protobuf' }
+        )).to have_been_made
+      end
+
+      context 'when it does not return successfully' do
+        let(:response_status) { 404 }
+        let(:response_body) { 'not found' }
+
+        it 'raises' do
+          expect { client.desire_lrp(lrp) }.to raise_error(ResponseError, /status: 404, body: not found/)
+        end
+      end
+
+      context 'when it fails to make the request' do
+        before do
+          stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/desire.r2').to_raise(StandardError.new('error message'))
+        end
+
+        it 'raises' do
+          expect { client.desire_lrp(lrp) }.to raise_error(RequestError, /error message/)
+        end
+      end
+
+      context 'when decoding the response fails' do
+        let(:response_body) { 'potato' }
+
+        it 'raises' do
+          expect { client.desire_lrp(lrp) }.to raise_error(DecodeError)
+        end
+      end
+
+      context 'when the task cannot be encoded' do
+        it 'raises' do
+          expect { client.desire_lrp(4) }.to raise_error(EncodeError)
         end
       end
     end

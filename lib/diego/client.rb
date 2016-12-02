@@ -63,6 +63,17 @@ module Diego
       protobuf_decode!(response.body, Bbs::Models::TaskLifecycleResponse)
     end
 
+    def desire_lrp(lrp)
+      request = protobuf_encode!({ desired_lrp: lrp }, Bbs::Models::DesireLRPRequest)
+
+      response = with_request_error_handling do
+        client.post(Routes::DESIRE_LRP, request, PROTOBUF_HEADER)
+      end
+
+      validate_status!(response: response, statuses: [200])
+      protobuf_decode!(response.body, Bbs::Models::DesiredLRPResponse)
+    end
+
     def with_request_error_handling(&blk)
       tries ||= 3
       yield
