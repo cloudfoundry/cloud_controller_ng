@@ -35,7 +35,7 @@ module VCAP::CloudController
             },
           }
         end
-        let(:isolation_segment) { IsolationSegmentModel.make(name: 'potato-segment') }
+        let(:isolation_segment) { 'potato-segment' }
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
         let(:external_port) { '7777' }
         let(:user) { 'user' }

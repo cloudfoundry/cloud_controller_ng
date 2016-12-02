@@ -71,18 +71,10 @@ module VCAP::CloudController
 
       def find_staging_isolation_segment(staging_details)
         if staging_details.isolation_segment
-          [staging_details.isolation_segment.name]
+          [staging_details.isolation_segment]
         else
           []
         end
-      end
-
-      def find_staging_isolation_segment(staging_details)
-        iso_seg = ''
-        if staging_details.isolation_segment
-          iso_seg = staging_details.isolation_segment.name
-        end
-        iso_seg
       end
 
       def generate_annotation(config, lifecycle_type, staging_details)
