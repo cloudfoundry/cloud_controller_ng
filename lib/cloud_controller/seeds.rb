@@ -66,9 +66,8 @@ module VCAP::CloudController
       end
 
       def create_seed_domains(config, system_org)
-        system_domain = config[:system_domain]
         domains = parsed_domains(config[:app_domains])
-        raise 'app_domains can not be empty' if domains.empty?
+        system_domain = config[:system_domain]
 
         domains.each do |domain|
           domain_name = domain['name']

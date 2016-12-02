@@ -380,14 +380,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      context 'when app domains are an empty array' do
-        let(:app_domains) { [] }
-
-        it 'raises an error' do
-          expect { Seeds.create_seed_domains(config, system_org) }.to raise_error(RuntimeError, /app_domains can not be empty/)
-        end
-      end
     end
 
     describe '.create_seed_security_groups' do
