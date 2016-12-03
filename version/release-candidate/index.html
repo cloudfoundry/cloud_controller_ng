@@ -3845,6 +3845,20 @@ environment variables listed on the source droplet.</p>
 
     <li class="method-list-item">
     <h4 class="method-list-item-label">
+      organization_guids
+
+        <span class="method-list-item-type">optional</span>
+        <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">    Comma-delimited list of organization guids to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code>
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
       page
 
         <span class="method-list-item-type">optional</span>
@@ -3885,7 +3899,7 @@ environment variables listed on the source droplet.</p>
       { "guid":"org-guid-1" },
       { "guid":"org-guid-2" }
     ]
-  }'</span> 
+  }'</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
@@ -3911,7 +3925,8 @@ environment variables listed on the source droplet.</p>
 
 </code></pre>
 
-<p>This endpoint entitles the specified organizations for the isolation segment.  Only Admins can entitle organizations for isolation segments.  If an organization is not already entitled for any other isolation segment, then this isolation segment automatically becomes the default for that organization.</p>
+<p>This endpoint entitles the specified organizations for the isolation segment.  Only Admins can entitle organizations for isolation segments.
+In the case where the specified isolation segment is the system-wide shared segment, and if an organization is not already entitled for any other isolation segment, then the shared isolation segment automatically gets assigned as the  default for that organization.</p>
 
 <h4 id="body-parameters">Body Parameters</h4>
 
