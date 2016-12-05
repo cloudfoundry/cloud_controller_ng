@@ -9,6 +9,7 @@ module VCAP::CloudController
           {
             'stack' => 'potato-stack',
             'droplet_uri' => 'droplet-uri',
+            'droplet_hash' => 'droplet-hash',
             'process_guid' => 'p-guid',
             'ports' => ports,
           }
@@ -62,16 +63,14 @@ module VCAP::CloudController
                         user: 'vcap',
                         from: 'droplet-uri',
                         cache_key: 'droplets-p-guid',
+                        checksum_algorithm: 'sha1',
+                        checksum_value: 'droplet-hash',
                       )
                     )
                   ],
                 )
               )
             )
-          end
-
-          xcontext 'when the droplet_hash is not empty' do
-            it 'adds "ChecksumAlgorithm" and "ChecksumValue" to the SetupActions DownloadAction'
           end
         end
 

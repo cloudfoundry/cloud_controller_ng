@@ -31,6 +31,8 @@ module VCAP::CloudController
               to: '.',
               cache_key: "droplets-#{@app_request['process_guid']}",
               user: 'vcap',
+              checksum_algorithm: 'sha1',
+              checksum_value: @app_request['droplet_hash'],
             )
           ])
         end
