@@ -3,13 +3,14 @@ require 'cloud_controller/metrics/periodic_updater'
 
 module VCAP::CloudController::Metrics
   RSpec.describe PeriodicUpdater do
-    let(:periodic_updater) { PeriodicUpdater.new(start_time, log_counter, [updater1, updater2]) }
+    let(:periodic_updater) { PeriodicUpdater.new(start_time, log_counter, logger, [updater1, updater2]) }
     let(:updater1) { double(:updater1) }
     let(:updater2) { double(:updater2) }
     let(:threadqueue) { double(EventMachine::Queue, size: 20, num_waiting: 0) }
     let(:resultqueue) { double(EventMachine::Queue, size: 0, num_waiting: 1) }
     let(:start_time) { Time.now.utc - 90 }
     let(:log_counter) { double(:log_counter, counts: {}) }
+    let(:logger) { double(:logger) }
 
     before do
       allow(EventMachine).to receive(:connection_count).and_return(123)
@@ -138,6 +139,7 @@ module VCAP::CloudController::Metrics
         end
 
         it 'bumps the number of users and sets periodic timer' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:record_user_count).once
           expect(@periodic_timers[0][:interval]).to eq(600)
 
@@ -145,6 +147,7 @@ module VCAP::CloudController::Metrics
         end
 
         it 'bumps the length of cc job queues and sets periodic timer' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_job_queue_length).once
           expect(@periodic_timers[1][:interval]).to eq(30)
 
@@ -152,6 +155,7 @@ module VCAP::CloudController::Metrics
         end
 
         it 'updates thread count and event machine queues' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_thread_info).once
           expect(@periodic_timers[2][:interval]).to eq(30)
 
@@ -159,6 +163,7 @@ module VCAP::CloudController::Metrics
         end
 
         it 'bumps the length of cc failed job queues and sets periodic timer' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_failed_job_count).once
           expect(@periodic_timers[3][:interval]).to eq(30)
 
@@ -166,6 +171,7 @@ module VCAP::CloudController::Metrics
         end
 
         it 'updates the vitals' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_vitals).once
           expect(@periodic_timers[4][:interval]).to eq(30)
 
@@ -173,6 +179,7 @@ module VCAP::CloudController::Metrics
         end
 
         it 'updates the log counts' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_log_counts).once
           expect(@periodic_timers[5][:interval]).to eq(30)
 
@@ -180,6 +187,7 @@ module VCAP::CloudController::Metrics
         end
 
         it 'updates the task stats' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_task_stats).once
           expect(@periodic_timers[6][:interval]).to eq(30)
 
@@ -457,6 +465,28 @@ module VCAP::CloudController::Metrics
         expect(periodic_updater).to receive(:update_log_counts).once
         expect(periodic_updater).to receive(:update_task_stats).once
         periodic_updater.update!
+      end
+    end
+
+    describe '#catch_error' do
+      it 'calls a block' do
+        was_called = false
+        periodic_updater.catch_error { was_called = true }
+        expect(was_called).to be true
+      end
+
+      it 'swallows errors' do
+        allow(logger).to receive(:info)
+        expect {
+          periodic_updater.catch_error { raise 'RDoom' }
+        }.not_to raise_error
+      end
+
+      it 'logs errors' do
+        exception = RuntimeError.new('The periodic metrics task encountered an error: boom')
+        allow(logger).to receive(:info)
+        periodic_updater.catch_error { raise exception }
+        expect(logger).to have_received(:info).with(exception)
       end
     end
   end

@@ -3,21 +3,22 @@ require 'cloud_controller/metrics/statsd_updater'
 
 module VCAP::CloudController::Metrics
   class PeriodicUpdater
-    def initialize(start_time, log_counter, updaters=[VarzUpdater.new, StatsdUpdater.new])
+    def initialize(start_time, log_counter, logger=Steno.logger, updaters=[VarzUpdater.new, StatsdUpdater.new])
       @start_time = start_time
       @updaters    = updaters
       @log_counter = log_counter
+      @logger = logger
     end
 
     def setup_updates
       update!
-      EM.add_periodic_timer(600) { record_user_count }
-      EM.add_periodic_timer(30) { update_job_queue_length }
-      EM.add_periodic_timer(30) { update_thread_info }
-      EM.add_periodic_timer(30) { update_failed_job_count }
-      EM.add_periodic_timer(30) { update_vitals }
-      EM.add_periodic_timer(30) { update_log_counts }
-      EM.add_periodic_timer(30) { update_task_stats }
+      EM.add_periodic_timer(600) { catch_error { record_user_count } }
+      EM.add_periodic_timer(30)  { catch_error { update_job_queue_length } }
+      EM.add_periodic_timer(30)  { catch_error { update_thread_info } }
+      EM.add_periodic_timer(30)  { catch_error { update_failed_job_count } }
+      EM.add_periodic_timer(30)  { catch_error { update_vitals } }
+      EM.add_periodic_timer(30)  { catch_error { update_log_counts } }
+      EM.add_periodic_timer(30)  { catch_error { update_task_stats } }
     end
 
     def update!
@@ -28,6 +29,12 @@ module VCAP::CloudController::Metrics
       update_vitals
       update_log_counts
       update_task_stats
+    end
+
+    def catch_error
+      yield
+    rescue => e
+      @logger.info(e)
     end
 
     def update_task_stats
