@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Spaces API</title>
-  <meta charset="utf-8">
-  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
-  <script>
-    if( "file:" == document.location.protocol ) {
-      var csslink = document.getElementById("bootstrapcss");
-      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
-    }
-  </script>
-  <style>
-    p {
-      padding: 15px;
-      font-size: 130%;
-    }
+  <head>
+    <title>Spaces API</title>
+    <meta charset="utf-8">
+    <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+    <script>
+if( "file:" == document.location.protocol ) {
+  var csslink = document.getElementById("bootstrapcss");
+  csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+}
+    </script>
+    <style>
+p {
+  padding: 15px;
+  font-size: 130%;
+}
 
     pre {
       white-space: pre;
@@ -59,32 +59,32 @@
     table ul {
       padding-left: 1.2em;
     }
-  </style>
-</head>
-<body>
-<div class="container">
-  <h1>Spaces API</h1>
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Spaces API</h1>
 
-  <div class="article">
-    <h2>Creating a Space</h2>
-    <h3>POST /v2/spaces/</h3>
+      <div class="article">
+        <h2>Creating a Space</h2>
+        <h3>POST /v2/spaces/</h3>
 
-      <h3>Request</h3>
-      <h4>Route</h4>
-      <pre class="request route highlight">POST /v2/spaces</pre>
+        <h3>Request</h3>
+        <h4>Route</h4>
+        <pre class="request route highlight">POST /v2/spaces</pre>
 
 
 
         <h4>Body</h4>
         <table class="fields table table-striped table-bordered table-condensed">
           <thead>
-          <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Default</th>
-            <th>Valid Values</th>
-            <th>Example Values</th>
-          </tr>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Default</th>
+              <th>Valid Values</th>
+              <th>Example Values</th>
+            </tr>
           </thead>
           <tbody>
             <tr class=" ">
@@ -103,9 +103,9 @@
               </td>
               <td>
                 <ul class="example_values">
-                      <li>development</li>
-                      <li>demo</li>
-                      <li>production</li>
+                  <li>development</li>
+                  <li>demo</li>
+                  <li>production</li>
                 </ul>
               </td>
             </tr>
@@ -125,7 +125,7 @@
               </td>
               <td>
                 <ul class="example_values">
-                      <li>guid-7ffcf1cb-b70d-48fc-9bf5-951b1287bed8</li>
+                  <li>guid-7ffcf1cb-b70d-48fc-9bf5-951b1287bed8</li>
                 </ul>
               </td>
             </tr>
@@ -289,8 +289,8 @@
   "organization_guid": "28960823-1b68-4a2b-8f36-77cc573bccca"
 }</pre>
 
-      <h4>Headers</h4>
-      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM2MCIsImVtYWlsIjoiZW1haWwtMjU0QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDB9.KG16J1xFGi1sMmGJaHld3bHLRB6Tj9TxIHiImT0nbXE
+        <h4>Headers</h4>
+        <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM2MCIsImVtYWlsIjoiZW1haWwtMjU0QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDB9.KG16J1xFGi1sMmGJaHld3bHLRB6Tj9TxIHiImT0nbXE
 Host: example.org
 Content-Type: application/x-www-form-urlencoded
 Cookie: </pre>
@@ -300,19 +300,19 @@ Cookie: </pre>
   &quot;name&quot;: &quot;development&quot;,
   &quot;organization_guid&quot;: &quot;28960823-1b68-4a2b-8f36-77cc573bccca&quot;
 }&#39; -X POST \
-	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM2MCIsImVtYWlsIjoiZW1haWwtMjU0QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDB9.KG16J1xFGi1sMmGJaHld3bHLRB6Tj9TxIHiImT0nbXE&quot; \
-	-H &quot;Host: example.org&quot; \
-	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
-	-H &quot;Cookie: &quot;</pre>
+  -H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM2MCIsImVtYWlsIjoiZW1haWwtMjU0QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDB9.KG16J1xFGi1sMmGJaHld3bHLRB6Tj9TxIHiImT0nbXE&quot; \
+  -H &quot;Host: example.org&quot; \
+  -H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+  -H &quot;Cookie: &quot;</pre>
 
         <h3>Response</h3>
 
         <h4>Status</h4>
         <pre class="response status">201 Created</pre>
 
-          <h4>Body</h4>
+        <h4>Body</h4>
 
-          <pre class="response body">{
+        <pre class="response body">{
   "metadata": {
     "guid": "2a01cf80-9fbf-448f-a7a0-1e415e28771e",
     "url": "/v2/spaces/2a01cf80-9fbf-448f-a7a0-1e415e28771e",
@@ -346,101 +346,101 @@ X-VCAP-Request-ID: afea22e9-7613-47bd-915e-43de5923ba13
 Content-Length: 1280
 X-Content-Type-Options: nosniff</pre>
 
-      <h3>Audit Records Created By The Request</h3>
-      <h4>Audit Record: audit.space.create</h4>
-      <table class="table table-striped table-bordered table-condensed">
-        <thead>
-        <tr>
-          <th>Attribute Name</th>
-          <th>Value</th>
-        </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>
-              <span class="name">id</span>
-            </td>
-            <td>
+        <h3>Audit Records Created By The Request</h3>
+        <h4>Audit Record: audit.space.create</h4>
+        <table class="table table-striped table-bordered table-condensed">
+          <thead>
+            <tr>
+              <th>Attribute Name</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span class="name">id</span>
+              </td>
+              <td>
                 <span class="description">3</span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <span class="name">guid</span>
-            </td>
-            <td>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">guid</span>
+              </td>
+              <td>
                 <span class="description">3ae5862c-fb43-49ed-935b-8feb7d0e19e8</span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <span class="name">created_at</span>
-            </td>
-            <td>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">created_at</span>
+              </td>
+              <td>
                 <span class="description">2016-06-08 16:41:40 UTC</span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <span class="name">updated_at</span>
-            </td>
-            <td>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">updated_at</span>
+              </td>
+              <td>
                 <span class="description"></span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <span class="name">timestamp</span>
-            </td>
-            <td>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">timestamp</span>
+              </td>
+              <td>
                 <span class="description">2016-06-08 16:41:40 UTC</span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <span class="name">type</span>
-            </td>
-            <td>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">type</span>
+              </td>
+              <td>
                 <span class="description">audit.space.create</span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <span class="name">actor</span>
-            </td>
-            <td>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">actor</span>
+              </td>
+              <td>
                 <span class="description">uaa-id-360</span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <span class="name">actor_type</span>
-            </td>
-            <td>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">actor_type</span>
+              </td>
+              <td>
                 <span class="description">user</span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <span class="name">actee</span>
-            </td>
-            <td>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">actee</span>
+              </td>
+              <td>
                 <span class="description">2a01cf80-9fbf-448f-a7a0-1e415e28771e</span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <span class="name">actee_type</span>
-            </td>
-            <td>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">actee_type</span>
+              </td>
+              <td>
                 <span class="description">space</span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <span class="name">metadata</span>
-            </td>
-            <td>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">metadata</span>
+              </td>
+              <td>
                 <pre>{
   &quot;request&quot;: {
     &quot;name&quot;: &quot;development&quot;,
@@ -448,51 +448,51 @@ X-Content-Type-Options: nosniff</pre>
     &quot;allow_ssh&quot;: true
   }
 }</pre>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <span class="name">space_id</span>
-            </td>
-            <td>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">space_id</span>
+              </td>
+              <td>
                 <span class="description"></span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <span class="name">organization_guid</span>
-            </td>
-            <td>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">organization_guid</span>
+              </td>
+              <td>
                 <span class="description">28960823-1b68-4a2b-8f36-77cc573bccca</span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <span class="name">space_guid</span>
-            </td>
-            <td>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">space_guid</span>
+              </td>
+              <td>
                 <span class="description">2a01cf80-9fbf-448f-a7a0-1e415e28771e</span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <span class="name">actor_name</span>
-            </td>
-            <td>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">actor_name</span>
+              </td>
+              <td>
                 <span class="description">email-254@somedomain.com</span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <span class="name">actee_name</span>
-            </td>
-            <td>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">actee_name</span>
+              </td>
+              <td>
                 <span class="description">development</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-  </div>
-</div>
-</body>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
 </html>
