@@ -96,7 +96,7 @@ module VCAP::CloudController
           it 'sends the staging message to the bbs' do
             messenger.send_desire_request(process, config)
 
-            expect(app_recipe_builder).to have_received(:build_app_lrp).with(config, message.as_json)
+            expect(app_recipe_builder).to have_received(:build_app_lrp).with(config, process, message.as_json)
             expect(bbs_apps_client).to have_received(:desire_app).with(build_lrp)
           end
         end

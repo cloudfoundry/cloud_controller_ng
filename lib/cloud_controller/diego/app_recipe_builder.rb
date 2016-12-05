@@ -1,3 +1,6 @@
+require 'cloud_controller/diego/buildpack/desired_lrp_builder'
+require 'cloud_controller/diego/docker/desired_lrp_builder'
+
 module VCAP::CloudController
   module Diego
     class AppRecipeBuilder
@@ -6,7 +9,9 @@ module VCAP::CloudController
       class MissingAppPort < StandardError
       end
 
-      def build_app_lrp(config, app_request)
+      def build_app_lrp(config, process, app_request)
+        desired_lrp_builder = LifecycleProtocol.protocol_for_type(process.app.lifecycle_type).desired_lrp_builder(config, app_request)
+
         ::Diego::Bbs::Models::DesiredLRP.new(
           process_guid: app_request['process_guid'],
           instances: app_request['num_instances'],
@@ -21,7 +26,7 @@ module VCAP::CloudController
           metrics_guid: app_request['log_guid'],
           annotation: app_request['etag'],
           egress_rules: generate_egress_rules(app_request['egress_rules']),
-          cached_dependencies: cached_dependencies(config),
+          cached_dependencies: desired_lrp_builder.cached_dependencies,
           legacy_download_user: 'root',
           trusted_system_certificates_path: RUNNING_TRUSTED_SYSTEM_CERT_PATH,
           network: generate_network(app_request['network']),
@@ -30,7 +35,7 @@ module VCAP::CloudController
             ::Diego::Bbs::Models::CodependentAction.new(actions: generate_app_action(app_request))
           ),
           monitor: generate_monitor_action(app_request),
-          root_fs: DockerURIConverter.new.convert(app_request['docker_image']),
+          root_fs: desired_lrp_builder.root_fs,
         )
       end
 
@@ -110,14 +115,6 @@ module VCAP::CloudController
         end
       end
 
-      def cached_dependencies(config)
-        [::Diego::Bbs::Models::CachedDependency.new(
-          from: LifecycleBundleUriGenerator.uri(config[:diego][:lifecycle_bundles][lifecycle_bundle_key]),
-          to: '/tmp/lifecycle',
-          cache_key: 'docker-lifecycle',
-        )]
-      end
-
       def generate_network(network_hash)
         network = ::Diego::Bbs::Models::Network.new(properties: [])
 
@@ -129,10 +126,6 @@ module VCAP::CloudController
         end
 
         network
-      end
-
-      def lifecycle_bundle_key
-        'docker'.to_sym
       end
 
       def file_descriptor_limit(file_descriptors)

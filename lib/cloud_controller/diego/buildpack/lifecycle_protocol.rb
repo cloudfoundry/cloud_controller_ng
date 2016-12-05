@@ -47,6 +47,10 @@ module VCAP
             TaskActionBuilder.new(config, task, task_lifecycle_data(task))
           end
 
+          def desired_lrp_builder(config, app_request)
+            DesiredLrpBuilder.new(config, app_request)
+          end
+
           def desired_app_message(process)
             {
               'start_command' => process.command.nil? ? process.detected_start_command : process.command,

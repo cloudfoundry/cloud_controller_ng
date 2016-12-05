@@ -33,7 +33,7 @@ module VCAP::CloudController
         process_guid   = ProcessGuid.from_process(process)
         desire_message = protocol.desire_app_request(process, config[:default_health_check_timeout])
         if bypass_bridge?
-          desired_lrp = app_recipe_builder.build_app_lrp(config, desire_message.as_json)
+          desired_lrp = app_recipe_builder.build_app_lrp(config, process, desire_message.as_json)
           bbs_apps_client.desire_app(desired_lrp)
         else
           nsync_client.desire_app(process_guid, desire_message)
