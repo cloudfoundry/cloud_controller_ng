@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Spaces API</title>
-  <meta charset="utf-8">
-  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
-  <script>
-    if( "file:" == document.location.protocol ) {
-      var csslink = document.getElementById("bootstrapcss");
-      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
-    }
-  </script>
-  <style>
-    p {
-      padding: 15px;
-      font-size: 130%;
-    }
+  <head>
+    <title>Spaces API</title>
+    <meta charset="utf-8">
+    <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+    <script>
+if( "file:" == document.location.protocol ) {
+  var csslink = document.getElementById("bootstrapcss");
+  csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+}
+    </script>
+    <style>
+p {
+  padding: 15px;
+  font-size: 130%;
+}
 
     pre {
       white-space: pre;
@@ -59,37 +59,37 @@
     table ul {
       padding-left: 1.2em;
     }
-  </style>
-</head>
-<body>
-<div class="container">
-  <h1>Spaces API</h1>
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Spaces API</h1>
 
-  <div class="article">
-    <h2>Remove Manager from the Space</h2>
-    <h3>DELETE /v2/spaces/:guid/managers/:manager_guid</h3>
+      <div class="article">
+        <h2>Remove Manager from the Space</h2>
+        <h3>DELETE /v2/spaces/:guid/managers/:manager_guid</h3>
 
-      <h3>Request</h3>
-      <h4>Route</h4>
-      <pre class="request route highlight">DELETE /v2/spaces/f2df4ebf-ae3c-4712-9e0a-717119d88b29/managers/uaa-id-393</pre>
+        <h3>Request</h3>
+        <h4>Route</h4>
+        <pre class="request route highlight">DELETE /v2/spaces/f2df4ebf-ae3c-4712-9e0a-717119d88b29/managers/uaa-id-393</pre>
 
         <h4>Parameters</h4>
         <table class="parameters table table-striped table-bordered table-condensed">
           <thead>
-          <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Valid Values</th>
-            <th>Example Values</th>
-          </tr>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Valid Values</th>
+              <th>Example Values</th>
+            </tr>
           </thead>
           <tbody>
             <tr class="">
               <td class=" ">
-                  <span class="name">guid</span>
+                <span class="name">guid</span>
               </td>
               <td>
-                  <span class="description">The guid of the Space</span>
+                <span class="description">The guid of the Space</span>
               </td>
               <td>
                 <ul class="valid_values">
@@ -102,10 +102,10 @@
             </tr>
             <tr class="">
               <td class=" ">
-                  <span class="name">manager_guid</span>
+                <span class="name">manager_guid</span>
               </td>
               <td>
-                  <span class="description">The guid of the manager</span>
+                <span class="description">The guid of the manager</span>
               </td>
               <td>
                 <ul class="valid_values">
@@ -122,18 +122,18 @@
 
 
 
-      <h4>Headers</h4>
-      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM5NSIsImVtYWlsIjoiZW1haWwtMjcxQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDF9.sAygQhRKA58V1FeR9COexz3zFV1Ho95dH3XXApBaemo
+        <h4>Headers</h4>
+        <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM5NSIsImVtYWlsIjoiZW1haWwtMjcxQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDF9.sAygQhRKA58V1FeR9COexz3zFV1Ho95dH3XXApBaemo
 Host: example.org
 Content-Type: application/x-www-form-urlencoded
 Cookie: </pre>
 
         <h4>cURL</h4>
         <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/spaces/f2df4ebf-ae3c-4712-9e0a-717119d88b29/managers/uaa-id-393&quot; -d &#39;&#39; -X DELETE \
-	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM5NSIsImVtYWlsIjoiZW1haWwtMjcxQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDF9.sAygQhRKA58V1FeR9COexz3zFV1Ho95dH3XXApBaemo&quot; \
-	-H &quot;Host: example.org&quot; \
-	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
-	-H &quot;Cookie: &quot;</pre>
+  -H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM5NSIsImVtYWlsIjoiZW1haWwtMjcxQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDF9.sAygQhRKA58V1FeR9COexz3zFV1Ho95dH3XXApBaemo&quot; \
+  -H &quot;Host: example.org&quot; \
+  -H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+  -H &quot;Cookie: &quot;</pre>
 
         <h3>Response</h3>
 
@@ -146,7 +146,141 @@ Cookie: </pre>
         <pre class="response headers">X-VCAP-Request-ID: 805f4110-4bae-4669-a81c-99e950bbe0bf
 X-Content-Type-Options: nosniff</pre>
 
-  </div>
-</div>
-</body>
+        <h3>Audit Records Created By The Request</h3>
+        <h4>Audit Record: audit.user.space_manager_remove</h4>
+        <table class="table table-striped table-bordered table-condensed">
+          <thead>
+            <tr>
+              <th>Attribute Name</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span class="name">id</span>
+              </td>
+              <td>
+                <span class="description">3</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">guid</span>
+              </td>
+              <td>
+                <span class="description">3ae5862c-fb43-49ed-935b-8feb7d0e19e8</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">created_at</span>
+              </td>
+              <td>
+                <span class="description">2016-06-08 16:41:40 UTC</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">updated_at</span>
+              </td>
+              <td>
+                <span class="description"></span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">timestamp</span>
+              </td>
+              <td>
+                <span class="description">2016-06-08 16:41:40 UTC</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">type</span>
+              </td>
+              <td>
+                <span class="description">audit.user.space_manager_remove</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">actor</span>
+              </td>
+              <td>
+                <span class="description">uaa-id-360</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">actor_type</span>
+              </td>
+              <td>
+                <span class="description">user</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">actee</span>
+              </td>
+              <td>
+                <span class="description">2a01cf80-9fbf-448f-a7a0-1e415e28771e</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">actee_type</span>
+              </td>
+              <td>
+                <span class="description">space</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">metadata</span>
+              </td>
+              <td>
+                <pre>{
+  &quot;request&quot;: null
+}</pre>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">organization_guid</span>
+              </td>
+              <td>
+                <span class="description">28960823-1b68-4a2b-8f36-77cc573bccca</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">space_guid</span>
+              </td>
+              <td>
+                <span class="description">2a01cf80-9fbf-448f-a7a0-1e415e28771e</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">actor_name</span>
+              </td>
+              <td>
+                <span class="description">email-254@somedomain.com</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="name">actee_name</span>
+              </td>
+              <td>
+                <span class="description">development</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
 </html>
