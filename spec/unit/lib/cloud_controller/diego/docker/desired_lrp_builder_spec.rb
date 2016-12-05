@@ -7,7 +7,9 @@ module VCAP::CloudController
         subject(:builder) { described_class.new(config, app_request) }
         let(:app_request) do
           {
-            'docker_image' => 'user/repo:tag'
+            'ports' => ports,
+            'docker_image' => 'user/repo:tag',
+            'execution_metadata' => execution_metadata,
           }
         end
         let(:config) do
@@ -19,6 +21,8 @@ module VCAP::CloudController
             }
           }
         end
+        let(:ports) { [] }
+        let(:execution_metadata) { '{}' }
 
         describe '#root_fs' do
           it 'uses the DockerURIConverter' do
@@ -56,6 +60,48 @@ module VCAP::CloudController
         describe '#global_environment_variables' do
           it 'returns an empty list' do
             expect(builder.global_environment_variables).to be_empty
+          end
+        end
+
+        describe '#ports' do
+          context 'when ports is an empty array' do
+            let(:ports) { [] }
+            let(:execution_metadata) {
+              {
+                ports: [
+                  { 'port' => '1', 'protocol' => 'udp' },
+                  { 'port' => '2', 'protocol' => 'udp' },
+                  { 'port' => '3', 'protocol' => 'tcp' },
+                  { 'port' => '4', 'protocol' => 'tcp' },
+                ]
+              }.to_json
+            }
+
+            it 'sets PORT to the first TCP port entry from execution_metadata' do
+              expect(builder.ports).to eq([3, 4])
+            end
+
+            context 'when the ports array does not contain any TCP entries' do
+              let(:execution_metadata) {
+                { ports: [{ 'port' => '1', 'protocol' => 'udp' }] }.to_json
+              }
+
+              it 'raises an error' do
+                expect {
+                  builder.ports
+                }.to raise_error(AppRecipeBuilder::MissingAppPort)
+              end
+            end
+
+            context 'when the execution_metadata does not contain ports' do
+              let(:execution_metadata) {
+                { ports: [] }.to_json
+              }
+
+              it 'returns an array containing only the default' do
+                expect(builder.ports).to eq([DEFAULT_APP_PORT])
+              end
+            end
           end
         end
       end

@@ -15,5 +15,7 @@ module VCAP::CloudController
     HEALTH_LOG_SOURCE = 'HEALTH'.freeze
     DEFAULT_FILE_DESCRIPTOR_LIMIT = 1024
     DEFAULT_LANG = 'en_US.UTF-8'.freeze
+
+    APP_LRP_DOMAIN = 'cf-apps'.freeze
   end
 end

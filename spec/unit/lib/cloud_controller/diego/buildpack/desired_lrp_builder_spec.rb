@@ -10,18 +10,22 @@ module VCAP::CloudController
             'stack' => 'potato-stack',
             'droplet_uri' => 'droplet-uri',
             'process_guid' => 'p-guid',
+            'ports' => ports,
           }
         end
+        let(:ports) { [1111, 2222, 3333] }
         let(:config) do
           {
             diego: {
               file_server_url: 'http://file-server.example.com',
               lifecycle_bundles: {
                 'buildpack/potato-stack': '/path/to/lifecycle.tgz',
-              }
+              },
+              use_privileged_containers_for_running: use_privileged_containers_for_running,
             }
           }
         end
+        let(:use_privileged_containers_for_running) { false }
 
         describe '#root_fs' do
           it 'returns a constructed root_fs' do
@@ -66,7 +70,7 @@ module VCAP::CloudController
             )
           end
 
-          context 'when the droplet_hash is not empty' do
+          xcontext 'when the droplet_hash is not empty' do
             it 'adds "ChecksumAlgorithm" and "ChecksumValue" to the SetupActions DownloadAction'
           end
         end
@@ -77,6 +81,44 @@ module VCAP::CloudController
               [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: DEFAULT_LANG)]
             )
           end
+        end
+
+        describe '#privileged?' do
+          context 'when the config is true' do
+            before do
+              config[:diego][:use_privileged_containers_for_running] = true
+            end
+
+            it 'returns true' do
+              expect(builder.privileged?).to eq(true)
+            end
+          end
+
+          context 'when the config is false' do
+            before do
+              config[:diego][:use_privileged_containers_for_running] = false
+            end
+
+            it 'returns false' do
+              expect(builder.privileged?).to eq(false)
+            end
+          end
+        end
+
+        describe '#ports' do
+          it 'returns the ports array' do
+            expect(builder.ports).to eq([1111, 2222, 3333])
+          end
+
+          context 'when the ports array is nil' do
+            let(:ports) { nil }
+
+            it 'returns an array of the default' do
+              expect(builder.ports).to eq([DEFAULT_APP_PORT])
+            end
+          end
+
+          xcontext 'when the ports array is empty'
         end
       end
     end

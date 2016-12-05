@@ -28,7 +28,6 @@ module VCAP::CloudController
             state: 'STARTED',
             diego: true,
             guid: 'banana-guid',
-            ports: ports,
             type: 'web',
             health_check_timeout: 12,
             instances: 21,
@@ -41,7 +40,6 @@ module VCAP::CloudController
           process.reload
         end
         let(:command) { 'echo "hello"' }
-        let(:ports) { [1111, 3333] }
 
         let(:route_without_service) { Route.make(space: process.space) }
         let(:route_with_service) do
@@ -64,7 +62,7 @@ module VCAP::CloudController
         let(:expected_action_environment_variables) do
           [
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'KEY', value: 'running_value'),
-            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '1111'),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '4444'),
           ]
         end
 
@@ -97,7 +95,7 @@ module VCAP::CloudController
                       run_action: ::Diego::Bbs::Models::RunAction.new(
                         user: expected_action_user,
                         path: '/tmp/lifecycle/healthcheck',
-                        args: ['-port=1111'],
+                        args: ['-port=4444'],
                         resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
                         log_source: HEALTH_LOG_SOURCE,
                         suppress_log_output: true,
@@ -107,7 +105,7 @@ module VCAP::CloudController
                       run_action: ::Diego::Bbs::Models::RunAction.new(
                         user: expected_action_user,
                         path: '/tmp/lifecycle/healthcheck',
-                        args: ['-port=3333'],
+                        args: ['-port=5555'],
                         resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
                         log_source: HEALTH_LOG_SOURCE,
                         suppress_log_output: true,
@@ -130,6 +128,8 @@ module VCAP::CloudController
             ),
           ]
         end
+
+        let(:lrp_builder_ports) { [4444, 5555] }
 
         let(:rule_dns_everywhere) do
           ::Diego::Bbs::Models::SecurityGroupRule.new(
@@ -209,6 +209,8 @@ module VCAP::CloudController
               root_fs: 'buildpack_root_fs',
               setup: expected_setup_action,
               global_environment_variables: env_vars,
+              privileged?: false,
+              ports: lrp_builder_ports,
             )
           end
 
@@ -224,36 +226,37 @@ module VCAP::CloudController
 
           it 'creates a desired lrp' do
             lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
-            expect(lrp.process_guid).to eq(app_details_from_protocol['process_guid'])
-            expect(lrp.instances).to eq(21)
-            expect(lrp.start_timeout_ms).to eq(12 * 1000)
-            expect(lrp.disk_mb).to eq(256)
-            expect(lrp.memory_mb).to eq(128)
-            expect(lrp.ports).to eq([1111, 3333])
-            expect(lrp.log_source).to eq(LRP_LOG_SOURCE)
-            expect(lrp.log_guid).to eq(process.app.guid)
-            expect(lrp.metrics_guid).to eq(process.app.guid)
+            expect(lrp.action).to eq(expected_action)
             expect(lrp.annotation).to eq(Time.at(2).to_f.to_s)
+            expect(lrp.cached_dependencies).to eq(expected_cached_dependencies)
+            expect(lrp.disk_mb).to eq(256)
+            expect(lrp.domain).to eq(APP_LRP_DOMAIN)
             expect(lrp.egress_rules).to match_array([
               rule_dns_everywhere,
               rule_http_everywhere,
               rule_staging_specific,
             ])
-            expect(lrp.legacy_download_user).to eq('root')
-            expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
-            expect(lrp.network).to eq(expected_network)
-
-            expect(lrp.action).to eq(expected_action)
-            expect(lrp.monitor).to eq(expected_monitor_action)
-
-            expect(lrp.setup).to eq(expected_setup_action)
-
             expect(lrp.environment_variables).to match_array(
               [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'foo', value: 'bar')]
             )
-            expect(lrp.cached_dependencies).to eq(expected_cached_dependencies)
+            expect(lrp.instances).to eq(21)
+            expect(lrp.legacy_download_user).to eq('root')
+            expect(lrp.log_guid).to eq(process.app.guid)
+            expect(lrp.log_source).to eq(LRP_LOG_SOURCE)
+            expect(lrp.memory_mb).to eq(128)
+            expect(lrp.metrics_guid).to eq(process.app.guid)
+            expect(lrp.monitor).to eq(expected_monitor_action)
+            expect(lrp.network).to eq(expected_network)
+            expect(lrp.ports).to eq([4444, 5555])
+            expect(lrp.process_guid).to eq(app_details_from_protocol['process_guid'])
             expect(lrp.root_fs).to eq('buildpack_root_fs')
+            expect(lrp.setup).to eq(expected_setup_action)
+            expect(lrp.start_timeout_ms).to eq(12 * 1000)
+            expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
           end
+
+          xcontext 'monitor action should always be "vcap"'
+          xcontext 'LegacyDownloadUser should always be "vcap"'
         end
 
         context 'when the lifecycle_type is "docker"' do
@@ -283,6 +286,8 @@ module VCAP::CloudController
               root_fs: 'docker_root_fs',
               setup: nil,
               global_environment_variables: [],
+              privileged?: false,
+              ports: lrp_builder_ports,
             )
           end
 
@@ -293,29 +298,30 @@ module VCAP::CloudController
           it 'creates a desired lrp' do
             lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
 
-            expect(lrp.process_guid).to eq(app_details_from_protocol['process_guid'])
-            expect(lrp.instances).to eq(21)
-            expect(lrp.environment_variables).to eq([])
-            expect(lrp.start_timeout_ms).to eq(12 * 1000)
-            expect(lrp.disk_mb).to eq(256)
-            expect(lrp.memory_mb).to eq(128)
-            expect(lrp.privileged).to eq false
-            expect(lrp.ports).to eq([1111, 3333])
-            expect(lrp.log_source).to eq(LRP_LOG_SOURCE)
-            expect(lrp.log_guid).to eq(process.app.guid)
-            expect(lrp.metrics_guid).to eq(process.app.guid)
+            expect(lrp.action).to eq(expected_action)
             expect(lrp.annotation).to eq(Time.at(2).to_f.to_s)
+            expect(lrp.cached_dependencies).to eq(expected_cached_dependencies)
+            expect(lrp.instances).to eq(21)
+            expect(lrp.disk_mb).to eq(256)
+            expect(lrp.domain).to eq(APP_LRP_DOMAIN)
             expect(lrp.egress_rules).to match_array([
               rule_dns_everywhere,
               rule_http_everywhere,
               rule_staging_specific,
             ])
-            expect(lrp.cached_dependencies).to eq(expected_cached_dependencies)
+            expect(lrp.environment_variables).to eq([])
             expect(lrp.legacy_download_user).to eq('root')
-            expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
-            expect(lrp.network).to eq(expected_network)
-            expect(lrp.action).to eq(expected_action)
+            expect(lrp.log_source).to eq(LRP_LOG_SOURCE)
+            expect(lrp.log_guid).to eq(process.app.guid)
+            expect(lrp.memory_mb).to eq(128)
+            expect(lrp.metrics_guid).to eq(process.app.guid)
             expect(lrp.monitor).to eq(expected_monitor_action)
+            expect(lrp.network).to eq(expected_network)
+            expect(lrp.ports).to eq([4444, 5555])
+            expect(lrp.privileged).to eq false
+            expect(lrp.process_guid).to eq(app_details_from_protocol['process_guid'])
+            expect(lrp.start_timeout_ms).to eq(12 * 1000)
+            expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
           end
 
           context 'cpu weight' do
@@ -366,69 +372,6 @@ module VCAP::CloudController
             it 'uses APP' do
               lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
               expect(lrp.action).to eq(expected_action)
-            end
-          end
-
-          context 'when ports is an empty array' do
-            let(:app_detail_overrides) do
-              {
-                'ports' => [],
-              }
-            end
-            let(:execution_metadata) {
-              {
-                ports: [
-                  { 'port' => '1', 'protocol' => 'udp' },
-                  { 'port' => '2', 'protocol' => 'udp' },
-                  { 'port' => '3', 'protocol' => 'tcp' },
-                  { 'port' => '4', 'protocol' => 'tcp' },
-                ]
-              }.to_json
-            }
-            let(:expected_action_environment_variables) do
-              [
-                ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'KEY', value: 'running_value'),
-                ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '3'),
-              ]
-            end
-
-            it 'sets PORT to the first TCP port entry from execution_metadata' do
-              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
-              expect(lrp.action).to eq(expected_action)
-            end
-
-            it 'sets the lrp ports to all tcp port entries from execution metadata' do
-              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
-              expect(lrp.ports).to eq([3, 4])
-            end
-
-            context 'when the ports array does not contain any TCP entries' do
-              let(:execution_metadata) {
-                { ports: [{ 'port' => '1', 'protocol' => 'udp' }] }.to_json
-              }
-
-              it 'raises an error?' do
-                expect {
-                  builder.build_app_lrp(config, process, app_details_from_protocol)
-                }.to raise_error(AppRecipeBuilder::MissingAppPort)
-              end
-            end
-
-            context 'when the execution_metadata does not contain ports' do
-              let(:expected_action_environment_variables) do
-                [
-                  ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'KEY', value: 'running_value'),
-                  ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: DEFAULT_APP_PORT.to_s),
-                ]
-              end
-              let(:execution_metadata) {
-                { ports: [] }.to_json
-              }
-
-              it 'sets PORT to the default' do
-                lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
-                expect(lrp.action).to eq(expected_action)
-              end
             end
           end
 

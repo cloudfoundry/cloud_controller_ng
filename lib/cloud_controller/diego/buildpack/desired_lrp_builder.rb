@@ -38,6 +38,14 @@ module VCAP::CloudController
         def global_environment_variables
           [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: DEFAULT_LANG)]
         end
+
+        def ports
+          @app_request['ports'] || [DEFAULT_APP_PORT]
+        end
+
+        def privileged?
+          @config[:diego][:use_privileged_containers_for_running]
+        end
       end
     end
   end

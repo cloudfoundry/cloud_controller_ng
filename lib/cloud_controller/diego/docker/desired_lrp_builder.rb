@@ -26,6 +26,24 @@ module VCAP::CloudController
         def global_environment_variables
           []
         end
+
+        def ports
+          if @app_request['ports'].length > 0
+            return @app_request['ports']
+          end
+          execution_metadata = MultiJson.load(@app_request['execution_metadata'])
+          if execution_metadata['ports'].empty?
+            return [DEFAULT_APP_PORT]
+          end
+          tcp_ports = execution_metadata['ports'].select { |port| port['protocol'] == 'tcp' }
+          fail AppRecipeBuilder::MissingAppPort if tcp_ports.empty?
+
+          tcp_ports.map { |port| port['port'].to_i }
+        end
+
+        def privileged?
+          false
+        end
       end
     end
   end

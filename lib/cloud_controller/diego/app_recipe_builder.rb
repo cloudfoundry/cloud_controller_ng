@@ -19,8 +19,8 @@ module VCAP::CloudController
           start_timeout_ms: app_request['health_check_timeout_in_seconds'] * 1000,
           disk_mb: app_request['disk_mb'],
           memory_mb: app_request['memory_mb'],
-          privileged: false,
-          ports: extract_exposed_ports(app_request),
+          privileged: desired_lrp_builder.privileged?,
+          ports: desired_lrp_builder.ports,
           log_source: LRP_LOG_SOURCE,
           log_guid: app_request['log_guid'],
           metrics_guid: app_request['log_guid'],
@@ -32,33 +32,20 @@ module VCAP::CloudController
           network: generate_network(app_request['network']),
           cpu_weight: TaskCpuWeightCalculator.new(memory_in_mb: app_request['memory_mb']).calculate,
           action: action(
-            ::Diego::Bbs::Models::CodependentAction.new(actions: generate_app_action(app_request))
+            ::Diego::Bbs::Models::CodependentAction.new(actions: generate_app_action(app_request, desired_lrp_builder))
           ),
-          monitor: generate_monitor_action(app_request),
+          monitor: generate_monitor_action(app_request, desired_lrp_builder),
           root_fs: desired_lrp_builder.root_fs,
           setup: desired_lrp_builder.setup,
+          domain: APP_LRP_DOMAIN,
         )
       end
 
       private
 
-      def extract_exposed_ports(app_request)
-        if app_request['ports'].length > 0
-          return app_request['ports']
-        end
+      def generate_app_action(app_request, lrp_builder)
         execution_metadata = MultiJson.load(app_request['execution_metadata'])
-        if execution_metadata['ports'].empty?
-          return [DEFAULT_APP_PORT]
-        end
-        tcp_ports = execution_metadata['ports'].select { |port| port['protocol'] == 'tcp' }
-        fail MissingAppPort if tcp_ports.empty?
-
-        tcp_ports.map { |port| port['port'].to_i }
-      end
-
-      def generate_app_action(app_request)
-        execution_metadata = MultiJson.load(app_request['execution_metadata'])
-        desired_ports = extract_exposed_ports(app_request)
+        desired_ports = lrp_builder.ports
         environment_variables = []
         app_request['environment'].each do |i|
           environment_variables << ::Diego::Bbs::Models::EnvironmentVariable.new(name: i['name'], value: i['value'])
@@ -83,11 +70,11 @@ module VCAP::CloudController
         ]
       end
 
-      def generate_monitor_action(app_request)
+      def generate_monitor_action(app_request, lrp_builder)
         return unless ['', 'port'].include?(app_request['health_check_type'])
         execution_metadata = MultiJson.load(app_request['execution_metadata'])
 
-        desired_ports = extract_exposed_ports(app_request)
+        desired_ports = lrp_builder.ports
         actions = []
         desired_ports.each do |port|
           actions << ::Diego::Bbs::Models::RunAction.new(
