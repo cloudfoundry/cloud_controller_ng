@@ -257,6 +257,58 @@ module VCAP::CloudController
 
           xcontext 'monitor action should always be "vcap"'
           xcontext 'LegacyDownloadUser should always be "vcap"'
+
+          context 'when a volume mount is provided' do
+            let(:service_instance) { ManagedServiceInstance.make space: app_model.space }
+            let(:multiple_volume_mounts) do
+              [
+                {
+                  container_dir: '/data/images',
+                  mode: 'r',
+                  device_type: 'shared',
+                  device: {
+                    driver: 'cephfs',
+                    volume_id: 'abc',
+                    mount_config: {
+                      key: 'value'
+                    }
+                  }
+                },
+                {
+                  container_dir: '/data/scratch',
+                  mode: 'rw',
+                  device_type: 'shared',
+                  device: {
+                    driver: 'local',
+                    volume_id: 'def',
+                    mount_config: {}
+                  }
+                }
+              ]
+            end
+
+            before do
+              ServiceBinding.make(app: app_model, service_instance: service_instance, volume_mounts: multiple_volume_mounts)
+            end
+
+            it 'desires the mount' do
+              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+              expect(lrp.volume_mounts).to eq([
+                ::Diego::Bbs::Models::VolumeMount.new(
+                  driver: 'cephfs',
+                  container_dir: '/data/images',
+                  mode: 'r',
+                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'abc', mount_config: { 'key' => 'value' }.to_json),
+                ),
+                ::Diego::Bbs::Models::VolumeMount.new(
+                  driver: 'local',
+                  container_dir: '/data/scratch',
+                  mode: 'rw',
+                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'def', mount_config: ''),
+                ),
+              ])
+            end
+          end
         end
 
         context 'when the lifecycle_type is "docker"' do
@@ -453,7 +505,57 @@ module VCAP::CloudController
             it 'adds the default ssh port to the list of ports'
           end
 
-          xcontext 'volume mounts'
+          context 'when a volume mount is provided' do
+            let(:service_instance) { ManagedServiceInstance.make space: app_model.space }
+            let(:multiple_volume_mounts) do
+              [
+                {
+                  container_dir: '/data/images',
+                  mode: 'r',
+                  device_type: 'shared',
+                  device: {
+                    driver: 'cephfs',
+                    volume_id: 'abc',
+                    mount_config: {
+                      key: 'value'
+                    }
+                  }
+                },
+                {
+                  container_dir: '/data/scratch',
+                  mode: 'rw',
+                  device_type: 'shared',
+                  device: {
+                    driver: 'local',
+                    volume_id: 'def',
+                    mount_config: {}
+                  }
+                }
+              ]
+            end
+
+            before do
+              ServiceBinding.make(app: app_model, service_instance: service_instance, volume_mounts: multiple_volume_mounts)
+            end
+
+            it 'desires the mount' do
+              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+              expect(lrp.volume_mounts).to eq([
+                ::Diego::Bbs::Models::VolumeMount.new(
+                  driver: 'cephfs',
+                  container_dir: '/data/images',
+                  mode: 'r',
+                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'abc', mount_config: { 'key' => 'value' }.to_json),
+                ),
+                ::Diego::Bbs::Models::VolumeMount.new(
+                  driver: 'local',
+                  container_dir: '/data/scratch',
+                  mode: 'rw',
+                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'def', mount_config: ''),
+                ),
+              ])
+            end
+          end
         end
       end
     end

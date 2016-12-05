@@ -38,10 +38,32 @@ module VCAP::CloudController
           root_fs: desired_lrp_builder.root_fs,
           setup: desired_lrp_builder.setup,
           domain: APP_LRP_DOMAIN,
+          volume_mounts: generate_volume_mounts(app_request['volume_mounts'].as_json),
         )
       end
 
       private
+
+      def generate_volume_mounts(app_volume_mounts)
+        proto_volume_mounts = []
+        app_volume_mounts.each do |volume_mount|
+          proto_volume_mount = ::Diego::Bbs::Models::VolumeMount.new(
+            driver: volume_mount['device']['driver'],
+            container_dir: volume_mount['container_dir'],
+            mode: volume_mount['mode']
+          )
+
+          a = volume_mount['device']['mount_config']
+          mount_config = a.present? ? a.to_json : ''
+          proto_volume_mount.shared = ::Diego::Bbs::Models::SharedDevice.new(
+            volume_id: volume_mount['device']['volume_id'],
+            mount_config: mount_config
+          )
+          proto_volume_mounts.append(proto_volume_mount)
+        end
+
+        proto_volume_mounts
+      end
 
       def generate_app_action(app_request, lrp_builder)
         execution_metadata = MultiJson.load(app_request['execution_metadata'])
