@@ -111,7 +111,7 @@ module VCAP::CloudController
           end
 
           context 'when the execution metadata has a specified user' do
-            let(:execution_metadata) { {user: 'foobar'}.to_json }
+            let(:execution_metadata) { { user: 'foobar' }.to_json }
 
             it 'uses the user from the execution metadata' do
               expect(builder.action_user).to eq('foobar')
