@@ -2,6 +2,8 @@ module VCAP::CloudController
   module Diego
     module Buildpack
       class DesiredLrpBuilder
+        include ::Diego::ActionBuilder
+
         def initialize(config, app_request)
           @config = config
           @app_request = app_request
@@ -20,6 +22,21 @@ module VCAP::CloudController
 
         def root_fs
           "preloaded:#{@app_request['stack']}"
+        end
+
+        def setup
+          serial([
+            ::Diego::Bbs::Models::DownloadAction.new(
+              from: @app_request['droplet_uri'],
+              to: '.',
+              cache_key: "droplets-#{@app_request['process_guid']}",
+              user: 'vcap',
+            )
+          ])
+        end
+
+        def global_environment_variables
+          [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: DEFAULT_LANG)]
         end
       end
     end

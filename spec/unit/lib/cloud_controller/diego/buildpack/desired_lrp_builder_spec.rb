@@ -7,7 +7,9 @@ module VCAP::CloudController
         subject(:builder) { described_class.new(config, app_request) }
         let(:app_request) do
           {
-            'stack' => 'potato-stack'
+            'stack' => 'potato-stack',
+            'droplet_uri' => 'droplet-uri',
+            'process_guid' => 'p-guid',
           }
         end
         let(:config) do
@@ -41,6 +43,39 @@ module VCAP::CloudController
               )
             ])
             expect(LifecycleBundleUriGenerator).to have_received(:uri).with('/path/to/lifecycle.tgz')
+          end
+        end
+
+        describe '#setup' do
+          it 'creates a setup action to download the droplet' do
+            expect(builder.setup).to eq(
+              ::Diego::Bbs::Models::Action.new(
+                serial_action: ::Diego::Bbs::Models::SerialAction.new(
+                  actions: [
+                    ::Diego::Bbs::Models::Action.new(
+                      download_action: ::Diego::Bbs::Models::DownloadAction.new(
+                        to: '.',
+                        user: 'vcap',
+                        from: 'droplet-uri',
+                        cache_key: 'droplets-p-guid',
+                      )
+                    )
+                  ],
+                )
+              )
+            )
+          end
+
+          context 'when the droplet_hash is not empty' do
+            it 'adds "ChecksumAlgorithm" and "ChecksumValue" to the SetupActions DownloadAction'
+          end
+        end
+
+        describe '#global_environment_variables' do
+          it 'returns a list' do
+            expect(builder.global_environment_variables).to match_array(
+              [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: DEFAULT_LANG)]
+            )
           end
         end
       end

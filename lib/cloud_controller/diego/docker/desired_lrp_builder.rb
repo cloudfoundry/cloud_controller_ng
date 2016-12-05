@@ -18,6 +18,14 @@ module VCAP::CloudController
         def root_fs
           DockerURIConverter.new.convert(@app_request['docker_image'])
         end
+
+        def setup
+          nil
+        end
+
+        def global_environment_variables
+          []
+        end
       end
     end
   end

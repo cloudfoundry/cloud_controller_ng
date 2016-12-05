@@ -200,11 +200,15 @@ module VCAP::CloudController
               ),
             ]
           end
+          let(:expected_setup_action) { ::Diego::Bbs::Models::Action.new }
+          let(:env_vars) { [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'foo', value: 'bar')] }
 
           let(:desired_lrp_builder) do
             instance_double(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder,
               cached_dependencies: expected_cached_dependencies,
               root_fs: 'buildpack_root_fs',
+              setup: expected_setup_action,
+              global_environment_variables: env_vars,
             )
           end
 
@@ -220,6 +224,33 @@ module VCAP::CloudController
 
           it 'creates a desired lrp' do
             lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+            expect(lrp.process_guid).to eq(app_details_from_protocol['process_guid'])
+            expect(lrp.instances).to eq(21)
+            expect(lrp.start_timeout_ms).to eq(12 * 1000)
+            expect(lrp.disk_mb).to eq(256)
+            expect(lrp.memory_mb).to eq(128)
+            expect(lrp.ports).to eq([1111, 3333])
+            expect(lrp.log_source).to eq(LRP_LOG_SOURCE)
+            expect(lrp.log_guid).to eq(process.app.guid)
+            expect(lrp.metrics_guid).to eq(process.app.guid)
+            expect(lrp.annotation).to eq(Time.at(2).to_f.to_s)
+            expect(lrp.egress_rules).to match_array([
+              rule_dns_everywhere,
+              rule_http_everywhere,
+              rule_staging_specific,
+            ])
+            expect(lrp.legacy_download_user).to eq('root')
+            expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
+            expect(lrp.network).to eq(expected_network)
+
+            expect(lrp.action).to eq(expected_action)
+            expect(lrp.monitor).to eq(expected_monitor_action)
+
+            expect(lrp.setup).to eq(expected_setup_action)
+
+            expect(lrp.environment_variables).to match_array(
+              [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'foo', value: 'bar')]
+            )
             expect(lrp.cached_dependencies).to eq(expected_cached_dependencies)
             expect(lrp.root_fs).to eq('buildpack_root_fs')
           end
@@ -250,6 +281,8 @@ module VCAP::CloudController
             instance_double(VCAP::CloudController::Diego::Docker::DesiredLrpBuilder,
               cached_dependencies: expected_cached_dependencies,
               root_fs: 'docker_root_fs',
+              setup: nil,
+              global_environment_variables: [],
             )
           end
 

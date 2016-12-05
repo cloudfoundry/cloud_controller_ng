@@ -46,6 +46,18 @@ module VCAP::CloudController
             expect(LifecycleBundleUriGenerator).to have_received(:uri).with('http://docker.example.com/path/to/lifecycle.tgz')
           end
         end
+
+        describe '#setup' do
+          it 'returns nil' do
+            expect(builder.setup).to be_nil
+          end
+        end
+
+        describe '#global_environment_variables' do
+          it 'returns an empty list' do
+            expect(builder.global_environment_variables).to be_empty
+          end
+        end
       end
     end
   end

@@ -15,7 +15,7 @@ module VCAP::CloudController
         ::Diego::Bbs::Models::DesiredLRP.new(
           process_guid: app_request['process_guid'],
           instances: app_request['num_instances'],
-          environment_variables: [],
+          environment_variables: desired_lrp_builder.global_environment_variables,
           start_timeout_ms: app_request['health_check_timeout_in_seconds'] * 1000,
           disk_mb: app_request['disk_mb'],
           memory_mb: app_request['memory_mb'],
@@ -36,6 +36,7 @@ module VCAP::CloudController
           ),
           monitor: generate_monitor_action(app_request),
           root_fs: desired_lrp_builder.root_fs,
+          setup: desired_lrp_builder.setup,
         )
       end
 
