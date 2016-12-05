@@ -306,6 +306,41 @@ module VCAP::CloudController
               ])
             end
           end
+
+          context 'when FileDescriptors is 0' do
+            before { process.file_descriptors = 0 }
+            let(:expected_file_descriptor_limit) { DEFAULT_FILE_DESCRIPTOR_LIMIT }
+
+            it 'uses the default File Descriptor Limit on the first run actions resource limits' do
+              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+              expect(lrp.action).to eq(expected_action)
+              expect(lrp.monitor).to eq(expected_monitor_action)
+            end
+          end
+
+          context 'when the health check type is not set' do
+            let(:app_detail_overrides) do
+              { 'health_check_type' => '' }
+            end
+
+            it 'adds a port healthcheck action for backwards compatibility' do
+              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+
+              expect(lrp.monitor).to eq(expected_monitor_action)
+            end
+          end
+
+          context 'when the health check type is set to "none"' do
+            let(:app_detail_overrides) do
+              { 'health_check_type' => 'none' }
+            end
+
+            it 'adds a port healthcheck action for backwards compatibility' do
+              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+
+              expect(lrp.monitor).to eq(nil)
+            end
+          end
         end
 
         context 'when the lifecycle_type is "docker"' do
