@@ -48,6 +48,10 @@ module VCAP::CloudController
         def privileged?
           @config[:diego][:use_privileged_containers_for_running]
         end
+
+        def action_user
+          'vcap'
+        end
       end
     end
   end

@@ -66,7 +66,6 @@ module VCAP::CloudController
       end
 
       def generate_app_action(app_request, lrp_builder)
-        execution_metadata = MultiJson.load(app_request['execution_metadata'])
         desired_ports = lrp_builder.ports
         environment_variables = []
         app_request['environment'].each do |i|
@@ -77,7 +76,7 @@ module VCAP::CloudController
         [
           action(
             ::Diego::Bbs::Models::RunAction.new(
-              user: override_action_user(execution_metadata),
+              user: lrp_builder.action_user,
               path: '/tmp/lifecycle/launcher',
               args: [
                 'app',
@@ -94,13 +93,12 @@ module VCAP::CloudController
 
       def generate_monitor_action(app_request, lrp_builder)
         return unless ['', 'port'].include?(app_request['health_check_type'])
-        execution_metadata = MultiJson.load(app_request['execution_metadata'])
 
         desired_ports = lrp_builder.ports
         actions = []
         desired_ports.each do |port|
           actions << ::Diego::Bbs::Models::RunAction.new(
-            user: override_action_user(execution_metadata),
+            user: lrp_builder.action_user,
             path: '/tmp/lifecycle/healthcheck',
             args: ["-port=#{port}"],
             resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: file_descriptor_limit(app_request['file_descriptors'])),
@@ -140,15 +138,6 @@ module VCAP::CloudController
 
       def file_descriptor_limit(file_descriptors)
         file_descriptors == 0 ? DEFAULT_FILE_DESCRIPTOR_LIMIT : file_descriptors
-      end
-
-      def override_action_user(execution_metadata)
-        user = execution_metadata['user']
-        if user.nil? || user.empty?
-          'root'
-        else
-          user
-        end
       end
     end
   end

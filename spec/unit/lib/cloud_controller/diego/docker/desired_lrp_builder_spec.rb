@@ -104,6 +104,20 @@ module VCAP::CloudController
             end
           end
         end
+
+        describe '#action_user' do
+          it 'returns "root"' do
+            expect(builder.action_user).to eq('root')
+          end
+
+          context 'when the execution metadata has a specified user' do
+            let(:execution_metadata) { {user: 'foobar'}.to_json }
+
+            it 'uses the user from the execution metadata' do
+              expect(builder.action_user).to eq('foobar')
+            end
+          end
+        end
       end
     end
   end

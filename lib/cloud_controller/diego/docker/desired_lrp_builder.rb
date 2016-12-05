@@ -44,6 +44,16 @@ module VCAP::CloudController
         def privileged?
           false
         end
+
+        def action_user
+          execution_metadata = MultiJson.load(@app_request['execution_metadata'])
+          user = execution_metadata['user']
+          if user.nil? || user.empty?
+            'root'
+          else
+            user
+          end
+        end
       end
     end
   end

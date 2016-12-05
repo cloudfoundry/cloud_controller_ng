@@ -79,7 +79,7 @@ module VCAP::CloudController
               log_source: 'APP/PROC/WEB',
               resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
               env: expected_action_environment_variables,
-              user: expected_action_user,
+              user: 'lrp-action-user',
             )
           )
         end
@@ -93,7 +93,7 @@ module VCAP::CloudController
                   actions: [
                     ::Diego::Bbs::Models::Action.new(
                       run_action: ::Diego::Bbs::Models::RunAction.new(
-                        user: expected_action_user,
+                        user: 'lrp-action-user',
                         path: '/tmp/lifecycle/healthcheck',
                         args: ['-port=4444'],
                         resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
@@ -103,7 +103,7 @@ module VCAP::CloudController
                     ),
                     ::Diego::Bbs::Models::Action.new(
                       run_action: ::Diego::Bbs::Models::RunAction.new(
-                        user: expected_action_user,
+                        user: 'lrp-action-user',
                         path: '/tmp/lifecycle/healthcheck',
                         args: ['-port=5555'],
                         resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
@@ -117,7 +117,6 @@ module VCAP::CloudController
             )
           )
         end
-        let(:expected_action_user) { 'root' }
         let(:expected_file_descriptor_limit) { 32 }
         let(:expected_cached_dependencies) do
           [
@@ -211,6 +210,7 @@ module VCAP::CloudController
               global_environment_variables: env_vars,
               privileged?: false,
               ports: lrp_builder_ports,
+              action_user: 'lrp-action-user',
             )
           end
 
@@ -254,9 +254,6 @@ module VCAP::CloudController
             expect(lrp.start_timeout_ms).to eq(12 * 1000)
             expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
           end
-
-          xcontext 'monitor action should always be "vcap"'
-          xcontext 'LegacyDownloadUser should always be "vcap"'
 
           context 'when a volume mount is provided' do
             let(:service_instance) { ManagedServiceInstance.make space: app_model.space }
@@ -340,6 +337,7 @@ module VCAP::CloudController
               global_environment_variables: [],
               privileged?: false,
               ports: lrp_builder_ports,
+              action_user: 'lrp-action-user',
             )
           end
 
@@ -416,7 +414,7 @@ module VCAP::CloudController
                   log_source: APP_LOG_SOURCE,
                   resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: 32),
                   env: expected_action_environment_variables,
-                  user: 'root',
+                  user: 'lrp-action-user',
                 )
               )
             end
@@ -456,17 +454,6 @@ module VCAP::CloudController
               lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
 
               expect(lrp.root_fs).to eq('docker_root_fs')
-            end
-          end
-
-          context 'when the execution metadata has a specified user' do
-            let(:expected_action_user) { 'foobar' }
-            let(:execution_metadata_user) { 'foobar' }
-
-            it 'uses the user from the execution metadata' do
-              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
-              expect(lrp.action).to eq(expected_action)
-              expect(lrp.monitor).to eq(expected_monitor_action)
             end
           end
 
