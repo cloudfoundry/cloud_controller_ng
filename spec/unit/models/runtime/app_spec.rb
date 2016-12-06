@@ -278,6 +278,20 @@ module VCAP::CloudController
         end
       end
 
+      describe 'health_check_http_endpoint' do
+        it 'can be set to a valid URL'
+
+        it 'cannot be set to an invalid URL'
+
+        context 'when the health_check_type is http' do
+          it 'can be set to a valid URL'
+        end
+
+        context 'when the health check_type is not http' do
+          it 'cannot be set'
+        end
+      end
+
       describe 'health_check_type' do
         it "defaults to 'port'" do
           expect(app.health_check_type).to eq('port')
@@ -290,6 +304,11 @@ module VCAP::CloudController
 
         it "can be set to 'process'" do
           app.health_check_type = 'process'
+          expect(app).to be_valid
+        end
+
+        it "can be set to 'http'" do
+          app.health_check_type = 'http'
           expect(app).to be_valid
         end
 

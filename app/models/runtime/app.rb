@@ -127,7 +127,7 @@ module VCAP::CloudController
     serializes_via_json :docker_credentials_json
 
     APP_STATES         = %w(STOPPED STARTED).map(&:freeze).freeze
-    HEALTH_CHECK_TYPES = %w(port none process).map(&:freeze).freeze
+    HEALTH_CHECK_TYPES = %w(port none process http).map(&:freeze).freeze
 
     # Last staging response which will contain streaming log url
     attr_accessor :last_stager_response
