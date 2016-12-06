@@ -89,7 +89,7 @@ module VCAP::CloudController
               it 'raises an error' do
                 expect {
                   builder.ports
-                }.to raise_error(AppRecipeBuilder::MissingAppPort)
+                }.to raise_error(CloudController::Errors::ApiError, /No tcp ports found in image metadata/)
               end
             end
 
