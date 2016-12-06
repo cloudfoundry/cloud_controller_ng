@@ -344,9 +344,126 @@ module Diego
         end
       end
 
-      context 'when the task cannot be encoded' do
+      context 'when the request cannot be encoded' do
         it 'raises' do
           expect { client.desire_lrp(4) }.to raise_error(EncodeError)
+        end
+      end
+    end
+
+    describe '#desired_lrp_by_process_guid' do
+      let(:lrp) { ::Diego::Bbs::Models::DesiredLRP.new(process_guid: process_guid) }
+      let(:response_body) { Bbs::Models::DesiredLRPResponse.new(error: nil, desired_lrp: lrp).encode.to_s }
+      let(:response_status) { 200 }
+
+      let(:process_guid) { 'process-guid' }
+
+      before do
+        stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrps/get_by_process_guid.r2').to_return(status: response_status, body: response_body)
+      end
+
+      it 'returns a Desired LRP Response' do
+        expected_request = Bbs::Models::DesiredLRPByProcessGuidRequest.new(process_guid: process_guid)
+
+        response = client.desired_lrp_by_process_guid(process_guid)
+        expect(response).to be_a(Bbs::Models::DesiredLRPResponse)
+        expect(response.error).to be_nil
+        expect(response.desired_lrp).to eq(lrp)
+        expect(a_request(:post, 'https://bbs.example.com:4443/v1/desired_lrps/get_by_process_guid.r2').with(
+                 body: expected_request.encode.to_s,
+                 headers: { 'Content-Type' => 'application/x-protobuf' }
+        )).to have_been_made
+      end
+
+      context 'when it does not return successfully' do
+        let(:response_status) { 404 }
+        let(:response_body) { 'not found' }
+
+        it 'raises' do
+          expect {
+            client.desired_lrp_by_process_guid(process_guid)
+          }.to raise_error(ResponseError, /status: 404, body: not found/)
+        end
+      end
+
+      context 'when it fails to make the request' do
+        before do
+          stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrps/get_by_process_guid.r2').to_raise(StandardError.new('error message'))
+        end
+
+        it 'raises' do
+          expect { client.desired_lrp_by_process_guid(process_guid) }.to raise_error(RequestError, /error message/)
+        end
+      end
+
+      context 'when decoding the response fails' do
+        let(:response_body) { 'potato' }
+
+        it 'raises' do
+          expect { client.desired_lrp_by_process_guid(process_guid) }.to raise_error(DecodeError)
+        end
+      end
+
+      context 'when the request cannot be encoded' do
+        it 'raises' do
+          expect { client.desired_lrp_by_process_guid(4) }.to raise_error(EncodeError)
+        end
+      end
+    end
+
+    describe '#update_desired_lrp' do
+      let(:process_guid) { 'process-guid' }
+      let(:lrp_update) { ::Diego::Bbs::Models::DesiredLRPUpdate.new(instances: 3) }
+
+      let(:response_body) { Bbs::Models::DesiredLRPLifecycleResponse.new(error: nil).encode.to_s }
+      let(:response_status) { 200 }
+
+      before do
+        stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/update').to_return(status: response_status, body: response_body)
+      end
+
+      it 'returns a Desired LRP Lifecycle Response' do
+        expected_request = Bbs::Models::UpdateDesiredLRPRequest.new(process_guid: process_guid, update: lrp_update)
+
+        response = client.update_desired_lrp(process_guid, lrp_update)
+        expect(response).to be_a(Bbs::Models::DesiredLRPLifecycleResponse)
+        expect(response.error).to be_nil
+        expect(a_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/update').with(
+                 body: expected_request.encode.to_s,
+                 headers: { 'Content-Type' => 'application/x-protobuf' }
+        )).to have_been_made
+      end
+
+      context 'when it does not return successfully' do
+        let(:response_status) { 404 }
+        let(:response_body) { 'not found' }
+
+        it 'raises' do
+          expect { client.update_desired_lrp(process_guid, lrp_update) }.to raise_error(ResponseError, /status: 404, body: not found/)
+        end
+      end
+
+      context 'when it fails to make the request' do
+        before do
+          stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/update').to_raise(StandardError.new('error message'))
+        end
+
+        it 'raises' do
+          expect { client.update_desired_lrp(process_guid, lrp_update) }.to raise_error(RequestError, /error message/)
+        end
+      end
+
+      context 'when decoding the response fails' do
+        let(:response_body) { 'potato' }
+
+        it 'raises' do
+          expect { client.update_desired_lrp(process_guid, lrp_update) }.to raise_error(DecodeError)
+        end
+      end
+
+      context 'when the request cannot be encoded' do
+        it 'raises' do
+          expect { client.update_desired_lrp(4, lrp_update) }.to raise_error(EncodeError)
         end
       end
     end

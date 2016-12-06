@@ -74,6 +74,28 @@ module Diego
       protobuf_decode!(response.body, Bbs::Models::DesiredLRPLifecycleResponse)
     end
 
+    def desired_lrp_by_process_guid(process_guid)
+      request = protobuf_encode!({ process_guid: process_guid }, Bbs::Models::DesiredLRPByProcessGuidRequest)
+
+      response = with_request_error_handling do
+        client.post(Routes::DESIRED_LRP_BY_PROCESS_GUID, request, PROTOBUF_HEADER)
+      end
+
+      validate_status!(response: response, statuses: [200])
+      protobuf_decode!(response.body, Bbs::Models::DesiredLRPResponse)
+    end
+
+    def update_desired_lrp(process_guid, lrp_update)
+      request = protobuf_encode!({ process_guid: process_guid, update: lrp_update }, Bbs::Models::UpdateDesiredLRPRequest)
+
+      response = with_request_error_handling do
+        client.post(Routes::UPDATE_DESIRED_LRP, request, PROTOBUF_HEADER)
+      end
+
+      validate_status!(response: response, statuses: [200])
+      protobuf_decode!(response.body, Bbs::Models::DesiredLRPLifecycleResponse)
+    end
+
     def with_request_error_handling(&blk)
       tries ||= 3
       yield
