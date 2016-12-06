@@ -297,7 +297,7 @@ module Diego
     end
 
     describe '#desire_lrp' do
-      let(:response_body) { Bbs::Models::DesiredLRPResponse.new(error: nil).encode.to_s }
+      let(:response_body) { Bbs::Models::DesiredLRPLifecycleResponse.new(error: nil).encode.to_s }
       let(:response_status) { 200 }
       let(:lrp) { ::Diego::Bbs::Models::DesiredLRP.new }
 
@@ -305,11 +305,11 @@ module Diego
         stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/desire.r2').to_return(status: response_status, body: response_body)
       end
 
-      it 'returns a Desired LRP Response' do
+      it 'returns a Desired LRP Lifecycle Response' do
         expected_desire_lrp_request = Bbs::Models::DesireLRPRequest.new(desired_lrp: lrp)
 
         response = client.desire_lrp(lrp)
-
+        expect(response).to be_a(Bbs::Models::DesiredLRPLifecycleResponse)
         expect(response.error).to be_nil
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/desire.r2').with(
                  body: expected_desire_lrp_request.encode.to_s,

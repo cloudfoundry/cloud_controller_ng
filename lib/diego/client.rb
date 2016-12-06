@@ -71,7 +71,7 @@ module Diego
       end
 
       validate_status!(response: response, statuses: [200])
-      protobuf_decode!(response.body, Bbs::Models::DesiredLRPResponse)
+      protobuf_decode!(response.body, Bbs::Models::DesiredLRPLifecycleResponse)
     end
 
     def with_request_error_handling(&blk)
