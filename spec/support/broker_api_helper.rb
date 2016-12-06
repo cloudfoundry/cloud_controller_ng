@@ -221,7 +221,8 @@ module VCAP::CloudController::BrokerApiHelper
          json_headers(admin_headers)
     )
 
-    @binding_id = JSON.parse(last_response.body)['metadata']['guid']
+    metadata = JSON.parse(last_response.body).fetch('metadata', {})
+    @binding_id = metadata.fetch('guid', nil)
   end
 
   def unbind_service

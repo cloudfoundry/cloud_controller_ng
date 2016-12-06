@@ -9,13 +9,14 @@ module VCAP::Services::ServiceBrokers::V2
         'metadata'    => opts[:metadata] || {},
         'name'        => opts[:name] || 'service-plan-name',
         'description' => opts[:description] || 'The description of the service plan',
-        'free'        => opts.fetch(:free, true)
+        'free'        => opts.fetch(:free, true),
+        'bindable'    => opts[:bindable]
       }
     end
 
     describe 'initializing' do
       let(:catalog_service) { instance_double(VCAP::Services::ServiceBrokers::V2::CatalogService) }
-      subject { CatalogPlan.new(catalog_service, build_valid_plan_attrs(free: false)) }
+      subject { CatalogPlan.new(catalog_service, build_valid_plan_attrs(free: false, bindable: true)) }
 
       its(:broker_provided_id) { should eq 'broker-provided-plan-id' }
       its(:name) { should eq 'service-plan-name' }
@@ -23,6 +24,7 @@ module VCAP::Services::ServiceBrokers::V2
       its(:metadata) { should eq({}) }
       its(:catalog_service) { should eq catalog_service }
       its(:free) { should be false }
+      its(:bindable) { should be true }
       its(:errors) { should be_empty }
 
       it 'defaults free field to true' do
@@ -100,6 +102,14 @@ module VCAP::Services::ServiceBrokers::V2
         plan.valid?
 
         expect(plan.errors.messages).to include 'Plan free must be a boolean, but has value "true"'
+      end
+
+      it 'validates that @bindable is a boolean' do
+        attrs = build_valid_plan_attrs(bindable: 'true')
+        plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        plan.valid?
+
+        expect(plan.errors.messages).to include 'Plan bindable must be a boolean, but has value "true"'
       end
 
       describe '#valid?' do

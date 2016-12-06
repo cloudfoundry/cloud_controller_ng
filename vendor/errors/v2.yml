@@ -371,7 +371,7 @@
 90005:
   name: UnbindableService
   http_code: 400
-  message: "The service doesn't support binding."
+  message: "The service instance doesn't support binding."
 
 90006:
   name: InvalidLoggingServiceBinding

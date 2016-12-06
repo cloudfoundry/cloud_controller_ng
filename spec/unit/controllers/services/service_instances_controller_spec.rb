@@ -3059,6 +3059,21 @@ module VCAP::CloudController
         end
       end
 
+      context 'when attempting to bind to an unbindable service plan' do
+        before do
+          service_instance.service_plan.bindable = false
+          service_instance.service_plan.save
+
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
+        end
+
+        it 'raises UnbindableService error' do
+          hash_body = JSON.parse(last_response.body)
+          expect(hash_body['error_code']).to eq('CF-UnbindableService')
+          expect(last_response).to have_status_code(400)
+        end
+      end
+
       context 'when the instance operation is in progress' do
         before do
           service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
