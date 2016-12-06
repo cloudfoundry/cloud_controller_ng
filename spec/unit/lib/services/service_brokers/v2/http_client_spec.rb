@@ -102,7 +102,7 @@ module VCAP::Services::ServiceBrokers::V2
               :request => response)
           end
 
-          let(:response) { double(:response, code: nil, reason: nil, body: nil, headers: nil) }
+          let(:response) { double(:response, code: nil, reason: nil, body: {}.to_json, headers: nil) }
           let(:ssl_config) { double(:ssl_config, :verify_mode= => nil) }
 
           before do
@@ -219,6 +219,31 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
+    shared_examples 'logging' do
+      let(:fake_logger) { instance_double(Steno::Logger, debug: nil) }
+      let(:response_body) { { syslog_drain_url: 'example.com/1234', credentials: { secrets: '1234' } }.to_json }
+
+      it 'redacts credentials from response body' do
+        make_request
+        expect(fake_logger).to have_received(:debug).with(/"credentials"=>"REDACTED"/)
+      end
+
+      it 'does not redact other keys' do
+        make_request
+        expect(fake_logger).to have_received(:debug).with(%r{"syslog_drain_url"=>"example.com/1234"})
+      end
+
+      context 'non-json responses' do
+        let(:response_body) { '<xml></xml>' }
+
+        it 'does not blow up when parsing' do
+          response = make_request
+          expect(response.code).to eq(200)
+          expect(fake_logger).to have_received(:debug).with(/Error parsing body/)
+        end
+      end
+    end
+
     shared_examples 'client that maps status codes to status code messages' do
       before do
         stub_request(http_method, full_url).
@@ -307,9 +332,10 @@ module VCAP::Services::ServiceBrokers::V2
 
       describe 'http request' do
         let(:make_request) { client.get(path) }
+        let(:response_body) { {}.to_json }
 
         before do
-          stub_request(:get, full_url).to_return(status: 200, body: {}.to_json)
+          stub_request(:get, full_url).to_return(status: 200, body: response_body)
         end
 
         it 'makes the correct GET http request' do
@@ -335,6 +361,8 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it_behaves_like 'a basic successful request'
+
+        it_behaves_like 'logging'
       end
 
       describe 'handling errors' do
@@ -364,9 +392,10 @@ module VCAP::Services::ServiceBrokers::V2
 
       describe 'http request' do
         let(:make_request) { client.put(path, message) }
+        let(:response_body) { {}.to_json }
 
         before do
-          stub_request(:put, full_url).to_return(status: 200, body: {}.to_json)
+          stub_request(:put, full_url).to_return(status: 200, body: response_body)
         end
 
         it 'makes the correct PUT http request' do
@@ -395,6 +424,8 @@ module VCAP::Services::ServiceBrokers::V2
             }.to_json)).
             to have_been_made
         end
+
+        it_behaves_like 'logging'
 
         it_behaves_like 'a basic successful request'
       end
@@ -433,9 +464,10 @@ module VCAP::Services::ServiceBrokers::V2
 
       describe 'http request' do
         let(:make_request) { client.patch(path, message) }
+        let(:response_body) { {}.to_json }
 
         before do
-          stub_request(:patch, full_url).to_return(status: 200, body: {}.to_json)
+          stub_request(:patch, full_url).to_return(status: 200, body: response_body)
         end
 
         it 'makes the correct PATCH http request' do
@@ -466,6 +498,8 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it_behaves_like 'a basic successful request'
+
+        it_behaves_like 'logging'
       end
 
       describe 'handling errors' do
@@ -494,9 +528,10 @@ module VCAP::Services::ServiceBrokers::V2
 
       describe 'http request' do
         let(:make_request) { client.delete(path, message) }
+        let(:response_body) { {}.to_json }
 
         before do
-          stub_request(:delete, full_url).with(query: message).to_return(status: 200, body: {}.to_json)
+          stub_request(:delete, full_url).with(query: message).to_return(status: 200, body: response_body)
         end
 
         it 'makes the correct DELETE http request' do
@@ -523,6 +558,8 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it_behaves_like 'a basic successful request'
+
+        it_behaves_like 'logging'
       end
 
       describe 'handling errors' do

@@ -131,7 +131,7 @@ module VCAP::Services
         logger.debug "Sending #{method} to #{uri}, BODY: #{body.inspect}, HEADERS: #{headers}"
 
         response = client.request(method, uri, opts)
-        logger.debug "Response from request to #{uri}: STATUS #{response.code}, BODY: #{response.body.inspect}, HEADERS: #{response.headers.inspect}"
+        logger.debug "Response from request to #{uri}: STATUS #{response.code}, BODY: #{redact_credentials(response)}, HEADERS: #{response.headers.inspect}"
 
         HttpResponse.from_http_client_response(response)
       rescue SocketError, Errno::ECONNREFUSED => error
@@ -140,6 +140,14 @@ module VCAP::Services
         raise Errors::ServiceBrokerApiTimeout.new(uri.to_s, method, error)
       rescue => error
         raise HttpRequestError.new(error.message, uri.to_s, method, error)
+      end
+
+      def redact_credentials(response)
+        body = MultiJson.load(response.body)
+        body['credentials'] = 'REDACTED' if body['credentials']
+        body.inspect
+      rescue
+        'Error parsing body'
       end
 
       def default_headers
