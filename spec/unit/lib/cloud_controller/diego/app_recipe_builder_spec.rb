@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Diego
     RSpec.describe AppRecipeBuilder do
-      subject(:builder) { described_class.new }
+      subject(:builder) { described_class.new(config: config, process: process, app_request: app_details_from_protocol) }
 
       describe '#build_app_lrp' do
         let(:app_details_from_protocol) do
@@ -225,7 +225,7 @@ module VCAP::CloudController
           end
 
           it 'creates a desired lrp' do
-            lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+            lrp = builder.build_app_lrp
             expect(lrp.action).to eq(expected_action)
             expect(lrp.annotation).to eq(Time.at(2).to_f.to_s)
             expect(lrp.cached_dependencies).to eq(expected_cached_dependencies)
@@ -289,7 +289,7 @@ module VCAP::CloudController
             end
 
             it 'desires the mount' do
-              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+              lrp = builder.build_app_lrp
               expect(lrp.volume_mounts).to eq([
                 ::Diego::Bbs::Models::VolumeMount.new(
                   driver: 'cephfs',
@@ -312,7 +312,7 @@ module VCAP::CloudController
             let(:expected_file_descriptor_limit) { DEFAULT_FILE_DESCRIPTOR_LIMIT }
 
             it 'uses the default File Descriptor Limit on the first run actions resource limits' do
-              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+              lrp = builder.build_app_lrp
               expect(lrp.action).to eq(expected_action)
               expect(lrp.monitor).to eq(expected_monitor_action)
             end
@@ -324,7 +324,7 @@ module VCAP::CloudController
             end
 
             it 'adds a port healthcheck action for backwards compatibility' do
-              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+              lrp = builder.build_app_lrp
 
               expect(lrp.monitor).to eq(expected_monitor_action)
             end
@@ -336,7 +336,7 @@ module VCAP::CloudController
             end
 
             it 'adds a port healthcheck action for backwards compatibility' do
-              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+              lrp = builder.build_app_lrp
 
               expect(lrp.monitor).to eq(nil)
             end
@@ -381,7 +381,7 @@ module VCAP::CloudController
           end
 
           it 'creates a desired lrp' do
-            lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+            lrp = builder.build_app_lrp
 
             expect(lrp.action).to eq(expected_action)
             expect(lrp.annotation).to eq(Time.at(2).to_f.to_s)
@@ -414,7 +414,7 @@ module VCAP::CloudController
               before { process.memory = (MIN_CPU_PROXY + MAX_CPU_PROXY) / 2 }
 
               it 'sets the cpu_weight to 100* value/max' do
-                lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+                lrp = builder.build_app_lrp
                 expect(lrp.cpu_weight).to eq(50)
               end
             end
@@ -422,7 +422,7 @@ module VCAP::CloudController
             context 'when the memory limit is below the minimum' do
               before { process.memory = MIN_CPU_PROXY - 1 }
               it 'sets the cpu_weight to 100*min/max' do
-                lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+                lrp = builder.build_app_lrp
                 expected_weight = (100 * MIN_CPU_PROXY / MAX_CPU_PROXY).to_i
                 expect(lrp.cpu_weight).to eq(expected_weight)
               end
@@ -431,7 +431,7 @@ module VCAP::CloudController
             context 'when the memory limit exceeds the maximum' do
               before { process.memory = MAX_CPU_PROXY + 1 }
               it 'sets the cpu_weight to 100' do
-                lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+                lrp = builder.build_app_lrp
                 expect(lrp.cpu_weight).to eq(100)
               end
             end
@@ -455,7 +455,7 @@ module VCAP::CloudController
             end
 
             it 'uses APP' do
-              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+              lrp = builder.build_app_lrp
               expect(lrp.action).to eq(expected_action)
             end
           end
@@ -466,7 +466,7 @@ module VCAP::CloudController
             end
 
             it 'adds a port healthcheck action for backwards compatibility' do
-              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+              lrp = builder.build_app_lrp
 
               expect(lrp.monitor).to eq(expected_monitor_action)
             end
@@ -478,7 +478,7 @@ module VCAP::CloudController
             end
 
             it 'adds a port healthcheck action for backwards compatibility' do
-              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+              lrp = builder.build_app_lrp
 
               expect(lrp.monitor).to eq(nil)
             end
@@ -486,7 +486,7 @@ module VCAP::CloudController
 
           context 'when the docker_image is set' do
             it 'converts the docker_image url to a root_fs path' do
-              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+              lrp = builder.build_app_lrp
 
               expect(lrp.root_fs).to eq('docker_root_fs')
             end
@@ -497,7 +497,7 @@ module VCAP::CloudController
             let(:expected_file_descriptor_limit) { DEFAULT_FILE_DESCRIPTOR_LIMIT }
 
             it 'uses the default File Descriptor Limit on the first run actions resource limits' do
-              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+              lrp = builder.build_app_lrp
               expect(lrp.action).to eq(expected_action)
               expect(lrp.monitor).to eq(expected_monitor_action)
             end
@@ -561,7 +561,7 @@ module VCAP::CloudController
             end
 
             it 'desires the mount' do
-              lrp = builder.build_app_lrp(config, process, app_details_from_protocol)
+              lrp = builder.build_app_lrp
               expect(lrp.volume_mounts).to eq([
                 ::Diego::Bbs::Models::VolumeMount.new(
                   driver: 'cephfs',

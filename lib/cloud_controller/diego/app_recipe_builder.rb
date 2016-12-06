@@ -6,7 +6,13 @@ module VCAP::CloudController
     class AppRecipeBuilder
       include ::Diego::ActionBuilder
 
-      def build_app_lrp(config, process, app_request)
+      def initialize(config:, process:, app_request:)
+        @config      = config
+        @process     = process
+        @app_request = app_request
+      end
+
+      def build_app_lrp
         desired_lrp_builder = LifecycleProtocol.protocol_for_type(process.app.lifecycle_type).desired_lrp_builder(config, app_request)
 
         ::Diego::Bbs::Models::DesiredLRP.new(
@@ -22,27 +28,31 @@ module VCAP::CloudController
           log_guid:                         app_request['log_guid'],
           metrics_guid:                     app_request['log_guid'],
           annotation:                       app_request['etag'],
-          egress_rules:                     generate_egress_rules(app_request['egress_rules']),
+          egress_rules:                     generate_egress_rules,
           cached_dependencies:              desired_lrp_builder.cached_dependencies,
           legacy_download_user:             'root',
           trusted_system_certificates_path: RUNNING_TRUSTED_SYSTEM_CERT_PATH,
-          network:                          generate_network(app_request['network']),
+          network:                          generate_network,
           cpu_weight:                       TaskCpuWeightCalculator.new(memory_in_mb: app_request['memory_mb']).calculate,
           action:                           action(
-            ::Diego::Bbs::Models::CodependentAction.new(actions: generate_app_action(app_request, desired_lrp_builder))
+            ::Diego::Bbs::Models::CodependentAction.new(actions: generate_app_action(desired_lrp_builder))
                                             ),
-          monitor:                          generate_monitor_action(app_request, desired_lrp_builder),
+          monitor:                          generate_monitor_action(desired_lrp_builder),
           root_fs:                          desired_lrp_builder.root_fs,
           setup:                            desired_lrp_builder.setup,
           domain:                           APP_LRP_DOMAIN,
-          volume_mounts:                    generate_volume_mounts(app_request['volume_mounts'].as_json),
+          volume_mounts:                    generate_volume_mounts,
         )
       end
 
       private
 
-      def generate_volume_mounts(app_volume_mounts)
+      attr_reader :config, :process, :app_request
+
+      def generate_volume_mounts
+        app_volume_mounts   = app_request['volume_mounts'].as_json
         proto_volume_mounts = []
+
         app_volume_mounts.each do |volume_mount|
           proto_volume_mount = ::Diego::Bbs::Models::VolumeMount.new(
             driver:        volume_mount['device']['driver'],
@@ -61,9 +71,10 @@ module VCAP::CloudController
         proto_volume_mounts
       end
 
-      def generate_app_action(app_request, lrp_builder)
+      def generate_app_action(lrp_builder)
         desired_ports         = lrp_builder.ports
         environment_variables = []
+
         app_request['environment'].each do |i|
           environment_variables << ::Diego::Bbs::Models::EnvironmentVariable.new(name: i['name'], value: i['value'])
         end
@@ -87,7 +98,7 @@ module VCAP::CloudController
         ]
       end
 
-      def generate_monitor_action(app_request, lrp_builder)
+      def generate_monitor_action(lrp_builder)
         return unless ['', 'port'].include?(app_request['health_check_type'])
 
         desired_ports = lrp_builder.ports
@@ -106,8 +117,8 @@ module VCAP::CloudController
         action(timeout(parallel(actions), timeout_ms: 1000 * 30.seconds))
       end
 
-      def generate_egress_rules(rules)
-        rules.map do |rule|
+      def generate_egress_rules
+        app_request['egress_rules'].map do |rule|
           ::Diego::Bbs::Models::SecurityGroupRule.new(
             protocol:     rule['protocol'],
             destinations: rule['destinations'],
@@ -119,10 +130,10 @@ module VCAP::CloudController
         end
       end
 
-      def generate_network(network_hash)
+      def generate_network
         network = ::Diego::Bbs::Models::Network.new(properties: [])
 
-        network_hash['properties'].each do |key, value|
+        app_request['network']['properties'].each do |key, value|
           network.properties << ::Diego::Bbs::Models::Network::PropertiesEntry.new(
             key:   key,
             value: value,

@@ -1,4 +1,5 @@
 require 'cloud_controller/dependency_locator'
+require 'cloud_controller/diego/desire_app_handler'
 
 module VCAP::CloudController
   module Diego
@@ -33,8 +34,8 @@ module VCAP::CloudController
         process_guid = ProcessGuid.from_process(process)
         if bypass_bridge?
           desire_message = protocol.desire_app_message(process, config[:default_health_check_timeout])
-          desired_lrp = app_recipe_builder.build_app_lrp(config, process, desire_message)
-          bbs_apps_client.desire_app(desired_lrp)
+          app_recipe_builder = AppRecipeBuilder.new(config, process, desire_message)
+          DesireAppHandler.create_app(app_recipe_builder, bbs_apps_client)
         else
           desire_message = protocol.desire_app_request(process, config[:default_health_check_timeout])
           nsync_client.desire_app(process_guid, desire_message)
@@ -71,10 +72,6 @@ module VCAP::CloudController
 
       def recipe_builder
         @recipe_builder ||= RecipeBuilder.new
-      end
-
-      def app_recipe_builder
-        @app_recipe_builder ||= AppRecipeBuilder.new
       end
 
       def stager_client
