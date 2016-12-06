@@ -50,8 +50,7 @@ module VCAP::CloudController
             mode:          volume_mount['mode']
           )
 
-          a                         = volume_mount['device']['mount_config']
-          mount_config              = a.present? ? a.to_json : ''
+          mount_config              = volume_mount['device']['mount_config'].present? ? volume_mount['device']['mount_config'].to_json : ''
           proto_volume_mount.shared = ::Diego::Bbs::Models::SharedDevice.new(
             volume_id:    volume_mount['device']['volume_id'],
             mount_config: mount_config
