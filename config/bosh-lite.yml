@@ -271,7 +271,7 @@ diego:
   nsync_url: http://10.244.16.14:8787
   stager_url: http://10.244.16.14:8888
   tps_url: http://10.244.16.14:1518
-  file_server_url: http://10.244.16.14:8080
+  file_server_url: http://10.244.16.22:8080
   cc_uploader_url: http://10.244.16.14:9090
   use_privileged_containers_for_running: false
   use_privileged_containers_for_staging: false
