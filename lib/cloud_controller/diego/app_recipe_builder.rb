@@ -34,7 +34,7 @@ module VCAP::CloudController
           trusted_system_certificates_path: RUNNING_TRUSTED_SYSTEM_CERT_PATH,
           network:                          generate_network,
           cpu_weight:                       TaskCpuWeightCalculator.new(memory_in_mb: app_request['memory_mb']).calculate,
-          action:                           action(::Diego::Bbs::Models::CodependentAction.new(actions: generate_app_action(desired_lrp_builder))),
+          action:                           codependent(generate_app_action(desired_lrp_builder)),
           monitor:                          generate_monitor_action(desired_lrp_builder),
           root_fs:                          desired_lrp_builder.root_fs,
           setup:                            desired_lrp_builder.setup,

@@ -46,6 +46,10 @@ module Diego
                  failure_message_prefix: failure_message_prefix))
       end
 
+      def codependent(actions)
+        action(::Diego::Bbs::Models::CodependentAction.new(actions: actions.map { |a| action(a) }))
+      end
+
       private
 
       def action_already_wrapped?(action)
@@ -59,6 +63,7 @@ module Diego
       :serial,
       :parallel,
       :timeout,
-      :emit_progress
+      :emit_progress,
+      :codependent
   end
 end
