@@ -9,6 +9,7 @@ module VCAP::CloudController
         let(:app_details_from_protocol) do
           json                = MultiJson.load(protocol.desire_app_request(process, default_health_check_timeout))
           json['environment'] = environment_variables
+          json['isolation_segment'] = 'placement-tag'
           json.merge!(app_detail_overrides)
         end
         let(:app_detail_overrides) do
@@ -253,6 +254,7 @@ module VCAP::CloudController
             expect(lrp.setup).to eq(expected_setup_action)
             expect(lrp.start_timeout_ms).to eq(12 * 1000)
             expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
+            expect(lrp.PlacementTags).to eq(['placement-tag'])
           end
 
           context 'when a volume mount is provided' do
@@ -407,6 +409,7 @@ module VCAP::CloudController
             expect(lrp.process_guid).to eq(app_details_from_protocol['process_guid'])
             expect(lrp.start_timeout_ms).to eq(12 * 1000)
             expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
+            expect(lrp.PlacementTags).to eq(['placement-tag'])
           end
 
           context 'when start command is not specified' do

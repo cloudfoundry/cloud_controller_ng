@@ -42,6 +42,7 @@ module VCAP::CloudController
           setup:                            desired_lrp_builder.setup,
           domain:                           APP_LRP_DOMAIN,
           volume_mounts:                    generate_volume_mounts,
+          PlacementTags:                    [app_request['isolation_segment']],
         )
       end
 
