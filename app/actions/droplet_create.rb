@@ -101,14 +101,7 @@ module VCAP::CloudController
       staging_details.staging_disk_in_mb    = disk_limit
       staging_details.environment_variables = environment_variables
       staging_details.lifecycle             = lifecycle
-
-      if space.isolation_segment_model
-        if !space.isolation_segment_model.is_shared_segment?
-          staging_details.isolation_segment = space.isolation_segment_model.name
-        end
-      elsif org.default_isolation_segment_model && !org.default_isolation_segment_model.is_shared_segment?
-        staging_details.isolation_segment = org.default_isolation_segment_model.name
-      end
+      staging_details.isolation_segment     = IsolationSegmentSelector.for_space(space)
 
       staging_details
     end

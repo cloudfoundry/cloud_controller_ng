@@ -67,16 +67,9 @@ module VCAP::CloudController
           'allow_ssh'                       => process.enable_ssh,
           'ports'                           => OpenProcessPorts.new(process).to_a,
           'network'                         => ContainerNetworkInfo.new(process).to_h,
-          'volume_mounts'                   => AppVolumeMounts.new(process.app)
+          'volume_mounts'                   => AppVolumeMounts.new(process.app),
+          'isolation_segment'               => VCAP::CloudController::IsolationSegmentSelector.for_space(process.space),
         }.merge(LifecycleProtocol.protocol_for_type(process.app.lifecycle_type).desired_app_message(process))
-
-        if process.space.isolation_segment_model
-          if !process.space.isolation_segment_model.is_shared_segment?
-            msg['isolation_segment'] = process.space.isolation_segment_model.name
-          end
-        elsif process.space.organization.default_isolation_segment_model && !process.space.organization.default_isolation_segment_model.is_shared_segment?
-          msg['isolation_segment'] = process.space.organization.default_isolation_segment_model.name
-        end
 
         msg
       end

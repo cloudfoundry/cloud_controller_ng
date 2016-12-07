@@ -115,4 +115,6 @@ require 'cloud_controller/port_generator'
 require 'cloud_controller/route_binding_message'
 require 'cloud_controller/process_route_handler'
 
+require 'cloud_controller/isolation_segment_selector'
+
 require 'services'
