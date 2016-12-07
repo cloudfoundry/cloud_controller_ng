@@ -94,7 +94,7 @@ module VCAP::CloudController
               path:            '/tmp/lifecycle/launcher',
               args:            [
                 'app',
-                app_request['start_command'],
+                app_request['start_command'] || '',
                 app_request['execution_metadata'],
               ],
               env:             environment_variables,
