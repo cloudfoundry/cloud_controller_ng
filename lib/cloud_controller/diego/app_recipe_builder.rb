@@ -49,6 +49,7 @@ module VCAP::CloudController
         ::Diego::Bbs::Models::DesiredLRPUpdate.new(
           instances:  process.instances,
           annotation: process.updated_at.to_f.to_s,
+          routes:     generate_routes(app_request['routing_info'])
         )
       end
 
