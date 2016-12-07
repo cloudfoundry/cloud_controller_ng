@@ -227,6 +227,16 @@ module VCAP::CloudController
 
       validate_health_check_type_and_port_presence_are_in_agreement
       validation_policies.map(&:validate)
+      validate_health_check_http_endpoint
+    end
+
+    def validate_health_check_http_endpoint
+      if health_check_type != "http" && health_check_http_endpoint
+        errors.add(:health_check_http_endpoint, "HTTP health check endpoint is valid only for http health check types, not #{health_check_type}")
+      end
+      if health_check_type  == "http" && !health_check_http_endpoint.is_uri?
+        errors.add(:health_check_http_endpoint, "HTTP health check endpoint is not a valid URL")
+      end
     end
 
     def validate_uniqueness_of_type_for_same_app_model
