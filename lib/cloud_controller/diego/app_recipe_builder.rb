@@ -34,15 +34,14 @@ module VCAP::CloudController
           trusted_system_certificates_path: RUNNING_TRUSTED_SYSTEM_CERT_PATH,
           network:                          generate_network,
           cpu_weight:                       TaskCpuWeightCalculator.new(memory_in_mb: app_request['memory_mb']).calculate,
-          action:                           action(
-            ::Diego::Bbs::Models::CodependentAction.new(actions: generate_app_action(desired_lrp_builder))
-                                            ),
+          action:                           action(::Diego::Bbs::Models::CodependentAction.new(actions: generate_app_action(desired_lrp_builder))),
           monitor:                          generate_monitor_action(desired_lrp_builder),
           root_fs:                          desired_lrp_builder.root_fs,
           setup:                            desired_lrp_builder.setup,
           domain:                           APP_LRP_DOMAIN,
           volume_mounts:                    generate_volume_mounts,
           PlacementTags:                    [app_request['isolation_segment']],
+          routes:                           generate_routes(app_request['routing_info'])
         )
       end
 
@@ -56,6 +55,29 @@ module VCAP::CloudController
       private
 
       attr_reader :config, :process, :app_request
+
+      def generate_routes(info)
+        http_routes = (info['http_routes'] || []).map do |i|
+          {
+            hostnames:         [i['hostname']],
+            port:              i['port'],
+            route_service_url: i['route_service_url']
+          }
+        end
+
+        ::Diego::Bbs::Models::Proto_routes.new(
+          routes: [
+            ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+              key:   'cf-router',
+              value: MultiJson.dump(http_routes)
+            ),
+            ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+              key:   'tcp-router',
+              value: MultiJson.dump((info['tcp_routes'] || []))
+            )
+          ]
+        )
+      end
 
       def generate_volume_mounts
         app_volume_mounts   = app_request['volume_mounts'].as_json

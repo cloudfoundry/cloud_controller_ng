@@ -7,8 +7,8 @@ module VCAP::CloudController
 
       describe '#build_app_lrp' do
         let(:app_details_from_protocol) do
-          json                = MultiJson.load(protocol.desire_app_request(process, default_health_check_timeout))
-          json['environment'] = environment_variables
+          json                      = MultiJson.load(protocol.desire_app_request(process, default_health_check_timeout))
+          json['environment']       = environment_variables
           json['isolation_segment'] = 'placement-tag'
           json.merge!(app_detail_overrides)
         end
@@ -341,6 +341,174 @@ module VCAP::CloudController
               lrp = builder.build_app_lrp
 
               expect(lrp.monitor).to eq(nil)
+            end
+          end
+
+          describe 'routes' do
+            before do
+              app_details_from_protocol['routing_info'] = {
+                'http_routes' => [
+                  {
+                    'hostname' => 'potato.example.com',
+                    'port'     => 8080
+                  },
+                  {
+                    'hostname'          => 'tomato.example.com',
+                    'port'              => 8080,
+                    'route_service_url' => 'https://potatosarebetter.example.com'
+                  }
+                ],
+                'tcp_routes' => [
+                  {
+                    'router_group_guid' => 'im-a-guid',
+                    'external_port'     => 1234,
+                    'container_port'    => 4321
+                  },
+                  {
+                    'router_group_guid' => 'im-probably-a-guid',
+                    'external_port'     => 789,
+                    'container_port'    => 987
+                  },
+                ]
+              }
+            end
+
+            it 'includes the correct routes' do
+              expected_routes = ::Diego::Bbs::Models::Proto_routes.new(
+                routes: [
+                  ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                    key:   'cf-router',
+                    value: [
+                      {
+                               'hostnames'         => ['potato.example.com'],
+                               'port'              => 8080,
+                               'route_service_url' => nil
+                             },
+                      {
+                        'hostnames'         => ['tomato.example.com'],
+                        'port'              => 8080,
+                        'route_service_url' => 'https://potatosarebetter.example.com'
+                      }
+                    ].to_json
+                  ),
+                  ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                    key:   'tcp-router',
+                    value: [
+                      {
+                        'router_group_guid' => 'im-a-guid',
+                        'external_port'     => 1234,
+                        'container_port'    => 4321
+                      },
+                      {
+                        'router_group_guid' => 'im-probably-a-guid',
+                        'external_port'     => 789,
+                        'container_port'    => 987
+                      }
+                    ].to_json
+                  )
+                ]
+              )
+
+              lrp = builder.build_app_lrp
+
+              expect(lrp.routes).to eq(expected_routes)
+            end
+
+            context 'when there are no http routes' do
+              before do
+                app_details_from_protocol['routing_info'] = {
+                  'tcp_routes' => [
+                    {
+                      'router_group_guid' => 'im-a-guid',
+                      'external_port'     => 1234,
+                      'container_port'    => 4321
+                    },
+                    {
+                      'router_group_guid' => 'im-probably-a-guid',
+                      'external_port'     => 789,
+                      'container_port'    => 987
+                    },
+                  ]
+                }
+              end
+
+              it 'includes empty cf-router entry' do
+                expected_routes = ::Diego::Bbs::Models::Proto_routes.new(
+                  routes: [
+                    ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                      key:   'cf-router',
+                      value: [].to_json
+                    ),
+                    ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                      key:   'tcp-router',
+                      value: [
+                        {
+                          'router_group_guid' => 'im-a-guid',
+                          'external_port'     => 1234,
+                          'container_port'    => 4321
+                        },
+                        {
+                          'router_group_guid' => 'im-probably-a-guid',
+                          'external_port'     => 789,
+                          'container_port'    => 987
+                        }
+                      ].to_json
+                    )
+                  ]
+                )
+
+                lrp = builder.build_app_lrp
+
+                expect(lrp.routes).to eq(expected_routes)
+              end
+            end
+
+            context 'when there are no tcp routes' do
+              before do
+                app_details_from_protocol['routing_info'] = {
+                  'http_routes' => [
+                    {
+                      'hostname' => 'potato.example.com',
+                      'port'     => 8080
+                    },
+                    {
+                      'hostname'          => 'tomato.example.com',
+                      'port'              => 8080,
+                      'route_service_url' => 'https://potatosarebetter.example.com'
+                    }
+                  ]
+                }
+              end
+
+              it 'includes empty tcp-router entry' do
+                expected_routes = ::Diego::Bbs::Models::Proto_routes.new(
+                  routes: [
+                    ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                      key:   'cf-router',
+                      value: [
+                        {
+                                 'hostnames'         => ['potato.example.com'],
+                                 'port'              => 8080,
+                                 'route_service_url' => nil
+                               },
+                        {
+                          'hostnames'         => ['tomato.example.com'],
+                          'port'              => 8080,
+                          'route_service_url' => 'https://potatosarebetter.example.com'
+                        }
+                      ].to_json
+                    ),
+                    ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                      key:   'tcp-router',
+                      value: [].to_json
+                    )
+                  ]
+                )
+
+                lrp = builder.build_app_lrp
+
+                expect(lrp.routes).to eq(expected_routes)
+              end
             end
           end
         end
