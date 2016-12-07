@@ -279,16 +279,26 @@ module VCAP::CloudController
       end
 
       describe 'health_check_http_endpoint' do
-        it 'can be set to a valid URL'
+        it 'can be set to a valid URL' do
+          app.health_check_type = 'http'
+          app.health_check_http_endpoint = 'http://google.com/v2'
+          expect(app).to be_valid
+        end
 
-        it 'cannot be set to an invalid URL'
-
-        context 'when the health_check_type is http' do
-          it 'can be set to a valid URL'
+        it 'cannot be set to an invalid URL' do
+          app.health_check_type = 'http'
+          app.health_check_http_endpoint = 'not-a-url'
+          expect(app).to_not be_valid
+          expect(app.errors.on(:health_check_http_endpoint)).to be_present
         end
 
         context 'when the health check_type is not http' do
-          it 'cannot be set'
+          it 'cannot be set' do
+            app.health_check_type = 'port'
+            app.health_check_http_endpoint = 'http://google.com/v2'
+            expect(app).to_not be_valid
+            expect(app.errors.on(:health_check_http_endpoint)).to be_present
+          end
         end
       end
 
