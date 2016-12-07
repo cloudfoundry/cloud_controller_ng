@@ -162,7 +162,6 @@ module VCAP::CloudController
     end
 
     def setup_db
-      logger.info "db config #{@config[:db]}"
       db_logger = Steno.logger('cc.db')
       DB.load_models(@config[:db], db_logger)
     end
