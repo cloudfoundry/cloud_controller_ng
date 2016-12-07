@@ -59,6 +59,7 @@ module VCAP::CloudController
             debug:                   { type: 'string' },
             disk_quota:              { type: 'integer' },
             environment_json:        { type: 'hash', default: {} },
+            health_check_http_endpoint: { type: 'string' },
             health_check_timeout:    { type: 'integer' },
             health_check_type:       { type: 'string', default: 'port' },
             instances:               { type: 'integer', default: 1 },
@@ -85,6 +86,7 @@ module VCAP::CloudController
             debug:                   { type: 'string' },
             disk_quota:              { type: 'integer' },
             environment_json:        { type: 'hash' },
+            health_check_http_endpoint: { type: 'string' },
             health_check_timeout:    { type: 'integer' },
             health_check_type:       { type: 'string' },
             instances:               { type: 'integer' },
@@ -315,6 +317,25 @@ module VCAP::CloudController
             end
           end
         end
+      end
+
+      it 'creates the app' do
+        request = {
+          name:             'maria',
+          space_guid:       space.guid,
+          environment_json: { 'KEY' => 'val' },
+          buildpack:        'http://example.com/buildpack',
+          health_check_http_endpoint: 'http://example.com/healthz',
+          health_check_type: 'http',
+        }
+
+        set_current_user(admin_user, admin: true)
+
+        post '/v2/apps', MultiJson.dump(request)
+
+        v2_app = App.last
+        expect(v2_app.health_check_type).to eq('http')
+        expect(v2_app.health_check_http_endpoint).to eq('http://example.com/healthz')
       end
 
       it 'creates the app' do

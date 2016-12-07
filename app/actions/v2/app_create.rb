@@ -27,6 +27,7 @@ module VCAP::CloudController
             command:                 request_attrs['command'],
             console:                 request_attrs['console'],
             debug:                   request_attrs['debug'],
+            health_check_http_endpoint:       request_attrs['health_check_http_endpoint'],
             health_check_type:       request_attrs['health_check_type'],
             health_check_timeout:    request_attrs['health_check_timeout'],
             diego:                   request_attrs['diego'],

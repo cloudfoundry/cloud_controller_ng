@@ -40,6 +40,27 @@ module VCAP::CloudController
 
         expect(v3_app.guid).to eq(v2_app.guid)
       end
+      context 'when the health_check_type is http' do
+        it 'creates the app' do
+          stack = Stack.make(name: 'stacks-on-stacks')
+
+          request_attrs = {
+            'name'              => 'maria',
+            'space_guid'        => space.guid,
+            'environment_json'  => { 'KEY' => 'val' },
+            'buildpack'         => 'http://example.com/buildpack',
+            'state'             => 'STOPPED',
+            'health_check_type' => 'http',
+            'health_check_http_endpoint' => 'http://example.com/healthz',
+            'stack_guid'        => stack.guid
+          }
+
+          v2_app = app_create.create(request_attrs)
+
+          expect(v2_app.health_check_type).to eq('http')
+          expect(v2_app.health_check_http_endpoint).to eq('http://example.com/healthz')
+        end
+      end
 
       context 'when custom buildpacks are disabled' do
         before do
