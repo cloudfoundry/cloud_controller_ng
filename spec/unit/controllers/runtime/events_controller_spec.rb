@@ -58,7 +58,6 @@ module VCAP::CloudController
 
       context 'as an org auditor' do
         before do
-          # @space_a.organization.add_auditor(@user_a)
           @org_a.add_auditor(@user_a)
           expect(@user_a.spaces).to be_empty
           set_current_user(@user_a)
