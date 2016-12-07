@@ -15,6 +15,34 @@ module VCAP::CloudController
         end
       end
 
+      def update_app(process_guid, lrp_update)
+        logger.info('update.app.request', process_guid: process_guid)
+
+        handle_diego_errors do
+          response = @client.update_desired_lrp(process_guid, lrp_update)
+
+          logger.info('update.app.response', process_guid: process_guid, error: response.error)
+          response
+        end
+      end
+
+      def app_exists?(process_guid)
+        logger.info('app.exists.request', process_guid: process_guid)
+
+        handle_diego_errors do
+          response = @client.desired_lrp_by_process_guid(process_guid)
+          logger.info('app.exists.response', process_guid: process_guid, error: response.error)
+
+          if response.error
+            return false if response.error.type == ::Diego::Bbs::Models::Error::Type::ResourceNotFound
+          end
+
+          response
+        end
+
+        true
+      end
+
       private
 
       def handle_diego_errors
@@ -30,7 +58,7 @@ module VCAP::CloudController
       end
 
       def logger
-        @logger ||= Steno.logger('cc.bbs.task_client')
+        @logger ||= Steno.logger('cc.bbs.apps_client')
       end
     end
   end

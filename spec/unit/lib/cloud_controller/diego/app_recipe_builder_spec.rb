@@ -7,7 +7,7 @@ module VCAP::CloudController
 
       describe '#build_app_lrp' do
         let(:app_details_from_protocol) do
-          json = MultiJson.load(protocol.desire_app_request(process, default_health_check_timeout))
+          json                = MultiJson.load(protocol.desire_app_request(process, default_health_check_timeout))
           json['environment'] = environment_variables
           json.merge!(app_detail_overrides)
         end
@@ -24,17 +24,17 @@ module VCAP::CloudController
         let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
         let(:process) do
           process = ProcessModel.make(:process,
-            app: app_model,
-            state: 'STARTED',
-            diego: true,
-            guid: 'banana-guid',
-            type: 'web',
+            app:                  app_model,
+            state:                'STARTED',
+            diego:                true,
+            guid:                 'banana-guid',
+            type:                 'web',
             health_check_timeout: 12,
-            instances: 21,
-            memory: 128,
-            disk_quota: 256,
-            command: command,
-            file_descriptors: 32,
+            instances:            21,
+            memory:               128,
+            disk_quota:           256,
+            command:              command,
+            file_descriptors:     32,
           )
           process.this.update(updated_at: Time.at(2))
           process.reload
@@ -44,7 +44,7 @@ module VCAP::CloudController
         let(:route_without_service) { Route.make(space: process.space) }
         let(:route_with_service) do
           si = ManagedServiceInstance.make(:routing, space: process.space)
-          r = Route.make(space: process.space)
+          r  = Route.make(space: process.space)
           RouteBinding.make(route: r, service_instance: si, route_service_url: 'http://foobar.com')
           r
         end
@@ -74,12 +74,12 @@ module VCAP::CloudController
         let(:expected_app_run_action) do
           ::Diego::Bbs::Models::Action.new(
             run_action: ::Diego::Bbs::Models::RunAction.new(
-              path: '/tmp/lifecycle/launcher',
-              args: ['app', command, execution_metadata],
-              log_source: 'APP/PROC/WEB',
+              path:            '/tmp/lifecycle/launcher',
+              args:            ['app', command, execution_metadata],
+              log_source:      'APP/PROC/WEB',
               resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-              env: expected_action_environment_variables,
-              user: 'lrp-action-user',
+              env:             expected_action_environment_variables,
+              user:            'lrp-action-user',
             )
           )
         end
@@ -88,26 +88,26 @@ module VCAP::CloudController
           ::Diego::Bbs::Models::Action.new(
             timeout_action: ::Diego::Bbs::Models::TimeoutAction.new(
               timeout_ms: 30000,
-              action: ::Diego::Bbs::Models::Action.new(
+              action:     ::Diego::Bbs::Models::Action.new(
                 parallel_action: ::Diego::Bbs::Models::ParallelAction.new(
                   actions: [
                     ::Diego::Bbs::Models::Action.new(
                       run_action: ::Diego::Bbs::Models::RunAction.new(
-                        user: 'lrp-action-user',
-                        path: '/tmp/lifecycle/healthcheck',
-                        args: ['-port=4444'],
-                        resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                        log_source: HEALTH_LOG_SOURCE,
+                        user:                'lrp-action-user',
+                        path:                '/tmp/lifecycle/healthcheck',
+                        args:                ['-port=4444'],
+                        resource_limits:     ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                        log_source:          HEALTH_LOG_SOURCE,
                         suppress_log_output: true,
                       )
                     ),
                     ::Diego::Bbs::Models::Action.new(
                       run_action: ::Diego::Bbs::Models::RunAction.new(
-                        user: 'lrp-action-user',
-                        path: '/tmp/lifecycle/healthcheck',
-                        args: ['-port=5555'],
-                        resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                        log_source: HEALTH_LOG_SOURCE,
+                        user:                'lrp-action-user',
+                        path:                '/tmp/lifecycle/healthcheck',
+                        args:                ['-port=5555'],
+                        resource_limits:     ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                        log_source:          HEALTH_LOG_SOURCE,
                         suppress_log_output: true,
                       )
                     )
@@ -121,8 +121,8 @@ module VCAP::CloudController
         let(:expected_cached_dependencies) do
           [
             ::Diego::Bbs::Models::CachedDependency.new(
-              from: 'lifecycle-from',
-              to: 'lifecycle-to',
+              from:      'lifecycle-from',
+              to:        'lifecycle-to',
               cache_key: 'lifecycle-key',
             ),
           ]
@@ -132,25 +132,25 @@ module VCAP::CloudController
 
         let(:rule_dns_everywhere) do
           ::Diego::Bbs::Models::SecurityGroupRule.new(
-            protocol: 'udp',
+            protocol:     'udp',
             destinations: ['0.0.0.0/0'],
-            ports: [53]
+            ports:        [53]
           )
         end
         let(:rule_http_everywhere) do
           ::Diego::Bbs::Models::SecurityGroupRule.new(
-            protocol: 'tcp',
+            protocol:     'tcp',
             destinations: ['0.0.0.0/0'],
-            ports: [80],
-            log: true
+            ports:        [80],
+            log:          true
           )
         end
         let(:rule_staging_specific) do
           ::Diego::Bbs::Models::SecurityGroupRule.new(
-            protocol: 'tcp',
+            protocol:     'tcp',
             destinations: ['0.0.0.0/0'],
-            ports: [443],
-            log: true
+            ports:        [443],
+            log:          true
           )
         end
         let(:execution_metadata) { { user: execution_metadata_user }.to_json }
@@ -174,17 +174,17 @@ module VCAP::CloudController
           let(:lifecycle_type) { :buildpack }
           let(:droplet) do
             DropletModel.make(lifecycle_type,
-              package: package,
-              state: DropletModel::STAGED_STATE,
+              package:            package,
+              state:              DropletModel::STAGED_STATE,
               execution_metadata: execution_metadata,
-              droplet_hash: 'droplet-hash',
+              droplet_hash:       'droplet-hash',
             )
           end
           let(:config) do
             {
               diego: {
                 use_privileged_containers_for_running: false,
-                lifecycle_bundles: {
+                lifecycle_bundles:                     {
                   'potato-stack' => 'some-uri'
                 }
               }
@@ -193,8 +193,8 @@ module VCAP::CloudController
           let(:expected_cached_dependencies) do
             [
               ::Diego::Bbs::Models::CachedDependency.new(
-                from: 'lifecycle-from',
-                to: 'lifecycle-to',
+                from:      'lifecycle-from',
+                to:        'lifecycle-to',
                 cache_key: 'lifecycle-cache-key',
               ),
             ]
@@ -204,21 +204,21 @@ module VCAP::CloudController
 
           let(:desired_lrp_builder) do
             instance_double(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder,
-              cached_dependencies: expected_cached_dependencies,
-              root_fs: 'buildpack_root_fs',
-              setup: expected_setup_action,
+              cached_dependencies:          expected_cached_dependencies,
+              root_fs:                      'buildpack_root_fs',
+              setup:                        expected_setup_action,
               global_environment_variables: env_vars,
-              privileged?: false,
-              ports: lrp_builder_ports,
-              action_user: 'lrp-action-user',
+              privileged?:                  false,
+              ports:                        lrp_builder_ports,
+              action_user:                  'lrp-action-user',
             )
           end
 
           before do
             VCAP::CloudController::BuildpackLifecycleDataModel.make(
-              app: app_model,
+              app:       app_model,
               buildpack: nil,
-              stack: 'potato-stack',
+              stack:     'potato-stack',
             )
 
             allow(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).and_return(desired_lrp_builder)
@@ -261,11 +261,11 @@ module VCAP::CloudController
               [
                 {
                   container_dir: '/data/images',
-                  mode: 'r',
-                  device_type: 'shared',
-                  device: {
-                    driver: 'cephfs',
-                    volume_id: 'abc',
+                  mode:          'r',
+                  device_type:   'shared',
+                  device:        {
+                    driver:       'cephfs',
+                    volume_id:    'abc',
                     mount_config: {
                       key: 'value'
                     }
@@ -273,11 +273,11 @@ module VCAP::CloudController
                 },
                 {
                   container_dir: '/data/scratch',
-                  mode: 'rw',
-                  device_type: 'shared',
-                  device: {
-                    driver: 'local',
-                    volume_id: 'def',
+                  mode:          'rw',
+                  device_type:   'shared',
+                  device:        {
+                    driver:       'local',
+                    volume_id:    'def',
                     mount_config: {}
                   }
                 }
@@ -292,16 +292,16 @@ module VCAP::CloudController
               lrp = builder.build_app_lrp
               expect(lrp.volume_mounts).to eq([
                 ::Diego::Bbs::Models::VolumeMount.new(
-                  driver: 'cephfs',
+                  driver:        'cephfs',
                   container_dir: '/data/images',
-                  mode: 'r',
-                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'abc', mount_config: { 'key' => 'value' }.to_json),
+                  mode:          'r',
+                  shared:        ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'abc', mount_config: { 'key' => 'value' }.to_json),
                 ),
                 ::Diego::Bbs::Models::VolumeMount.new(
-                  driver: 'local',
+                  driver:        'local',
                   container_dir: '/data/scratch',
-                  mode: 'rw',
-                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'def', mount_config: ''),
+                  mode:          'rw',
+                  shared:        ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'def', mount_config: ''),
                 ),
               ])
             end
@@ -348,17 +348,17 @@ module VCAP::CloudController
           let(:lifecycle_type) { :docker }
           let(:droplet) do
             DropletModel.make(:docker,
-              package: package,
-              state: DropletModel::STAGED_STATE,
-              execution_metadata: execution_metadata,
+              package:              package,
+              state:                DropletModel::STAGED_STATE,
+              execution_metadata:   execution_metadata,
               docker_receipt_image: 'docker-receipt-image',
             )
           end
           let(:old_expected_cached_dependencies) do
             [
               ::Diego::Bbs::Models::CachedDependency.new(
-                from: 'http://file-server.com/v1/static/the/docker/lifecycle/path.tgz',
-                to: '/tmp/lifecycle',
+                from:      'http://file-server.com/v1/static/the/docker/lifecycle/path.tgz',
+                to:        '/tmp/lifecycle',
                 cache_key: 'docker-lifecycle',
               ),
             ]
@@ -366,13 +366,13 @@ module VCAP::CloudController
 
           let(:desired_lrp_builder) do
             instance_double(VCAP::CloudController::Diego::Docker::DesiredLrpBuilder,
-              cached_dependencies: expected_cached_dependencies,
-              root_fs: 'docker_root_fs',
-              setup: nil,
+              cached_dependencies:          expected_cached_dependencies,
+              root_fs:                      'docker_root_fs',
+              setup:                        nil,
               global_environment_variables: [],
-              privileged?: false,
-              ports: lrp_builder_ports,
-              action_user: 'lrp-action-user',
+              privileged?:                  false,
+              ports:                        lrp_builder_ports,
+              action_user:                  'lrp-action-user',
             )
           end
 
@@ -422,7 +422,7 @@ module VCAP::CloudController
             context 'when the memory limit is below the minimum' do
               before { process.memory = MIN_CPU_PROXY - 1 }
               it 'sets the cpu_weight to 100*min/max' do
-                lrp = builder.build_app_lrp
+                lrp             = builder.build_app_lrp
                 expected_weight = (100 * MIN_CPU_PROXY / MAX_CPU_PROXY).to_i
                 expect(lrp.cpu_weight).to eq(expected_weight)
               end
@@ -444,12 +444,12 @@ module VCAP::CloudController
             let(:expected_app_run_action) do
               ::Diego::Bbs::Models::Action.new(
                 run_action: ::Diego::Bbs::Models::RunAction.new(
-                  path: '/tmp/lifecycle/launcher',
-                  args: ['app', command, execution_metadata],
-                  log_source: APP_LOG_SOURCE,
+                  path:            '/tmp/lifecycle/launcher',
+                  args:            ['app', command, execution_metadata],
+                  log_source:      APP_LOG_SOURCE,
                   resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: 32),
-                  env: expected_action_environment_variables,
-                  user: 'lrp-action-user',
+                  env:             expected_action_environment_variables,
+                  user:            'lrp-action-user',
                 )
               )
             end
@@ -508,8 +508,8 @@ module VCAP::CloudController
             let(:expected_diego_sshd_run_action) do
               ::Diego::Bbs::Models::Action.new(
                 run_action: ::Diego::Bbs::Models::RunAction.new(
-                  path: '/tmp/lifecycle/diego-sshd',
-                  args: [ # TODO: generate rsa keypair like "code.cloudfoundry.org/diego-ssh/keys"
+                  path:            '/tmp/lifecycle/diego-sshd',
+                  args:            [ # TODO: generate rsa keypair like "code.cloudfoundry.org/diego-ssh/keys"
                     '-address=0.0.0.0:1111',
                     '-hostKey=pem-host-private-key',
                     '-authorizedKey=authorized-user-key',
@@ -517,8 +517,8 @@ module VCAP::CloudController
                     '-logLevel=fatal',
                   ],
                   resource_limits: expected_app_run_action.resource_limits,
-                  env: expected_app_run_action.env,
-                  user: expected_app_run_action.user,
+                  env:             expected_app_run_action.env,
+                  user:            expected_app_run_action.user,
                 )
               )
             end
@@ -533,11 +533,11 @@ module VCAP::CloudController
               [
                 {
                   container_dir: '/data/images',
-                  mode: 'r',
-                  device_type: 'shared',
-                  device: {
-                    driver: 'cephfs',
-                    volume_id: 'abc',
+                  mode:          'r',
+                  device_type:   'shared',
+                  device:        {
+                    driver:       'cephfs',
+                    volume_id:    'abc',
                     mount_config: {
                       key: 'value'
                     }
@@ -545,11 +545,11 @@ module VCAP::CloudController
                 },
                 {
                   container_dir: '/data/scratch',
-                  mode: 'rw',
-                  device_type: 'shared',
-                  device: {
-                    driver: 'local',
-                    volume_id: 'def',
+                  mode:          'rw',
+                  device_type:   'shared',
+                  device:        {
+                    driver:       'local',
+                    volume_id:    'def',
                     mount_config: {}
                   }
                 }
@@ -564,20 +564,36 @@ module VCAP::CloudController
               lrp = builder.build_app_lrp
               expect(lrp.volume_mounts).to eq([
                 ::Diego::Bbs::Models::VolumeMount.new(
-                  driver: 'cephfs',
+                  driver:        'cephfs',
                   container_dir: '/data/images',
-                  mode: 'r',
-                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'abc', mount_config: { 'key' => 'value' }.to_json),
+                  mode:          'r',
+                  shared:        ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'abc', mount_config: { 'key' => 'value' }.to_json),
                 ),
                 ::Diego::Bbs::Models::VolumeMount.new(
-                  driver: 'local',
+                  driver:        'local',
                   container_dir: '/data/scratch',
-                  mode: 'rw',
-                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'def', mount_config: ''),
+                  mode:          'rw',
+                  shared:        ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'def', mount_config: ''),
                 ),
               ])
             end
           end
+        end
+      end
+
+      describe '#build_app_lrp_update' do
+        let(:config) { {} }
+        let(:app_details_from_protocol) { {} }
+        let(:process) do
+          process = ProcessModel.make(:process, instances: 7)
+          process.this.update(updated_at: Time.at(2))
+          process.reload
+        end
+
+        it 'returns a DesiredLRPUpdate' do
+          result = builder.build_app_lrp_update
+          expect(result.instances).to eq(7)
+          expect(result.annotation).to eq(Time.at(2).to_f.to_s)
         end
       end
     end

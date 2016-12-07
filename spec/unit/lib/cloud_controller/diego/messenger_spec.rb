@@ -91,14 +91,14 @@ module VCAP::CloudController
             TestConfig.override(diego: { temporary_local_apps: true })
 
             allow(protocol).to receive(:desire_app_message).and_return(message)
-            allow(Diego::AppRecipeBuilder).to receive(:new).with(config, process, message).and_return(app_recipe_builder)
+            allow(Diego::AppRecipeBuilder).to receive(:new).with(config: config, process: process, app_request: message).and_return(app_recipe_builder)
           end
 
-          it 'sends the staging message to the bbs' do
+          it 'attempts to create or update the app by delegating to the desire app handler' do
+            allow(DesireAppHandler).to receive(:create_or_update_app)
             messenger.send_desire_request(process, config)
 
-            expect(app_recipe_builder).to have_received(:build_app_lrp)
-            expect(bbs_apps_client).to have_received(:desire_app).with(build_lrp)
+            expect(DesireAppHandler).to have_received(:create_or_update_app).with(process_guid, app_recipe_builder, bbs_apps_client)
             expect(protocol).to have_received(:desire_app_message).with(process, default_health_check_timeout)
           end
         end

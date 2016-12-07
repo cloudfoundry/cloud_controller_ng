@@ -8,7 +8,7 @@ module VCAP::CloudController::Diego
       let(:bbs_client) { instance_double(::Diego::Client, desire_lrp: lurp_response) }
 
       let(:lurp) { ::Diego::Bbs::Models::DesiredLRP.new }
-      let(:lurp_response) { ::Diego::Bbs::Models::DesiredLRPResponse.new }
+      let(:lurp_response) { ::Diego::Bbs::Models::DesiredLRPLifecycleResponse.new }
 
       it 'sends the lrp to diego' do
         client.desire_app(lurp)
@@ -32,7 +32,7 @@ module VCAP::CloudController::Diego
       context 'when bbs returns a response with an error' do
         before do
           allow(bbs_client).to receive(:desire_lrp).and_return(
-            ::Diego::Bbs::Models::DesiredLRPResponse.new(error: ::Diego::Bbs::Models::Error.new(message: 'error message'))
+            ::Diego::Bbs::Models::DesiredLRPLifecycleResponse.new(error: ::Diego::Bbs::Models::Error.new(message: 'error message'))
           )
         end
 
@@ -41,6 +41,99 @@ module VCAP::CloudController::Diego
             client.desire_app(lurp)
           }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('RunnerError')
+          end
+        end
+      end
+    end
+
+    describe '#app_exists?' do
+      let(:bbs_client) { instance_double(::Diego::Client) }
+      let(:bbs_response) { ::Diego::Bbs::Models::DesiredLRPResponse.new(error: error) }
+      let(:process_guid) { 'process-guid' }
+      let(:error) { nil }
+
+      before do
+        allow(bbs_client).to receive(:desired_lrp_by_process_guid).with('process-guid').and_return(bbs_response)
+      end
+
+      it 'returns true if the app exists' do
+        expect(client.app_exists?(process_guid)).to be_truthy
+      end
+
+      context 'when the bbs response contains a resource not found error' do
+        let(:error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::ResourceNotFound) }
+
+        it 'returns false' do
+          expect(client.app_exists?(process_guid)).to be_falsey
+        end
+      end
+
+      context 'when the bbs response contains any other error' do
+        let(:error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::UnknownError, message: 'error message') }
+
+        it 'raises an api error' do
+          expect {
+            client.app_exists?(process_guid)
+          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+            expect(e.name).to eq('RunnerError')
+          end
+        end
+      end
+
+      context 'when bbs client errors' do
+        before do
+          allow(bbs_client).to receive(:desired_lrp_by_process_guid).and_raise(::Diego::Error.new('boom'))
+        end
+
+        it 'raises an api error' do
+          expect {
+            client.app_exists?(process_guid)
+          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+            expect(e.name).to eq('RunnerUnavailable')
+          end
+        end
+      end
+    end
+
+    describe '#update_app' do
+      let(:bbs_client) { instance_double(::Diego::Client) }
+      let(:bbs_response) { ::Diego::Bbs::Models::DesiredLRPLifecycleResponse.new(error: error) }
+      let(:error) { nil }
+
+      let(:process_guid) { 'process-guid' }
+      let(:lrp_update) { ::Diego::Bbs::Models::DesiredLRPUpdate.new(instances: 3) }
+
+      before do
+        allow(bbs_client).to receive(:update_desired_lrp).with(process_guid, lrp_update).and_return(bbs_response)
+      end
+
+      it 'sends the update lrp to diego' do
+        client.update_app(process_guid, lrp_update)
+        expect(bbs_client).to have_received(:update_desired_lrp).with(process_guid, lrp_update)
+      end
+
+      context 'when the bbs response contains an error' do
+        let(:error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::UnknownError, message: 'error message') }
+
+        it 'raises an api error' do
+          expect {
+            client.update_app(process_guid, lrp_update)
+          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+            expect(e.name).to eq('RunnerError')
+          end
+        end
+      end
+
+      context 'when bbs client errors' do
+        before do
+          allow(bbs_client).to receive(:update_desired_lrp).and_raise(::Diego::Error.new('boom'))
+        end
+
+        it 'raises an api error' do
+          expect {
+            client.update_app(process_guid, lrp_update)
+          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+            expect(e.name).to eq('RunnerUnavailable')
           end
         end
       end

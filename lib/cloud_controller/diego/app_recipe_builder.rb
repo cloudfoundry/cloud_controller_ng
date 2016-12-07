@@ -45,6 +45,13 @@ module VCAP::CloudController
         )
       end
 
+      def build_app_lrp_update
+        ::Diego::Bbs::Models::DesiredLRPUpdate.new(
+          instances:  process.instances,
+          annotation: process.updated_at.to_f.to_s,
+        )
+      end
+
       private
 
       attr_reader :config, :process, :app_request
