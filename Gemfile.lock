@@ -100,8 +100,8 @@ GEM
       activesupport
       tzinfo
     cloudfront-signer (3.0.0)
-    codeclimate-test-reporter (0.6.0)
-      simplecov (>= 0.7.1, < 1.0.0)
+    codeclimate-test-reporter (1.0.3)
+      simplecov
     coderay (1.1.1)
     cookiejar (0.3.0)
     crack (0.4.2)
@@ -123,7 +123,7 @@ GEM
     eventmachine (1.0.9.1)
     excon (0.51.0)
     extlib (0.9.16)
-    fakefs (0.8.1)
+    fakefs (0.10.0)
     faraday (0.10.0)
       multipart-post (>= 1.2, < 3)
     fission (0.5.0)
@@ -329,7 +329,7 @@ GEM
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
-    pry-byebug (3.4.0)
+    pry-byebug (3.4.2)
       byebug (~> 9.0)
       pry (~> 0.10)
     public_suffix (1.5.3)
@@ -359,7 +359,7 @@ GEM
       trollop
     retriable (1.4.1)
     rfc822 (0.1.5)
-    roodi (4.0.0)
+    roodi (5.0.0)
       ruby_parser (~> 3.2, >= 3.2.2)
     rspec (3.4.0)
       rspec-core (~> 3.4.0)
@@ -372,12 +372,12 @@ GEM
     rspec-expectations (3.4.0)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.4.0)
-    rspec-instafail (0.2.5)
+    rspec-instafail (1.0.0)
       rspec
     rspec-its (1.2.0)
       rspec-core (>= 3.0.0)
       rspec-expectations (>= 3.0.0)
-    rspec-mocks (3.4.0)
+    rspec-mocks (3.4.1)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.4.0)
     rspec-rails (3.4.0)
@@ -398,19 +398,19 @@ GEM
     ruby-debug-ide (0.6.0)
       rake (>= 0.8.1)
     ruby-progressbar (1.8.1)
-    ruby_parser (3.6.3)
+    ruby_parser (3.8.3)
       sexp_processor (~> 4.1)
     safe_yaml (1.0.4)
     sequel (4.41.0)
-    sexp_processor (4.4.4)
+    sexp_processor (4.7.0)
     signet (0.7.3)
       addressable (~> 2.3)
       faraday (~> 0.9)
       jwt (~> 1.5)
       multi_json (~> 1.10)
-    simplecov (0.11.2)
+    simplecov (0.12.0)
       docile (~> 1.1.0)
-      json (~> 1.8)
+      json (>= 1.8, < 3)
       simplecov-html (~> 0.10.0)
     simplecov-html (0.10.0)
     sinatra (1.4.7)
@@ -507,7 +507,7 @@ DEPENDENCIES
   pg (= 0.19.0)
   protobuf
   pry-byebug
-  public_suffix
+  public_suffix (~> 1.0)
   rack-test
   railties
   rake

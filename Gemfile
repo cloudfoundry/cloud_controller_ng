@@ -39,7 +39,7 @@ gem 'statsd-ruby'
 gem 'activemodel'
 gem 'actionpack'
 gem 'actionview'
-gem 'public_suffix'
+gem 'public_suffix', '~> 1.0'
 gem 'protobuf'
 
 # Requiring this particular commit to get a fix to a race condition when subscribing before a connection is made.
