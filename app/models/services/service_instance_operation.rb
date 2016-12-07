@@ -7,6 +7,10 @@ module VCAP::CloudController
 
     serialize_attributes :json, :proposed_changes
 
+    def validate
+      validates_max_length 10_000, :broker_provided_operation if broker_provided_operation
+    end
+
     def proposed_changes
       super || {}
     end

@@ -51,5 +51,19 @@ module VCAP::CloudController
         expect(operation.state).to eq 'finished'
       end
     end
+
+    describe 'validations' do
+      describe 'broker_provided_operation' do
+        it 'can be smaller than 10k' do
+          operation.broker_provided_operation = '.' * 10000
+          expect(operation).to be_valid
+        end
+
+        it 'cannot be larger than 10k' do
+          operation.broker_provided_operation = '.' * 11000
+          expect(operation).not_to be_valid
+        end
+      end
+    end
   end
 end
