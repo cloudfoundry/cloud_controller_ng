@@ -55,7 +55,7 @@ gem 'cf-message-bus', '~> 0.3.0'
 gem 'bits_service_client', git: 'https://github.com/cloudfoundry-incubator/bits-service-client.git'
 
 group :db do
-  gem 'mysql2', '0.4.4'
+  gem 'mysql2', '0.4.5'
   gem 'pg', '0.19.0'
 end
 
