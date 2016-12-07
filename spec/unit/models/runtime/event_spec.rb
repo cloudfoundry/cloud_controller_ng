@@ -21,6 +21,39 @@ module VCAP::CloudController
 
     it { is_expected.to have_timestamp_columns }
 
+    context 'when no space is specified' do
+      let(:event_attrs) {
+        {
+          type: 'audit.test',
+          actor: 'frank',
+          actor_type: 'dude',
+          actor_name: 'Frank N Stein',
+          actee: 'vlad',
+          actee_type: 'vampire',
+          actee_name: 'Count Vlad Dracula The Impaler',
+          timestamp: Time.new(1999, 9, 9).utc,
+          metadata: {}
+        }
+      }
+
+      it 'fails to create the event' do
+        expect { Event.create(event_attrs) }.to raise_error(Event::EventValidationError)
+      end
+
+      context 'when an organization is specified' do
+        before do
+          event_attrs[:organization_guid] = space.organization.guid
+        end
+
+        it 'creates an event tied just to the organization' do
+          expect { Event.create(event_attrs) }.to_not raise_error
+
+          an_event = Event.first(actor: 'frank')
+          expect(an_event.actee).to eq('vlad')
+        end
+      end
+    end
+
     describe 'Associations' do
       it { is_expected.to have_associated :space }
     end
