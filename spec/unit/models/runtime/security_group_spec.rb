@@ -535,6 +535,16 @@ module VCAP::CloudController
               end
 
               context 'bad' do
+                context 'when its empty' do
+                  let(:rule) { build_all_rule('destination' => '') }
+
+                  it 'is not valid' do
+                    expect(subject).not_to be_valid
+                    expect(subject.errors[:rules].length).to eq 1
+                    expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+                  end
+                end
+
                 context 'when it contains non-CIDR characters' do
                   let(:rule) { build_all_rule('destination' => 'asdf') }
 

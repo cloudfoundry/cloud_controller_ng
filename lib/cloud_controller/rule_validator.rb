@@ -31,6 +31,7 @@ module CloudController
     end
 
     def self.validate_destination(destination)
+      return false if destination.empty?
       address_list = destination.split('-')
 
       return false if address_list.length > 2
