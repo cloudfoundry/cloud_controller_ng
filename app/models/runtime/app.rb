@@ -109,14 +109,14 @@ module VCAP::CloudController
     export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
                       :detected_buildpack, :detected_buildpack_guid, :environment_json, :memory, :instances, :disk_quota,
                       :state, :version, :command, :console, :debug, :staging_task_id,
-                      :package_state, :health_check_type, :health_check_timeout,
+                      :package_state, :health_check_type, :health_check_timeout, :health_check_http_endpoint,
                       :staging_failed_reason, :staging_failed_description, :diego, :docker_image, :package_updated_at,
                       :detected_start_command, :enable_ssh, :docker_credentials_json, :ports
 
     import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
       :state, :command, :console, :debug, :staging_task_id,
-      :service_binding_guids, :route_guids, :health_check_type,
+      :service_binding_guids, :route_guids, :health_check_type, :health_check_http_endpoint,
       :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh,
       :docker_credentials_json, :ports
 
