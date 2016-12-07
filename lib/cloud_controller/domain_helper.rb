@@ -1,6 +1,6 @@
 module CloudController
   module DomainHelper
-    DOMAIN_REGEX = /^(([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\.)+([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])$/ix
+    DOMAIN_REGEX = /\A(([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\.)+([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\Z/ix
 
     def self.intermediate_domains(name)
       return [] unless name && name =~ DOMAIN_REGEX
