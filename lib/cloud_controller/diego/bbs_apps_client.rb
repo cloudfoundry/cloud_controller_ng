@@ -11,6 +11,9 @@ module VCAP::CloudController
         handle_diego_errors do
           response = @client.desire_lrp(lrp)
           logger.info('desire.app.response', process_guid: lrp.process_guid, error: response.error)
+
+          return response if response.error.try(:type) == ::Diego::Bbs::Models::Error::Type::ResourceConflict
+
           response
         end
       end
@@ -20,8 +23,10 @@ module VCAP::CloudController
 
         handle_diego_errors do
           response = @client.update_desired_lrp(process_guid, lrp_update)
-
           logger.info('update.app.response', process_guid: process_guid, error: response.error)
+
+          return response if response.error.try(:type) == ::Diego::Bbs::Models::Error::Type::ResourceConflict
+
           response
         end
       end

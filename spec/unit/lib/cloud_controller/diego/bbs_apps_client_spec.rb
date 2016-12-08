@@ -8,7 +8,8 @@ module VCAP::CloudController::Diego
       let(:bbs_client) { instance_double(::Diego::Client, desire_lrp: lurp_response) }
 
       let(:lurp) { ::Diego::Bbs::Models::DesiredLRP.new }
-      let(:lurp_response) { ::Diego::Bbs::Models::DesiredLRPLifecycleResponse.new }
+      let(:lurp_response) { ::Diego::Bbs::Models::DesiredLRPLifecycleResponse.new(error: error) }
+      let(:error) { nil }
 
       it 'sends the lrp to diego' do
         client.desire_app(lurp)
@@ -29,12 +30,16 @@ module VCAP::CloudController::Diego
         end
       end
 
-      context 'when bbs returns a response with an error' do
-        before do
-          allow(bbs_client).to receive(:desire_lrp).and_return(
-            ::Diego::Bbs::Models::DesiredLRPLifecycleResponse.new(error: ::Diego::Bbs::Models::Error.new(message: 'error message'))
-          )
+      context 'when the bbs response contains a conflict error' do
+        let(:error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::ResourceConflict) }
+
+        it 'returns false' do
+          expect { client.desire_app(lurp) }.not_to raise_error
         end
+      end
+
+      context 'when bbs returns a response with any other error' do
+        let(:error) { ::Diego::Bbs::Models::Error.new(message: 'error message') }
 
         it 'raises an api error' do
           expect {
@@ -112,7 +117,15 @@ module VCAP::CloudController::Diego
         expect(bbs_client).to have_received(:update_desired_lrp).with(process_guid, lrp_update)
       end
 
-      context 'when the bbs response contains an error' do
+      context 'when the bbs response contains a conflict error' do
+        let(:error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::ResourceConflict) }
+
+        it 'returns false' do
+          expect { client.update_app(process_guid, lrp_update) }.not_to raise_error
+        end
+      end
+
+      context 'when the bbs response contains any other error' do
         let(:error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::UnknownError, message: 'error message') }
 
         it 'raises an api error' do
