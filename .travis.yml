@@ -28,6 +28,9 @@ before_script:
 script:
   - bundle exec rake $TASKS
 
+after_script:
+  - codeclimate-test-reporter
+
 services:
   - mysql
   - postgresql
