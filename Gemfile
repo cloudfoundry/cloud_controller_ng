@@ -11,6 +11,7 @@ gem 'eventmachine', '~> 1.0.9'
 # that has not been updated in the fog gem. See https://www.pivotaltracker.com/story/show/128669549 for more info
 gem 'fog-google', '~> 0.4.0'
 gem 'google-api-client', '~> 0.8.6'
+gem 'fog-azure-rm', '~> 0.1.2'
 
 gem 'fog'
 gem 'i18n'

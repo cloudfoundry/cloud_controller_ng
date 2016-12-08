@@ -5,6 +5,7 @@
 # they will be ignored and preserved.
 
 require 'fog'
+require 'fog/azurerm'
 require 'httpclient'
 require 'steno'
 
