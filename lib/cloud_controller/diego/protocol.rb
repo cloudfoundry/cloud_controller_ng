@@ -60,6 +60,7 @@ module VCAP::CloudController
           'log_guid'                        => process.app.guid,
           'log_source'                      => "APP/PROC/#{process.type.upcase}",
           'health_check_type'               => process.health_check_type,
+          'health_check_http_endpoint'      => process.health_check_http_endpoint || "",
           'health_check_timeout_in_seconds' => process.health_check_timeout || default_health_check_timeout,
           'egress_rules'                    => @egress_rules.running(process),
           'etag'                            => process.updated_at.to_f.to_s,
