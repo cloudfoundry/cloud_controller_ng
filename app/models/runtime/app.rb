@@ -301,6 +301,7 @@ module VCAP::CloudController
       (column_changed?(:state) ||
         column_changed?(:memory) ||
         column_changed?(:health_check_type) ||
+        column_changed?(:health_check_http_endpoint) ||
         column_changed?(:enable_ssh) ||
         @ports_changed_by_user
       ) && started?
