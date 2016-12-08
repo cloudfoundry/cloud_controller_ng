@@ -2462,5 +2462,85 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'push app with stack' do
+      let(:org) { Organization.make }
+      let(:space) { Space.make(organization: org) }
+      let(:stack) { Stack.make }
+      let(:private_stack) { Stack.make(is_private: true) }
+      let(:initial_hash) do
+        {
+          name: 'maria',
+          space_guid: space.guid
+        }
+      end
+      let(:space_developer) { make_developer_for_space(space) }
+
+      before do
+        set_current_user_as_admin
+
+        put "/v2/private_stacks/#{private_stack.guid}/organizations/#{org.guid}"
+        expect(last_response).to have_status_code(201)
+      end
+
+      it 'creates app with public stack' do
+        set_current_user(space_developer)
+
+        post '/v2/apps', MultiJson.dump(initial_hash.merge({ stack_guid: stack.guid }))
+        expect(last_response).to have_status_code(201)
+        expect(entity['stack_guid']).to eq(stack.guid)
+      end
+
+      context 'when private stack is associated with space' do
+        before do
+          put "/v2/private_stacks/#{private_stack.guid}/spaces/#{space.guid}"
+          expect(last_response).to have_status_code(201)
+        end
+
+        it 'creates app with private stack' do
+          set_current_user(space_developer)
+
+          post '/v2/apps', MultiJson.dump(initial_hash.merge({ stack_guid: private_stack.guid }))
+          expect(last_response).to have_status_code(201)
+          expect(entity['stack_guid']).to eq(private_stack.guid)
+        end
+
+        it 'changes app to use private stack' do
+          set_current_user(space_developer)
+
+          post '/v2/apps', MultiJson.dump(initial_hash)
+          expect(last_response).to have_status_code(201)
+          app_url = metadata['url']
+
+          put app_url, MultiJson.dump({ stack_guid: private_stack.guid })
+          expect(last_response).to have_status_code(201)
+          expect(entity['stack_guid']).to eq(private_stack.guid)
+        end
+      end
+
+      context 'when private stack is not associated with space' do
+        it 'fails to create app with private stack' do
+          set_current_user(space_developer)
+
+          post '/v2/apps', MultiJson.dump(initial_hash.merge({ stack_guid: private_stack.guid }))
+          expect(last_response).to have_status_code(400)
+          expect(decoded_response['description']).to match(/The request is invalid/)
+          expect(decoded_response['error_code']).to match(/InvalidRequest/)
+        end
+
+        it 'fails to change app to use private stack' do
+          set_current_user(space_developer)
+
+          post '/v2/apps', MultiJson.dump(initial_hash)
+          expect(last_response).to have_status_code(201)
+          app_url = metadata['url']
+
+          put app_url, MultiJson.dump({ stack_guid: private_stack.guid })
+          expect(last_response).to have_status_code(400)
+          expect(decoded_response['description']).to match(/The request is invalid/)
+          expect(decoded_response['error_code']).to match(/InvalidRequest/)
+        end
+      end
+    end
   end
 end

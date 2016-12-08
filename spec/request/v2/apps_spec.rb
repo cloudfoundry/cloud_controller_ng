@@ -187,7 +187,8 @@ RSpec.describe 'Apps' do
                   },
                   'entity' => {
                     'name'        => process.stack.name,
-                    'description' => process.stack.description
+                    'description' => process.stack.description,
+                    'is_private'  => process.stack.is_private
                   }
                 },
                 'routes_url'                 => "/v2/apps/#{process.guid}/routes",

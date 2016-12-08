@@ -29,8 +29,8 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :description }
-      it { is_expected.to import_attributes :name, :description }
+      it { is_expected.to export_attributes :name, :description, :is_private }
+      it { is_expected.to import_attributes :name, :description, :is_private }
     end
 
     describe '.configure' do
@@ -156,6 +156,56 @@ module VCAP::CloudController
       it 'fails if there are apps' do
         AppFactory.make(stack: stack)
         expect { stack.destroy }.to raise_error CloudController::Errors::ApiError, /Please delete the app associations for your stack/
+      end
+    end
+
+    describe 'Org / Space association' do
+      context 'private' do
+        let(:private_stack) { Stack.make(is_private: true) }
+        before do
+          private_stack.remove_all_spaces
+          private_stack.remove_all_organizations
+        end
+
+        describe 'association to org' do
+          it 'succeeds if the org is not suspended' do
+            expect { private_stack.add_organization(Organization.make) }.not_to raise_error
+          end
+
+          it 'fails if the org is suspended' do
+            expect { private_stack.add_organization(Organization.make(status: 'suspended')) }.to raise_error(Stack::AssociationError)
+          end
+        end
+
+        describe 'association to space in a org' do
+          let(:org) { Organization.make }
+
+          before do
+            expect { private_stack.add_organization(org) }.not_to raise_error
+          end
+
+          it 'succeeds if the space belongs a bound org' do
+            expect { private_stack.add_space(Space.make(organization: org)) }.not_to raise_error
+          end
+
+          it 'fails if the org that space belongs is not bound' do
+            expect { private_stack.add_space(Space.make) }.to raise_error(Stack::AssociationError)
+          end
+
+          it 'fails if the org that space belongs is suspended' do
+            expect { private_stack.add_organization(org) }.not_to raise_error
+            org.status = 'suspended'
+            expect { private_stack.add_space(Space.make(organization: org)) }.to raise_error(Stack::AssociationError)
+          end
+        end
+      end
+
+      context 'public' do
+        let(:public_stack) { Stack.make }
+
+        it 'fails associating to org if it is not private' do
+          expect { public_stack.add_organization(Organization.make) }.to raise_error(Stack::AssociationError)
+        end
       end
     end
   end

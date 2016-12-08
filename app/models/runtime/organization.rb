@@ -91,9 +91,19 @@ module VCAP::CloudController
     one_to_many :space_quota_definitions,
                 before_add: proc { |org, quota| quota.organization.id == org.id }
 
+    many_to_many(
+      :private_stacks,
+      class: 'VCAP::CloudController::Stack',
+      join_table: 'organizations_private_stacks',
+      left_key: :organization_id,
+      right_key: :private_stack_id,
+      before_add: :validate_add_private_stack
+    )
+
     add_association_dependencies(
       owned_private_domains: :destroy,
       private_domains: :nullify,
+      private_stacks: :nullify,
       service_plan_visibilities: :destroy,
       space_quota_definitions: :destroy
     )
@@ -244,6 +254,11 @@ module VCAP::CloudController
 
     def running_and_pending_tasks_count
       tasks_dataset.where(state: [TaskModel::PENDING_STATE, TaskModel::RUNNING_STATE]).count
+    end
+
+    def validate_add_private_stack(stack)
+      return if stack.is_private && !suspended?
+      raise AssociationError.new
     end
   end
 end
