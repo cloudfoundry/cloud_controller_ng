@@ -3,7 +3,16 @@ require 'spec_helper'
 module VCAP::CloudController
   module Diego
     RSpec.describe AppRecipeBuilder do
-      subject(:builder) { described_class.new(config: config, process: process, app_request: app_details_from_protocol) }
+      subject(:builder) do
+        described_class.new(
+          config:      config,
+          process:     process,
+          app_request: app_details_from_protocol,
+          ssh_key:     ssh_key
+        )
+      end
+
+      let(:ssh_key) { SSHKey.new }
 
       describe '#build_app_lrp' do
         let(:app_details_from_protocol) do
@@ -36,6 +45,7 @@ module VCAP::CloudController
             disk_quota:           256,
             command:              command,
             file_descriptors:     32,
+            enable_ssh:           false
           )
           process.this.update(updated_at: Time.at(2))
           process.reload
@@ -511,6 +521,52 @@ module VCAP::CloudController
               end
             end
           end
+
+          describe 'ssh' do
+            before do
+              process.update(enable_ssh: true)
+            end
+
+            it 'includes the ssh port' do
+              lrp = builder.build_app_lrp
+              expect(lrp.ports).to include(2222)
+            end
+
+            it 'includes the lrp route' do
+              lrp = builder.build_app_lrp
+              expect(lrp.routes.routes).to include(
+                ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                  key:   'diego-ssh',
+                  value: MultiJson.dump({
+                    container_port:   2222,
+                    private_key:      ssh_key.private_key,
+                    host_fingerprint: ssh_key.fingerprint
+                  })
+                )
+              )
+            end
+
+            it 'includes the ssh daemon run action' do
+              lrp = builder.build_app_lrp
+
+              actions = lrp.action.codependent_action.actions.map(&:run_action)
+              expect(actions).to include(
+                ::Diego::Bbs::Models::RunAction.new(
+                  user:            'lrp-action-user',
+                  path:            '/tmp/lifecycle/diego-sshd',
+                  args:            [
+                    '-address=0.0.0.0:2222',
+                    "-hostKey=#{ssh_key.private_key}",
+                    "-authorizedKey=#{ssh_key.authorized_key}",
+                    '-inheritDaemonEnv',
+                    '-logLevel=fatal',
+                  ],
+                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                  env:             expected_action_environment_variables,
+                )
+              )
+            end
+          end
         end
 
         context 'when the lifecycle_type is "docker"' do
@@ -693,30 +749,6 @@ module VCAP::CloudController
               expect(lrp.action).to eq(expected_action)
               expect(lrp.monitor).to eq(expected_monitor_action)
             end
-          end
-
-          xcontext 'when ssh is allowed' do
-            before { process.allow_ssh = true }
-            let(:expected_diego_sshd_run_action) do
-              ::Diego::Bbs::Models::Action.new(
-                run_action: ::Diego::Bbs::Models::RunAction.new(
-                  path:            '/tmp/lifecycle/diego-sshd',
-                  args:            [ # TODO: generate rsa keypair like "code.cloudfoundry.org/diego-ssh/keys"
-                    '-address=0.0.0.0:1111',
-                    '-hostKey=pem-host-private-key',
-                    '-authorizedKey=authorized-user-key',
-                    '-inheritDaemonEnv',
-                    '-logLevel=fatal',
-                  ],
-                  resource_limits: expected_app_run_action.resource_limits,
-                  env:             expected_app_run_action.env,
-                  user:            expected_app_run_action.user,
-                )
-              )
-            end
-            let(:expected_run_actions) { [expected_app_run_action, expected_diego_sshd_run_action] }
-
-            it 'adds the default ssh port to the list of ports'
           end
 
           context 'when a volume mount is provided' do

@@ -1,19 +1,24 @@
 require 'cloud_controller/diego/buildpack/desired_lrp_builder'
 require 'cloud_controller/diego/docker/desired_lrp_builder'
+require 'cloud_controller/diego/ssh_key'
 
 module VCAP::CloudController
   module Diego
     class AppRecipeBuilder
       include ::Diego::ActionBuilder
 
-      def initialize(config:, process:, app_request:)
+      def initialize(config:, process:, app_request:, ssh_key: SSHKey.new)
         @config      = config
         @process     = process
         @app_request = app_request
+        @ssh_key     = ssh_key
       end
 
       def build_app_lrp
         desired_lrp_builder = LifecycleProtocol.protocol_for_type(process.app.lifecycle_type).desired_lrp_builder(config, app_request)
+
+        ports = desired_lrp_builder.ports
+        ports << DEFAULT_SSH_PORT if allow_ssh?
 
         ::Diego::Bbs::Models::DesiredLRP.new(
           process_guid:                     app_request['process_guid'],
@@ -34,7 +39,7 @@ module VCAP::CloudController
           trusted_system_certificates_path: RUNNING_TRUSTED_SYSTEM_CERT_PATH,
           network:                          generate_network,
           cpu_weight:                       TaskCpuWeightCalculator.new(memory_in_mb: app_request['memory_mb']).calculate,
-          action:                           codependent(generate_app_action(desired_lrp_builder)),
+          action:                           generate_run_action(desired_lrp_builder),
           monitor:                          generate_monitor_action(desired_lrp_builder),
           root_fs:                          desired_lrp_builder.root_fs,
           setup:                            desired_lrp_builder.setup,
@@ -55,7 +60,7 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :config, :process, :app_request
+      attr_reader :config, :process, :app_request, :ssh_key
 
       def generate_routes(info)
         http_routes = (info['http_routes'] || []).map do |i|
@@ -66,18 +71,33 @@ module VCAP::CloudController
           }
         end
 
-        ::Diego::Bbs::Models::Proto_routes.new(
-          routes: [
-            ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
-              key:   'cf-router',
-              value: MultiJson.dump(http_routes)
-            ),
-            ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
-              key:   'tcp-router',
-              value: MultiJson.dump((info['tcp_routes'] || []))
-            )
-          ]
-        )
+        routes = [
+          ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+            key:   CF_ROUTES_KEY,
+            value: MultiJson.dump(http_routes)
+          ),
+          ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+            key:   TCP_ROUTES_KEY,
+            value: MultiJson.dump((info['tcp_routes'] || []))
+          )
+        ]
+
+        if allow_ssh?
+          routes << ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+            key:   SSH_ROUTES_KEY,
+            value: MultiJson.dump({
+              container_port:   DEFAULT_SSH_PORT,
+              private_key:      ssh_key.private_key,
+              host_fingerprint: ssh_key.fingerprint
+            })
+          )
+        end
+
+        ::Diego::Bbs::Models::Proto_routes.new(routes: routes)
+      end
+
+      def allow_ssh?
+        app_request['allow_ssh']
       end
 
       def generate_volume_mounts
@@ -102,7 +122,38 @@ module VCAP::CloudController
         proto_volume_mounts
       end
 
-      def generate_app_action(lrp_builder)
+      def generate_app_action(user, environment_variables)
+        action(::Diego::Bbs::Models::RunAction.new(
+                 user:            user,
+                 path:            '/tmp/lifecycle/launcher',
+                 args:            [
+                   'app',
+                   app_request['start_command'] || '',
+                   app_request['execution_metadata'],
+                 ],
+                 env:             environment_variables,
+                 log_source:      app_request['log_source'] || APP_LOG_SOURCE,
+                 resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: file_descriptor_limit(app_request['file_descriptors'])),
+        ))
+      end
+
+      def generate_ssh_action(user, environment_variables)
+        action(::Diego::Bbs::Models::RunAction.new(
+                 user:            user,
+                 path:            '/tmp/lifecycle/diego-sshd',
+                 args:            [
+                   "-address=#{sprintf('0.0.0.0:%d', DEFAULT_SSH_PORT)}",
+                   "-hostKey=#{ssh_key.private_key}",
+                   "-authorizedKey=#{ssh_key.authorized_key}",
+                   '-inheritDaemonEnv',
+                   '-logLevel=fatal',
+                 ],
+                 env:             environment_variables,
+                 resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: file_descriptor_limit(app_request['file_descriptors'])),
+        ))
+      end
+
+      def generate_environment_variables(lrp_builder)
         desired_ports         = lrp_builder.ports
         environment_variables = []
 
@@ -110,23 +161,16 @@ module VCAP::CloudController
           environment_variables << ::Diego::Bbs::Models::EnvironmentVariable.new(name: i['name'], value: i['value'])
         end
         environment_variables << ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: desired_ports.first.to_s)
+        environment_variables
+      end
 
-        [
-          action(
-            ::Diego::Bbs::Models::RunAction.new(
-              user:            lrp_builder.action_user,
-              path:            '/tmp/lifecycle/launcher',
-              args:            [
-                'app',
-                app_request['start_command'] || '',
-                app_request['execution_metadata'],
-              ],
-              env:             environment_variables,
-              log_source:      app_request['log_source'] || APP_LOG_SOURCE,
-              resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: file_descriptor_limit(app_request['file_descriptors'])),
-            )
-          )
-        ]
+      def generate_run_action(lrp_builder)
+        environment_variables = generate_environment_variables(lrp_builder)
+
+        actions = []
+        actions << generate_app_action(lrp_builder.action_user, environment_variables)
+        actions << generate_ssh_action(lrp_builder.action_user, environment_variables) if allow_ssh?
+        codependent(actions)
       end
 
       def generate_monitor_action(lrp_builder)

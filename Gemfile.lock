@@ -307,6 +307,7 @@ GEM
     multipart-post (2.0.0)
     mustache (0.99.8)
     mysql2 (0.4.5)
+    net-ssh (2.9.2)
     netaddr (1.5.1)
     newrelic_rpm (3.17.1.326)
     nokogiri (1.6.8.1)
@@ -500,6 +501,7 @@ DEPENDENCIES
   multi_json
   mysql2 (= 0.4.5)
   nats!
+  net-ssh
   netaddr
   newrelic_rpm (>= 3.12)
   nokogiri (~> 1.6.8)
