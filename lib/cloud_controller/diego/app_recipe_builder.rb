@@ -17,8 +17,21 @@ module VCAP::CloudController
       def build_app_lrp
         desired_lrp_builder = LifecycleProtocol.protocol_for_type(process.app.lifecycle_type).desired_lrp_builder(config, app_request)
 
-        ports = desired_lrp_builder.ports
-        ports << DEFAULT_SSH_PORT if allow_ssh?
+        ports  = desired_lrp_builder.ports
+        routes = generate_routes(app_request['routing_info'])
+
+        if allow_ssh?
+          ports << DEFAULT_SSH_PORT
+
+          routes << ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+            key:   SSH_ROUTES_KEY,
+            value: MultiJson.dump({
+              container_port:   DEFAULT_SSH_PORT,
+              private_key:      ssh_key.private_key,
+              host_fingerprint: ssh_key.fingerprint
+            })
+          )
+        end
 
         ::Diego::Bbs::Models::DesiredLRP.new(
           process_guid:                     app_request['process_guid'],
@@ -46,15 +59,21 @@ module VCAP::CloudController
           domain:                           APP_LRP_DOMAIN,
           volume_mounts:                    generate_volume_mounts,
           PlacementTags:                    [app_request['isolation_segment']],
-          routes:                           generate_routes(app_request['routing_info'])
+          routes:                           ::Diego::Bbs::Models::Proto_routes.new(routes: routes)
         )
       end
 
-      def build_app_lrp_update
+      def build_app_lrp_update(existing_lrp)
+        routes = generate_routes(app_request['routing_info'])
+
+        existing_routes = ::Diego::Bbs::Models::Proto_routes.decode(existing_lrp.routes)
+        ssh_route       = existing_routes.routes.find { |r| r.key == SSH_ROUTES_KEY }
+        routes << ssh_route
+
         ::Diego::Bbs::Models::DesiredLRPUpdate.new(
           instances:  process.instances,
           annotation: process.updated_at.to_f.to_s,
-          routes:     generate_routes(app_request['routing_info'])
+          routes:     ::Diego::Bbs::Models::Proto_routes.new(routes: routes)
         )
       end
 
@@ -71,7 +90,7 @@ module VCAP::CloudController
           }
         end
 
-        routes = [
+        [
           ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
             key:   CF_ROUTES_KEY,
             value: MultiJson.dump(http_routes)
@@ -81,19 +100,6 @@ module VCAP::CloudController
             value: MultiJson.dump((info['tcp_routes'] || []))
           )
         ]
-
-        if allow_ssh?
-          routes << ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
-            key:   SSH_ROUTES_KEY,
-            value: MultiJson.dump({
-              container_port:   DEFAULT_SSH_PORT,
-              private_key:      ssh_key.private_key,
-              host_fingerprint: ssh_key.fingerprint
-            })
-          )
-        end
-
-        ::Diego::Bbs::Models::Proto_routes.new(routes: routes)
       end
 
       def allow_ssh?

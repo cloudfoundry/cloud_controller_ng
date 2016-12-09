@@ -51,25 +51,27 @@ module VCAP::CloudController::Diego
       end
     end
 
-    describe '#app_exists?' do
+    describe '#get_app' do
       let(:bbs_client) { instance_double(::Diego::Client) }
-      let(:bbs_response) { ::Diego::Bbs::Models::DesiredLRPResponse.new(error: error) }
+      let(:bbs_response) { ::Diego::Bbs::Models::DesiredLRPResponse.new(desired_lrp: desired_lrp, error: error) }
       let(:process_guid) { 'process-guid' }
+      let(:desired_lrp) { ::Diego::Bbs::Models::DesiredLRP.new(process_guid: process_guid) }
       let(:error) { nil }
 
       before do
         allow(bbs_client).to receive(:desired_lrp_by_process_guid).with('process-guid').and_return(bbs_response)
       end
 
-      it 'returns true if the app exists' do
-        expect(client.app_exists?(process_guid)).to be_truthy
+      it 'returns the lrp if it exists' do
+        returned_lrp = client.get_app(process_guid)
+        expect(returned_lrp).to eq(desired_lrp)
       end
 
       context 'when the bbs response contains a resource not found error' do
         let(:error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::ResourceNotFound) }
 
-        it 'returns false' do
-          expect(client.app_exists?(process_guid)).to be_falsey
+        it 'returns nil' do
+          expect(client.get_app(process_guid)).to be_nil
         end
       end
 
@@ -78,7 +80,7 @@ module VCAP::CloudController::Diego
 
         it 'raises an api error' do
           expect {
-            client.app_exists?(process_guid)
+            client.get_app(process_guid)
           }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('RunnerError')
           end
@@ -92,7 +94,7 @@ module VCAP::CloudController::Diego
 
         it 'raises an api error' do
           expect {
-            client.app_exists?(process_guid)
+            client.get_app(process_guid)
           }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('RunnerUnavailable')
           end

@@ -31,21 +31,21 @@ module VCAP::CloudController
         end
       end
 
-      def app_exists?(process_guid)
-        logger.info('app.exists.request', process_guid: process_guid)
+      def get_app(process_guid)
+        logger.info('get.app.request', process_guid: process_guid)
 
-        handle_diego_errors do
+        result = handle_diego_errors do
           response = @client.desired_lrp_by_process_guid(process_guid)
-          logger.info('app.exists.response', process_guid: process_guid, error: response.error)
+          logger.info('get.app.response', process_guid: process_guid, error: response.error)
 
           if response.error
-            return false if response.error.type == ::Diego::Bbs::Models::Error::Type::ResourceNotFound
+            return nil if response.error.type == ::Diego::Bbs::Models::Error::Type::ResourceNotFound
           end
 
           response
         end
 
-        true
+        result.desired_lrp
       end
 
       private
@@ -60,6 +60,8 @@ module VCAP::CloudController
         if response.error
           raise CloudController::Errors::ApiError.new_from_details('RunnerError', response.error.message)
         end
+
+        response
       end
 
       def logger

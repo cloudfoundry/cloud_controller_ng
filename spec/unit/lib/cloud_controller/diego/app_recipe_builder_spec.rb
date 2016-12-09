@@ -813,9 +813,20 @@ module VCAP::CloudController
           process.this.update(updated_at: Time.at(2))
           process.reload
         end
+        # the auto-generated proto clients use bytes type for routes, so an existing lrp response
+        # will not turn routes into a Proto_routes object.
+        # to simulate that in test we encode the Proto_routes object into bytes.
+        let(:existing_lrp) do
+          ::Diego::Bbs::Models::DesiredLRP.new(
+            routes: ::Diego::Bbs::Models::Proto_routes.new(
+              routes: [existing_ssh_route]
+            ).encode
+          )
+        end
+        let(:existing_ssh_route) { nil }
 
         it 'returns a DesiredLRPUpdate' do
-          result = builder.build_app_lrp_update
+          result = builder.build_app_lrp_update(existing_lrp)
           expect(result.instances).to eq(7)
           expect(result.annotation).to eq(Time.at(2).to_f.to_s)
         end
@@ -885,7 +896,7 @@ module VCAP::CloudController
               ]
             )
 
-            lrp_update = builder.build_app_lrp_update
+            lrp_update = builder.build_app_lrp_update(existing_lrp)
 
             expect(lrp_update.routes).to eq(expected_routes)
           end
@@ -933,7 +944,7 @@ module VCAP::CloudController
                 ]
               )
 
-              lrp_update = builder.build_app_lrp_update
+              lrp_update = builder.build_app_lrp_update(existing_lrp)
 
               expect(lrp_update.routes).to eq(expected_routes)
             end
@@ -981,9 +992,23 @@ module VCAP::CloudController
                 ]
               )
 
-              lrp_update = builder.build_app_lrp_update
+              lrp_update = builder.build_app_lrp_update(existing_lrp)
 
               expect(lrp_update.routes).to eq(expected_routes)
+            end
+          end
+
+          context 'when ssh routes are already present' do
+            let(:existing_ssh_route) do
+              ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                key:   SSH_ROUTES_KEY,
+                value: 'existing-data'
+              )
+            end
+
+            it 'includes the ssh route unchanged' do
+              lrp = builder.build_app_lrp_update(existing_lrp)
+              expect(lrp.routes.routes).to include(existing_ssh_route)
             end
           end
         end
