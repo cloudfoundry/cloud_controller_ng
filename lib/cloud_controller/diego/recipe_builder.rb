@@ -35,6 +35,7 @@ module VCAP::CloudController
           cached_dependencies: task_action_builder.cached_dependencies,
           root_fs: task_action_builder.stack,
           environment_variables: task_action_builder.task_environment_variables,
+          PlacementTags: [VCAP::CloudController::IsolationSegmentSelector.for_space(task.space)]
         )
       end
 

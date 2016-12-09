@@ -303,6 +303,7 @@ module VCAP::CloudController
             },
           }
         end
+        let(:isolation_segment) { 'potato-segment' }
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
         let(:external_port) { '7777' }
         let(:user) { 'user' }
@@ -324,6 +325,8 @@ module VCAP::CloudController
         end
 
         before do
+          allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return(isolation_segment)
+
           SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }], running_default: true)
           app.space.add_security_group(
             SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }])
@@ -395,6 +398,7 @@ module VCAP::CloudController
 
             expect(result.metrics_guid).to eq('')
             expect(result.cpu_weight).to eq(25)
+            expect(result.PlacementTags).to eq([isolation_segment])
           end
 
           context 'when a volume mount is provided' do
@@ -462,6 +466,15 @@ module VCAP::CloudController
 
               result = recipe_builder.build_app_task(config, task)
               expect(result.privileged).to be(true)
+            end
+          end
+
+          context 'when isolation segment is not set' do
+            let(:isolation_segment) { nil }
+
+            it 'configures no placement tags' do
+              result = recipe_builder.build_app_task(config, task)
+              expect(result.PlacementTags).to eq([])
             end
           end
         end
@@ -519,6 +532,7 @@ module VCAP::CloudController
 
             expect(result.metrics_guid).to eq('')
             expect(result.cpu_weight).to eq(25)
+            expect(result.PlacementTags).to eq([isolation_segment])
           end
 
           context 'when a volume mount is provided' do
@@ -586,6 +600,15 @@ module VCAP::CloudController
 
               result = recipe_builder.build_app_task(config, task)
               expect(result.privileged).to be(true)
+            end
+          end
+
+          context 'when isolation segment is not set' do
+            let(:isolation_segment) { nil }
+
+            it 'configures no placement tags' do
+              result = recipe_builder.build_app_task(config, task)
+              expect(result.PlacementTags).to eq([])
             end
           end
         end
