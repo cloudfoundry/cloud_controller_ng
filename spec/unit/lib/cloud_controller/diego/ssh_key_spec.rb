@@ -21,8 +21,8 @@ module VCAP::CloudController
       describe '#private_key' do
         it 'returns an open ssh format private key' do
           ssh_key = SSHKey.new(1024)
-          expect(ssh_key.private_key).to match(/\A-----BEGIN RSA PRIVATE KEY-----/)
-          expect(ssh_key.private_key).to match(/-----END RSA PRIVATE KEY-----\n\Z/m)
+          expect(ssh_key.private_key).to start_with('-----BEGIN RSA PRIVATE KEY-----')
+          expect(ssh_key.private_key).to end_with("-----END RSA PRIVATE KEY-----\n")
         end
 
         it 'does not change' do
