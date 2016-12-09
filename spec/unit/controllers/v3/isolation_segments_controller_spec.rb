@@ -125,7 +125,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         context "and the user belongs to an org in the isolation segment's allowed list" do
           before do
-            isolation_segment_model.add_organization(org1)
+            assigner.assign(isolation_segment_model, [org1])
             org1.add_user(user)
             space.add_developer(user)
           end
@@ -231,7 +231,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         expect(response.status).to eq 201
         expect(parsed_body['guid']).to eq(isolation_segment_model.guid)
-        expect(isolation_segment_model.organizations).to include(org)
+        expect(isolation_segment_model.organizations).to contain_exactly(org)
       end
 
       it 'assigns multiple organizations to the isolation segment' do
@@ -242,11 +242,9 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         expect(parsed_body['guid']).to eq(isolation_segment_model.guid)
 
-        # need to reload the orgs because the default isolation segment get set
-        # This also means that the updated at time is on our ors
         org.reload
         org_2.reload
-        expect(isolation_segment_model.organizations).to include(org, org_2)
+        expect(isolation_segment_model.organizations).to contain_exactly(org, org_2)
       end
 
       context 'when the isolation segment does not exist' do
@@ -484,28 +482,28 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(parsed_body['guid']).to eq(isolation_segment.guid)
           expect(parsed_body['name']).to eq(isolation_segment.name)
         end
-      end
 
-      context 'and the user is registered to a space' do
-        before do
-          allow_user_read_access(user, space: space)
-          stub_readable_space_guids_for(user, space)
-        end
-
-        context 'and the space is associated to an isolation segment' do
+        context 'and the user is registered to a space' do
           before do
-            isolation_segment.add_space(space)
+            allow_user_read_access(user, space: space)
+            stub_readable_space_guids_for(user, space)
           end
 
-          it 'allows the user to see the isolation segment' do
-            get :show, guid: isolation_segment.guid
+          context 'and the space is associated to an isolation segment' do
+            before do
+              isolation_segment.add_space(space)
+            end
 
-            expect(response.status).to eq 200
-            expect(parsed_body['guid']).to eq(isolation_segment.guid)
-            expect(parsed_body['name']).to eq(isolation_segment.name)
-            expect(parsed_body['links']['self']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}")
-            expect(parsed_body['links']['organizations']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations")
-            expect(parsed_body['links']['spaces']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces")
+            it 'allows the user to see the isolation segment' do
+              get :show, guid: isolation_segment.guid
+
+              expect(response.status).to eq 200
+              expect(parsed_body['guid']).to eq(isolation_segment.guid)
+              expect(parsed_body['name']).to eq(isolation_segment.name)
+              expect(parsed_body['links']['self']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}")
+              expect(parsed_body['links']['organizations']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations")
+              expect(parsed_body['links']['spaces']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces")
+            end
           end
         end
       end
@@ -741,20 +739,6 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(response.status).to eq 404
         end
       end
-
-      context 'when the isolation segment is still associated to spaces' do
-        before do
-          VCAP::CloudController::Space.make(isolation_segment_guid: isolation_segment_model1.guid)
-        end
-
-        it 'returns a 400' do
-          delete :destroy, guid: isolation_segment_model1.guid
-
-          expect(response.status).to eq 400
-          expect(parsed_body['errors'].first['title']).to eq('CF-AssociationNotEmpty')
-          expect(parsed_body['errors'].first['detail']).to eq('Please delete the space associations for your isolation segment.')
-        end
-      end
     end
 
     context 'when the user is not admin' do
@@ -771,7 +755,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
   describe 'default shared isolation segment' do
     let(:shared_segment) do
-      VCAP::CloudController::IsolationSegmentModel[guid: VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID]
+      VCAP::CloudController::IsolationSegmentModel.first(guid: VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
     end
 
     let!(:original_name) { shared_segment.name }
@@ -790,7 +774,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       delete :destroy, guid: shared_segment.guid
 
       expect(response.status).to eq 422
-      expect(VCAP::CloudController::IsolationSegmentModel[guid: shared_segment.guid].exists?).to be true
+      expect(VCAP::CloudController::IsolationSegmentModel.first(guid: shared_segment.guid).exists?).to be true
     end
 
     it 'cannot be updated via API' do

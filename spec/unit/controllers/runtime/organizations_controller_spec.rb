@@ -3,6 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::OrganizationsController do
     let(:org) { Organization.make }
+    let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:name) }
@@ -146,8 +147,6 @@ module VCAP::CloudController
     end
 
     describe 'setting the default isolation segment' do
-      let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
-
       let(:isolation_segment) { IsolationSegmentModel.make }
       let(:isolation_segment2) { IsolationSegmentModel.make }
 
@@ -156,7 +155,7 @@ module VCAP::CloudController
         let!(:user) { set_current_user(make_developer_for_space(space)) }
 
         before do
-          isolation_segment.add_organization(org)
+          assigner.assign(isolation_segment, [org])
         end
 
         it 'returns a 403' do
@@ -177,12 +176,12 @@ module VCAP::CloudController
         end
 
         context 'when the isolation segment does not exist' do
-          it 'returns a 400' do
+          it 'returns a 404' do
             put "/v2/organizations/#{org.guid}", MultiJson.dump({
               default_isolation_segment_guid: 'bogus-guid'
             })
 
-            expect(last_response.status).to eq(400)
+            expect(last_response.status).to eq(404)
           end
         end
 
@@ -226,23 +225,6 @@ module VCAP::CloudController
               expect(org.default_isolation_segment_model).to eq(isolation_segment)
             end
           end
-
-          context 'when the org has a space with no assigned segment and the space contains apps' do
-            before do
-              space = Space.make(organization: org)
-              AppModel.make(space: space)
-            end
-
-            it 'returns a 400 and does not change the default isolation segment' do
-              put "/v2/organizations/#{org.guid}", MultiJson.dump({
-                default_isolation_segment_guid: isolation_segment2.guid
-              })
-
-              expect(last_response.status).to eq(400)
-              org.reload
-              expect(org.default_isolation_segment_model).to eq(isolation_segment)
-            end
-          end
         end
       end
 
@@ -251,8 +233,8 @@ module VCAP::CloudController
 
         before do
           set_current_user_as_admin
-          isolation_segment.add_organization(org)
-          isolation_segment2.add_organization(org)
+          assigner.assign(isolation_segment, [org])
+          assigner.assign(isolation_segment2, [org])
         end
 
         it 'sets the isolation segment as the org default' do

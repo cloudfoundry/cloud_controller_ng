@@ -216,44 +216,29 @@ module VCAP::CloudController
     delete '/v2/spaces/:guid/isolation_segment', :delete_isolation_segment
     def delete_isolation_segment(guid)
       space = find_guid(guid)
-      check_isolation_segment_access!(space)
-
-      check_space_is_empty!(space, 'Removing')
+      check_org_update_access!(space)
 
       space.db.transaction do
         space.lock!
-        space.update(isolation_segment_guid: nil)
-        space.save
+        space.update(isolation_segment_model: nil)
       end
 
       [HTTP::OK, object_renderer.render_json(self.class, space, @opts)]
     end
 
-    def before_update(obj)
+    def before_update(space)
       if request_attrs['isolation_segment_guid']
-        check_isolation_segment_access!(obj)
+        check_org_update_access!(space)
 
-        check_space_is_empty!(obj, 'Adding')
-
-        isolation_segment_guids = obj.organization.isolation_segment_models.map(&:guid)
-        unless isolation_segment_guids.include?(request_attrs['isolation_segment_guid'])
-          raise CloudController::Errors::ApiError.new_from_details('UnableToPerform',
-                                                                   'Adding the Isolation Segment to the Space',
-                                                                   "Only Isolation Segments in the Organization's allowed list can be used.")
+        if IsolationSegmentModel.where(guid: request_attrs['isolation_segment_guid']).empty?
+          raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Isolation Segment not found')
         end
       end
 
-      super(obj)
+      super(space)
     end
 
     private
-
-    def check_space_is_empty!(space, action)
-      raise CloudController::Errors::ApiError.new_from_details(
-        'UnableToPerform',
-        "#{action} the Isolation Segment to the Space",
-        'Cannot change the Isolation Segment for a Space containing Apps') unless space.app_models.empty?
-    end
 
     def add_role(guid, role, user_id, username)
       user = User.first(guid: user_id) || User.create(guid: user_id)
@@ -292,7 +277,7 @@ module VCAP::CloudController
       end
     end
 
-    def check_isolation_segment_access!(space)
+    def check_org_update_access!(space)
       validate_access(:update, space.organization, nil)
     end
 

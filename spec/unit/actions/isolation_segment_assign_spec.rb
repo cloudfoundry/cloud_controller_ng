@@ -7,16 +7,18 @@ module VCAP::CloudController
     let(:org) { Organization.make }
     let(:org2) { Organization.make }
 
-    it 'sorts the organizations passed in for assignment' do
-      org.update(guid: 'b')
-      org2.update(guid: 'a')
+    describe 'sorting the organizations passed in for assignment' do
+      it 'sorts them correctly when org2 has a lower index than org' do
+        expect(isolation_segment_model).to receive(:add_organization).with(org2).ordered
+        expect(isolation_segment_model).to receive(:add_organization).with(org).ordered
+        subject.assign(isolation_segment_model, [org, org2])
+      end
 
-      org.reload
-      org2.reload
-
-      expect(isolation_segment_model).to receive(:add_organization).with(org2).ordered
-      expect(isolation_segment_model).to receive(:add_organization).with(org).ordered
-      subject.assign(isolation_segment_model, [org, org2])
+      it 'sorts them correctly when org has a lower index than org2' do
+        expect(isolation_segment_model).to receive(:add_organization).with(org).ordered
+        expect(isolation_segment_model).to receive(:add_organization).with(org2).ordered
+        subject.assign(isolation_segment_model, [org, org2])
+      end
     end
 
     context 'when an isolation segment is not assigned to any orgs' do

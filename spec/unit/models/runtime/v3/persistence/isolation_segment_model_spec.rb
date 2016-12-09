@@ -6,6 +6,7 @@ require 'isolation_segment_unassign'
 module VCAP::CloudController
   RSpec.describe IsolationSegmentModel do
     let(:isolation_segment_model) { IsolationSegmentModel.make }
+    let(:isolation_segment_model_2) { IsolationSegmentModel.make }
 
     let(:assigner) { IsolationSegmentAssign.new }
     let(:unassigner) { IsolationSegmentUnassign.new }
@@ -15,42 +16,55 @@ module VCAP::CloudController
         let(:space_1) { Space.make }
         let(:space_2) { Space.make }
 
-        it 'one isolation_segment can reference a single spaces' do
-          isolation_segment_model.add_space(space_1)
-
-          expect(isolation_segment_model.spaces).to include(space_1)
-          expect(space_1.isolation_segment_model).to eq isolation_segment_model
+        context 'when the space is not part of an entitled organization' do
+          it 'does not add the space' do
+            expect {
+              isolation_segment_model.add_space(space_1)
+            }.to raise_error(CloudController::Errors::ApiError, /Only Isolation Segments in the Organization/)
+          end
         end
 
-        it 'one isolation_segment can reference multiple spaces' do
-          isolation_segment_model.add_space(space_1)
-          isolation_segment_model.add_space(space_2)
+        context "and the Isolation Segment has been added to the space's organization" do
+          before do
+            assigner.assign(isolation_segment_model, [space_1.organization, space_2.organization])
+            assigner.assign(isolation_segment_model_2, [space_1.organization, space_2.organization])
+          end
 
-          expect(isolation_segment_model.spaces).to include(space_1, space_2)
-          expect(space_1.isolation_segment_model).to eq isolation_segment_model
-          expect(space_2.isolation_segment_model).to eq isolation_segment_model
-        end
-
-        it 'multiple isolation_segments cannot reference the same space' do
-          isolation_segment_model_2 = IsolationSegmentModel.make
-
-          isolation_segment_model.add_space(space_1)
-          isolation_segment_model_2.add_space(space_1)
-
-          expect(isolation_segment_model.spaces).to be_empty
-          expect(isolation_segment_model_2.spaces).to include(space_1)
-        end
-
-        context 'removing spaces from isolation segments' do
-          it 'properly removes the associations' do
+          it 'one isolation_segment can reference a single space' do
             isolation_segment_model.add_space(space_1)
-            space_1.reload
 
-            isolation_segment_model.remove_space(space_1)
-            isolation_segment_model.reload
+            expect(isolation_segment_model.spaces).to include(space_1)
+            expect(space_1.isolation_segment_model).to eq isolation_segment_model
+          end
+
+          it 'one isolation_segment can reference multiple spaces' do
+            isolation_segment_model.add_space(space_1)
+            isolation_segment_model.add_space(space_2)
+
+            expect(isolation_segment_model.spaces).to include(space_1, space_2)
+            expect(space_1.isolation_segment_model).to eq isolation_segment_model
+            expect(space_2.isolation_segment_model).to eq isolation_segment_model
+          end
+
+          it 'multiple isolation_segments cannot reference the same space' do
+            isolation_segment_model.add_space(space_1)
+            isolation_segment_model_2.add_space(space_1)
 
             expect(isolation_segment_model.spaces).to be_empty
-            expect(space_1.isolation_segment_model).to be_nil
+            expect(isolation_segment_model_2.spaces).to include(space_1)
+          end
+
+          context 'removing spaces from isolation segments' do
+            it 'properly removes the associations' do
+              isolation_segment_model.add_space(space_1)
+              space_1.reload
+
+              isolation_segment_model.remove_space(space_1)
+              isolation_segment_model.reload
+
+              expect(isolation_segment_model.spaces).to be_empty
+              expect(space_1.isolation_segment_model).to be_nil
+            end
           end
         end
       end
@@ -63,9 +77,9 @@ module VCAP::CloudController
         it 'allows one isolation segment to be referenced by multiple organizations' do
           assigner.assign(isolation_segment_model, [org_1, org_2])
 
-          expect(isolation_segment_model.organizations).to include(org_1, org_2)
-          expect(org_1.isolation_segment_models).to include(isolation_segment_model)
-          expect(org_2.isolation_segment_models).to include(isolation_segment_model)
+          expect(isolation_segment_model.organizations).to contain_exactly(org_1, org_2)
+          expect(org_1.isolation_segment_models).to contain_exactly(isolation_segment_model)
+          expect(org_2.isolation_segment_models).to contain_exactly(isolation_segment_model)
         end
 
         it 'allows multiple isolation segments to be applied to one organization' do
@@ -74,9 +88,9 @@ module VCAP::CloudController
           assigner.assign(isolation_segment_model, [org_1])
           assigner.assign(isolation_segment_model_2, [org_1])
 
-          expect(isolation_segment_model.organizations).to include(org_1)
-          expect(isolation_segment_model_2.organizations).to include(org_1)
-          expect(org_1.isolation_segment_models).to include(isolation_segment_model, isolation_segment_model_2)
+          expect(isolation_segment_model.organizations).to contain_exactly(org_1)
+          expect(isolation_segment_model_2.organizations).to contain_exactly(org_1)
+          expect(org_1.isolation_segment_models).to contain_exactly(isolation_segment_model, isolation_segment_model_2)
         end
 
         context 'when adding isolation segments to the allowed list' do
@@ -160,14 +174,33 @@ module VCAP::CloudController
     describe '#before_destroy' do
       let(:org) { Organization.make }
 
-      it 'raises an error if still assigned to any orgs' do
+      before do
         assigner.assign(isolation_segment_model, [org])
+      end
+
+      it 'raises an error if still assigned to any orgs' do
         expect { isolation_segment_model.destroy }.to raise_error(CloudController::Errors::ApiError, /Please delete the Organization associations for your Isolation Segment/)
+        expect { isolation_segment_model.reload }.to_not raise_error
       end
 
       it 'raises an error if there are still spaces associated' do
-        Space.make(isolation_segment_guid: isolation_segment_model.guid)
-        expect { isolation_segment_model.destroy }.to raise_error(CloudController::Errors::ApiError, /Please delete the space/)
+        Space.make(organization: org, isolation_segment_guid: isolation_segment_model.guid)
+        expect { isolation_segment_model.destroy }.to raise_error(CloudController::Errors::ApiError, /Please delete the Space associations/)
+        expect { isolation_segment_model.reload }.to_not raise_error
+      end
+    end
+
+    describe '#is_shared_segment?' do
+      it 'returns false' do
+        expect(isolation_segment_model.is_shared_segment?).to be false
+      end
+
+      context 'when the guids match' do
+        let(:isolation_segment_model) { IsolationSegmentModel.first(guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID) }
+
+        it 'returns true' do
+          expect(isolation_segment_model.is_shared_segment?).to be true
+        end
       end
     end
   end

@@ -16,6 +16,9 @@ module VCAP::CloudController
       right_key: :isolation_segment_guid,
       right_primary_key: :guid,
       join_table: :organizations_isolation_segments,
+      # These are needed because we do not set the default isolation segment
+      # for an organization. This happens as part of the action on an
+      # Isolation Segment.
       before_add: proc { cannot_create! },
       before_remove: proc { cannot_update! }
 
@@ -155,7 +158,12 @@ module VCAP::CloudController
     end
 
     def before_destroy
-      update(default_isolation_segment_model: nil)
+      @destroying = true
+
+      # This is a Database.update(default_isolation_segment_guid), not a
+      # Model.update(default_isolation_segment_model). This way our model guards
+      # do not block us from removing the default_isolation_segment.
+      update(default_isolation_segment_guid: nil)
       remove_all_isolation_segment_models
       super
     end
@@ -175,6 +183,10 @@ module VCAP::CloudController
       validates_unique :name
       validates_format ORG_NAME_REGEX, :name
       validates_includes ORG_STATUS_VALUES, :status, allow_missing: true
+
+      if column_changed?(:default_isolation_segment_guid)
+        validate_default_isolation_segment(default_isolation_segment_model) unless @destroying
+      end
     end
 
     def has_remaining_memory(mem)
@@ -205,6 +217,8 @@ module VCAP::CloudController
       billing_enabled
     end
 
+    private
+
     def check_spaces_without_isolation_segments_empty!(action)
       Space.dataset.where(isolation_segment_guid: nil, organization: self).each do |space|
         raise CloudController::Errors::ApiError.new_from_details(
@@ -214,7 +228,35 @@ module VCAP::CloudController
       end
     end
 
-    private
+    def validate_default_isolation_segment(isolation_segment_model)
+      if isolation_segment_model
+        validate_default_isolation_segment_set(isolation_segment_model)
+      else
+        validate_default_isolation_segment_unset
+      end
+    end
+
+    def validate_default_isolation_segment_set(isolation_segment_model)
+      isolation_segment_guids = isolation_segment_models.map(&:guid)
+      unless isolation_segment_guids.include?(isolation_segment_model.guid)
+        raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
+                                                                 "Could not find Isolation Segment with guid: #{isolation_segment_model.guid}")
+      end
+
+      check_spaces_without_isolation_segments_empty!('Setting') unless initial_value(:default_isolation_segment_guid).eql?(nil) &&
+        isolation_segment_model.is_shared_segment?
+    end
+
+    def validate_default_isolation_segment_unset
+      if isolation_segment_models.length > 1
+        raise CloudController::Errors::ApiError.new_from_details(
+          'UnableToPerform',
+          'Cannot unset the Default Isolation Segment.',
+          'Please change the Default Isolation Segment for your Organization before attempting to remove the default.')
+      end
+
+      check_spaces_without_isolation_segments_empty!('Removing')
+    end
 
     def validate_quota_on_create
       return if quota_definition

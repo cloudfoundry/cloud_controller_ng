@@ -18,7 +18,6 @@ module VCAP::CloudController
       it { is_expected.to have_associated :billing_managers, class: User }
       it { is_expected.to have_associated :auditors, class: User }
       it { is_expected.to have_associated :space_quota_definitions, associated_instance: ->(org) { SpaceQuotaDefinition.make(organization: org) } }
-      it { is_expected.to have_associated :default_isolation_segment_model, class: IsolationSegmentModel }
 
       it 'has associated owned_private domains' do
         domain = PrivateDomain.make
@@ -129,30 +128,10 @@ module VCAP::CloudController
         end
       end
 
-      describe 'isolation segments' do
+      describe 'isolation_segments' do
         let(:isolation_segment_model) { IsolationSegmentModel.make }
         let(:isolation_segment_model2) { IsolationSegmentModel.make }
         let(:assigner) { IsolationSegmentAssign.new }
-
-        context 'when setting the default isolation segment' do
-          it 'raises an error if it is not in the allowed list' do
-            expect {
-              org.default_isolation_segment_model = isolation_segment_model
-              org.save
-            }.to raise_error(Sequel::ForeignKeyConstraintViolation)
-          end
-
-          it 'can be updated' do
-            assigner.assign(isolation_segment_model, [org])
-            org.update(default_isolation_segment_model: isolation_segment_model)
-            org.reload
-            expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
-
-            assigner.assign(isolation_segment_model2, [org])
-            org.default_isolation_segment_model = isolation_segment_model2
-            expect(org.default_isolation_segment_model).to eq(isolation_segment_model2)
-          end
-        end
 
         context 'when adding isolation segments to the allowed list' do
           it 'raises an ApiError' do
@@ -171,25 +150,6 @@ module VCAP::CloudController
             expect {
               org.remove_isolation_segment_model(isolation_segment_model)
             }.to raise_error(CloudController::Errors::ApiError)
-          end
-        end
-      end
-
-      describe '#check_spaces_without_isolation_segments_empty!' do
-        it 'does not raise an error' do
-          expect { org.check_spaces_without_isolation_segments_empty!('Setting') }.to_not raise_error
-        end
-
-        context 'when there are spaces without an isolation segment that contain apps' do
-          before do
-            AppModel.make(space: Space.make(organization: org))
-          end
-
-          it 'raises an UnableToPerform error' do
-            expect { org.check_spaces_without_isolation_segments_empty!('Setting') }.to raise_error(
-              CloudController::Errors::ApiError,
-              /Setting default Isolation Segment/
-            )
           end
         end
       end
@@ -268,6 +228,170 @@ module VCAP::CloudController
           expect {
             org.save
           }.to raise_error(Sequel::ValidationFailed)
+        end
+      end
+
+      describe 'default_isolation_segment' do
+        let(:isolation_segment_model) { IsolationSegmentModel.make }
+        let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+
+        context 'assigning the default isolation segment' do
+          context 'and the default is not in the allowed list' do
+            it 'raises an InvalidRelation' do
+              expect {
+                org.update(default_isolation_segment_model: isolation_segment_model)
+              }.to raise_error(CloudController::Errors::ApiError, /Could not find Isolation Segment with guid: #{isolation_segment_model.guid}/)
+
+              org.reload
+              expect(org.default_isolation_segment_model).to eq(nil)
+            end
+          end
+
+          context 'and the default is in the allowed list' do
+            before do
+              assigner.assign(isolation_segment_model, [org])
+            end
+
+            it 'sets the default isolation segment' do
+              org.update(default_isolation_segment_model: isolation_segment_model)
+              org.reload
+
+              expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+            end
+
+            context 'when there are spaces in the org' do
+              let!(:space) { Space.make(organization: org) }
+              let(:shared_segment) { IsolationSegmentModel.first(guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID) }
+
+              it 'sets the default Isolation Segment' do
+                org.update(default_isolation_segment_model: isolation_segment_model)
+                org.reload
+
+                expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+              end
+
+              context 'and the org has an assigned default that is not the shared segment' do
+                before do
+                  org.update(default_isolation_segment_model: isolation_segment_model)
+                  org.reload
+                end
+
+                context 'and a space has an app' do
+                  before do
+                    AppModel.make(space: space)
+                  end
+
+                  it 'cannot change the default isolation segment to the shared segment' do
+                    expect {
+                      assigner.assign(shared_segment, [org])
+                      org.update(default_isolation_segment_model: shared_segment)
+                    }.to raise_error(CloudController::Errors::ApiError, /Please delete all Apps from Space/)
+
+                    org.reload
+                    expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+                  end
+                end
+              end
+
+              context 'and a space has an app' do
+                it 'raises an UnableToPerform exception and does not set the default' do
+                  AppModel.make(space: space)
+                  expect {
+                    org.update(default_isolation_segment_guid: isolation_segment_model.guid)
+                  }.to raise_error(CloudController::Errors::ApiError, /Please delete all Apps from Space/)
+
+                  org.reload
+                  expect(org.default_isolation_segment_model).to eq(nil)
+                end
+
+                it 'sets the default when assigning the shared segment as the default' do
+                  AppModel.make(space: space)
+                  expect {
+                    assigner.assign(shared_segment, [org])
+                  }.to_not raise_error
+
+                  org.reload
+                  expect(org.default_isolation_segment_model).to eq(shared_segment)
+                end
+
+                context 'and the space has an assigned isolation segment' do
+                  let(:isolation_segment_model2) { IsolationSegmentModel.make }
+
+                  before do
+                    assigner.assign(isolation_segment_model2, [org])
+                    space.update(isolation_segment_model: isolation_segment_model2)
+                    AppModel.make(space: space)
+                  end
+
+                  it 'sets the default Isolation Segment' do
+                    org.update(default_isolation_segment_model: isolation_segment_model)
+                    org.reload
+
+                    expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+                  end
+                end
+              end
+            end
+          end
+        end
+
+        context 'unassigning the default isolation segment' do
+          before do
+            assigner.assign(isolation_segment_model, [org])
+            org.update(default_isolation_segment_model: isolation_segment_model)
+          end
+
+          context 'and there are no other isolation segments in the allowed list' do
+            it 'succeeds' do
+              org.update(default_isolation_segment_model: nil)
+              org.reload
+
+              expect(org.default_isolation_segment_guid).to be_nil
+            end
+
+            context 'and there are spaces in the organization' do
+              let!(:space) { Space.make(organization: org) }
+
+              it 'unassigns the default isolation segment' do
+                org.update(default_isolation_segment_model: nil)
+                org.reload
+
+                expect(org.default_isolation_segment_guid).to be_nil
+              end
+
+              context 'and the space has apps' do
+                before do
+                  AppModel.make(space: space)
+                end
+
+                it 'raises a 400 UnableToPerform' do
+                  expect {
+                    org.update(default_isolation_segment_model: nil)
+                  }.to raise_error(CloudController::Errors::ApiError, /Removing default Isolation Segment/)
+
+                  org.reload
+                  expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+                end
+              end
+            end
+          end
+
+          context 'and there are more that one isolation segments in the allowed list' do
+            let(:isolation_segment_model_2) { IsolationSegmentModel.make }
+
+            before do
+              assigner.assign(isolation_segment_model_2, [org])
+            end
+
+            it 'raises a 400 UnableToPerform' do
+              expect {
+                org.update(default_isolation_segment_model: nil)
+              }.to raise_error(CloudController::Errors::ApiError, /Please change the Default Isolation Segment for your Organization/)
+
+              org.reload
+              expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+            end
+          end
         end
       end
     end

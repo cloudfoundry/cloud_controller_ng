@@ -161,6 +161,18 @@ module VCAP::CloudController
       if space_quota_definition && space_quota_definition.organization.guid != organization.guid
         errors.add(:space_quota_definition, :invalid_organization)
       end
+
+      if column_changed?(:isolation_segment_guid)
+        validate_isolation_segment(isolation_segment_model)
+      end
+    end
+
+    def validate_isolation_segment(isolation_segment_model)
+      if isolation_segment_model
+        validate_isolation_segment_set(isolation_segment_model)
+      else
+        validate_isolation_segment_unset
+      end
     end
 
     def validate_developer(user)
@@ -235,6 +247,27 @@ module VCAP::CloudController
 
     def running_and_pending_tasks_count
       tasks_dataset.where(state: [TaskModel::PENDING_STATE, TaskModel::RUNNING_STATE]).count
+    end
+
+    def validate_isolation_segment_set(isolation_segment_model)
+      isolation_segment_guids = organization.isolation_segment_models.map(&:guid)
+      unless isolation_segment_guids.include?(isolation_segment_model.guid)
+        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform',
+                                                                 'Adding the Isolation Segment to the Space',
+                                                                 "Only Isolation Segments in the Organization's allowed list can be used.")
+      end
+
+      raise CloudController::Errors::ApiError.new_from_details(
+        'UnableToPerform',
+        'Adding the Isolation Segment to the Space',
+        'Cannot change the Isolation Segment for a Space containing Apps') unless app_models.empty?
+    end
+
+    def validate_isolation_segment_unset
+      raise CloudController::Errors::ApiError.new_from_details(
+        'UnableToPerform',
+        'Removing the Isolation Segment from the Space',
+        'Cannot change the Isolation Segment for a Space containing Apps') unless app_models.empty?
     end
   end
 end

@@ -23,13 +23,13 @@ module VCAP::CloudController
     end
 
     def before_destroy
-      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'space', 'isolation segment') unless spaces.empty?
+      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'Space', 'Isolation Segment') unless spaces.empty?
       raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'Organization', 'Isolation Segment') unless organizations.empty?
       super
     end
 
-    def self.shared_segment
-      @shared_segment ||= IsolationSegmentModel.first(guid: SHARED_ISOLATION_SEGMENT_GUID)
+    def is_shared_segment?
+      guid == SHARED_ISOLATION_SEGMENT_GUID
     end
   end
 end

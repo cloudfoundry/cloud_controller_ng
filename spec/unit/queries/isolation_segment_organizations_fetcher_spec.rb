@@ -7,15 +7,15 @@ module VCAP::CloudController
 
     let!(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
 
+    let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+
     let(:org1) { VCAP::CloudController::Organization.make }
     let(:org2) { VCAP::CloudController::Organization.make }
     let(:org3) { VCAP::CloudController::Organization.make }
     let(:org4) { VCAP::CloudController::Organization.make }
 
     before do
-      isolation_segment_model.add_organization(org1)
-      isolation_segment_model.add_organization(org2)
-      isolation_segment_model.add_organization(org3)
+      assigner.assign(isolation_segment_model, [org1, org2, org3])
     end
 
     describe '#fetch_all' do
