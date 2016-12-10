@@ -235,7 +235,7 @@ module VCAP::CloudController
         errors.add(:health_check_http_endpoint, "HTTP health check endpoint is valid only for http health check types, not #{health_check_type}")
       end
       if health_check_type == 'http' && !health_check_http_endpoint.is_uri_path?
-        errors.add(:health_check_http_endpoint, "HTTP health check endpoint is not a valid URL: #{health_check_http_endpoint}")
+        errors.add(:health_check_http_endpoint, "HTTP health check endpoint is not a valid URI path: #{health_check_http_endpoint}")
       end
     end
 

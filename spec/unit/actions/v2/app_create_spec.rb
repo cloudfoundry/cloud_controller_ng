@@ -51,14 +51,14 @@ module VCAP::CloudController
             'buildpack'         => 'http://example.com/buildpack',
             'state'             => 'STOPPED',
             'health_check_type' => 'http',
-            'health_check_http_endpoint' => 'http://example.com/healthz',
+            'health_check_http_endpoint' => '/healthz',
             'stack_guid'        => stack.guid
           }
 
           v2_app = app_create.create(request_attrs)
 
           expect(v2_app.health_check_type).to eq('http')
-          expect(v2_app.health_check_http_endpoint).to eq('http://example.com/healthz')
+          expect(v2_app.health_check_http_endpoint).to eq('/healthz')
         end
       end
 

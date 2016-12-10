@@ -325,7 +325,7 @@ module VCAP::CloudController
           space_guid:       space.guid,
           environment_json: { 'KEY' => 'val' },
           buildpack:        'http://example.com/buildpack',
-          health_check_http_endpoint: 'http://example.com/healthz',
+          health_check_http_endpoint: '/healthz',
           health_check_type: 'http',
         }
 
@@ -335,7 +335,7 @@ module VCAP::CloudController
 
         v2_app = App.last
         expect(v2_app.health_check_type).to eq('http')
-        expect(v2_app.health_check_http_endpoint).to eq('http://example.com/healthz')
+        expect(v2_app.health_check_http_endpoint).to eq('/healthz')
       end
 
       it 'creates the app' do
