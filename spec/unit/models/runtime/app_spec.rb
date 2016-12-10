@@ -1334,6 +1334,13 @@ module VCAP::CloudController
             app.update(enable_ssh: !app.enable_ssh)
           }.to change { app.version }
         end
+
+        it 'should update the version when changing health_check_http_endpoint' do
+          app.update(health_check_type: 'http', health_check_http_endpoint: '/oldpath')
+          expect {
+            app.update(health_check_http_endpoint: '/newpath')
+          }.to change { app.version }
+        end
       end
     end
 

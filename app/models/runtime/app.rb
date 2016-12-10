@@ -292,6 +292,7 @@ module VCAP::CloudController
       # * transitioning to STARTED
       # * memory is changed
       # * health check type is changed
+      # * health check http endpoint is changed
       # * enable_ssh is changed
       # * ports were changed by the user
       #
