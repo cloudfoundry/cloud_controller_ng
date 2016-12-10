@@ -68,6 +68,7 @@ module CloudController::Presenters::V2
           'package_state'              => 'PENDING',
           'health_check_type'          => 'port',
           'health_check_timeout'       => nil,
+          'health_check_http_endpoint' => nil,
           'staging_failed_reason'      => anything,
           'staging_failed_description' => 'because',
           'diego'                      => true,

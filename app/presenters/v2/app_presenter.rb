@@ -28,6 +28,7 @@ module CloudController
             'package_state'               => app.package_state,
             'health_check_type'           => app.health_check_type,
             'health_check_timeout'        => app.health_check_timeout,
+            'health_check_http_endpoint'  => app.health_check_http_endpoint,
             'staging_failed_reason'       => app.staging_failed_reason,
             'staging_failed_description'  => app.staging_failed_description,
             'diego'                       => app.diego,
