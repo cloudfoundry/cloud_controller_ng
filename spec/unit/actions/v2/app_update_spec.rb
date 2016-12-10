@@ -8,6 +8,41 @@ module VCAP::CloudController
     subject(:app_update) { described_class.new(access_validator: access_validator, stagers: stagers) }
 
     describe 'update' do
+      it 'updates the process' do
+        process = App.make
+        app     = process.app
+
+        request_attrs = {
+          'production'                 => false,
+          'memory'                     => 4,
+          'instances'                  => 2,
+          'disk_quota'                 => 30,
+          'command'                    => 'new-command',
+          'health_check_type'          => 'http',
+          'health_check_timeout'       => 20,
+          'health_check_http_endpoint' => '/health',
+          'diego'                      => true,
+          'enable_ssh'                 => true,
+          'ports'                      => [8080],
+          'route_guids'                => [],
+        }
+
+        app_update.update(app, process, request_attrs)
+
+        expect(process.production).to eq(false)
+        expect(process.memory).to eq(4)
+        expect(process.instances).to eq(2)
+        expect(process.disk_quota).to eq(30)
+        expect(process.command).to eq('new-command')
+        expect(process.health_check_type).to eq('http')
+        expect(process.health_check_timeout).to eq(20)
+        expect(process.health_check_http_endpoint).to eq('/health')
+        expect(process.diego).to eq(true)
+        expect(process.enable_ssh).to eq(true)
+        expect(process.ports).to eq([8080])
+        expect(process.route_guids).to eq([])
+      end
+
       it 'updates the app' do
         process = App.make
         app     = process.app
