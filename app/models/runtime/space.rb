@@ -5,7 +5,6 @@ module VCAP::CloudController
     class InvalidManagerRelation < CloudController::Errors::InvalidRelation; end
     class InvalidSpaceQuotaRelation < CloudController::Errors::InvalidRelation; end
     class UnauthorizedAccessToPrivateDomain < RuntimeError; end
-    class OrganizationAlreadySet < RuntimeError; end
 
     SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
 
@@ -188,7 +187,7 @@ module VCAP::CloudController
     end
 
     def validate_change_organization(new_org)
-      raise OrganizationAlreadySet unless organization.nil? || organization.guid == new_org.guid
+      raise CloudController::Errors::ApiError.new_from_details('OrganizationAlreadySet') unless organization.nil? || organization.guid == new_org.guid
     end
 
     def self.user_visibility_filter(user)

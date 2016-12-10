@@ -143,6 +143,11 @@
   http_code: 403
   message: "Cannot remove last User in org"
 
+30007:
+  name: OrganizationAlreadySet
+  http_code: 400
+  message: 'Cannot change organization'
+
 40001:
   name: SpaceInvalid
   http_code: 400

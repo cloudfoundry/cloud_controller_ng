@@ -52,7 +52,7 @@ module VCAP::CloudController
 
       context 'organization' do
         it 'fails when changing' do
-          expect { Space.make.organization = Organization.make }.to raise_error Space::OrganizationAlreadySet
+          expect { Space.make.organization = Organization.make }.to raise_error(CloudController::Errors::ApiError, /Cannot change organization/)
         end
       end
     end

@@ -6,8 +6,6 @@ module VCAP::CloudController
                                      'equal to total routes, and must be less ' \
                                      'than or equal to total reserved ports for the organization quota.')
 
-    class OrganizationAlreadySet < RuntimeError; end
-
     many_to_one :organization, before_set: :validate_change_organization
     one_to_many :spaces
 
@@ -38,7 +36,7 @@ module VCAP::CloudController
     end
 
     def validate_change_organization(new_org)
-      raise OrganizationAlreadySet unless organization.nil? || organization.guid == new_org.guid
+      raise CloudController::Errors::ApiError.new_from_details('OrganizationAlreadySet') unless organization.nil? || organization.guid == new_org.guid
     end
 
     def self.user_visibility_filter(user)
