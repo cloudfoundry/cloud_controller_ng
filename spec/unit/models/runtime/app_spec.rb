@@ -279,21 +279,28 @@ module VCAP::CloudController
       end
 
       describe 'health_check_http_endpoint' do
-        it 'can be set to a valid URL' do
+        it 'can be set to a valid uri path' do
           app.health_check_type = 'http'
-          app.health_check_http_endpoint = 'http://google.com/v2'
+          app.health_check_http_endpoint = '/v2'
           expect(app).to be_valid
         end
 
-        it 'needs a URL' do
+        it 'needs a uri path' do
           app.health_check_type = 'http'
           expect(app).to_not be_valid
           expect(app.errors.on(:health_check_http_endpoint)).to be_present
         end
 
-        it 'cannot be set to an invalid URL' do
+        it 'cannot be set to a relative path' do
           app.health_check_type = 'http'
-          app.health_check_http_endpoint = 'not-a-url'
+          app.health_check_http_endpoint = 'relative/path'
+          expect(app).to_not be_valid
+          expect(app.errors.on(:health_check_http_endpoint)).to be_present
+        end
+
+        it 'cannot be set to an empty string' do
+          app.health_check_type = 'http'
+          app.health_check_http_endpoint = ' '
           expect(app).to_not be_valid
           expect(app.errors.on(:health_check_http_endpoint)).to be_present
         end

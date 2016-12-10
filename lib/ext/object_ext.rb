@@ -4,4 +4,8 @@ class Object
   rescue
     false
   end
+
+  def is_uri_path?
+    self.is_a?(String) && %r{\A/\S+\Z} =~ self
+  end
 end
