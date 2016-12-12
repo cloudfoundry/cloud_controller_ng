@@ -8,7 +8,11 @@ module VCAP::CloudController
       let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
       let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
       let(:isolation_segment_model_2) { VCAP::CloudController::IsolationSegmentModel.make }
-      let(:shared_isolation_segment) { VCAP::CloudController::IsolationSegmentModel.shared_segment }
+      let(:shared_isolation_segment) do
+        VCAP::CloudController::IsolationSegmentModel.first(
+          guid: VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID
+        )
+      end
 
       context 'when the org has a default' do
         context 'and the default is the shared isolation segment' do

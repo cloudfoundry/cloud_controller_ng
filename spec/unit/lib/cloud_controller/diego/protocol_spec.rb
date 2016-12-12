@@ -96,7 +96,7 @@ module VCAP::CloudController
             lifecycle:           droplet.lifecycle_type,
             lifecycle_data:      { 'some' => 'data' },
             completion_callback: "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}" \
-                                   "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}"
+            "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}"
           })
         end
       end
@@ -146,35 +146,35 @@ module VCAP::CloudController
           allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return('segment-from-selector')
         end
 
-          it 'is a message with the information nsync needs to desire the app' do
-            # TODO: The test shouldn't be a copy/paste of the implementation
-            expect(message.as_json).to match({
-              'disk_mb' => process.disk_quota,
-              'environment' => Environment.new(process, running_env).as_json,
-              'file_descriptors' => process.file_descriptors,
-              'health_check_type' => process.health_check_type,
-              'health_check_timeout_in_seconds' => process.health_check_timeout,
-              'health_check_http_endpoint' => '',
-              'log_guid' => process.app.guid,
-              'log_source' => 'APP/PROC/WEB',
-              'memory_mb' => process.memory,
-              'num_instances' => process.desired_instances,
-              'process_guid' => ProcessGuid.from_process(process),
-              'stack' => process.stack.name,
-              'execution_metadata' => process.execution_metadata,
-              'routes' => [
-                route_without_service.uri,
-                route_with_service.uri
-              ],
-              'routing_info' => {
-                'http_routes' => [
-                  { 'hostname' => route_without_service.uri,
-                    'port' => 2222,
-                },
-                { 'hostname' => route_with_service.uri,
-                  'route_service_url' => route_with_service.route_binding.route_service_url,
+        it 'is a message with the information nsync needs to desire the app' do
+          # TODO: The test shouldn't be a copy/paste of the implementation
+          expect(message.as_json).to match({
+            'disk_mb' => process.disk_quota,
+            'environment' => Environment.new(process, running_env).as_json,
+            'file_descriptors' => process.file_descriptors,
+            'health_check_type' => process.health_check_type,
+            'health_check_timeout_in_seconds' => process.health_check_timeout,
+            'health_check_http_endpoint' => '',
+            'log_guid' => process.app.guid,
+            'log_source' => 'APP/PROC/WEB',
+            'memory_mb' => process.memory,
+            'num_instances' => process.desired_instances,
+            'process_guid' => ProcessGuid.from_process(process),
+            'stack' => process.stack.name,
+            'execution_metadata' => process.execution_metadata,
+            'routes' => [
+              route_without_service.uri,
+              route_with_service.uri
+            ],
+            'routing_info' => {
+              'http_routes' => [
+                { 'hostname' => route_without_service.uri,
                   'port' => 2222,
-                }
+              },
+              { 'hostname' => route_with_service.uri,
+                'route_service_url' => route_with_service.route_binding.route_service_url,
+                'port' => 2222,
+              }
               ]
             },
             'egress_rules' => ['running_egress_rule'],
@@ -192,78 +192,6 @@ module VCAP::CloudController
             'volume_mounts' => an_instance_of(Array),
             'isolation_segment' => 'segment-from-selector'
           }.merge(fake_lifecycle_protocol.desired_app_message(double(:app))))
-        end
-
-        describe 'isolation segments' do
-          let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
-          let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
-          let(:isolation_segment_model_2) { VCAP::CloudController::IsolationSegmentModel.make }
-          let(:shared_isolation_segment) { VCAP::CloudController::IsolationSegmentModel.shared_segment }
-
-          context 'when the org has a default' do
-            context 'and the default is the shared isolation segments' do
-              before do
-                assigner.assign(shared_isolation_segment, [process.space.organization])
-              end
-
-              it 'does not set an isolation segment' do
-                expect(message['isolation_segment']).to be_nil
-              end
-            end
-
-            context 'and the default is not the shared isolation segment' do
-              before do
-                assigner.assign(isolation_segment_model, [process.space.organization])
-                process.space.organization.update(default_isolation_segment_model: isolation_segment_model)
-              end
-
-              it 'sets the isolation segment' do
-                expect(message['isolation_segment']).to eq(isolation_segment_model.name)
-              end
-
-              context 'and the space from that org has an isolation segment' do
-                context 'and the isolation segment is the shared isolation segment' do
-                  before do
-                    assigner.assign(shared_isolation_segment, [process.space.organization])
-                    process.space.isolation_segment_model = shared_isolation_segment
-                    process.space.save
-                  end
-
-                  it 'does not set the isolation segment' do
-                    expect(message['isolation_segment']).to be_nil
-                  end
-                end
-
-                context 'and the isolation segment is not the shared or the default' do
-                  before do
-                    assigner.assign(isolation_segment_model_2, [process.space.organization])
-                    process.space.isolation_segment_model = isolation_segment_model_2
-                    process.space.save
-                  end
-
-                  it 'sets the IS from the space' do
-                    expect(message['isolation_segment']).to eq(isolation_segment_model_2.name)
-                  end
-                end
-              end
-            end
-          end
-
-          context 'when the org does not have a default' do
-            context 'and the space from that org has an isolation segment' do
-              context 'and the isolation segment is not the shared isolation segment' do
-                before do
-                  assigner.assign(isolation_segment_model, [process.space.organization])
-                  process.space.isolation_segment_model = isolation_segment_model
-                  process.space.save
-                end
-
-                it 'sets the isolation segment' do
-                  expect(message['isolation_segment']).to eq(isolation_segment_model.name)
-                end
-              end
-            end
-          end
         end
 
         context 'when app does not have ports defined' do
