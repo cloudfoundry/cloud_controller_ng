@@ -79,7 +79,7 @@ RSpec.describe 'ServiceBindings' do
     end
 
     it 'does not list service bindings without web processes' do
-      non_web_process = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
+      non_web_process       = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
       non_displayed_binding = VCAP::CloudController::ServiceBinding.make(app: non_web_process.app, service_instance: service_instance)
 
       get '/v2/service_bindings', nil, headers_for(user)
@@ -149,6 +149,7 @@ RSpec.describe 'ServiceBindings' do
                       'package_state'              => 'STAGED',
                       'health_check_type'          => 'port',
                       'health_check_timeout'       => nil,
+                      'health_check_http_endpoint' => nil,
                       'staging_failed_reason'      => nil,
                       'staging_failed_description' => nil,
                       'diego'                      => false,
@@ -262,7 +263,7 @@ RSpec.describe 'ServiceBindings' do
     end
 
     it 'does not display service bindings without a web process' do
-      non_web_process = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
+      non_web_process       = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
       non_displayed_binding = VCAP::CloudController::ServiceBinding.make(app: non_web_process.app, service_instance: service_instance)
 
       get "/v2/service_bindings/#{non_displayed_binding.guid}", nil, headers_for(user)
