@@ -52,7 +52,22 @@ module VCAP::CloudController
         logger.info('stop.app.request', process_guid: process_guid)
         handle_diego_errors do
           response = @client.remove_desired_lrp(process_guid)
-          logger.info('get.app.response', process_guid: process_guid, error: response.error)
+          logger.info('stop.app.response', process_guid: process_guid, error: response.error)
+
+          if response.error
+            return nil if response.error.type == ::Diego::Bbs::Models::Error::Type::ResourceNotFound
+          end
+
+          response
+        end
+      end
+
+      def stop_index(process_guid, index)
+        logger.info('stop.index.request', process_guid: process_guid, index: index)
+        actual_lrp_key = ::Diego::Bbs::Models::ActualLRPKey.new(process_guid: process_guid, index: index, domain: APP_LRP_DOMAIN)
+        handle_diego_errors do
+          response = @client.retire_actual_lrp(actual_lrp_key)
+          logger.info('stop.index.response', process_guid: process_guid, index: index, error: response.error)
 
           if response.error
             return nil if response.error.type == ::Diego::Bbs::Models::Error::Type::ResourceNotFound

@@ -107,6 +107,17 @@ module Diego
       protobuf_decode!(response.body, Bbs::Models::DesiredLRPLifecycleResponse)
     end
 
+    def retire_actual_lrp(actual_lrp_key)
+      request = protobuf_encode!({ actual_lrp_key: actual_lrp_key }, Bbs::Models::RetireActualLRPRequest)
+
+      response = with_request_error_handling do
+        client.post(Routes::RETIRE_ACTUAL_LRP, request, PROTOBUF_HEADER)
+      end
+
+      validate_status!(response: response, statuses: [200])
+      protobuf_decode!(response.body, Bbs::Models::ActualLRPLifecycleResponse)
+    end
+
     def with_request_error_handling(&blk)
       tries ||= 3
       yield

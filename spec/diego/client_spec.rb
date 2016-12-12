@@ -466,6 +466,61 @@ module Diego
       end
     end
 
+    describe '#retire_actual_lrp' do
+      let(:actual_lrp_key) { Bbs::Models::ActualLRPKey.new(process_guid: 'process-guid', index: 1, domain: 'domain') }
+      let(:response_body) { Bbs::Models::ActualLRPLifecycleResponse.new(error: nil).encode.to_s }
+      let(:response_status) { 200 }
+
+      before do
+        stub_request(:post, 'https://bbs.example.com:4443/v1/actual_lrps/retire').to_return(status: response_status, body: response_body)
+      end
+
+      it 'returns an Actual LRP Lifecycle Response' do
+        expected_request = Bbs::Models::RetireActualLRPRequest.new(actual_lrp_key: actual_lrp_key)
+
+        response = client.retire_actual_lrp(actual_lrp_key)
+        expect(response).to be_a(Bbs::Models::ActualLRPLifecycleResponse)
+        expect(response.error).to be_nil
+        expect(a_request(:post, 'https://bbs.example.com:4443/v1/actual_lrps/retire').with(
+                 body: expected_request.encode.to_s,
+                 headers: { 'Content-Type' => 'application/x-protobuf' }
+        )).to have_been_made
+      end
+
+      context 'when it does not return successfully' do
+        let(:response_status) { 404 }
+        let(:response_body) { 'not found' }
+
+        it 'raises' do
+          expect { client.retire_actual_lrp(actual_lrp_key) }.to raise_error(ResponseError, /status: 404, body: not found/)
+        end
+      end
+
+      context 'when it fails to make the request' do
+        before do
+          stub_request(:post, 'https://bbs.example.com:4443/v1/actual_lrps/retire').to_raise(StandardError.new('error message'))
+        end
+
+        it 'raises' do
+          expect { client.retire_actual_lrp(actual_lrp_key) }.to raise_error(RequestError, /error message/)
+        end
+      end
+
+      context 'when decoding the response fails' do
+        let(:response_body) { 'potato' }
+
+        it 'raises' do
+          expect { client.retire_actual_lrp(actual_lrp_key) }.to raise_error(DecodeError)
+        end
+      end
+
+      context 'when the request cannot be encoded' do
+        it 'raises' do
+          expect { client.retire_actual_lrp(4) }.to raise_error(EncodeError)
+        end
+      end
+    end
+
     describe '#with_request_error_handling' do
       it 'retries' do
         tries = 0
@@ -484,6 +539,7 @@ module Diego
         }.to raise_error(RequestError)
       end
     end
+
     describe '#update_desired_lrp' do
       let(:process_guid) { 'process-guid' }
       let(:lrp_update) { ::Diego::Bbs::Models::DesiredLRPUpdate.new(instances: 3) }

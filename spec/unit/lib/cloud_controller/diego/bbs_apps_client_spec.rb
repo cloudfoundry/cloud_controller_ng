@@ -101,6 +101,58 @@ module VCAP::CloudController::Diego
       end
     end
 
+    describe '#stop_index' do
+      let(:bbs_client) { instance_double(::Diego::Client) }
+      let(:bbs_response) { ::Diego::Bbs::Models::ActualLRPLifecycleResponse.new(error: error) }
+      let(:process_guid) { 'process-guid' }
+      let(:index) { 9 }
+      let(:actual_lrp_key) { ::Diego::Bbs::Models::ActualLRPKey.new(process_guid: process_guid, index: index, domain: APP_LRP_DOMAIN) }
+      let(:error) { nil }
+
+      before do
+        allow(bbs_client).to receive(:retire_actual_lrp).with(actual_lrp_key).and_return(bbs_response)
+      end
+
+      it 'does not raise error' do
+        expect { client.stop_index(process_guid, index) }.to_not raise_error
+        expect(bbs_client).to have_received(:retire_actual_lrp).with(actual_lrp_key)
+      end
+
+      context 'when the bbs response contains a resource not found error' do
+        let(:error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::ResourceNotFound) }
+
+        it 'returns nil' do
+          expect(client.stop_index(process_guid, index)).to be_nil
+        end
+      end
+
+      context 'when the bbs response contains any other error' do
+        let(:error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::UnknownError, message: 'error message') }
+
+        it 'raises an api error' do
+          expect {
+            client.stop_index(process_guid, index)
+          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+            expect(e.name).to eq('RunnerError')
+          end
+        end
+      end
+
+      context 'when bbs client errors' do
+        before do
+          allow(bbs_client).to receive(:retire_actual_lrp).and_raise(::Diego::Error.new('boom'))
+        end
+
+        it 'raises an api error' do
+          expect {
+            client.stop_index(process_guid, index)
+          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+            expect(e.name).to eq('RunnerUnavailable')
+          end
+        end
+      end
+    end
+
     describe '#get_app' do
       let(:bbs_client) { instance_double(::Diego::Client) }
       let(:bbs_response) { ::Diego::Bbs::Models::DesiredLRPResponse.new(desired_lrp: desired_lrp, error: error) }

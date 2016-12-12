@@ -132,6 +132,21 @@ module VCAP::CloudController
 
           expect(nsync_client).to have_received(:stop_index).with(process_guid, index)
         end
+
+        context 'when configured to stop an index directly to diego' do
+          let(:bbs_apps_client) { instance_double(BbsAppsClient, stop_index: nil) }
+
+          before do
+            CloudController::DependencyLocator.instance.register(:bbs_apps_client, bbs_apps_client)
+            TestConfig.override(diego: { temporary_local_apps: true })
+          end
+
+          it 'sends a stop index request to the bbs' do
+            messenger.send_stop_index_request(process, index)
+
+            expect(bbs_apps_client).to have_received(:stop_index).with(process_guid, index)
+          end
+        end
       end
 
       describe '#send_stop_app_request' do

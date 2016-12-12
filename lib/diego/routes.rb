@@ -9,5 +9,6 @@ module Diego
     DESIRED_LRP_BY_PROCESS_GUID = '/v1/desired_lrps/get_by_process_guid.r2'.freeze
     UPDATE_DESIRED_LRP          = '/v1/desired_lrp/update'.freeze
     REMOVE_DESIRED_LRP          = '/v1/desired_lrp/remove'.freeze
+    RETIRE_ACTUAL_LRP           = '/v1/actual_lrps/retire'.freeze
   end
 end
