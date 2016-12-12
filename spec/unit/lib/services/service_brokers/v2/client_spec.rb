@@ -194,19 +194,30 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker returns a operation' do
-        let(:code) { 202 }
-        let(:message) { 'Accepted' }
         let(:response_data) do
           { operation: 'a_broker_operation_identifier' }
         end
 
-        it 'return immediately with the broker response' do
-          client        = Client.new(client_attrs)
-          attributes, _ = client.provision(instance, accepts_incomplete: true)
+        context 'and the response is a 202' do
+          let(:code) { 202 }
+          let(:message) { 'Accepted' }
 
-          expect(attributes[:last_operation][:broker_provided_operation]).to eq('a_broker_operation_identifier')
-          expect(attributes[:last_operation][:type]).to eq('create')
-          expect(attributes[:last_operation][:state]).to eq('in progress')
+          it 'return immediately with the operation from the broker response' do
+            client = Client.new(client_attrs)
+            attributes, _ = client.provision(instance, accepts_incomplete: true)
+
+            expect(attributes[:last_operation][:broker_provided_operation]).to eq('a_broker_operation_identifier')
+          end
+        end
+
+        context 'and the response is 200' do
+          let(:code) { 200 }
+          it 'ignores the operation' do
+            client = Client.new(client_attrs)
+            attributes, _ = client.provision(instance, accepts_incomplete: true)
+
+            expect(attributes[:last_operation][:broker_provided_operation]).to be_nil
+          end
         end
       end
 
@@ -591,6 +602,34 @@ module VCAP::Services::ServiceBrokers::V2
               expect(attributes[:last_operation][:broker_provided_operation]).to eq('a_broker_operation_identifier')
               expect(error).to be_nil
             end
+          end
+        end
+      end
+
+      context 'when the broker returns a operation' do
+        let(:response_data) do
+          { operation: 'a_broker_operation_identifier' }
+        end
+
+        context 'and the response is a 202' do
+          let(:code) { 202 }
+          let(:message) { 'Accepted' }
+
+          it 'return immediately with the operation from the broker response' do
+            client = Client.new(client_attrs)
+            attributes, _ = client.update(instance, new_plan, accepts_incomplete: true)
+
+            expect(attributes[:last_operation][:broker_provided_operation]).to eq('a_broker_operation_identifier')
+          end
+        end
+
+        context 'and the response is 200' do
+          let(:code) { 200 }
+          it 'ignores the operation' do
+            client = Client.new(client_attrs)
+            attributes, _ = client.update(instance, new_plan, accepts_incomplete: true)
+
+            expect(attributes[:last_operation][:broker_provided_operation]).to be_nil
           end
         end
       end
@@ -1270,6 +1309,34 @@ module VCAP::Services::ServiceBrokers::V2
             client.deprovision(instance)
           }.to raise_error(Errors::ServiceBrokerBadResponse).
             with_message("Service instance #{instance.name}: Service broker error: Could not delete instance")
+        end
+      end
+
+      context 'when the broker returns a operation' do
+        let(:response_data) do
+          { operation: 'a_broker_operation_identifier' }
+        end
+
+        context 'and the response is a 202' do
+          let(:code) { 202 }
+          let(:message) { 'Accepted' }
+
+          it 'return immediately with the operation from the broker response' do
+            client = Client.new(client_attrs)
+            attributes = client.deprovision(instance)
+
+            expect(attributes[:last_operation][:broker_provided_operation]).to eq('a_broker_operation_identifier')
+          end
+        end
+
+        context 'and the response is 200' do
+          let(:code) { 200 }
+          it 'ignores the operation' do
+            client = Client.new(client_attrs)
+            attributes = client.deprovision(instance)
+
+            expect(attributes[:last_operation][:broker_provided_operation]).to be_nil
+          end
         end
       end
     end

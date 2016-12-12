@@ -42,7 +42,7 @@ module VCAP::Services::ServiceBrokers::V2
         last_operation: {
           type: 'create',
           description: last_operation_hash['description'] || '',
-          broker_provided_operation: parsed_response['operation']
+          broker_provided_operation: async_response?(response) ? parsed_response['operation'] : nil
         }
       }
 
@@ -171,7 +171,7 @@ module VCAP::Services::ServiceBrokers::V2
           type: 'delete',
           description: last_operation_hash['description'] || '',
           state: state || 'succeeded',
-          broker_provided_operation: parsed_response['operation']
+          broker_provided_operation: async_response?(response) ? parsed_response['operation'] : nil
         }.compact
       }
     rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict => e
@@ -200,7 +200,7 @@ module VCAP::Services::ServiceBrokers::V2
           type: 'update',
           state: state,
           description: last_operation_hash['description'] || '',
-          broker_provided_operation: parsed_response['operation']
+          broker_provided_operation: async_response?(response) ? parsed_response['operation'] : nil
         },
       }
 
@@ -228,6 +228,10 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     private
+
+    def async_response?(response)
+      response.code == 202
+    end
 
     def extract_state(instance, last_operation_hash)
       return last_operation_hash['state'] unless last_operation_hash.empty?
