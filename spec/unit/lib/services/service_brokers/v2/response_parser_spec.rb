@@ -205,6 +205,24 @@ module VCAP::Services
           }
         end
 
+        def self.with_operation
+          {
+            'operation' => 'g' * 10_000
+          }
+        end
+
+        def self.with_long_operation
+          {
+            'operation' => 'g' * 10_001
+          }
+        end
+
+        def self.with_non_string_operation
+          {
+            'operation' => { 'excellent' => 'adventure' }
+          }
+        end
+
         def self.valid_catalog
           {
             'services' => [
@@ -280,6 +298,10 @@ module VCAP::Services
           "The service broker returned an invalid response for the request to #{uri}: " \
           'The service is attempting to supply volume mounts from your application, but is not registered as a volume mount service. ' \
           'Please contact the service provider.'
+        end
+
+        def self.invalid_operation_error(uri, message)
+          "The service broker returned an invalid response for the request to #{uri}: #{message}"
         end
 
         def self.with_valid_volume_mounts
@@ -415,6 +437,9 @@ module VCAP::Services
         test_case(:provision, 202, broker_empty_json,                                           result: client_result_with_state('in progress'))
         test_case(:provision, 202, broker_non_empty_json,                                       result: client_result_with_state('in progress'))
         test_case(:provision, 202, with_dashboard_url.to_json,                                  result: client_result_with_state('in progress').merge(with_dashboard_url))
+        test_case(:provision, 202, with_operation.to_json,                                      result: client_result_with_state('in progress').merge(with_operation))
+        test_case(:provision, 202, with_non_string_operation.to_json,                           error: Errors::ServiceBrokerResponseMalformed, description: invalid_operation_error(instance_uri, 'The service broker response contained an operation field that was not a string.'))
+        test_case(:provision, 202, with_long_operation.to_json,                                 error: Errors::ServiceBrokerResponseMalformed, description: invalid_operation_error(instance_uri, 'The service broker response contained an operation field exceeding 10k characters.'))
         test_pass_through(:provision, 202, with_dashboard_url,                                  expected_state: 'in progress')
         test_case(:provision, 204, broker_partial_json,                                         error: Errors::ServiceBrokerBadResponse)
         test_case(:provision, 204, broker_malformed_json,                                       error: Errors::ServiceBrokerBadResponse)
@@ -557,6 +582,9 @@ module VCAP::Services
         test_case(:deprovision, 202, broker_malformed_json,                                     error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json, instance_uri))
         test_case(:deprovision, 202, broker_empty_json,                                         result: client_result_with_state('in progress'))
         test_case(:deprovision, 202, broker_non_empty_json,                                     result: client_result_with_state('in progress'))
+        test_case(:deprovision, 202, with_operation.to_json,                                    result: client_result_with_state('in progress').merge(with_operation))
+        test_case(:deprovision, 202, with_non_string_operation.to_json,                         error: Errors::ServiceBrokerResponseMalformed, description: invalid_operation_error(instance_uri, 'The service broker response contained an operation field that was not a string.'))
+        test_case(:deprovision, 202, with_long_operation.to_json,                               error: Errors::ServiceBrokerResponseMalformed, description: invalid_operation_error(instance_uri, 'The service broker response contained an operation field exceeding 10k characters.'))
         test_pass_through(:deprovision, 202,                                                    expected_state: 'in progress')
         test_case(:deprovision, 204, broker_partial_json,                                       error: Errors::ServiceBrokerBadResponse)
         test_case(:deprovision, 204, broker_malformed_json,                                     error: Errors::ServiceBrokerBadResponse)
@@ -607,6 +635,9 @@ module VCAP::Services
         test_case(:update, 202, broker_malformed_json,                                          error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json, instance_uri))
         test_case(:update, 202, broker_empty_json,                                              result: client_result_with_state('in progress'))
         test_case(:update, 202, broker_non_empty_json,                                          result: client_result_with_state('in progress'))
+        test_case(:update, 202, with_operation.to_json,                                         result: client_result_with_state('in progress').merge(with_operation))
+        test_case(:update, 202, with_non_string_operation.to_json,                              error: Errors::ServiceBrokerResponseMalformed, description: invalid_operation_error(instance_uri, 'The service broker response contained an operation field that was not a string.'))
+        test_case(:update, 202, with_long_operation.to_json,                                    error: Errors::ServiceBrokerResponseMalformed, description: invalid_operation_error(instance_uri, 'The service broker response contained an operation field exceeding 10k characters.'))
         test_pass_through(:update, 202,                                                         expected_state: 'in progress')
         test_case(:update, 204, broker_partial_json,                                            error: Errors::ServiceBrokerBadResponse)
         test_case(:update, 204, broker_malformed_json,                                          error: Errors::ServiceBrokerBadResponse)
