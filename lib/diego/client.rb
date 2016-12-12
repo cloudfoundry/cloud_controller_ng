@@ -96,6 +96,17 @@ module Diego
       protobuf_decode!(response.body, Bbs::Models::DesiredLRPLifecycleResponse)
     end
 
+    def remove_desired_lrp(process_guid)
+      request = protobuf_encode!({ process_guid: process_guid }, Bbs::Models::RemoveDesiredLRPRequest)
+
+      response = with_request_error_handling do
+        client.post(Routes::REMOVE_DESIRED_LRP, request, PROTOBUF_HEADER)
+      end
+
+      validate_status!(response: response, statuses: [200])
+      protobuf_decode!(response.body, Bbs::Models::DesiredLRPLifecycleResponse)
+    end
+
     def with_request_error_handling(&blk)
       tries ||= 3
       yield

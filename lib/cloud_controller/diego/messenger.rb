@@ -53,7 +53,11 @@ module VCAP::CloudController
         logger.info('stop.app', app_guid: process.guid)
 
         process_guid = ProcessGuid.from_process(process)
-        nsync_client.stop_app(process_guid)
+        if bypass_bridge?
+          bbs_apps_client.stop_app(process_guid)
+        else
+          nsync_client.stop_app(process_guid)
+        end
       end
 
       private

@@ -70,9 +70,6 @@ module VCAP::CloudController
         diego_envs
       end
 
-      def task_completion_callback(task)
-      end
-
       def logger
         @logger ||= Steno.logger('cc.diego.task_protocol')
       end

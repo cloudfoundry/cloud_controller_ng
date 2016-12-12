@@ -147,6 +147,21 @@ module VCAP::CloudController
 
           expect(nsync_client).to have_received(:stop_app).with(process_guid)
         end
+
+        context 'when configured to stop an app directly to diego' do
+          let(:bbs_apps_client) { instance_double(BbsAppsClient, stop_app: nil) }
+
+          before do
+            CloudController::DependencyLocator.instance.register(:bbs_apps_client, bbs_apps_client)
+            TestConfig.override(diego: { temporary_local_apps: true })
+          end
+
+          it 'sends a stop app request to the bbs' do
+            messenger.send_stop_app_request(process)
+
+            expect(bbs_apps_client).to have_received(:stop_app).with(process_guid)
+          end
+        end
       end
     end
   end
