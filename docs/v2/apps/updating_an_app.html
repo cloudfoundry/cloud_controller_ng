@@ -304,6 +304,23 @@
             </tr>
             <tr class=" ">
               <td class=" ">
+                <span class="name">health_check_http_endpoint</span>
+              </td>
+              <td>
+                <span class="description">Endpoint called to determine if the app is healthy.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+              <td>
+                <ul class="example_values">
+                  <li>/health</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
                 <span class="name">health_check_type</span>
               </td>
               <td>
@@ -314,6 +331,7 @@
               </td>
               <td>
                 <ul class="valid_values">
+                    <li>http</li>
                     <li>port</li>
                     <li>process</li>
                     <li>none</li>
@@ -625,6 +643,7 @@ Cookie: </pre>
     "debug": null,
     "staging_task_id": null,
     "package_state": "PENDING",
+    "health_check_http_endpoint": "",
     "health_check_type": "port",
     "health_check_timeout": null,
     "staging_failed_reason": null,

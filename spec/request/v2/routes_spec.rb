@@ -160,6 +160,7 @@ RSpec.describe 'Routes' do
                       'package_state'              => 'STAGED',
                       'health_check_type'          => 'port',
                       'health_check_timeout'       => nil,
+                      'health_check_http_endpoint' => nil,
                       'staging_failed_reason'      => nil,
                       'staging_failed_description' => nil,
                       'diego'                      => false,

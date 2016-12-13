@@ -147,6 +147,7 @@ module VCAP::CloudController
               'file_descriptors' => process.file_descriptors,
               'health_check_type' => process.health_check_type,
               'health_check_timeout_in_seconds' => process.health_check_timeout,
+              'health_check_http_endpoint' => '',
               'log_guid' => process.app.guid,
               'log_source' => 'APP/PROC/WEB',
               'memory_mb' => process.memory,
@@ -303,6 +304,16 @@ module VCAP::CloudController
 
           it 'uses the default app health check from the config' do
             expect(message['health_check_timeout_in_seconds']).to eq(default_health_check_timeout)
+          end
+        end
+
+        context 'when the app health check http endpoint is set' do
+          let(:default_health_check_http_endpoint) { '/check' }
+          before do
+            process.health_check_http_endpoint = default_health_check_http_endpoint
+          end
+          it 'uses the app health check http endpoint' do
+            expect(message['health_check_http_endpoint']).to eq(default_health_check_http_endpoint)
           end
         end
 
