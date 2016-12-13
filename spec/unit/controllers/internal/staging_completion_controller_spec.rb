@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'membrane'
+require 'cloud_controller/diego/failure_reason_sanitizer'
 
 module VCAP::CloudController
   RSpec.describe StagingCompletionController do
@@ -47,6 +48,58 @@ module VCAP::CloudController
         post url, MultiJson.dump(staging_response)
         expect(last_response.status).to eq(524)
         expect(last_response.body).to match /JobTimeout/
+      end
+
+      context 'when receiving the callback directly from BBS' do
+        let(:staging_result) do
+          {
+            lifecycle_type: 'buildpack',
+            lifecycle_metadata: {
+              buildpack_key: buildpack_key,
+              detected_buildpack: detected_buildpack,
+            },
+            execution_metadata: execution_metadata,
+            process_types: { web: 'start me' }
+          }
+        end
+        let(:failure_reason) { '' }
+        let(:sanitized_failure_reason) { double(:sanitized_failure_reason) }
+        let(:staging_response) do
+          {
+            failed: failure_reason.present?,
+            failure_reason: failure_reason,
+            result: MultiJson.dump(staging_result)
+          }
+        end
+
+        before do
+          allow(Diego::FailureReasonSanitizer).to receive(:sanitize).with(failure_reason).and_return(sanitized_failure_reason)
+        end
+
+        it 'calls the stager with the droplet and response' do
+          expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(droplet, { result: staging_result }, false)
+
+          post url, MultiJson.dump(staging_response)
+          expect(last_response.status).to eq(200)
+        end
+
+        it 'propagates api errors from staging_response' do
+          expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(CloudController::Errors::ApiError.new_from_details('JobTimeout'))
+
+          post url, MultiJson.dump(staging_response)
+          expect(last_response.status).to eq(524)
+          expect(last_response.body).to match /JobTimeout/
+        end
+
+        context 'when staging failed' do
+          let(:failure_reason) { 'something went wrong' }
+
+          it 'passes down the sanitized version of the error to the diego stager' do
+            expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(droplet, { error: sanitized_failure_reason, result: staging_result }, false)
+
+            post url, MultiJson.dump(staging_response)
+          end
+        end
       end
 
       context 'when the droplet does not exist' do

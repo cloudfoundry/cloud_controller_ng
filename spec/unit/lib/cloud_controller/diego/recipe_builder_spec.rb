@@ -114,9 +114,7 @@ module VCAP::CloudController
             expect(result.cpu_weight).to eq(50)
             expect(result.legacy_download_user).to eq('vcap')
 
-            annotation = JSON.parse(result.annotation)
-            expect(annotation['lifecycle']).to eq(lifecycle_type)
-            expect(annotation['completion_callback']).to eq("http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}" \
+            expect(result.completion_callback_url).to eq("http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}" \
                                    "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}")
 
             timeout_action = result.action.timeout_action
@@ -133,11 +131,6 @@ module VCAP::CloudController
 
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
             expect(result.PlacementTags).to eq(['potato-segment'])
-          end
-
-          it 'sets the completion callback to the stager callback url' do
-            result = recipe_builder.build_staging_task(config, staging_details)
-            expect(result.completion_callback_url).to eq("http://stager.example.com/v1/staging/#{droplet.guid}/completed")
           end
 
           it 'gives the task a TrustedSystemCertificatesPath' do
@@ -208,15 +201,6 @@ module VCAP::CloudController
             expect(result.legacy_download_user).to eq('vcap')
           end
 
-          it 'sets the annotation' do
-            result = recipe_builder.build_staging_task(config, staging_details)
-
-            annotation = JSON.parse(result.annotation)
-            expect(annotation['lifecycle']).to eq(lifecycle_type)
-            expect(annotation['completion_callback']).to eq("http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}" \
-                                   "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}")
-          end
-
           it 'sets the cached dependencies' do
             result = recipe_builder.build_staging_task(config, staging_details)
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
@@ -249,7 +233,8 @@ module VCAP::CloudController
 
           it 'sets the completion callback' do
             result = recipe_builder.build_staging_task(config, staging_details)
-            expect(result.completion_callback_url).to eq("http://stager.example.com/v1/staging/#{droplet.guid}/completed")
+            expect(result.completion_callback_url).to eq("http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}" \
+                                   "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}")
           end
 
           it 'sets the trusted cert path' do

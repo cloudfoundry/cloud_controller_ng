@@ -44,8 +44,7 @@ module VCAP::CloudController
         action_builder = LifecycleProtocol.protocol_for_type(lifecycle_type).staging_action_builder(config, staging_details)
 
         ::Diego::Bbs::Models::TaskDefinition.new(
-          annotation:                       generate_annotation(config, lifecycle_type, staging_details),
-          completion_callback_url:          stager_callback_url(config, staging_details),
+          completion_callback_url:          staging_completion_callback(staging_details, config),
           cpu_weight:                       STAGING_TASK_CPU_WEIGHT,
           disk_mb:                          staging_details.staging_disk_in_mb,
           egress_rules:                     generate_egress_rules(staging_details),
@@ -83,12 +82,6 @@ module VCAP::CloudController
           lifecycle:           lifecycle_type,
           completion_callback: staging_completion_callback(staging_details, config)
         }.to_json
-      end
-
-      def stager_callback_url(config, staging_details)
-        stager_completion_callback_url      = URI(config[:diego][:stager_url])
-        stager_completion_callback_url.path = "/v1/staging/#{staging_details.droplet.guid}/completed"
-        stager_completion_callback_url.to_s
       end
 
       def generate_egress_rules(staging_details)
