@@ -293,6 +293,47 @@ module VCAP::CloudController::RestController
         end
       end
 
+      context 'orber-by' do
+        before do
+          VCAP::CloudController::TestModel.make
+          VCAP::CloudController::TestModel.make
+          VCAP::CloudController::TestModel.make
+        end
+
+        let(:opts) do
+          {
+            results_per_page: 1,
+            order_by: order_by_param,
+            page: 2
+          }
+        end
+
+        context 'when not specified' do
+          let(:opts) do
+            {
+              results_per_page: 1,
+              page: 2
+            }
+          end
+
+          it 'does not include order-by in url params' do
+            next_url = JSON.parse(render_json_call)['next_url']
+            expect(next_url).to_not include('order-by')
+          end
+        end
+
+        context 'when it is specified' do
+          let (:order_by_param) { 'sortable_value' }
+
+          it 'includes order-by in next_url and prev_url' do
+            prev_url = JSON.parse(render_json_call)['prev_url']
+            next_url = JSON.parse(render_json_call)['next_url']
+            expect(prev_url).to include("order-by=#{order_by_param}")
+            expect(next_url).to include("order-by=#{order_by_param}")
+          end
+        end
+      end
+
       context 'when collection_transformer is given' do
         let(:collection_transformer) { double('collection_transformer') }
         let!(:test_model) { VCAP::CloudController::TestModel.make }
