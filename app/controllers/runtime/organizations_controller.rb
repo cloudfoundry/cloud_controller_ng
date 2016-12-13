@@ -282,16 +282,6 @@ module VCAP::CloudController
       [HTTP::CREATED, object_renderer.render_json(self.class, org, @opts)]
     end
 
-    def remove_role(org, role, user_id, username)
-      user = User.first(guid: user_id)
-      raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', "User with guid #{user_id} not found") unless user
-      user.username = username
-
-      org.send("remove_#{role}", user)
-
-      @user_event_repository.record_organization_role_remove(org, user, role, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
-    end
-
     def user_guid_parameter
       @opts[:q][0].split(':')[1] if @opts[:q]
     end
