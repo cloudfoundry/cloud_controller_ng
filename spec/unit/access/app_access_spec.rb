@@ -34,6 +34,22 @@ module VCAP::CloudController
       end
     end
 
+    context 'global auditor only' do
+      include_context :global_auditor_setup
+
+      before { FeatureFlag.make(name: 'app_bits_upload', enabled: false) }
+
+      it_behaves_like :read_only_access
+
+      it 'does NOT allow the user to :read_permissions' do
+        expect(subject).not_to allow_op_on_object(:read_permissions, object)
+      end
+
+      it 'does NOT allow global_auditor to :read_env' do
+        expect(subject).not_to allow_op_on_object(:read_env, object)
+      end
+    end
+
     context 'admin read only' do
       include_context :admin_read_only_setup
 

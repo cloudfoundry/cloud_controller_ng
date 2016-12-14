@@ -23,6 +23,10 @@ module VCAP::CloudController
       roles.admin_read_only?
     end
 
+    def self.global_auditor?
+      roles.global_auditor?
+    end
+
     def self.roles
       VCAP::CloudController::Roles.new(token)
     end

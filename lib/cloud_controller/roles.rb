@@ -4,6 +4,7 @@ module VCAP::CloudController
   class Roles
     CLOUD_CONTROLLER_ADMIN_SCOPE = 'cloud_controller.admin'.freeze
     CLOUD_CONTROLLER_ADMIN_READ_ONLY_SCOPE = 'cloud_controller.admin_read_only'.freeze
+    CLOUD_CONTROLLER_GLOBAL_AUDITOR = 'cloud_controller.global_auditor'.freeze
 
     def initialize(token=nil)
       @scopes = Set.new(token && token['scope'])
@@ -15,6 +16,10 @@ module VCAP::CloudController
 
     def admin_read_only?
       @scopes.include?(CLOUD_CONTROLLER_ADMIN_READ_ONLY_SCOPE)
+    end
+
+    def global_auditor?
+      @scopes.include?(CLOUD_CONTROLLER_GLOBAL_AUDITOR)
     end
 
     def admin=(flag)

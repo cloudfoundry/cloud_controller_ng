@@ -21,6 +21,13 @@ module UserHelpers
     set_current_user(user, { admin_read_only: true }.merge(opts))
   end
 
+  # rubocop:disable all
+  def set_current_user_as_global_auditor(opts={})
+    # rubocop:enable all
+    user = opts.delete(:user) || VCAP::CloudController::User.make
+    set_current_user(user, { global_auditor: true }.merge(opts))
+  end
+
   def user_token(user, opts={})
     token_coder = CF::UAA::TokenCoder.new(audience_ids: TestConfig.config[:uaa][:resource_id],
                                           skey: TestConfig.config[:uaa][:symmetric_secret],
@@ -38,6 +45,10 @@ module UserHelpers
 
       if opts[:admin_read_only]
         scopes << 'cloud_controller.admin_read_only'
+      end
+
+      if opts[:global_auditor]
+        scopes << 'cloud_controller.global_auditor'
       end
 
       encoding_opts = {

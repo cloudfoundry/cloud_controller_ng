@@ -1408,6 +1408,18 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the user is a global auditor' do
+        before do
+          set_current_user_as_global_auditor
+        end
+
+        it 'should not be able to read environment variables' do
+          get "/v2/apps/#{app_obj.guid}/env"
+          expect(last_response.status).to eql(403)
+          expect(JSON.parse(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
+        end
+      end
+
       context 'when the user reads environment variables from the app endpoint using inline-relations-depth=2' do
         let!(:test_environment_json) { { 'environ_key' => 'value' } }
         let(:parent_app) { AppModel.make(environment_variables: test_environment_json) }
