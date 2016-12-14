@@ -15,7 +15,8 @@ module VCAP::CloudController
     encrypt :credentials, salt: :salt
 
     def to_hash(opts={})
-      if !VCAP::CloudController::SecurityContext.admin? && !service_instance.space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
+      access_context = VCAP::CloudController::Security::AccessContext.new
+      if access_context.cannot?(:read_env, self)
         opts[:redact] = ['credentials']
       end
       super(opts)

@@ -22,10 +22,9 @@ module CloudController
         private
 
         def redact_creds_if_necessary(binding)
-          admin_override           = VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
-          admin_or_space_developer = admin_override || binding.space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
+          access_context = VCAP::CloudController::Security::AccessContext.new
 
-          return binding.credentials if admin_or_space_developer
+          return binding.credentials if access_context.can?(:read_env, binding)
           { 'redacted_message' => VCAP::CloudController::Presenters::V3::BasePresenter::REDACTED_MESSAGE }
         end
       end
