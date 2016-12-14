@@ -134,13 +134,11 @@ module VCAP::CloudController::RestController
       associated_controller ||= VCAP::CloudController.controller_from_model_name(associated_model)
 
       querier = associated_model == VCAP::CloudController::App ? AppQuery : Query
-      admin_override = SecurityContext.admin? || SecurityContext.admin_read_only?
+      access_context = VCAP::CloudController::Security::AccessContext.new
       filtered_dataset =
         querier.filtered_dataset_from_query_params(
           associated_model,
-          obj.user_visible_relationship_dataset(name,
-                                                VCAP::CloudController::SecurityContext.current_user,
-                                                admin_override),
+          obj.user_visible_relationship_dataset(name, access_context.user, access_context.admin_override),
           associated_controller.query_parameters,
           @opts
         )
@@ -265,8 +263,8 @@ module VCAP::CloudController::RestController
 
     def enumerate_dataset
       qp = self.class.query_parameters
-      admin_override = SecurityContext.admin? || SecurityContext.admin_read_only?
-      visible_objects = model.user_visible(VCAP::CloudController::SecurityContext.current_user, admin_override)
+      access_context = VCAP::CloudController::Security::AccessContext.new
+      visible_objects = model.user_visible(access_context.user, access_context.admin_override)
       filtered_objects = filter_dataset(visible_objects)
       get_filtered_dataset_for_enumeration(model, filtered_objects, qp, @opts)
     end
