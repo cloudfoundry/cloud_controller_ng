@@ -107,7 +107,7 @@ module CloudFoundry
       end
 
       def not_admin
-        !VCAP::CloudController::SecurityContext.admin? && !VCAP::CloudController::SecurityContext.admin_read_only?
+        !VCAP::CloudController::Security::AccessContext.new.admin_override
       end
     end
   end
