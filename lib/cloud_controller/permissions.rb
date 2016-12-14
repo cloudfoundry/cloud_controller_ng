@@ -38,7 +38,7 @@ class VCAP::CloudController::Permissions
   end
 
   def can_see_secrets_in_space?(space_guid, org_guid)
-    roles.admin? ||
+    roles.admin? || roles.admin_read_only? ||
       membership.has_any_roles?(ROLES_FOR_SECRETS, space_guid, org_guid)
   end
 

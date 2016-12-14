@@ -109,7 +109,14 @@ module VCAP::CloudController
       context 'user has no membership' do
         context 'and user is an admin' do
           it 'returns true' do
-            set_current_user(user, { admin: true })
+            set_current_user_as_admin
+            expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be true
+          end
+        end
+
+        context 'and user is admin_read_only' do
+          it 'returns true' do
+            set_current_user_as_admin_read_only
             expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be true
           end
         end
