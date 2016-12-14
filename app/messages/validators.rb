@@ -1,4 +1,5 @@
 require 'active_model'
+require 'utils/uri_utils'
 
 module VCAP::CloudController::Validators
   class ArrayValidator < ActiveModel::EachValidator
@@ -28,7 +29,7 @@ module VCAP::CloudController::Validators
 
   class UriValidator < ActiveModel::EachValidator
     def validate_each(record, attribute, value)
-      record.errors.add attribute, 'must be a valid URI' unless value.is_uri?
+      record.errors.add attribute, 'must be a valid URI' unless UriUtils.is_uri?(value)
     end
   end
 

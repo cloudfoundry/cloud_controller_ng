@@ -1,3 +1,5 @@
+require 'utils/uri_utils'
+
 module VCAP::CloudController
   class CustomBuildpack < Struct.new(:url)
     def to_s
@@ -10,7 +12,7 @@ module VCAP::CloudController
 
     def valid?
       @errors = []
-      unless url.is_uri?
+      unless UriUtils.is_uri?(url)
         @errors << "#{url} is not valid public url or a known buildpack name"
       end
       @errors.empty?

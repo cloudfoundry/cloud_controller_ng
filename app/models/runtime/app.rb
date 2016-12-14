@@ -4,6 +4,7 @@ require 'cloud_controller/undo_app_changes'
 require 'cloud_controller/errors/application_missing'
 require 'repositories/app_usage_event_repository'
 require 'presenters/v3/cache_key_presenter'
+require 'utils/uri_utils'
 
 require_relative 'buildpack'
 
@@ -231,7 +232,7 @@ module VCAP::CloudController
     end
 
     def validate_health_check_http_endpoint
-      if health_check_type == 'http' && !health_check_http_endpoint.is_uri_path?
+      if health_check_type == 'http' && !UriUtils.is_uri_path?(health_check_http_endpoint)
         errors.add(:health_check_http_endpoint, "HTTP health check endpoint is not a valid URI path: #{health_check_http_endpoint}")
       end
     end

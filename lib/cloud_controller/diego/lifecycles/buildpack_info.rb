@@ -1,3 +1,5 @@
+require 'utils/uri_utils'
+
 module VCAP::CloudController
   class BuildpackInfo
     attr_accessor :buildpack, :buildpack_record, :buildpack_url
@@ -5,7 +7,7 @@ module VCAP::CloudController
     def initialize(buildpack_name_or_url, buildpack_record)
       @buildpack        = buildpack_name_or_url
       @buildpack_record = buildpack_record
-      @buildpack_url    = buildpack_name_or_url if buildpack_name_or_url.is_uri?
+      @buildpack_url    = buildpack_name_or_url if UriUtils.is_uri?(buildpack_name_or_url)
     end
 
     def buildpack_exists_in_db?

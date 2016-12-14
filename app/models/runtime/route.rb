@@ -1,4 +1,5 @@
 require 'cloud_controller/dea/client'
+require 'utils/uri_utils'
 
 module VCAP::CloudController
   class Route < Sequel::Model
@@ -114,7 +115,7 @@ module VCAP::CloudController
     def validate_path
       return if path == ''
 
-      if !"pathcheck://#{host}#{path}".is_uri?
+      if !UriUtils.is_uri?("pathcheck://#{host}#{path}")
         errors.add(:path, :invalid_path)
       end
 

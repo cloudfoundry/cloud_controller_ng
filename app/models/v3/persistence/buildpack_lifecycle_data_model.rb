@@ -1,4 +1,5 @@
 require 'cloud_controller/diego/lifecycles/lifecycles'
+require 'utils/uri_utils'
 
 module VCAP::CloudController
   class BuildpackLifecycleDataModel < Sequel::Model(:buildpack_lifecycle_data)
@@ -22,7 +23,7 @@ module VCAP::CloudController
       self.buildpack_url = nil
       self.admin_buildpack_name = nil
 
-      if buildpack.is_uri?
+      if UriUtils.is_uri?(buildpack)
         self.buildpack_url = buildpack
       else
         self.admin_buildpack_name = buildpack
