@@ -310,15 +310,6 @@ module VCAP::CloudController
           expect(app).to_not be_valid
           expect(app.errors.on(:health_check_http_endpoint)).to be_present
         end
-
-        context 'when the health check_type is not http' do
-          it 'cannot be set' do
-            app.health_check_type = 'port'
-            app.health_check_http_endpoint = 'http://google.com/v2'
-            expect(app).to_not be_valid
-            expect(app.errors.on(:health_check_http_endpoint)).to be_present
-          end
-        end
       end
 
       describe 'health_check_type' do
