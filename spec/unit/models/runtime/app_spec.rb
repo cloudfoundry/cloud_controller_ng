@@ -279,6 +279,12 @@ module VCAP::CloudController
       end
 
       describe 'health_check_http_endpoint' do
+        it 'can be set to the root path' do
+          app.health_check_type = 'http'
+          app.health_check_http_endpoint = '/'
+          expect(app).to be_valid
+        end
+
         it 'can be set to a valid uri path' do
           app.health_check_type = 'http'
           app.health_check_http_endpoint = '/v2'
