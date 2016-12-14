@@ -171,10 +171,10 @@ module VCAP::CloudController
                 { 'hostname' => route_without_service.uri,
                   'port' => 2222,
               },
-              { 'hostname' => route_with_service.uri,
-                'route_service_url' => route_with_service.route_binding.route_service_url,
-                'port' => 2222,
-              }
+                { 'hostname' => route_with_service.uri,
+                  'route_service_url' => route_with_service.route_binding.route_service_url,
+                  'port' => 2222,
+                }
               ]
             },
             'egress_rules' => ['running_egress_rule'],

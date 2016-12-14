@@ -28,9 +28,9 @@ templates:
   dea_ca.crt.erb: config/certs/dea_ca.crt
   dea_client.crt.erb: config/certs/dea_client.crt
   dea_client.key.erb: config/certs/dea_client.key
-  bbs_ca.crt.erb: config/certs/bbs_ca.crt
-  bbs_client.crt.erb: config/certs/bbs_client.crt
-  bbs_client.key.erb: config/certs/bbs_client.key
+  mutual_tls_ca.crt.erb: config/certs/mutual_tls_ca.crt
+  mutual_tls.crt.erb: config/certs/mutual_tls.crt
+  mutual_tls.key.erb: config/certs/mutual_tls.key
   pre-start.sh.erb: bin/pre-start
   post-start.sh.erb: bin/post-start
   migrate_db.sh.erb: bin/migrate_db
@@ -118,6 +118,8 @@ properties:
   cc.external_port:
     description: "External Cloud Controller port"
     default: 9022
+  cc.tls_port:
+    description: "Port for internal TLS communication"
   cc.internal_service_hostname:
     description: "Internal hostname used to resolve the address of the Cloud Controller"
     default: "cloud-controller-ng.service.cf.internal"
@@ -777,14 +779,15 @@ properties:
   cc.diego.bbs.url:
     description: "URL of the BBS Server"
     default: https://bbs.service.cf.internal:8889
-  cc.diego.bbs.ca_cert:
-    description: "PEM-encoded CA certificate for communication with the BBS"
+
+  cc.mutual_tls.ca_cert:
+    description: "PEM-encoded CA certificate for secure, mutually authenticated TLS communication"
     default: "temporary default, remove with temporary_local_staging"
-  cc.diego.bbs.client_cert:
-    description: "PEM-encoded server certificate for communication with the BBS"
+  cc.mutual_tls.public_cert:
+    description: "PEM-encoded certificate for secure, mutually authenticated TLS communication"
     default: "temporary default, remove with temporary_local_staging"
-  cc.diego.bbs.client_key:
-    description: "PEM-encoded server key for communication with the BBS"
+  cc.mutual_tls.private_key:
+    description: "PEM-encoded key for secure, mutually authenticated TLS communication"
     default: "temporary default, remove with temporary_local_staging"
 
   cc.diego.nsync_url:

@@ -582,15 +582,17 @@ properties:
   cc.diego.bbs.url:
     description: "URL of the BBS Server"
     default: https://bbs.service.cf.internal:8889
-  cc.diego.bbs.ca_cert:
-    description: "PEM-encoded CA certificate for communication with the BBS"
+
+  cc.mutual_tls.ca_cert:
+    description: "PEM-encoded CA certificate for secure, mutually authenticated TLS communication"
     default: "temporary default, remove with temporary_local_staging"
-  cc.diego.bbs.client_cert:
-    description: "PEM-encoded server certificate for communication with the BBS"
+  cc.mutual_tls.public_cert:
+    description: "PEM-encoded certificate for secure, mutually authenticated TLS communication"
     default: "temporary default, remove with temporary_local_staging"
-  cc.diego.bbs.client_key:
-    description: "PEM-encoded server key for communication with the BBS"
+  cc.mutual_tls.private_key:
+    description: "PEM-encoded key for secure, mutually authenticated TLS communication"
     default: "temporary default, remove with temporary_local_staging"
+
 
   cc.diego.nsync_url:
     default: http://nsync.service.cf.internal:8787

@@ -2,6 +2,7 @@ require 'sinatra'
 require 'controllers/base/base_controller'
 require 'cloud_controller/diego/tps_client'
 require 'cloud_controller/internal_api'
+require 'cloud_controller/diego/failure_reason_sanitizer'
 
 module VCAP::CloudController
   class StagingCompletionController < RestController::BaseController

@@ -63,6 +63,16 @@ module VCAP::CloudController
         )
       end
 
+      def staging_completion_callback(staging_details, config)
+        port = config[:tls_port] || config[:external_port]
+        scheme = config[:tls_port].present? ? 'https' : 'http'
+
+        auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"
+        host_port = "#{config[:internal_service_hostname]}:#{port}"
+        path      = "/internal/v3/staging/#{staging_details.droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}"
+        "#{scheme}://#{auth}@#{host_port}#{path}"
+      end
+
       private
 
       def cpu_weight(task)
@@ -128,13 +138,6 @@ module VCAP::CloudController
         end
 
         proto_volume_mounts
-      end
-
-      def staging_completion_callback(staging_details, config)
-        auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"
-        host_port = "#{config[:internal_service_hostname]}:#{config[:external_port]}"
-        path      = "/internal/v3/staging/#{staging_details.droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}"
-        "http://#{auth}@#{host_port}#{path}"
       end
 
       def logger

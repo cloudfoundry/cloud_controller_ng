@@ -13,6 +13,7 @@ module VCAP::CloudController
     define_schema do
       {
         :external_port => Integer,
+        optional(:tls_port) => Integer,
         :external_protocol => String,
         :internal_service_hostname => String,
         :info => {

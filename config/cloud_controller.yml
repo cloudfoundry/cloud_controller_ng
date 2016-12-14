@@ -1,6 +1,7 @@
 ---
 local_route: 127.0.0.1
 external_port: 8181
+tls_port: 8182
 pid_filename: /tmp/cloud_controller.pid
 message_bus_servers:
   - nats://127.0.0.1:4222

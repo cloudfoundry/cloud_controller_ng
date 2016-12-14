@@ -1,6 +1,7 @@
 ---
 local_route: 192.168.50.1
 external_port: 9022
+tls_port: 9023
 internal_service_hostname: 192.168.50.1
 
 pid_filename: /tmp/cloud_controller.pid

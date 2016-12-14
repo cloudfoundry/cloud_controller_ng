@@ -25,6 +25,9 @@ local_route: <%= discover_external_ip %>
 local_route: <%= p('cc.nginx.ip') %>
 <% end %>
 external_port: <%= p("cc.external_port") %>
+<% if_p('cc.tls_port') do |tls_port| %>
+tls_port: <%= p("cc.tls_port") %>
+<% end %>
 internal_service_hostname: <%= p("cc.internal_service_hostname") %>
 
 pid_filename: /var/vcap/sys/run/cloud_controller_ng/cloud_controller_ng.pid
@@ -433,6 +436,6 @@ diego:
   docker_staging_stack: <%= p("cc.diego.docker_staging_stack") %>
   bbs:
     url: <%= p("cc.diego.bbs.url") %>
-    key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.key
-    cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.crt
-    ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_ca.crt
+    key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls.key
+    cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls.crt
+    ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls_ca.crt
