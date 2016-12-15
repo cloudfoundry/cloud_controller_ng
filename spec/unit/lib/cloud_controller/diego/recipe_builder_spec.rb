@@ -20,7 +20,6 @@ module VCAP::CloudController
         end
         let(:config) do
           {
-            external_port: external_port,
             tls_port: tls_port,
             internal_service_hostname: internal_service_hostname,
             internal_api: {
@@ -38,7 +37,6 @@ module VCAP::CloudController
         end
         let(:isolation_segment) { 'potato-segment' }
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
-        let(:external_port) { '7777' }
         let(:tls_port) { '7773' }
         let(:user) { 'user' }
         let(:password) { 'password' }
@@ -71,31 +69,6 @@ module VCAP::CloudController
           SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }], staging_default: true)
           security_group = SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }], staging_default: false)
           security_group.add_staging_space(app.space)
-        end
-
-        describe '#staging_completion_callback' do
-          let(:droplet) { double(:droplet, guid: 'droplet-guid') }
-          let(:package) { double(:package) }
-
-          context 'when configured with a tls port' do
-            let(:tls_port) { '7773' }
-
-            it 'builds the url as https using the tls port' do
-              url = recipe_builder.staging_completion_callback(staging_details, config)
-              expect(url).to eq("https://#{user}:#{password}@#{internal_service_hostname}:#{tls_port}" \
-                                "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}")
-            end
-          end
-
-          context 'when not configured with a tls port' do
-            let(:tls_port) { nil }
-
-            it 'builds the url as http using the external port' do
-              url = recipe_builder.staging_completion_callback(staging_details, config)
-              expect(url).to eq("http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}" \
-                                "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}")
-            end
-          end
         end
 
         context 'with a buildpack backend' do

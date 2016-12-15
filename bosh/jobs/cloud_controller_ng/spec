@@ -120,6 +120,7 @@ properties:
     default: 9022
   cc.tls_port:
     description: "Port for internal TLS communication"
+    default: 9023
   cc.internal_service_hostname:
     description: "Internal hostname used to resolve the address of the Cloud Controller"
     default: "cloud-controller-ng.service.cf.internal"

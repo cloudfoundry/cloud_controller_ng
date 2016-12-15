@@ -54,8 +54,9 @@ module VCAP::CloudController
       result = {}
       if staging_response[:failed]
         result[:error] = Diego::FailureReasonSanitizer.sanitize(staging_response[:failure_reason])
+      else
+        result[:result] = MultiJson.load(staging_response[:result], symbolize_keys: true)
       end
-      result[:result] = MultiJson.load(staging_response[:result], symbolize_keys: true)
       result
     end
 

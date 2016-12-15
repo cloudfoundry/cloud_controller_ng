@@ -1,5 +1,6 @@
 ---
 external_port: 8181
+tls_port: 8183
 
 info:
   name: "vcap"

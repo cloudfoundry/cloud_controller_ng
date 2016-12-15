@@ -64,8 +64,8 @@ module VCAP::CloudController
       end
 
       def staging_completion_callback(staging_details, config)
-        port = config[:tls_port] || config[:external_port]
-        scheme = config[:tls_port].present? ? 'https' : 'http'
+        port = config[:tls_port]
+        scheme = 'https'
 
         auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"
         host_port = "#{config[:internal_service_hostname]}:#{port}"

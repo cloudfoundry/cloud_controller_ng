@@ -64,11 +64,12 @@ module VCAP::CloudController
         end
         let(:failure_reason) { '' }
         let(:sanitized_failure_reason) { double(:sanitized_failure_reason) }
+        let(:staging_result_json) { MultiJson.dump(staging_result) }
         let(:staging_response) do
           {
             failed: failure_reason.present?,
             failure_reason: failure_reason,
-            result: MultiJson.dump(staging_result)
+            result: staging_result_json,
           }
         end
 
@@ -93,9 +94,10 @@ module VCAP::CloudController
 
         context 'when staging failed' do
           let(:failure_reason) { 'something went wrong' }
+          let(:staging_result_json) { nil }
 
           it 'passes down the sanitized version of the error to the diego stager' do
-            expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(droplet, { error: sanitized_failure_reason, result: staging_result }, false)
+            expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(droplet, { error: sanitized_failure_reason }, false)
 
             post url, MultiJson.dump(staging_response)
           end

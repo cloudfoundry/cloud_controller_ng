@@ -48,9 +48,8 @@ http {
     server unix:/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock;
   }
 
-  <% if_p("cc.tls_port") do |tls_port| %>
   server {
-    listen <%= tls_port %> ssl;
+    listen <%= p("cc.tls_port") %> ssl;
 
     ssl_certificate /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls.crt;
     ssl_certificate_key /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls.key;
@@ -82,7 +81,6 @@ http {
       <% end %>
     }
   }
-  <% end %>
 
   server {
   <% if p("cc.nginx.ip").empty? %>
