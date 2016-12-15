@@ -209,7 +209,7 @@ http {
 
     # Pass altered request body to a backend
     location @cc_uploads {
-      proxy_pass http://unix:/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock;
+      proxy_pass http://cloud_controller;
     }
 
     location ~ ^/internal_redirect/(.*){

@@ -2,7 +2,7 @@
 local_route: 192.168.50.1
 external_port: 9022
 tls_port: 9023
-internal_service_hostname: 192.168.50.1
+internal_service_hostname: cloud-controller-ng.service.cf.internal
 
 pid_filename: /tmp/cloud_controller.pid
 newrelic_enabled: false
