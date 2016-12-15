@@ -25,7 +25,7 @@ namespace :spec do
   end
 
   def run_specs(path)
-    sh "bundle exec rspec #{path} --require rspec/instafail --format RSpec::Instafail"
+    sh "bundle exec rspec #{path} --require rspec/instafail --format RSpec::Instafail --format progress"
   end
 
   def run_specs_parallel(path)
