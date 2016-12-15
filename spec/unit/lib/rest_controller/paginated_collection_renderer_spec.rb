@@ -323,7 +323,7 @@ module VCAP::CloudController::RestController
         end
 
         context 'when it is specified' do
-          let (:order_by_param) { 'sortable_value' }
+          let(:order_by_param) { 'sortable_value' }
 
           it 'includes order-by in next_url and prev_url' do
             prev_url = JSON.parse(render_json_call)['prev_url']
