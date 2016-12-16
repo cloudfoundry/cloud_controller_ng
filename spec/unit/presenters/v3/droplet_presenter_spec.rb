@@ -14,7 +14,8 @@ module VCAP::CloudController::Presenters::V3
         staging_memory_in_mb:  234,
         staging_disk_in_mb:    934,
         execution_metadata:    'black-box-string',
-        package_guid:          'abcdefabcdef12345'
+        package_guid:          'abcdefabcdef12345',
+        droplet_hash:           'droplet-sha1-checksum',
       )
     end
     let(:scheme) { TestConfig.config[:external_protocol] }
@@ -81,6 +82,18 @@ module VCAP::CloudController::Presenters::V3
         end
 
         describe 'result' do
+          context 'when droplet is in a "staging" state' do
+            before do
+              droplet.state = VCAP::CloudController::DropletModel::STAGED_STATE
+              droplet.droplet_hash = nil
+              droplet.save
+            end
+
+            it 'has the correct result' do
+              expect(result[:result][:hash]).to eq(type: 'sha1', value: nil)
+            end
+          end
+
           context 'when droplet is in a "final" state' do
             before do
               droplet.state = VCAP::CloudController::DropletModel::FINAL_STATES.first
@@ -105,7 +118,7 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'has the correct result' do
-            expect(result[:result][:hash]).to eq(type: 'sha1', value: nil)
+            expect(result[:result][:hash]).to eq(type: 'sha1', value: 'droplet-sha1-checksum')
             expect(result[:result][:stack]).to eq('the-happiest-stack')
             expect(result[:result][:buildpack][:name]).to eq('the-happiest-buildpack')
             expect(result[:result][:buildpack][:detect_output]).to eq('the-happiest-buildpack-detect-output')
