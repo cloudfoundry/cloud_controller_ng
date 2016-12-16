@@ -756,7 +756,7 @@ RSpec.describe 'Apps' do
         environment_variables:       { 'cloud' => 'foundry' },
         execution_metadata: 'some-data',
         droplet_hash: 'shalalala',
-        sha256_checksum: 'droplet-checksum-sha256',
+        sha256_checksum: 'droplet-sha256-checksum',
         process_types: { 'web' => 'start-command' },
         staging_memory_in_mb: 100,
         staging_disk_in_mb: 200,
@@ -790,7 +790,7 @@ RSpec.describe 'Apps' do
         'staging_memory_in_mb' => 100,
         'staging_disk_in_mb' => 200,
         'result' => {
-          'hash'                   => { 'type' => 'sha1', 'value' => 'shalalala' },
+          'hash'                   => { 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' },
           'buildpack'              => { 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil },
           'stack'                  => 'stack-name',
           'execution_metadata'     => 'some-data',

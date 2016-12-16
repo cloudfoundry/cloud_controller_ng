@@ -29,8 +29,6 @@ module VCAP::CloudController
           @resource
         end
 
-        DEFAULT_HASHING_ALGORITHM = 'sha1'.freeze
-
         def build_links
           url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
 
@@ -50,10 +48,7 @@ module VCAP::CloudController
 
           lifecycle_result = if droplet.lifecycle_type == Lifecycles::BUILDPACK
                                {
-                                 hash:      {
-                                   type:  DEFAULT_HASHING_ALGORITHM,
-                                   value: droplet.droplet_hash,
-                                 },
+                                 hash:      droplet_checksum_info,
                                  buildpack: {
                                    name:          CloudController::UrlSecretObfuscator.obfuscate(droplet.buildpack_receipt_buildpack),
                                    detect_output: droplet.buildpack_receipt_detect_output
@@ -70,6 +65,14 @@ module VCAP::CloudController
             execution_metadata: redact(droplet.execution_metadata),
             process_types:      redact_hash(droplet.process_types)
           }.merge(lifecycle_result)
+        end
+
+        def droplet_checksum_info
+          if droplet.sha256_checksum
+            { type: 'sha256', value: droplet.sha256_checksum }
+          else
+            { type: 'sha1', value: droplet.droplet_hash }
+          end
         end
 
         def links_for_lifecyle(url_builder)

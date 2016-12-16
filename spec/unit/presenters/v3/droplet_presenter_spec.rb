@@ -15,7 +15,8 @@ module VCAP::CloudController::Presenters::V3
         staging_disk_in_mb:    934,
         execution_metadata:    'black-box-string',
         package_guid:          'abcdefabcdef12345',
-        droplet_hash:           'droplet-sha1-checksum',
+        droplet_hash:          'droplet-sha1-checksum',
+        sha256_checksum:       'droplet-sha256-checksum',
       )
     end
     let(:scheme) { TestConfig.config[:external_protocol] }
@@ -86,11 +87,23 @@ module VCAP::CloudController::Presenters::V3
             before do
               droplet.state = VCAP::CloudController::DropletModel::STAGED_STATE
               droplet.droplet_hash = nil
+              droplet.sha256_checksum = nil
               droplet.save
             end
 
             it 'has the correct result' do
               expect(result[:result][:hash]).to eq(type: 'sha1', value: nil)
+            end
+          end
+
+          context 'when the droplet does not have a sha256 checksum calculated' do
+            before do
+              droplet.sha256_checksum = nil
+              droplet.save
+            end
+
+            it 'has the correct result' do
+              expect(result[:result][:hash]).to eq(type: 'sha1', value: 'droplet-sha1-checksum')
             end
           end
 
@@ -118,7 +131,7 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'has the correct result' do
-            expect(result[:result][:hash]).to eq(type: 'sha1', value: 'droplet-sha1-checksum')
+            expect(result[:result][:hash]).to eq(type: 'sha256', value: 'droplet-sha256-checksum')
             expect(result[:result][:stack]).to eq('the-happiest-stack')
             expect(result[:result][:buildpack][:name]).to eq('the-happiest-buildpack')
             expect(result[:result][:buildpack][:detect_output]).to eq('the-happiest-buildpack-detect-output')
