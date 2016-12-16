@@ -1407,10 +1407,26 @@ module VCAP::CloudController
             before do
               space.update(allow_ssh: true)
             end
+            context 'when default_app_ssh_access is true' do
+              before do
+                TestConfig.override({ default_app_ssh_access: true })
+              end
 
-            it 'sets enable_ssh to true' do
-              app = App.make(app: parent_app)
-              expect(app.enable_ssh).to eq(true)
+              it 'sets enable_ssh to true' do
+                app = App.make(app: parent_app)
+                expect(app.enable_ssh).to eq(true)
+              end
+            end
+
+            context 'when default_app_ssh_access is false' do
+              before do
+                TestConfig.override({ default_app_ssh_access: false })
+              end
+
+              it 'sets enable_ssh to false' do
+                app = App.make(app: parent_app)
+                expect(app.enable_ssh).to eq(false)
+              end
             end
           end
 
