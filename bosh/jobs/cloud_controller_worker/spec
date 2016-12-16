@@ -17,6 +17,9 @@ templates:
   droplets_ca_cert.pem.erb: config/certs/droplets_ca_cert.pem
   packages_ca_cert.pem.erb: config/certs/packages_ca_cert.pem
   resource_pool_ca_cert.pem.erb: config/certs/resource_pool_ca_cert.pem
+  mutual_tls_ca.crt.erb: config/certs/mutual_tls_ca.crt
+  mutual_tls.crt.erb: config/certs/mutual_tls.crt
+  mutual_tls.key.erb: config/certs/mutual_tls.key
 
 packages:
   - capi_utils

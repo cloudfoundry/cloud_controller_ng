@@ -358,6 +358,6 @@ diego:
   lifecycle_bundles: <%= p("cc.diego.lifecycle_bundles").to_json %>
   bbs:
     url: <%= p("cc.diego.bbs.url") %>
-    key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls.key
-    cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls.crt
-    ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls_ca.crt
+    key_file: /var/vcap/jobs/cloud_controller_worker/config/certs/mutual_tls.key
+    cert_file: /var/vcap/jobs/cloud_controller_worker/config/certs/mutual_tls.crt
+    ca_file: /var/vcap/jobs/cloud_controller_worker/config/certs/mutual_tls_ca.crt
