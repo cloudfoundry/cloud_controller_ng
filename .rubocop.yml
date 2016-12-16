@@ -2,7 +2,7 @@ require:
 - ./spec/linters/migration/add_constraint_name.rb
 
 AllCops:
-  TargetRubyVersion: 2.2
+  TargetRubyVersion: 2.3
   Include:
     - '**/Gemfile'
     - '**/Rakefile'
@@ -85,6 +85,9 @@ Style/EachWithObject:
 
 Style/FormatString:
   EnforcedStyle: sprintf
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
 
 Style/GuardClause:
   Enabled: false
