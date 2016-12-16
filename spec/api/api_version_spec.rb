@@ -4,10 +4,6 @@ require 'vcap/digester'
 RSpec.describe 'Stable API warning system', api_version_check: true do
   API_FOLDER_CHECKSUM = '9c4a45ebc1e740ae909fc0ab740c6d51bfdc1f73'.freeze
 
-  it 'double-checks the version' do
-    expect(VCAP::CloudController::Constants::API_VERSION).to eq('2.67.0')
-  end
-
   it 'tells the developer if the API specs change' do
     api_folder = File.expand_path('..', __FILE__)
     filenames = Dir.glob("#{api_folder}/**/*").reject { |filename| File.directory?(filename) || filename == __FILE__ || filename.include?('v3') }.sort
