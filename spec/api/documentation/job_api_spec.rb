@@ -63,7 +63,7 @@ RSpec.resource 'Jobs', type: [:api, :legacy_api] do
     describe 'When a job has failed with an unknown failure' do
       class UnknownFailingJob < FakeJob
         def perform
-          raise RuntimeError.new('arbitrary string')
+          raise 'arbitrary string'
         end
       end
 

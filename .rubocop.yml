@@ -104,10 +104,22 @@ Style/IndentHash:
 Style/Lambda:
   Enabled: false
 
+Style/MultilineArrayBraceLayout:
+  Enabled: false
+
 Style/MultilineBlockChain:
   Enabled: false
 
 Style/MultilineBlockLayout:
+  Enabled: false
+
+Style/MultilineHashBraceLayout:
+  Enabled: false
+
+Style/MultilineMethodCallBraceLayout:
+  Enabled: false
+
+Style/MultilineMethodDefinitionBraceLayout:
   Enabled: false
 
 Style/MultilineOperationIndentation:
