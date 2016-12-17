@@ -244,7 +244,7 @@ module VCAP::CloudController
           it 'includes service_plan_url for managed service instances' do
             get "/v2/spaces/#{space.guid}/service_instances", { return_user_provided_service_instances: true }
             service_instances_response = decoded_response.fetch('resources')
-            managed_service_instance_response = service_instances_response.detect {|si|
+            managed_service_instance_response = service_instances_response.detect { |si|
               si.fetch('metadata').fetch('guid') == managed_service_instance.guid
             }
             expect(managed_service_instance_response.fetch('entity').fetch('service_plan_url')).to be
@@ -255,7 +255,7 @@ module VCAP::CloudController
           it 'includes the correct service binding url' do
             get "/v2/spaces/#{space.guid}/service_instances", { return_user_provided_service_instances: true }
             service_instances_response = decoded_response.fetch('resources')
-            user_provided_service_instance_response = service_instances_response.detect {|si|
+            user_provided_service_instance_response = service_instances_response.detect { |si|
               si.fetch('metadata').fetch('guid') == user_provided_service_instance.guid
             }
             expect(user_provided_service_instance_response.fetch('entity').fetch('service_bindings_url')).to include('user_provided_service_instance')
@@ -279,7 +279,7 @@ module VCAP::CloudController
           it 'includes service_plan_url for managed service instances' do
             get "/v2/spaces/#{space.guid}/service_instances"
             service_instances_response = decoded_response.fetch('resources')
-            managed_service_instance_response = service_instances_response.detect {|si|
+            managed_service_instance_response = service_instances_response.detect { |si|
               si.fetch('metadata').fetch('guid') == managed_service_instance.guid
             }
             expect(managed_service_instance_response.fetch('entity').fetch('service_plan_url')).to be

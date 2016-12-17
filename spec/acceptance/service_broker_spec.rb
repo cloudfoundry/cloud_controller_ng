@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Service Broker' do
   include VCAP::CloudController::BrokerApiHelper
 
-  let(:catalog_with_no_plans) {{
+  let(:catalog_with_no_plans) { {
     services:
     [{
       id:          'service-guid-here',
@@ -14,7 +14,7 @@ RSpec.describe 'Service Broker' do
     }]
   }}
 
-  let(:catalog_with_small_plan) {{
+  let(:catalog_with_small_plan) { {
     services:
     [{
       id:          'service-guid-here',
@@ -29,7 +29,7 @@ RSpec.describe 'Service Broker' do
     }]
   }}
 
-  let(:catalog_with_large_plan) {{
+  let(:catalog_with_large_plan) { {
     services:
     [{
       id:          'service-guid-here',
@@ -44,7 +44,7 @@ RSpec.describe 'Service Broker' do
     }]
   }}
 
-  let(:catalog_with_two_plans) {{
+  let(:catalog_with_two_plans) { {
     services:
     [{
       id:          'service-guid-here',

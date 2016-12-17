@@ -14,7 +14,7 @@ module VCAP::CloudController
     end
 
     def self.visible_private_plan_ids_for_user(user)
-      user.organizations.map {|org|
+      user.organizations.map { |org|
         visible_private_plan_ids_for_organization(org)
       }.flatten.uniq
     end

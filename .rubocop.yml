@@ -131,6 +131,9 @@ Style/NegatedIf:
 Style/Next:
   Enabled: false
 
+Style/NumericLiteralPrefix:
+  Enabled: false
+
 Style/NumericLiterals:
   Enabled: false
 

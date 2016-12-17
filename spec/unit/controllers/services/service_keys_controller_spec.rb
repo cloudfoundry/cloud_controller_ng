@@ -46,7 +46,7 @@ module VCAP::CloudController
     describe 'Dependencies' do
       let(:object_renderer) { double :object_renderer }
       let(:collection_renderer) { double :collection_renderer }
-      let(:dependencies) {{
+      let(:dependencies) { {
           object_renderer: object_renderer,
           collection_renderer: collection_renderer
       }}

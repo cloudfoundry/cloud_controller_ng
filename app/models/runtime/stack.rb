@@ -81,7 +81,7 @@ module VCAP::CloudController
         @hash['default']
       end
 
-      Schema = Membrane::SchemaParser.parse {{
+      Schema = Membrane::SchemaParser.parse { {
         'default' => String,
         'stacks' => [{
           'name' => String,
