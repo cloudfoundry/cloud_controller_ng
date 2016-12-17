@@ -43,7 +43,7 @@ module VCAP::CloudController
 
         context 'the task has a buildpack droplet' do
           let(:app) { AppModel.make }
-          let(:droplet) { DropletModel.make(:buildpack, app_guid: app.guid, droplet_hash: 'some_hash') }
+          let(:droplet) { DropletModel.make(:buildpack, app_guid: app.guid, droplet_hash: 'some_hash', sha256_checksum: 'droplet-sha256-checksum') }
 
           before do
             allow(egress_rules).to receive(:running).with(app).and_return(['running_egress_rule'])
@@ -78,7 +78,7 @@ module VCAP::CloudController
           let(:org) { Organization.make }
           let(:space) { Space.make(organization: org) }
           let(:app) { AppModel.make(space: space) }
-          let(:droplet) { DropletModel.make(:buildpack, app_guid: app.guid, droplet_hash: 'some_hash') }
+          let(:droplet) { DropletModel.make(:buildpack, app_guid: app.guid, droplet_hash: 'some_hash', sha256_checksum: 'droplet-sha256-checksum') }
           let(:task) { TaskModel.make(app_guid: app.guid, droplet_guid: droplet.guid, command: 'be rake my panda', memory_in_mb: 2048, disk_in_mb: 2048) }
 
           let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }

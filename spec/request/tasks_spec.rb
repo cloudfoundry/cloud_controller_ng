@@ -5,10 +5,9 @@ RSpec.describe 'Tasks' do
   let(:user) { VCAP::CloudController::User.make }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
   let(:droplet) do
-    VCAP::CloudController::DropletModel.make(
+    VCAP::CloudController::DropletModel.make(:staged,
       app_guid:     app_model.guid,
       state:        VCAP::CloudController::DropletModel::STAGED_STATE,
-      droplet_hash: 'droplet-hash'
     )
   end
   let(:developer_headers) { headers_for(user) }
@@ -506,10 +505,9 @@ RSpec.describe 'Tasks' do
 
     context 'when requesting a specific droplet' do
       let(:non_assigned_droplet) do
-        VCAP::CloudController::DropletModel.make(
+        VCAP::CloudController::DropletModel.make(:staged,
           app_guid:     app_model.guid,
           state:        VCAP::CloudController::DropletModel::STAGED_STATE,
-          droplet_hash: 'some-droplet-hash'
         )
       end
 

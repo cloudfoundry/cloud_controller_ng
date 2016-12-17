@@ -25,13 +25,6 @@ module VCAP::CloudController
       end
     end
 
-    def fake_app_staging(app)
-      app.package_hash = 'abc'
-      app.droplet_hash = 'def'
-      app.save
-      expect(app.needs_staging?).to eq(false)
-    end
-
     let(:guid_pattern) { '[[:alnum:]-]+' }
     let(:bind_status) { 200 }
     let(:bind_body) { { credentials: credentials } }

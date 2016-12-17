@@ -12,6 +12,7 @@ module VCAP::CloudController
       VCAP::CloudController::DropletModel.make(lifecycle_type,
         app_guid:              source_app.guid,
         droplet_hash:          'abcdef',
+        sha256_checksum:          'droplet-sha256-checksum',
         process_types:         { web: 'bundle exec rails s' },
         environment_variables: { 'THING' => 'STUFF' },
         state:                 VCAP::CloudController::DropletModel::STAGED_STATE)
@@ -28,6 +29,7 @@ module VCAP::CloudController
         expect(copied_droplet.state).to eq DropletModel::COPYING_STATE
         expect(copied_droplet.buildpack_receipt_buildpack_guid).to eq source_droplet.buildpack_receipt_buildpack_guid
         expect(copied_droplet.droplet_hash).to be nil
+        expect(copied_droplet.sha256_checksum).to be nil
         expect(copied_droplet.environment_variables).to eq(nil)
         expect(copied_droplet.process_types).to eq({ 'web' => 'bundle exec rails s' })
         expect(copied_droplet.buildpack_receipt_buildpack).to eq source_droplet.buildpack_receipt_buildpack

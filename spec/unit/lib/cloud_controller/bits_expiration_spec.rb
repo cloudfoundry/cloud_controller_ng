@@ -44,20 +44,16 @@ module VCAP::CloudController
     context 'with droplets' do
       before do
         t        = Time.now
-        @current = DropletModel.make(
-          state:        DropletModel::STAGED_STATE,
+        @current = DropletModel.make(:staged,
           app_guid:     app.guid,
-          droplet_hash: 'current!',
           created_at:   t
         )
         app.update(droplet: @current)
 
         10.times do |i|
-          DropletModel.make(
-            state:        DropletModel::STAGED_STATE,
+          DropletModel.make(:staged,
             app_guid:     app.guid,
-            droplet_hash: 'real hash!',
-            created_at:   t + i
+            created_at:   t + i,
           )
         end
       end
@@ -103,10 +99,8 @@ module VCAP::CloudController
           app_guid:     app.guid,
           created_at:   t
         )
-        @current = DropletModel.make(
-          state:        DropletModel::STAGED_STATE,
+        @current = DropletModel.make(:staged,
           app_guid:     app.guid,
-          droplet_hash: 'current!',
           package_guid: @current_package.guid
         )
         app.update(droplet: @current)

@@ -756,6 +756,7 @@ RSpec.describe 'Apps' do
         environment_variables:       { 'cloud' => 'foundry' },
         execution_metadata: 'some-data',
         droplet_hash: 'shalalala',
+        sha256_checksum: 'droplet-checksum-sha256',
         process_types: { 'web' => 'start-command' },
         staging_memory_in_mb: 100,
         staging_disk_in_mb: 200,

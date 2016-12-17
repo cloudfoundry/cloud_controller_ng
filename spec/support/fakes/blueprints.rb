@@ -78,6 +78,7 @@ module VCAP::CloudController
     app { AppModel.make }
     staging_memory_in_mb { 123 }
     droplet_hash { Sham.guid }
+    sha256_checksum { Sham.guid }
     buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(droplet: object.save) }
   end
 

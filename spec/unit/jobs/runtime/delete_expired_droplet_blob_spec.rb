@@ -13,8 +13,8 @@ module VCAP::CloudController
         job.perform
       end
 
-      it 'nils the droplet_hash' do
-        expect { job.perform }.to change { droplet.reload.droplet_hash }.to(nil)
+      it 'nils the droplet checksums' do
+        expect { job.perform }.to change { [droplet.reload.droplet_hash, droplet.reload.sha256_checksum] }.to([nil, nil])
       end
 
       context 'when the droplet does not exist' do

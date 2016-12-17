@@ -1776,7 +1776,6 @@ module VCAP::CloudController
         let(:app) {
           app = AppFactory.make(diego: true, docker_image: 'some-docker-image')
           app.current_droplet.update(
-            droplet_hash:       'the-droplet-hash',
             execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
           )
           app.reload
@@ -1805,7 +1804,6 @@ module VCAP::CloudController
             let(:app) {
               app = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
               app.current_droplet.update(
-                droplet_hash:       'the-droplet-hash',
                 execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
               )
               app.reload
@@ -1837,7 +1835,6 @@ module VCAP::CloudController
               app = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
 
               app.current_droplet.update(
-                droplet_hash:       'the-droplet-hash',
                 execution_metadata: '{"ports":[{"Port":1024, "Protocol":"udp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"udp"}]}',
               )
               app.reload
@@ -1851,7 +1848,6 @@ module VCAP::CloudController
             it 'returns the ports that were specified during creation' do
               app = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1, ports: [1111])
               app.current_droplet.update(
-                droplet_hash:       'the-droplet-hash',
                 execution_metadata: 'some-invalid-json',
               )
               app.reload
@@ -1865,7 +1861,6 @@ module VCAP::CloudController
             it 'returns the default port' do
               app = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
               app.current_droplet.update(
-                droplet_hash:       'the-droplet-hash',
                 execution_metadata: '{"cmd":"run.sh"}',
               )
               app.reload
@@ -1899,7 +1894,6 @@ module VCAP::CloudController
             it 'returns the ports that were specified during creation' do
               app = AppFactory.make(diego: true, ports: [1025, 1026, 1027, 1028], instances: 1)
               app.current_droplet.update(
-                droplet_hash:       'the-droplet-hash',
                 execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":8080, "Protocol":"tcp"}]}',
               )
               app.reload
