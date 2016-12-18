@@ -9,7 +9,11 @@ module VCAP::CloudController
         end
 
         def perform
-          old_app_events = AppEvent.where("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", cutoff_age_in_days.to_i)
+          if App.db.database_type == :mssql
+            old_app_events = AppEvent.where("created_at < DATEADD(DAY, -?, CURRENT_TIMESTAMP)", cutoff_age_in_days.to_i)
+          else
+            old_app_events = AppEvent.where("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", cutoff_age_in_days.to_i)
+          end
           logger = Steno.logger('cc.background')
           logger.info("Cleaning up #{old_app_events.count} AppEvent rows")
           old_app_events.delete
