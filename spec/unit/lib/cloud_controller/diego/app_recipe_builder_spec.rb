@@ -330,27 +330,89 @@ module VCAP::CloudController
             end
           end
 
-          context 'when the health check type is not set' do
-            let(:app_detail_overrides) do
-              { 'health_check_type' => '' }
+          context 'healthcheck' do
+            context 'when the health check type is not set' do
+              let(:app_detail_overrides) do
+                { 'health_check_type' => '' }
+              end
+
+              it 'adds a port healthcheck action for backwards compatibility' do
+                lrp = builder.build_app_lrp
+
+                expect(lrp.monitor).to eq(expected_monitor_action)
+              end
             end
 
-            it 'adds a port healthcheck action for backwards compatibility' do
-              lrp = builder.build_app_lrp
+            context 'when the health check type is set to "none"' do
+              let(:app_detail_overrides) do
+                { 'health_check_type' => 'none' }
+              end
 
-              expect(lrp.monitor).to eq(expected_monitor_action)
+              it 'adds a port healthcheck action for backwards compatibility' do
+                lrp = builder.build_app_lrp
+
+                expect(lrp.monitor).to eq(nil)
+              end
             end
-          end
 
-          context 'when the health check type is set to "none"' do
-            let(:app_detail_overrides) do
-              { 'health_check_type' => 'none' }
+            context 'when the health check type is set to "port"' do
+              let(:app_detail_overrides) do
+                { 'health_check_type' => 'port' }
+              end
+
+              it 'adds a port healthcheck action' do
+                lrp = builder.build_app_lrp
+
+                expect(lrp.monitor).to eq(expected_monitor_action)
+              end
             end
 
-            it 'adds a port healthcheck action for backwards compatibility' do
-              lrp = builder.build_app_lrp
+            context 'when the health check type is set to "http"' do
+              let(:app_detail_overrides) do
+                {
+                  'health_check_type' => 'http',
+                  'health_check_http_endpoint' => 'http-endpoint'
+                }
+              end
+              let(:expected_monitor_action) do
+                ::Diego::Bbs::Models::Action.new(
+                  timeout_action: ::Diego::Bbs::Models::TimeoutAction.new(
+                    timeout_ms: 30000,
+                    action:     ::Diego::Bbs::Models::Action.new(
+                      parallel_action: ::Diego::Bbs::Models::ParallelAction.new(
+                        actions: [
+                          ::Diego::Bbs::Models::Action.new(
+                            run_action: ::Diego::Bbs::Models::RunAction.new(
+                              user:                'lrp-action-user',
+                              path:                '/tmp/lifecycle/healthcheck',
+                              args:                ['-port=4444', '-uri=http-endpoint'],
+                              resource_limits:     ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                              log_source:          HEALTH_LOG_SOURCE,
+                              suppress_log_output: true,
+                            )
+                          ),
+                          ::Diego::Bbs::Models::Action.new(
+                            run_action: ::Diego::Bbs::Models::RunAction.new(
+                              user:                'lrp-action-user',
+                              path:                '/tmp/lifecycle/healthcheck',
+                              args:                ['-port=5555'],
+                              resource_limits:     ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                              log_source:          HEALTH_LOG_SOURCE,
+                              suppress_log_output: true,
+                            )
+                          )
+                        ]
+                      )
+                    )
+                  )
+                )
+              end
 
-              expect(lrp.monitor).to eq(nil)
+              it 'adds a http healthcheck action using the first port' do
+                lrp = builder.build_app_lrp
+
+                expect(lrp.monitor).to eq(expected_monitor_action)
+              end
             end
           end
 

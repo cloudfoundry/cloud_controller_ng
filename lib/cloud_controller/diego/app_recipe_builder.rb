@@ -180,22 +180,31 @@ module VCAP::CloudController
       end
 
       def generate_monitor_action(lrp_builder)
-        return unless ['', 'port'].include?(app_request['health_check_type'])
+        return if app_request['health_check_type'] == 'none'
 
         desired_ports = lrp_builder.ports
         actions       = []
-        desired_ports.each do |port|
-          actions << ::Diego::Bbs::Models::RunAction.new(
-            user:                lrp_builder.action_user,
-            path:                '/tmp/lifecycle/healthcheck',
-            args:                ["-port=#{port}"],
-            resource_limits:     ::Diego::Bbs::Models::ResourceLimits.new(nofile: file_descriptor_limit(app_request['file_descriptors'])),
-            log_source:          HEALTH_LOG_SOURCE,
-            suppress_log_output: true,
-          )
+        desired_ports.each_with_index do |port, index|
+          actions << build_action(lrp_builder, port, index)
         end
 
         action(timeout(parallel(actions), timeout_ms: 1000 * 30.seconds))
+      end
+
+      def build_action(lrp_builder, port, index)
+        extra_args = []
+        if app_request['health_check_type'] == 'http' && index == 0
+          extra_args << "-uri=#{app_request['health_check_http_endpoint']}"
+        end
+
+        ::Diego::Bbs::Models::RunAction.new(
+          user:                lrp_builder.action_user,
+          path:                '/tmp/lifecycle/healthcheck',
+          args:                ["-port=#{port}"].concat(extra_args),
+          resource_limits:     ::Diego::Bbs::Models::ResourceLimits.new(nofile: file_descriptor_limit(app_request['file_descriptors'])),
+          log_source:          HEALTH_LOG_SOURCE,
+          suppress_log_output: true,
+        )
       end
 
       def generate_egress_rules
