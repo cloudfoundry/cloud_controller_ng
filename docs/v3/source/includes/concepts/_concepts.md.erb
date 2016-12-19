@@ -61,9 +61,9 @@ Example Person Resource
   "guid": "fd35633f-5c5c-4e4e-a5a9-0722c970a9d2",
   "created_at": "2016-03-18T23:26:46Z",
   "updated_at": "2016-10-17T20:00:42Z",
-  
+
   "name": "Bob",
-  
+
   "links": {
     "self": {
       "href": "https://api.example.org/v3/people/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"
@@ -133,6 +133,137 @@ Each link is keyed by its type and will include a `href` for the URL and an opti
     <p class="method-list-item-description">An optional field containing the HTTP method to be used when following the URL.</p>
   </li>
 </ul>
+
+## Relationships
+
+Relationships allow users to create, read, update, and delete associations between resources. Relationships are managed
+through a relationship sub resource.
+
+Not all resources implement every relationship operation listed below. See the docs for each resource to see how it interacts with its relationships.
+
+### To-One relationships
+
+Some relationships relate a resource to exactly one other resource. For example an app can belong to only one space.
+
+```
+Setting the relationship while creating an object
+```
+
+```shell
+curl "https://api.example.org/v3/books" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -d '{
+    "color": "yellow",
+    "relationships": {
+      "publisher": {
+        "data": { "guid": "publisher-guid" }
+      }
+    }
+  }'
+```
+
+```
+Setting the relationship
+```
+
+```shell
+curl "https://api.example.org/v3/books/[guid]/relationships/publisher" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -d '{ "data": { "guid":"publisher-guid" } }'
+```
+
+```
+Removing the relationship
+```
+
+```shell
+curl "https://api.example.org/v3/books/[guid]/relationships/publisher" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -d '{ "data": null }'
+```
+
+### To-Many relationships
+
+Some relationships relate an resource to several other resources. For example a space has many apps.
+
+```
+Setting relationships while creating an object
+```
+
+```shell
+curl "https://api.example.org/v3/cars" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -d '{
+    "color": "yellow",
+    "relationships": {
+      "authors": {
+        "data": [
+          { "guid": "author-guid-1" },
+          { "guid": "author-guid-2" }
+        ]
+      }
+    }
+  }'
+```
+
+```
+Adding related resources
+```
+
+```shell
+curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -d '{
+    "data": [
+      { "guid":"author-guid-1" },
+      { "guid":"author-guid-2" }
+    ]
+  }'
+```
+
+```
+Replacing all relationships
+```
+
+```shell
+curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -d '{
+    "data": [
+      { "guid":"author-guid-3" },
+      { "guid":"author-guid-4" }
+    ]
+  }'
+```
+
+```
+Removing all relationships
+```
+
+```shell
+curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -d '{ "data": [] }'
+```
+
+```
+Removing specific relationships
+```
+
+```shell
+curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
+  -X DELETE \
+  -H "Authorization: bearer [token]" \
+  -d '{ "data": [ { "guid":"author-guid-3" } ] }'
+  }'
+```
 
 ## Errors
 
