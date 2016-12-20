@@ -15,7 +15,7 @@ module VCAP::CloudController
 
       size = available_ports.size
 
-      if size == 0
+      if size.zero?
         return -1
       end
 

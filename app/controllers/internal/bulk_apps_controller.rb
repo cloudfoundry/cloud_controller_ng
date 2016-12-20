@@ -34,7 +34,7 @@ module VCAP::CloudController
     get '/internal/bulk/apps', :bulk_apps
 
     def filtered_bulk_apps
-      raise ApiError.new_from_details('MessageParseError', 'Missing request body') if body.length == 0
+      raise ApiError.new_from_details('MessageParseError', 'Missing request body') if body.length.zero?
       payload = MultiJson.load(body)
 
       apps = runners.diego_apps_from_process_guids(payload)

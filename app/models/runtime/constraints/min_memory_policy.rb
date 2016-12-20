@@ -5,6 +5,6 @@ class MinMemoryPolicy
   end
 
   def validate
-    @errors.add(:memory, :zero_or_less) unless @app.memory > 0
+    @errors.add(:memory, :zero_or_less) unless @app.memory.positive?
   end
 end

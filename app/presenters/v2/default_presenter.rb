@@ -3,7 +3,7 @@ module CloudController
     module V2
       class DefaultPresenter < BasePresenter
         def entity_hash(controller, obj, opts, depth, parents, orphans=nil)
-          export_attrs = opts.delete(:export_attrs) if depth == 0
+          export_attrs = opts.delete(:export_attrs) if depth.zero?
 
           rel_hash = RelationsPresenter.new.to_hash(controller, obj, opts, depth, parents, orphans)
           obj_hash = obj.to_hash(attrs: export_attrs)

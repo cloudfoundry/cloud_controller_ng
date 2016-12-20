@@ -172,7 +172,7 @@ module CloudController
           end
         end
 
-        if batch.length > 0
+        if batch.length.positive?
           yield(batch)
         end
       end

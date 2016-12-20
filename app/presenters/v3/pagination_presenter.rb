@@ -29,7 +29,7 @@ module VCAP::CloudController
             first:         { href: first_uri },
             last:          { href: last_uri },
             next:          next_page <= last_page ? { href: next_uri } : nil,
-            previous:      previous_page > 0 ? { href: previous_uri } : nil
+            previous:      previous_page.positive? ? { href: previous_uri } : nil
           }
         end
 

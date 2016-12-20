@@ -14,7 +14,7 @@ module VCAP
       raise ArgumentError.new('grace period should be an integer') unless grace_period_in_seconds.is_a? Integer
 
       @grace_period_in_seconds = grace_period_in_seconds
-      if grace_period_in_seconds < 0
+      if grace_period_in_seconds.negative?
         @grace_period_in_seconds = 0
         @logger.warn("negative grace period interval '#{grace_period_in_seconds}' is invalid, changed to 0")
       end
@@ -53,7 +53,7 @@ module VCAP
         decode_token_with_key(auth_token, pkey: asymmetric_key.value)
       rescue CF::UAA::InvalidSignature
         asymmetric_key.refresh
-        tries > 0 ? retry : raise
+        tries.positive? ? retry : raise
       end
     end
 

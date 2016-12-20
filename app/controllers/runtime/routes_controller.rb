@@ -287,7 +287,7 @@ module VCAP::CloudController
         routes = routes.where(path: path) if path
         routes = routes.where(port: port) if port
 
-        return [HTTP::NO_CONTENT, nil] if routes.count > 0
+        return [HTTP::NO_CONTENT, nil] if routes.count.positive?
       end
       [HTTP::NOT_FOUND, nil]
     end

@@ -422,7 +422,7 @@ module VCAP::CloudController
         config[:broker_client_default_async_poll_interval_seconds] ||= 60
         config[:packages][:max_valid_packages_stored] ||= 5
         config[:droplets][:max_staged_droplets_stored] ||= 5
-        config[:minimum_candidate_stagers] = (config[:minimum_candidate_stagers] && config[:minimum_candidate_stagers] > 0) ? config[:minimum_candidate_stagers] : 5
+        config[:minimum_candidate_stagers] = config[:minimum_candidate_stagers] && config[:minimum_candidate_stagers].positive? ? config[:minimum_candidate_stagers] : 5
         config[:bits_service] ||= { enabled: false }
         config[:rate_limiter] ||= { enabled: false }
         config[:rate_limiter][:general_limit] ||= 2000
@@ -445,7 +445,7 @@ module VCAP::CloudController
 
       def sanitize_grace_period(config)
         grace_period = config[:app_bits_upload_grace_period_in_seconds]
-        config[:app_bits_upload_grace_period_in_seconds] = 0 if grace_period < 0
+        config[:app_bits_upload_grace_period_in_seconds] = 0 if grace_period.negative?
       end
 
       def sanitize_staging_auth(config)

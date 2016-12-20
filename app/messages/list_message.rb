@@ -37,11 +37,11 @@ module VCAP::CloudController
       end
 
       def validate_page(value, record)
-        record.errors.add(:page, 'must be a positive integer') unless value.to_i > 0
+        record.errors.add(:page, 'must be a positive integer') unless value.to_i.positive?
       end
 
       def validate_per_page(value, record)
-        if value.to_i > 0
+        if value.to_i.positive?
           record.errors.add(:per_page, 'must be between 1 and 5000') unless value.to_i <= 5000
         else
           record.errors.add(:per_page, 'must be a positive integer')

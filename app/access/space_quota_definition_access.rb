@@ -23,9 +23,9 @@ module VCAP::CloudController
         context.roles.admin_read_only? || (
         !context.user.nil? && (
           (context.user.managed_organizations.include? space_quota_definition.organization) ||
-          ((context.user.managed_spaces & space_quota_definition.spaces).length > 0) ||
-          ((context.user.audited_spaces & space_quota_definition.spaces).length > 0) ||
-          ((context.user.spaces & space_quota_definition.spaces).length > 0)
+          (context.user.managed_spaces & space_quota_definition.spaces).length.positive? ||
+          (context.user.audited_spaces & space_quota_definition.spaces).length.positive? ||
+          (context.user.spaces & space_quota_definition.spaces).length.positive?
         )
       )
     end

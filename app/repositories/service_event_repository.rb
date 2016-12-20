@@ -194,7 +194,7 @@ module VCAP::CloudController
         request_hash[:auth_password] = '[REDACTED]' if params.key? :auth_password
 
         metadata = { request: {} }
-        if request_hash.length > 0
+        if request_hash.length.positive?
           metadata[:request] = request_hash
         end
         metadata

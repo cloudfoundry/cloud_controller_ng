@@ -130,10 +130,10 @@ module VCAP::CloudController
         end
 
         def change_running_instances(app, delta)
-          if delta > 0
+          if delta.positive?
             range = (app.instances - delta...app.instances)
             Dea::AppStarterTask.new(app, @blobstore_url_generator, config).start(specific_instances: range)
-          elsif delta < 0
+          elsif delta.negative?
             range = (app.instances...app.instances - delta)
             stop_indices(app, range.to_a)
           end
@@ -163,7 +163,7 @@ module VCAP::CloudController
         end
 
         def get_file_uri_for_active_instance_by_index(app, path, index)
-          if index < 0 || index >= app.instances
+          if index.negative? || index >= app.instances
             msg = "Request failed for app: #{app.name}, instance: #{index}"
             msg << " and path: #{path || '/'} as the instance is out of range."
 

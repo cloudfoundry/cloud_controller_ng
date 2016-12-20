@@ -134,7 +134,7 @@ module CloudController
             remaining_retries: retries
           }.merge(log_data)
         )
-        retry unless retries == 0
+        retry unless retries.zero?
         raise e
       end
     end

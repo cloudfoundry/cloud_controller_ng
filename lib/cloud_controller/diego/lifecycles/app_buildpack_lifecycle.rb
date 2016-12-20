@@ -46,8 +46,6 @@ module VCAP::CloudController
     def buildpack
       if message.buildpack_data.requested?(:buildpack)
         message.buildpack_data.buildpack
-      else
-        return nil
       end
     end
 

@@ -225,7 +225,7 @@ module VCAP::CloudController
       end
 
       def file_descriptor_limit(file_descriptors)
-        file_descriptors == 0 ? DEFAULT_FILE_DESCRIPTOR_LIMIT : file_descriptors
+        file_descriptors.zero? ? DEFAULT_FILE_DESCRIPTOR_LIMIT : file_descriptors
       end
     end
   end

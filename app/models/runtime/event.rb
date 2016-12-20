@@ -35,13 +35,13 @@ module VCAP::CloudController
       # If we have a space, get the guids off of it.
       # If we have only an org, get the org guid from it.
       # Raise.
-      if (space_guid && organization_guid) || organization_guid
-        return
-      elsif space
-        self.space_guid = space.guid
-        self.organization_guid = space.organization.guid
-      else
-        raise EventValidationError.new('A Space or an organization_guid must be supplied when creating an Event.')
+      if !((space_guid && organization_guid) || organization_guid)
+        if space
+          self.space_guid = space.guid
+          self.organization_guid = space.organization.guid
+        else
+          raise EventValidationError.new('A Space or an organization_guid must be supplied when creating an Event.')
+        end
       end
     end
 
