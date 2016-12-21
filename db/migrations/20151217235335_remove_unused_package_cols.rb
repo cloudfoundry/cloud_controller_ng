@@ -18,6 +18,6 @@ Sequel.migration do
     add_column :package_docker_data, :email_salt, String
     add_column :package_docker_data, :encrypted_login_server, String
     add_column :package_docker_data, :login_server_salt, String
-    add_column :package_docker_data, :store_image, :boolean, default: false
+    add_column :package_docker_data, :store_image, TrueClass, default: false
   end
 end

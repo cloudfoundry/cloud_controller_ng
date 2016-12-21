@@ -1,7 +1,11 @@
 Sequel.migration do
   up do
     alter_table :service_keys do
-      set_column_type :credentials, String, null: false, text: true
+      if Sequel::Model.db.database_type == :mssql
+        set_column_type :credentials, String, null: false, size: :max
+      else
+        set_column_type :credentials, String, null: false, text: true
+      end
     end
   end
 

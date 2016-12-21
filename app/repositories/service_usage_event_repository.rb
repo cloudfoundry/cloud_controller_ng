@@ -1,3 +1,4 @@
+require 'jobs/common_events_cleanup'
 module VCAP::CloudController
   module Repositories
     class ServiceUsageEventRepository
@@ -83,8 +84,7 @@ module VCAP::CloudController
       end
 
       def delete_events_older_than(cutoff_age_in_days)
-        old_service_usage_events = ServiceUsageEvent.dataset.where("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", cutoff_age_in_days.to_i)
-        old_service_usage_events.delete
+        CommonEventsCleanUp.delete_model_events_older_than(ServiceUsageEvent, cutoff_age_in_days)
       end
     end
   end

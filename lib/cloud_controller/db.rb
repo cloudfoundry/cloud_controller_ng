@@ -36,6 +36,14 @@ module VCAP::CloudController
         end
       end
 
+      if opts[:db_type]
+        connection_options[:db_type] = opts[:db_type]
+      end
+
+      if opts[:azure]
+        connection_options[:azure] = opts[:azure]
+      end
+
       db = Sequel.connect(opts[:database], connection_options)
       db.logger = logger
       db.sql_log_level = opts[:log_level] || :debug2
@@ -100,8 +108,13 @@ module VCAP
     def self.timestamps(migration, table_key)
       created_at_idx = "#{table_key}_created_at_index".to_sym if table_key
       updated_at_idx = "#{table_key}_updated_at_index".to_sym if table_key
-      migration.Timestamp :created_at, null: false, default: Sequel::CURRENT_TIMESTAMP
-      migration.Timestamp :updated_at
+      if Sequel::Model.db.database_type == :mssql
+        migration.Datetime :created_at, null: false, default: Sequel::CURRENT_TIMESTAMP
+        migration.Datetime :updated_at
+      else
+        migration.Timestamp :created_at, null: false, default: Sequel::CURRENT_TIMESTAMP
+        migration.Timestamp :updated_at
+      end
       migration.index :created_at, name: created_at_idx
       migration.index :updated_at, name: updated_at_idx
     end

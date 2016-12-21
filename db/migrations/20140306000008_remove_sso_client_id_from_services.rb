@@ -6,6 +6,11 @@ Sequel.migration do
         FROM services
         WHERE sso_client_id IS NOT NULL
     SQL
+    if Sequel::Model.db.database_type == :mssql
+      alter_table :services do
+        drop_constraint :uq_services_sso_client_id
+      end
+    end
     alter_table :services do
       drop_column :sso_client_id
     end

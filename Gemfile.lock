@@ -385,6 +385,8 @@ GEM
     tilt (2.0.2)
     timecop (0.8.1)
     timeliness (0.3.8)
+    tiny_tds (1.0.5)
+      mini_portile2 (~> 2.0)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
     unf (0.1.4)
@@ -480,6 +482,7 @@ DEPENDENCIES
   steno
   thin
   timecop
+  tiny_tds (= 1.0.5)
   unf
   vcap-concurrency!
   vcap_common (~> 4.0.4)

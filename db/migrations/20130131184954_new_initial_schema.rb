@@ -58,7 +58,7 @@ Sequel.migration do
       VCAP::Migration.common(self, :qd)
 
       String :name, null: false, unique: true, case_insensitive: true
-      Boolean :non_basic_services_allowed, null: false
+      TrueClass :non_basic_services_allowed, null: false
       Integer :total_services, null: false
       Integer :memory_limit, null: false
 
@@ -87,7 +87,7 @@ Sequel.migration do
       String :info_url
       String :acls
       Integer :timeout
-      Boolean :active, default: false
+      TrueClass :active, default: false
 
       index :label
       index [:label, :provider], unique: true
@@ -163,7 +163,7 @@ Sequel.migration do
 
       # Do the bare miminum for now.  We'll migrate this to something
       # fancier later if we need it.
-      Boolean :production, default: false
+      TrueClass :production, default: false
 
       # environment provided by the developer.
       # does not include environment from service
@@ -266,8 +266,8 @@ Sequel.migration do
       Integer :default_space_id
       foreign_key [:default_space_id], :spaces, name: :fk_users_default_space_id
 
-      Boolean :admin,  default: false
-      Boolean :active, default: false
+      TrueClass :admin,  default: false
+      TrueClass :active, default: false
     end
 
     create_table :apps_routes do

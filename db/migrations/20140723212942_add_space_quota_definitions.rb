@@ -4,7 +4,7 @@ Sequel.migration do
       VCAP::Migration.common(self, :sqd)
 
       String :name, null: false
-      Boolean :non_basic_services_allowed, null: false
+      TrueClass :non_basic_services_allowed, null: false
       Integer :total_services, null: false
       Integer :memory_limit, null: false
       Integer :total_routes, null: false

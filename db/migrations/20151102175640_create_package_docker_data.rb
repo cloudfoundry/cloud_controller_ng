@@ -17,7 +17,7 @@ Sequel.migration do
       String :encrypted_login_server
       String :login_server_salt
 
-      Boolean :store_image, default: false
+      TrueClass :store_image, default: false
 
       String :package_guid
       index :package_guid, name: :package_docker_data_package_guid

@@ -3,7 +3,7 @@
 Sequel.migration do
   change do
     alter_table :organizations do
-      add_column :can_access_non_public_plans, :boolean, default: false, null: false
+      add_column :can_access_non_public_plans, TrueClass, default: false, null: false
     end
   end
 end

@@ -1,5 +1,15 @@
 Sequel.migration do
   up do
+    if Sequel::Model.db.database_type == :mssql
+      run <<-SQL
+          DECLARE  @dropconstraintsql NVARCHAR(MAX);
+          SELECT @dropconstraintsql = 'ALTER TABLE env_groups'
+              + ' DROP CONSTRAINT ' + name + ';'
+              FROM sys.default_constraints
+              where [parent_object_id] = OBJECT_ID(N'env_groups') and [parent_column_id] = COLUMNPROPERTY(OBJECT_ID(N'env_groups'),(N'environment_json'),'ColumnId')
+          EXEC sp_executeSQL @dropconstraintsql
+        SQL
+    end
     alter_table(:env_groups) do
       add_column :salt, String
       set_column_allow_null(:environment_json)

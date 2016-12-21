@@ -51,6 +51,8 @@ module VCAP::CloudController
         { Sequel.lit("date_trunc('second', updated_at)") => updated_at[1].change(usec: 0) }
       elsif App.db.database_type == :mysql
         { Sequel.lit('UNIX_TIMESTAMP(updated_at)') => updated_at[1].to_i }
+      elsif App.db.database_type == :mssql
+        { Sequel.lit("DATEDIFF(second,{d'1970-01-01'},updated_at)") => updated_at[1].to_i }
       else
         {}
       end

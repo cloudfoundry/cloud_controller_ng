@@ -5,7 +5,11 @@ Sequel.migration do
 
   down do
     alter_table(:app_v3) do
-      add_column :lifecycle, String, text: true, null: true
+      if Sequel::Model.db.database_type == :mssql
+        add_column :lifecycle, String, size: :max, null: true
+      else
+        add_column :lifecycle, String, text: true, null: true
+      end
     end
   end
 end
