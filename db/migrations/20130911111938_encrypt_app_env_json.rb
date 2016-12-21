@@ -15,7 +15,11 @@ Sequel.migration do
 
   down do
     alter_table :apps do
-      add_column :environment_json, :text
+      if Sequel::Model.db.database_type == :mssql
+        add_column :environment_json, String, size: :max
+      else
+        add_column :environment_json, :text
+      end
     end
 
     self[:apps].each do |row|

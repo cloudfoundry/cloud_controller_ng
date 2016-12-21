@@ -1,6 +1,10 @@
 Sequel.migration do
   up do
-    add_column :apps_v3, :lifecycle, String, text: true, null: true
+    if Sequel::Model.db.database_type == :mssql
+      add_column :apps_v3, :lifecycle, String, size: :max, null: true
+    else
+      add_column :apps_v3, :lifecycle, String, text: true, null: true
+    end
   end
 
   down do

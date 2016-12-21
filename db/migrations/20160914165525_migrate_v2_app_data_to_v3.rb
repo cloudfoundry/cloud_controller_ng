@@ -8,6 +8,8 @@ Sequel.migration do
                'mysql'
              elsif self.class.name =~ /postgres/i
                'postgres'
+             elsif Sequel::Model.db.database_type == :mssql
+               'mssql'
              else
                raise 'unknown database'
              end
@@ -18,7 +20,7 @@ Sequel.migration do
     generate_stop_events_query = <<-SQL
       INSERT INTO app_usage_events
         (guid, created_at, instance_count, memory_in_mb_per_instance, state, app_guid, app_name, space_guid, space_name, org_guid, buildpack_guid, buildpack_name, package_state, parent_app_name, parent_app_guid, process_type, task_guid, task_name, package_guid, previous_state, previous_package_state, previous_memory_in_mb_per_instance, previous_instance_count)
-      SELECT %s, now(), p.instances, p.memory, 'STOPPED', p.guid, p.name, s.guid, s.name, o.guid, d.buildpack_receipt_buildpack_guid, d.buildpack_receipt_buildpack, p.package_state, a.name, a.guid, p.type, NULL, NULL, pkg.guid, 'STARTED', p.package_state, p.memory, p.instances
+      SELECT %s, %s(), p.instances, p.memory, 'STOPPED', p.guid, p.name, s.guid, s.name, o.guid, d.buildpack_receipt_buildpack_guid, d.buildpack_receipt_buildpack, p.package_state, a.name, a.guid, p.type, NULL, NULL, pkg.guid, 'STARTED', p.package_state, p.memory, p.instances
         FROM apps as p
           INNER JOIN apps_v3 as a ON (a.guid=p.app_guid)
           INNER JOIN spaces as s ON (s.guid=a.space_guid)
@@ -29,9 +31,11 @@ Sequel.migration do
         WHERE p.state='STARTED'
     SQL
     if dbtype == 'mysql'
-      run generate_stop_events_query % 'UUID()'
+      run sprintf(generate_stop_events_query, 'UUID()', 'now')
     elsif dbtype == 'postgres'
-      run generate_stop_events_query % 'get_uuid()'
+      run sprintf(generate_stop_events_query, 'get_uuid()', 'now')
+    elsif dbtype == 'mssql'
+      run sprintf(generate_stop_events_query, 'NEWID()', 'GETDATE')
     end
 
     ###
@@ -269,6 +273,12 @@ Sequel.migration do
         WHERE processes.droplet_hash <> droplets.droplet_hash OR processes.droplet_hash IS NULL
       SQL
 
+      mssql_prune_droplets_query = <<-SQL
+        DELETE droplets FROM droplets
+          JOIN processes ON processes.id = droplets.app_id
+        WHERE processes.droplet_hash <> droplets.droplet_hash OR processes.droplet_hash IS NULL
+      SQL
+
       if dbtype == 'mysql'
         run mysql_prune_droplets_query
 
@@ -282,6 +292,13 @@ Sequel.migration do
         run <<-SQL
           DELETE FROM droplets a USING droplets b
           WHERE a.app_id = b.app_id AND a.id < b.id
+        SQL
+      elsif dbtype == 'mssql'
+        run mssql_prune_droplets_query
+
+        run <<-SQL
+          DELETE a FROM droplets a, droplets b
+          WHERE a.app_id=b.app_id AND a.id < b.id
         SQL
       end
 
@@ -318,10 +335,28 @@ Sequel.migration do
           droplets.buildpack_receipt_detect_output = v2_app.detected_buildpack
       SQL
 
+      mssql_convert_to_v3_droplets_query = <<-SQL
+        UPDATE droplets
+        SET
+          guid = v2_app.guid,
+          state = 'STAGED',
+          app_guid = v2_app.guid,
+          package_guid = v2_app.guid,
+          docker_receipt_image = droplets.cached_docker_image,
+          process_types = CONCAT('{"web":"', droplets.detected_start_command, '"}'),
+          buildpack_receipt_buildpack = v2_app.detected_buildpack_name,
+          buildpack_receipt_buildpack_guid = v2_app.detected_buildpack_guid,
+          buildpack_receipt_detect_output = v2_app.detected_buildpack
+        FROM processes AS v2_app
+        WHERE v2_app.id = droplets.app_id
+      SQL
+
       if dbtype == 'mysql'
         run mysql_convert_to_v3_droplets_query
       elsif dbtype == 'postgres'
         run postgres_convert_to_v3_droplets_query
+      elsif dbtype == 'mssql'
+        run mssql_convert_to_v3_droplets_query
       end
 
       # add lifecycle data to buildpack droplets
@@ -350,10 +385,19 @@ Sequel.migration do
         WHERE web_process.droplet_hash IS NOT NULL AND current_droplet.droplet_hash = web_process.droplet_hash
       SQL
 
+      mssql_set_current_droplet_query = <<-SQL
+        UPDATE apps
+          SET droplet_guid = droplets.guid
+        FROM droplets
+          WHERE droplets.app_guid = apps.guid
+      SQL
+
       if dbtype == 'mysql'
         run mysql_set_current_droplet_query
       elsif dbtype == 'postgres'
         run postgres_set_current_droplet_query
+      elsif dbtype == 'mssql'
+        run mssql_set_current_droplet_query
       end
 
       ####
@@ -364,6 +408,8 @@ Sequel.migration do
         run 'update buildpack_lifecycle_data set guid=UUID();'
       elsif self.class.name =~ /postgres/i
         run 'update buildpack_lifecycle_data set guid=get_uuid();'
+      elsif Sequel::Model.db.database_type == :mssql
+        run 'update buildpack_lifecycle_data set guid=NEWID();'
       end
 
       ####
@@ -385,6 +431,8 @@ Sequel.migration do
         run 'update apps_routes set guid=UUID() where guid is NULL;'
       elsif self.class.name =~ /postgres/i
         run 'update apps_routes set guid=get_uuid() where guid is NULL;'
+      elsif Sequel::Model.db.database_type == :mssql
+        run 'update apps_routes set guid=NEWID() where guid is NULL;'
       end
 
       ####
@@ -411,7 +459,10 @@ Sequel.migration do
     end
 
     alter_table :droplets do
+      drop_index :state, name: :droplets_state_index
       set_column_not_null(:state)
+      add_index :state, name: :droplets_state_index
+      drop_index :app_id, name: :droplets_app_id_index
       drop_column :app_id
       drop_column :cached_docker_image
       drop_column :detected_start_command
@@ -423,8 +474,9 @@ Sequel.migration do
 
       set_column_not_null(:app_guid)
       set_column_not_null(:route_guid)
+      drop_index :guid, name: :apps_routes_guid_index
       set_column_not_null(:guid)
-
+      add_index :guid, unique: true, name: :apps_routes_guid_index
       # for mysql, which loses collation settings when setting not null constraint
       set_column_type :app_guid, String, collate_opts
       set_column_type :route_guid, String, collate_opts
@@ -438,6 +490,7 @@ Sequel.migration do
     rename_table :apps_routes, :route_mappings
 
     alter_table(:service_bindings) do
+      drop_index [:app_id, :service_instance_id], name: :sb_app_id_srv_inst_id_index
       drop_column :service_instance_id
       drop_column :app_id
       drop_column :gateway_name
@@ -457,18 +510,21 @@ Sequel.migration do
     end
 
     alter_table(:processes) do
+      drop_index :name, name: :apps_name_index
       drop_column :name
       drop_column :encrypted_environment_json
       drop_column :salt
       drop_column :encrypted_buildpack
       drop_column :buildpack_salt
       drop_column :space_id
+      drop_index :stack_id, name: :apps_stack_id_index
       drop_column :stack_id
       drop_column :admin_buildpack_id
       drop_column :docker_image
       drop_column :package_hash
       drop_column :package_state
       drop_column :droplet_hash
+      drop_index :package_pending_since, name: :apps_pkg_pending_since_index
       drop_column :package_pending_since
       drop_column :deleted_at
       drop_column :staging_task_id

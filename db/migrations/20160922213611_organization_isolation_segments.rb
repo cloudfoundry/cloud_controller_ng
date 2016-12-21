@@ -16,14 +16,21 @@ Sequel.migration do
 
     alter_table :organizations do
       add_column :default_isolation_segment_guid, String, collate_opts
-
-      add_foreign_key [:guid, :default_isolation_segment_guid], :organizations_isolation_segments, name: 'organizations_isolation_segments_pk'
+      if Sequel::Model.db.database_type == :mssql
+        add_foreign_key [:guid, :default_isolation_segment_guid], :organizations_isolation_segments, name: 'organizations_isolation_segments_fk'
+      else
+        add_foreign_key [:guid, :default_isolation_segment_guid], :organizations_isolation_segments, name: 'organizations_isolation_segments_pk'
+      end
     end
   end
 
   down do
     alter_table :organizations do
-      drop_foreign_key :organizations_isolation_segment_pk
+      if Sequel::Model.db.database_type == :mssql
+        drop_foreign_key :organizations_isolation_segment_fk
+      else
+        drop_foreign_key :organizations_isolation_segment_pk
+      end
     end
 
     drop_table :organizations_isolation_segments
