@@ -482,7 +482,7 @@ DEPENDENCIES
   steno
   thin
   timecop
-  tiny_tds (= 1.0.5)
+  tiny_tds (~> 1.0.5)
   unf
   vcap-concurrency!
   vcap_common (~> 4.0.4)
