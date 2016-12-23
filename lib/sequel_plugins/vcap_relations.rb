@@ -6,7 +6,7 @@ module Sequel::Plugins::VcapRelations
 
   module InstanceMethods
     def has_one_to_many?(association)
-      association_type(association) == :one_to_many && send(association).count > 0
+      association_type(association) == :one_to_many && send(association).count.positive?
     end
 
     def has_one_to_one?(association)

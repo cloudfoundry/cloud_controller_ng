@@ -379,7 +379,7 @@ module VCAP::CloudController
     end
 
     def plan_visible_to_org?(organization, service_plan)
-      ServicePlan.organization_visible(organization).filter(guid: service_plan.guid).count > 0
+      ServicePlan.organization_visible(organization).filter(guid: service_plan.guid).count.positive?
     end
 
     def invalid_plan?(requested_plan_guid, service)

@@ -88,7 +88,7 @@ module VCAP::CloudController
 
         it 'should contain list of both private domains and shared domains' do
           domains = @app.space.organization.private_domains
-          expect(domains.count > 0).to eq(true)
+          expect(domains.count.positive?).to eq(true)
 
           private_domains = domains.collect do |domain|
             { 'guid' => domain.guid,

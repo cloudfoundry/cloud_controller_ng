@@ -93,7 +93,7 @@ http {
 
     server_name  _;
     server_name_in_redirect off;
-    <% if p("request_timeout_in_seconds").to_i > 0 %>
+    <% if p("request_timeout_in_seconds").to_i.positive? %>
       proxy_send_timeout          <%= p("request_timeout_in_seconds") %>;
       proxy_read_timeout          <%= p("request_timeout_in_seconds") %>;
     <% end %>

@@ -57,7 +57,7 @@ module VCAP::CloudController::RestController
         end
 
         unless association.link_only?
-          if depth > 0
+          if depth.positive?
             eager_load_hash[association_name] = {
               visibility_filter => build_eager_load_hash(
                 nil,

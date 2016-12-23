@@ -94,7 +94,7 @@ module VCAP::CloudController
       end
 
       def case_insensitive_equals(str1, str2)
-        str1.casecmp(str2) == 0
+        str1.casecmp(str2).zero?
       end
 
       def validate_not_changing_lifecycle_type!(process, request_attrs)

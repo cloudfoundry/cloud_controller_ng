@@ -90,7 +90,7 @@ module VCAP::CloudController
                 where(:"#{Domain.table_name}__router_group_guid" => route.domain.router_group_guid,
                       :"#{Route.table_name}__port" => route.port)
 
-      domains.count > 0
+      domains.count.positive?
     end
   end
 end

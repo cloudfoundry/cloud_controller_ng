@@ -55,7 +55,7 @@ module VCAP::CloudController
     end
 
     def port
-      super == 0 ? nil : super
+      super.zero? ? nil : super
     end
 
     def organization
@@ -86,7 +86,7 @@ module VCAP::CloudController
       validate_domain
       validate_total_routes
       validate_ports
-      validate_total_reserved_route_ports if port && port > 0
+      validate_total_reserved_route_ports if port && port.positive?
       errors.add(:host, :domain_conflict) if domains_match?
 
       RouteValidator.new(self).validate
@@ -169,7 +169,7 @@ module VCAP::CloudController
     end
 
     def tcp?
-      domain.shared? && domain.tcp? && port.present? && port > 0
+      domain.shared? && domain.tcp? && port.present? && port.positive?
     end
 
     private
@@ -210,7 +210,7 @@ module VCAP::CloudController
     def validate_fqdn
       return unless host
       length_with_period_separator = host.length + 1
-      host_label_length = host.length > 0 ? length_with_period_separator : 0
+      host_label_length = host.length.positive? ? length_with_period_separator : 0
       total_domain_too_long = host_label_length + domain.name.length > Domain::MAXIMUM_FQDN_DOMAIN_LENGTH
       errors.add(:host, "combined with domain name must be no more than #{Domain::MAXIMUM_FQDN_DOMAIN_LENGTH} characters") if total_domain_too_long
     end

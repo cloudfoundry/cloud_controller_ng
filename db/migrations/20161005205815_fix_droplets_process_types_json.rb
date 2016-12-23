@@ -12,7 +12,7 @@ Sequel.migration do
     end
 
     def flush
-      if @batched_commands.count > 0
+      if @batched_commands.count.positive?
         cases            = []
         ids              = []
         id_place_holders = []

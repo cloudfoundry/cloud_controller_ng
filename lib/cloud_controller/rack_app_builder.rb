@@ -59,7 +59,7 @@ module VCAP::CloudController
         access_filename = File.join(File.dirname(config[:logging][:file]), 'cc.access.log')
         access_log ||= File.open(access_filename, 'a')
         access_log.sync = true
-        return access_log
+        access_log
       end
     end
   end

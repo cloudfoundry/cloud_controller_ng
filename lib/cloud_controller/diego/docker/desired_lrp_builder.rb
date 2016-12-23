@@ -28,7 +28,7 @@ module VCAP::CloudController
         end
 
         def ports
-          if @app_request['ports'].length > 0
+          if @app_request['ports'].length.positive?
             return @app_request['ports']
           end
           execution_metadata = MultiJson.load(@app_request['execution_metadata'])

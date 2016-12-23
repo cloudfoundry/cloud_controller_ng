@@ -23,7 +23,7 @@ module VCAP::CloudController
         connection_options[key] = opts[key] if opts[key]
       end
 
-      if opts[:database].index('mysql') == 0
+      if opts[:database].index('mysql').zero?
         connection_options[:charset] = 'utf8'
       end
 

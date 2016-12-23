@@ -5,7 +5,7 @@ class InstancesPolicy
   end
 
   def validate
-    if @app.instances < 0
+    if @app.instances.negative?
       @errors.add(:instances, :less_than_zero)
     end
   end

@@ -61,7 +61,7 @@ module VCAP::CloudController
           response = http_client.get2(path, headers)
         rescue Errno::ECONNREFUSED => e
           tries -= 1
-          retry unless tries == 0
+          retry unless tries.zero?
           raise CloudController::Errors::InstancesUnavailable.new(e)
         end
 
