@@ -33,6 +33,24 @@ module VCAP::CloudController
 
         expect(clock).to have_received(:schedule_frequent_cleanup).with(:pending_droplets, Jobs::Runtime::PendingDropletCleanup)
       end
+
+      describe 'high availability' do
+        let(:scheduler1) { Scheduler.new(config) }
+        let(:scheduler2) { Scheduler.new(config) }
+
+        it 'runs only one clock at a time' do
+          allow(Clockwork).to receive(:run) { sleep 5 }
+
+          schedulers = [
+            Thread.new { scheduler1.start },
+            Thread.new { scheduler2.start },
+          ]
+          schedulers.each { |t| t.join(0.5) }
+          schedulers.each(&:kill)
+
+          expect(Clockwork).to have_received(:run).once
+        end
+      end
     end
   end
 end

@@ -17,10 +17,18 @@ module VCAP::CloudController
     end
 
     def start
-      CLEANUPS.each { |c| @clock.schedule_cleanup(c[:name], c[:class], c[:time]) }
-      @clock.schedule_frequent_cleanup(:pending_droplets, Jobs::Runtime::PendingDropletCleanup)
-      @clock.schedule_daily(:expired_blob_cleanup, Jobs::Runtime::ExpiredBlobCleanup, '00:00')
-      Clockwork.run
+      # The Locking model has its own DB defined in lib/cloud_controller/db.rb
+      # For that reason, the transaction below is not effectively wrapping transactions that may happen nested in its
+      # block. This is to work around the fact that Sequel doesn't let us manage the transactions ourselves with a
+      # non-block syntax
+      Locking.db.transaction do
+        Locking[name: 'clock'].lock!
+
+        CLEANUPS.each { |c| @clock.schedule_cleanup(c[:name], c[:class], c[:time]) }
+        @clock.schedule_frequent_cleanup(:pending_droplets, Jobs::Runtime::PendingDropletCleanup)
+        @clock.schedule_daily(:expired_blob_cleanup, Jobs::Runtime::ExpiredBlobCleanup, '00:00')
+        Clockwork.run
+      end
     end
   end
 end

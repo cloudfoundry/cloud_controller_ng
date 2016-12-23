@@ -130,6 +130,7 @@ module VCAP::CloudController
 
       def create_seed_lockings
         Locking.find_or_create(name: 'buildpacks')
+        Locking.find_or_create(name: 'clock')
       end
 
       def create_seed_environment_variable_groups
