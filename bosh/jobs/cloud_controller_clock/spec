@@ -120,6 +120,10 @@ properties:
     description: "How often the droplet pending cleanup job runs"
     default: 300
 
+  cc.diego_sync.frequency_in_seconds:
+    description: "How often to synchronize CC's database with Diego's"
+    default: 30
+
   cc.external_protocol:
     default: "https"
     description: "The protocol used to access the CC API from an external entity"

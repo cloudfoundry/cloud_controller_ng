@@ -27,7 +27,7 @@ module VCAP::CloudController
         job = if expiration
                 klass.new(expiration)
               else
-                klass
+                klass.new
               end
         opts = { queue: 'cc-generic' }
         opts[:priority] = priority if priority

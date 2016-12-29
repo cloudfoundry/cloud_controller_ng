@@ -35,6 +35,13 @@ module VCAP::CloudController
           with(:pending_droplets, Jobs::Runtime::PendingDropletCleanup)
       end
 
+      it 'schedules diego syncs' do
+        schedule.start
+
+        expect(clock).to have_received(:schedule_frequent_job).
+          with(:diego_sync, Jobs::Diego::Sync, priority: -10)
+      end
+
       describe 'high availability' do
         let(:scheduler1) { Scheduler.new(config) }
         let(:scheduler2) { Scheduler.new(config) }

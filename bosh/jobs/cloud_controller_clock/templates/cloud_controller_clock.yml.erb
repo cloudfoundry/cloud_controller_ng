@@ -105,6 +105,9 @@ pending_droplets:
   frequency_in_seconds: <%= p("cc.pending_droplets.frequency_in_seconds") %>
   expiration_in_seconds: <%= p("cc.staging_timeout_in_seconds") %>
 
+diego_sync:
+  frequency_in_seconds: <%= p("cc.diego_sync.frequency_in_seconds") %>
+
 default_app_memory: <%= p("cc.default_app_memory") %>
 default_app_disk_in_mb: <%= p("cc.default_app_disk_in_mb") %>
 maximum_app_disk_in_mb: <%= p("cc.maximum_app_disk_in_mb") %>

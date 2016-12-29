@@ -226,6 +226,24 @@ module VCAP::CloudController
     metadata { {} }
   end
 
+  App.blueprint(:diego_runnable) do
+    app { AppModel.make(droplet: DropletModel.make(:staged)) }
+    diego { true }
+    instances { 1 }
+    type { Sham.name }
+    metadata { {} }
+    state { 'STARTED' }
+  end
+
+  App.blueprint(:dea_runnable) do
+    app { AppModel.make(droplet: DropletModel.make(:staged)) }
+    diego { false }
+    instances { 1 }
+    type { Sham.name }
+    metadata { {} }
+    state { 'STARTED' }
+  end
+
   App.blueprint(:docker) do
     app { AppModel.make(:docker) }
     diego { true }
