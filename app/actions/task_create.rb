@@ -39,7 +39,7 @@ module VCAP::CloudController
 
       if bypass_bridge?
         task_definition = Diego::RecipeBuilder.new.build_app_task(config, task)
-        dependency_locator.bbs_task_client.desire_task(task.guid, task_definition, 'cf-tasks')
+        dependency_locator.bbs_task_client.desire_task(task.guid, task_definition, Diego::TASKS_DOMAIN)
         mark_task_as_running(task)
       else
         dependency_locator.nsync_client.desire_task(task)

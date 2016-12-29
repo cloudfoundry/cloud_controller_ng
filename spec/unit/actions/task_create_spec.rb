@@ -71,7 +71,7 @@ module VCAP::CloudController
           it 'builds a recipe for the task and desires the task from BBS' do
             task = task_create_action.create(app, message, user_guid, user_email)
 
-            expect(bbs_client).to have_received(:desire_task).with(task.guid, task_definition, 'cf-tasks')
+            expect(bbs_client).to have_received(:desire_task).with(task.guid, task_definition, Diego::TASKS_DOMAIN)
           end
 
           it 'updates the task to be running' do
