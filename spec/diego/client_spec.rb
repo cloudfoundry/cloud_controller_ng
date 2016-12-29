@@ -53,6 +53,62 @@ module Diego
       end
     end
 
+    describe '#upsert_domain' do
+      let(:response_body) { Bbs::Models::UpsertDomainResponse.new(error: nil).encode.to_s }
+      let(:response_status) { 200 }
+      let(:domain) { 'domain' }
+      let(:ttl) { 100 }
+
+      before do
+        stub_request(:post, 'https://bbs.example.com:4443/v1/domains/upsert').to_return(status: response_status, body: response_body)
+      end
+
+      it 'returns a domain lifecycle response' do
+        expected_domain_request = Bbs::Models::UpsertDomainRequest.new(ttl: ttl, domain: domain)
+
+        response = client.upsert_domain(domain: domain, ttl: ttl)
+
+        expect(response.error).to be_nil
+        expect(a_request(:post, 'https://bbs.example.com:4443/v1/domains/upsert').with(
+                 body: expected_domain_request.encode.to_s,
+                 headers: { 'Content-Type' => 'application/x-protobuf' }
+        )).to have_been_made
+      end
+
+      context 'when it does not return successfully' do
+        let(:response_status) { 404 }
+        let(:response_body) { 'not found' }
+
+        it 'raises' do
+          expect { client.upsert_domain(domain: domain, ttl: ttl) }.to raise_error(ResponseError, /status: 404, body: not found/)
+        end
+      end
+
+      context 'when it fails to make the request' do
+        before do
+          stub_request(:post, 'https://bbs.example.com:4443/v1/domains/upsert').to_raise(StandardError.new('error message'))
+        end
+
+        it 'raises' do
+          expect { client.upsert_domain(domain: domain, ttl: ttl) }.to raise_error(RequestError, /error message/)
+        end
+      end
+
+      context 'when decoding the response fails' do
+        let(:response_body) { 'potato' }
+
+        it 'raises' do
+          expect { client.upsert_domain(domain: domain, ttl: ttl) }.to raise_error(DecodeError)
+        end
+      end
+
+      context 'when the domain cannot be encoded' do
+        it 'raises' do
+          expect { client.upsert_domain(domain: 4, ttl: ttl) }.to raise_error(EncodeError)
+        end
+      end
+    end
+
     describe '#desire_task' do
       let(:response_body) { Bbs::Models::TaskLifecycleResponse.new(error: nil).encode.to_s }
       let(:response_status) { 200 }
@@ -593,6 +649,67 @@ module Diego
       context 'when the request cannot be encoded' do
         it 'raises' do
           expect { client.update_desired_lrp(4, lrp_update) }.to raise_error(EncodeError)
+        end
+      end
+    end
+
+    describe '#desired_lrps_scheduling_infos' do
+      let(:scheduling_infos) { [::Diego::Bbs::Models::DesiredLRPSchedulingInfo.new] }
+      let(:response_body) { Bbs::Models::DesiredLRPSchedulingInfosResponse.new(error: nil, desired_lrp_scheduling_infos: scheduling_infos).encode.to_s }
+      let(:response_status) { 200 }
+      let(:domain) { 'domain' }
+
+      before do
+        stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp_scheduling_infos/list').to_return(status: response_status, body: response_body)
+      end
+
+      it 'returns a Desired LRP Scheduling Infos Response' do
+        expected_request = Bbs::Models::DesiredLRPsRequest.new(domain: domain)
+
+        response = client.desired_lrp_scheduling_infos(domain)
+        expect(response).to be_a(Bbs::Models::DesiredLRPSchedulingInfosResponse)
+        expect(response.error).to be_nil
+        expect(response.desired_lrp_scheduling_infos).to eq(scheduling_infos)
+        expect(a_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp_scheduling_infos/list').with(
+                 body: expected_request.encode.to_s,
+                 headers: { 'Content-Type' => 'application/x-protobuf' }
+        )).to have_been_made
+      end
+
+      context 'when it does not return successfully' do
+        let(:response_status) { 404 }
+        let(:response_body) { 'not found' }
+
+        it 'raises' do
+          expect {
+            client.desired_lrp_scheduling_infos(domain)
+          }.to raise_error(ResponseError, /status: 404, body: not found/)
+        end
+      end
+
+      context 'when it fails to make the request' do
+        before do
+          stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp_scheduling_infos/list').to_raise(StandardError.new('error message'))
+        end
+
+        it 'raises' do
+          expect {
+            client.desired_lrp_scheduling_infos(domain)
+          }.to raise_error(RequestError, /error message/)
+        end
+      end
+
+      context 'when decoding the response fails' do
+        let(:response_body) { 'potato' }
+
+        it 'raises' do
+          expect { client.desired_lrp_scheduling_infos(domain) }.to raise_error(DecodeError)
+        end
+      end
+
+      context 'when the request cannot be encoded' do
+        it 'raises' do
+          expect { client.desired_lrp_scheduling_infos(9) }.to raise_error(EncodeError)
         end
       end
     end

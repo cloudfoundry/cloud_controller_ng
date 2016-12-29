@@ -17,7 +17,8 @@ module VCAP::CloudController
     APP_LOG_SOURCE                   = 'APP'.freeze
     HEALTH_LOG_SOURCE                = 'HEALTH'.freeze
 
-    APP_LRP_DOMAIN = 'cf-apps'.freeze
+    APP_LRP_DOMAIN     = 'cf-apps'.freeze
+    APP_LRP_DOMAIN_TTL = 2.minutes
 
     CF_ROUTES_KEY  = 'cf-router'.freeze
     TCP_ROUTES_KEY = 'tcp-router'.freeze

@@ -255,5 +255,88 @@ module VCAP::CloudController::Diego
         end
       end
     end
+
+    describe '#fetch_scheduling_infos' do
+      let(:bbs_client) { instance_double(::Diego::Client) }
+      let(:bbs_response) { ::Diego::Bbs::Models::DesiredLRPSchedulingInfosResponse.new(desired_lrp_scheduling_infos: lrp_scheduling_infos, error: error) }
+      let(:lrp_scheduling_infos) { [::Diego::Bbs::Models::DesiredLRPSchedulingInfo.new] }
+      let(:error) { nil }
+
+      before do
+        allow(bbs_client).to receive(:desired_lrp_scheduling_infos).with(APP_LRP_DOMAIN).and_return(bbs_response)
+      end
+
+      it 'returns lrp scheduling infos' do
+        returned_infos = client.fetch_scheduling_infos
+        expect(returned_infos).to eq(lrp_scheduling_infos)
+      end
+
+      context 'when the bbs response contains any error' do
+        let(:error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::UnknownError, message: 'error message') }
+
+        it 'raises an api error' do
+          expect {
+            client.fetch_scheduling_infos
+          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+            expect(e.name).to eq('RunnerError')
+          end
+        end
+      end
+
+      context 'when bbs client errors' do
+        before do
+          allow(bbs_client).to receive(:desired_lrp_scheduling_infos).and_raise(::Diego::Error.new('boom'))
+        end
+
+        it 'raises an api error' do
+          expect {
+            client.fetch_scheduling_infos
+          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+            expect(e.name).to eq('RunnerUnavailable')
+          end
+        end
+      end
+    end
+
+    describe '#bump_freshness' do
+      let(:bbs_client) { instance_double(::Diego::Client) }
+      let(:bbs_response) { ::Diego::Bbs::Models::UpsertDomainResponse.new(error: error) }
+      let(:error) { nil }
+
+      before do
+        allow(bbs_client).to receive(:upsert_domain).with(domain: APP_LRP_DOMAIN, ttl: APP_LRP_DOMAIN_TTL).and_return(bbs_response)
+      end
+
+      it 'sends the upsert domain to diego' do
+        client.bump_freshness
+        expect(bbs_client).to have_received(:upsert_domain).with(domain: APP_LRP_DOMAIN, ttl: APP_LRP_DOMAIN_TTL)
+      end
+
+      context 'when the bbs response contains any other error' do
+        let(:error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::UnknownError, message: 'error message') }
+
+        it 'raises an api error' do
+          expect {
+            client.bump_freshness
+          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+            expect(e.name).to eq('RunnerError')
+          end
+        end
+      end
+
+      context 'when bbs client errors' do
+        before do
+          allow(bbs_client).to receive(:upsert_domain).and_raise(::Diego::Error.new('boom'))
+        end
+
+        it 'raises an api error' do
+          expect {
+            client.bump_freshness
+          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+            expect(e.name).to eq('RunnerUnavailable')
+          end
+        end
+      end
+    end
   end
 end
