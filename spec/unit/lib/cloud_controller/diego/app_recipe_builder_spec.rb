@@ -5,32 +5,24 @@ module VCAP::CloudController
     RSpec.describe AppRecipeBuilder do
       subject(:builder) do
         described_class.new(
-          config:      config,
-          process:     process,
-          app_request: app_details_from_protocol,
-          ssh_key:     ssh_key
+          config:  config,
+          process: process,
+          ssh_key: ssh_key
         )
       end
 
       let(:ssh_key) { SSHKey.new }
 
       describe '#build_app_lrp' do
-        let(:app_details_from_protocol) do
-          json                      = MultiJson.load(protocol.desire_app_request(process, default_health_check_timeout))
-          json['environment']       = environment_variables
-          json['isolation_segment'] = 'placement-tag'
-          json.merge!(app_detail_overrides)
-        end
-        let(:app_detail_overrides) do
-          { 'health_check_type' => 'port' }
-        end
-
         let(:environment_variables) { ['name' => 'KEY', 'value' => 'running_value'] }
-        let(:protocol) { Protocol.new }
-        let(:default_health_check_timeout) { 24 }
+        before do
+          environment = instance_double(Environment)
+          allow(Environment).to receive(:new).with(process, {}).and_return(environment)
+          allow(environment).to receive(:as_json).and_return(environment_variables)
+        end
 
         let(:lifecycle_type) { nil }
-        let(:app_model) { AppModel.make(lifecycle_type, guid: 'banana-guid') }
+        let(:app_model) { AppModel.make(lifecycle_type, guid: 'banana-guid', droplet: DropletModel.make(state: 'STAGED')) }
         let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
         let(:process) do
           process = ProcessModel.make(:process,
@@ -45,6 +37,7 @@ module VCAP::CloudController
             disk_quota:           256,
             command:              command,
             file_descriptors:     32,
+            health_check_type:    'port',
             enable_ssh:           false
           )
           process.this.update(updated_at: Time.at(2))
@@ -178,6 +171,7 @@ module VCAP::CloudController
           RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: 1111)
 
           app_model.update(droplet: droplet)
+          allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return('placement-tag')
           process.current_droplet.execution_metadata = execution_metadata
         end
 
@@ -259,7 +253,7 @@ module VCAP::CloudController
             expect(lrp.monitor).to eq(expected_monitor_action)
             expect(lrp.network).to eq(expected_network)
             expect(lrp.ports).to eq([4444, 5555])
-            expect(lrp.process_guid).to eq(app_details_from_protocol['process_guid'])
+            expect(lrp.process_guid).to eq(ProcessGuid.from_process(process))
             expect(lrp.root_fs).to eq('buildpack_root_fs')
             expect(lrp.setup).to eq(expected_setup_action)
             expect(lrp.start_timeout_ms).to eq(12 * 1000)
@@ -332,8 +326,8 @@ module VCAP::CloudController
 
           context 'healthcheck' do
             context 'when the health check type is not set' do
-              let(:app_detail_overrides) do
-                { 'health_check_type' => '' }
+              before do
+                process.health_check_type = ''
               end
 
               it 'adds a port healthcheck action for backwards compatibility' do
@@ -344,8 +338,8 @@ module VCAP::CloudController
             end
 
             context 'when the health check type is set to "none"' do
-              let(:app_detail_overrides) do
-                { 'health_check_type' => 'none' }
+              before do
+                process.health_check_type = 'none'
               end
 
               it 'adds a port healthcheck action for backwards compatibility' do
@@ -356,8 +350,8 @@ module VCAP::CloudController
             end
 
             context 'when the health check type is set to "port"' do
-              let(:app_detail_overrides) do
-                { 'health_check_type' => 'port' }
+              before do
+                process.health_check_type = 'port'
               end
 
               it 'adds a port healthcheck action' do
@@ -368,12 +362,11 @@ module VCAP::CloudController
             end
 
             context 'when the health check type is set to "http"' do
-              let(:app_detail_overrides) do
-                {
-                  'health_check_type' => 'http',
-                  'health_check_http_endpoint' => 'http-endpoint'
-                }
+              before do
+                process.health_check_type          = 'http'
+                process.health_check_http_endpoint = 'http-endpoint'
               end
+
               let(:expected_monitor_action) do
                 ::Diego::Bbs::Models::Action.new(
                   timeout_action: ::Diego::Bbs::Models::TimeoutAction.new(
@@ -418,7 +411,7 @@ module VCAP::CloudController
 
           describe 'routes' do
             before do
-              app_details_from_protocol['routing_info'] = {
+              routing_info = {
                 'http_routes' => [
                   {
                     'hostname' => 'potato.example.com',
@@ -443,6 +436,10 @@ module VCAP::CloudController
                   },
                 ]
               }
+
+              routing_info_object = instance_double(Protocol::RoutingInfo)
+              allow(Protocol::RoutingInfo).to receive(:new).with(process).and_return(routing_info_object)
+              allow(routing_info_object).to receive(:routing_info).and_return(routing_info)
             end
 
             it 'includes the correct routes' do
@@ -488,7 +485,7 @@ module VCAP::CloudController
 
             context 'when there are no http routes' do
               before do
-                app_details_from_protocol['routing_info'] = {
+                routing_info = {
                   'tcp_routes' => [
                     {
                       'router_group_guid' => 'im-a-guid',
@@ -502,6 +499,10 @@ module VCAP::CloudController
                     },
                   ]
                 }
+
+                routing_info_object = instance_double(Protocol::RoutingInfo)
+                allow(Protocol::RoutingInfo).to receive(:new).with(process).and_return(routing_info_object)
+                allow(routing_info_object).to receive(:routing_info).and_return(routing_info)
               end
 
               it 'includes empty cf-router entry' do
@@ -537,7 +538,7 @@ module VCAP::CloudController
 
             context 'when there are no tcp routes' do
               before do
-                app_details_from_protocol['routing_info'] = {
+                routing_info = {
                   'http_routes' => [
                     {
                       'hostname' => 'potato.example.com',
@@ -550,6 +551,10 @@ module VCAP::CloudController
                     }
                   ]
                 }
+
+                routing_info_object = instance_double(Protocol::RoutingInfo)
+                allow(Protocol::RoutingInfo).to receive(:new).with(process).and_return(routing_info_object)
+                allow(routing_info_object).to receive(:routing_info).and_return(routing_info)
               end
 
               it 'includes empty tcp-router entry' do
@@ -692,7 +697,7 @@ module VCAP::CloudController
             expect(lrp.network).to eq(expected_network)
             expect(lrp.ports).to eq([4444, 5555])
             expect(lrp.privileged).to eq false
-            expect(lrp.process_guid).to eq(app_details_from_protocol['process_guid'])
+            expect(lrp.process_guid).to eq(ProcessGuid.from_process(process))
             expect(lrp.start_timeout_ms).to eq(12 * 1000)
             expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
             expect(lrp.PlacementTags).to eq(['placement-tag'])
@@ -747,32 +752,9 @@ module VCAP::CloudController
             end
           end
 
-          context 'when log source is empty' do
-            let(:app_detail_overrides) do
-              { 'log_source' => nil }
-            end
-            let(:expected_app_run_action) do
-              ::Diego::Bbs::Models::Action.new(
-                run_action: ::Diego::Bbs::Models::RunAction.new(
-                  path:            '/tmp/lifecycle/launcher',
-                  args:            ['app', command, execution_metadata],
-                  log_source:      APP_LOG_SOURCE,
-                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: 32),
-                  env:             expected_action_environment_variables,
-                  user:            'lrp-action-user',
-                )
-              )
-            end
-
-            it 'uses APP' do
-              lrp = builder.build_app_lrp
-              expect(lrp.action).to eq(expected_action)
-            end
-          end
-
           context 'when the health check type is not set' do
-            let(:app_detail_overrides) do
-              { 'health_check_type' => '' }
+            before do
+              process.health_check_type = ''
             end
 
             it 'adds a port healthcheck action for backwards compatibility' do
@@ -783,8 +765,8 @@ module VCAP::CloudController
           end
 
           context 'when the health check type is set to "none"' do
-            let(:app_detail_overrides) do
-              { 'health_check_type' => 'none' }
+            before do
+              process.health_check_type = 'none'
             end
 
             it 'adds a port healthcheck action for backwards compatibility' do
@@ -869,9 +851,9 @@ module VCAP::CloudController
 
       describe '#build_app_lrp_update' do
         let(:config) { {} }
-        let(:app_details_from_protocol) { { 'routing_info' => {} } }
+        let(:app_model) { AppModel.make(:buildpack, guid: 'banana-guid', droplet: DropletModel.make(state: 'STAGED')) }
         let(:process) do
-          process = ProcessModel.make(:process, instances: 7)
+          process = ProcessModel.make(:process, instances: 7, app: app_model)
           process.this.update(updated_at: Time.at(2))
           process.reload
         end
@@ -895,7 +877,7 @@ module VCAP::CloudController
 
         describe 'routes' do
           before do
-            app_details_from_protocol['routing_info'] = {
+            routing_info = {
               'http_routes' => [
                 {
                   'hostname' => 'potato.example.com',
@@ -920,6 +902,10 @@ module VCAP::CloudController
                 },
               ]
             }
+
+            routing_info_object = instance_double(Protocol::RoutingInfo)
+            allow(Protocol::RoutingInfo).to receive(:new).with(process).and_return(routing_info_object)
+            allow(routing_info_object).to receive(:routing_info).and_return(routing_info)
           end
 
           it 'includes the correct routes' do
@@ -965,7 +951,7 @@ module VCAP::CloudController
 
           context 'when there are no http routes' do
             before do
-              app_details_from_protocol['routing_info'] = {
+              routing_info = {
                 'tcp_routes' => [
                   {
                     'router_group_guid' => 'im-a-guid',
@@ -979,6 +965,10 @@ module VCAP::CloudController
                   },
                 ]
               }
+
+              routing_info_object = instance_double(Protocol::RoutingInfo)
+              allow(Protocol::RoutingInfo).to receive(:new).with(process).and_return(routing_info_object)
+              allow(routing_info_object).to receive(:routing_info).and_return(routing_info)
             end
 
             it 'includes empty cf-router entry' do
@@ -1014,7 +1004,7 @@ module VCAP::CloudController
 
           context 'when there are no tcp routes' do
             before do
-              app_details_from_protocol['routing_info'] = {
+              routing_info = {
                 'http_routes' => [
                   {
                     'hostname' => 'potato.example.com',
@@ -1027,6 +1017,10 @@ module VCAP::CloudController
                   }
                 ]
               }
+
+              routing_info_object = instance_double(Protocol::RoutingInfo)
+              allow(Protocol::RoutingInfo).to receive(:new).with(process).and_return(routing_info_object)
+              allow(routing_info_object).to receive(:routing_info).and_return(routing_info)
             end
 
             it 'includes empty tcp-router entry' do

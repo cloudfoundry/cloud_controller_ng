@@ -7,11 +7,11 @@ module VCAP::CloudController
     class AppRecipeBuilder
       include ::Diego::ActionBuilder
 
-      def initialize(config:, process:, app_request:, ssh_key: SSHKey.new)
+      def initialize(config:, process:, ssh_key: SSHKey.new)
         @config      = config
         @process     = process
-        @app_request = app_request
         @ssh_key     = ssh_key
+        @app_request = Protocol.new.desire_app_message(process, config[:default_health_check_timeout])
       end
 
       def build_app_lrp
