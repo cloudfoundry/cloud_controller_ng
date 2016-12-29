@@ -101,6 +101,50 @@ module VCAP::CloudController
     sequence_id { Sham.sequence_id }
   end
 
+  TaskModel.blueprint(:running) do
+    guid { Sham.guid }
+    app { AppModel.make }
+    name { Sham.name }
+    droplet { DropletModel.make(:staged, app: app) }
+    command { 'bundle exec rake' }
+    state { VCAP::CloudController::TaskModel::RUNNING_STATE }
+    memory_in_mb { 256 }
+    sequence_id { Sham.sequence_id }
+  end
+
+  TaskModel.blueprint(:canceling) do
+    guid { Sham.guid }
+    app { AppModel.make }
+    name { Sham.name }
+    droplet { DropletModel.make(:staged, app: app) }
+    command { 'bundle exec rake' }
+    state { VCAP::CloudController::TaskModel::CANCELING_STATE }
+    memory_in_mb { 256 }
+    sequence_id { Sham.sequence_id }
+  end
+
+  TaskModel.blueprint(:succeeded) do
+    guid { Sham.guid }
+    app { AppModel.make }
+    name { Sham.name }
+    droplet { DropletModel.make(:staged, app: app) }
+    command { 'bundle exec rake' }
+    state { VCAP::CloudController::TaskModel::SUCCEEDED_STATE }
+    memory_in_mb { 256 }
+    sequence_id { Sham.sequence_id }
+  end
+
+  TaskModel.blueprint(:pending) do
+    guid { Sham.guid }
+    app { AppModel.make }
+    name { Sham.name }
+    droplet { DropletModel.make(:staged, app: app) }
+    command { 'bundle exec rake' }
+    state { VCAP::CloudController::TaskModel::PENDING_STATE }
+    memory_in_mb { 256 }
+    sequence_id { Sham.sequence_id }
+  end
+
   User.blueprint do
     guid { Sham.uaa_id }
   end

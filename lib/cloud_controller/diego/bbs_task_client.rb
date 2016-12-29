@@ -30,6 +30,26 @@ module VCAP::CloudController
         end
       end
 
+      def fetch_tasks
+        logger.info('fetch.tasks.request')
+
+        handle_diego_errors do
+          response = client.tasks(domain: TASKS_DOMAIN)
+          logger.info('fetch.tasks.response', error: response.error)
+          response
+        end.tasks
+      end
+
+      def bump_freshness
+        logger.info('bump.freshness.request')
+
+        handle_diego_errors do
+          response = @client.upsert_domain(domain: TASKS_DOMAIN, ttl: TASKS_DOMAIN_TTL)
+          logger.info('bump.freshness.response', error: response.error)
+          response
+        end
+      end
+
       private
 
       attr_reader :client
@@ -44,6 +64,8 @@ module VCAP::CloudController
         if response.error
           raise CloudController::Errors::ApiError.new_from_details('TaskError', response.error.message)
         end
+
+        response
       end
 
       def logger

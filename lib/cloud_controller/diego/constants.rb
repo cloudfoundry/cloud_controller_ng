@@ -26,5 +26,7 @@ module VCAP::CloudController
     CF_ROUTES_KEY  = 'cf-router'.freeze
     TCP_ROUTES_KEY = 'tcp-router'.freeze
     SSH_ROUTES_KEY = 'diego-ssh'.freeze
+
+    BULKER_TASK_FAILURE = 'Unable to determine completion status'.freeze
   end
 end
