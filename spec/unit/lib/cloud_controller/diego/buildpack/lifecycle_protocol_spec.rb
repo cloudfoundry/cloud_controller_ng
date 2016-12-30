@@ -317,6 +317,7 @@ module VCAP
                 process_guid: ProcessGuid.from_process(process),
                 checksum_algorithm: 'sha1',
                 checksum_value: droplet.droplet_hash,
+                start_command: 'go go go',
               }
             end
             let(:blobstore_url_generator) do
@@ -347,6 +348,22 @@ module VCAP
 
               it 'uses it' do
                 builder_opts.merge!(checksum_algorithm: 'sha256', checksum_value: 'droplet-sha256-checksum')
+                expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
+                  config,
+                  builder_opts,
+                )
+                lifecycle_protocol.desired_lrp_builder(config, process)
+              end
+            end
+
+            context 'when a start command is not set' do
+              before do
+                process.update(command: nil)
+                allow(process).to receive(:detected_start_command).and_return('/usr/bin/nc')
+              end
+
+              it 'uses the deteceted start command' do
+                builder_opts[:start_command] = '/usr/bin/nc'
                 expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
                   config,
                   builder_opts,

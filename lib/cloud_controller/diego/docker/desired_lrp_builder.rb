@@ -2,11 +2,14 @@ module VCAP::CloudController
   module Diego
     module Docker
       class DesiredLrpBuilder
+        attr_reader :start_command
+
         def initialize(config, opts)
           @config = config
           @docker_image = opts[:docker_image]
           @execution_metadata = opts[:execution_metadata]
           @ports = opts[:ports]
+          @start_command = opts[:start_command]
         end
 
         def cached_dependencies

@@ -120,6 +120,7 @@ module VCAP
                 ports: [1, 2, 3],
                 docker_image: 'the-image',
                 execution_metadata: 'foobar',
+                start_command: 'go go go',
               }
             end
             before do

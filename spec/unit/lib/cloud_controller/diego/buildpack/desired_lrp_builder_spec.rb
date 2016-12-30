@@ -14,6 +14,7 @@ module VCAP::CloudController
             ports: ports,
             checksum_algorithm: 'checksum-algorithm',
             checksum_value: 'checksum-value',
+            start_command: 'dd if=/dev/random of=/dev/null',
           }
         end
         let(:ports) { [1111, 2222, 3333] }
@@ -29,6 +30,12 @@ module VCAP::CloudController
           }
         end
         let(:use_privileged_containers_for_running) { false }
+
+        describe '#start_command' do
+          it 'returns the passed in start command' do
+            expect(builder.start_command).to eq('dd if=/dev/random of=/dev/null')
+          end
+        end
 
         describe '#root_fs' do
           it 'returns a constructed root_fs' do

@@ -141,28 +141,19 @@ module VCAP::CloudController
         proto_volume_mounts
       end
 
-      def generate_app_action(user, environment_variables)
+      def generate_app_action(start_command, user, environment_variables)
         action(::Diego::Bbs::Models::RunAction.new(
                  user:            user,
                  path:            '/tmp/lifecycle/launcher',
                  args:            [
                    'app',
-                   start_command,
+                   start_command || '',
                    process.execution_metadata,
                  ],
                  env:             environment_variables,
                  log_source:      "APP/PROC/#{process.type.upcase}",
                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: file_descriptor_limit),
         ))
-      end
-
-      def start_command
-        command = if process.app.lifecycle_type == Lifecycles::DOCKER
-                    process.command
-                  else
-                    process.command.nil? ? process.detected_start_command : process.command
-                  end
-        command || ''
       end
 
       def generate_ssh_action(user, environment_variables)
@@ -197,7 +188,7 @@ module VCAP::CloudController
         environment_variables = generate_environment_variables(lrp_builder)
 
         actions = []
-        actions << generate_app_action(lrp_builder.action_user, environment_variables)
+        actions << generate_app_action(lrp_builder.start_command, lrp_builder.action_user, environment_variables)
         actions << generate_ssh_action(lrp_builder.action_user, environment_variables) if allow_ssh?
         codependent(actions)
       end

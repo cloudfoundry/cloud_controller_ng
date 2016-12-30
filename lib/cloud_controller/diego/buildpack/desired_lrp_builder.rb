@@ -4,6 +4,8 @@ module VCAP::CloudController
       class DesiredLrpBuilder
         include ::Diego::ActionBuilder
 
+        attr_reader :start_command
+
         def initialize(config, opts)
           @config = config
           @stack = opts[:stack]
@@ -13,6 +15,7 @@ module VCAP::CloudController
           @ports = opts[:ports]
           @checksum_algorithm = opts[:checksum_algorithm]
           @checksum_value = opts[:checksum_value]
+          @start_command = opts[:start_command]
         end
 
         def cached_dependencies

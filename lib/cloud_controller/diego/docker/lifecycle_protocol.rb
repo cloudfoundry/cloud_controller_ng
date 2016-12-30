@@ -47,6 +47,7 @@ module VCAP
               ports: Protocol::OpenProcessPorts.new(process).to_a,
               docker_image: process.current_droplet.docker_receipt_image,
               execution_metadata: process.execution_metadata,
+              start_command: process.command,
             }
           end
         end

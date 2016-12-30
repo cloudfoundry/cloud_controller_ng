@@ -10,6 +10,7 @@ module VCAP::CloudController
             ports: ports,
             docker_image: 'user/repo:tag',
             execution_metadata: execution_metadata,
+            start_command: 'dd if=/dev/random of=/dev/null',
           }
         end
         let(:config) do
@@ -116,6 +117,12 @@ module VCAP::CloudController
             it 'uses the user from the execution metadata' do
               expect(builder.action_user).to eq('foobar')
             end
+          end
+        end
+
+        describe '#start_command' do
+          it 'returns the passed in start command' do
+            expect(builder.start_command).to eq('dd if=/dev/random of=/dev/null')
           end
         end
       end

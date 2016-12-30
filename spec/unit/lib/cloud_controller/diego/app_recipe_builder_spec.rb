@@ -216,6 +216,7 @@ module VCAP::CloudController
               privileged?:                  false,
               ports:                        lrp_builder_ports,
               action_user:                  'lrp-action-user',
+              start_command:                command,
             )
           end
 
@@ -678,6 +679,7 @@ module VCAP::CloudController
               privileged?:                  false,
               ports:                        lrp_builder_ports,
               action_user:                  'lrp-action-user',
+              start_command:                command,
             )
           end
 
@@ -713,27 +715,6 @@ module VCAP::CloudController
             expect(lrp.start_timeout_ms).to eq(12 * 1000)
             expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
             expect(lrp.PlacementTags).to eq(['placement-tag'])
-          end
-
-          context 'when start command is not specified' do
-            let(:command) { nil }
-            let(:expected_app_run_action) do
-              ::Diego::Bbs::Models::Action.new(
-                run_action: ::Diego::Bbs::Models::RunAction.new(
-                  path:            '/tmp/lifecycle/launcher',
-                  args:            ['app', '', execution_metadata],
-                  log_source:      'APP/PROC/WEB',
-                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                  env:             expected_action_environment_variables,
-                  user:            'lrp-action-user',
-                )
-              )
-            end
-
-            it 'uses empty string for the start command arg' do
-              lrp = builder.build_app_lrp
-              expect(lrp.action).to eq(expected_action)
-            end
           end
 
           context 'cpu weight' do

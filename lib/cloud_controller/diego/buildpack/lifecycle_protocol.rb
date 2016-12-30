@@ -80,6 +80,7 @@ module VCAP
               stack: process.app.lifecycle_data.stack,
               checksum_algorithm: checksum_info['type'],
               checksum_value: checksum_info['value'],
+              start_command: process.command.nil? ? process.detected_start_command : process.command,
             }
           end
 
