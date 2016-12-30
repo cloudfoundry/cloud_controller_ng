@@ -1,6 +1,8 @@
 module VCAP::CloudController
   module Diego
     class TasksSync
+      BATCH_SIZE = 500
+
       class Error < StandardError
       end
       class BBSFetchError < Error
@@ -14,7 +16,7 @@ module VCAP::CloudController
       def sync
         diego_tasks = bbs_task_client.fetch_tasks.index_by(&:task_guid)
 
-        TaskModel.each do |task|
+        for_tasks do |task|
           diego_task = diego_tasks.delete(task.guid)
           next unless [TaskModel::RUNNING_STATE, TaskModel::CANCELING_STATE].include? task.state
           if diego_task.nil?
@@ -44,6 +46,16 @@ module VCAP::CloudController
       end
 
       private
+
+      def for_tasks(&blk)
+        last_id = 0
+        loop do
+          tasks = TaskModel.where('tasks.id > ?', last_id).order(:id).limit(BATCH_SIZE)
+          tasks.each(&blk)
+          return if tasks.count < BATCH_SIZE
+          last_id = tasks.last[0]
+        end
+      end
 
       def bbs_task_client
         CloudController::DependencyLocator.instance.bbs_task_client
