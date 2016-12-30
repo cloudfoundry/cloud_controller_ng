@@ -143,7 +143,14 @@ module VCAP
 
             let(:app) { AppModel.make }
             let(:package) { PackageModel.make(app_guid: app.guid) }
-            let(:droplet) { DropletModel.make(:staged, package_guid: package.guid, app_guid: app.guid, droplet_hash: 'some_hash') }
+            let(:droplet) do
+              DropletModel.make(:staged,
+                package_guid: package.guid,
+                app_guid: app.guid,
+                droplet_hash: 'droplet-sha1-checksum',
+                sha256_checksum: 'droplet-sha256-checksum',
+              )
+            end
             let(:process) { App.make(app: app, command: 'command from app', metadata: {}) }
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
@@ -170,7 +177,26 @@ module VCAP
             it 'includes the droplet_hash' do
               droplet_hash = lifecycle_protocol.desired_app_message(process)['droplet_hash']
 
-              expect(droplet_hash).to eq('some_hash')
+              expect(droplet_hash).to eq('droplet-sha1-checksum')
+            end
+
+            it 'the "checksum" info defaults to sha256' do
+              droplet_hash = lifecycle_protocol.desired_app_message(process)['checksum']
+
+              expect(droplet_hash).to eq({ 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' })
+            end
+
+            context 'when the droplet does not have sha256 checksum' do
+              before do
+                droplet.sha256_checksum = nil
+                droplet.save
+              end
+
+              it 'the "checksum" info falls back to sha1' do
+                droplet_hash = lifecycle_protocol.desired_app_message(process)['checksum']
+
+                expect(droplet_hash).to eq({ 'type' => 'sha1', 'value' => 'droplet-sha1-checksum' })
+              end
             end
 
             context 'when process does not have a start command set' do

@@ -9,9 +9,12 @@ module VCAP::CloudController
           {
             'stack' => 'potato-stack',
             'droplet_uri' => 'droplet-uri',
-            'droplet_hash' => 'droplet-hash',
             'process_guid' => 'p-guid',
             'ports' => ports,
+            'checksum' => {
+              'type' => 'checksum-algorithm',
+              'value' => 'checksum-value'
+            }
           }
         end
         let(:ports) { [1111, 2222, 3333] }
@@ -63,8 +66,8 @@ module VCAP::CloudController
                         user: 'vcap',
                         from: 'droplet-uri',
                         cache_key: 'droplets-p-guid',
-                        checksum_algorithm: 'sha1',
-                        checksum_value: 'droplet-hash',
+                        checksum_algorithm: 'checksum-algorithm',
+                        checksum_value: 'checksum-value',
                       )
                     )
                   ],

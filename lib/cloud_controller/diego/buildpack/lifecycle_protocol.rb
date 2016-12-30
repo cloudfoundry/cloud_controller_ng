@@ -56,10 +56,19 @@ module VCAP
               'start_command' => process.command.nil? ? process.detected_start_command : process.command,
               'droplet_uri' => @blobstore_url_generator.unauthorized_perma_droplet_download_url(process),
               'droplet_hash' => process.current_droplet.droplet_hash,
+              'checksum' => droplet_checksum_info(process.current_droplet),
             }
           end
 
           private
+
+          def droplet_checksum_info(droplet)
+            if droplet.sha256_checksum
+              { 'type' => 'sha256', 'value' => droplet.sha256_checksum }
+            else
+              { 'type' => 'sha1', 'value' => droplet.droplet_hash }
+            end
+          end
 
           def task_lifecycle_data(task)
             {
