@@ -16,18 +16,25 @@ module VCAP::CloudController
       def sync
         diego_tasks = bbs_task_client.fetch_tasks.index_by(&:task_guid)
 
-        for_tasks do |task|
-          diego_task = diego_tasks.delete(task.guid)
-          next unless [TaskModel::RUNNING_STATE, TaskModel::CANCELING_STATE].include? task.state
-          if diego_task.nil?
-            task.update(state: TaskModel::FAILED_STATE, failure_reason: BULKER_TASK_FAILURE)
-            logger.info('missing-diego-task', task_guid: task.guid)
-          elsif task.state == TaskModel::CANCELING_STATE
-            @workpool.submit(task.guid) do |guid|
-              bbs_task_client.cancel_task(guid)
-              logger.info('canceled-cc-task', task_guid: guid)
+        batched_tasks do |tasks|
+          tasks_to_fail = []
+
+          tasks.each do |task|
+            diego_task = diego_tasks.delete(task.guid)
+            next unless [TaskModel::RUNNING_STATE, TaskModel::CANCELING_STATE].include? task.state
+
+            if diego_task.nil?
+              tasks_to_fail << task.guid
+              logger.info('missing-diego-task', task_guid: task.guid)
+            elsif task.state == TaskModel::CANCELING_STATE
+              @workpool.submit(task.guid) do |guid|
+                bbs_task_client.cancel_task(guid)
+                logger.info('canceled-cc-task', task_guid: guid)
+              end
             end
           end
+
+          TaskModel.where(guid: tasks_to_fail).update(state: TaskModel::FAILED_STATE, failure_reason: BULKER_TASK_FAILURE)
         end
 
         diego_tasks.keys.each do |task_guid|
@@ -47,11 +54,11 @@ module VCAP::CloudController
 
       private
 
-      def for_tasks(&blk)
+      def batched_tasks
         last_id = 0
         loop do
           tasks = TaskModel.where('tasks.id > ?', last_id).order(:id).limit(BATCH_SIZE)
-          tasks.each(&blk)
+          yield tasks
           return if tasks.count < BATCH_SIZE
           last_id = tasks.last[0]
         end
