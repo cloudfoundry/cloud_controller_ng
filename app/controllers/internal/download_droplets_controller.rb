@@ -16,11 +16,11 @@ module VCAP::CloudController
 
     attr_reader :blobstore
 
-    get "#{DROPLET_V2_PATH}/:guid/:droplet_hash/download", :download_droplet
-    def download_droplet(guid, droplet_hash)
+    get "#{DROPLET_V2_PATH}/:guid/:droplet_checksum/download", :download_droplet
+    def download_droplet(guid, droplet_checksum)
       app = App.find(guid: guid)
       check_app_exists(app, guid)
-      raise ApiError.new_from_details('NotFound', droplet_hash) unless app.droplet_hash == droplet_hash
+      raise ApiError.new_from_details('NotFound', droplet_checksum) unless app.droplet_checksum == droplet_checksum
 
       blob_name = 'droplet'
       droplet   = app.current_droplet

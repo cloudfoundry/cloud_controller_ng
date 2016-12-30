@@ -83,6 +83,10 @@ module VCAP::CloudController
       File.join(guid, hash) if hash
     end
 
+    def checksum
+      sha256_checksum || droplet_hash
+    end
+
     def buildpack?
       lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
     end

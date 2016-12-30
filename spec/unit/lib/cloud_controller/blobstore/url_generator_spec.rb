@@ -57,7 +57,8 @@ module CloudController
           let(:app) { VCAP::CloudController::AppFactory.make }
 
           it 'gives out a url to the cloud controller' do
-            expect(url_generator.unauthorized_perma_droplet_download_url(app)).to eql("http://api.example.com:9292/internal/v2/droplets/#{app.guid}/#{app.droplet_hash}/download")
+            download_url = "http://api.example.com:9292/internal/v2/droplets/#{app.guid}/#{app.droplet_checksum}/download"
+            expect(url_generator.unauthorized_perma_droplet_download_url(app)).to eql(download_url)
           end
 
           context 'when no droplet_hash' do

@@ -215,6 +215,19 @@ module VCAP::CloudController
       end
     end
 
+    describe '#droplet_checksum' do
+      let!(:droplet_model_with_both) { DropletModel.make(sha256_checksum: 'foo', droplet_hash: 'bar') }
+      let!(:droplet_model_with_only_sha1) { DropletModel.make(sha256_checksum: nil, droplet_hash: 'baz') }
+
+      it 'returns the sha256_checksum when present' do
+        expect(droplet_model_with_both.checksum).to eq('foo')
+      end
+
+      it 'returns the sha1 checksum when there is no sha256' do
+        expect(droplet_model_with_only_sha1.checksum).to eq('baz')
+      end
+    end
+
     describe 'usage events' do
       it 'ensures we have coverage for all states' do
         expect(DropletModel::DROPLET_STATES.count).to eq(6), 'After adding a new state, tests for app usage event coverage should be added.'
