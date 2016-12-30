@@ -8,6 +8,7 @@ module VCAP::CloudController
 
       def initialize(config)
         @config = config
+        @workpool = WorkPool.new(50)
       end
 
       def sync
@@ -20,15 +21,21 @@ module VCAP::CloudController
             task.update(state: TaskModel::FAILED_STATE, failure_reason: BULKER_TASK_FAILURE)
             logger.info('missing-diego-task', task_guid: task.guid)
           elsif task.state == TaskModel::CANCELING_STATE
-            bbs_task_client.cancel_task(task.guid)
-            logger.info('canceled-cc-task', task_guid: task.guid)
+            @workpool.submit(task.guid) do |guid|
+              bbs_task_client.cancel_task(guid)
+              logger.info('canceled-cc-task', task_guid: guid)
+            end
           end
         end
 
         diego_tasks.keys.each do |task_guid|
-          bbs_task_client.cancel_task(task_guid)
-          logger.info('missing-cc-task', task_guid: task_guid)
+          @workpool.submit(task_guid) do |guid|
+            bbs_task_client.cancel_task(guid)
+            logger.info('missing-cc-task', task_guid: guid)
+          end
         end
+
+        @workpool.drain
 
         bbs_task_client.bump_freshness
       rescue CloudController::Errors::ApiError => e
