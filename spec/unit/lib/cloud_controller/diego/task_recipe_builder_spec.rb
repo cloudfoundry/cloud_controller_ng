@@ -2,8 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Diego
-    RSpec.describe RecipeBuilder do
-      subject(:recipe_builder) { RecipeBuilder.new }
+    RSpec.describe TaskRecipeBuilder do
+      subject(:task_recipe_builder) { TaskRecipeBuilder.new }
 
       describe '#build_staging_task' do
         let(:app) { AppModel.make(guid: 'banana-guid') }
@@ -100,7 +100,7 @@ module VCAP::CloudController
           end
 
           it 'constructs a TaskDefinition with staging instructions' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
 
             expect(result.root_fs).to eq('preloaded:potato-stack')
             expect(result.log_guid).to eq('banana-guid')
@@ -134,12 +134,12 @@ module VCAP::CloudController
           end
 
           it 'gives the task a TrustedSystemCertificatesPath' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.trusted_system_certificates_path).to eq('/etc/cf-system-certificates')
           end
 
           it 'sets the env vars' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.environment_variables).to eq(lifecycle_environment_variables)
           end
 
@@ -147,7 +147,7 @@ module VCAP::CloudController
             let(:isolation_segment) { nil }
 
             it 'sets PlacementTags to  an empty array' do
-              result = recipe_builder.build_staging_task(config, staging_details)
+              result = task_recipe_builder.build_staging_task(config, staging_details)
 
               expect(result.PlacementTags).to eq([])
             end
@@ -177,47 +177,47 @@ module VCAP::CloudController
           end
 
           it 'sets the log guid' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.log_guid).to eq('banana-guid')
           end
 
           it 'sets the log source' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.log_source).to eq('STG')
           end
 
           it 'sets the result file' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.result_file).to eq('/tmp/result.json')
           end
 
           it 'sets privileged container to the config value' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.privileged).to be(false)
           end
 
           it 'sets the legacy download user' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.legacy_download_user).to eq('vcap')
           end
 
           it 'sets the cached dependencies' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
           end
 
           it 'sets the memory' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.memory_mb).to eq(42)
           end
 
           it 'sets the disk' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.disk_mb).to eq(51)
           end
 
           it 'sets the egress rules' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
 
             expect(result.egress_rules).to match_array([
               rule_dns_everywhere,
@@ -227,23 +227,23 @@ module VCAP::CloudController
           end
 
           it 'sets the rootfs' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.root_fs).to eq('preloaded:docker-stack')
           end
 
           it 'sets the completion callback' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.completion_callback_url).to eq("https://#{user}:#{password}@#{internal_service_hostname}:#{tls_port}" \
                                    "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}")
           end
 
           it 'sets the trusted cert path' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.trusted_system_certificates_path).to eq('/etc/cf-system-certificates')
           end
 
           it 'sets the timeout and sets the run action' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
 
             timeout_action = result.action.timeout_action
             expect(timeout_action).not_to be_nil
@@ -253,7 +253,7 @@ module VCAP::CloudController
           end
 
           it 'sets the PlacementTags' do
-            result = recipe_builder.build_staging_task(config, staging_details)
+            result = task_recipe_builder.build_staging_task(config, staging_details)
 
             expect(result.PlacementTags).to eq(['potato-segment'])
           end
@@ -359,7 +359,7 @@ module VCAP::CloudController
           end
 
           it 'constructs a TaskDefinition with app task instructions' do
-            result = recipe_builder.build_app_task(config, task)
+            result = task_recipe_builder.build_app_task(config, task)
             expected_callback_url = "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed"
 
             expect(result.log_guid).to eq(app.guid)
@@ -420,7 +420,7 @@ module VCAP::CloudController
             end
 
             it 'desires the mount' do
-              result = recipe_builder.build_app_task(config, task)
+              result = task_recipe_builder.build_app_task(config, task)
               expect(result.volume_mounts).to eq([
                 ::Diego::Bbs::Models::VolumeMount.new(
                   driver: 'cephfs',
@@ -442,14 +442,14 @@ module VCAP::CloudController
             it 'is false when it is false in the config' do
               config[:diego][:use_privileged_containers_for_running] = false
 
-              result = recipe_builder.build_app_task(config, task)
+              result = task_recipe_builder.build_app_task(config, task)
               expect(result.privileged).to be(false)
             end
 
             it 'is true when it is true in the config' do
               config[:diego][:use_privileged_containers_for_running] = true
 
-              result = recipe_builder.build_app_task(config, task)
+              result = task_recipe_builder.build_app_task(config, task)
               expect(result.privileged).to be(true)
             end
           end
@@ -458,7 +458,7 @@ module VCAP::CloudController
             let(:isolation_segment) { nil }
 
             it 'configures no placement tags' do
-              result = recipe_builder.build_app_task(config, task)
+              result = task_recipe_builder.build_app_task(config, task)
               expect(result.PlacementTags).to eq([])
             end
           end
@@ -491,7 +491,7 @@ module VCAP::CloudController
           end
 
           it 'constructs a TaskDefinition with app task instructions' do
-            result = recipe_builder.build_app_task(config, task)
+            result = task_recipe_builder.build_app_task(config, task)
             expected_callback_url = "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed"
 
             expect(result.disk_mb).to eq(1024)
@@ -554,7 +554,7 @@ module VCAP::CloudController
             end
 
             it 'desires the mount' do
-              result = recipe_builder.build_app_task(config, task)
+              result = task_recipe_builder.build_app_task(config, task)
               expect(result.volume_mounts).to eq([
                 ::Diego::Bbs::Models::VolumeMount.new(
                   driver: 'cephfs',
@@ -576,14 +576,14 @@ module VCAP::CloudController
             it 'is false when it is false in the config' do
               config[:diego][:use_privileged_containers_for_running] = false
 
-              result = recipe_builder.build_app_task(config, task)
+              result = task_recipe_builder.build_app_task(config, task)
               expect(result.privileged).to be(false)
             end
 
             it 'is true when it is true in the config' do
               config[:diego][:use_privileged_containers_for_running] = true
 
-              result = recipe_builder.build_app_task(config, task)
+              result = task_recipe_builder.build_app_task(config, task)
               expect(result.privileged).to be(true)
             end
           end
@@ -592,7 +592,7 @@ module VCAP::CloudController
             let(:isolation_segment) { nil }
 
             it 'configures no placement tags' do
-              result = recipe_builder.build_app_task(config, task)
+              result = task_recipe_builder.build_app_task(config, task)
               expect(result.PlacementTags).to eq([])
             end
           end

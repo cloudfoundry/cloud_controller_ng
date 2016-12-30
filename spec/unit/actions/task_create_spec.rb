@@ -58,14 +58,14 @@ module VCAP::CloudController
 
         context 'when talking directly to BBS' do
           let(:task_definition) { instance_double(::Diego::Bbs::Models::TaskDefinition) }
-          let(:recipe_builder) { instance_double(Diego::RecipeBuilder) }
+          let(:recipe_builder) { instance_double(Diego::TaskRecipeBuilder) }
 
           before do
             config[:diego] = {
               temporary_local_tasks: true
             }
             allow(recipe_builder).to receive(:build_app_task).with(config, instance_of(TaskModel)).and_return(task_definition)
-            allow(Diego::RecipeBuilder).to receive(:new).and_return(recipe_builder)
+            allow(Diego::TaskRecipeBuilder).to receive(:new).and_return(recipe_builder)
           end
 
           it 'builds a recipe for the task and desires the task from BBS' do

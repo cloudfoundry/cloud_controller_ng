@@ -10,7 +10,7 @@ module VCAP::CloudController
         staging_guid = staging_details.droplet.guid
 
         if do_local_staging
-          task_definition = recipe_builder.build_staging_task(config, staging_details)
+          task_definition = task_recipe_builder.build_staging_task(config, staging_details)
           bbs_stager_client.stage(staging_guid, task_definition)
         else
           staging_message = protocol.stage_package_request(config, staging_details)
@@ -77,8 +77,8 @@ module VCAP::CloudController
         @protocol ||= Protocol.new
       end
 
-      def recipe_builder
-        @recipe_builder ||= RecipeBuilder.new
+      def task_recipe_builder
+        @task_recipe_builder ||= TaskRecipeBuilder.new
       end
 
       def stager_client

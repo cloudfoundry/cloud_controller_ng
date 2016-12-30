@@ -7,7 +7,7 @@ require 'cloud_controller/diego/task_cpu_weight_calculator'
 
 module VCAP::CloudController
   module Diego
-    class RecipeBuilder
+    class TaskRecipeBuilder
       include ::Diego::ActionBuilder
 
       def initialize
