@@ -104,6 +104,39 @@ module VCAP
             end
           end
 
+          describe '#desired_lrp_builder' do
+            let(:config) { {} }
+            let(:app) { AppModel.make(droplet: droplet) }
+            let(:droplet) do
+              DropletModel.make(:docker, {
+                state: DropletModel::STAGED_STATE,
+                docker_receipt_image: 'the-image',
+                execution_metadata: 'foobar',
+              })
+            end
+            let(:process) { ProcessModel.make(app: app, diego: true, command: 'go go go', metadata: {}) }
+            let(:builder_opts) do
+              {
+                ports: [1, 2, 3],
+                docker_image: 'the-image',
+                execution_metadata: 'foobar',
+              }
+            end
+            before do
+              allow(Protocol::OpenProcessPorts).to receive(:new).with(process).and_return(
+                instance_double(Protocol::OpenProcessPorts, to_a: [1, 2, 3])
+              )
+            end
+
+            it 'creates a diego DesiredLrpBuilder' do
+              expect(VCAP::CloudController::Diego::Docker::DesiredLrpBuilder).to receive(:new).with(
+                config,
+                builder_opts,
+              )
+              lifecycle_protocol.desired_lrp_builder(config, process)
+            end
+          end
+
           describe '#task_action_builder' do
             let(:config) { {} }
             let(:droplet) { DropletModel.make(:docker, docker_receipt_image: 'repository/the-image') }

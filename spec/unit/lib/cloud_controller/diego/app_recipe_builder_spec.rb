@@ -325,6 +325,18 @@ module VCAP::CloudController
           end
 
           context 'healthcheck' do
+            context 'when the health_check_timeout is not set on process' do
+              before do
+                process.update(health_check_timeout: nil)
+                config.merge!(default_health_check_timeout: 12345)
+              end
+
+              it 'falls back to the default located in the config' do
+                lrp = builder.build_app_lrp
+                expect(lrp.start_timeout_ms).to eq(12345000)
+              end
+            end
+
             context 'when the health check type is not set' do
               before do
                 process.health_check_type = ''
@@ -749,6 +761,18 @@ module VCAP::CloudController
                 lrp = builder.build_app_lrp
                 expect(lrp.cpu_weight).to eq(100)
               end
+            end
+          end
+
+          context 'when the health_check_timeout is not set on process' do
+            before do
+              process.update(health_check_timeout: nil)
+              config.merge!(default_health_check_timeout: 12345)
+            end
+
+            it 'falls back to the default located in the config' do
+              lrp = builder.build_app_lrp
+              expect(lrp.start_timeout_ms).to eq(12345000)
             end
           end
 

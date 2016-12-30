@@ -29,14 +29,24 @@ module VCAP
             TaskActionBuilder.new(config, task, { droplet_path: task.droplet.docker_receipt_image })
           end
 
-          def desired_lrp_builder(config, app_request)
-            DesiredLrpBuilder.new(config, app_request)
+          def desired_lrp_builder(config, process)
+            DesiredLrpBuilder.new(config, builder_opts(process))
           end
 
           def desired_app_message(process)
             {
               'start_command' => process.command,
               'docker_image'  => process.current_droplet.docker_receipt_image
+            }
+          end
+
+          private
+
+          def builder_opts(process)
+            {
+              ports: Protocol::OpenProcessPorts.new(process).to_a,
+              docker_image: process.current_droplet.docker_receipt_image,
+              execution_metadata: process.execution_metadata,
             }
           end
         end

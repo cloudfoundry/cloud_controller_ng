@@ -4,17 +4,16 @@ module VCAP::CloudController
   module Diego
     module Buildpack
       RSpec.describe DesiredLrpBuilder do
-        subject(:builder) { described_class.new(config, app_request) }
-        let(:app_request) do
+        subject(:builder) { described_class.new(config, opts) }
+        let(:opts) do
           {
-            'stack' => 'potato-stack',
-            'droplet_uri' => 'droplet-uri',
-            'process_guid' => 'p-guid',
-            'ports' => ports,
-            'checksum' => {
-              'type' => 'checksum-algorithm',
-              'value' => 'checksum-value'
-            }
+            stack: 'potato-stack',
+            droplet_uri: 'droplet-uri',
+            droplet_hash: 'droplet-hash',
+            process_guid: 'p-guid',
+            ports: ports,
+            checksum_algorithm: 'checksum-algorithm',
+            checksum_value: 'checksum-value',
           }
         end
         let(:ports) { [1111, 2222, 3333] }

@@ -293,6 +293,68 @@ module VCAP
               end
             end
           end
+
+          describe '#desired_lrp_builder' do
+            let(:config) { {} }
+            let(:app) { AppModel.make(droplet: droplet) }
+            let(:droplet) do
+              DropletModel.make(state: DropletModel::STAGED_STATE)
+            end
+            let(:process) do
+              ProcessModel.make(
+                app: app,
+                diego: true,
+                command: 'go go go',
+                metadata: {},
+              )
+            end
+            let(:builder_opts) do
+              {
+                ports: [1, 2, 3],
+                stack: process.stack.name,
+                droplet_uri: 'www.droplet.com',
+                droplet_hash: droplet.droplet_hash,
+                process_guid: ProcessGuid.from_process(process),
+                checksum_algorithm: 'sha1',
+                checksum_value: droplet.droplet_hash,
+              }
+            end
+            let(:blobstore_url_generator) do
+              instance_double(
+                ::CloudController::Blobstore::UrlGenerator,
+                unauthorized_perma_droplet_download_url: 'www.droplet.com'
+              )
+            end
+
+            before do
+              allow(Protocol::OpenProcessPorts).to receive(:new).with(process).and_return(
+                instance_double(Protocol::OpenProcessPorts, to_a: [1, 2, 3])
+              )
+            end
+
+            it 'creates a diego DesiredLrpBuilder' do
+              expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
+                config,
+                builder_opts,
+              )
+              lifecycle_protocol.desired_lrp_builder(config, process)
+            end
+
+            context 'when the droplet has a sha256 checksum calculated' do
+              before do
+                droplet.update(sha256_checksum: 'droplet-sha256-checksum')
+              end
+
+              it 'uses it' do
+                builder_opts.merge!(checksum_algorithm: 'sha256', checksum_value: 'droplet-sha256-checksum')
+                expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
+                  config,
+                  builder_opts,
+                )
+                lifecycle_protocol.desired_lrp_builder(config, process)
+              end
+            end
+          end
         end
       end
     end

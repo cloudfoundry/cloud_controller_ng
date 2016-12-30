@@ -47,8 +47,8 @@ module VCAP
             TaskActionBuilder.new(config, task, task_lifecycle_data(task))
           end
 
-          def desired_lrp_builder(config, app_request)
-            DesiredLrpBuilder.new(config, app_request)
+          def desired_lrp_builder(config, process)
+            DesiredLrpBuilder.new(config, builder_opts(process))
           end
 
           def desired_app_message(process)
@@ -68,6 +68,19 @@ module VCAP
             else
               { 'type' => 'sha1', 'value' => droplet.droplet_hash }
             end
+          end
+
+          def builder_opts(process)
+            checksum_info = droplet_checksum_info(process.current_droplet)
+            {
+              droplet_uri: @blobstore_url_generator.unauthorized_perma_droplet_download_url(process),
+              droplet_hash: process.current_droplet.droplet_hash,
+              ports: Protocol::OpenProcessPorts.new(process).to_a,
+              process_guid: ProcessGuid.from_process(process),
+              stack: process.app.lifecycle_data.stack,
+              checksum_algorithm: checksum_info['type'],
+              checksum_value: checksum_info['value'],
+            }
           end
 
           def task_lifecycle_data(task)

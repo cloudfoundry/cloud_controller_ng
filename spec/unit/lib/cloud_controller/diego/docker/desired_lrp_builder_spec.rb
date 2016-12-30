@@ -4,12 +4,12 @@ module VCAP::CloudController
   module Diego
     module Docker
       RSpec.describe DesiredLrpBuilder do
-        subject(:builder) { described_class.new(config, app_request) }
-        let(:app_request) do
+        subject(:builder) { described_class.new(config, opts) }
+        let(:opts) do
           {
-            'ports' => ports,
-            'docker_image' => 'user/repo:tag',
-            'execution_metadata' => execution_metadata,
+            ports: ports,
+            docker_image: 'user/repo:tag',
+            execution_metadata: execution_metadata,
           }
         end
         let(:config) do
