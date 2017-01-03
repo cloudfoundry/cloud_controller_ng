@@ -157,58 +157,15 @@ curl "https://api.example.org/v3/books" \
     "color": "yellow",
     "relationships": {
       "publisher": {
-        "data": { "guid": "publisher-guid" }
+        "guid": "publisher-guid"
       }
     }
   }'
-```
-
-```
-Setting the relationship
-```
-
-```shell
-curl "https://api.example.org/v3/books/[guid]/relationships/publisher" \
-  -X PATCH \
-  -H "Authorization: bearer [token]" \
-  -d '{ "data": { "guid":"publisher-guid" } }'
-```
-
-```
-Removing the relationship
-```
-
-```shell
-curl "https://api.example.org/v3/books/[guid]/relationships/publisher" \
-  -X PATCH \
-  -H "Authorization: bearer [token]" \
-  -d '{ "data": null }'
 ```
 
 ### To-Many relationships
 
-Some relationships relate an resource to several other resources. For example a space has many apps.
-
-```
-Setting relationships while creating an object
-```
-
-```shell
-curl "https://api.example.org/v3/cars" \
-  -X POST \
-  -H "Authorization: bearer [token]" \
-  -d '{
-    "color": "yellow",
-    "relationships": {
-      "authors": {
-        "data": [
-          { "guid": "author-guid-1" },
-          { "guid": "author-guid-2" }
-        ]
-      }
-    }
-  }'
-```
+Some relationships relate an resource to several other resources. For example an Isolation Segment can be entitled to multiple organizations.
 
 ```
 Adding related resources
