@@ -17,7 +17,7 @@ module VCAP::CloudController
     def check_authentication(op)
       auth                  = env['HTTP_AUTHORIZATION']
       grace_period          = config.fetch(:app_bits_upload_grace_period_in_seconds, 0)
-      relaxed_token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa], grace_period)
+      relaxed_token_decoder = VCAP::UaaTokenDecoder.new(config, grace_period)
       VCAP::CloudController::Security::SecurityContextConfigurer.new(relaxed_token_decoder).configure(auth)
       super
     end
