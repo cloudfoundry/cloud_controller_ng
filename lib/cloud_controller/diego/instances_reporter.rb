@@ -9,12 +9,7 @@ module VCAP::CloudController
 
       def all_instances_for_app(process)
         result    = {}
-
-        if bypass_bridge?
-          instances = bbs_instances_client.lrp_instances(process)
-        else
-          instances = tps_client.lrp_instances(process)
-        end
+        instances = instances_for_process(process)
 
         for_each_desired_instance(instances, process) do |instance|
           info = {
@@ -36,7 +31,7 @@ module VCAP::CloudController
       def number_of_starting_and_running_instances_for_processes(processes)
         result = {}
 
-              instances_map = tps_client.bulk_lrp_instances(processes)
+        instances_map = tps_client.bulk_lrp_instances(processes)
         processes.each do |application|
           running_indices = Set.new
 
@@ -60,7 +55,7 @@ module VCAP::CloudController
 
       def number_of_starting_and_running_instances_for_process(process)
         return 0 unless process.started?
-        instances = tps_client.lrp_instances(process)
+        instances = instances_for_process(process)
 
         running_indices = Set.new
 
@@ -79,7 +74,7 @@ module VCAP::CloudController
 
       def crashed_instances_for_app(process)
         result    = []
-        instances = tps_client.lrp_instances(process)
+        instances = instances_for_process(process)
 
         for_each_desired_instance(instances, process) do |instance|
           if instance[:state] == 'CRASHED'
@@ -147,6 +142,10 @@ module VCAP::CloudController
 
       def instance_is_desired?(instance, process)
         instance[:index] < process.instances
+      end
+
+      def instances_for_process(process)
+        bypass_bridge? ? bbs_instances_client.lrp_instances(process) : tps_client.lrp_instances(process)
       end
 
       def fill_unreported_instances_with_down_instances(reported_instances, process)

@@ -671,8 +671,8 @@ module Diego
         expect(response.error).to be_nil
         expect(response.actual_lrp_groups).to eq(actual_lrp_groups)
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/actual_lrp_groups/list_by_process_guid').with(
-          body: expected_request.encode.to_s,
-          headers: { 'Content-Type' => 'application/x-protobuf' }
+                 body: expected_request.encode.to_s,
+                 headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
     end

@@ -5,10 +5,10 @@ module VCAP::CloudController::Diego
     subject(:client) { BbsInstancesClient.new(bbs_client) }
     let(:bbs_client) { instance_double(::Diego::Client) }
 
-    def makeActualLRPGroup(process_guid, lrp_index, lrp_state, placement_error)
+    def make_actual_lrp_group(process_guid, lrp_index, lrp_state, placement_error)
       instance = ::Diego::Bbs::Models::ActualLRP.new(
         actual_lrp_key:
-          ::Diego::Bbs::Models::ActualLRPKey.new({process_guid: process_guid, index: lrp_index}),
+          ::Diego::Bbs::Models::ActualLRPKey.new({ process_guid: process_guid, index: lrp_index }),
         actual_lrp_instance_key:
           ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid: instance_guid),
         placement_error: placement_error,
@@ -17,17 +17,18 @@ module VCAP::CloudController::Diego
         actual_lrp_net_info: actual_lrp_net_info1,
         )
 
-      return ::Diego::Bbs::Models::ActualLRPGroup.new(instance: instance)
+      ::Diego::Bbs::Models::ActualLRPGroup.new(instance: instance)
     end
 
     describe '#lrp_instances' do
       let(:bbs_response) { ::Diego::Bbs::Models::ActualLRPGroupsResponse.new(actual_lrp_groups: actual_lrp_groups, error: error) }
-      let(:actual_lrp_groups) { [::Diego::Bbs::Models::ActualLRPGroup.new(instance: actual_lrp1 ) ] }
-      let(:actual_lrp1)  { ::Diego::Bbs::Models::ActualLRP.new(
+      let(:actual_lrp_groups) { [::Diego::Bbs::Models::ActualLRPGroup.new(instance: actual_lrp1)] }
+      let(:actual_lrp1) { ::Diego::Bbs::Models::ActualLRP.new(
         actual_lrp_key: actual_lrp_key1,
         actual_lrp_instance_key: actual_lrp_instance_key1,
         actual_lrp_net_info: actual_lrp_net_info1
-      )  }
+      )
+      }
       let(:actual_lrp_key1) { ::Diego::Bbs::Models::ActualLRPKey.new }
       let(:actual_lrp_instance_key1) { ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid: instance_guid) }
       let(:actual_lrp_net_info1) { ::Diego::Bbs::Models::ActualLRPNetInfo.new(address: address, ports: ports) }
@@ -37,8 +38,8 @@ module VCAP::CloudController::Diego
       let(:instance_guid) { 'instance_guid' }
       let(:yesterday) { 1.day.ago.to_i }
       let(:seconds_since_yesterday) { 3600 * 24 }
-      let(:address)  { '1.2.3.4' }
-      let(:ports) { [::Diego::Bbs::Models::PortMapping.new(container_port:5566, host_port:80) ] }
+      let(:address) { '1.2.3.4' }
+      let(:ports) { [::Diego::Bbs::Models::PortMapping.new(container_port: 5566, host_port: 80)] }
 
       before do
         allow(bbs_client).to receive(:actual_lrp_groups_by_process_guid).with(process_guid).and_return(bbs_response)
@@ -51,12 +52,13 @@ module VCAP::CloudController::Diego
 
       context 'when it successfully fetches the lrp instances' do
         let(:bbs_response) { ::Diego::Bbs::Models::ActualLRPGroupsResponse.new(actual_lrp_groups: actual_lrp_groups, error: error) }
-        let(:actual_lrp_groups) {[
-          makeActualLRPGroup(process_guid, 1, 'UNCLAIMED', ''),
-          makeActualLRPGroup(process_guid, 2, 'CLAIMED', ''),
-          makeActualLRPGroup(process_guid, 3, 'RUNNING', ''),
-          makeActualLRPGroup(process_guid, 4, 'CRASHED', 'i crashed')
-        ]}
+        let(:actual_lrp_groups) { [
+          make_actual_lrp_group(process_guid, 1, 'UNCLAIMED', ''),
+          make_actual_lrp_group(process_guid, 2, 'CLAIMED', ''),
+          make_actual_lrp_group(process_guid, 3, 'RUNNING', ''),
+          make_actual_lrp_group(process_guid, 4, 'CRASHED', 'i crashed')
+        ]
+        }
 
         before do
           allow(bbs_client).to receive(:actual_lrp_groups_by_process_guid).with(process_guid).and_return(bbs_response)
@@ -65,8 +67,7 @@ module VCAP::CloudController::Diego
         it 'returns a list of instances' do
           instances = client.lrp_instances(process)
           expect(instances.length).to eq(4)
-          expect(instances).to match([
-           {
+          expect(instances).to match([{
              process_guid: process_guid,
              instance_guid: 'instance_guid',
              index: 1,
@@ -74,8 +75,7 @@ module VCAP::CloudController::Diego
              uptime: seconds_since_yesterday,
              state: 'UNCLAIMED',
              net_info: actual_lrp_net_info1,
-           },
-           {
+           }, {
              process_guid: process_guid,
              instance_guid: 'instance_guid',
              index: 2,
@@ -83,8 +83,7 @@ module VCAP::CloudController::Diego
              uptime: seconds_since_yesterday,
              state: 'CLAIMED',
              net_info: actual_lrp_net_info1,
-           },
-           {
+           }, {
              process_guid: process_guid,
              instance_guid: 'instance_guid',
              index: 3,
@@ -92,8 +91,7 @@ module VCAP::CloudController::Diego
              uptime: seconds_since_yesterday,
              state: 'RUNNING',
              net_info: actual_lrp_net_info1,
-           },
-           {
+           }, {
              process_guid: process_guid,
              instance_guid: 'instance_guid',
              index: 4,
@@ -106,6 +104,5 @@ module VCAP::CloudController::Diego
         end
       end
     end
-
   end
 end

@@ -99,9 +99,13 @@ module VCAP::CloudController
           end
 
           it 'sends the staging message to the bbs' do
-            instances_reporter.all_instances_for_app(app)
-
+            result = instances_reporter.all_instances_for_app(app)
             expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+            expect(result).to eq({
+              0 => { state: 'RUNNING', details: 'some-details', uptime: 1, since: 101 },
+              1 => { state: 'CRASHED', uptime: 3, since: 303 },
+              2 => { state: 'STARTING', uptime: 5, since: 505 },
+            })
           end
         end
       end
@@ -220,6 +224,125 @@ module VCAP::CloudController
         end
       end
 
+      describe '#number_of_starting_and_running_instances_for_process with local tps' do
+        before do
+          TestConfig.override(diego: { temporary_local_tps: true })
+          allow(bbs_instances_client).to receive(:lrp_instances).and_return(instances_to_return)
+        end
+
+        context 'when the app is not started' do
+          before do
+            app.state = 'STOPPED'
+          end
+
+          it 'returns 0' do
+            result = instances_reporter.number_of_starting_and_running_instances_for_process(app)
+
+            expect(bbs_instances_client).not_to have_received(:lrp_instances)
+            expect(result).to eq(0)
+          end
+        end
+
+        context 'when the app is started' do
+          before do
+            app.state = 'STARTED'
+          end
+
+          let(:desired_instances) { 3 }
+
+          context 'when a desired instance is missing' do
+            let(:instances_to_return) {
+              [
+                { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', uptime: 1, since: 101 },
+                { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'STARTING', uptime: 4, since: 404 },
+              ]
+            }
+
+            it 'returns the number of desired indices that have an instance in the running/starting state ' do
+              result = instances_reporter.number_of_starting_and_running_instances_for_process(app)
+
+              expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+              expect(result).to eq(2)
+            end
+          end
+
+          context 'when multiple instances are reporting as running/started at a desired index' do
+            let(:instances_to_return) {
+              [
+                { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-B', index: 0, state: 'STARTING', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'RUNNING', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'STARTING', uptime: 4 },
+              ]
+            }
+
+            it 'returns the number of desired indices that have an instance in the running/starting state ' do
+              result = instances_reporter.number_of_starting_and_running_instances_for_process(app)
+
+              expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+              expect(result).to eq(3)
+            end
+          end
+
+          context 'when there are undesired instances that are running/starting' do
+            let(:instances_to_return) {
+              [
+                { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-B', index: 1, state: 'RUNNING', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-C', index: 2, state: 'STARTING', uptime: 4 },
+                { process_guid: 'process-guid', instance_guid: 'instance-D', index: 3, state: 'RUNNING', uptime: 1 },
+              ]
+            }
+
+            it 'returns the number of desired indices that have an instance in the running/starting state ' do
+              result = instances_reporter.number_of_starting_and_running_instances_for_process(app)
+
+              expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+              expect(result).to eq(3)
+            end
+          end
+
+          context 'when there are crashed instances at a desired index' do
+            let(:instances_to_return) {
+              [
+                { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-B', index: 0, state: 'CRASHED', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'CRASHED', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'STARTING', uptime: 1 },
+              ]
+            }
+
+            it 'returns the number of desired indices that have an instance in the running/starting state ' do
+              result = instances_reporter.number_of_starting_and_running_instances_for_process(app)
+
+              expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+              expect(result).to eq(2)
+            end
+          end
+
+          context 'when diego is unavailable' do
+            before do
+              allow(bbs_instances_client).to receive(:lrp_instances).and_raise(StandardError.new('oh no'))
+            end
+
+            it 'returns -1 indicating not fresh' do
+              expect(instances_reporter.number_of_starting_and_running_instances_for_process(app)).to eq(-1)
+            end
+
+            context 'when its an InstancesUnavailable' do
+              let(:error) { CloudController::Errors::InstancesUnavailable.new('oh my') }
+              before do
+                allow(bbs_instances_client).to receive(:lrp_instances).and_raise(error)
+              end
+
+              it 'returns -1 indicating not fresh' do
+                expect(instances_reporter.number_of_starting_and_running_instances_for_process(app)).to eq(-1)
+              end
+            end
+          end
+        end
+      end
+
       describe '#number_of_starting_and_running_instances_for_processes' do
         let(:app1) { AppFactory.make(state: 'STARTED', instances: 2) }
         let(:app2) { AppFactory.make(state: 'STARTED', instances: 5) }
@@ -325,6 +448,76 @@ module VCAP::CloudController
             it 're-raises' do
               expect { instances_reporter.crashed_instances_for_app(app) }.to raise_error(error)
             end
+          end
+        end
+
+        context 'when local tps is configured' do
+          before do
+            TestConfig.override(diego: { temporary_local_tps: true })
+            allow(bbs_instances_client).to receive(:lrp_instances).and_return(instances_to_return)
+          end
+
+          it 'returns an array of crashed instances' do
+            result = instances_reporter.crashed_instances_for_app(app)
+
+            expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+            expect(result).to eq([
+              { 'instance' => 'instance-C', 'uptime' => 3, 'since' => 303 },
+            ])
+          end
+        end
+      end
+
+      describe '#crashed_instances_for_app when local tps is configured' do
+        before do
+          TestConfig.override(diego: { temporary_local_tps: true })
+          allow(bbs_instances_client).to receive(:lrp_instances).and_return(instances_to_return)
+        end
+        it 'returns an array of crashed instances' do
+          result = instances_reporter.crashed_instances_for_app(app)
+
+          expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+          expect(result).to eq([
+            { 'instance' => 'instance-C', 'uptime' => 3, 'since' => 303 },
+          ])
+        end
+
+        context 'when diego is unavailable' do
+          before do
+            allow(bbs_instances_client).to receive(:lrp_instances).and_raise(StandardError.new('oh no'))
+          end
+
+          it 'raises an InstancesUnavailable exception' do
+            expect {
+              instances_reporter.crashed_instances_for_app(app)
+            }.to raise_error(CloudController::Errors::InstancesUnavailable, /oh no/)
+          end
+
+          context 'when its an InstancesUnavailable' do
+            let(:error) { CloudController::Errors::InstancesUnavailable.new('oh my') }
+            before do
+              allow(bbs_instances_client).to receive(:lrp_instances).and_raise(error)
+            end
+
+            it 're-raises' do
+              expect { instances_reporter.crashed_instances_for_app(app) }.to raise_error(error)
+            end
+          end
+        end
+
+        context 'when local tps is configured' do
+          before do
+            TestConfig.override(diego: { temporary_local_tps: true })
+            allow(bbs_instances_client).to receive(:lrp_instances).and_return(instances_to_return)
+          end
+
+          it 'returns an array of crashed instances' do
+            result = instances_reporter.crashed_instances_for_app(app)
+
+            expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+            expect(result).to eq([
+              { 'instance' => 'instance-C', 'uptime' => 3, 'since' => 303 },
+            ])
           end
         end
       end
