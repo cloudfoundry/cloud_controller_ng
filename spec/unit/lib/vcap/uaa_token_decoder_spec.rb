@@ -15,10 +15,12 @@ module VCAP
     end
 
     let(:uaa_info) { double(CF::UAA::Info) }
+    let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
     let(:logger) { double(Steno::Logger) }
 
     before do
-      allow(CF::UAA::Info).to receive(:new).and_return(uaa_info)
+      allow(::CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+      allow(uaa_client).to receive(:info).and_return(uaa_info)
       allow(Steno).to receive(:logger).with('cc.uaa_token_decoder').and_return(logger)
     end
 

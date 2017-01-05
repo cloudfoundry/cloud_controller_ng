@@ -4,7 +4,7 @@ require 'queries/space_user_roles_fetcher'
 module VCAP::CloudController
   class SpacesController < RestController::ModelController
     def self.dependencies
-      [:space_event_repository, :username_and_roles_populating_collection_renderer, :username_lookup_uaa_client, :services_event_repository, :user_event_repository]
+      [:space_event_repository, :username_and_roles_populating_collection_renderer, :uaa_client, :services_event_repository, :user_event_repository]
     end
 
     define_attributes do
@@ -46,7 +46,7 @@ module VCAP::CloudController
       @space_event_repository = dependencies.fetch(:space_event_repository)
       @user_event_repository = dependencies.fetch(:user_event_repository)
       @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
-      @username_lookup_uaa_client = dependencies.fetch(:username_lookup_uaa_client)
+      @uaa_client = dependencies.fetch(:uaa_client)
       @services_event_repository = dependencies.fetch(:services_event_repository)
     end
 
@@ -151,7 +151,7 @@ module VCAP::CloudController
         username = parse_and_validate_json(body)['username']
 
         begin
-          user_id = @username_lookup_uaa_client.id_for_username(username)
+          user_id = @uaa_client.id_for_username(username)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         rescue UaaEndpointDisabled
@@ -163,7 +163,7 @@ module VCAP::CloudController
       end
 
       define_method("add_#{role}_by_user_id") do |guid, user_id|
-        username = @username_lookup_uaa_client.usernames_for_ids([user_id])[user_id]
+        username = @uaa_client.usernames_for_ids([user_id])[user_id]
 
         add_role(guid, role, user_id, username ? username : '')
       end
@@ -181,7 +181,7 @@ module VCAP::CloudController
         username = parse_and_validate_json(body)['username']
 
         begin
-          user_id = @username_lookup_uaa_client.id_for_username(username)
+          user_id = @uaa_client.id_for_username(username)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         rescue UaaEndpointDisabled
@@ -206,7 +206,7 @@ module VCAP::CloudController
                   find_guid_and_validate_access(:update, guid)
                 end
 
-        username = @username_lookup_uaa_client.usernames_for_ids([user_id])[user_id]
+        username = @uaa_client.usernames_for_ids([user_id])[user_id]
         remove_role(space, role, user_id, username ? username : '')
 
         [HTTP::NO_CONTENT, nil]

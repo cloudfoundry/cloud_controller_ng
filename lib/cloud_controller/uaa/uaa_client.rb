@@ -52,6 +52,10 @@ module VCAP::CloudController
       raise UaaEndpointDisabled
     end
 
+    def info
+      CF::UAA::Info.new(uaa_target, uaa_connection_opts)
+    end
+
     private
 
     def token_issuer

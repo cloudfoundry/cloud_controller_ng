@@ -197,7 +197,7 @@ module CloudController
     end
 
     def username_populating_object_renderer
-      create_object_renderer(object_transformer: UsernamePopulator.new(username_lookup_uaa_client))
+      create_object_renderer(object_transformer: UsernamePopulator.new(uaa_client))
     end
 
     def paginated_collection_renderer
@@ -209,18 +209,18 @@ module CloudController
     end
 
     def username_populating_collection_renderer
-      create_paginated_collection_renderer(collection_transformer: UsernamePopulator.new(username_lookup_uaa_client))
+      create_paginated_collection_renderer(collection_transformer: UsernamePopulator.new(uaa_client))
     end
 
     def username_and_roles_populating_collection_renderer
-      create_paginated_collection_renderer(collection_transformer: UsernamesAndRolesPopulator.new(username_lookup_uaa_client))
+      create_paginated_collection_renderer(collection_transformer: UsernamesAndRolesPopulator.new(uaa_client))
     end
 
     def router_group_type_populating_collection_renderer
       create_paginated_collection_renderer(collection_transformer: RouterGroupTypePopulator.new(routing_api_client))
     end
 
-    def username_lookup_uaa_client
+    def uaa_client
       client_id = @config[:cloud_controller_username_lookup_client_name]
       secret = @config[:cloud_controller_username_lookup_client_secret]
       target = @config[:uaa][:internal_url]

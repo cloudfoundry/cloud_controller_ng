@@ -6,7 +6,7 @@ module VCAP::CloudController
     def self.dependencies
       [
         :username_and_roles_populating_collection_renderer,
-        :username_lookup_uaa_client,
+        :uaa_client,
         :services_event_repository,
         :user_event_repository
       ]
@@ -15,7 +15,7 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
-      @username_lookup_uaa_client = dependencies.fetch(:username_lookup_uaa_client)
+      @uaa_client = dependencies.fetch(:uaa_client)
       @services_event_repository = dependencies.fetch(:services_event_repository)
       @user_event_repository = dependencies.fetch(:user_event_repository)
     end
@@ -142,7 +142,7 @@ module VCAP::CloudController
         username = parse_and_validate_json(body)['username']
 
         begin
-          user_id = @username_lookup_uaa_client.id_for_username(username)
+          user_id = @uaa_client.id_for_username(username)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         rescue UaaEndpointDisabled
@@ -170,7 +170,7 @@ module VCAP::CloudController
         username = parse_and_validate_json(body)['username']
 
         begin
-          user_id = @username_lookup_uaa_client.id_for_username(username)
+          user_id = @uaa_client.id_for_username(username)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         rescue UaaEndpointDisabled

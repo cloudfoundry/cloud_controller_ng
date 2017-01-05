@@ -82,12 +82,11 @@ module VCAP
     end
 
     def asymmetric_key
-      ssl_options = {
-        skip_ssl_validation: config[:skip_cert_verify],
-        ssl_ca_file: uaa_config[:ca_file]
-      }
-      info = CF::UAA::Info.new(uaa_config[:internal_url], ssl_options)
-      @asymmetric_key ||= UaaVerificationKeys.new(info)
+      @asymmetric_key ||= UaaVerificationKeys.new(uaa_client.info)
+    end
+
+    def uaa_client
+      ::CloudController::DependencyLocator.instance.uaa_client
     end
   end
 end

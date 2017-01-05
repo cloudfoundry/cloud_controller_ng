@@ -136,7 +136,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
         put 'v2/spaces/:guid/developers' do
           example 'Associate Developer with the Space by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(developer.guid)
 
             client.put "v2/spaces/#{space.guid}/developers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
@@ -149,7 +149,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
         delete 'v2/spaces/:guid/developers' do
           example 'Remove Developer with the Space by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_developer.guid)
 
             client.delete "v2/spaces/#{space.guid}/developers", MultiJson.dump({ username: 'developer@example.com' }, pretty: true), headers
@@ -192,7 +192,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
         put 'v2/spaces/:guid/managers' do
           example 'Associate Manager with the Space by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(manager.guid)
 
             client.put "v2/spaces/#{space.guid}/managers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
@@ -205,7 +205,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
         delete 'v2/spaces/:guid/managers' do
           example 'Remove Manager with the Space by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_manager.guid)
 
             client.delete "v2/spaces/#{space.guid}/managers", MultiJson.dump({ username: 'manager@example.com' }, pretty: true), headers
@@ -248,7 +248,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
         put 'v2/spaces/:guid/auditors' do
           example 'Associate Auditor with the Space by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(auditor.guid)
 
             client.put "v2/spaces/#{space.guid}/auditors", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
@@ -261,7 +261,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
         delete 'v2/spaces/:guid/auditors' do
           example 'Remove Auditor with the Space by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_auditor.guid)
 
             client.delete "v2/spaces/#{space.guid}/auditors", MultiJson.dump({ username: 'auditor@example.com' }, pretty: true), headers
