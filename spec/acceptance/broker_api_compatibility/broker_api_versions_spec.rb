@@ -3,10 +3,10 @@ require 'spec_helper'
 RSpec.describe 'Broker API Versions' do
   let(:spec_sha) do
     {
-      'broker_api_v2.0_spec.rb' => '002a36b3c0372aa5ee20567286fce165',
+      'broker_api_v2.0_spec.rb' => 'bfcf4a3ee89c8e6a85e04907a8dcd675',
       'broker_api_v2.1_spec.rb' => '08684c8e80c16c20274b5318908fc34d',
       'broker_api_v2.2_spec.rb' => '061f3170c242aa7e7b42178d478e2a9a',
-      'broker_api_v2.3_spec.rb' => 'ff3be7b583bec8cd903f8af48dc46785',
+      'broker_api_v2.3_spec.rb' => '3ff19f2ce9888c817d6e2a49c7306cc8',
       'broker_api_v2.4_spec.rb' => '17ddf45ce44d07f8912f3a8031ae8016',
       'broker_api_v2.5_spec.rb' => 'a1c55e4193072955fa600197e07ac64a',
       'broker_api_v2.6_spec.rb' => 'd814f5d1665d1be3ae36e673d288161b',

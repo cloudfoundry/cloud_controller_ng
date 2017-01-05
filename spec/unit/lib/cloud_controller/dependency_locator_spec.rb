@@ -354,8 +354,9 @@ RSpec.describe CloudController::DependencyLocator do
     it 'returns a routing_api_client' do
       name = config[:routing_api][:routing_client_name]
       secret = config[:routing_api][:routing_client_secret]
-      uaa = config[:uaa][:url]
-      opts = { skip_ssl_validation: config[:skip_cert_verify] }
+      uaa = config[:uaa][:internal_url]
+      ca_file = config[:uaa][:ca_file]
+      opts = { skip_ssl_validation: config[:skip_cert_verify], ca_file: ca_file }
 
       token_issuer = double('token_issuer')
       expect(CF::UAA::TokenIssuer).to receive(:new).with(uaa, name, secret, opts).and_return(token_issuer)
