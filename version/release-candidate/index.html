@@ -120,18 +120,16 @@
 key features:</p>
 
 <ul>
-<li>Running one-off tasks on Cloud Foundry</li>
-<li>Applications consisting of several processes via a Procfile</li>
-<li>Direct access to application packages and droplets</li>
+<li><strong>GA</strong> - Running one-off tasks on Cloud Foundry</li>
+<li><strong>Experimental</strong> - Applications consisting of several processes via a Procfile</li>
+<li><strong>Experimental</strong> - Direct access to application packages and droplets</li>
 </ul>
 
 <h2 id="more-resources">More Resources</h2>
 
 <ul>
-<li><a href="http://apidocs.cloudfoundry.org/">Cloud Foundry V2 API Documentation</a></li>
-<li><a href="https://github.com/cloudfoundry/v3-cli-plugin">CF CLI V3 Plugin - Experimental</a></li>
-<li><a href="https://github.com/cloudfoundry/cloud_controller_ng/wiki/How-to-Create-an-App-Using-V3-of-the-CC-API">Push an app with cf
-curl</a></li>
+<li>The <a href="http://apidocs.cloudfoundry.org/">Cloud Foundry V2 API</a> is still the primary API for interacting with Cloud Foundry.</li>
+<li><a href="https://docs.cloudfoundry.org/devguide/using-tasks.html">Running Tasks</a></li>
 <li><a href="https://cloudfoundry.slack.com/messages/capi/">CAPI Slack Channel</a></li>
 </ul>
 
@@ -357,46 +355,15 @@ through a relationship sub resource.</p>
     "color": "yellow",
     "relationships": {
       "publisher": {
-        "data": { "guid": "publisher-guid" }
+        "guid": "publisher-guid"
       }
     }
   }'</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Setting the relationship
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/books/[guid]/relationships/publisher"</span> <span class="se">\</span>
-  -X PATCH <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -d <span class="s1">'{ "data": { "guid":"publisher-guid" } }'</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Removing the relationship
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/books/[guid]/relationships/publisher"</span> <span class="se">\</span>
-  -X PATCH <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -d <span class="s1">'{ "data": null }'</span>
 </code></pre>
 
 <h3 id="to-many-relationships">To-Many relationships</h3>
 
-<p>Some relationships relate an resource to several other resources. For example a space has many apps.</p>
-<pre class="highlight plaintext"><code>Setting relationships while creating an object
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/cars"</span> <span class="se">\</span>
-  -X POST <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -d <span class="s1">'{
-    "color": "yellow",
-    "relationships": {
-      "authors": {
-        "data": [
-          { "guid": "author-guid-1" },
-          { "guid": "author-guid-2" }
-        ]
-      }
-    }
-  }'</span>
-</code></pre>
+<p>Some relationships relate an resource to several other resources. For example an Isolation Segment can be entitled to multiple organizations.</p>
 <pre class="highlight plaintext"><code>Adding related resources
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/books/[guid]/relationships/authors"</span> <span class="se">\</span>
@@ -1843,8 +1810,8 @@ It will include environment variables for Environment Variable Groups and Servic
       "web": "bundle exec rackup config.ru -p $PORT"
     },
     "hash": {
-      "type": "sha1",
-      "value": "0cd90dd63dd9f42db25340445d203fba25c69cf6"
+      "type": "sha256",
+      "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "buildpack": {
       "name": "ruby_buildpack",
@@ -1936,8 +1903,8 @@ It will include environment variables for Environment Variable Groups and Servic
       "web": "bundle exec rackup config.ru -p $PORT"
     },
     "hash": {
-      "type": "sha1",
-      "value": "0cd90dd63dd9f42db25340445d203fba25c69cf6"
+      "type": "sha256",
+      "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "buildpack": {
       "name": "ruby_buildpack",
@@ -2441,7 +2408,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
     </h4>
 
     <p class="method-list-item-description">
-      State of the package. Possible states are &ldquo;STAGING&rdquo;, &ldquo;STAGED&rdquo;, &ldquo;COPYING&rdquo;, &ldquo;FAILED&rdquo;, or &ldquo;EXPIRED&rdquo;.
+      State of the droplet. Possible states are &ldquo;STAGING&rdquo;, &ldquo;STAGED&rdquo;, &ldquo;COPYING&rdquo;, &ldquo;FAILED&rdquo;, or &ldquo;EXPIRED&rdquo;.
     </p>
   </li>
   <li class="method-list-item">
@@ -2862,8 +2829,8 @@ environment variables listed on the source droplet.</p>
       "web": "bundle exec rackup config.ru -p $PORT"
     },
     "hash": {
-      "type": "sha1",
-      "value": "0cd90dd63dd9f42db25340445d203fba25c69cf6"
+      "type": "sha256",
+      "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "buildpack": {
       "name": "ruby_buildpack",
@@ -3002,8 +2969,8 @@ environment variables listed on the source droplet.</p>
           "redacted_message": "[PRIVATE DATA HIDDEN IN LISTS]"
         },
         "hash": {
-          "type": "sha1",
-          "value": "0cd90dd63dd9f42db25340445d203fba25c69cf6"
+          "type": "sha256",
+          "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         },
         "buildpack": {
           "name": "ruby_buildpack",
@@ -3230,8 +3197,8 @@ environment variables listed on the source droplet.</p>
           "redacted_message": "[PRIVATE DATA HIDDEN IN LISTS]"
         },
         "hash": {
-          "type": "sha1",
-          "value": "0cd90dd63dd9f42db25340445d203fba25c69cf6"
+          "type": "sha256",
+          "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         },
         "buildpack": {
           "name": "ruby_buildpack",
@@ -3419,8 +3386,8 @@ environment variables listed on the source droplet.</p>
           "redacted_message": "[PRIVATE DATA HIDDEN IN LISTS]"
         },
         "hash": {
-          "type": "sha1",
-          "value": "0cd90dd63dd9f42db25340445d203fba25c69cf6"
+          "type": "sha256",
+          "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         },
         "buildpack": {
           "name": "ruby_buildpack",
@@ -4261,7 +4228,7 @@ In the case where the specified isolation segment is the system-wide shared segm
   "type": "docker",
   "data": {
     "hash": {
-      "type": "sha1",
+      "type": "sha256",
       "value": null
     },
     "error": null,
@@ -4337,7 +4304,7 @@ In the case where the specified isolation segment is the system-wide shared segm
   "type": "bits",
   "data": {
     "hash": {
-      "type": "sha1",
+      "type": "sha256",
       "value": null
     },
     "error": null
@@ -4404,7 +4371,7 @@ In the case where the specified isolation segment is the system-wide shared segm
   "type": "bits",
   "data": {
     "hash": {
-      "type": "sha1",
+      "type": "sha256",
       "value": null
     },
     "error": null
@@ -4600,7 +4567,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "type": "bits",
       "data": {
         "hash": {
-          "type": "sha1",
+          "type": "sha256",
           "value": null
         },
         "error": null
@@ -4634,7 +4601,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "type": "docker",
       "data": {
         "hash": {
-          "type": "sha1",
+          "type": "sha256",
           "value": null
         },
         "error": null,
@@ -4819,7 +4786,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
       "data": {
         "error": null,
         "hash": {
-          "type": "sha1",
+          "type": "sha256",
           "value": null
         }
       },
