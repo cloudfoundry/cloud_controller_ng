@@ -46,6 +46,24 @@ function exists_on_ref {
   popd > /dev/null
 }
 
+function first_release_with_sha {
+  declare sha=$1
+
+  local tag
+  release=""
+
+  pushd "${CAPI_RELEASE_DIR}" > /dev/null
+    for tag in $(git tag | grep -E '^(\d+\.)?(\d+\.)?(\*|\d+)$' | sort -n -t . -k 2); do
+      exists_on_ref "${tag}" "${sha}"
+
+      if [[ "${exists}" -eq 0 ]]; then
+        release=$tag
+        return
+      fi
+    done
+  popd > /dev/null
+}
+
 function display_pre_release_branches_with_sha {
   declare search_sha=$1
 
@@ -77,7 +95,16 @@ function display_pre_release_branches_with_sha {
 
 function main {
   update_repos
-  display_pre_release_branches_with_sha "${SEARCH_SHA}"
+  first_release_with_sha "${SEARCH_SHA}"
+
+  if [[ -n "${release}" ]]; then
+    local result
+    result="$(tput setaf 2)$(tput bold)$release$(tput sgr0)"
+    echo "$(tput setaf 1)First CAPI release:$(tput sgr0)" "${result}"
+  else
+    echo "$(tput setaf 1)Has not been released$(tput sgr0)"
+    display_pre_release_branches_with_sha "${SEARCH_SHA}"
+  fi
 }
 
 main
