@@ -99,6 +99,7 @@ login:
 
 uaa:
   url: https://uaa.bosh-lite.com
+  internal_url: https://uaa.bosh-lite.com
   resource_id: cloud_controller,cloud_controller_service_permissions
   verification_key: |
       -----BEGIN PUBLIC KEY-----
