@@ -5,9 +5,9 @@ module VCAP::CloudController
     let(:url) { 'http://uaa.example.com' }
     let(:client_id) { 'client_id' }
     let(:secret) { 'secret_key' }
-    let(:uaa_options) { { skip_ssl_validation: false, ssl_ca_file: nil } }
+    let(:uaa_options) { { skip_ssl_validation: false, ssl_ca_file: 'path/to/ca/file' } }
 
-    subject(:uaa_client) { UaaClient.new(url, client_id, secret) }
+    subject(:uaa_client) { UaaClient.new(uaa_target: url, client_id: client_id, secret: secret, ca_file: 'path/to/ca/file') }
     let(:auth_header) { 'bearer STUFF' }
     let(:token_info) { double(CF::UAA::TokenInfo, auth_header: auth_header) }
     let(:token_issuer) { double(CF::UAA::TokenIssuer, client_credentials_grant: token_info) }

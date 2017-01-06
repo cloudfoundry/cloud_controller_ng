@@ -6,7 +6,7 @@ module VCAP::Services::SSO::UAA
     ROUTER_404_VALUE = 'unknown_route'.freeze
 
     def initialize(opts={})
-      @opts = opts
+      @opts       = opts
       @uaa_client = create_uaa_client
     end
 
@@ -25,10 +25,10 @@ module VCAP::Services::SSO::UAA
       request.content_type     = 'application/json'
       request['Authorization'] = uaa_client.token_info.auth_header
 
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
+      http             = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl     = true
       http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-      http.cert_store = OpenSSL::X509::Store.new
+      http.cert_store  = OpenSSL::X509::Store.new
       http.cert_store.set_default_paths
 
       logger.info("POST UAA transaction: #{uri} - #{scrub(request_body).to_json}")
@@ -94,7 +94,7 @@ module VCAP::Services::SSO::UAA
 
     def filter_uaa_client_scope
       configured_scope = VCAP::CloudController::Config.config[:uaa_client_scope].split(',')
-      filtered_scope = configured_scope.select do |val|
+      filtered_scope   = configured_scope.select do |val|
         ['cloud_controller.write', 'openid', 'cloud_controller.read', 'cloud_controller_service_permissions.read'].include?(val)
       end
 
@@ -102,25 +102,16 @@ module VCAP::Services::SSO::UAA
     end
 
     def create_uaa_client
-      VCAP::CloudController::UaaClient.new(uaa_target, uaa_client_name, uaa_client_secret, uaa_connection_opts)
+      VCAP::CloudController::UaaClient.new(
+        uaa_target: uaa_target,
+        client_id:  VCAP::CloudController::Config.config[:uaa_client_name],
+        secret:     VCAP::CloudController::Config.config[:uaa_client_secret],
+        ca_file:    VCAP::CloudController::Config.config[:uaa][:ca_file]
+      )
     end
 
     def uaa_target
       VCAP::CloudController::Config.config[:uaa][:internal_url]
-    end
-
-    def uaa_client_name
-      VCAP::CloudController::Config.config[:uaa_client_name]
-    end
-
-    def uaa_client_secret
-      VCAP::CloudController::Config.config[:uaa_client_secret]
-    end
-
-    def uaa_connection_opts
-      {
-        ca_file: VCAP::CloudController::Config.config[:uaa][:ca_file]
-      }
     end
   end
 end

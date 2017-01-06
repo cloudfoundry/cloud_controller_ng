@@ -221,11 +221,12 @@ module CloudController
     end
 
     def uaa_client
-      client_id = @config[:cloud_controller_username_lookup_client_name]
-      secret = @config[:cloud_controller_username_lookup_client_secret]
-      target = @config[:uaa][:internal_url]
-      ca_file = @config[:uaa][:ca_file]
-      UaaClient.new(target, client_id, secret, { ca_file: ca_file })
+      UaaClient.new(
+        uaa_target: @config[:uaa][:internal_url],
+        client_id:  @config[:cloud_controller_username_lookup_client_name],
+        secret:     @config[:cloud_controller_username_lookup_client_secret],
+        ca_file:    @config[:uaa][:ca_file]
+      )
     end
 
     def routing_api_client
