@@ -4,6 +4,8 @@ Thanks for contributing to cloud_controller_ng. To speed up the process of revie
 
 * An explanation of the use cases your change solves
 
+* Links to any other associated PRs
+
 * [ ] I have viewed signed and have submitted the Contributor License Agreement
 
 * [ ] I have made this pull request to the `master` branch
