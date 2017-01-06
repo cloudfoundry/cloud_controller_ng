@@ -231,16 +231,17 @@ module CloudController
 
     def routing_api_client
       return RoutingApi::DisabledClient.new if @config[:routing_api].nil?
+
+      uaa_client = UaaClient.new(
+        uaa_target: @config[:uaa][:internal_url],
+        client_id:  HashUtils.dig(@config, :routing_api, :routing_client_name),
+        secret:     HashUtils.dig(@config, :routing_api, :routing_client_secret),
+        ca_file:    @config[:uaa][:ca_file]
+      )
+
       skip_cert_verify = @config[:skip_cert_verify]
-
-      client_id = @config[:routing_api] && @config[:routing_api][:routing_client_name]
-      secret = @config[:routing_api] && @config[:routing_api][:routing_client_secret]
-      uaa_target = @config[:uaa][:internal_url]
-      ca_file = @config[:uaa][:ca_file]
-      token_issuer = CF::UAA::TokenIssuer.new(uaa_target, client_id, secret, { skip_ssl_validation: false, ca_file: ca_file })
-
-      routing_api_url = @config[:routing_api] && @config[:routing_api][:url]
-      RoutingApi::Client.new(routing_api_url, token_issuer, skip_cert_verify)
+      routing_api_url  = HashUtils.dig(@config, :routing_api, :url)
+      RoutingApi::Client.new(routing_api_url, uaa_client, skip_cert_verify)
     end
 
     def missing_blob_handler

@@ -343,19 +343,18 @@ RSpec.describe CloudController::DependencyLocator do
     end
 
     it 'returns a routing_api_client' do
-      name = config[:routing_api][:routing_client_name]
-      secret = config[:routing_api][:routing_client_secret]
-      uaa = config[:uaa][:internal_url]
-      ca_file = config[:uaa][:ca_file]
-      opts = { skip_ssl_validation: false, ca_file: ca_file }
-
-      token_issuer = double('token_issuer')
-      expect(CF::UAA::TokenIssuer).to receive(:new).with(uaa, name, secret, opts).and_return(token_issuer)
+      uaa_client = instance_double(VCAP::CloudController::UaaClient)
+      expect(VCAP::CloudController::UaaClient).to receive(:new).with(
+        uaa_target: config[:uaa][:internal_url],
+        client_id:  config[:routing_api][:routing_client_name],
+        secret:     config[:routing_api][:routing_client_secret],
+        ca_file:    config[:uaa][:ca_file],
+      ).and_return(uaa_client)
 
       client = locator.routing_api_client
 
       expect(client).to be_an_instance_of(VCAP::CloudController::RoutingApi::Client)
-      expect(client.token_issuer).to eq token_issuer
+      expect(client.uaa_client).to eq uaa_client
       expect(client.routing_api_uri.to_s).to eq(config[:routing_api][:url])
       expect(client.skip_cert_verify).to eq(config[:skip_cert_verify])
     end
