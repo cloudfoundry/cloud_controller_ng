@@ -28,6 +28,7 @@ module VCAP::Services::SSO::UAA
       http             = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl     = true
       http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+      http.ca_file     = uaa_ca_file
       http.cert_store  = OpenSSL::X509::Store.new
       http.cert_store.set_default_paths
 
@@ -106,8 +107,12 @@ module VCAP::Services::SSO::UAA
         uaa_target: uaa_target,
         client_id:  VCAP::CloudController::Config.config[:uaa_client_name],
         secret:     VCAP::CloudController::Config.config[:uaa_client_secret],
-        ca_file:    VCAP::CloudController::Config.config[:uaa][:ca_file]
+        ca_file:    uaa_ca_file
       )
+    end
+
+    def uaa_ca_file
+      VCAP::CloudController::Config.config[:uaa][:ca_file]
     end
 
     def uaa_target

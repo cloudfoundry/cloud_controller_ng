@@ -211,6 +211,7 @@ module VCAP::Services::SSO::UAA
           allow(mock_http).to receive(:use_ssl=)
           allow(mock_http).to receive(:verify_mode=)
           allow(OpenSSL::X509::Store).to receive(:new).and_return(mock_cert_store)
+          allow(mock_http).to receive(:ca_file=)
           allow(mock_http).to receive(:cert_store=)
           allow(mock_http).to receive(:cert_store).and_return(mock_cert_store)
           allow(mock_http).to receive(:request).and_return(double(:response, code: '200'))
@@ -241,6 +242,17 @@ module VCAP::Services::SSO::UAA
 
           expect(mock_http).to have_received(:cert_store=).with(mock_cert_store)
           expect(mock_cert_store).to have_received(:set_default_paths)
+        end
+
+        it 'sets the ca_file' do
+          changeset = [
+            double('command', uaa_command: {}, client_attrs: {}),
+          ]
+
+          client_manager = UaaClientManager.new
+          client_manager.modify_transaction(changeset)
+
+          expect(mock_http).to have_received(:ca_file=).with('spec/fixtures/certs/uaa_ca.crt')
         end
       end
 
