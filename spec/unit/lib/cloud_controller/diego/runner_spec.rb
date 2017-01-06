@@ -36,6 +36,19 @@ module VCAP::CloudController
             expect { runner.scale }.to raise_error(CloudController::Errors::ApiError, /App not started/)
           end
         end
+
+        context 'when the app has no droplet' do
+          before do
+            process.app.update(droplet_guid: nil)
+          end
+
+          it 'does not desire an app and raises an exception' do
+            expect(messenger).to_not receive(:send_desire_request)
+            expect { runner.scale }.to raise_error(
+              CloudController::Errors::ApiError, /App has not finished staging/
+            )
+          end
+        end
       end
 
       describe '#start' do

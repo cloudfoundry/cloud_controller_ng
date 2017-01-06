@@ -12,6 +12,7 @@ module VCAP::CloudController
 
       def scale
         raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @process.started?
+        raise CloudController::Errors::ApiError.new_from_details('NotStaged') if @process.pending?
         with_logging('scale') { messenger.send_desire_request(@process, @config) }
       end
 
