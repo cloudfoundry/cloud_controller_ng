@@ -45,6 +45,21 @@ module VCAP::CloudController::Diego
         allow(bbs_client).to receive(:actual_lrp_groups_by_process_guid).with(process_guid).and_return(bbs_response)
       end
 
+      context 'we have a bulk_lrp_instances thing' do
+        let(:process1) { VCAP::CloudController::AppFactory.make }
+        let(:process2) { VCAP::CloudController::AppFactory.make }
+        before do
+          allow(bbs_client).to receive(:actual_lrp_groups_by_process_guid).with(instance_of(String)).and_return(bbs_response)
+        end
+
+        it 'sends lrp instance requests to diego in bulk' do
+          client.bulk_lrp_instances([process1, process2])
+          expect(bbs_client).to have_received(:actual_lrp_groups_by_process_guid).with(ProcessGuid.from_process(process1)).exactly(:once)
+          expect(bbs_client).to have_received(:actual_lrp_groups_by_process_guid).with(ProcessGuid.from_process(process2)).exactly(:once)
+          expect(bbs_client).to have_received(:actual_lrp_groups_by_process_guid).with(instance_of(String)).exactly(:twice)
+        end
+      end
+
       it 'sends the lrp instances request to diego' do
         client.lrp_instances(process)
         expect(bbs_client).to have_received(:actual_lrp_groups_by_process_guid).with(process_guid)

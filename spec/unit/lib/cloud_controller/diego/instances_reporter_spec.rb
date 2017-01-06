@@ -418,6 +418,81 @@ module VCAP::CloudController
         end
       end
 
+      describe '#number_of_starting_and_running_instances_for_processes when local tps is configured' do
+        let(:app1) { AppFactory.make(state: 'STARTED', instances: 2) }
+        let(:app2) { AppFactory.make(state: 'STARTED', instances: 5) }
+        let(:instance_map) do
+          {
+            app1.guid => [
+              {
+                state: 'RUNNING',
+                index: 0
+              },
+              {
+                state: 'STARTING',
+                index: 1
+              },
+              {
+                state: 'CRASHED',
+                index: 2
+              },
+              {
+                state: 'STARTING',
+                index: 1
+              },
+            ],
+            app2.guid => [
+              {
+                state: 'RUNNING',
+                index: 0
+              },
+              {
+                state: 'STARTING',
+                index: 1
+              },
+              {
+                state: 'CRASHED',
+                index: 2
+              },
+              {
+                state: 'RUNNING',
+                index: 3
+              }
+            ],
+          }
+        end
+        before do
+          TestConfig.override(diego: { temporary_local_tps: true })
+          allow(bbs_instances_client).to receive(:bulk_lrp_instances).and_return(instance_map)
+        end
+
+        it 'returns a hash of app => instance count' do
+          result = instances_reporter.number_of_starting_and_running_instances_for_processes([app1, app2])
+          expect(result).to eq({ app1.guid => 2, app2.guid => 3 })
+        end
+
+        context 'when diego is unavailable' do
+          before do
+            allow(bbs_instances_client).to receive(:bulk_lrp_instances).and_raise(StandardError.new('oh no'))
+          end
+
+          it 'returns -1 indicating not fresh' do
+            expect(instances_reporter.number_of_starting_and_running_instances_for_processes([app1, app2])).to eq({ app1.guid => -1, app2.guid => -1 })
+          end
+
+          context 'when its an InstancesUnavailable' do
+            let(:error) { CloudController::Errors::InstancesUnavailable.new('oh my') }
+            before do
+              allow(bbs_instances_client).to receive(:bulk_lrp_instances).and_raise(error)
+            end
+
+            it 'returns -1 indicating not fresh' do
+              expect(instances_reporter.number_of_starting_and_running_instances_for_processes([app1, app2])).to eq({ app1.guid => -1, app2.guid => -1 })
+            end
+          end
+        end
+      end
+
       describe '#crashed_instances_for_app' do
         it 'returns an array of crashed instances' do
           result = instances_reporter.crashed_instances_for_app(app)

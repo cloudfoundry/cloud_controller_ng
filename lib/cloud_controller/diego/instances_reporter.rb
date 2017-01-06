@@ -31,7 +31,7 @@ module VCAP::CloudController
       def number_of_starting_and_running_instances_for_processes(processes)
         result = {}
 
-        instances_map = tps_client.bulk_lrp_instances(processes)
+        instances_map = instances_map_for_processes(processes)
         processes.each do |application|
           running_indices = Set.new
 
@@ -146,6 +146,13 @@ module VCAP::CloudController
 
       def instances_for_process(process)
         bypass_bridge? ? bbs_instances_client.lrp_instances(process) : tps_client.lrp_instances(process)
+      end
+
+      def instances_map_for_processes(processes)
+        if bypass_bridge?
+          return bbs_instances_client.bulk_lrp_instances(processes)
+        end
+        tps_client.bulk_lrp_instances(processes)
       end
 
       def fill_unreported_instances_with_down_instances(reported_instances, process)

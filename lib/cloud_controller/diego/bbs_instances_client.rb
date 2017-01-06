@@ -17,6 +17,7 @@ module VCAP::CloudController
           response
         end
 
+        # NOTE: Do we need to run process_guid through ProcessGuid.app_guid?
         instances = bbs_lrp_groups.actual_lrp_groups.map do |actual_lrp_group|
           actual_lrp = resolve(actual_lrp_group)
           {
@@ -33,10 +34,10 @@ module VCAP::CloudController
         instances
       end
 
-      def resolve(actual_lrp_group)
-        return actual_lrp_group.instance if actual_lrp_group.instance
-        return actual_lrp_group.evacuating if actual_lrp_group.evacuating
-        raise CloudController::Errors::InstancesUnavailable.new('no instance or evacuating object in actual_lrp_group')
+      def bulk_lrp_instances(processes)
+        processes.map do |process|
+          lrp_instances(process)
+        end
       end
 
       private
@@ -53,6 +54,12 @@ module VCAP::CloudController
         end
 
         response
+      end
+
+      def resolve(actual_lrp_group)
+        return actual_lrp_group.instance if actual_lrp_group.instance
+        return actual_lrp_group.evacuating if actual_lrp_group.evacuating
+        raise CloudController::Errors::InstancesUnavailable.new('no instance or evacuating object in actual_lrp_group')
       end
 
       def logger
