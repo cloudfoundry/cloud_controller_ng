@@ -173,14 +173,12 @@ module VCAP::CloudController
       end
 
       def generate_environment_variables(lrp_builder)
-        desired_ports         = lrp_builder.ports
-        environment_variables = []
+        environment_variables = lrp_builder.port_environment_variables
 
         env = Environment.new(process, EnvironmentVariableGroup.running.environment_json).as_json
         env.each do |i|
           environment_variables << ::Diego::Bbs::Models::EnvironmentVariable.new(name: i['name'], value: i['value'])
         end
-        environment_variables << ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: desired_ports.first.to_s)
         environment_variables
       end
 

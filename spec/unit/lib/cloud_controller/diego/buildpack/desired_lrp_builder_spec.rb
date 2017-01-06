@@ -128,6 +128,17 @@ module VCAP::CloudController
 
           xcontext 'when the ports array is empty'
         end
+
+        describe '#port_environment_variables' do
+          let(:ports) { [11, 22, 33] }
+
+          it 'returns the array of environment variables' do
+            expect(builder.port_environment_variables).to match_array([
+              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '11'),
+              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_PORT', value: '11'),
+            ])
+          end
+        end
       end
     end
   end

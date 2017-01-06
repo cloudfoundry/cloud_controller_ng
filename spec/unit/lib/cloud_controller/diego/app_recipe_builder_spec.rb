@@ -215,6 +215,7 @@ module VCAP::CloudController
               global_environment_variables: env_vars,
               privileged?:                  false,
               ports:                        lrp_builder_ports,
+              port_environment_variables:   expected_action_environment_variables,
               action_user:                  'lrp-action-user',
               start_command:                command,
             )
@@ -678,6 +679,7 @@ module VCAP::CloudController
               global_environment_variables: [],
               privileged?:                  false,
               ports:                        lrp_builder_ports,
+              port_environment_variables:   expected_action_environment_variables,
               action_user:                  'lrp-action-user',
               start_command:                command,
             )

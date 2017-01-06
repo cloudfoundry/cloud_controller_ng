@@ -46,6 +46,12 @@ module VCAP::CloudController
           tcp_ports.map { |port| port['port'].to_i }
         end
 
+        def port_environment_variables
+          [
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: ports.first.to_s),
+          ]
+        end
+
         def privileged?
           false
         end

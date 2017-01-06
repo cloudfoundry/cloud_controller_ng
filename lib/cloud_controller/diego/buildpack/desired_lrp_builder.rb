@@ -54,6 +54,13 @@ module VCAP::CloudController
           @ports || [DEFAULT_APP_PORT]
         end
 
+        def port_environment_variables
+          [
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: ports.first.to_s),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_PORT', value: ports.first.to_s),
+          ]
+        end
+
         def privileged?
           @config[:diego][:use_privileged_containers_for_running]
         end
