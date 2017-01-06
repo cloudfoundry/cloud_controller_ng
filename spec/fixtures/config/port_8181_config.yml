@@ -52,9 +52,10 @@ hm9000:
 
 uaa:
   url: "http://localhost:8080/uaa"
-  internal_url: "http://uaa.service.cf.internal"
+  internal_url: "https://uaa.service.cf.internal"
   resource_id: "cloud_controller"
   symmetric_secret: "tokensecret"
+  ca_file: "spec/fixtures/certs/uaa_ca.crt"
 
 logging:
   file: /tmp/cloud_controller.8181.log

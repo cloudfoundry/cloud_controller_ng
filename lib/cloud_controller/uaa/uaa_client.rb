@@ -64,7 +64,7 @@ module VCAP::CloudController
 
     def uaa_connection_opts
       {
-        skip_ssl_validation: !!options[:skip_ssl_validation],
+        skip_ssl_validation: false,
         ssl_ca_file: options[:ca_file]
       }
     end

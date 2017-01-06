@@ -49,7 +49,8 @@ hm9000:
 uaa:
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"
-  internal_url: "http://uaa.service.cf.internal"
+  internal_url: "https://uaa.service.cf.internal"
+  ca_file: "spec/fixtures/certs/uaa_ca.crt"
 
 logging:
   level: fatal # Keep at fatal to avoid lots of extraneous output in tests

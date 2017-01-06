@@ -317,15 +317,6 @@ RSpec.describe CloudController::DependencyLocator do
       expect(uaa_client.secret).to eq(config[:cloud_controller_username_lookup_client_secret])
       expect(uaa_client.uaa_target).to eq(config[:uaa][:internal_url])
     end
-
-    context 'when skip_cert_verify is true in the config' do
-      before { TestConfig.override(skip_cert_verify: true) }
-
-      it 'skips ssl validation to uaa' do
-        uaa_client = locator.uaa_client
-        expect(uaa_client.options[:skip_ssl_validation]).to be true
-      end
-    end
   end
 
   describe '#routing_api_client' do
@@ -356,7 +347,7 @@ RSpec.describe CloudController::DependencyLocator do
       secret = config[:routing_api][:routing_client_secret]
       uaa = config[:uaa][:internal_url]
       ca_file = config[:uaa][:ca_file]
-      opts = { skip_ssl_validation: config[:skip_cert_verify], ca_file: ca_file }
+      opts = { skip_ssl_validation: false, ca_file: ca_file }
 
       token_issuer = double('token_issuer')
       expect(CF::UAA::TokenIssuer).to receive(:new).with(uaa, name, secret, opts).and_return(token_issuer)

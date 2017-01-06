@@ -224,9 +224,8 @@ module CloudController
       client_id = @config[:cloud_controller_username_lookup_client_name]
       secret = @config[:cloud_controller_username_lookup_client_secret]
       target = @config[:uaa][:internal_url]
-      skip_cert_verify = @config[:skip_cert_verify]
       ca_file = @config[:uaa][:ca_file]
-      UaaClient.new(target, client_id, secret, { skip_ssl_validation: skip_cert_verify, ca_file: ca_file })
+      UaaClient.new(target, client_id, secret, { ca_file: ca_file })
     end
 
     def routing_api_client
@@ -237,7 +236,7 @@ module CloudController
       secret = @config[:routing_api] && @config[:routing_api][:routing_client_secret]
       uaa_target = @config[:uaa][:internal_url]
       ca_file = @config[:uaa][:ca_file]
-      token_issuer = CF::UAA::TokenIssuer.new(uaa_target, client_id, secret, { skip_ssl_validation: skip_cert_verify, ca_file: ca_file })
+      token_issuer = CF::UAA::TokenIssuer.new(uaa_target, client_id, secret, { skip_ssl_validation: false, ca_file: ca_file })
 
       routing_api_url = @config[:routing_api] && @config[:routing_api][:url]
       RoutingApi::Client.new(routing_api_url, token_issuer, skip_cert_verify)

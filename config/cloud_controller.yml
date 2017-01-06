@@ -85,10 +85,10 @@ db:
 
 uaa:
   url: "http://localhost:8080/uaa"
-  internal_url: "http://uaa.service.cf.internal"
+  internal_url: "https://uaa.service.cf.internal"
   resource_id: "cloud_controller"
   symmetric_secret: "tokensecret"
-  ca_file: "/var/vcap/jobs/cloud_controller_ng/config/certs/uaa_ca.crt"
+  ca_file: "spec/fixtures/certs/uaa_ca.crt"
 
 hm9000:
   url: "http://localhost:5155"

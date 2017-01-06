@@ -18,7 +18,6 @@ module VCAP::Services::SSO::UAA
       return if changeset.empty?
 
       uri          = URI("#{uaa_target}/oauth/clients/tx/modify")
-      use_ssl      = uri.instance_of?(URI::HTTPS)
       request_body = batch_request(changeset)
 
       request                  = Net::HTTP::Post.new(uri.path)
@@ -27,12 +26,10 @@ module VCAP::Services::SSO::UAA
       request['Authorization'] = uaa_client.token_info.auth_header
 
       http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = use_ssl
-      if use_ssl
-        http.verify_mode = verify_certs? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
-        http.cert_store = OpenSSL::X509::Store.new
-        http.cert_store.set_default_paths
-      end
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+      http.cert_store = OpenSSL::X509::Store.new
+      http.cert_store.set_default_paths
 
       logger.info("POST UAA transaction: #{uri} - #{scrub(request_body).to_json}")
       response = http.request(request)
@@ -62,10 +59,6 @@ module VCAP::Services::SSO::UAA
     private
 
     attr_reader :uaa_client
-
-    def verify_certs?
-      !VCAP::CloudController::Config.config[:skip_cert_verify]
-    end
 
     def log_bad_uaa_response(response)
       logger.error("UAA request failed with code: #{response.code} - #{response.inspect}")
@@ -126,7 +119,6 @@ module VCAP::Services::SSO::UAA
 
     def uaa_connection_opts
       {
-        skip_ssl_validation: !verify_certs?,
         ca_file: VCAP::CloudController::Config.config[:uaa][:ca_file]
       }
     end
