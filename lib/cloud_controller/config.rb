@@ -285,24 +285,24 @@ module VCAP::CloudController
         :shared_isolation_segment_name => String,
 
         optional(:diego) => {
-          temporary_local_staging:               bool,
-          temporary_local_tasks:                 bool,
-          temporary_local_apps:                  bool,
-          nsync_url:                             String,
-          stager_url:                            String,
-          tps_url:                               String,
-          file_server_url:                       String,
-          cc_uploader_url:                       String,
-          use_privileged_containers_for_running: bool,
-          use_privileged_containers_for_staging: bool,
-          lifecycle_bundles:                     Hash,
-
           bbs: {
             url:         String,
             ca_file:     String,
             cert_file:   String,
             key_file:    String,
-          }
+          },
+          cc_uploader_url:                       String,
+          file_server_url:                       String,
+          lifecycle_bundles:                     Hash,
+          nsync_url:                             String,
+          pid_limit:                             Integer,
+          stager_url:                            String,
+          temporary_local_staging:               bool,
+          temporary_local_tasks:                 bool,
+          temporary_local_apps:                  bool,
+          tps_url:                               String,
+          use_privileged_containers_for_running: bool,
+          use_privileged_containers_for_staging: bool,
         },
       }
     end
@@ -442,6 +442,9 @@ module VCAP::CloudController
       def sanitize(config)
         sanitize_grace_period(config)
         sanitize_staging_auth(config)
+
+        config[:diego][:pid_limit] = 0 if config[:diego][:pid_limit] < 0
+
         config
       end
 

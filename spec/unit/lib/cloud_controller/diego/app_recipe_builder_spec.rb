@@ -191,7 +191,8 @@ module VCAP::CloudController
                 use_privileged_containers_for_running: false,
                 lifecycle_bundles:                     {
                   'potato-stack' => 'some-uri'
-                }
+                },
+                pid_limit: 100,
               }
             }
           end
@@ -250,6 +251,7 @@ module VCAP::CloudController
             expect(lrp.legacy_download_user).to eq('root')
             expect(lrp.log_guid).to eq(process.app.guid)
             expect(lrp.log_source).to eq(LRP_LOG_SOURCE)
+            expect(lrp.max_pids).to eq(100)
             expect(lrp.memory_mb).to eq(128)
             expect(lrp.metrics_guid).to eq(process.app.guid)
             expect(lrp.monitor).to eq(expected_monitor_action)
@@ -651,7 +653,13 @@ module VCAP::CloudController
         end
 
         context 'when the lifecycle_type is "docker"' do
-          let(:config) { {} }
+          let(:config) do
+            {
+              diego: {
+                pid_limit: 100,
+              }
+            }
+          end
           let(:lifecycle_type) { :docker }
           let(:droplet) do
             DropletModel.make(:docker,
@@ -707,6 +715,7 @@ module VCAP::CloudController
             expect(lrp.legacy_download_user).to eq('root')
             expect(lrp.log_source).to eq(LRP_LOG_SOURCE)
             expect(lrp.log_guid).to eq(process.app.guid)
+            expect(lrp.max_pids).to eq(100)
             expect(lrp.memory_mb).to eq(128)
             expect(lrp.metrics_guid).to eq(process.app.guid)
             expect(lrp.monitor).to eq(expected_monitor_action)

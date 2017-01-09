@@ -362,3 +362,4 @@ diego:
     key_file: /var/vcap/jobs/cloud_controller_worker/config/certs/mutual_tls.key
     cert_file: /var/vcap/jobs/cloud_controller_worker/config/certs/mutual_tls.crt
     ca_file: /var/vcap/jobs/cloud_controller_worker/config/certs/mutual_tls_ca.crt
+  pid_limit: <%= p("cc.diego.pid_limit") %>

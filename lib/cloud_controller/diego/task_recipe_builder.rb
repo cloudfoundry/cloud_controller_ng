@@ -16,26 +16,27 @@ module VCAP::CloudController
 
       def build_app_task(config, task)
         task_completion_callback = VCAP::CloudController::Diego::TaskCompletionCallbackGenerator.new(config).generate(task)
-        app_volume_mounts = VCAP::CloudController::Diego::Protocol::AppVolumeMounts.new(task.app).as_json
-        task_action_builder = LifecycleProtocol.protocol_for_type(task.droplet.lifecycle_type).task_action_builder(config, task)
+        app_volume_mounts        = VCAP::CloudController::Diego::Protocol::AppVolumeMounts.new(task.app).as_json
+        task_action_builder      = LifecycleProtocol.protocol_for_type(task.droplet.lifecycle_type).task_action_builder(config, task)
 
         ::Diego::Bbs::Models::TaskDefinition.new(
-          completion_callback_url: task_completion_callback,
-          cpu_weight: cpu_weight(task),
-          disk_mb: task.disk_in_mb,
-          egress_rules: generate_running_egress_rules(task.app),
-          legacy_download_user: STAGING_LEGACY_DOWNLOAD_USER,
-          log_guid: task.app.guid,
-          log_source: "APP/TASK/#{task.name}",
-          memory_mb: task.memory_in_mb,
-          privileged: config[:diego][:use_privileged_containers_for_running],
+          completion_callback_url:          task_completion_callback,
+          cpu_weight:                       cpu_weight(task),
+          disk_mb:                          task.disk_in_mb,
+          egress_rules:                     generate_running_egress_rules(task.app),
+          legacy_download_user:             STAGING_LEGACY_DOWNLOAD_USER,
+          log_guid:                         task.app.guid,
+          log_source:                       "APP/TASK/#{task.name}",
+          max_pids:                         config[:diego][:pid_limit],
+          memory_mb:                        task.memory_in_mb,
+          privileged:                       config[:diego][:use_privileged_containers_for_running],
           trusted_system_certificates_path: STAGING_TRUSTED_SYSTEM_CERT_PATH,
-          volume_mounts: generate_volume_mounts(app_volume_mounts),
-          action: task_action_builder.action,
-          cached_dependencies: task_action_builder.cached_dependencies,
-          root_fs: task_action_builder.stack,
-          environment_variables: task_action_builder.task_environment_variables,
-          PlacementTags: [VCAP::CloudController::IsolationSegmentSelector.for_space(task.space)]
+          volume_mounts:                    generate_volume_mounts(app_volume_mounts),
+          action:                           task_action_builder.action,
+          cached_dependencies:              task_action_builder.cached_dependencies,
+          root_fs:                          task_action_builder.stack,
+          environment_variables:            task_action_builder.task_environment_variables,
+          PlacementTags:                    [VCAP::CloudController::IsolationSegmentSelector.for_space(task.space)],
         )
       end
 
@@ -59,12 +60,13 @@ module VCAP::CloudController
           action:                           timeout(action_builder.action, timeout_ms: config[:staging][:timeout_in_seconds].to_i * 1000),
           environment_variables:            action_builder.task_environment_variables,
           cached_dependencies:              action_builder.cached_dependencies,
-          PlacementTags:                    find_staging_isolation_segment(staging_details)
+          PlacementTags:                    find_staging_isolation_segment(staging_details),
+          max_pids:                         config[:diego][:pid_limit],
         )
       end
 
       def staging_completion_callback(staging_details, config)
-        port = config[:tls_port]
+        port   = config[:tls_port]
         scheme = 'https'
 
         auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"
@@ -124,14 +126,14 @@ module VCAP::CloudController
         proto_volume_mounts = []
         app_volume_mounts.each do |volume_mount|
           proto_volume_mount = ::Diego::Bbs::Models::VolumeMount.new(
-            driver: volume_mount['device']['driver'],
+            driver:        volume_mount['device']['driver'],
             container_dir: volume_mount['container_dir'],
-            mode: volume_mount['mode']
+            mode:          volume_mount['mode']
           )
 
           mount_config              = volume_mount['device']['mount_config'].present? ? volume_mount['device']['mount_config'].to_json : ''
           proto_volume_mount.shared = ::Diego::Bbs::Models::SharedDevice.new(
-            volume_id: volume_mount['device']['volume_id'],
+            volume_id:    volume_mount['device']['volume_id'],
             mount_config: mount_config
           )
           proto_volume_mounts.append(proto_volume_mount)

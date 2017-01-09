@@ -64,7 +64,8 @@ module VCAP::CloudController
           domain:                           APP_LRP_DOMAIN,
           volume_mounts:                    generate_volume_mounts,
           PlacementTags:                    [IsolationSegmentSelector.for_space(process.space)],
-          routes:                           ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes)
+          routes:                           ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes),
+          max_pids:                         @config[:diego][:pid_limit],
         )
       end
 

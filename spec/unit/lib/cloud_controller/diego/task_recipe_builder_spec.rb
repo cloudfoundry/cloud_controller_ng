@@ -32,6 +32,7 @@ module VCAP::CloudController
             diego: {
               use_privileged_containers_for_staging: false,
               stager_url: 'http://stager.example.com',
+              pid_limit: 100,
             },
           }
         end
@@ -131,6 +132,7 @@ module VCAP::CloudController
 
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
             expect(result.PlacementTags).to eq(['potato-segment'])
+            expect(result.max_pids).to eq(100)
           end
 
           it 'gives the task a TrustedSystemCertificatesPath' do
@@ -257,6 +259,12 @@ module VCAP::CloudController
 
             expect(result.PlacementTags).to eq(['potato-segment'])
           end
+
+          it 'sets the max_pids' do
+            result = task_recipe_builder.build_staging_task(config, staging_details)
+
+            expect(result.max_pids).to eq(100)
+          end
         end
       end
 
@@ -284,7 +292,8 @@ module VCAP::CloudController
             },
             diego: {
               lifecycle_bundles: { 'buildpack/potato-stack': 'potato_lifecycle_bundle_url' },
-              use_privileged_containers_for_running: false
+              pid_limit: 100,
+              use_privileged_containers_for_running: false,
             },
           }
         end
@@ -384,6 +393,7 @@ module VCAP::CloudController
             expect(result.metrics_guid).to eq('')
             expect(result.cpu_weight).to eq(25)
             expect(result.PlacementTags).to eq([isolation_segment])
+            expect(result.max_pids).to eq(100)
           end
 
           context 'when a volume mount is provided' do
@@ -513,11 +523,10 @@ module VCAP::CloudController
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
             expect(result.action).to eq(task_action)
 
-            # missing nsync tests ?
-
             expect(result.metrics_guid).to eq('')
             expect(result.cpu_weight).to eq(25)
             expect(result.PlacementTags).to eq([isolation_segment])
+            expect(result.max_pids).to eq(100)
           end
 
           context 'when a volume mount is provided' do

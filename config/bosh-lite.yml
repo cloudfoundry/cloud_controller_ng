@@ -290,6 +290,7 @@ diego:
     key_file: spec/fixtures/certs/bbs_client.key
     cert_file: spec/fixtures/certs/bbs_client.crt
     ca_file: spec/fixtures/certs/bbs_ca.crt
+  pid_limit: 0
 
 shared_isolation_segment_name: shared
 
