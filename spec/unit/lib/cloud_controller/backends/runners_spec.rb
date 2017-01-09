@@ -289,42 +289,22 @@ module VCAP::CloudController
       it 'returns apps that have the desired data' do
         last_app = AppFactory.make(state: 'STARTED')
 
-        apps, _ = runners.dea_apps_hm9k(100, 0)
+        apps, _ = runners.dea_apps_hm9k
         expect(apps.count).to eq(6)
 
         expect(apps.last).to include(
           'id'            => last_app.guid,
           'instances'     => last_app.instances,
           'state'         => last_app.state,
-          'memory'        => last_app.memory,
           'package_state' => 'STAGED',
           'version'       => last_app.version,
         )
-        expect(apps.last).to have_key('updated_at')
-      end
-
-      it 'respects the batch_size' do
-        app_counts = [3, 5].map do |batch_size|
-          runners.dea_apps_hm9k(batch_size, 0)[0].count
-        end
-
-        expect(app_counts).to eq([3, 5])
-      end
-
-      it 'returns non-intersecting apps across subsequent batches' do
-        first_batch, next_id = runners.dea_apps_hm9k(3, 0)
-        expect(first_batch.count).to eq(3)
-
-        second_batch, _ = runners.dea_apps_hm9k(3, next_id)
-        expect(second_batch.count).to eq(2)
-
-        expect(second_batch & first_batch).to eq([])
       end
 
       it 'does not return stopped apps' do
         stopped_app = AppFactory.make(state: 'STOPPED')
 
-        batch, _ = runners.dea_apps_hm9k(100, 0)
+        batch, _ = runners.dea_apps_hm9k
 
         guids = batch.map { |entry| entry['id'] }
         expect(guids).not_to include(stopped_app.guid)
@@ -334,7 +314,7 @@ module VCAP::CloudController
         staging_failed_app = dea_app1
         DropletModel.make(package: dea_app1.latest_package, app: dea_app1.app, state: DropletModel::FAILED_STATE)
 
-        batch, _ = runners.dea_apps_hm9k(100, 0)
+        batch, _ = runners.dea_apps_hm9k
 
         guids = batch.map { |entry| entry['id'] }
         expect(guids).not_to include(staging_failed_app.guid)
@@ -344,10 +324,199 @@ module VCAP::CloudController
         staging_pending_app = dea_app1
         PackageModel.make(app: dea_app1.app, state: PackageModel::PENDING_STATE)
 
-        batch, _ = runners.dea_apps_hm9k(100, 0)
+        batch, _ = runners.dea_apps_hm9k
 
-        guids = batch.map { |entry| entry['id'] }
-        expect(guids).to include(staging_pending_app.guid)
+        found = false
+        batch.each do |item|
+          if item['id'] == staging_pending_app.guid
+            expect(item['package_state']).to eq('PENDING')
+            found = true
+          end
+        end
+
+        expect(found).to be true
+      end
+
+      it 'returns the largest process id from the query' do
+        _, process_id = runners.dea_apps_hm9k
+        expect(process_id).to equal(App.dataset.order(:id).last.id)
+      end
+    end
+
+    describe '#latest' do
+      context 'when the input hash includes a key app_guid' do
+        let(:input) do
+          [{
+            app_guid: 'app_guid_1',
+            id: 1,
+          }]
+        end
+
+        it 'is added to the hash' do
+          output_hash = runners.latest(input)
+          expect(output_hash['app_guid_1']).to eq(input[0])
+        end
+
+        context 'when the input hash has multiple values' do
+          let(:input) do
+            [
+              {
+                app_guid: 'app_guid_1',
+                id: 1,
+              },
+              {
+                app_guid: 'app_guid_2',
+                id: 2,
+              },
+            ]
+          end
+
+          it 'adds all items to the hash' do
+            output_hash = runners.latest(input)
+
+            expect(output_hash.length).to eq(input.length)
+            expect(output_hash['app_guid_1']).to eq(input[0])
+            expect(output_hash['app_guid_2']).to eq(input[1])
+          end
+        end
+
+        context 'when multiple items have the same app_guid key' do
+          context 'when the created_at times are the same' do
+            let(:time) { Time.now }
+
+            let(:input) do
+              [
+                {
+                  app_guid: 'app_guid_1',
+                  id: 1,
+                  created_at: time,
+                },
+                {
+                  app_guid: 'app_guid_1',
+                  id: 2,
+                  created_at: time,
+                }
+              ]
+            end
+
+            it "takes the last entry based off of the 'id'" do
+              output_hash = runners.latest(input)
+              expect(output_hash['app_guid_1']).to eq(input[1])
+            end
+          end
+        end
+      end
+    end
+
+    describe '#package_state' do
+      let(:parent_app) { AppModel.make }
+      subject(:app) { App.make(app: parent_app) }
+
+      context 'when no package exists' do
+        it 'is PENDING' do
+          expect(app.latest_package).to be_nil
+          expect(runners.package_state(app.guid, nil, app.latest_droplet, app.latest_package)).to eq('PENDING')
+        end
+      end
+
+      context 'when the package has no hash' do
+        before do
+          PackageModel.make(app: parent_app, package_hash: nil)
+        end
+
+        it 'is PENDING' do
+          expect(runners.package_state(app.guid, nil, app.latest_droplet, app.latest_package)).to eq('PENDING')
+        end
+      end
+
+      context 'when the package failed to upload' do
+        before do
+          PackageModel.make(app: parent_app, state: PackageModel::FAILED_STATE)
+        end
+
+        it 'is FAILED' do
+          expect(runners.package_state(app.guid, nil, app.latest_droplet, app.latest_package)).to eq('FAILED')
+        end
+      end
+
+      context 'when the package is available and there is no droplet' do
+        before do
+          PackageModel.make(app: parent_app, package_hash: 'hash')
+        end
+
+        it 'is PENDING' do
+          expect(runners.package_state(app.guid, nil, app.latest_droplet, app.latest_package)).to eq('PENDING')
+        end
+      end
+
+      context 'when the current droplet is the latest droplet' do
+        before do
+          package = PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::READY_STATE)
+          droplet = DropletModel.make(app: parent_app, package: package, state: DropletModel::STAGED_STATE)
+          parent_app.update(droplet: droplet)
+        end
+
+        it 'is STAGED' do
+          expect(runners.package_state(app.guid, app.current_droplet.guid, app.latest_droplet, app.latest_package)).to eq('STAGED')
+        end
+      end
+
+      context 'when the current droplet is not the latest droplet' do
+        before do
+          package = PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::READY_STATE)
+          DropletModel.make(app: parent_app, package: package, state: DropletModel::STAGED_STATE)
+        end
+
+        it 'is PENDING' do
+          expect(runners.package_state(app.guid, nil, app.latest_droplet, app.latest_package)).to eq('PENDING')
+        end
+      end
+
+      context 'when the latest droplet failed to stage' do
+        before do
+          package = PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::READY_STATE)
+          DropletModel.make(app: parent_app, package: package, state: DropletModel::FAILED_STATE)
+        end
+
+        it 'is FAILED' do
+          expect(runners.package_state(app.guid, nil, app.latest_droplet, app.latest_package)).to eq('FAILED')
+        end
+      end
+
+      context 'when there is a newer package than current droplet' do
+        before do
+          package = PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::READY_STATE)
+          droplet = DropletModel.make(app: parent_app, package: package, state: DropletModel::STAGED_STATE)
+          parent_app.update(droplet: droplet)
+          PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::READY_STATE, created_at: droplet.created_at + 10.seconds)
+        end
+
+        it 'is PENDING' do
+          expect(runners.package_state(app.guid, app.current_droplet.guid, app.latest_droplet, app.latest_package)).to eq('PENDING')
+        end
+      end
+
+      context 'when the latest droplet is the current droplet but it does not have a package' do
+        before do
+          droplet = DropletModel.make(app: parent_app, state: DropletModel::STAGED_STATE)
+          parent_app.update(droplet: droplet)
+        end
+
+        it 'is STAGED' do
+          expect(runners.package_state(app.guid, app.current_droplet.guid, app.latest_droplet, app.latest_package)).to eq('STAGED')
+        end
+      end
+
+      context 'when the latest droplet has no package but there is a previous package' do
+        before do
+          previous_package = PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::FAILED_STATE)
+          droplet = DropletModel.make(app: parent_app, state: DropletModel::STAGED_STATE, created_at: previous_package.created_at + 10.seconds)
+          parent_app.update(droplet: droplet)
+        end
+
+        it 'is STAGED' do
+          expect(runners.package_state(app.guid, app.current_droplet.guid, app.latest_droplet, app.latest_package)).to eq('STAGED')
+        end
       end
     end
   end
