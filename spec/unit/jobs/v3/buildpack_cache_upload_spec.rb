@@ -2,8 +2,11 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::V3
-    RSpec.describe DropletUpload do
-      let(:droplet) { DropletModel.make }
+    RSpec.describe BuildpackCacheUpload do
+      subject(:job) { BuildpackCacheUpload.new(local_path: local_file.path, app_guid: app.guid, stack_name: 'some-stack') }
+
+      let(:app) { AppModel.make(:buildpack) }
+
       let(:file_content) { 'some_file_content' }
       let(:local_file) do
         Tempfile.new('local_file').tap do |f|
@@ -11,33 +14,34 @@ module VCAP::CloudController
           f.flush
         end
       end
+
       let!(:blobstore) do
-        blobstore = CloudController::DependencyLocator.instance.droplet_blobstore
-        allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_return(blobstore)
+        blobstore = CloudController::DependencyLocator.instance.buildpack_cache_blobstore
+        allow(CloudController::DependencyLocator.instance).to receive(:buildpack_cache_blobstore).and_return(blobstore)
         blobstore
       end
+      let!(:blobstore_key) { Presenters::V3::CacheKeyPresenter.cache_key(guid: app.guid, stack_name: 'some-stack') }
 
-      subject(:job) { DropletUpload.new(local_file.path, droplet.guid) }
+      before do
+        app.lifecycle_data.update(stack: 'some-stack')
+        app.reload
+      end
 
       it { is_expected.to be_a_valid_job }
 
       describe '#perform' do
-        it 'updates the droplet checksums' do
-          sha1_digest = Digester.new.digest_file(local_file)
-          sha256_digest = Digester.new(algorithm: Digest::SHA256).digest_file(local_file)
-
+        it 'uploads the buildpack cache to the blobstore' do
           job.perform
-          expect(droplet.refresh.droplet_hash).to eq(sha1_digest)
-          expect(droplet.refresh.sha256_checksum).to eq(sha256_digest)
-        end
-
-        it 'uploads the droplet to the blobstore' do
-          job.perform
-          droplet.refresh
 
           downloaded_file = Tempfile.new('downloaded_file')
-          blobstore.download_from_blobstore(File.join(droplet.guid, droplet.droplet_hash), downloaded_file.path)
+          blobstore.download_from_blobstore(blobstore_key, downloaded_file.path)
           expect(downloaded_file.read).to eql(file_content)
+        end
+
+        it 'updates the buildpack cache checksum' do
+          sha256_digest = Digester.new(algorithm: Digest::SHA256).digest_file(local_file)
+
+          expect { job.perform }.to change { app.refresh.buildpack_cache_sha256_checksum }.to(sha256_digest)
         end
 
         it 'deletes the uploaded file' do
@@ -46,18 +50,17 @@ module VCAP::CloudController
         end
 
         it 'knows its job name' do
-          expect(job.job_name_in_configuration).to equal(:droplet_upload)
+          expect(job.job_name_in_configuration).to equal(:buildpack_cache_upload)
         end
 
-        context 'when the droplet record no longer exists' do
-          subject(:job) { DropletUpload.new(local_file.path, 'bad-guid') }
+        context 'when the app record no longer exists' do
+          before { app.destroy }
 
           it 'should not try to upload the droplet' do
-            digest = Digester.new.digest_file(local_file)
             job.perform
 
             downloaded_file = Tempfile.new('downloaded_file')
-            blobstore.download_from_blobstore(File.join('bad-guid', digest), downloaded_file.path)
+            blobstore.download_from_blobstore(blobstore_key, downloaded_file.path)
             expect(downloaded_file.read).to eql('')
           end
 
@@ -68,16 +71,17 @@ module VCAP::CloudController
         end
 
         context 'when upload is a failure' do
-          let(:worker) { Delayed::Worker.new }
-          let(:job) do
-            DropletUpload.class_eval do
+          subject(:job) do
+            BuildpackCacheUpload.class_eval do
               def reschedule_at(_, _=nil)
                 # induce the jobs to reschedule almost immediately instead of waiting around for the backoff algorithm
                 Time.now.utc
               end
             end
-            DropletUpload.new(local_file.path, droplet.guid)
+            BuildpackCacheUpload.new(local_path: local_file.path, app_guid: app.guid, stack_name: 'some-stack')
           end
+
+          let(:worker) { Delayed::Worker.new }
 
           before do
             Delayed::Worker.destroy_failed_jobs = false
@@ -90,9 +94,8 @@ module VCAP::CloudController
               worker.work_off 1
             end
 
-            it 'does not record the droplet checksums' do
-              expect(droplet.refresh.droplet_hash).to be_nil
-              expect(droplet.refresh.sha256_checksum).to be_nil
+            it 'does not record the buildpack cache checksums' do
+              expect(app.refresh.buildpack_cache_sha256_checksum).to be_nil
             end
 
             it 'records the failure' do

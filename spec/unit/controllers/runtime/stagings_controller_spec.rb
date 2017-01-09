@@ -294,9 +294,9 @@ module VCAP::CloudController
           }.by(1)
 
           job = Delayed::Job.last
-          expect(job.handler).to include("#{app_model.guid}/#{stack}")
+          expect(job.handler).to include(app_model.guid)
+          expect(job.handler).to include(stack)
           expect(job.handler).to include('ngx.uploads')
-          expect(job.handler).to include('buildpack_cache_blobstore')
           expect(job.queue).to eq('cc-api_z1-99')
           expect(job.guid).not_to be_nil
           expect(last_response.status).to eq 200
