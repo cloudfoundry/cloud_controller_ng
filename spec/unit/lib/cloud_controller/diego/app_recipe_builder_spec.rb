@@ -457,9 +457,9 @@ module VCAP::CloudController
             end
 
             it 'includes the correct routes' do
-              expected_routes = ::Diego::Bbs::Models::Proto_routes.new(
+              expected_routes = ::Diego::Bbs::Models::ProtoRoutes.new(
                 routes: [
-                  ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                     key:   'cf-router',
                     value: [
                       {
@@ -474,7 +474,7 @@ module VCAP::CloudController
                       }
                     ].to_json
                   ),
-                  ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                     key:   'tcp-router',
                     value: [
                       {
@@ -520,13 +520,13 @@ module VCAP::CloudController
               end
 
               it 'includes empty cf-router entry' do
-                expected_routes = ::Diego::Bbs::Models::Proto_routes.new(
+                expected_routes = ::Diego::Bbs::Models::ProtoRoutes.new(
                   routes: [
-                    ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                    ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                       key:   'cf-router',
                       value: [].to_json
                     ),
-                    ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                    ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                       key:   'tcp-router',
                       value: [
                         {
@@ -572,9 +572,9 @@ module VCAP::CloudController
               end
 
               it 'includes empty tcp-router entry' do
-                expected_routes = ::Diego::Bbs::Models::Proto_routes.new(
+                expected_routes = ::Diego::Bbs::Models::ProtoRoutes.new(
                   routes: [
-                    ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                    ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                       key:   'cf-router',
                       value: [
                         {
@@ -589,7 +589,7 @@ module VCAP::CloudController
                         }
                       ].to_json
                     ),
-                    ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                    ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                       key:   'tcp-router',
                       value: [].to_json
                     )
@@ -616,7 +616,7 @@ module VCAP::CloudController
             it 'includes the lrp route' do
               lrp = builder.build_app_lrp
               expect(lrp.routes.routes).to include(
-                ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                   key:   'diego-ssh',
                   value: MultiJson.dump({
                     container_port:   2222,
@@ -865,13 +865,13 @@ module VCAP::CloudController
           process.reload
         end
         # the auto-generated proto clients use bytes type for routes, so an existing lrp response
-        # will not turn routes into a Proto_routes object.
-        # to simulate that in test we encode the Proto_routes object into bytes.
+        # will not turn routes into a ProtoRoutes object.
+        # to simulate that in test we encode the ProtoRoutes object into bytes.
         let(:existing_lrp) do
           ::Diego::Bbs::Models::DesiredLRP.new(
-            routes: ::Diego::Bbs::Models::Proto_routes.new(
+            routes: ::Diego::Bbs::Models::ProtoRoutes.new(
               routes: [existing_ssh_route]
-            ).encode
+            )
           )
         end
         let(:existing_ssh_route) { nil }
@@ -916,9 +916,9 @@ module VCAP::CloudController
           end
 
           it 'includes the correct routes' do
-            expected_routes = ::Diego::Bbs::Models::Proto_routes.new(
+            expected_routes = ::Diego::Bbs::Models::ProtoRoutes.new(
               routes: [
-                ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                   key:   'cf-router',
                   value: [
                     {
@@ -933,7 +933,7 @@ module VCAP::CloudController
                     }
                   ].to_json
                 ),
-                ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                   key:   'tcp-router',
                   value: [
                     {
@@ -979,13 +979,13 @@ module VCAP::CloudController
             end
 
             it 'includes empty cf-router entry' do
-              expected_routes = ::Diego::Bbs::Models::Proto_routes.new(
+              expected_routes = ::Diego::Bbs::Models::ProtoRoutes.new(
                 routes: [
-                  ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                     key:   'cf-router',
                     value: [].to_json
                   ),
-                  ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                     key:   'tcp-router',
                     value: [
                       {
@@ -1031,9 +1031,9 @@ module VCAP::CloudController
             end
 
             it 'includes empty tcp-router entry' do
-              expected_routes = ::Diego::Bbs::Models::Proto_routes.new(
+              expected_routes = ::Diego::Bbs::Models::ProtoRoutes.new(
                 routes: [
-                  ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                     key:   'cf-router',
                     value: [
                       {
@@ -1048,7 +1048,7 @@ module VCAP::CloudController
                       }
                     ].to_json
                   ),
-                  ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                     key:   'tcp-router',
                     value: [].to_json
                   )
@@ -1063,7 +1063,7 @@ module VCAP::CloudController
 
           context 'when ssh routes are already present' do
             let(:existing_ssh_route) do
-              ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+              ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                 key:   SSH_ROUTES_KEY,
                 value: 'existing-data'
               )

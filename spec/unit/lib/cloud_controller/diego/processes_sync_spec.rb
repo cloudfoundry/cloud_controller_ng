@@ -39,7 +39,7 @@ module VCAP::CloudController
         ::Diego::Bbs::Models::DesiredLRPUpdate.new(
           instances:  stale_process.instances,
           annotation: stale_process.updated_at.to_f.to_s,
-          routes:     ::Diego::Bbs::Models::Proto_routes.new(routes: [])
+          routes:     ::Diego::Bbs::Models::ProtoRoutes.new(routes: [])
         )
       end
       let!(:stale_process) { ProcessModel.make(:diego_runnable) }

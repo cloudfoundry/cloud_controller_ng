@@ -27,7 +27,7 @@ module Diego
       #
       class DesiredLRPSchedulingInfo < ::Protobuf::Message; end
       class DesiredLRPRunInfo < ::Protobuf::Message; end
-      class Proto_routes < ::Protobuf::Message
+      class ProtoRoutes < ::Protobuf::Message
         class RoutesEntry < ::Protobuf::Message; end
 
       end
@@ -46,7 +46,7 @@ module Diego
         optional :string, :annotation, 2
         optional :int32, :instances, 3
         optional ::Diego::Bbs::Models::DesiredLRPResource, :desired_lrp_resource, 4
-        optional :bytes, :routes, 5
+        optional ::Diego::Bbs::Models::ProtoRoutes, :routes, 5
         optional ::Diego::Bbs::Models::ModificationTag, :modification_tag, 6
         optional ::Diego::Bbs::Models::VolumePlacement, :volume_placement, 7
         repeated :string, :PlacementTags, 8
@@ -74,18 +74,18 @@ module Diego
         optional :int64, :start_timeout_ms, 19
       end
 
-      class Proto_routes
+      class ProtoRoutes
         class RoutesEntry
           optional :string, :key, 1
           optional :bytes, :value, 2
         end
 
-        repeated ::Diego::Bbs::Models::Proto_routes::RoutesEntry, :routes, 1
+        repeated ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry, :routes, 1
       end
 
       class DesiredLRPUpdate
         optional :int32, :instances, 1
-        optional :bytes, :routes, 2
+        optional ::Diego::Bbs::Models::ProtoRoutes, :routes, 2
         optional :string, :annotation, 3
       end
 
@@ -99,6 +99,7 @@ module Diego
         optional :int32, :memory_mb, 1
         optional :int32, :disk_mb, 2
         optional :string, :root_fs, 3
+        optional :int32, :max_pids, 4
       end
 
       class DesiredLRP
@@ -117,7 +118,7 @@ module Diego
         optional :uint32, :cpu_weight, 12
         optional :bool, :privileged, 13
         repeated :uint32, :ports, 14
-        optional :bytes, :routes, 15
+        optional ::Diego::Bbs::Models::ProtoRoutes, :routes, 15
         optional :string, :log_source, 16
         optional :string, :log_guid, 17
         optional :string, :metrics_guid, 18
@@ -130,6 +131,7 @@ module Diego
         repeated ::Diego::Bbs::Models::VolumeMount, :volume_mounts, 25
         optional ::Diego::Bbs::Models::Network, :network, 26
         repeated :string, :PlacementTags, 28
+        optional :int32, :max_pids, 29
       end
 
     end

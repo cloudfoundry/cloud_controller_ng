@@ -26,7 +26,7 @@ module VCAP::CloudController
         if allow_ssh?
           ports << DEFAULT_SSH_PORT
 
-          routes << ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+          routes << ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
             key:   SSH_ROUTES_KEY,
             value: MultiJson.dump({
               container_port:   DEFAULT_SSH_PORT,
@@ -64,21 +64,21 @@ module VCAP::CloudController
           domain:                           APP_LRP_DOMAIN,
           volume_mounts:                    generate_volume_mounts,
           PlacementTags:                    [IsolationSegmentSelector.for_space(process.space)],
-          routes:                           ::Diego::Bbs::Models::Proto_routes.new(routes: routes)
+          routes:                           ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes)
         )
       end
 
       def build_app_lrp_update(existing_lrp)
         routes = generate_routes(routing_info)
 
-        existing_routes = ::Diego::Bbs::Models::Proto_routes.decode(existing_lrp.routes)
+        existing_routes = existing_lrp.routes
         ssh_route       = existing_routes.routes.find { |r| r.key == SSH_ROUTES_KEY }
         routes << ssh_route
 
         ::Diego::Bbs::Models::DesiredLRPUpdate.new(
           instances:  process.instances,
           annotation: process.updated_at.to_f.to_s,
-          routes:     ::Diego::Bbs::Models::Proto_routes.new(routes: routes)
+          routes:     ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes)
         )
       end
 
@@ -104,11 +104,11 @@ module VCAP::CloudController
         end
 
         [
-          ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+          ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
             key:   CF_ROUTES_KEY,
             value: MultiJson.dump(http_routes)
           ),
-          ::Diego::Bbs::Models::Proto_routes::RoutesEntry.new(
+          ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
             key:   TCP_ROUTES_KEY,
             value: MultiJson.dump((info['tcp_routes'] || []))
           )

@@ -42,6 +42,7 @@ module Diego
         repeated ::Diego::Bbs::Models::Provider, :rootfs_providers, 5
         repeated :string, :placement_tags, 6
         repeated :string, :optional_placement_tags, 7
+        optional :string, :rep_url, 8
       end
 
       class Provider
