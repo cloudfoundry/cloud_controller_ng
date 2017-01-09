@@ -114,10 +114,10 @@ module VCAP::CloudController
 
     def get_memory_limit(requested_limit, space, org)
       @memory_limit_calculator.get_limit(requested_limit, space, org)
-    rescue StagingMemoryCalculator::SpaceQuotaExceeded
-      raise SpaceQuotaExceeded
-    rescue StagingMemoryCalculator::OrgQuotaExceeded
-      raise OrgQuotaExceeded
+    rescue StagingMemoryCalculator::SpaceQuotaExceeded => e
+      raise SpaceQuotaExceeded.new e.message
+    rescue StagingMemoryCalculator::OrgQuotaExceeded => e
+      raise OrgQuotaExceeded.new e.message
     end
 
     def logger

@@ -5,8 +5,8 @@ module VCAP::CloudController
 
     def get_limit(requested_limit, space, org)
       return minimum_limit if requested_limit.nil? || requested_limit < minimum_limit
-      raise SpaceQuotaExceeded if !space.has_remaining_memory(requested_limit)
-      raise OrgQuotaExceeded if !org.has_remaining_memory(requested_limit)
+      raise SpaceQuotaExceeded.new("staging requires #{requested_limit}M memory") if !space.has_remaining_memory(requested_limit)
+      raise OrgQuotaExceeded.new("staging requires #{requested_limit}M memory") if !org.has_remaining_memory(requested_limit)
       requested_limit
     end
 

@@ -93,25 +93,31 @@ module VCAP::CloudController
 
           context 'when SpaceQuotaExceeded error is raised' do
             before do
-              allow(droplet_create).to receive(:create_and_stage_without_event).and_raise(DropletCreate::SpaceQuotaExceeded.new)
+              allow(droplet_create).to receive(:create_and_stage_without_event).and_raise(
+                DropletCreate::SpaceQuotaExceeded.new('helpful message')
+              )
             end
 
             it 'translates it to an ApiError' do
-              expect { action.stage(process) }.to raise_error(CloudController::Errors::ApiError) do |err|
-                expect(err.details.name).to eq('SpaceQuotaMemoryLimitExceeded')
-              end
+              expect { action.stage(process) }.to(raise_error(
+                                                    CloudController::Errors::ApiError,
+                /helpful message/
+              )) { |err| expect(err.details.name).to eq('SpaceQuotaMemoryLimitExceeded') }
             end
           end
 
           context 'when OrgQuotaExceeded error is raised' do
             before do
-              allow(droplet_create).to receive(:create_and_stage_without_event).and_raise(DropletCreate::OrgQuotaExceeded.new)
+              allow(droplet_create).to receive(:create_and_stage_without_event).and_raise(
+                DropletCreate::OrgQuotaExceeded.new('helpful message')
+              )
             end
 
             it 'translates it to an ApiError' do
-              expect { action.stage(process) }.to raise_error(CloudController::Errors::ApiError) do |err|
-                expect(err.details.name).to eq('AppMemoryQuotaExceeded')
-              end
+              expect { action.stage(process) }.to(raise_error(
+                                                    CloudController::Errors::ApiError,
+                /helpful message/
+              )) { |err| expect(err.details.name).to eq('AppMemoryQuotaExceeded') }
             end
           end
 

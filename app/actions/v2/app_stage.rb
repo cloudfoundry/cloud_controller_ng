@@ -26,10 +26,10 @@ module VCAP::CloudController
         app.last_stager_response = droplet_creator.staging_response
       rescue Diego::Runner::CannotCommunicateWithDiegoError => e
         logger.error("failed communicating with diego backend: #{e.message}")
-      rescue DropletCreate::SpaceQuotaExceeded
-        raise CloudController::Errors::ApiError.new_from_details('SpaceQuotaMemoryLimitExceeded')
-      rescue DropletCreate::OrgQuotaExceeded
-        raise CloudController::Errors::ApiError.new_from_details('AppMemoryQuotaExceeded')
+      rescue DropletCreate::SpaceQuotaExceeded => e
+        raise CloudController::Errors::ApiError.new_from_details('SpaceQuotaMemoryLimitExceeded', e.message)
+      rescue DropletCreate::OrgQuotaExceeded => e
+        raise CloudController::Errors::ApiError.new_from_details('AppMemoryQuotaExceeded', e.message)
       rescue DropletCreate::DiskLimitExceeded
         raise CloudController::Errors::ApiError.new_from_details('AppInvalid', 'too much disk requested')
       rescue DropletCreate::DropletError => e

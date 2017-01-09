@@ -309,7 +309,9 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the space quota is exceeded' do
         before do
-          allow(droplet_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::DropletCreate::SpaceQuotaExceeded)
+          allow(droplet_create).to receive(:create_and_stage).and_raise(
+            VCAP::CloudController::DropletCreate::SpaceQuotaExceeded.new('helpful message')
+          )
         end
 
         it 'returns 422 Unprocessable' do
@@ -317,12 +319,15 @@ RSpec.describe DropletsController, type: :controller do
 
           expect(response.status).to eq(422)
           expect(response.body).to include("space's memory limit exceeded")
+          expect(response.body).to include('helpful message')
         end
       end
 
       context 'when the org quota is exceeded' do
         before do
-          allow(droplet_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::DropletCreate::OrgQuotaExceeded)
+          allow(droplet_create).to receive(:create_and_stage).and_raise(
+            VCAP::CloudController::DropletCreate::OrgQuotaExceeded.new('helpful message')
+          )
         end
 
         it 'returns 422 Unprocessable' do
@@ -330,6 +335,7 @@ RSpec.describe DropletsController, type: :controller do
 
           expect(response.status).to eq(422)
           expect(response.body).to include("organization's memory limit exceeded")
+          expect(response.body).to include('helpful message')
         end
       end
 

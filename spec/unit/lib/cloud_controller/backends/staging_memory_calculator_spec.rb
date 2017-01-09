@@ -44,7 +44,7 @@ module VCAP::CloudController
           it 'raises MemoryLimitCalculator::SpaceQuotaExceeded' do
             expect {
               calculator.get_limit(requested_limit, space, org)
-            }.to raise_error(StagingMemoryCalculator::SpaceQuotaExceeded)
+            }.to raise_error(StagingMemoryCalculator::SpaceQuotaExceeded, /staging requires 100M memory/)
           end
         end
 
@@ -54,7 +54,7 @@ module VCAP::CloudController
           it 'raises MemoryLimitCalculator::OrgQuotaExceeded' do
             expect {
               calculator.get_limit(requested_limit, space, org)
-            }.to raise_error(StagingMemoryCalculator::OrgQuotaExceeded)
+            }.to raise_error(StagingMemoryCalculator::OrgQuotaExceeded, /staging requires 100M memory/)
           end
         end
       end

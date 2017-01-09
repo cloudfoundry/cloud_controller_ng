@@ -99,10 +99,10 @@ class DropletsController < ApplicationController
     render status: :created, json: Presenters::V3::DropletPresenter.new(droplet)
   rescue DropletCreate::InvalidPackage => e
     invalid_request!(e.message)
-  rescue DropletCreate::SpaceQuotaExceeded
-    unprocessable!("space's memory limit exceeded")
-  rescue DropletCreate::OrgQuotaExceeded
-    unprocessable!("organization's memory limit exceeded")
+  rescue DropletCreate::SpaceQuotaExceeded => e
+    unprocessable!("space's memory limit exceeded: #{e.message}")
+  rescue DropletCreate::OrgQuotaExceeded => e
+    unprocessable!("organization's memory limit exceeded: #{e.message}")
   rescue DropletCreate::DiskLimitExceeded
     unprocessable!('disk limit exceeded')
   end

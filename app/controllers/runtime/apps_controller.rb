@@ -102,11 +102,11 @@ module VCAP::CloudController
 
     def self.translate_memory_validation_exception(memory_errors)
       if memory_errors.include?(:space_quota_exceeded)
-        CloudController::Errors::ApiError.new_from_details('SpaceQuotaMemoryLimitExceeded')
+        CloudController::Errors::ApiError.new_from_details('SpaceQuotaMemoryLimitExceeded', 'app requested more memory than available')
       elsif memory_errors.include?(:space_instance_memory_limit_exceeded)
         CloudController::Errors::ApiError.new_from_details('SpaceQuotaInstanceMemoryLimitExceeded')
       elsif memory_errors.include?(:quota_exceeded)
-        CloudController::Errors::ApiError.new_from_details('AppMemoryQuotaExceeded')
+        CloudController::Errors::ApiError.new_from_details('AppMemoryQuotaExceeded', 'app requested more memory than available')
       elsif memory_errors.include?(:zero_or_less)
         CloudController::Errors::ApiError.new_from_details('AppMemoryInvalid')
       elsif memory_errors.include?(:instance_memory_limit_exceeded)
