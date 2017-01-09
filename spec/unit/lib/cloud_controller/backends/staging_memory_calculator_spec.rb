@@ -35,6 +35,28 @@ module VCAP::CloudController
           limit = calculator.get_limit(requested_limit, space, org)
           expect(limit).to eq(minimum_limit)
         end
+
+        describe 'when the minimum limit is over the available memory' do
+          context 'space quota' do
+            let(:space_quota_limit) { minimum_limit - 1 }
+
+            it 'raises MemoryLimitCalculator::SpaceQuotaExceeded' do
+              expect {
+                calculator.get_limit(requested_limit, space, org)
+              }.to raise_error(StagingMemoryCalculator::SpaceQuotaExceeded, /staging requires 10M memory/)
+            end
+          end
+
+          context 'org quota' do
+            let(:org_quota_limit) { minimum_limit - 1 }
+
+            it 'raises MemoryLimitCalculator::OrgQuotaExceeded' do
+              expect {
+                calculator.get_limit(requested_limit, space, org)
+              }.to raise_error(StagingMemoryCalculator::OrgQuotaExceeded, /staging requires 10M memory/)
+            end
+          end
+        end
       end
 
       context 'when the requested_limit is greater than the minimum limit' do
