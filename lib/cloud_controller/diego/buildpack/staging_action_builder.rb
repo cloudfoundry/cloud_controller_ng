@@ -22,12 +22,14 @@ module VCAP::CloudController
             )
           ]
           if lifecycle_data[:build_artifacts_cache_download_uri]
-            download_actions << ::Diego::Bbs::Models::DownloadAction.new(
-              artifact: 'build artifacts cache',
-              from:     lifecycle_data[:build_artifacts_cache_download_uri],
-              to:       '/tmp/cache',
-              user:     'vcap'
-            )
+            download_actions << try_action(::Diego::Bbs::Models::DownloadAction.new({
+              artifact:           'build artifacts cache',
+              from:               lifecycle_data[:build_artifacts_cache_download_uri],
+              to:                 '/tmp/cache',
+              user:               'vcap',
+              checksum_algorithm: 'sha256',
+              checksum_value:     lifecycle_data[:buildpack_cache_checksum],
+            }))
           end
 
           skip_detect = lifecycle_data[:buildpacks].count == 1 && !!lifecycle_data[:buildpacks].first[:skip_detect]

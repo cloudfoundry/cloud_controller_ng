@@ -38,6 +38,7 @@ module VCAP::CloudController
             buildpacks:                         buildpacks,
             droplet_upload_uri:                 'http://droplet_upload_uri.example.com/path/to/bits',
             stack:                              'buildpack-stack',
+            buildpack_cache_checksum:           'bp-cache-checksum',
           }
         end
         let(:buildpacks) { [] }
@@ -60,10 +61,12 @@ module VCAP::CloudController
 
           let(:download_build_artifacts_cache_action) do
             ::Diego::Bbs::Models::DownloadAction.new(
-              artifact: 'build artifacts cache',
-              from:     'http://build_artifacts_cache_download_uri.example.com/path/to/bits',
-              to:       '/tmp/cache',
-              user:     'vcap'
+              artifact:           'build artifacts cache',
+              from:               'http://build_artifacts_cache_download_uri.example.com/path/to/bits',
+              to:                 '/tmp/cache',
+              user:               'vcap',
+              checksum_algorithm: 'sha256',
+              checksum_value:     'bp-cache-checksum'
             )
           end
 
@@ -116,7 +119,7 @@ module VCAP::CloudController
 
             parallel_download_action = actions[0].parallel_action
             expect(parallel_download_action.actions[0].download_action).to eq(download_app_package_action)
-            expect(parallel_download_action.actions[1].download_action).to eq(download_build_artifacts_cache_action)
+            expect(parallel_download_action.actions[1].try_action.action.download_action).to eq(download_build_artifacts_cache_action)
 
             expect(actions[1].run_action).to eq(run_staging_action)
 

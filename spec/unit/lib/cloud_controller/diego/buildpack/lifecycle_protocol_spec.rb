@@ -236,6 +236,7 @@ module VCAP
 
             before do
               allow_any_instance_of(BuildpackEntryGenerator).to receive(:buildpack_entries).and_return(['buildpacks'])
+              package.app.update(buildpack_cache_sha256_checksum: 'bp-cache-checksum')
             end
 
             it 'returns a StagingActionBuilder' do
@@ -251,6 +252,7 @@ module VCAP
                 stack: 'potato-stack',
                 build_artifacts_cache_upload_uri: 'buildpack_cache_upload_url',
                 droplet_upload_uri: 'droplet_upload_url',
+                buildpack_cache_checksum: 'bp-cache-checksum',
               }))
             end
           end

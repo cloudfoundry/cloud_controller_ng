@@ -10,13 +10,14 @@ module VCAP
           class InvalidDownloadUri < StandardError; end
 
           def initialize(blobstore_url_generator=::CloudController::DependencyLocator.instance.blobstore_url_generator)
-            @blobstore_url_generator = blobstore_url_generator
+            @blobstore_url_generator   = blobstore_url_generator
             @buildpack_entry_generator = BuildpackEntryGenerator.new(@blobstore_url_generator)
           end
 
           def lifecycle_data(staging_details)
             lifecycle_data                                    = Diego::Buildpack::LifecycleData.new
             lifecycle_data.app_bits_download_uri              = @blobstore_url_generator.package_download_url(staging_details.package)
+            lifecycle_data.buildpack_cache_checksum           = staging_details.package.app.buildpack_cache_sha256_checksum
             lifecycle_data.build_artifacts_cache_download_uri = @blobstore_url_generator.buildpack_cache_download_url(
               staging_details.package.app_guid,
               staging_details.lifecycle.staging_stack
@@ -54,9 +55,9 @@ module VCAP
           def desired_app_message(process)
             {
               'start_command' => process.command.nil? ? process.detected_start_command : process.command,
-              'droplet_uri' => @blobstore_url_generator.unauthorized_perma_droplet_download_url(process),
-              'droplet_hash' => process.current_droplet.droplet_hash,
-              'checksum' => droplet_checksum_info(process.current_droplet),
+              'droplet_uri'   => @blobstore_url_generator.unauthorized_perma_droplet_download_url(process),
+              'droplet_hash'  => process.current_droplet.droplet_hash,
+              'checksum'      => droplet_checksum_info(process.current_droplet),
             }
           end
 
@@ -73,21 +74,21 @@ module VCAP
           def builder_opts(process)
             checksum_info = droplet_checksum_info(process.current_droplet)
             {
-              droplet_uri: @blobstore_url_generator.unauthorized_perma_droplet_download_url(process),
-              droplet_hash: process.current_droplet.droplet_hash,
-              ports: Protocol::OpenProcessPorts.new(process).to_a,
-              process_guid: ProcessGuid.from_process(process),
-              stack: process.app.lifecycle_data.stack,
+              droplet_uri:        @blobstore_url_generator.unauthorized_perma_droplet_download_url(process),
+              droplet_hash:       process.current_droplet.droplet_hash,
+              ports:              Protocol::OpenProcessPorts.new(process).to_a,
+              process_guid:       ProcessGuid.from_process(process),
+              stack:              process.app.lifecycle_data.stack,
               checksum_algorithm: checksum_info['type'],
-              checksum_value: checksum_info['value'],
-              start_command: process.command.nil? ? process.detected_start_command : process.command,
+              checksum_value:     checksum_info['value'],
+              start_command:      process.command.nil? ? process.detected_start_command : process.command,
             }
           end
 
           def task_lifecycle_data(task)
             {
               droplet_uri: droplet_download_uri(task),
-              stack: task.app.lifecycle_data.stack
+              stack:       task.app.lifecycle_data.stack
             }
           end
 
