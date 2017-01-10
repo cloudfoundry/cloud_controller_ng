@@ -17,13 +17,13 @@ Lifecycle objects describe buildpacks or docker images.
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      data['buildpack']
-      <span class="method-list-item-type">string</span>
+      data['buildpacks']
+      <span class="method-list-item-type">array of strings</span>
     </h4>
 
     <p class="method-list-item-description">
-      The name of the buildpack or a URL from which it may be downloaded, or null
-      to auto-detect the buildpack
+      A list of the names of buildpacks, URLs from which they may be downloaded, or null
+      to auto-detect a suitable buildpack. Currently only supports at most one buildpack.
     </p>
   </li>
   <li class="method-list-item">
