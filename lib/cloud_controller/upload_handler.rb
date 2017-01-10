@@ -10,8 +10,8 @@ class UploadHandler
   end
 
   def uploaded_file(params, resource_name)
-    if using_nginx?
-      nginx_uploaded_file(params, resource_name)
+    if (nginx_file = nginx_uploaded_file(params, resource_name))
+      nginx_file
     else
       rack_temporary_file(params, resource_name)
     end
@@ -19,17 +19,13 @@ class UploadHandler
 
   private
 
-  def using_nginx?
-    config[:nginx][:use_nginx]
-  end
-
   def nginx_uploaded_file(params, resource_name)
-    params["#{resource_name}_path"]
+    HashUtils.dig(params, "#{resource_name}_path")
   end
 
   def rack_temporary_file(params, resource_name)
     resource_params = params[resource_name]
-    return unless resource_params.respond_to?(:[])
+    return unless resource_params.is_a?(Hash)
 
     tempfile = resource_params[:tempfile] || resource_params['tempfile']
     tempfile.respond_to?(:path) ? tempfile.path : tempfile

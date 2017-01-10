@@ -116,7 +116,7 @@ module VCAP::CloudController
 
     def upload_path
       @upload_path ||=
-        if HashUtils.dig(config, :nginx, :use_nginx)
+        if HashUtils.dig(params, 'droplet_path') # passed from nginx
           params['droplet_path']
         elsif (tempfile = HashUtils.dig(params, 'file', :tempfile))
           tempfile.path
@@ -126,6 +126,8 @@ module VCAP::CloudController
     end
 
     def check_file_md5
+      return if Rails.env.local?
+
       digester = Digester.new(algorithm: Digest::MD5, type: :base64digest)
       file_md5 = digester.digest_path(upload_path)
       header_md5 = env['HTTP_CONTENT_MD5']
