@@ -10,8 +10,8 @@ module VCAP::CloudController
     let(:tmpdir) { Dir.mktmpdir }
     let(:filename) { 'file.zip' }
 
-    let(:sha_valid_zip) { Digester.new.digest_file(valid_zip) }
-    let(:sha_valid_zip2) { Digester.new.digest_file(valid_zip2) }
+    let(:sha_valid_zip) { Digester.new(algorithm: Digest::SHA256).digest_file(valid_zip) }
+    let(:sha_valid_zip2) { Digester.new(algorithm: Digest::SHA256).digest_file(valid_zip2) }
 
     let(:valid_zip) do
       zip_name = File.join(tmpdir, filename)
@@ -46,13 +46,16 @@ module VCAP::CloudController
         end
 
         context 'new bits (new sha)' do
-          it 'copies new bits to the blobstore and updates the key' do
+          it 'copies new bits to the blobstore and updates the key and checksum' do
             expect(buildpack_blobstore).to receive(:cp_to_blobstore).with(valid_zip, expected_sha_valid_zip)
-            expect {
-              upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)
-            }.to change {
-              Buildpack.find(name: 'upload_binary_buildpack').key
-            }.from(nil).to(expected_sha_valid_zip)
+
+            expect(buildpack.key).to be_nil
+            expect(buildpack.sha256_checksum).to be_nil
+
+            upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)
+
+            expect(buildpack.key).to eq(expected_sha_valid_zip)
+            expect(buildpack.sha256_checksum).to eq(sha_valid_zip)
           end
 
           it 'does not attempt to delete the old buildpack blob when it does not exist' do

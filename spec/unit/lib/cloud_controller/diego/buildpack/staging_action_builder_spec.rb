@@ -185,50 +185,85 @@ module VCAP::CloudController
           context 'when there are buildpacks' do
             let(:buildpacks) do
               [
-                { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', skip_detect: false },
-                { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', skip_detect: true },
+                { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', skip_detect: false, sha256: 'checksum' },
+                { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', skip_detect: true, sha256: 'checksum' },
               ]
             end
 
             it 'includes buildpack dependencies' do
               buildpack_entry_1 = ::Diego::Bbs::Models::CachedDependency.new(
-                name:      'buildpack-1',
-                from:      'buildpack-1-url',
-                to:        "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-1-key')}",
-                cache_key: 'buildpack-1-key',
+                name:               'buildpack-1',
+                from:               'buildpack-1-url',
+                to:                 "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-1-key')}",
+                cache_key:          'buildpack-1-key',
+                checksum_algorithm: 'sha256',
+                checksum_value:     'checksum',
               )
               buildpack_entry_2 = ::Diego::Bbs::Models::CachedDependency.new(
-                name:      'buildpack-2',
-                from:      'buildpack-2-url',
-                to:        "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-2-key')}",
-                cache_key: 'buildpack-2-key',
+                name:               'buildpack-2',
+                from:               'buildpack-2-url',
+                to:                 "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-2-key')}",
+                cache_key:          'buildpack-2-key',
+                checksum_algorithm: 'sha256',
+                checksum_value:     'checksum',
               )
 
               result = builder.cached_dependencies
               expect(result).to include(buildpack_entry_1, buildpack_entry_2)
+            end
+
+            context 'and some do not include checksums' do
+              let(:buildpacks) do
+                [
+                  { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', skip_detect: false, sha256: 'checksum' },
+                  { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', skip_detect: true, sha256: nil },
+                ]
+              end
+
+              it 'does not ask for checksum validation' do
+                buildpack_entry_1 = ::Diego::Bbs::Models::CachedDependency.new(
+                  name:               'buildpack-1',
+                  from:               'buildpack-1-url',
+                  to:                 "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-1-key')}",
+                  cache_key:          'buildpack-1-key',
+                  checksum_algorithm: 'sha256',
+                  checksum_value:     'checksum',
+                )
+                buildpack_entry_2 = ::Diego::Bbs::Models::CachedDependency.new(
+                  name:               'buildpack-2',
+                  from:               'buildpack-2-url',
+                  to:                 "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-2-key')}",
+                  cache_key:          'buildpack-2-key',
+                )
+
+                result = builder.cached_dependencies
+                expect(result).to include(buildpack_entry_1, buildpack_entry_2)
+              end
             end
           end
 
           context 'when there are custom buildpacks' do
             let(:buildpacks) do
               [
-                { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', skip_detect: false },
+                { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', skip_detect: false, sha256: 'checksum' },
                 { name: 'custom', key: 'custom-key', url: 'custom-url', skip_detect: true },
               ]
             end
 
             it 'does not include the custom buildpacks' do
               buildpack_entry_1 = ::Diego::Bbs::Models::CachedDependency.new(
-                name:      'buildpack-1',
-                from:      'buildpack-1-url',
-                to:        "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-1-key')}",
-                cache_key: 'buildpack-1-key',
+                name:               'buildpack-1',
+                from:               'buildpack-1-url',
+                to:                 "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-1-key')}",
+                cache_key:          'buildpack-1-key',
+                checksum_algorithm: 'sha256',
+                checksum_value:     'checksum',
               )
               buildpack_entry_2 = ::Diego::Bbs::Models::CachedDependency.new(
-                name:      'custom',
-                from:      'custom-url',
-                to:        "/tmp/buildpacks/#{Digest::MD5.hexdigest('custom-key')}",
-                cache_key: 'custom-key',
+                name:               'custom',
+                from:               'custom-url',
+                to:                 "/tmp/buildpacks/#{Digest::MD5.hexdigest('custom-key')}",
+                cache_key:          'custom-key',
               )
 
               result = builder.cached_dependencies

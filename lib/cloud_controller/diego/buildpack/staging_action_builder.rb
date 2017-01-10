@@ -87,12 +87,18 @@ module VCAP::CloudController
             lifecycle_data[:buildpacks].map do |buildpack|
               next if buildpack[:name] == 'custom'
 
-              ::Diego::Bbs::Models::CachedDependency.new(
-                name:      buildpack[:name],
-                from:      buildpack[:url],
-                to:        "/tmp/buildpacks/#{Digest::MD5.hexdigest(buildpack[:key])}",
-                cache_key: buildpack[:key],
-              )
+              buildpack_dependency = {
+                name:               buildpack[:name],
+                from:               buildpack[:url],
+                to:                 "/tmp/buildpacks/#{Digest::MD5.hexdigest(buildpack[:key])}",
+                cache_key:          buildpack[:key],
+              }
+              if buildpack[:sha256]
+                buildpack_dependency[:checksum_algorithm] = 'sha256'
+                buildpack_dependency[:checksum_value] = buildpack[:sha256]
+              end
+
+              ::Diego::Bbs::Models::CachedDependency.new(buildpack_dependency)
             end.compact
           )
         end

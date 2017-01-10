@@ -54,8 +54,8 @@ RSpec.describe 'Staging an app', type: :integration do
       )
 
       @expected_buildpack_shas = [
-        "#{@buildpack_response_2.json_body['metadata']['guid']}_#{Digester.new.digest_path(valid_zip)}",
-        "#{@buildpack_response_1.json_body['metadata']['guid']}_#{Digester.new.digest_path(valid_zip(4))}",
+        "#{@buildpack_response_2.json_body['metadata']['guid']}_#{Digester.new(algorithm: Digest::SHA256).digest_path(valid_zip)}",
+        "#{@buildpack_response_1.json_body['metadata']['guid']}_#{Digester.new(algorithm: Digest::SHA256).digest_path(valid_zip(4))}",
       ]
 
       org = make_post_request(
