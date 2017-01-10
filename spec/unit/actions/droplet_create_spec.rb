@@ -43,7 +43,7 @@ module VCAP::CloudController
     let(:lifecycle_data) do
       {
         stack:     stack.name,
-        buildpack: buildpack_git_url
+        buildpacks: [buildpack_git_url]
       }
     end
 

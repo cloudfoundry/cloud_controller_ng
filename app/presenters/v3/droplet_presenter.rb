@@ -11,7 +11,7 @@ module VCAP::CloudController
             error:                 droplet.error,
             lifecycle:             {
               type: droplet.lifecycle_type,
-              data: droplet.lifecycle_data.as_json
+              data: droplet.lifecycle_data.to_hash
             },
             staging_memory_in_mb:  droplet.staging_memory_in_mb,
             staging_disk_in_mb:    droplet.staging_disk_in_mb,

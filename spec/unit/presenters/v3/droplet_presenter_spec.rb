@@ -51,8 +51,8 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:error]).to eq('FAILED - things went all sorts of bad')
 
           expect(result[:lifecycle][:type]).to eq('buildpack')
-          expect(result[:lifecycle][:data]['stack']).to eq('the-happiest-stack')
-          expect(result[:lifecycle][:data]['buildpack']).to eq('the-happiest-buildpack')
+          expect(result[:lifecycle][:data][:stack]).to eq('the-happiest-stack')
+          expect(result[:lifecycle][:data][:buildpacks]).to eq(['the-happiest-buildpack'])
           expect(result[:environment_variables]).to eq({ 'elastic' => 'runtime' })
           expect(result[:staging_memory_in_mb]).to eq(234)
           expect(result[:staging_disk_in_mb]).to eq(934)
@@ -67,7 +67,7 @@ module VCAP::CloudController::Presenters::V3
           let(:buildpack_receipt_buildpack) { 'https://amelia:meow@neopets.com' }
 
           it 'obfuscates the username and password' do
-            expect(result[:lifecycle][:data]['buildpack']).to eq('https://***:***@neopets.com')
+            expect(result[:lifecycle][:data][:buildpacks]).to eq(['https://***:***@neopets.com'])
             expect(result[:result][:buildpack][:name]).to eq('https://***:***@neopets.com')
           end
         end

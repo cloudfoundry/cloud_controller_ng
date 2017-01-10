@@ -63,48 +63,89 @@ module VCAP::CloudController
         end
       end
 
-      context 'buildpack' do
-        context 'when the buildpack is not a string' do
-          let(:params) { { buildpack: 3 } }
+      context 'buildpacks' do
+        context 'when buildpacks is not an array' do
+          let(:params) { { buildpacks: 'foo-buildpack' } }
 
           it 'is not valid' do
             message = BuildpackLifecycleDataMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors.full_messages[0]).to include('Buildpack must be a string')
+            expect(message.errors.full_messages[0]).to include('Buildpacks must be an array')
           end
         end
 
-        context 'when the stack name is an empty string' do
-          let(:params) { { buildpack: '' } }
+        context 'when more than one buildpack is requested' do
+          let(:params) { { buildpacks: ['foo-buildpack', 'bar'] } }
 
           it 'is not valid' do
             message = BuildpackLifecycleDataMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors.full_messages[0]).to include('Buildpack must be between 1 and 4096 characters')
+            expect(message.errors.full_messages[0]).to include('currently only supports one buildpack')
           end
         end
 
-        context 'when the buildpack name exceeds 4096 characters' do
-          let(:long_string) { 'a' * 4097 }
-          let(:params) { { buildpack: long_string } }
-
-          it 'is not valid' do
-            message = BuildpackLifecycleDataMessage.new(params)
-
-            expect(message).not_to be_valid
-            expect(message.errors.full_messages[0]).to include('Buildpack must be between 1 and 4096 characters')
-          end
-        end
-
-        context 'when the buildpack is not requested' do
-          let(:params) { { buildpack: nil } }
+        context 'when buildpacks is an empty array' do
+          let(:params) { { buildpacks: [] } }
 
           it 'is valid' do
             message = BuildpackLifecycleDataMessage.new(params)
-
             expect(message).to be_valid
+          end
+        end
+
+        context 'when buildpacks is not requested' do
+          let(:params) { { buildpacks: nil } }
+
+          it 'is valid' do
+            message = BuildpackLifecycleDataMessage.new(params)
+            expect(message).to be_valid
+          end
+        end
+
+        context 'when buildpacks contains non-string values' do
+          let(:params) { { buildpacks: [4] } }
+
+          it 'is not valid' do
+            message = BuildpackLifecycleDataMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages[0]).to include('Buildpacks can only contain strings')
+          end
+        end
+
+        context 'when buildpacks contains an empty string' do
+          let(:params) { { buildpacks: [''] } }
+
+          it 'is not valid' do
+            message = BuildpackLifecycleDataMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages[0]).to include('Buildpacks entries must be between 1 and 4096 characters')
+          end
+        end
+
+        context 'when buildpacks contains a name exceeding 4096 characters' do
+          let(:long_string) { 'a' * 4097 }
+          let(:params) { { buildpacks: [long_string] } }
+
+          it 'is not valid' do
+            message = BuildpackLifecycleDataMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages[0]).to include('Buildpacks entries must be between 1 and 4096 characters')
+          end
+        end
+
+        context 'when buildpacks contains a nil' do
+          let(:params) { { buildpacks: [nil] } }
+
+          it 'is not valid' do
+            message = BuildpackLifecycleDataMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages[0]).to include('Buildpacks can only contain strings')
           end
         end
       end

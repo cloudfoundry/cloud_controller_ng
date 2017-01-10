@@ -78,7 +78,7 @@ module VCAP::CloudController
           AppUpdateMessage.new({
               lifecycle: {
                 type: 'buildpack',
-                data: { buildpack: 'http://new-buildpack.url', stack: 'redhat' }
+                data: { buildpacks: ['http://new-buildpack.url'], stack: 'redhat' }
               }
             })
         end

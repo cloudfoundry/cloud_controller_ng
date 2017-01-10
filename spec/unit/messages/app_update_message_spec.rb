@@ -10,7 +10,7 @@ module VCAP::CloudController
           'lifecycle' => {
             'type' => 'buildpack',
             'data' => {
-              'buildpack' => 'some-buildpack',
+              'buildpacks' => ['some-buildpack'],
               'stack' => 'some-stack'
             }
           },
@@ -25,7 +25,7 @@ module VCAP::CloudController
 
         expect(message).to be_a(AppUpdateMessage)
         expect(message.name).to eq('some-name')
-        expect(message.lifecycle['data']['buildpack']).to eq('some-buildpack')
+        expect(message.lifecycle['data']['buildpacks'].first).to eq('some-buildpack')
         expect(message.lifecycle['data']['stack']).to eq('some-stack')
         expect(message.environment_variables).to eq({ 'ENVVAR' => 'env-val' })
       end
@@ -81,7 +81,7 @@ module VCAP::CloudController
               lifecycle: {
                 type: 'buildpack',
                 data: {
-                  buildpack: 'java',
+                  buildpacks: ['java'],
                   stack: 'cflinuxfs2'
                 }
               }
@@ -100,7 +100,7 @@ module VCAP::CloudController
               lifecycle: {
                 type: 'buildpack',
                 data: {
-                  buildpack: 123,
+                  buildpacks: [123],
                   stack: 324
                 }
               }
@@ -110,7 +110,7 @@ module VCAP::CloudController
           it 'must provide a valid buildpack value' do
             message = AppUpdateMessage.new(params)
             expect(message).not_to be_valid
-            expect(message.errors_on(:lifecycle)).to include('Buildpack must be a string')
+            expect(message.errors_on(:lifecycle)).to include('Buildpacks can only contain strings')
           end
 
           it 'must provide a valid stack name' do

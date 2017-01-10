@@ -24,9 +24,9 @@ module VCAP::CloudController
 
     def update_lifecycle_data_model(app)
       should_save = false
-      if message.buildpack_data.requested?(:buildpack)
+      if message.buildpack_data.requested?(:buildpacks)
         should_save = true
-        app.lifecycle_data.buildpack = message.buildpack_data.buildpack
+        app.lifecycle_data.buildpack = buildpack
       end
       if message.buildpack_data.requested?(:stack)
         should_save = true
@@ -44,8 +44,8 @@ module VCAP::CloudController
     attr_reader :message, :validator
 
     def buildpack
-      if message.buildpack_data.requested?(:buildpack)
-        message.buildpack_data.buildpack
+      if message.buildpack_data.requested?(:buildpacks)
+        message.buildpack_data.buildpacks.try(:first)
       else
         return nil
       end

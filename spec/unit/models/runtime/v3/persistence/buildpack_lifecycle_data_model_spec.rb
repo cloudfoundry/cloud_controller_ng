@@ -43,7 +43,7 @@ module VCAP::CloudController
 
     describe '#to_hash' do
       let(:expected_lifecycle_data) do
-        { buildpack: buildpack, stack: 'cflinuxfs2' }
+        { buildpacks: [buildpack], stack: 'cflinuxfs2' }
       end
       let(:buildpack) { 'ruby' }
       let(:stack) { 'cflinuxfs2' }

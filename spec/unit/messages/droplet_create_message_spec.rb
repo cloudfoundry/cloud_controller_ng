@@ -119,13 +119,13 @@ module VCAP::CloudController
 
       context 'when lifecycle is provided' do
         it 'is valid' do
-          params = { lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } } }
+          params = { lifecycle: { type: 'buildpack', data: { buildpacks: ['java'], stack: 'cflinuxfs2' } } }
           message = DropletCreateMessage.new(params)
           expect(message).to be_valid
         end
 
         it 'must provide type' do
-          params = { lifecycle: { data: { buildpack: 'java', stack: 'cflinuxfs2' } } }
+          params = { lifecycle: { data: { buildpacks: ['java'], stack: 'cflinuxfs2' } } }
 
           message = DropletCreateMessage.new(params)
           expect(message).not_to be_valid
@@ -161,12 +161,12 @@ module VCAP::CloudController
           end
 
           it 'must provide a valid buildpack' do
-            params = { lifecycle: { type: 'buildpack', data: { buildpack: { wh: 'at?' }, stack: 'onstacksonstacks' } } }
+            params = { lifecycle: { type: 'buildpack', data: { buildpacks: [{ wh: 'at?' }], stack: 'onstacksonstacks' } } }
 
             message = DropletCreateMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors[:lifecycle]).to include('Buildpack must be a string')
+            expect(message.errors[:lifecycle]).to include('Buildpacks can only contain strings')
           end
         end
 

@@ -39,7 +39,7 @@ RSpec.describe 'Droplets' do
           type: 'buildpack',
           data: {
             stack:     'cflinuxfs2',
-            buildpack: 'http://github.com/myorg/awesome-buildpack'
+            buildpacks: ['http://github.com/myorg/awesome-buildpack']
           }
         },
       }
@@ -67,8 +67,8 @@ RSpec.describe 'Droplets' do
         'lifecycle'             => {
           'type' => 'buildpack',
           'data' => {
-            'stack'     => 'cflinuxfs2',
-            'buildpack' => 'http://github.com/myorg/awesome-buildpack'
+            'stack' => 'cflinuxfs2',
+            'buildpacks' => ['http://github.com/myorg/awesome-buildpack']
           }
         },
         'environment_variables' => {
@@ -159,8 +159,8 @@ RSpec.describe 'Droplets' do
         'lifecycle'             => {
           'type' => 'buildpack',
           'data' => {
-            'buildpack' => 'http://buildpack.git.url.com',
-            'stack'     => 'stack-name'
+            'buildpacks' => ['http://buildpack.git.url.com'],
+            'stack' => 'stack-name'
           }
         },
         'staging_memory_in_mb'  => 100,
@@ -271,8 +271,8 @@ RSpec.describe 'Droplets' do
             'lifecycle'             => {
               'type' => 'buildpack',
               'data' => {
-                'buildpack' => 'http://buildpack.git.url.com',
-                'stack'     => 'stack-2'
+                'buildpacks' => ['http://buildpack.git.url.com'],
+                'stack' => 'stack-2'
               }
             },
             'staging_memory_in_mb'  => 123,
@@ -301,8 +301,8 @@ RSpec.describe 'Droplets' do
             'lifecycle'             => {
               'type' => 'buildpack',
               'data' => {
-                'buildpack' => buildpack.name,
-                'stack'     => 'stack-1'
+                'buildpacks' => [buildpack.name],
+                'stack' => 'stack-1'
               }
             },
             'staging_memory_in_mb'  => 123,
@@ -540,8 +540,8 @@ RSpec.describe 'Droplets' do
             'lifecycle'             => {
               'type' => 'buildpack',
               'data' => {
-                'buildpack' => 'http://buildpack.git.url.com',
-                'stack'     => 'stack-2'
+                'buildpacks' => ['http://buildpack.git.url.com'],
+                'stack' => 'stack-2'
               }
             },
             'staging_memory_in_mb'  => 123,
@@ -570,8 +570,8 @@ RSpec.describe 'Droplets' do
             'lifecycle'             => {
               'type' => 'buildpack',
               'data' => {
-                'buildpack' => buildpack.name,
-                'stack'     => 'stack-1'
+                'buildpacks' => [buildpack.name],
+                'stack' => 'stack-1'
               }
             },
             'staging_memory_in_mb'  => 123,
@@ -684,8 +684,8 @@ RSpec.describe 'Droplets' do
             'lifecycle'             => {
               'type' => 'buildpack',
               'data' => {
-                'buildpack' => 'http://buildpack.git.url.com',
-                'stack'     => 'stack-2'
+                'buildpacks' => ['http://buildpack.git.url.com'],
+                'stack' => 'stack-2'
               }
             },
             'staging_memory_in_mb'  => 123,
@@ -714,8 +714,8 @@ RSpec.describe 'Droplets' do
             'lifecycle'             => {
               'type' => 'buildpack',
               'data' => {
-                'buildpack' => buildpack.name,
-                'stack'     => 'stack-1'
+                'buildpacks' => [buildpack.name],
+                'stack' => 'stack-1'
               }
             },
             'staging_memory_in_mb'  => 123,
@@ -782,8 +782,8 @@ RSpec.describe 'Droplets' do
         'lifecycle'             => {
           'type' => 'buildpack',
           'data' => {
-            'buildpack' => 'http://buildpack.git.url.com',
-            'stack'     => 'stack-name'
+            'buildpacks' => ['http://buildpack.git.url.com'],
+            'stack' => 'stack-name'
           }
         },
         'staging_memory_in_mb'  => 100,

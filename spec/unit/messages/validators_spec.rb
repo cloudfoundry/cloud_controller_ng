@@ -217,10 +217,10 @@ module VCAP::CloudController::Validators
       context 'when lifecycle type provided is buildpack' do
         context 'when the buildpack lifecycle data is invalid' do
           it 'correctly adds the buildpack data message validation errors' do
-            message = LifecycleMessage.new({ lifecycle: { type: 'buildpack', data: { buildpack: 123 } } })
+            message = LifecycleMessage.new({ lifecycle: { type: 'buildpack', data: { buildpacks: [123] } } })
 
             expect(message).to_not be_valid
-            expect(message.errors_on(:lifecycle)).to include('Buildpack must be a string')
+            expect(message.errors_on(:lifecycle)).to include('Buildpacks can only contain strings')
           end
         end
       end

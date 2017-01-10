@@ -60,7 +60,7 @@ RSpec.describe DropletsController, type: :controller do
 
     describe 'buildpack lifecycle' do
       describe 'buildpack request' do
-        let(:req_body) { { lifecycle: { type: 'buildpack', data: { buildpack: buildpack_request } } } }
+        let(:req_body) { { lifecycle: { type: 'buildpack', data: { buildpacks: [buildpack_request] } } } }
         let(:buildpack) { VCAP::CloudController::Buildpack.make }
 
         context 'when a git url is requested' do

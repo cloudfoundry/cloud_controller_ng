@@ -185,7 +185,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       {
         name: 'some-name',
         relationships: { space: { guid: space.guid } },
-        lifecycle: { type: 'buildpack', data: { buildpack: 'http://some.url', stack: nil } }
+        lifecycle: { type: 'buildpack', data: { buildpacks: ['http://some.url'], stack: nil } }
       }
     end
 
@@ -279,7 +279,7 @@ RSpec.describe AppsV3Controller, type: :controller do
               {
                 name:          'some-name',
                 relationships: { space: { guid: space.guid } },
-                lifecycle:     { type: 'buildpack', data: { buildpack: 'blawgow', stack: nil } }
+                lifecycle:     { type: 'buildpack', data: { buildpacks: ['blawgow'], stack: nil } }
               }
             end
 
@@ -550,7 +550,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           let(:req_body) do
             {
               name:      'some-name',
-              lifecycle: { type: 'buildpack', data: { buildpack: 'blawgow' } }
+              lifecycle: { type: 'buildpack', data: { buildpacks: ['blawgow'] } }
             }
           end
 
@@ -570,7 +570,7 @@ RSpec.describe AppsV3Controller, type: :controller do
               lifecycle: {
                 type: 'buildpack',
                 data: {
-                  buildpack: buildpack_url
+                  buildpacks: [buildpack_url]
                 }
               } }
           end
@@ -587,7 +587,7 @@ RSpec.describe AppsV3Controller, type: :controller do
               lifecycle: {
                 type: 'buildpack',
                 data: {
-                  buildpack: nil
+                  buildpacks: nil
                 }
               } }
           end

@@ -31,7 +31,7 @@ module VCAP::CloudController
         end
 
         context 'when the user requested a buildpack' do
-          let(:lifecycle_request_data) { { buildpack: 'custom-bp' } }
+          let(:lifecycle_request_data) { { buildpacks: ['custom-bp'] } }
 
           it 'uses the requested buildpack' do
             lifecycle_data_model = lifecycle.create_lifecycle_data_model(app)
@@ -70,7 +70,7 @@ module VCAP::CloudController
 
     describe '#update_lifecycle_data_model' do
       let(:app) { AppModel.make(:buildpack) }
-      let(:lifecycle_request_data) { { buildpack: 'http://oj.com', stack: 'sweetness' } }
+      let(:lifecycle_request_data) { { buildpacks: ['http://oj.com'], stack: 'sweetness' } }
 
       it 'updates the BuildpackLifecycleDataModel' do
         lifecycle.update_lifecycle_data_model(app)

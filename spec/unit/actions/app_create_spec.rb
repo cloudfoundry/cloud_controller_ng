@@ -14,7 +14,7 @@ module VCAP::CloudController
       let(:environment_variables) { { 'BAKED' => 'POTATO' } }
       let(:buildpack) { Buildpack.make }
       let(:relationships) { { 'space' => { 'guid' => space_guid } } }
-      let(:lifecycle_request) { { 'type' => 'buildpack', 'data' => { 'buildpack' => buildpack.name, 'stack' => 'cflinuxfs2' } } }
+      let(:lifecycle_request) { { 'type' => 'buildpack', 'data' => { 'buildpacks' => [buildpack.name], 'stack' => 'cflinuxfs2' } } }
       let(:lifecycle) { instance_double(AppBuildpackLifecycle, create_lifecycle_data_model: nil) }
 
       context 'when the request is valid' do
