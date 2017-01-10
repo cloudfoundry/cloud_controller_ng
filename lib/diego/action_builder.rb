@@ -38,6 +38,10 @@ module Diego
         action(Bbs::Models::TimeoutAction.new(action: action(action), timeout_ms: timeout_ms))
       end
 
+      def try_action(action)
+        action(Bbs::Models::TryAction.new(action: action(action)))
+      end
+
       def emit_progress(action, start_message:, success_message:, failure_message_prefix:)
         action(Bbs::Models::EmitProgressAction.new(
                  action:                 action(action),
@@ -64,6 +68,7 @@ module Diego
       :parallel,
       :timeout,
       :emit_progress,
-      :codependent
+      :codependent,
+      :try_action
   end
 end
