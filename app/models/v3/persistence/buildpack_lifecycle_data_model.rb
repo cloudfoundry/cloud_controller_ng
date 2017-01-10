@@ -36,7 +36,7 @@ module VCAP::CloudController
     end
 
     def to_hash
-      { buildpacks: [CloudController::UrlSecretObfuscator.obfuscate(buildpack)], stack: stack }
+      { buildpacks: buildpack ? [CloudController::UrlSecretObfuscator.obfuscate(buildpack)] : [], stack: stack }
     end
 
     def validate

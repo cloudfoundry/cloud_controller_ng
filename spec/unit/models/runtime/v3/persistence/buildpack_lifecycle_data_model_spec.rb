@@ -60,6 +60,9 @@ module VCAP::CloudController
 
       context 'when the user has not specified a buildpack' do
         let(:buildpack) { nil }
+        let(:expected_lifecycle_data) do
+          { buildpacks: [], stack: 'cflinuxfs2' }
+        end
 
         it 'returns the lifecycle data as a hash' do
           expect(buildpack_lifecycle_data_model.to_hash).to eq expected_lifecycle_data

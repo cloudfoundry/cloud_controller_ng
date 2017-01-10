@@ -82,6 +82,19 @@ module VCAP::CloudController::Presenters::V3
           end
         end
 
+        context 'when there is no buildpack' do
+          let(:buildpack) { nil }
+
+          before do
+            droplet.lifecycle_data.buildpack = buildpack
+            droplet.save
+          end
+
+          it 'has an empty array of buildpacks' do
+            expect(result[:lifecycle][:data][:buildpacks]).to eq([])
+          end
+        end
+
         describe 'result' do
           context 'when droplet is in a "staging" state' do
             before do
