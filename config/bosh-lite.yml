@@ -99,7 +99,7 @@ login:
 
 uaa:
   url: https://uaa.bosh-lite.com
-  internal_url: https://uaa.bosh-lite.com
+  internal_url: https://uaa.service.cf.internal:8443
   resource_id: cloud_controller,cloud_controller_service_permissions
   verification_key: |
       -----BEGIN PUBLIC KEY-----
@@ -108,6 +108,7 @@ uaa:
       qHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug
       spULZVNRxq7veq/fzwIDAQAB
       -----END PUBLIC KEY-----
+  ca_file: "spec/fixtures/certs/uaa_ca.crt"
 
 hm9000:
   url: https://hm9000.bosh-lite.com
