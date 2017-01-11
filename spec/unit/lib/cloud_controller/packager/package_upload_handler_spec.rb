@@ -11,7 +11,7 @@ module CloudController::Packager
 
     describe '#pack' do
       let(:packer_implementation) { instance_double(LocalBitsPacker, send_package_to_blobstore: expected_package_hash) }
-      let(:expected_package_hash) { 'expected-package-hash' }
+      let(:expected_package_hash) { { sha1: 'expected-sha1', sha256: 'expected-sha256' } }
 
       before do
         allow(CloudController::DependencyLocator.instance).to receive(:packer).and_return(packer_implementation)
@@ -22,10 +22,16 @@ module CloudController::Packager
         expect(packer_implementation).to have_received(:send_package_to_blobstore).with(package.guid, uploaded_files_path, cached_files_fingerprints)
       end
 
-      it 'sets the package sha to the package' do
+      it 'sets the package_hash' do
         expect {
           packer.pack
-        }.to change { package.refresh.package_hash }.to(expected_package_hash)
+        }.to change { package.refresh.package_hash }.to('expected-sha1')
+      end
+
+      it 'sets the package sha256' do
+        expect {
+          packer.pack
+        }.to change { package.refresh.sha256_checksum }.to('expected-sha256')
       end
 
       it 'sets the state of the package' do

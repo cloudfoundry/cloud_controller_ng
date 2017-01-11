@@ -26,7 +26,10 @@ module CloudController
         bundle_response = resource_pool.bundles(fingerprints.to_json)
         package         = create_temp_file_with_content(package_filename, bundle_response.body)
         package_blobstore.cp_to_blobstore(package.path, blobstore_key)
-        Digester.new.digest_file(package)
+        {
+          sha1: Digester.new.digest_file(package),
+          sha256: Digester.new(algorithm: Digest::SHA256).digest_file(package),
+        }
       end
 
       def create_temp_file_with_content(filename, content)

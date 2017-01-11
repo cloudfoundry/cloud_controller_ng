@@ -17,13 +17,13 @@ module CloudController
         raise PackageNotFound unless package
 
         begin
-          package_hash = packer_implementation.send_package_to_blobstore(@package_guid, @uploaded_files_path, @cached_files_fingerprints)
+          checksums = packer_implementation.send_package_to_blobstore(@package_guid, @uploaded_files_path, @cached_files_fingerprints)
         rescue => e
           package.fail_upload!(e.message)
           raise e
         end
 
-        package.succeed_upload!(package_hash)
+        package.succeed_upload!(checksums)
 
         VCAP::CloudController::BitsExpiration.new.expire_packages!(package.app)
       ensure

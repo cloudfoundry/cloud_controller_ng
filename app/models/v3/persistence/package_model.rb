@@ -47,11 +47,12 @@ module VCAP::CloudController
       state == READY_STATE
     end
 
-    def succeed_upload!(package_hash)
+    def succeed_upload!(checksums)
       db.transaction do
         self.lock!
-        self.package_hash = package_hash
-        self.state        = VCAP::CloudController::PackageModel::READY_STATE
+        self.package_hash = checksums[:sha1]
+        self.sha256_checksum = checksums[:sha256]
+        self.state = VCAP::CloudController::PackageModel::READY_STATE
         self.save
       end
     end
