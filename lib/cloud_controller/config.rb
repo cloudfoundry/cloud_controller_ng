@@ -442,10 +442,16 @@ module VCAP::CloudController
       def sanitize(config)
         sanitize_grace_period(config)
         sanitize_staging_auth(config)
-
-        config[:diego][:pid_limit] = 0 if config[:diego][:pid_limit] < 0
+        sanitize_diego_properties(config)
 
         config
+      end
+
+      def sanitize_diego_properties(config)
+        pid_limit = HashUtils.dig(config, :diego, :pid_limit)
+        if pid_limit
+          config[:diego][:pid_limit] = 0 if pid_limit < 0
+        end
       end
 
       def sanitize_grace_period(config)
