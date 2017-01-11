@@ -340,6 +340,35 @@ RSpec.describe 'Apps' do
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end
+
+    context 'ordering' do
+      it 'can order by name' do
+        VCAP::CloudController::AppModel.make(space: space, name: 'zed')
+        VCAP::CloudController::AppModel.make(space: space, name: 'alpha')
+        VCAP::CloudController::AppModel.make(space: space, name: 'gamma')
+        VCAP::CloudController::AppModel.make(space: space, name: 'delta')
+        VCAP::CloudController::AppModel.make(space: space, name: 'theta')
+
+        ascending = ['alpha', 'delta', 'gamma', 'theta', 'zed']
+        descending = ascending.reverse
+
+        # ASCENDING
+        get '/v3/apps?order_by=name', nil, user_header
+        expect(last_response.status).to eq(200)
+        parsed_response = MultiJson.load(last_response.body)
+        app_names = parsed_response['resources'].map { |i| i['name'] }
+        expect(app_names).to eq(ascending)
+        expect(parsed_response['pagination']['first']['href']).to include("order_by=#{CGI.escape('+')}name")
+
+        # DESCENDING
+        get '/v3/apps?order_by=-name', nil, user_header
+        expect(last_response.status).to eq(200)
+        parsed_response = MultiJson.load(last_response.body)
+        app_names = parsed_response['resources'].map { |i| i['name'] }
+        expect(app_names).to eq(descending)
+        expect(parsed_response['pagination']['first']['href']).to include('order_by=-name')
+      end
+    end
   end
 
   describe 'GET /v3/apps/:guid' do

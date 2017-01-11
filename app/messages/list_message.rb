@@ -21,7 +21,7 @@ module VCAP::CloudController
     class PaginationOrderValidator < ActiveModel::Validator
       def validate(record)
         order_by = record.pagination_params[:order_by]
-        columns_allowed = %w(created_at updated_at).join('|')
+        columns_allowed = record.valid_order_by_values.join('|')
         matcher = /^(\+|\-)?(#{columns_allowed})$/
         record.errors.add(:order_by, "can only be 'created_at' or 'updated_at'") unless order_by =~ matcher
       end
@@ -47,6 +47,11 @@ module VCAP::CloudController
           record.errors.add(:per_page, 'must be a positive integer')
         end
       end
+    end
+
+    # override this to define valid fields to order by
+    def valid_order_by_values
+      [:created_at, :updated_at]
     end
 
     validates_with PaginationPageValidator
