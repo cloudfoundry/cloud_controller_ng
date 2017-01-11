@@ -66,15 +66,15 @@
   <h1>Spaces API</h1>
 
   <div class="article">
-    <h2>List all Security Groups for the Space</h2>
-    <h3>GET /v2/spaces/:guid/security_groups</h3>
+    <h2>List all Staging Security Groups for the Space</h2>
+    <h3>GET /v2/spaces/:guid/staging_security_groups</h3>
     <p class="explanation">
-      This includes security groups that have <code>running_default</code> set to <code>true</code> as well as security groups that belong to this space.
+      This includes security groups that have <code>staging_default</code> set to <code>true</code> as well as security groups that belong to this space.
     </p>
 
       <h3>Request</h3>
       <h4>Route</h4>
-      <pre class="request route highlight">GET /v2/spaces/c0842ef3-352a-4440-b369-a5fd138ba504/security_groups</pre>
+      <pre class="request route highlight">GET /v2/spaces/c0842ef3-352a-4440-b369-a5fd138ba504/staging_security_groups</pre>
 
         <h4>Parameters</h4>
         <table class="parameters table table-striped table-bordered table-condensed">
@@ -246,7 +246,7 @@ Host: example.org
 Cookie: </pre>
 
         <h4>cURL</h4>
-        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/spaces/c0842ef3-352a-4440-b369-a5fd138ba504/security_groups&quot; -X GET \
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/spaces/c0842ef3-352a-4440-b369-a5fd138ba504/staging_security_groups&quot; -X GET \
 	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM2NSIsImVtYWlsIjoiZW1haWwtMjU4QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDB9.oBZKoMmftLwIS2bHmd9EuM7ZD_aSeyDCCRwLKVpl7XM&quot; \
 	-H &quot;Host: example.org&quot; \
 	-H &quot;Cookie: &quot;</pre>
@@ -282,7 +282,7 @@ Cookie: </pre>
         ],
         "running_default": false,
         "staging_default": false,
-        "spaces_url": "/v2/security_groups/3da034d1-f0e3-4bfe-8d42-0bf2822fe8cc/spaces"
+        "spaces_url": "/v2/security_groups/3da034d1-f0e3-4bfe-8d42-0bf2822fe8cc/spaces",
         "staging_spaces_url": "/v2/security_groups/3da034d1-f0e3-4bfe-8d42-0bf2822fe8cc/staging_spaces"
       }
     }
