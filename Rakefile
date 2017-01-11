@@ -14,11 +14,6 @@ rescue LoadError
   # this isn't needed in a production environment so the gem will not exist
 end
 
-task default: ['spec:all', :rubocop_autocorrect]
+task default: ['spec:all', 'rubocop:changed']
 
-task :rubocop_autocorrect do
-  require 'rubocop'
-  cli = RuboCop::CLI.new
-  exit_code = cli.run(%w(--auto-correct))
-  exit(exit_code) if exit_code != 0
-end
+task rubocop_autocorrect: ['rubocop:changed']
