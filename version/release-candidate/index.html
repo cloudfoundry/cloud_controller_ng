@@ -1411,7 +1411,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
     "lifecycle": {
       "type": "buildpack",
       "data": {
-        "buildpack": "java_buildpack"
+        "buildpacks": ["java_buildpack"]
       }
     },
     "relationships": {
@@ -1435,7 +1435,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
   "lifecycle": {
     "type": "buildpack",
     "data": {
-      "buildpack": "java_buildpack",
+      "buildpacks": ["java_buildpack"],
       "stack": "cflinuxfs2"
     }
   },
@@ -1548,7 +1548,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
   "lifecycle": {
     "type": "buildpack",
     "data": {
-      "buildpack": "java_buildpack",
+      "buildpacks": ["java_buildpack"],
       "stack": "cflinuxfs2"
     }
   },
@@ -1676,7 +1676,7 @@ It will include environment variables for Environment Variable Groups and Servic
     "lifecycle": {
       "type": "buildpack",
       "data": {
-        "buildpack": "java_buildpack",
+        "buildpacks": ["java_buildpack"],
       }
     }
   }'</span> 
@@ -1695,7 +1695,7 @@ It will include environment variables for Environment Variable Groups and Servic
   "lifecycle": {
     "type": "buildpack",
     "data": {
-      "buildpack": "java_buildpack",
+      "buildpacks": ["java_buildpack"],
       "stack": "cflinuxfs2"
     }
   },
@@ -1797,7 +1797,7 @@ It will include environment variables for Environment Variable Groups and Servic
   "lifecycle": {
     "type": "buildpack",
     "data": {
-      "buildpack": null,
+      "buildpacks": [ "ruby_buildpack" ],
       "stack": null
     }
   },
@@ -1890,7 +1890,7 @@ It will include environment variables for Environment Variable Groups and Servic
   "lifecycle": {
     "type": "buildpack",
     "data": {
-      "buildpack": null,
+      "buildpacks": [ "ruby_buildpack" ],
       "stack": null
     }
   },
@@ -1994,7 +1994,7 @@ It will include environment variables for Environment Variable Groups and Servic
   "lifecycle": {
     "type": "buildpack",
     "data": {
-      "buildpack": "java_buildpack",
+      "buildpacks": ["java_buildpack"],
       "stack": "cflinuxfs2"
     }
   },
@@ -2066,7 +2066,7 @@ It will include environment variables for Environment Variable Groups and Servic
   "lifecycle": {
     "type": "buildpack",
     "data": {
-      "buildpack": "java_buildpack",
+      "buildpacks": ["java_buildpack"],
       "stack": "cflinuxfs2"
     }
   },
@@ -2172,7 +2172,7 @@ It will include environment variables for Environment Variable Groups and Servic
       "lifecycle": {
         "type": "buildpack",
         "data": {
-          "buildpack": "java_buildpack",
+          "buildpacks": ["java_buildpack"],
           "stack": "cflinuxfs2"
         }
       },
@@ -2224,7 +2224,7 @@ It will include environment variables for Environment Variable Groups and Servic
       "lifecycle": {
         "type": "buildpack",
         "data": {
-          "buildpack": "ruby_buildpack",
+          "buildpacks": ["ruby_buildpack"],
           "stack": "cflinuxfs2"
         }
       },
@@ -2533,13 +2533,13 @@ they either use a specific droplet guid, or use the current droplet assigned to 
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      data[&lsquo;buildpack&rsquo;]
-      <span class="method-list-item-type">string</span>
+      data[&lsquo;buildpacks&rsquo;]
+      <span class="method-list-item-type">array of strings</span>
     </h4>
 
     <p class="method-list-item-description">
-      The name of the buildpack or a URL from which it may be downloaded, or null
-      to auto-detect the buildpack
+      A list of the names of buildpacks, URLs from which they may be downloaded, or null
+      to auto-detect a suitable buildpack. Currently only supports at most one buildpack.
     </p>
   </li>
   <li class="method-list-item">
@@ -2596,7 +2596,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
     "lifecycle": {
       "type": "buildpack",
       "data": {
-        "buildpack": "http://github.com/myorg/awesome-buildpack",
+        "buildpacks": ["http://github.com/myorg/awesome-buildpack"],
         "stack": "cflinuxfs2"
       }
     }
@@ -2613,7 +2613,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
   "lifecycle": {
     "type": "buildpack",
     "data": {
-      "buildpack": null,
+      "buildpacks": [ "ruby_buildpack" ],
       "stack": null
     }
   },
@@ -2746,7 +2746,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
   "lifecycle": {
     "type": "buildpack",
     "data": {
-      "buildpack": null,
+      "buildpacks": [ "ruby_buildpack" ],
       "stack": null
     }
   },
@@ -2816,7 +2816,7 @@ environment variables listed on the source droplet.</p>
   "lifecycle": {
     "type": "buildpack",
     "data": {
-      "buildpack": null,
+      "buildpacks": [ "ruby_buildpack" ],
       "stack": null
     }
   },
@@ -2957,7 +2957,7 @@ environment variables listed on the source droplet.</p>
       "lifecycle": {
         "type": "buildpack",
         "data": {
-          "buildpack": null,
+          "buildpacks": [ "ruby_buildpack" ],
           "stack": null
         }
       },
@@ -3185,7 +3185,7 @@ environment variables listed on the source droplet.</p>
       "lifecycle": {
         "type": "buildpack",
         "data": {
-          "buildpack": null,
+          "buildpacks": [ "ruby_buildpack" ],
           "stack": null
         }
       },
@@ -3374,7 +3374,7 @@ environment variables listed on the source droplet.</p>
       "lifecycle": {
         "type": "buildpack",
         "data": {
-          "buildpack": null,
+          "buildpacks": [ "ruby_buildpack" ],
           "stack": null
         }
       },
