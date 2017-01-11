@@ -39,6 +39,7 @@ module VCAP::CloudController
             droplet_upload_uri:                 'http://droplet_upload_uri.example.com/path/to/bits',
             stack:                              'buildpack-stack',
             buildpack_cache_checksum:           'bp-cache-checksum',
+            app_bits_checksum:                  { type: 'sha256', value: 'package-checksum' },
           }
         end
         let(:buildpacks) { [] }
@@ -52,10 +53,12 @@ module VCAP::CloudController
         describe '#action' do
           let(:download_app_package_action) do
             ::Diego::Bbs::Models::DownloadAction.new(
-              artifact: 'app package',
-              from:     'http://app_bits_download_uri.example.com/path/to/bits',
-              to:       '/tmp/app',
-              user:     'vcap'
+              artifact:           'app package',
+              from:               'http://app_bits_download_uri.example.com/path/to/bits',
+              to:                 '/tmp/app',
+              user:               'vcap',
+              checksum_algorithm: 'sha256',
+              checksum_value:     'package-checksum',
             )
           end
 
@@ -230,10 +233,10 @@ module VCAP::CloudController
                   checksum_value:     'checksum',
                 )
                 buildpack_entry_2 = ::Diego::Bbs::Models::CachedDependency.new(
-                  name:               'buildpack-2',
-                  from:               'buildpack-2-url',
-                  to:                 "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-2-key')}",
-                  cache_key:          'buildpack-2-key',
+                  name:      'buildpack-2',
+                  from:      'buildpack-2-url',
+                  to:        "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-2-key')}",
+                  cache_key: 'buildpack-2-key',
                 )
 
                 result = builder.cached_dependencies
@@ -260,10 +263,10 @@ module VCAP::CloudController
                 checksum_value:     'checksum',
               )
               buildpack_entry_2 = ::Diego::Bbs::Models::CachedDependency.new(
-                name:               'custom',
-                from:               'custom-url',
-                to:                 "/tmp/buildpacks/#{Digest::MD5.hexdigest('custom-key')}",
-                cache_key:          'custom-key',
+                name:      'custom',
+                from:      'custom-url',
+                to:        "/tmp/buildpacks/#{Digest::MD5.hexdigest('custom-key')}",
+                cache_key: 'custom-key',
               )
 
               result = builder.cached_dependencies

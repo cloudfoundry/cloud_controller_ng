@@ -47,6 +47,20 @@ module VCAP::CloudController
       state == READY_STATE
     end
 
+    def checksum_info
+      if sha256_checksum.blank? && package_hash.present?
+        {
+          type:  'sha1',
+          value: package_hash,
+        }
+      else
+        {
+          type:  'sha256',
+          value: sha256_checksum,
+        }
+      end
+    end
+
     def succeed_upload!(checksums)
       db.transaction do
         self.lock!

@@ -145,9 +145,9 @@ module VCAP
             let(:package) { PackageModel.make(app_guid: app.guid) }
             let(:droplet) do
               DropletModel.make(:staged,
-                package_guid: package.guid,
-                app_guid: app.guid,
-                droplet_hash: 'droplet-sha1-checksum',
+                package_guid:    package.guid,
+                app_guid:        app.guid,
+                droplet_hash:    'droplet-sha1-checksum',
                 sha256_checksum: 'droplet-sha256-checksum',
               )
             end
@@ -219,18 +219,18 @@ module VCAP
             let(:staging_details) do
               StagingDetails.new.tap do |details|
                 details.lifecycle = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: 'some buildpack info')
-                details.package = package
-                details.droplet = droplet
+                details.package   = package
+                details.droplet   = droplet
               end
             end
 
             let(:blobstore_url_generator) do
               instance_double(
                 ::CloudController::Blobstore::UrlGenerator,
-                package_download_url: 'package_download_url',
+                package_download_url:         'package_download_url',
                 buildpack_cache_download_url: 'buildpack_cache_download_url',
-                buildpack_cache_upload_url: 'buildpack_cache_upload_url',
-                droplet_upload_url: 'droplet_upload_url'
+                buildpack_cache_upload_url:   'buildpack_cache_upload_url',
+                droplet_upload_url:           'droplet_upload_url'
               )
             end
 
@@ -246,13 +246,14 @@ module VCAP
               expect(lifecycle_protocol.staging_action_builder(config, staging_details)).to be staging_action_builder
 
               expect(StagingActionBuilder).to have_received(:new).with(config, staging_details, hash_including({
-                app_bits_download_uri: 'package_download_url',
+                app_bits_download_uri:              'package_download_url',
                 build_artifacts_cache_download_uri: 'buildpack_cache_download_url',
-                buildpacks: ['buildpacks'],
-                stack: 'potato-stack',
-                build_artifacts_cache_upload_uri: 'buildpack_cache_upload_url',
-                droplet_upload_uri: 'droplet_upload_url',
-                buildpack_cache_checksum: 'bp-cache-checksum',
+                buildpacks:                         ['buildpacks'],
+                stack:                              'potato-stack',
+                build_artifacts_cache_upload_uri:   'buildpack_cache_upload_url',
+                droplet_upload_uri:                 'droplet_upload_url',
+                buildpack_cache_checksum:           'bp-cache-checksum',
+                app_bits_checksum:                  package.checksum_info,
               }))
             end
           end
@@ -278,7 +279,7 @@ module VCAP
 
               expect(TaskActionBuilder).to have_received(:new).with(config, task, {
                 droplet_uri: 'www.droplet.com',
-                stack: 'potato-stack'
+                stack:       'potato-stack'
               })
             end
 
@@ -304,22 +305,22 @@ module VCAP
             end
             let(:process) do
               ProcessModel.make(
-                app: app,
-                diego: true,
-                command: 'go go go',
+                app:      app,
+                diego:    true,
+                command:  'go go go',
                 metadata: {},
               )
             end
             let(:builder_opts) do
               {
-                ports: [1, 2, 3],
-                stack: process.stack.name,
-                droplet_uri: 'www.droplet.com',
-                droplet_hash: droplet.droplet_hash,
-                process_guid: ProcessGuid.from_process(process),
+                ports:              [1, 2, 3],
+                stack:              process.stack.name,
+                droplet_uri:        'www.droplet.com',
+                droplet_hash:       droplet.droplet_hash,
+                process_guid:       ProcessGuid.from_process(process),
                 checksum_algorithm: 'sha1',
-                checksum_value: droplet.droplet_hash,
-                start_command: 'go go go',
+                checksum_value:     droplet.droplet_hash,
+                start_command:      'go go go',
               }
             end
             let(:blobstore_url_generator) do

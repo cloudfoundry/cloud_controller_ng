@@ -26,26 +26,6 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links]).to include(links)
       end
 
-      context 'when the package has a sha1 hash and not a sha256 hash' do
-        before do
-          package.update(package_hash: 'sha1-hash', sha256_checksum: nil)
-        end
-
-        it 'displays the sha1' do
-          expect(result[:data][:hash]).to eq({ type: 'sha1', value: 'sha1-hash' })
-        end
-      end
-
-      context 'when the package has no checksums' do
-        before do
-          package.update(package_hash: nil, sha256_checksum: nil)
-        end
-
-        it 'displays the sha256 with null value' do
-          expect(result[:data][:hash]).to eq({ type: 'sha256', value: nil })
-        end
-      end
-
       context 'when the package type is bits' do
         let(:package) { VCAP::CloudController::PackageModel.make(type: 'bits') }
 

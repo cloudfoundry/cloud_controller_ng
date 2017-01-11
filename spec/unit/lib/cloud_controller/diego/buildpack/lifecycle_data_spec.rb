@@ -14,6 +14,7 @@ module VCAP::CloudController
           data.buildpacks                         = []
           data.stack                              = 'stack'
           data.buildpack_cache_checksum           = 'bp-cache-checksum'
+          data.app_bits_checksum                  = { type: 'sha256', value: 'package-checksum' }
           data
         end
 
@@ -26,6 +27,7 @@ module VCAP::CloudController
             buildpacks:                         [],
             stack:                              'stack',
             buildpack_cache_checksum:           'bp-cache-checksum',
+            app_bits_checksum:                  { type: 'sha256', value: 'package-checksum' },
           }
         end
 
@@ -78,7 +80,7 @@ module VCAP::CloudController
                 expect {
                   data.message
                 }.to raise_error(
-                  Membrane::SchemaValidationError, /{ #{key} => Expected instance of (String|Array), given an instance of NilClass }/
+                  Membrane::SchemaValidationError, /{ #{key} => Expected instance of (String|Array|Hash), given an instance of NilClass }/
                 )
               end
             end

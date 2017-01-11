@@ -35,22 +35,8 @@ module VCAP::CloudController
         def buildpack_data
           {
             error: package.error,
-            hash:  checksum_info,
+            hash:  package.checksum_info,
           }
-        end
-
-        def checksum_info
-          if package.sha256_checksum.blank? && package.package_hash.present?
-            {
-              type:  'sha1',
-              value: package.package_hash,
-            }
-          else
-            {
-              type:  'sha256',
-              value: package.sha256_checksum,
-            }
-          end
         end
 
         def build_links

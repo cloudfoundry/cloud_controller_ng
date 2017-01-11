@@ -15,10 +15,12 @@ module VCAP::CloudController
         def action
           download_actions = [
             ::Diego::Bbs::Models::DownloadAction.new(
-              artifact: 'app package',
-              from:     lifecycle_data[:app_bits_download_uri],
-              to:       '/tmp/app',
-              user:     'vcap'
+              artifact:           'app package',
+              from:               lifecycle_data[:app_bits_download_uri],
+              to:                 '/tmp/app',
+              user:               'vcap',
+              checksum_algorithm: lifecycle_data[:app_bits_checksum][:type],
+              checksum_value:     lifecycle_data[:app_bits_checksum][:value],
             )
           ]
           if lifecycle_data[:build_artifacts_cache_download_uri]

@@ -17,6 +17,7 @@ module VCAP
           def lifecycle_data(staging_details)
             lifecycle_data                                    = Diego::Buildpack::LifecycleData.new
             lifecycle_data.app_bits_download_uri              = @blobstore_url_generator.package_download_url(staging_details.package)
+            lifecycle_data.app_bits_checksum                  = staging_details.package.checksum_info
             lifecycle_data.buildpack_cache_checksum           = staging_details.package.app.buildpack_cache_sha256_checksum
             lifecycle_data.build_artifacts_cache_download_uri = @blobstore_url_generator.buildpack_cache_download_url(
               staging_details.package.app_guid,
