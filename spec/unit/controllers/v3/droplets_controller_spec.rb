@@ -121,6 +121,27 @@ RSpec.describe DropletsController, type: :controller do
             expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to eq(app_model.lifecycle_data.buildpack)
           end
         end
+
+        context 'when an empty array of buildpacks is specified' do
+          let(:req_body) { { lifecycle: { type: 'buildpack', data: { buildpacks: [] } } } }
+
+          it 'does NOT set a buildpack on the droplet lifecycle data' do
+            post :create, { package_guid: package.guid, body: req_body }
+
+            expect(response.status).to eq(201)
+            expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to be_nil
+          end
+        end
+
+        context 'when buildpacks is null' do
+          let(:req_body) { { lifecycle: { type: 'buildpack', data: { buildpacks: nil } } } }
+
+          it 'does NOT set a buildpack on the droplet lifecycle data' do
+            post :create, { package_guid: package.guid, body: req_body }
+            expect(response.status).to eq(201)
+            expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to be_nil
+          end
+        end
       end
     end
 

@@ -49,7 +49,7 @@ module VCAP::CloudController
     private
 
     def buildpack_to_use
-      if staging_message.buildpack_data.requested?(:buildpacks)
+      if staging_message.buildpack_data.buildpacks
         staging_message.buildpack_data.buildpacks.first
       else
         @package.app.lifecycle_data.try(:buildpack)
