@@ -229,6 +229,28 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it { is_expected.to have_associated :spaces }
+
+      describe 'spaces' do
+        it { is_expected.to have_associated :spaces }
+
+        it 'can be delete when it has associated spaces' do
+          security_group = SecurityGroup.make
+          security_group.add_space(Space.make)
+
+          expect { security_group.destroy }.not_to raise_error
+        end
+      end
+
+      describe 'staging_spaces' do
+        it { is_expected.to have_associated :staging_spaces, associated_instance: ->(_) { Space.make } }
+
+        it 'can be delete when it has associated staging_spaces' do
+          security_group = SecurityGroup.make
+          security_group.add_staging_space(Space.make)
+
+          expect { security_group.destroy }.not_to raise_error
+        end
+      end
     end
 
     describe 'Validations' do

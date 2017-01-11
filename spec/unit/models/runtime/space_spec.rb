@@ -221,6 +221,10 @@ module VCAP::CloudController
           eager_space = Space.eager(:security_groups).all.first
           expect(eager_space.security_groups).to match_array [associated_sg, default_sg, another_default_sg]
         end
+
+        it 'can be deleted when associated' do
+          expect { space.destroy }.not_to raise_error
+        end
       end
 
       describe 'staging_security_groups' do
@@ -237,6 +241,10 @@ module VCAP::CloudController
         it 'works when eager loading' do
           eager_space = Space.eager(:staging_security_groups).all.first
           expect(eager_space.staging_security_groups).to match_array [associated_sg, default_sg, another_default_sg]
+        end
+
+        it 'can be deleted when associated' do
+          expect { space.destroy }.not_to raise_error
         end
       end
 
