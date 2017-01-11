@@ -10,10 +10,11 @@
   <% end %>
 <% end %>
 
-<% content_for :order_by_query_param do %>
+<% content_for :order_by_query_param do |values| %>
+
   <% query_param('order_by', ['optional']) do %>
     Value to sort by. Defaults to ascending, or prepend with "-" to sort descending.
-    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+    <br>Possible values are <%= ['created_at', 'updated_at'].concat(Array(values)).uniq.compact.map { |value| "<code>#{value}</code>" }.join(', ') %>.
   <% end %>
 <% end %>
 
