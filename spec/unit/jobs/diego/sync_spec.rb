@@ -37,7 +37,7 @@ module VCAP::CloudController
         end
 
         it 'runs at most once in parallel' do
-          allow(tasks_sync).to receive(:sync) { sleep 1 }
+          allow(tasks_sync).to receive(:sync) { sleep 2 }
 
           threads = [
             Thread.new { job.perform },
