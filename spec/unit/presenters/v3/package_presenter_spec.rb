@@ -5,7 +5,7 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe PackagePresenter do
     describe '#to_hash' do
       let(:result) { PackagePresenter.new(package).to_hash }
-      let(:package) { VCAP::CloudController::PackageModel.make(type: 'package_type') }
+      let(:package) { VCAP::CloudController::PackageModel.make(type: 'package_type', sha256_checksum: 'sha256') }
       let(:scheme) { TestConfig.config[:external_protocol] }
       let(:host) { TestConfig.config[:external_domain] }
       let(:link_prefix) { "#{scheme}://#{host}" }
@@ -20,10 +20,30 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:type]).to eq(package.type)
         expect(result[:state]).to eq(package.state)
         expect(result[:data][:error]).to eq(package.error)
-        expect(result[:data][:hash]).to eq({ type: 'sha1', value: package.package_hash })
+        expect(result[:data][:hash]).to eq({ type: 'sha256', value: 'sha256' })
         expect(result[:created_at]).to eq(package.created_at)
         expect(result[:updated_at]).to eq(package.updated_at)
         expect(result[:links]).to include(links)
+      end
+
+      context 'when the package has a sha1 hash and not a sha256 hash' do
+        before do
+          package.update(package_hash: 'sha1-hash', sha256_checksum: nil)
+        end
+
+        it 'displays the sha1' do
+          expect(result[:data][:hash]).to eq({ type: 'sha1', value: 'sha1-hash' })
+        end
+      end
+
+      context 'when the package has no checksums' do
+        before do
+          package.update(package_hash: nil, sha256_checksum: nil)
+        end
+
+        it 'displays the sha256 with null value' do
+          expect(result[:data][:hash]).to eq({ type: 'sha256', value: nil })
+        end
       end
 
       context 'when the package type is bits' do
