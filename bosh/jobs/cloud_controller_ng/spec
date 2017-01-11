@@ -463,6 +463,7 @@ properties:
     description: "The certificate authority being used by UAA"
   uaa.ssl.port:
     description: "The port used by UAA for ssl connections"
+    default: 8443
   uaa.port:
     description: "The port used by UAA for non-ssl connections"
   cc.uaa.internal_url:
