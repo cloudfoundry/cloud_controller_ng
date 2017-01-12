@@ -653,6 +653,30 @@ module Diego
       end
     end
 
+    describe '#actual_lrp_groups_by_process_guid' do
+      let(:process_guid) { 'process-guid' }
+
+      let(:response_body) { Bbs::Models::ActualLRPGroupsResponse.new(error: nil, actual_lrp_groups: actual_lrp_groups).encode.to_s }
+      let(:actual_lrp_groups) { [::Diego::Bbs::Models::ActualLRPGroup.new] }
+      let(:response_status) { 200 }
+      before do
+        stub_request(:post, 'https://bbs.example.com:4443/v1/actual_lrp_groups/list_by_process_guid').to_return(status: response_status, body: response_body)
+      end
+
+      it 'returns a LRP instances response' do
+        expected_request = Bbs::Models::ActualLRPGroupsByProcessGuidRequest.new(process_guid: process_guid)
+
+        response = client.actual_lrp_groups_by_process_guid(process_guid)
+        expect(response).to be_a(Bbs::Models::ActualLRPGroupsResponse)
+        expect(response.error).to be_nil
+        expect(response.actual_lrp_groups).to eq(actual_lrp_groups)
+        expect(a_request(:post, 'https://bbs.example.com:4443/v1/actual_lrp_groups/list_by_process_guid').with(
+          body: expected_request.encode.to_s,
+          headers: { 'Content-Type' => 'application/x-protobuf' }
+        )).to have_been_made
+      end
+    end
+
     describe '#desired_lrps_scheduling_infos' do
       let(:scheduling_infos) { [::Diego::Bbs::Models::DesiredLRPSchedulingInfo.new] }
       let(:response_body) { Bbs::Models::DesiredLRPSchedulingInfosResponse.new(error: nil, desired_lrp_scheduling_infos: scheduling_infos).encode.to_s }

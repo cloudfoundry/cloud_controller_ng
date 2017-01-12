@@ -9,7 +9,12 @@ module VCAP::CloudController
 
       def all_instances_for_app(process)
         result    = {}
-        instances = tps_client.lrp_instances(process)
+
+        if bypass_bridge?
+          instances = bbs_instances_client.lrp_instances(process)
+        else
+          instances = tps_client.lrp_instances(process)
+        end
 
         for_each_desired_instance(instances, process) do |instance|
           info = {
@@ -31,7 +36,7 @@ module VCAP::CloudController
       def number_of_starting_and_running_instances_for_processes(processes)
         result = {}
 
-        instances_map = tps_client.bulk_lrp_instances(processes)
+              instances_map = tps_client.bulk_lrp_instances(processes)
         processes.each do |application|
           running_indices = Set.new
 
@@ -159,6 +164,14 @@ module VCAP::CloudController
 
       def logger
         @logger ||= Steno.logger('cc.diego.instances_reporter')
+      end
+
+      def bbs_instances_client
+        CloudController::DependencyLocator.instance.bbs_instances_client
+      end
+
+      def bypass_bridge?
+        !!HashUtils.dig(Config.config, :diego, :temporary_local_tps)
       end
     end
   end
