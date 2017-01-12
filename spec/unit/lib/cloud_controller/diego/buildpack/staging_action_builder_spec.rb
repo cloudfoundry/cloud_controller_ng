@@ -155,6 +155,23 @@ module VCAP::CloudController
             end
           end
 
+          context 'when there is no buildpack cache checksum' do
+            before do
+              lifecycle_data[:buildpack_cache_checksum] = ''
+            end
+
+            it 'does not include the builpack cache download action' do
+              result = builder.action
+
+              serial_action = result.serial_action
+              actions       = serial_action.actions
+
+              parallel_download_action = actions[0].parallel_action
+              expect(parallel_download_action.actions.count).to eq(1)
+              expect(parallel_download_action.actions.first.download_action).not_to eq(download_build_artifacts_cache_action)
+            end
+          end
+
           context 'when there is a specific buildpack requested' do
             let(:buildpacks) {
               [

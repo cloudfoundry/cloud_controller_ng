@@ -23,7 +23,7 @@ module VCAP::CloudController
               checksum_value:     lifecycle_data[:app_bits_checksum][:value],
             )
           ]
-          if lifecycle_data[:build_artifacts_cache_download_uri]
+          if lifecycle_data[:build_artifacts_cache_download_uri] && lifecycle_data[:buildpack_cache_checksum].present?
             download_actions << try_action(::Diego::Bbs::Models::DownloadAction.new({
               artifact:           'build artifacts cache',
               from:               lifecycle_data[:build_artifacts_cache_download_uri],
