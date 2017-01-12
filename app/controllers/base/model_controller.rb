@@ -372,7 +372,7 @@ module VCAP::CloudController::RestController
       # @return [Exception] The vcap not-found exception for this
       # rest/api endpoint.
       def not_found_exception(guid, find_model)
-        CloudController::Errors::ApiError.new_from_details(not_found_exception_name(find_model), guid)
+        CloudController::Errors::NotFound.new_from_details(not_found_exception_name(find_model), guid)
       end
 
       # Start the DSL for defining attributes.  This is used inside

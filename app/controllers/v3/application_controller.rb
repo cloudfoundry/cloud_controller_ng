@@ -20,6 +20,10 @@ module V3ErrorsHelper
   def resources_not_found!(message)
     raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', message)
   end
+
+  def resource_not_found!(resource)
+    raise CloudController::Errors::NotFound.new_from_details('ResourceNotFound', "#{resource.to_s.humanize} not found")
+  end
 end
 
 class ApplicationController < ActionController::Base
@@ -38,6 +42,7 @@ class ApplicationController < ActionController::Base
 
   rescue_from CloudController::Blobstore::BlobstoreError, with: :handle_blobstore_error
   rescue_from CloudController::Errors::NotAuthenticated, with: :handle_not_authenticated
+  rescue_from CloudController::Errors::NotFound, with: :handle_not_found
   rescue_from CloudController::Errors::ApiError, with: :handle_api_error
 
   def configuration
@@ -149,17 +154,14 @@ class ApplicationController < ActionController::Base
     handle_api_error(error)
   end
 
-  def handle_not_authenticated(error)
+  def handle_exception(error)
     presenter = ErrorPresenter.new(error, Rails.env.test?, V3ErrorHasher.new(error))
     logger.info(presenter.log_message)
     render status: presenter.response_code, json: presenter
   end
-
-  def handle_api_error(error)
-    presenter = ErrorPresenter.new(error, Rails.env.test?, V3ErrorHasher.new(error))
-    logger.info(presenter.log_message)
-    render status: presenter.response_code, json: presenter
-  end
+  alias_method :handle_not_authenticated, :handle_exception
+  alias_method :handle_api_error, :handle_exception
+  alias_method :handle_not_found, :handle_exception
 
   def null_coalesce_body
     params[:body] ||= {}
@@ -167,9 +169,5 @@ class ApplicationController < ActionController::Base
 
   def membership
     @membership ||= Membership.new(current_user)
-  end
-
-  def resource_not_found!(resource)
-    raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "#{resource.to_s.humanize} not found")
   end
 end

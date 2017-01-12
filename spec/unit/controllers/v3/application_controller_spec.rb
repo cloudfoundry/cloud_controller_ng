@@ -39,6 +39,10 @@ RSpec.describe ApplicationController, type: :controller do
     def blobstore_error
       raise CloudController::Blobstore::BlobstoreError.new('it broke!')
     end
+
+    def not_found
+      raise CloudController::Errors::NotFound.new_from_details('NotFound')
+    end
   end
 
   describe '#check_read_permissions' do
@@ -304,6 +308,17 @@ RSpec.describe ApplicationController, type: :controller do
       get :api_explode
       expect(response.status).to eq(400)
       expect(parsed_body['errors'].first['detail']).to eq('The request is invalid')
+    end
+  end
+
+  describe '#handle_not_found' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'rescues from NotFound error and renders an error presenter' do
+      routes.draw { get 'not_found' => 'anonymous#not_found' }
+      get :not_found
+      expect(response.status).to eq(404)
+      expect(parsed_body['errors'].first['detail']).to eq('Unknown request')
     end
   end
 end
