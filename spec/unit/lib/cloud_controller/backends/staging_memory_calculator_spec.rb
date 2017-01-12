@@ -95,7 +95,7 @@ module VCAP::CloudController
       context 'when the value is in the configuration' do
         let(:expected_limit) { 99 }
         before do
-          VCAP::CloudController::Config.config[:minimum_staging_memory_mb] = expected_limit
+          VCAP::CloudController::Config.config[:staging][:minimum_staging_memory_mb] = expected_limit
         end
 
         it 'returns the configured value' do
