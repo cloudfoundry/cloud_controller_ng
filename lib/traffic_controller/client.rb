@@ -20,7 +20,7 @@ module TrafficController
       envelopes = []
       boundary = extract_boundary!(response.contenttype)
       parser = MultipartParser.new(body: response.body, boundary: boundary)
-      while !(next_part = parser.next_part).nil?
+      until (next_part = parser.next_part).nil?
         envelopes << protobuf_decode!(next_part, Models::Envelope)
       end
       envelopes
