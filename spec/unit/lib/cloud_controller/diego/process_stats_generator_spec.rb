@@ -27,8 +27,7 @@ module VCAP::CloudController
       end
 
       describe '#bulk_generate' do
-        let(:bbs_response) { ::Diego::Bbs::Models::ActualLRPGroupsResponse.new(actual_lrp_groups: actual_lrp_groups) }
-        let(:actual_lrp_groups) { [make_actual_lrp_group('instance-guid', 1, 'UNCLAIMED', '', 1.day.ago.to_i)] }
+        let(:bbs_response) { [make_actual_lrp('instance-guid', 1, 'UNCLAIMED', '', 1.day.ago.to_i)] }
 
         let(:process1) { VCAP::CloudController::AppFactory.make }
         let(:process2) { VCAP::CloudController::AppFactory.make }
@@ -45,13 +44,12 @@ module VCAP::CloudController
       end
 
       describe '#generate' do
-        let(:bbs_response) { ::Diego::Bbs::Models::ActualLRPGroupsResponse.new(actual_lrp_groups: actual_lrp_groups) }
-        let(:actual_lrp_groups) do
+        let(:bbs_response) do
           [
-            make_actual_lrp_group(instance_guid, 1, 'UNCLAIMED', nil, yesterday),
-            make_actual_lrp_group(instance_guid, 2, 'CLAIMED', nil, yesterday),
-            make_actual_lrp_group(instance_guid, 3, 'RUNNING', nil, yesterday),
-            make_actual_lrp_group(instance_guid, 4, 'CRASHED', 'instance-details', yesterday)
+            make_actual_lrp(instance_guid, 1, 'UNCLAIMED', nil, yesterday),
+            make_actual_lrp(instance_guid, 2, 'CLAIMED', nil, yesterday),
+            make_actual_lrp(instance_guid, 3, 'RUNNING', nil, yesterday),
+            make_actual_lrp(instance_guid, 4, 'CRASHED', 'instance-details', yesterday)
           ]
         end
         let(:process) { VCAP::CloudController::AppFactory.make }
@@ -69,33 +67,6 @@ module VCAP::CloudController
             { instance_guid: 'instance_guid', index: 3, since: yesterday, uptime: seconds_since_yesterday, state: 'RUNNING' },
             { instance_guid: 'instance_guid', index: 4, since: yesterday, uptime: seconds_since_yesterday, state: 'CRASHED', details: 'instance-details' },
           ])
-        end
-
-        context 'when "instance" is not set on the actual lrp group' do
-          let(:actual_lrp_groups) do
-            [
-              ::Diego::Bbs::Models::ActualLRPGroup.new(evacuating: make_actual_lrp(instance_guid, 1, 'UNCLAIMED', nil, yesterday)),
-              ::Diego::Bbs::Models::ActualLRPGroup.new(evacuating: make_actual_lrp(instance_guid, 2, 'CLAIMED', nil, yesterday)),
-              ::Diego::Bbs::Models::ActualLRPGroup.new(evacuating: make_actual_lrp(instance_guid, 3, 'RUNNING', nil, yesterday)),
-              ::Diego::Bbs::Models::ActualLRPGroup.new(evacuating: make_actual_lrp(instance_guid, 4, 'CRASHED', 'instance-details', yesterday)),
-            ]
-          end
-          it 'falls back to "evacuating"' do
-            instances = generator.generate(process)
-            expect(instances.length).to eq(4)
-            expect(instances).to match([
-              { instance_guid: 'instance_guid', index: 1, since: yesterday, uptime: seconds_since_yesterday, state: 'UNCLAIMED' },
-              { instance_guid: 'instance_guid', index: 2, since: yesterday, uptime: seconds_since_yesterday, state: 'CLAIMED' },
-              { instance_guid: 'instance_guid', index: 3, since: yesterday, uptime: seconds_since_yesterday, state: 'RUNNING' },
-              { instance_guid: 'instance_guid', index: 4, since: yesterday, uptime: seconds_since_yesterday, state: 'CRASHED', details: 'instance-details' },
-            ])
-          end
-        end
-        context 'when "instance" and "evacuating" are not set on the actual lrp group' do
-          let(:actual_lrp_groups) { [::Diego::Bbs::Models::ActualLRPGroup.new] }
-          it 'raises' do
-            expect { generator.generate(process) }.to raise_error(CloudController::Errors::InstancesUnavailable)
-          end
         end
       end
     end

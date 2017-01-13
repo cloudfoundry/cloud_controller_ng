@@ -2,9 +2,7 @@ module VCAP::CloudController
   module Diego
     class ProcessStatsGenerator
       def generate(process)
-        lrp_groups = bbs_instances_client.lrp_instances(process)
-        lrp_groups.actual_lrp_groups.map do |actual_lrp_group|
-          actual_lrp = resolve(actual_lrp_group)
+        bbs_instances_client.lrp_instances(process).map do |actual_lrp|
           {
             instance_guid: actual_lrp.actual_lrp_instance_key.instance_guid,
             index: actual_lrp.actual_lrp_key.index,

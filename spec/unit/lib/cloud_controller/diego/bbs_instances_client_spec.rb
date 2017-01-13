@@ -6,8 +6,10 @@ module VCAP::CloudController::Diego
     let(:bbs_client) { instance_double(::Diego::Client) }
 
     describe '#lrp_instances' do
-      let(:bbs_response) { ::Diego::Bbs::Models::ActualLRPGroupsResponse.new(actual_lrp_groups: [actual_lrp_groups]) }
-      let(:actual_lrp_groups) { ::Diego::Bbs::Models::ActualLRPGroup.new(instance: ::Diego::Bbs::Models::ActualLRP.new(state: 'potato')) }
+      let(:bbs_response) { ::Diego::Bbs::Models::ActualLRPGroupsResponse.new(actual_lrp_groups: actual_lrp_groups) }
+      let(:actual_lrp_groups) { [actual_lrp_group] }
+      let(:actual_lrp_group) { ::Diego::Bbs::Models::ActualLRPGroup.new(instance: actual_lrp) }
+      let(:actual_lrp) { ::Diego::Bbs::Models::ActualLRP.new(state: 'potato') }
       let(:process) { VCAP::CloudController::AppFactory.make }
       let(:process_guid) { ProcessGuid.from_process(process) }
 
@@ -16,8 +18,14 @@ module VCAP::CloudController::Diego
       end
 
       it 'sends the lrp instances request to diego' do
-        expect(client.lrp_instances(process)).to eq(bbs_response)
+        client.lrp_instances(process)
         expect(bbs_client).to have_received(:actual_lrp_groups_by_process_guid).with(process_guid)
+      end
+
+      it 'returns a resolved list of actual LRPs' do
+        resolved_actual_lrp = ::Diego::Bbs::Models::ActualLRP.new(state: 'yuca')
+        allow(::Diego::ActualLRPGroupResolver).to receive(:get_lrp).with(actual_lrp_group).and_return(resolved_actual_lrp)
+        expect(client.lrp_instances(process)).to eq([resolved_actual_lrp])
       end
 
       context 'when the response contains an error' do
