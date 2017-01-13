@@ -6,7 +6,7 @@ module VCAP::CloudController
       subject(:instances_reporter) { described_class.new(tps_client) }
       let(:app) { AppFactory.make(instances: desired_instances, memory: 128, disk_quota: 2048) }
       let(:tps_client) { double(:tps_client) }
-      let(:bbs_instances_client) { instance_double(BbsInstancesClient) }
+      let(:process_stats_generator)  { instance_double(ProcessStatsGenerator) }
       let(:desired_instances) { 3 }
       let(:now) { Time.now.utc }
       let(:usage_time) { now.to_s }
@@ -53,9 +53,10 @@ module VCAP::CloudController
       let(:config) { TestConfig.config }
 
       before do
-        CloudController::DependencyLocator.instance.register(:bbs_instances_client, bbs_instances_client)
         allow(tps_client).to receive(:lrp_instances).and_return(instances_to_return)
         allow(tps_client).to receive(:lrp_instances_stats).and_return(instances_stats_to_return)
+
+        allow(ProcessStatsGenerator).to receive(:new).and_return(process_stats_generator)
       end
 
       describe '#all_instances_for_app' do
@@ -106,12 +107,12 @@ module VCAP::CloudController
         context 'when local tps is configured' do
           before do
             TestConfig.override(diego: { temporary_local_tps: true })
-            allow(bbs_instances_client).to receive(:lrp_instances).and_return(instances_to_return)
+            allow(process_stats_generator).to receive(:generate).and_return(instances_to_return)
           end
 
-          it 'sends the staging message to the bbs' do
+          it 'gets process stats without talking to tps' do
             result = instances_reporter.all_instances_for_app(app)
-            expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+            expect(process_stats_generator).to have_received(:generate).with(app)
             expect(result).to eq({
               0 => { state: 'RUNNING', details: 'some-details', uptime: 1, since: 101 },
               1 => { state: 'CRASHED', uptime: 3, since: 303 },
@@ -238,7 +239,7 @@ module VCAP::CloudController
       describe '#number_of_starting_and_running_instances_for_process with local tps' do
         before do
           TestConfig.override(diego: { temporary_local_tps: true })
-          allow(bbs_instances_client).to receive(:lrp_instances).and_return(instances_to_return)
+          allow(process_stats_generator).to receive(:generate).and_return(instances_to_return)
         end
 
         context 'when the app is not started' do
@@ -249,7 +250,7 @@ module VCAP::CloudController
           it 'returns 0' do
             result = instances_reporter.number_of_starting_and_running_instances_for_process(app)
 
-            expect(bbs_instances_client).not_to have_received(:lrp_instances)
+            expect(process_stats_generator).not_to have_received(:generate)
             expect(result).to eq(0)
           end
         end
@@ -272,7 +273,7 @@ module VCAP::CloudController
             it 'returns the number of desired indices that have an instance in the running/starting state ' do
               result = instances_reporter.number_of_starting_and_running_instances_for_process(app)
 
-              expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+              expect(process_stats_generator).to have_received(:generate).with(app)
               expect(result).to eq(2)
             end
           end
@@ -290,7 +291,7 @@ module VCAP::CloudController
             it 'returns the number of desired indices that have an instance in the running/starting state ' do
               result = instances_reporter.number_of_starting_and_running_instances_for_process(app)
 
-              expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+              expect(process_stats_generator).to have_received(:generate).with(app)
               expect(result).to eq(3)
             end
           end
@@ -308,7 +309,7 @@ module VCAP::CloudController
             it 'returns the number of desired indices that have an instance in the running/starting state ' do
               result = instances_reporter.number_of_starting_and_running_instances_for_process(app)
 
-              expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+              expect(process_stats_generator).to have_received(:generate).with(app)
               expect(result).to eq(3)
             end
           end
@@ -326,14 +327,14 @@ module VCAP::CloudController
             it 'returns the number of desired indices that have an instance in the running/starting state ' do
               result = instances_reporter.number_of_starting_and_running_instances_for_process(app)
 
-              expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+              expect(process_stats_generator).to have_received(:generate).with(app)
               expect(result).to eq(2)
             end
           end
 
           context 'when diego is unavailable' do
             before do
-              allow(bbs_instances_client).to receive(:lrp_instances).and_raise(StandardError.new('oh no'))
+              allow(process_stats_generator).to receive(:generate).and_raise(StandardError.new('oh no'))
             end
 
             it 'returns -1 indicating not fresh' do
@@ -343,7 +344,7 @@ module VCAP::CloudController
             context 'when its an InstancesUnavailable' do
               let(:error) { CloudController::Errors::InstancesUnavailable.new('oh my') }
               before do
-                allow(bbs_instances_client).to receive(:lrp_instances).and_raise(error)
+                allow(process_stats_generator).to receive(:generate).and_raise(error)
               end
 
               it 'returns -1 indicating not fresh' do
@@ -474,7 +475,7 @@ module VCAP::CloudController
         end
         before do
           TestConfig.override(diego: { temporary_local_tps: true })
-          allow(bbs_instances_client).to receive(:bulk_lrp_instances).and_return(instance_map)
+          allow(process_stats_generator).to receive(:bulk_generate).and_return(instance_map)
         end
 
         it 'returns a hash of app => instance count' do
@@ -484,7 +485,7 @@ module VCAP::CloudController
 
         context 'when diego is unavailable' do
           before do
-            allow(bbs_instances_client).to receive(:bulk_lrp_instances).and_raise(StandardError.new('oh no'))
+            allow(process_stats_generator).to receive(:bulk_generate).and_raise(StandardError.new('oh no'))
           end
 
           it 'returns -1 indicating not fresh' do
@@ -494,7 +495,7 @@ module VCAP::CloudController
           context 'when its an InstancesUnavailable' do
             let(:error) { CloudController::Errors::InstancesUnavailable.new('oh my') }
             before do
-              allow(bbs_instances_client).to receive(:bulk_lrp_instances).and_raise(error)
+              allow(process_stats_generator).to receive(:bulk_generate).and_raise(error)
             end
 
             it 'returns -1 indicating not fresh' do
@@ -540,13 +541,13 @@ module VCAP::CloudController
         context 'when local tps is configured' do
           before do
             TestConfig.override(diego: { temporary_local_tps: true })
-            allow(bbs_instances_client).to receive(:lrp_instances).and_return(instances_to_return)
+            allow(process_stats_generator).to receive(:generate).and_return(instances_to_return)
           end
 
           it 'returns an array of crashed instances' do
             result = instances_reporter.crashed_instances_for_app(app)
 
-            expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+            expect(process_stats_generator).to have_received(:generate).with(app)
             expect(result).to eq([
               { 'instance' => 'instance-C', 'uptime' => 3, 'since' => 303 },
             ])
@@ -557,12 +558,12 @@ module VCAP::CloudController
       describe '#crashed_instances_for_app when local tps is configured' do
         before do
           TestConfig.override(diego: { temporary_local_tps: true })
-          allow(bbs_instances_client).to receive(:lrp_instances).and_return(instances_to_return)
+          allow(process_stats_generator).to receive(:generate).and_return(instances_to_return)
         end
         it 'returns an array of crashed instances' do
           result = instances_reporter.crashed_instances_for_app(app)
 
-          expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+          expect(process_stats_generator).to have_received(:generate).with(app)
           expect(result).to eq([
             { 'instance' => 'instance-C', 'uptime' => 3, 'since' => 303 },
           ])
@@ -570,7 +571,7 @@ module VCAP::CloudController
 
         context 'when diego is unavailable' do
           before do
-            allow(bbs_instances_client).to receive(:lrp_instances).and_raise(StandardError.new('oh no'))
+            allow(process_stats_generator).to receive(:generate).and_raise(StandardError.new('oh no'))
           end
 
           it 'raises an InstancesUnavailable exception' do
@@ -582,7 +583,7 @@ module VCAP::CloudController
           context 'when its an InstancesUnavailable' do
             let(:error) { CloudController::Errors::InstancesUnavailable.new('oh my') }
             before do
-              allow(bbs_instances_client).to receive(:lrp_instances).and_raise(error)
+              allow(process_stats_generator).to receive(:generate).and_raise(error)
             end
 
             it 're-raises' do
@@ -594,13 +595,13 @@ module VCAP::CloudController
         context 'when local tps is configured' do
           before do
             TestConfig.override(diego: { temporary_local_tps: true })
-            allow(bbs_instances_client).to receive(:lrp_instances).and_return(instances_to_return)
+            allow(process_stats_generator).to receive(:generate).and_return(instances_to_return)
           end
 
           it 'returns an array of crashed instances' do
             result = instances_reporter.crashed_instances_for_app(app)
 
-            expect(bbs_instances_client).to have_received(:lrp_instances).with(app)
+            expect(process_stats_generator).to have_received(:generate).with(app)
             expect(result).to eq([
               { 'instance' => 'instance-C', 'uptime' => 3, 'since' => 303 },
             ])

@@ -1,3 +1,5 @@
+require 'cloud_controller/diego/process_stats_generator'
+
 module VCAP::CloudController
   module Diego
     class InstancesReporter
@@ -145,14 +147,19 @@ module VCAP::CloudController
       end
 
       def instances_for_process(process)
-        bypass_bridge? ? bbs_instances_client.lrp_instances(process) : tps_client.lrp_instances(process)
+        if bypass_bridge?
+          ProcessStatsGenerator.new.generate(process)
+        else
+          tps_client.lrp_instances(process)
+        end
       end
 
       def instances_map_for_processes(processes)
         if bypass_bridge?
-          return bbs_instances_client.bulk_lrp_instances(processes)
+          ProcessStatsGenerator.new.bulk_generate(processes)
+        else
+          tps_client.bulk_lrp_instances(processes)
         end
-        tps_client.bulk_lrp_instances(processes)
       end
 
       def fill_unreported_instances_with_down_instances(reported_instances, process)
@@ -170,10 +177,6 @@ module VCAP::CloudController
 
       def logger
         @logger ||= Steno.logger('cc.diego.instances_reporter')
-      end
-
-      def bbs_instances_client
-        CloudController::DependencyLocator.instance.bbs_instances_client
       end
 
       def bypass_bridge?
