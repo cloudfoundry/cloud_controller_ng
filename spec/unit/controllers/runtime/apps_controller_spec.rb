@@ -1400,7 +1400,7 @@ module VCAP::CloudController
             set_current_user(developer, { scopes: ['cloud_controller.write'] })
           end
 
-          it 'returns InvalidAuthToken' do
+          it 'returns InsufficientScope' do
             get "/v2/apps/#{app_obj.guid}/env"
             expect(last_response.status).to eql(403)
             expect(JSON.parse(last_response.body)['description']).to eql('Your token lacks the necessary scopes to access this resource.')
