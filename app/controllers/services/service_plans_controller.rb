@@ -37,7 +37,7 @@ module VCAP::CloudController
           {}
         )
       elsif SecurityContext.invalid_token?
-        raise CloudController::Errors::ApiError.new_from_details('InvalidAuthToken')
+        raise CloudController::Errors::InvalidAuthToken
       else
         super
       end

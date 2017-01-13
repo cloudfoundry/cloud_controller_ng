@@ -9,11 +9,6 @@ require 'allowy'
 require 'eventmachine/schedule_sync'
 
 require 'vcap/common'
-require 'cloud_controller/errors/api_error'
-require 'cloud_controller/errors/not_authenticated'
-require 'cloud_controller/errors/not_found'
-require 'cloud_controller/errors/blob_not_found'
-require 'cloud_controller/errors/details'
 require 'uaa/token_coder'
 
 require 'sinatra/vcap'
@@ -24,6 +19,12 @@ ActiveSupport::JSON::Encoding.time_precision = 0
 
 module VCAP::CloudController; end
 
+require 'cloud_controller/errors/api_error'
+require 'cloud_controller/errors/not_authenticated'
+require 'cloud_controller/errors/not_found'
+require 'cloud_controller/errors/blob_not_found'
+require 'cloud_controller/errors/details'
+require 'cloud_controller/errors/invalid_auth_token'
 require 'cloud_controller/errors/invalid_relation'
 require 'cloud_controller/errors/invalid_app_relation'
 require 'cloud_controller/errors/invalid_route_relation'

@@ -43,6 +43,7 @@ class ApplicationController < ActionController::Base
   rescue_from CloudController::Blobstore::BlobstoreError, with: :handle_blobstore_error
   rescue_from CloudController::Errors::NotAuthenticated, with: :handle_not_authenticated
   rescue_from CloudController::Errors::NotFound, with: :handle_not_found
+  rescue_from CloudController::Errors::InvalidAuthToken, with: :handle_invalid_auth_token
   rescue_from CloudController::Errors::ApiError, with: :handle_api_error
 
   def configuration
@@ -146,7 +147,7 @@ class ApplicationController < ActionController::Base
       raise CloudController::Errors::NotAuthenticated
     end
 
-    raise CloudController::Errors::ApiError.new_from_details('InvalidAuthToken')
+    raise CloudController::Errors::InvalidAuthToken
   end
 
   def handle_blobstore_error(error)
@@ -162,6 +163,7 @@ class ApplicationController < ActionController::Base
   alias_method :handle_not_authenticated, :handle_exception
   alias_method :handle_api_error, :handle_exception
   alias_method :handle_not_found, :handle_exception
+  alias_method :handle_invalid_auth_token, :handle_exception
 
   def null_coalesce_body
     params[:body] ||= {}
