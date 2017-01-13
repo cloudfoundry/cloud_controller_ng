@@ -1,15 +1,19 @@
 require 'spec_helper'
 require 'actions/droplet_create'
-require 'cloud_controller/backends/staging_memory_calculator'
-require 'cloud_controller/backends/staging_disk_calculator'
-require 'cloud_controller/backends/staging_environment_builder'
 require 'messages/droplet_create_message'
 require 'isolation_segment_assign'
 require 'isolation_segment_unassign'
 
 module VCAP::CloudController
   RSpec.describe DropletCreate do
-    subject(:action) { described_class.new(memory_limit_calculator, disk_limit_calculator, environment_builder) }
+    subject(:action) do
+      described_class.new(
+        memory_limit_calculator: memory_limit_calculator,
+        disk_limit_calculator:   disk_limit_calculator,
+        environment_presenter:   environment_builder
+      )
+    end
+
     let(:user) { User.make }
     let(:user_email) { 'user@example.com' }
 
@@ -42,7 +46,7 @@ module VCAP::CloudController
     let(:stack) { Stack.default }
     let(:lifecycle_data) do
       {
-        stack:     stack.name,
+        stack:      stack.name,
         buildpacks: [buildpack_git_url]
       }
     end
@@ -230,7 +234,7 @@ module VCAP::CloudController
           context 'when memory_limit_calculator raises MemoryLimitCalculator::SpaceQuotaExceeded' do
             before do
               allow(memory_limit_calculator).to receive(:get_limit).with(staging_memory_in_mb, space, org).and_raise(
-                StagingMemoryCalculator::SpaceQuotaExceeded.new('helpful message')
+                QuotaValidatingStagingMemoryCalculator::SpaceQuotaExceeded.new('helpful message')
               )
             end
 
@@ -244,7 +248,7 @@ module VCAP::CloudController
           context 'when memory_limit_calculator raises MemoryLimitCalculator::OrgQuotaExceeded' do
             before do
               allow(memory_limit_calculator).to receive(:get_limit).with(staging_memory_in_mb, space, org).and_raise(
-                StagingMemoryCalculator::OrgQuotaExceeded, 'helpful message'
+                QuotaValidatingStagingMemoryCalculator::OrgQuotaExceeded, 'helpful message'
               )
             end
 

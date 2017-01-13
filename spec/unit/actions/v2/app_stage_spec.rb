@@ -12,7 +12,7 @@ module VCAP::CloudController
         let(:droplet_create) { instance_double(DropletCreate, create_and_stage_without_event: nil, staging_response: 'staging-response') }
 
         before do
-          allow(DropletCreate).to receive(:new).and_return(droplet_create)
+          allow(DropletCreate).to receive(:new).with(memory_limit_calculator: an_instance_of(NonQuotaValidatingStagingMemoryCalculator)).and_return(droplet_create)
         end
 
         it 'delegates to DropletCreate with a DropletCreateMessage based on the process' do
