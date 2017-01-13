@@ -4,24 +4,14 @@ module VCAP::CloudController
     class OrgQuotaExceeded < StandardError; end
 
     def get_limit(requested_limit, space, org)
-      staging_memory = [minimum_limit, requested_limit].compact.max
-      space_quota_exceeded!(staging_memory) unless space.has_remaining_memory(staging_memory)
-      org_quota_exceeded!(staging_memory) unless org.has_remaining_memory(staging_memory)
-      staging_memory
+      return minimum_limit if requested_limit.nil? || requested_limit < minimum_limit
+      raise SpaceQuotaExceeded.new("staging requires #{requested_limit}M memory") if !space.has_remaining_memory(requested_limit)
+      raise OrgQuotaExceeded.new("staging requires #{requested_limit}M memory") if !org.has_remaining_memory(requested_limit)
+      requested_limit
     end
 
     def minimum_limit
       Config.config[:staging][:minimum_staging_memory_mb] || 1024
-    end
-
-    private
-
-    def org_quota_exceeded!(staging_memory)
-      raise OrgQuotaExceeded.new("staging requires #{staging_memory}M memory")
-    end
-
-    def space_quota_exceeded!(staging_memory)
-      raise SpaceQuotaExceeded.new("staging requires #{staging_memory}M memory")
     end
   end
 end
