@@ -3,11 +3,6 @@ require 'cloud_controller/diego/tps_instances_reporter'
 
 module VCAP::CloudController
   class InstancesReporters
-    def initialize(diego_client, health_manager_client)
-      @tps_client = diego_client
-      @health_manager_client = health_manager_client
-    end
-
     def number_of_starting_and_running_instances_for_process(app)
       reporter_for_app(app).number_of_starting_and_running_instances_for_process(app)
     end
@@ -40,11 +35,15 @@ module VCAP::CloudController
     end
 
     def diego_reporter
-      @diego_reporter ||= Diego::TpsInstancesReporter.new(@tps_client)
+      @diego_reporter ||= Diego::TpsInstancesReporter.new(dependency_locator.tps_client)
     end
 
     def legacy_reporter
-      @dea_reporter ||= Dea::InstancesReporter.new(@health_manager_client)
+      @dea_reporter ||= Dea::InstancesReporter.new(dependency_locator.health_manager_client)
+    end
+
+    def dependency_locator
+      CloudController::DependencyLocator.instance
     end
   end
 end

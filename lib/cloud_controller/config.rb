@@ -358,7 +358,7 @@ module VCAP::CloudController
         stagers = Stagers.new(@config, message_bus, dea_pool)
         dependency_locator.register(:stagers, stagers)
 
-        dependency_locator.register(:instances_reporters, InstancesReporters.new(tps_client, hm_client))
+        dependency_locator.register(:instances_reporters, InstancesReporters.new)
         dependency_locator.register(:index_stopper, IndexStopper.new(runners))
 
         Dea::Client.configure(@config, message_bus, dea_pool, blobstore_url_generator)

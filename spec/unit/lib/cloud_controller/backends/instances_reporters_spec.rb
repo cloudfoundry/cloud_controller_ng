@@ -14,9 +14,12 @@ module VCAP::CloudController
 
     let(:dea_reporter) { instance_double(Dea::InstancesReporter) }
     let(:diego_reporter) { instance_double(Diego::TpsInstancesReporter) }
-    let(:instances_reporters) { InstancesReporters.new(tps_client, hm_client) }
+    subject(:instances_reporters) { InstancesReporters.new }
 
     before do
+      CloudController::DependencyLocator.instance.register(:health_manager_client, hm_client)
+      CloudController::DependencyLocator.instance.register(:tps_client, tps_client)
+
       allow(Dea::InstancesReporter).to receive(:new).with(hm_client).and_return(dea_reporter)
       allow(Diego::TpsInstancesReporter).to receive(:new).with(tps_client).and_return(diego_reporter)
     end
