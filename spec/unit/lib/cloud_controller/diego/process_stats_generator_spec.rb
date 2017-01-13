@@ -59,14 +59,16 @@ module VCAP::CloudController
         let(:seconds_since_yesterday) { 3600 * 24 }
 
         it 'returns stats' do
-          instances = generator.generate(process)
-          expect(instances.length).to eq(4)
-          expect(instances).to match([
-            { instance_guid: 'instance_guid', index: 1, since: yesterday, uptime: seconds_since_yesterday, state: 'UNCLAIMED' },
-            { instance_guid: 'instance_guid', index: 2, since: yesterday, uptime: seconds_since_yesterday, state: 'CLAIMED' },
-            { instance_guid: 'instance_guid', index: 3, since: yesterday, uptime: seconds_since_yesterday, state: 'RUNNING' },
-            { instance_guid: 'instance_guid', index: 4, since: yesterday, uptime: seconds_since_yesterday, state: 'CRASHED', details: 'instance-details' },
-          ])
+          Timecop.freeze do
+            instances = generator.generate(process)
+            expect(instances.length).to eq(4)
+            expect(instances).to match([
+              { instance_guid: 'instance_guid', index: 1, since: yesterday, uptime: seconds_since_yesterday, state: 'UNCLAIMED' },
+              { instance_guid: 'instance_guid', index: 2, since: yesterday, uptime: seconds_since_yesterday, state: 'CLAIMED' },
+              { instance_guid: 'instance_guid', index: 3, since: yesterday, uptime: seconds_since_yesterday, state: 'RUNNING' },
+              { instance_guid: 'instance_guid', index: 4, since: yesterday, uptime: seconds_since_yesterday, state: 'CRASHED', details: 'instance-details' },
+            ])
+          end
         end
       end
     end
