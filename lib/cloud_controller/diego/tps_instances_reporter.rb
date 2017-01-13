@@ -2,7 +2,7 @@ require 'cloud_controller/diego/process_stats_generator'
 
 module VCAP::CloudController
   module Diego
-    class InstancesReporter
+    class TpsInstancesReporter
       attr_reader :tps_client
 
       def initialize(tps_client)

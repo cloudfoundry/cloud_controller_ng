@@ -13,12 +13,12 @@ module VCAP::CloudController
     end
 
     let(:dea_reporter) { instance_double(Dea::InstancesReporter) }
-    let(:diego_reporter) { instance_double(Diego::InstancesReporter) }
+    let(:diego_reporter) { instance_double(Diego::TpsInstancesReporter) }
     let(:instances_reporters) { InstancesReporters.new(tps_client, hm_client) }
 
     before do
       allow(Dea::InstancesReporter).to receive(:new).with(hm_client).and_return(dea_reporter)
-      allow(Diego::InstancesReporter).to receive(:new).with(tps_client).and_return(diego_reporter)
+      allow(Diego::TpsInstancesReporter).to receive(:new).with(tps_client).and_return(diego_reporter)
     end
 
     describe '#number_of_starting_and_running_instances_for_process' do

@@ -1,5 +1,5 @@
 require 'cloud_controller/dea/instances_reporter'
-require 'cloud_controller/diego/instances_reporter'
+require 'cloud_controller/diego/tps_instances_reporter'
 
 module VCAP::CloudController
   class InstancesReporters
@@ -40,7 +40,7 @@ module VCAP::CloudController
     end
 
     def diego_reporter
-      @diego_reporter ||= Diego::InstancesReporter.new(@tps_client)
+      @diego_reporter ||= Diego::TpsInstancesReporter.new(@tps_client)
     end
 
     def legacy_reporter

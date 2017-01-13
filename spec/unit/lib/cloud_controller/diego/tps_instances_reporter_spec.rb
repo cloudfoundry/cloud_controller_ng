@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Diego
-    RSpec.describe InstancesReporter do
+    RSpec.describe TpsInstancesReporter do
       subject(:instances_reporter) { described_class.new(tps_client) }
       let(:app) { AppFactory.make(instances: desired_instances, memory: 128, disk_quota: 2048) }
       let(:tps_client) { double(:tps_client) }

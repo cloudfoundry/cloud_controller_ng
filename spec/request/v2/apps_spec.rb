@@ -828,7 +828,7 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v2/apps/:guid/stats' do
     let(:process) { VCAP::CloudController::AppFactory.make(state: 'STARTED', space: space) }
-    let(:instances_reporters) { instance_double(VCAP::CloudController::Diego::InstancesReporter) }
+    let(:instances_reporters) { instance_double(VCAP::CloudController::Diego::TpsInstancesReporter) }
     let(:instances_reporter_response) do
       {
         0 => {
