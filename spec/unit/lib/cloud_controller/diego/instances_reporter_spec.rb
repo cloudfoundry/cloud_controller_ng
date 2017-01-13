@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:desired_instances) { 3 }
       let(:now) { Time.now.utc }
       let(:usage_time) { now.to_s }
-      let(:instances_to_return) {
+      let(:instances_stats_to_return) {
         [
           {
             process_guid: 'process-guid',
@@ -39,12 +39,23 @@ module VCAP::CloudController
             net_info: { foo: 'ports-G' }, stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 } },
         ]
       }
+      let(:instances_to_return) {
+        [
+          { instance_guid: 'instance-A', index: 0, state: 'RUNNING', uptime: 1, details: 'some-details', since: 101 },
+          { instance_guid: 'instance-B', index: 1, state: 'RUNNING', uptime: 2, since: 202 },
+          { instance_guid: 'instance-C', index: 1, state: 'CRASHED', uptime: 3, since: 303 },
+          { instance_guid: 'instance-D', index: 2, state: 'RUNNING', uptime: 4, since: 404 },
+          { instance_guid: 'instance-E', index: 2, state: 'STARTING', uptime: 5, since: 505 },
+          { instance_guid: 'instance-F', index: 3, state: 'STARTING', uptime: 6, since: 606 },
+          { instance_guid: 'instance-G', index: 4, state: 'CRASHED', uptime: 7, since: 707 },
+        ]
+      }
       let(:config) { TestConfig.config }
 
       before do
         CloudController::DependencyLocator.instance.register(:bbs_instances_client, bbs_instances_client)
         allow(tps_client).to receive(:lrp_instances).and_return(instances_to_return)
-        allow(tps_client).to receive(:lrp_instances_stats).and_return(instances_to_return)
+        allow(tps_client).to receive(:lrp_instances_stats).and_return(instances_stats_to_return)
       end
 
       describe '#all_instances_for_app' do
@@ -680,7 +691,7 @@ module VCAP::CloudController
 
         context 'when no stats are returned for an instance' do
           before do
-            instances_to_return[0].delete(:stats)
+            instances_stats_to_return[0].delete(:stats)
           end
 
           it 'creates zero usage for the instance' do

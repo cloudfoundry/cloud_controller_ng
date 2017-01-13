@@ -17,18 +17,17 @@ module VCAP::CloudController
           response
         end
 
-        # NOTE: Do we need to run process_guid through ProcessGuid.app_guid?
         instances = bbs_lrp_groups.actual_lrp_groups.map do |actual_lrp_group|
           actual_lrp = resolve(actual_lrp_group)
           {
-            process_guid: actual_lrp.actual_lrp_key.process_guid,
             instance_guid: actual_lrp.actual_lrp_instance_key.instance_guid,
             index: actual_lrp.actual_lrp_key.index,
             since: actual_lrp.since,
             uptime: Time.now.to_i - actual_lrp.since,
             state: actual_lrp.state,
-            net_info: actual_lrp.actual_lrp_net_info,
-          }
+          }.tap do |h|
+            h[:details] = actual_lrp.placement_error if actual_lrp.placement_error.present?
+          end
         end
 
         instances
