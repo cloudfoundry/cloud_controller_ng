@@ -94,7 +94,7 @@ module VCAP::CloudController
       single_filter = opts[:q][0] if opts[:q]
 
       if single_filter && single_filter.start_with?('service_broker_guid')
-        service_broker_guid = single_filter.split(':')[1]
+        service_broker_guid = single_filter.split(/(:| IN )/)[2]
 
         Query.
           filtered_dataset_from_query_params(model, ds, qp, { q: '' }).

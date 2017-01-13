@@ -223,7 +223,12 @@ module VCAP::CloudController
       end
 
       context 'as an admin' do
-        before { set_current_user_as_admin }
+        let(:different_service) { Service.make(service_broker: ServiceBroker.make) }
+        let(:different_service_plan) { ServicePlan.make }
+        before do
+          set_current_user_as_admin
+          different_service_plan.service = different_service
+        end
 
         it 'displays all service plans' do
           get '/v2/service_plans'
@@ -243,6 +248,7 @@ module VCAP::CloudController
 
           expect(returned_plan_guids).to match_array expected_plan_guids
           expect(returned_service_guids).to match_array expected_service_guids
+          expect(returned_plan_guids).to include(different_service_plan.guid)
         end
 
         it 'can query by service plan guid' do
@@ -263,9 +269,10 @@ module VCAP::CloudController
 
           expect(returned_plan_guids).to match_array expected_plan_guids
           expect(returned_service_guids).to match_array expected_service_guids
+          expect(returned_plan_guids).not_to include(different_service_plan.guid)
         end
 
-        it 'can query by service broker guid' do
+        it 'can query by service broker guid using ":"' do
           service = @services[:public][0].service
           get "/v2/service_plans?q=service_broker_guid:#{service.service_broker.guid}"
           expect(last_response.status).to eq 200
@@ -283,6 +290,28 @@ module VCAP::CloudController
 
           expect(returned_plan_guids).to match_array expected_plan_guids
           expect(returned_service_guids).to match_array expected_service_guids
+          expect(returned_plan_guids).not_to include(different_service_plan.guid)
+        end
+
+        it 'can query by service broker guid using "IN"' do
+          service = @services[:public][0].service
+          get "/v2/service_plans?q=service_broker_guid%20IN%20#{service.service_broker.guid}"
+          expect(last_response.status).to eq 200
+
+          expected_plan_guids = service.service_plans.map(&:guid)
+          expected_service_guids = [service.guid]
+
+          returned_plan_guids = decoded_response.fetch('resources').map do |res|
+            res['metadata']['guid']
+          end
+
+          returned_service_guids = decoded_response.fetch('resources').map do |res|
+            res['entity']['service_guid']
+          end
+
+          expect(returned_plan_guids).to match_array expected_plan_guids
+          expect(returned_service_guids).to match_array expected_service_guids
+          expect(returned_plan_guids).not_to include(different_service_plan.guid)
         end
       end
 
