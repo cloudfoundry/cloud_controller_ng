@@ -6,7 +6,7 @@ module VCAP::CloudController
       subject(:instances_reporter) { described_class.new(tps_client) }
       let(:app) { AppFactory.make(instances: desired_instances, memory: 128, disk_quota: 2048) }
       let(:tps_client) { double(:tps_client) }
-      let(:process_stats_generator)  { instance_double(ProcessStatsGenerator) }
+      let(:process_stats_generator) { instance_double(ProcessStatsGenerator) }
       let(:desired_instances) { 3 }
       let(:now) { Time.now.utc }
       let(:usage_time) { now.to_s }

@@ -4,7 +4,7 @@ require 'diego/lrp_constants'
 
 module Diego
   class ActualLRPGroupResolver
-    class ActualLRPGroupError < Diego::Error;
+    class ActualLRPGroupError < Diego::Error
     end
 
     def self.get_lrp(actual_lrp_group)
