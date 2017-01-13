@@ -68,7 +68,7 @@ module VCAP::CloudController::Presenters::V3
 
           it 'obfuscates the username and password' do
             expect(result[:lifecycle][:data][:buildpacks]).to eq(['https://***:***@neopets.com'])
-            expect(result[:result][:buildpack][:name]).to eq('https://***:***@neopets.com')
+            expect(result[:result][:buildpacks]).to eq([{ name: 'https://***:***@neopets.com', detect_output: 'the-happiest-buildpack-detect-output' }])
           end
         end
 
@@ -146,8 +146,7 @@ module VCAP::CloudController::Presenters::V3
           it 'has the correct result' do
             expect(result[:result][:hash]).to eq(type: 'sha256', value: 'droplet-sha256-checksum')
             expect(result[:result][:stack]).to eq('the-happiest-stack')
-            expect(result[:result][:buildpack][:name]).to eq('the-happiest-buildpack')
-            expect(result[:result][:buildpack][:detect_output]).to eq('the-happiest-buildpack-detect-output')
+            expect(result[:result][:buildpacks]).to eq([{ name: 'the-happiest-buildpack', detect_output: 'the-happiest-buildpack-detect-output' }])
           end
         end
 

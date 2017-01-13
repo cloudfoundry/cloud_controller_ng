@@ -167,7 +167,7 @@ RSpec.describe 'Droplets' do
         'staging_disk_in_mb'    => 200,
         'result'                => {
           'hash'                   => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-          'buildpack'              => { 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil },
+          'buildpacks'             => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
           'stack'                  => 'stack-name',
           'execution_metadata'     => 'some-data',
           'process_types'          => { 'web' => 'start-command' }
@@ -279,7 +279,7 @@ RSpec.describe 'Droplets' do
             'staging_disk_in_mb'    => 456,
             'result'                => {
               'hash'                   => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-              'buildpack'              => { 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil },
+              'buildpacks'             => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
               'stack'                  => 'stack-2',
               'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
               'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
@@ -548,7 +548,7 @@ RSpec.describe 'Droplets' do
             'staging_disk_in_mb'    => 456,
             'result'                => {
               'hash'                   => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-              'buildpack'              => { 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil },
+              'buildpacks'             => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
               'stack'                  => 'stack-2',
               'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
               'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
@@ -692,7 +692,7 @@ RSpec.describe 'Droplets' do
             'staging_disk_in_mb'    => 456,
             'result'                => {
               'hash'                   => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-              'buildpack'              => { 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil },
+              'buildpacks'             => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
               'stack'                  => 'stack-2',
               'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
               'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }

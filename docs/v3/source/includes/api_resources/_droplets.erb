@@ -119,10 +119,12 @@
       "type": "sha256",
       "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
-    "buildpack": {
-      "name": "ruby_buildpack",
-      "detect_output": "ruby 1.6.14"
-    },
+    "buildpacks": [
+      {
+        "name": "ruby_buildpack",
+        "detect_output": "ruby 1.6.14"
+      }
+    ],
     "stack": "cflinuxfs2"
   },
   "environment_variables": {
@@ -208,10 +210,12 @@
           "type": "sha256",
           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         },
-        "buildpack": {
-          "name": "ruby_buildpack",
-          "detect_output": "ruby 1.6.14"
-        },
+        "buildpacks": [
+          {
+            "name": "ruby_buildpack",
+            "detect_output": "ruby 1.6.14"
+          }
+        ],
         "stack": "cflinuxfs2"
       },
       "environment_variables": {

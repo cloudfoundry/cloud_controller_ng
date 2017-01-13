@@ -818,7 +818,7 @@ RSpec.describe 'Apps' do
         'staging_disk_in_mb'    => 200,
         'result'                => {
           'hash'               => { 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' },
-          'buildpack'          => { 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil },
+          'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
           'stack'              => 'stack-name',
           'execution_metadata' => 'some-data',
           'process_types'      => { 'web' => 'start-command' }

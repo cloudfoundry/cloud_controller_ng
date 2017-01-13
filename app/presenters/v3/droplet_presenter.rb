@@ -49,10 +49,10 @@ module VCAP::CloudController
           lifecycle_result = if droplet.lifecycle_type == Lifecycles::BUILDPACK
                                {
                                  hash:      droplet_checksum_info,
-                                 buildpack: {
+                                 buildpacks: [{
                                    name:          CloudController::UrlSecretObfuscator.obfuscate(droplet.buildpack_receipt_buildpack),
                                    detect_output: droplet.buildpack_receipt_detect_output
-                                 },
+                                 }],
                                  stack:     droplet.buildpack_receipt_stack_name,
                                }
                              elsif droplet.lifecycle_type == Lifecycles::DOCKER
