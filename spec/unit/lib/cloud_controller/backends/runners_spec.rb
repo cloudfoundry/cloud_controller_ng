@@ -326,15 +326,10 @@ module VCAP::CloudController
 
         batch, _ = runners.dea_apps_hm9k
 
-        found = false
-        batch.each do |item|
-          if item['id'] == staging_pending_app.guid
-            expect(item['package_state']).to eq('PENDING')
-            found = true
-          end
-        end
-
-        expect(found).to be true
+        expect(batch).to include(hash_including({
+          'id' => staging_pending_app.guid,
+          'package_state' => 'PENDING'
+        }))
       end
 
       it 'returns the largest process id from the query' do
