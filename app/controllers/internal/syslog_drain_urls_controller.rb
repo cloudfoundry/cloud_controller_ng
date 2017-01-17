@@ -1,15 +1,7 @@
 module VCAP::CloudController
   class SyslogDrainUrlsInternalController < RestController::BaseController
-    # Endpoint does its own (non-standard) auth
+    # Endpoint uses mutual tls for auth, handled by nginx
     allow_unauthenticated_access
-
-    def initialize(*)
-      super
-      auth = Rack::Auth::Basic::Request.new(env)
-      unless auth.provided? && auth.basic? && auth.credentials == InternalApi.credentials
-        raise CloudController::Errors::NotAuthenticated
-      end
-    end
 
     get '/internal/v1/syslog_drain_urls', :list
     def list
