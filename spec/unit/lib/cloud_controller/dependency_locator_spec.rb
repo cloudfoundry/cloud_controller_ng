@@ -418,4 +418,13 @@ RSpec.describe CloudController::DependencyLocator do
       expect(locator.instances_reporters).to be_an_instance_of(VCAP::CloudController::InstancesReporters)
     end
   end
+
+  describe '#traffic_controller_client' do
+    it 'returns a traffic controller client' do
+      client = instance_double(::TrafficController::Client)
+      allow(::TrafficController::Client).to receive(:new).with(url: 'http://loggregator-trafficcontroller.service.cf.internal:8081').and_return(client)
+      expect(locator.traffic_controller_client).to eq(client)
+      expect(::TrafficController::Client).to have_received(:new).with(url: 'http://loggregator-trafficcontroller.service.cf.internal:8081')
+    end
+  end
 end

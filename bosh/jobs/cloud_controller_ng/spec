@@ -851,3 +851,7 @@ properties:
   cc.diego.pid_limit:
     description: "Maximum pid limit for containerized work running user-provided code"
     default: 1024
+
+  cc.loggregator.internal_url:
+    description: "Internal url used to communicate with traffic_controller"
+    default: "http://loggregator-trafficcontroller.service.cf.internal:8081"

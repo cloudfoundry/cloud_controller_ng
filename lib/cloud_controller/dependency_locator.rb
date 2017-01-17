@@ -8,6 +8,7 @@ require 'cloud_controller/upload_handler'
 require 'cloud_controller/blob_sender/nginx_blob_sender'
 require 'cloud_controller/blob_sender/default_blob_sender'
 require 'cloud_controller/blob_sender/missing_blob_handler'
+require 'traffic_controller/client'
 require 'cloud_controller/diego/task_recipe_builder'
 require 'cloud_controller/diego/app_recipe_builder'
 require 'cloud_controller/diego/stager_client'
@@ -85,6 +86,10 @@ module CloudController
 
     def tps_client
       @dependencies[:tps_client] || raise('tps_client not set')
+    end
+
+    def traffic_controller_client
+      @dependencies[:traffic_controller_client] || register(:traffic_controller_client, build_traffic_controller_client)
     end
 
     def upload_handler
@@ -338,6 +343,10 @@ module CloudController
       )
 
       VCAP::CloudController::Diego::BbsInstancesClient.new(bbs_client)
+    end
+
+    def build_traffic_controller_client
+      TrafficController::Client.new(url: HashUtils.dig(@config, :loggregator, :internal_url))
     end
 
     def create_object_renderer(opts={})
