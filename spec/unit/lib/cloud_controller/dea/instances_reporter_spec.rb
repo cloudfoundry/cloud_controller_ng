@@ -101,10 +101,10 @@ module VCAP::CloudController
         [a]
       end
 
-      context 'when there are no proccess' do
-        it 'returns an empty array' do
+      context 'when there are no proccesses' do
+        it 'returns an empty hash' do
           result = subject.number_of_starting_and_running_instances_for_processes(Space.make.apps)
-          expect(result).to eq([])
+          expect(result).to eq({})
         end
       end
 
