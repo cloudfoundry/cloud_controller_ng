@@ -1,5 +1,6 @@
 require 'cloud_controller/dea/instances_reporter'
 require 'cloud_controller/diego/tps_instances_reporter'
+require 'cloud_controller/diego/instances_reporter'
 
 module VCAP::CloudController
   class InstancesReporters
@@ -21,9 +22,9 @@ module VCAP::CloudController
 
     def number_of_starting_and_running_instances_for_processes(apps)
       diego_apps = apps.select(&:diego?)
-      dea_apps = apps - diego_apps
+      dea_apps   = apps - diego_apps
 
-      diego_instances = diego_reporter.number_of_starting_and_running_instances_for_processes(diego_apps)
+      diego_instances  = diego_reporter.number_of_starting_and_running_instances_for_processes(diego_apps)
       legacy_instances = legacy_reporter.number_of_starting_and_running_instances_for_processes(dea_apps)
       legacy_instances.merge(diego_instances)
     end
@@ -35,11 +36,21 @@ module VCAP::CloudController
     end
 
     def diego_reporter
-      @diego_reporter ||= Diego::TpsInstancesReporter.new(dependency_locator.tps_client)
+      @diego_reporter ||= begin
+        if bypass_bridge?
+          Diego::InstancesReporter.new(dependency_locator.bbs_instances_client, dependency_locator.traffic_controller_client)
+        else
+          Diego::TpsInstancesReporter.new(dependency_locator.tps_client)
+        end
+      end
     end
 
     def legacy_reporter
       @dea_reporter ||= Dea::InstancesReporter.new(dependency_locator.health_manager_client)
+    end
+
+    def bypass_bridge?
+      !!HashUtils.dig(Config.config, :diego, :temporary_local_tps)
     end
 
     def dependency_locator

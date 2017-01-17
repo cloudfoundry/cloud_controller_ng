@@ -176,7 +176,7 @@ module VCAP::CloudController
       end
 
       def logger
-        @logger ||= Steno.logger('cc.diego.instances_reporter')
+        @logger ||= Steno.logger('cc.diego.tps_instances_reporter')
       end
 
       def bypass_bridge?

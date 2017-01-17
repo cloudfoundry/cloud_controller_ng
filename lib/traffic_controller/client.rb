@@ -11,7 +11,7 @@ module TrafficController
 
     def container_metrics(auth_token:, app_guid:)
       response = with_request_error_handling do
-        client.get("/apps/#{app_guid}/containermetrics", nil, { 'Authorization' => auth_token } )
+        client.get("/apps/#{app_guid}/containermetrics", nil, { 'Authorization' => auth_token })
       end
 
       validate_status!(response: response, statuses: [200])
