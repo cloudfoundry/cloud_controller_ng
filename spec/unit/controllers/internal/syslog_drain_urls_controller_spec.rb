@@ -18,7 +18,7 @@ module VCAP::CloudController
         expect(decoded_results).to include(
           {
             app_obj.guid => { 'drains' => match_array(['fishfinger', 'foobar']),
-              'hostname'               => 'org-1.space-1.app-1' }
+                              'hostname' => 'org-1.space-1.app-1' }
 
           }
         )
@@ -36,7 +36,7 @@ module VCAP::CloudController
           expect(decoded_results).to include(
             {
               app_obj.guid => { 'drains' => match_array(['fishfinger', 'foobar']),
-                'hostname'               => 'org-2.space-2.app-2' }
+                                'hostname'               => 'org-2.space-2.app-2' }
 
             }
           )
@@ -55,7 +55,7 @@ module VCAP::CloudController
           expect(decoded_results).to include(
             {
               app_obj.guid => { 'drains' => match_array(['fishfinger', 'foobar']),
-                'hostname'               => 'org-3.space-3.app-3' }
+                                'hostname'               => 'org-3.space-3.app-3' }
 
             }
           )
@@ -74,7 +74,7 @@ module VCAP::CloudController
           expect(decoded_results).to include(
             {
               app_obj.guid => { 'drains' => match_array(['fishfinger', 'foobar']),
-                'hostname'               => 'org-4.space-4.app-4' }
+                                'hostname'               => 'org-4.space-4.app-4' }
 
             }
           )
@@ -99,7 +99,7 @@ module VCAP::CloudController
           expect(decoded_results).to include(
             {
               app_obj.guid => { 'drains' => match_array(['fishfinger', 'foobar']),
-                'hostname'               => "#{orgName}.#{spaceName}.#{appName}"
+                                'hostname'               => "#{orgName}.#{spaceName}.#{appName}"
               }
 
             }
@@ -122,7 +122,7 @@ module VCAP::CloudController
           expect(decoded_results).to include(
             {
               app_obj.guid => { 'drains' => match_array(['fishfinger', 'foobar']),
-                'hostname'               => "#{orgName}.#{spaceName}.#{appName}"
+                                'hostname'               => "#{orgName}.#{spaceName}.#{appName}"
               }
 
             }
