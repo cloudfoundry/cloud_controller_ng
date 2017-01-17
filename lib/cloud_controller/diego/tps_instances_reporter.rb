@@ -11,7 +11,7 @@ module VCAP::CloudController
 
       def all_instances_for_app(process)
         result    = {}
-        instances = instances_for_process(process)
+        instances = tps_client.lrp_instances(process)
 
         for_each_desired_instance(instances, process) do |instance|
           info = {
@@ -33,7 +33,7 @@ module VCAP::CloudController
       def number_of_starting_and_running_instances_for_processes(processes)
         result = {}
 
-        instances_map = instances_map_for_processes(processes)
+        instances_map = tps_client.bulk_lrp_instances(processes)
         processes.each do |application|
           running_indices = Set.new
 
@@ -57,7 +57,7 @@ module VCAP::CloudController
 
       def number_of_starting_and_running_instances_for_process(process)
         return 0 unless process.started?
-        instances = instances_for_process(process)
+        instances = tps_client.lrp_instances(process)
 
         running_indices = Set.new
 
@@ -76,7 +76,7 @@ module VCAP::CloudController
 
       def crashed_instances_for_app(process)
         result    = []
-        instances = instances_for_process(process)
+        instances = tps_client.lrp_instances(process)
 
         for_each_desired_instance(instances, process) do |instance|
           if instance[:state] == 'CRASHED'
@@ -146,22 +146,6 @@ module VCAP::CloudController
         instance[:index] < process.instances
       end
 
-      def instances_for_process(process)
-        if bypass_bridge?
-          ProcessStatsGenerator.new.generate(process)
-        else
-          tps_client.lrp_instances(process)
-        end
-      end
-
-      def instances_map_for_processes(processes)
-        if bypass_bridge?
-          ProcessStatsGenerator.new.bulk_generate(processes)
-        else
-          tps_client.bulk_lrp_instances(processes)
-        end
-      end
-
       def fill_unreported_instances_with_down_instances(reported_instances, process)
         process.instances.times do |i|
           unless reported_instances[i]
@@ -177,10 +161,6 @@ module VCAP::CloudController
 
       def logger
         @logger ||= Steno.logger('cc.diego.tps_instances_reporter')
-      end
-
-      def bypass_bridge?
-        !!HashUtils.dig(Config.config, :diego, :temporary_local_tps)
       end
     end
   end
