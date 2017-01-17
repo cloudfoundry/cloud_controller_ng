@@ -48,6 +48,8 @@ http {
     server unix:/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock;
   }
 
+  # This block ensures the endpoings it serves are handled by mutual TLS.
+  # Refer to the 'return 403' statement in the http block to see how we secure those endpoints.
   server {
     listen <%= p("cc.tls_port") %> ssl;
 
