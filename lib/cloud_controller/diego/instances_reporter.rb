@@ -1,5 +1,6 @@
 require 'cloud_controller/diego/process_stats_generator'
 require 'traffic_controller/client'
+require 'utils/workpool'
 
 module VCAP::CloudController
   module Diego
@@ -9,6 +10,7 @@ module VCAP::CloudController
       def initialize(bbs_instances_client, traffic_controller_client)
         @bbs_instances_client      = bbs_instances_client
         @traffic_controller_client = traffic_controller_client
+        @workpool = WorkPool.new(50)
       end
 
       def all_instances_for_app(process)
@@ -40,8 +42,12 @@ module VCAP::CloudController
         instances = {}
 
         processes.each do |process|
-          instances[process.guid] = number_of_starting_and_running_instances_for_process(process)
+          @workpool.submit(instances, process) do |i, p|
+            i[p.guid] = number_of_starting_and_running_instances_for_process(p)
+          end
         end
+
+        @workpool.drain
 
         instances
       end
