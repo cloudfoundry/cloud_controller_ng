@@ -5,21 +5,20 @@ module TrafficController
   class Client
     BOUNDARY_REGEXP = /boundary=(.+)/
 
-    def initialize(url:, auth_token:)
-      @url        = url
-      @auth_token = auth_token
+    def initialize(url:)
+      @url = url
     end
 
-    def container_metrics(app_guid:)
+    def container_metrics(auth_token:, app_guid:)
       response = with_request_error_handling do
-        client.get("/apps/#{app_guid}/containermetrics")
+        client.get("/apps/#{app_guid}/containermetrics", nil, { 'Authorization' => auth_token } )
       end
 
       validate_status!(response: response, statuses: [200])
 
       envelopes = []
-      boundary = extract_boundary!(response.contenttype)
-      parser = MultipartParser.new(body: response.body, boundary: boundary)
+      boundary  = extract_boundary!(response.contenttype)
+      parser    = MultipartParser.new(body: response.body, boundary: boundary)
       until (next_part = parser.next_part).nil?
         envelopes << protobuf_decode!(next_part, Models::Envelope)
       end
@@ -36,7 +35,7 @@ module TrafficController
 
     private
 
-    attr_reader :url, :auth_token
+    attr_reader :url
 
     def extract_boundary!(content_type)
       match_data = BOUNDARY_REGEXP.match(content_type)
@@ -65,7 +64,6 @@ module TrafficController
       client.send_timeout           = 10
       client.receive_timeout        = 10
       client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      client.default_header         = { 'Authorization' => auth_token }
       client
     end
 
