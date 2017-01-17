@@ -177,6 +177,18 @@ module VCAP::CloudController
               expect(last_response.body).to eq 'unauthenticated_response'
             end
           end
+
+          context 'when the token is invalid/ expired' do
+            before do
+              VCAP::CloudController::SecurityContext.set(nil, :invalid_token, nil)
+            end
+
+            it 'returns an invalid token error to the user' do
+              get '/test_endpoint'
+              expect(last_response.status).to eq 401
+              expect(last_response.body).to match /InvalidAuthToken/
+            end
+          end
         end
 
         context 'when the endpoint requires basic auth' do

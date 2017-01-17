@@ -40,11 +40,15 @@ module UserHelpers
         scopes << 'cloud_controller.admin_read_only'
       end
 
-      user_token = token_coder.encode(
+      encoding_opts = {
         user_id: user ? user.guid : (rand * 1_000_000_000).ceil,
-        email:   opts[:email],
-        scope:   scopes
-      )
+        email: opts[:email],
+        scope: scopes
+      }
+
+      encoding_opts[:exp] = 0 if opts[:expired]
+
+      user_token = token_coder.encode(encoding_opts)
 
       return user_token
     end
