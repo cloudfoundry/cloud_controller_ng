@@ -10,12 +10,11 @@ module VCAP::CloudController
         let(:task) { TaskModel.make }
         let(:task_config) do
           {
-            internal_api: {
-              auth_user: 'utako',
-              auth_password: 'luan'
-            },
             internal_service_hostname: 'google.com',
-            external_port: '1234'
+            tls_port: '8888',
+            diego: {
+              temporary_local_tps: true,
+            }
           }
         end
 
@@ -24,9 +23,9 @@ module VCAP::CloudController
         end
 
         it 'returns a completion callback url' do
-          url = generator.generate(task)
-
-          expect(url).to eq "http://utako:luan@google.com:1234/internal/v3/tasks/#{task.guid}/completed"
+          expect(generator.generate(task)).to eq(
+            "https://google.com:8888/internal/v4/tasks/#{task.guid}/completed"
+          )
         end
       end
     end

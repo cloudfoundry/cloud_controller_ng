@@ -6,10 +6,9 @@ module VCAP::CloudController
       end
 
       def generate(task)
-        auth      = "#{@config[:internal_api][:auth_user]}:#{@config[:internal_api][:auth_password]}"
-        host_port = "#{@config[:internal_service_hostname]}:#{@config[:external_port]}"
-        path      = "/internal/v3/tasks/#{task.guid}/completed"
-        "http://#{auth}@#{host_port}#{path}"
+        host_port = "#{@config[:internal_service_hostname]}:#{@config[:tls_port]}"
+        path      = "/internal/v4/tasks/#{task.guid}/completed"
+        "https://#{host_port}#{path}"
       end
     end
   end

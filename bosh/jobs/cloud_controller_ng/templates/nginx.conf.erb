@@ -80,6 +80,10 @@ http {
     location ~ /internal/v3/staging/.*/droplet_completed {
       proxy_pass http://cloud_controller;
     }
+
+    location ~ /internal/v4/tasks/.*/completed {
+      proxy_pass http://cloud_controller;
+    }
   }
 
   server {
@@ -97,6 +101,10 @@ http {
     <% end %>
 
     location /internal/v1/syslog_drain_urls {
+      return 403 'HTTPS is required';
+    }
+
+    location /internal/v4/tasks/*/completed {
       return 403 'HTTPS is required';
     }
 

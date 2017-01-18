@@ -284,7 +284,7 @@ module VCAP::CloudController
         end
         let(:config) do
           {
-            external_port: external_port,
+            tls_port: tls_port,
             internal_service_hostname: internal_service_hostname,
             internal_api: {
               auth_user: user,
@@ -294,12 +294,13 @@ module VCAP::CloudController
               lifecycle_bundles: { 'buildpack/potato-stack': 'potato_lifecycle_bundle_url' },
               pid_limit: 100,
               use_privileged_containers_for_running: false,
+              temporary_local_tps: true,
             },
           }
         end
         let(:isolation_segment) { 'potato-segment' }
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
-        let(:external_port) { '7777' }
+        let(:tls_port) { '7777' }
         let(:user) { 'user' }
         let(:password) { 'password' }
         let(:rule_dns_everywhere) do
@@ -369,7 +370,7 @@ module VCAP::CloudController
 
           it 'constructs a TaskDefinition with app task instructions' do
             result = task_recipe_builder.build_app_task(config, task)
-            expected_callback_url = "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed"
+            expected_callback_url = "https://#{internal_service_hostname}:#{tls_port}/internal/v4/tasks/#{task.guid}/completed"
 
             expect(result.log_guid).to eq(app.guid)
             expect(result.memory_mb).to eq(2048)
@@ -502,7 +503,7 @@ module VCAP::CloudController
 
           it 'constructs a TaskDefinition with app task instructions' do
             result = task_recipe_builder.build_app_task(config, task)
-            expected_callback_url = "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed"
+            expected_callback_url = "https://#{internal_service_hostname}:#{tls_port}/internal/v4/tasks/#{task.guid}/completed"
 
             expect(result.disk_mb).to eq(1024)
             expect(result.memory_mb).to eq(2048)
