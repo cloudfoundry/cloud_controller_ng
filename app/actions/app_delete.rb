@@ -55,7 +55,8 @@ module VCAP::CloudController
       DropletDelete.new(user_guid, user_email, stagers).delete(app.droplets)
       ProcessDelete.new(user_guid, user_email).delete(app.processes)
       RouteMappingDelete.new(user_guid, user_email).delete(route_mappings_to_delete(app))
-      ServiceBindingDelete.new(user_guid, user_email).delete(app.service_bindings)
+      errors = ServiceBindingDelete.new(user_guid, user_email).delete(app.service_bindings)
+      raise errors.first unless errors.empty?
       delete_buildpack_cache(app)
     end
 

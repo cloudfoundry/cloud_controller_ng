@@ -90,16 +90,30 @@ module VCAP::CloudController
           expect(app.exists?).to be_falsey
         end
 
-        it 'deletes associated service bindings' do
-          allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind)
+        describe 'deleting service bindings' do
+          it 'deletes associated service bindings' do
+            allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind)
 
-          binding = ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space))
+            binding = ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space))
 
-          expect {
-            app_delete.delete(app_dataset)
-          }.to change { ServiceBinding.count }.by(-1)
-          expect(binding.exists?).to be_falsey
-          expect(app.exists?).to be_falsey
+            expect {
+              app_delete.delete(app_dataset)
+            }.to change { ServiceBinding.count }.by(-1)
+            expect(binding.exists?).to be_falsey
+            expect(app.exists?).to be_falsey
+          end
+
+          context 'when service binding delete returns errors' do
+            before do
+              allow_any_instance_of(ServiceBindingDelete).to receive(:delete).and_return([StandardError.new('first'), StandardError.new('second')])
+            end
+
+            it 'raises the first error in the list' do
+              expect {
+                app_delete.delete(app_dataset)
+              }.to raise_error(StandardError, 'first')
+            end
+          end
         end
       end
     end
