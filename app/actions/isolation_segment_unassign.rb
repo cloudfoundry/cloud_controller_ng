@@ -2,18 +2,14 @@ module VCAP::CloudController
   class IsolationSegmentUnassign
     class IsolationSegmentUnassignError < StandardError; end
 
-    def unassign(isolation_segment, organizations)
+    def unassign(isolation_segment, org)
       isolation_segment.db.transaction do
         isolation_segment.lock!
+        org.lock!
 
-        organizations.sort! { |o1, o2| o1.id <=> o2.id }.each do |org|
-          org.lock!
-          space_association_error! if segment_associated_with_space?(isolation_segment, org)
-
-          unset_default_segment(isolation_segment, org)
-
-          isolation_segment.remove_organization(org)
-        end
+        space_association_error! if segment_associated_with_space?(isolation_segment, org)
+        unset_default_segment(isolation_segment, org)
+        isolation_segment.remove_organization(org)
       end
     end
 

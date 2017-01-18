@@ -129,7 +129,7 @@ RSpec.describe 'IsolationSegmentModels' do
     end
   end
 
-  describe 'DELETE /v3/isolation_segments/:guid/relationships/organizations' do
+  describe 'DELETE /v3/isolation_segments/:guid/relationships/organizations/:org_guid' do
     let(:org1) { VCAP::CloudController::Organization.make }
     let(:org2) { VCAP::CloudController::Organization.make }
     let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
@@ -139,16 +139,12 @@ RSpec.describe 'IsolationSegmentModels' do
     end
 
     it 'removes the organization from the isolation segment' do
-      unassign_request = {
-        data: [
-          { guid: org2.guid }
-        ]
-      }
-
-      delete "/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations", unassign_request, user_header
+      delete "/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations/#{org1.guid}", nil, user_header
 
       expect(last_response.status).to eq(204)
-      expect(isolation_segment.organizations).to include(org1)
+      isolation_segment.reload
+      expect(isolation_segment.organizations).to include(org2)
+      expect(isolation_segment.organizations).to_not include(org1)
     end
   end
 

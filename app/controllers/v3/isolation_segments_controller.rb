@@ -120,11 +120,16 @@ class IsolationSegmentsController < ApplicationController
     render status: :created, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
   end
 
-  def unassign_allowed_organizations
+  def unassign_allowed_organization
     unauthorized! unless roles.admin?
-    isolation_segment_model, orgs = organizations_lookup
 
-    organization_unassigner.unassign(isolation_segment_model, orgs)
+    isolation_segment_model = IsolationSegmentModel.first(guid: params[:guid])
+    resource_not_found!(:isolation_segment) unless isolation_segment_model
+
+    org = Organization.first(guid: params[:org_guid])
+    resource_not_found!(:org) unless org
+
+    organization_unassigner.unassign(isolation_segment_model, org)
 
     head :no_content
   rescue IsolationSegmentUnassign::IsolationSegmentUnassignError => e
