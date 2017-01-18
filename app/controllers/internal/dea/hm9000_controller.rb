@@ -18,7 +18,7 @@ module VCAP::CloudController
       post '/internal/dea/hm9000/start/:app_guid', :start
 
       def start(app_guid)
-        raise CloudController::Errors::ApiError.new_from_details('NotFound') unless App.find(guid: app_guid)
+        raise CloudController::Errors::ApiError.new_from_details('ProcessNotFound', app_guid) unless App.find(guid: app_guid)
         logger.info('dea.hm9000.start', app_guid: app_guid)
         SubSystem.hm9000_respondent.process_hm9000_start(read_body)
 
@@ -28,7 +28,7 @@ module VCAP::CloudController
       post '/internal/dea/hm9000/stop/:app_guid', :stop
 
       def stop(app_guid)
-        raise CloudController::Errors::ApiError.new_from_details('NotFound') unless App.find(guid: app_guid)
+        raise CloudController::Errors::ApiError.new_from_details('ProcessNotFound', app_guid) unless App.find(guid: app_guid)
         logger.info('dea.hm9000.stop', app_guid: app_guid)
         SubSystem.hm9000_respondent.process_hm9000_stop(read_body)
 

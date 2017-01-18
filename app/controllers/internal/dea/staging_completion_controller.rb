@@ -29,7 +29,7 @@ module VCAP::CloudController
         staging_response = read_body
 
         process = App.find(guid: process_guid)
-        raise CloudController::Errors::ApiError.new_from_details('NotFound') unless process
+        raise CloudController::Errors::ApiError.new_from_details('ProcessNotFound', process_guid) unless process
 
         droplet = process.latest_droplet
         raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless droplet.try(:guid) == staging_response['task_id']

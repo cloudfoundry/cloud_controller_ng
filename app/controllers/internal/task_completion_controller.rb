@@ -19,7 +19,7 @@ module VCAP::CloudController
     def complete_task(task_guid)
       task_response = read_body
       task = TaskModel.find(guid: task_guid)
-      raise CloudController::Errors::ApiError.new_from_details('NotFound') unless task
+      raise CloudController::Errors::NotFound.new_from_details('ResourceNotFound', "Task not found: #{task_guid}") unless task
       raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') if task_guid != task_response[:task_guid]
       raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') if [TaskModel::SUCCEEDED_STATE, TaskModel::FAILED_STATE].include? task.state
 
