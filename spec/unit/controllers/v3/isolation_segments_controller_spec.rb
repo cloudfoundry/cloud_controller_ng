@@ -313,18 +313,10 @@ RSpec.describe IsolationSegmentsController, type: :controller do
     end
   end
 
-  describe '#unassign_allowed_organizations' do
+  describe '#unassign_allowed_organization' do
     let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
     let(:org) { VCAP::CloudController::Organization.make }
     let(:org_2) { VCAP::CloudController::Organization.make }
-
-    let(:req_body) do
-      {
-        data: [
-          { guid: org.guid }
-        ]
-      }
-    end
 
     context 'when the user is an admin' do
       before do
@@ -332,7 +324,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       end
 
       it 'unassigns Isolation Segments from the org' do
-        post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+        post :unassign_allowed_organization, guid: isolation_segment_model.guid, org_guid: org.guid
         expect(response.status).to eq 204
       end
 
@@ -345,27 +337,41 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         end
 
         it 'returns an unprocessable error' do
-          post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+          post :unassign_allowed_organization, guid: isolation_segment_model.guid, org_guid: org.guid
           expect(response.status).to eq 422
         end
       end
 
-      context 'when the request is malformed' do
-        let(:req_body) {
+      context 'when a request body is supplied' do
+        let(:req_body) do
           {
-            bork: 'some-name',
+            data: [
+              { guid: org2.guid }
+            ]
           }
-        }
+        end
 
-        it 'returns a 422' do
-          post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-          expect(response.status).to eq 422
+        before do
+          assigner.assign(isolation_segment_model, [org2])
+        end
+
+        it 'ignores the body' do
+          post :unassign_allowed_organization, guid: isolation_segment_model.guid, org_guid: org.guid, body: req_body
+          expect(response.status).to eq 204
+          expect(isolation_segment_model.organizations).to include(org2)
         end
       end
 
       context 'when the isolation segment does not exist' do
         it 'returns a 404' do
-          post :unassign_allowed_organizations, guid: 'bad-guid', body: req_body
+          post :unassign_allowed_organization, guid: 'bad-guid', org_guid: org.guid
+          expect(response.status).to eq 404
+        end
+      end
+
+      context 'when the organization does not exist' do
+        it 'returns a 404' do
+          post :unassign_allowed_organization, guid: isolation_segment_model.guid, org_guid: 'bad-guid'
           expect(response.status).to eq 404
         end
       end
@@ -377,7 +383,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       end
 
       it 'returns a 403' do
-        post :unassign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
+        post :unassign_allowed_organization, guid: isolation_segment_model.guid, org_guid: org.guid
         expect(response.status).to eq 403
       end
     end

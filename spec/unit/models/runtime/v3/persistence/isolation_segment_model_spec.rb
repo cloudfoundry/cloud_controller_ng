@@ -100,7 +100,7 @@ module VCAP::CloudController
             end
 
             it 'can be removed' do
-              unassigner.unassign(isolation_segment_model, [org])
+              unassigner.unassign(isolation_segment_model, org)
 
               expect(isolation_segment_model.organizations).to be_empty
               expect(org.isolation_segment_models).to be_empty
