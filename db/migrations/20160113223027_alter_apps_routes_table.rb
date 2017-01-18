@@ -11,8 +11,13 @@ Sequel.migration do
       add_foreign_key [:route_id], :routes, name: :fk_apps_routes_route_id
 
       add_primary_key :id
-      add_column :created_at, :timestamp, null: false, default: Sequel::CURRENT_TIMESTAMP
-      add_column :updated_at, :timestamp
+      if Sequel::Model.db.database_type == :mssql
+        add_column :created_at, :datetime, null: false, default: Sequel::CURRENT_TIMESTAMP
+        add_column :updated_at, :datetime
+      else
+        add_column :created_at, :timestamp, null: false, default: Sequel::CURRENT_TIMESTAMP
+        add_column :updated_at, :timestamp
+      end
       add_column :app_port, Integer
       add_column :guid, String
     end
@@ -32,6 +37,8 @@ Sequel.migration do
        $$ LANGUAGE plpgsql;'
 
       run 'update apps_routes set guid=get_uuid();'
+    elsif Sequel::Model.db.database_type == :mssql
+      run 'update apps_routes set guid=NEWID();'
     end
 
     alter_table :apps_routes do

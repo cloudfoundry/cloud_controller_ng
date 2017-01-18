@@ -15,8 +15,10 @@ Sequel.migration do
 
       String :process_type
       index :process_type
+    end
 
-      unique [:app_guid, :route_guid, :process_type]
+    alter_table :route_mappings do
+      add_unique_constraint [:app_guid, :route_guid, :process_type], :name => 'route_mappings_app_guid_route_guid_process_type_key'
     end
   end
 end

@@ -83,7 +83,11 @@ module VCAP::CloudController
       end
 
       def delete_events_older_than(cutoff_age_in_days)
-        old_service_usage_events = ServiceUsageEvent.dataset.where("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", cutoff_age_in_days.to_i)
+        if App.db.database_type == :mssql
+          old_service_usage_events = ServiceUsageEvent.dataset.where("created_at < DATEADD(DAY, -?, CURRENT_TIMESTAMP)", cutoff_age_in_days.to_i)
+        else
+          old_service_usage_events = ServiceUsageEvent.dataset.where("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", cutoff_age_in_days.to_i)
+        end
         old_service_usage_events.delete
       end
     end

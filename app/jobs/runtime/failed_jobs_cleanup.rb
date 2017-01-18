@@ -9,11 +9,17 @@ module VCAP::CloudController
         end
 
         def perform
-          old_delayed_jobs = Delayed::Job.
-                             where('failed_at is not null').
-                             where('failed_at >= run_at').
-                             where("run_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", cutoff_age_in_days.to_i)
-
+          if App.db.database_type == :mssql
+            old_delayed_jobs = Delayed::Job.
+                              where('failed_at is not null').
+                              where('failed_at >= run_at').
+                              where("run_at < DATEADD(DAY, -?, CURRENT_TIMESTAMP)", cutoff_age_in_days.to_i)
+          else
+            old_delayed_jobs = Delayed::Job.
+                              where('failed_at is not null').
+                              where('failed_at >= run_at').
+                              where("run_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", cutoff_age_in_days.to_i)
+          end
           logger = Steno.logger('cc.background')
           logger.info("Cleaning up #{old_delayed_jobs.count} Failed Delayed Jobs")
 

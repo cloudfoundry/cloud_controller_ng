@@ -12,6 +12,13 @@ Sequel.migration do
       end
     end
 
+    if Sequel::Model.db.database_type == :mssql
+      alter_table :apps do
+        drop_constraint :fk_apps_framework_id, type: :foreign_key
+        drop_constraint :fk_apps_runtime_id, type: :foreign_key
+      end
+    end
+
     alter_table :apps do
       drop_column :framework_id
       drop_column :runtime_id
