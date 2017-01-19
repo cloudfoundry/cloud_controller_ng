@@ -10,7 +10,6 @@ module VCAP::CloudController
       def initialize(bbs_instances_client, traffic_controller_client)
         @bbs_instances_client      = bbs_instances_client
         @traffic_controller_client = traffic_controller_client
-        @workpool = WorkPool.new(50)
       end
 
       def all_instances_for_app(process)
@@ -40,14 +39,20 @@ module VCAP::CloudController
 
       def number_of_starting_and_running_instances_for_processes(processes)
         instances = {}
+        workpool = WorkPool.new(50)
+        queue = Queue.new
 
         processes.each do |process|
-          @workpool.submit(instances, process) do |i, p|
-            i[p.guid] = number_of_starting_and_running_instances_for_process(p)
+          workpool.submit(instances, process) do |i, p|
+            queue << [p.guid, number_of_starting_and_running_instances_for_process(p)]
           end
         end
 
-        @workpool.drain
+        workpool.drain
+        until queue.empty?
+          guid, info = queue.pop
+          instances[guid] = info
+        end
 
         instances
       end
