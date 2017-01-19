@@ -420,15 +420,10 @@ RSpec.describe CloudController::DependencyLocator do
   end
 
   describe '#traffic_controller_client' do
-    after do
-      locator.register(:traffic_controller_client, nil)
-    end
-
     it 'returns a traffic controller client' do
       client = instance_double(::TrafficController::Client)
-      allow(::TrafficController::Client).to receive(:new).with(url: 'http://loggregator-trafficcontroller.service.cf.internal:8081').and_return(client)
+      expect(::TrafficController::Client).to receive(:new).with(url: 'http://loggregator-trafficcontroller.service.cf.internal:8081').and_return(client)
       expect(locator.traffic_controller_client).to eq(client)
-      expect(::TrafficController::Client).to have_received(:new).with(url: 'http://loggregator-trafficcontroller.service.cf.internal:8081')
     end
   end
 end
