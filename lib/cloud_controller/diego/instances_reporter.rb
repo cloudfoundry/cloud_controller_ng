@@ -33,7 +33,7 @@ module VCAP::CloudController
         fill_unreported_instances_with_down_instances(instances, process)
       rescue => e
         raise e if e.is_a? CloudController::Errors::InstancesUnavailable
-        logger.error('instances_reporter.error', error: e.to_s)
+        logger.error('all_instances_for_app.error', error: e.to_s)
         raise CloudController::Errors::InstancesUnavailable.new(e)
       end
 
@@ -70,7 +70,7 @@ module VCAP::CloudController
 
         running_indices.length
       rescue => e
-        logger.error('instances_reporter.error', error: e.to_s)
+        logger.error('number_of_starting_and_running_instances_for_process.error', error: e.to_s)
         return UNKNOWN_INSTANCE_COUNT
       end
 
@@ -90,7 +90,7 @@ module VCAP::CloudController
 
       rescue => e
         raise e if e.is_a? CloudController::Errors::InstancesUnavailable
-        logger.error('instances_reporter.error', error: e.to_s)
+        logger.error('crashed_instances_for_app.error', error: e.to_s)
         raise CloudController::Errors::InstancesUnavailable.new(e)
       end
 
@@ -99,6 +99,7 @@ module VCAP::CloudController
         current_time = Time.now.to_f
         formatted_current_time = Time.now.to_datetime.rfc3339
 
+        logger.debug('stats_for_app.fetching_container_metrics', process_guid: process.guid)
         envelopes = @traffic_controller_client.container_metrics(
           app_guid: process.guid,
           auth_token: VCAP::CloudController::SecurityContext.auth_token,
@@ -145,7 +146,7 @@ module VCAP::CloudController
         fill_unreported_instances_with_down_instances(result, process)
       rescue => e
         raise e if e.is_a? CloudController::Errors::InstancesUnavailable
-        logger.error('instances_reporter.error', error: e.to_s)
+        logger.error('stats_for_app.error', error: e.to_s)
         raise CloudController::Errors::InstancesUnavailable.new(e)
       end
 
