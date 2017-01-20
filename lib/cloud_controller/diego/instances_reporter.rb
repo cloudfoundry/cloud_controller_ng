@@ -18,13 +18,13 @@ module VCAP::CloudController
           next unless actual_lrp.actual_lrp_key.index < process.instances
 
           current_time_ns = Time.now.to_f * 1e9
+          translated_state = LrpStateTranslator.translate_lrp_state(actual_lrp)
           result = {
-            state:  convert_actual_lrp_state(actual_lrp.state),
+            state:  translated_state,
             uptime: nanoseconds_to_seconds(current_time_ns - actual_lrp.since),
             since:  nanoseconds_to_seconds(actual_lrp.since),
           }
 
-          result[:state]   = 'STARTING' if lrp_starting?(actual_lrp)
           result[:details] = actual_lrp.placement_error if actual_lrp.placement_error.present?
 
           instances[actual_lrp.actual_lrp_key.index] = result
@@ -119,7 +119,7 @@ module VCAP::CloudController
         actual_lrps.each do |actual_lrp|
           next unless actual_lrp.actual_lrp_key.index < process.instances
           info = {
-            state: actual_lrp[:state],
+            state: LrpStateTranslator.translate_lrp_state(actual_lrp),
             stats: {
               name:       process.name,
               uris:       process.uris,
@@ -158,30 +158,14 @@ module VCAP::CloudController
       end
 
       def running_or_starting?(lrp)
-        return true if ::Diego::ActualLRPState::RUNNING == lrp.state
-        return true if lrp_starting?(lrp)
+        translated_state = LrpStateTranslator.translate_lrp_state(lrp)
+        return true if VCAP::CloudController::Diego::LRP_RUNNING == translated_state
+        return true if VCAP::CloudController::Diego::LRP_STARTING == translated_state
         false
       end
 
       def nanoseconds_to_seconds(time)
         (time / 1e9).to_i
-      end
-
-      def lrp_starting?(lrp)
-        lrp.state == ::Diego::ActualLRPState::CLAIMED || (lrp.state == ::Diego::ActualLRPState::UNCLAIMED && lrp.placement_error.blank?)
-      end
-
-      def convert_actual_lrp_state(state)
-        case state
-        when ::Diego::ActualLRPState::RUNNING
-          'RUNNING'
-        when ::Diego::ActualLRPState::CLAIMED
-          'STARTING'
-        when ::Diego::ActualLRPState::UNCLAIMED
-          'DOWN'
-        when ::Diego::ActualLRPState::CRASHED
-          'CRASHED'
-        end
       end
 
       def fill_unreported_instances_with_down_instances(reported_instances, process)
@@ -203,6 +187,23 @@ module VCAP::CloudController
         end
 
         0
+      end
+    end
+
+    class LrpStateTranslator
+      def self.translate_lrp_state(lrp)
+        case lrp.state
+        when ::Diego::ActualLRPState::RUNNING
+          VCAP::CloudController::Diego::LRP_RUNNING
+        when ::Diego::ActualLRPState::CLAIMED
+          VCAP::CloudController::Diego::LRP_STARTING
+        when ::Diego::ActualLRPState::UNCLAIMED
+          lrp.placement_error.present? ? VCAP::CloudController::Diego::LRP_DOWN : VCAP::CloudController::Diego::LRP_STARTING
+        when ::Diego::ActualLRPState::CRASHED
+          VCAP::CloudController::Diego::LRP_CRASHED
+        else
+          VCAP::CloudController::Diego::LRP_UNKNOWN
+        end
       end
     end
   end

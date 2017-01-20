@@ -28,5 +28,11 @@ module VCAP::CloudController
     SSH_ROUTES_KEY = 'diego-ssh'.freeze
 
     BULKER_TASK_FAILURE = 'Unable to determine completion status'.freeze
+
+    LRP_STARTING = 'STARTING'.freeze
+    LRP_RUNNING  = 'RUNNING'.freeze
+    LRP_CRASHED  = 'CRASHED'.freeze
+    LRP_DOWN     = 'DOWN'.freeze
+    LRP_UNKNOWN  = 'UNKNOWN'.freeze
   end
 end
