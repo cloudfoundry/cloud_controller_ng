@@ -8,7 +8,8 @@ module VCAP::CloudController
         :username_and_roles_populating_collection_renderer,
         :uaa_client,
         :services_event_repository,
-        :user_event_repository
+        :user_event_repository,
+        :organization_event_repository
       ]
     end
 
@@ -18,6 +19,7 @@ module VCAP::CloudController
       @uaa_client = dependencies.fetch(:uaa_client)
       @services_event_repository = dependencies.fetch(:services_event_repository)
       @user_event_repository = dependencies.fetch(:user_event_repository)
+      @organization_event_repository = dependencies.fetch(:organization_event_repository)
     end
 
     define_attributes do
@@ -229,7 +231,11 @@ module VCAP::CloudController
 
       delete_action = OrganizationDelete.new(SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository))
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, guid, delete_action)
-      enqueue_deletion_job(deletion_job)
+      response = enqueue_deletion_job(deletion_job)
+
+      @organization_event_repository.record_organization_delete_request(org, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+
+      response
     end
 
     def remove_related(guid, name, other_guid, find_model=model)
@@ -285,9 +291,15 @@ module VCAP::CloudController
     end
 
     def after_create(organization)
+      @organization_event_repository.record_organization_create(organization, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
       return if SecurityContext.admin?
       organization.add_user(user)
       organization.add_manager(user)
+    end
+
+    def after_update(organization)
+      @organization_event_repository.record_organization_update(organization, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+      super(organization)
     end
   end
 end
