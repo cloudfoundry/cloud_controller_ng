@@ -7,17 +7,12 @@ module VCAP::CloudController
     # Endpoint does its own (non-standard) auth
     allow_unauthenticated_access
 
-    def initialize(*)
-      super
+    post '/internal/apps/:process_guid/crashed', :crashed
+    def crashed(process_guid)
       auth = Rack::Auth::Basic::Request.new(env)
       unless auth.provided? && auth.basic? && auth.credentials == InternalApi.credentials
         raise CloudController::Errors::NotAuthenticated
       end
-    end
-
-    post '/internal/apps/:process_guid/crashed', :crashed
-
-    def crashed(process_guid)
       crash_payload = crashed_request
 
       app_guid = Diego::ProcessGuid.app_guid(process_guid)
