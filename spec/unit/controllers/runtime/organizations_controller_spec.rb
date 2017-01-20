@@ -292,6 +292,19 @@ module VCAP::CloudController
             org = Organization.find(name: 'my-org-name')
             expect(org.default_isolation_segment_model).to be_nil
           end
+
+          it 'creates an audit event of type audit.organization.create' do
+            event = Event.find(type: 'audit.organization.create')
+            expect(event).to be_nil
+
+            post '/v2/organizations', MultiJson.dump({ name: 'my-org-name' })
+            org = Organization.find(name: 'my-org-name')
+
+            event = Event.find(type: 'audit.organization.create', actee: org.guid)
+            expect(event).not_to be_nil
+            expect(event.actee).to eq(org.guid)
+            expect(event.actor_name).to eq(SecurityContext.current_user_email)
+          end
         end
       end
 
@@ -303,9 +316,11 @@ module VCAP::CloudController
         context 'as a non admin' do
           let(:user) { User.make }
 
-          it 'adds creator as an org manager' do
+          before do
             set_current_user(user)
+          end
 
+          it 'adds creator as an org manager' do
             post '/v2/organizations', MultiJson.dump({ name: 'my-org-name' })
 
             expect(last_response.status).to eq(201)
@@ -313,7 +328,42 @@ module VCAP::CloudController
             expect(org.managers).to eq([user])
             expect(org.users).to eq([user])
           end
+
+          it 'creates an audit event of type audit.organization.create' do
+            event = Event.find(type: 'audit.organization.create')
+            expect(event).to be_nil
+
+            post '/v2/organizations', MultiJson.dump({ name: 'my-org-name' })
+            org = Organization.find(name: 'my-org-name')
+
+            event = Event.find(type: 'audit.organization.create', actee: org.guid)
+            expect(event).not_to be_nil
+            expect(event.actee).to eq(org.guid)
+            expect(event.actor_name).to eq(SecurityContext.current_user_email)
+          end
         end
+      end
+    end
+
+    describe 'PUT /v2/organizations/:guid' do
+      let(:org) { Organization.make }
+
+      before do
+        set_current_user_as_admin
+      end
+
+      it 'creates an audit event of type audit.organization.update' do
+        event = Event.find(type: 'audit.organization.update')
+        expect(event).to be_nil
+
+        put "/v2/organizations/#{org.guid}", MultiJson.dump({ name: 'another-name' })
+
+        expect(last_response.status).to eq(201)
+
+        event = Event.find(type: 'audit.organization.update', actee: org.guid)
+        expect(event).not_to be_nil
+        expect(event.actee).to eq(org.guid)
+        expect(event.actor_name).to eq(SecurityContext.current_user_email)
       end
     end
 
@@ -819,6 +869,18 @@ module VCAP::CloudController
         delete "/v2/organizations/#{org.guid}"
         expect(last_response).to have_status_code 204
         expect { org.refresh }.to raise_error Sequel::Error, 'Record not found'
+      end
+
+      it 'creates an event of type audit.organization.delete-request' do
+        event = Event.find(type: 'audit.organization.delete-request', actee: org.guid)
+        expect(event).to be_nil
+
+        delete "/v2/organizations/#{org.guid}"
+
+        event = Event.find(type: 'audit.organization.delete-request', actee: org.guid)
+        expect(event).not_to be_nil
+        expect(event.actee).to eq(org.guid)
+        expect(event.actor_name).to eq(SecurityContext.current_user_email)
       end
 
       context 'with recursive=false' do
