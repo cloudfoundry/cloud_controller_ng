@@ -81,7 +81,7 @@ http {
       proxy_pass http://cloud_controller;
     }
 
-    location ~ /internal/v4/tasks/.*/completed {
+    location ~ /internal/v4 {
       proxy_pass http://cloud_controller;
     }
   }
@@ -104,7 +104,7 @@ http {
       return 403 'HTTPS is required';
     }
 
-    location /internal/v4/tasks/*/completed {
+    location /internal/v4 {
       return 403 'HTTPS is required';
     }
 
