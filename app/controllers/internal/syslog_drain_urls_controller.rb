@@ -3,7 +3,7 @@ module VCAP::CloudController
     # Endpoint uses mutual tls for auth, handled by nginx
     allow_unauthenticated_access
 
-    get '/internal/v1/syslog_drain_urls', :list
+    get '/internal/v4/syslog_drain_urls', :list
     def list
       guid_to_drain_maps = AppModel.
                            join(ServiceBinding, app_guid: :guid).
