@@ -4026,43 +4026,23 @@ In the case where the specified isolation segment is the system-wide shared segm
   </li>
 </ul>
 
-          <h3 id="revoke-entitlement-to-isolation-segment-for-one-or-more-organizations">Revoke entitlement to isolation segment for one or more organizations</h3>
+          <h3 id="revoke-entitlement-to-isolation-segment-for-an-organization">Revoke entitlement to isolation segment for an organization</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
-<pre class="highlight http"><code><span class="nf">DELETE</span> <span class="nn">/v3/isolation_segments/:guid/relationships/organizations</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<pre class="highlight http"><code><span class="nf">DELETE</span> <span class="nn">/v3/isolation_segments/:guid/relationships/organizations/:org_guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]/relationships/organizations"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]/relationships/organizations/[org_guid]"</span> <span class="se">\</span>
   -X DELETE <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -d <span class="s1">'{
-    "data": [
-      { "guid":"org-guid-1" },
-      { "guid":"org-guid-2" }
-    ]
-  }'</span> 
+  -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
 </code></pre>
 
-<p>This endpoint revokes the entitlements for the specified organizations to the isolation segment.  Only Admins can revoke isolation segment entitlements.  If the isolation segment is assigned to a space within an organization, the entitlement cannot be revoked.  If the isolation segment is the organization&rsquo;s default, and the organization has more than one isolation segment, the entitlement cannot be revoked.</p>
-
-<h4 id="body-parameters">Body Parameters</h4>
-
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      data
-
-      <span class="method-list-item-type"/>
-    </h4>
-
-    <p class="method-list-item-description">Array of organizations, each specified by its guid, for which entitlement will be revoked.</p>
-  </li>
-</ul>
+<p>This endpoint revokes the entitlement for the specified organization to the isolation segment.  Only Admins can revoke isolation segment entitlements.  If the isolation segment is assigned to a space within an organization, the entitlement cannot be revoked.  If the isolation segment is the organization&rsquo;s default, and the organization has more than one isolation segment, the entitlement cannot be revoked.</p>
 
           <h3 id="list-organizations-for-an-isolation-segment">List organizations for an isolation segment</h3>
 <pre class="highlight plaintext"><code>Definition
