@@ -883,6 +883,20 @@ RSpec.describe DropletsController, type: :controller do
         end
       end
 
+      context 'when the user is a global auditor' do
+        before do
+          set_current_user_as_global_auditor(user: user)
+        end
+
+        it 'returns all droplets' do
+          get :index
+
+          expect(response.status).to eq(200)
+          response_guids = parsed_body['resources'].map { |r| r['guid'] }
+          expect(response_guids).to match_array([user_droplet_1, user_droplet_2, admin_droplet].map(&:guid))
+        end
+      end
+
       context 'when the user has read access, but not write access to the space' do
         before do
           allow_user_read_access(user, space: space)

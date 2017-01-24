@@ -28,12 +28,12 @@ class VCAP::CloudController::Permissions
   end
 
   def can_read_from_org?(org_guid)
-    roles.admin? || roles.admin_read_only? ||
+    roles.admin? || roles.admin_read_only? || roles.global_auditor? ||
     membership.has_any_roles?(ROLES_FOR_ORG_READING, nil, org_guid)
   end
 
   def can_read_from_space?(space_guid, org_guid)
-    roles.admin? || roles.admin_read_only? ||
+    roles.admin? || roles.admin_read_only? || roles.global_auditor? ||
       membership.has_any_roles?(ROLES_FOR_READING, space_guid, org_guid)
   end
 

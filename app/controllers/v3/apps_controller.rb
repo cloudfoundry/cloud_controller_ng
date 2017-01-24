@@ -23,7 +23,7 @@ class AppsV3Controller < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
     invalid_param!(message.pagination_options.errors.full_messages) unless message.pagination_options.valid?
 
-    dataset = if roles.admin? || roles.admin_read_only?
+    dataset = if roles.admin? || roles.admin_read_only? || roles.global_auditor?
                 AppListFetcher.new.fetch_all(message)
               else
                 AppListFetcher.new.fetch(message, readable_space_guids)

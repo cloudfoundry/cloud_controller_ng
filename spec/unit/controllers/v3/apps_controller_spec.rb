@@ -73,6 +73,30 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
     end
 
+    context 'global_auditor' do
+      let!(:app_model_1) { VCAP::CloudController::AppModel.make }
+      let!(:app_model_2) { VCAP::CloudController::AppModel.make }
+      let!(:app_model_3) { VCAP::CloudController::AppModel.make }
+
+      before do
+        allow(controller).to receive(:readable_space_guids).and_return([])
+        disallow_user_read_access(user, space: space_1)
+        set_current_user_as_global_auditor
+
+        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_3, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+      end
+
+      it 'fetches all the apps' do
+        get :index
+
+        expect(response.status).to eq(200)
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response_guids).to match_array([app_model_1, app_model_2, app_model_3].map(&:guid))
+      end
+    end
+
     context 'when the user does not have read scope' do
       before do
         set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])

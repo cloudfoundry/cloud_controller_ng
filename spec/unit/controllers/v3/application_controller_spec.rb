@@ -96,6 +96,22 @@ RSpec.describe ApplicationController, type: :controller do
       end
     end
 
+    context 'cloud_controller.global_auditor' do
+      before do
+        set_current_user_as_global_auditor
+      end
+
+      it 'grants reading access' do
+        get :index
+        expect(response.status).to eq(200)
+      end
+
+      it 'should show a specific item' do
+        get :show, id: 1
+        expect(response.status).to eq(204)
+      end
+    end
+
     it 'admin can read all' do
       set_current_user_as_admin
 
