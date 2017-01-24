@@ -29,8 +29,14 @@ newrelic_enabled: <%= !!properties.cc.newrelic.license_key %>
 development_mode: <%= p("cc.development_mode") %>
 
 message_bus_servers:
-<% p("nats.machines").each do |address| %>
-  - nats://<%= p("nats.user") %>:<%= p("nats.password") %>@<%= address %>:<%= p("nats.port") %>
+<% if_p("nats.machines") do %>
+  <% p("nats.machines").each do |address| %>
+    - nats://<%= p("nats.user") %>:<%= p("nats.password") %>@<%= address %>:<%= p("nats.port") %>
+  <% end %>
+<% end.else do %>
+  <% link("nats").instances.each do |instance| %>
+    - nats://<%= link("nats").p("nats.user") %>:<%= link("nats").p("nats.password") %>@<%= instance.address %>:<%= link("nats").p("nats.port") %>
+  <% end %>
 <% end %>
 
 external_protocol: <%= p("cc.external_protocol") %>
