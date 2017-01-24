@@ -46,6 +46,13 @@ packages:
   - libmariadb
   - ruby-2.3
 
+provides:
+- name: cloud_controller
+  type: cloud_controller
+  properties:
+  - system_domain
+  - app_domains
+
 properties:
   ssl.skip_cert_verify:
     description: "specifies that the job is allowed to skip ssl cert verification"
