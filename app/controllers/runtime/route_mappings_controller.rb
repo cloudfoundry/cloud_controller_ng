@@ -13,8 +13,9 @@ module VCAP::CloudController
     query_parameters :app_guid, :route_guid
 
     def read(guid)
-      obj = find_guid(guid)
-      raise CloudController::Errors::ApiError.new_from_details('RouteMappingNotFound', guid) unless obj.process_type == 'web'
+      obj = RouteMappingModel.where(guid: guid).eager(:route, :process, app: :space).all.first
+      raise CloudController::Errors::ApiError.new_from_details('RouteMappingNotFound', guid) unless obj && obj.process_type == 'web'
+
       validate_access(:read, obj)
       object_renderer.render_json(self.class, obj, @opts)
     end
