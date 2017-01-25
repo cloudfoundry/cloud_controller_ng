@@ -599,13 +599,10 @@ properties:
 
   cc.mutual_tls.ca_cert:
     description: "PEM-encoded CA certificate for secure, mutually authenticated TLS communication"
-    default: "" # temporary default, remove with temporary_local_staging
   cc.mutual_tls.public_cert:
     description: "PEM-encoded certificate for secure, mutually authenticated TLS communication"
-    default: "" # temporary default, remove with temporary_local_staging
   cc.mutual_tls.private_key:
     description: "PEM-encoded key for secure, mutually authenticated TLS communication"
-    default: "" # temporary default, remove with temporary_local_staging
 
   cc.diego.nsync_url:
     default: http://nsync.service.cf.internal:8787
