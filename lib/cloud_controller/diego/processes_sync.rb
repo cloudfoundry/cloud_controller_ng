@@ -26,11 +26,13 @@ module VCAP::CloudController
             @workpool.submit(process) do |p|
               recipe_builder = AppRecipeBuilder.new(config: config, process: p)
               bbs_apps_client.desire_app(recipe_builder.build_app_lrp)
+              logger.info('desire-lrp', process_guid: p.guid)
             end
           elsif process.updated_at.to_f.to_s != diego_lrp.annotation
             @workpool.submit(process, diego_lrp) do |p, l|
               recipe_builder = AppRecipeBuilder.new(config: config, process: p)
               bbs_apps_client.update_app(process_guid, recipe_builder.build_app_lrp_update(l))
+              logger.info('update-lrp', process_guid: p.guid)
             end
           end
         end
@@ -38,6 +40,7 @@ module VCAP::CloudController
         diego_lrps.keys.each do |process_guid_to_delete|
           @workpool.submit(process_guid_to_delete) do |guid|
             bbs_apps_client.stop_app(guid)
+            logger.info('delete-lrp', process_guid: p.guid)
           end
         end
 
