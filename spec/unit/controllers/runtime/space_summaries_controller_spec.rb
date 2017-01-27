@@ -102,6 +102,21 @@ module VCAP::CloudController
           expect(parsed_response['description']).to eq('Instances information unavailable: something went wrong.')
         end
       end
+
+      context 'when an app is deleted concurrently' do
+        let(:deleted_app) { AppFactory.make(space: space) }
+        before do
+          deleted_app.app = nil
+          allow_any_instance_of(Space).to receive(:apps).and_return([app_obj, deleted_app])
+        end
+
+        it 'ignores the process with the deleted app' do
+          get "/v2/spaces/#{space.guid}/summary"
+          expect(last_response.status).to eq(200)
+          expect(space.apps).to match([app_obj, deleted_app])
+          expect(last_response.body).not_to include(deleted_app.guid)
+        end
+      end
     end
   end
 end
