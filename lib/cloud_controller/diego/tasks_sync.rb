@@ -14,6 +14,7 @@ module VCAP::CloudController
       end
 
       def sync
+        logger.info('run-task-sync')
         diego_tasks = bbs_task_client.fetch_tasks.index_by(&:task_guid)
 
         batched_tasks do |tasks|

@@ -16,6 +16,7 @@ module VCAP::CloudController
       end
 
       def sync
+        logger.info('run-process-sync')
         diego_lrps = bbs_apps_client.fetch_scheduling_infos.index_by { |d| d.desired_lrp_key.process_guid }
 
         for_processes do |process|
