@@ -21,11 +21,6 @@ packages:
   - libmariadb
   - ruby-2.3
 
-consumes:
-- name: nats
-  type: nats
-  optional: true
-
 properties:
   ssl.skip_cert_verify:
     description: "specifies that the job is allowed to skip ssl cert verification"
@@ -46,13 +41,13 @@ properties:
         router_group_name: default-tcp
 
   nats.user:
-    description: "Username for cc client to connect to NATS. Deprecated in favor of nats link."
+    description: "Username for cc client to connect to NATS"
   nats.password:
-    description: "Password for cc client to connect to NATS. Deprecated in favor of nats link."
+    description: "Password for cc client to connect to NATS"
   nats.port:
-    description: "IP port of Cloud Foundry NATS server. Deprecated in favor of nats link."
+    description: "IP port of Cloud Foundry NATS server"
   nats.machines:
-    description: "IP of each NATS cluster member. Deprecated in favor of nats link, which will be used if this is not provided."
+    description: "IP of each NATS cluster member."
 
   request_timeout_in_seconds:
     description: "Timeout for requests in seconds."
