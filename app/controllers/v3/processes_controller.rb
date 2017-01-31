@@ -24,7 +24,7 @@ class ProcessesController < ApplicationController
       app, dataset = ProcessListFetcher.new(message).fetch_for_app
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
-      dataset = if roles.admin? || roles.admin_read_only?
+      dataset = if can_read_globally?
                   ProcessListFetcher.new(message).fetch_all
                 else
                   ProcessListFetcher.new(message).fetch_for_spaces(space_guids: readable_space_guids)

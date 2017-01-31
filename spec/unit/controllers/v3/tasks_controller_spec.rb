@@ -318,8 +318,7 @@ RSpec.describe TasksController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
-      stub_readable_space_guids_for(user, space)
+      allow_user_read_access_for(user, spaces: [space])
     end
 
     it 'returns tasks the user has read access' do
@@ -427,27 +426,9 @@ RSpec.describe TasksController, type: :controller do
       end
     end
 
-    context 'admin' do
+    context 'when the user has global read access' do
       before do
-        set_current_user_as_admin
-      end
-
-      it 'returns a 200 and all tasks' do
-        task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
-        task_2 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
-        task_3 = VCAP::CloudController::TaskModel.make
-
-        get :index
-
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
-        expect(response.status).to eq(200)
-        expect(response_guids).to match_array([task_1, task_2, task_3].map(&:guid))
-      end
-    end
-
-    context 'admin read only' do
-      before do
-        set_current_user_as_admin_read_only
+        allow_user_global_read_access(user)
       end
 
       it 'returns a 200 and all tasks' do

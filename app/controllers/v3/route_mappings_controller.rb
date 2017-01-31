@@ -21,7 +21,7 @@ class RouteMappingsController < ApplicationController
       app, dataset = fetcher.fetch_for_app(app_guid: params[:app_guid])
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
-      dataset = if roles.admin? || roles.admin_read_only?
+      dataset = if can_read_globally?
                   fetcher.fetch_all
                 else
                   fetcher.fetch_for_spaces(space_guids: readable_space_guids)

@@ -79,6 +79,28 @@ module UserHelpers
     allow(permissions_double(user)).to receive(:can_write_to_space?).with(space.guid).and_return(true)
   end
 
+  def allow_user_read_access_for(user, orgs: [], spaces: [])
+    allow(permissions_double(user)).to receive(:can_read_from_org?).and_return(false)
+    orgs.each do |org|
+      allow(permissions_double(user)).to receive(:can_read_from_org?).with(org.guid).and_return(true)
+    end
+    stub_readable_org_guids_for(user, orgs)
+
+    allow(permissions_double(user)).to receive(:can_read_from_space?).and_return(false)
+    spaces.each do |space|
+      allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(true)
+    end
+    stub_readable_space_guids_for(user, spaces)
+  end
+
+  def allow_user_global_read_access(user)
+    allow(permissions_double(user)).to receive(:can_read_globally?).and_return(true)
+  end
+
+  def disallow_user_global_read_access(user)
+    allow(permissions_double(user)).to receive(:can_read_globally?).and_return(false)
+  end
+
   def disallow_user_read_access(user, space:)
     allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(false)
   end
@@ -91,12 +113,12 @@ module UserHelpers
     allow(permissions_double(user)).to receive(:can_write_to_space?).with(space.guid).and_return(false)
   end
 
-  def stub_readable_space_guids_for(user, space)
-    allow(permissions_double(user)).to receive(:readable_space_guids).and_return([space.guid])
+  def stub_readable_space_guids_for(user, spaces)
+    allow(permissions_double(user)).to receive(:readable_space_guids).and_return(spaces.map(&:guid))
   end
 
-  def stub_readable_org_guids_for(user, org)
-    allow(permissions_double(user)).to receive(:readable_org_guids).and_return([org.guid])
+  def stub_readable_org_guids_for(user, orgs)
+    allow(permissions_double(user)).to receive(:readable_org_guids).and_return(orgs.map(&:guid))
   end
 
   def permissions_double(user)
@@ -104,6 +126,7 @@ module UserHelpers
     @permissions[user.guid] ||= begin
       instance_double(VCAP::CloudController::Permissions).tap do |permissions|
         allow(VCAP::CloudController::Permissions).to receive(:new).with(user).and_return(permissions)
+        allow(permissions).to receive(:can_read_globally?).and_return(false)
       end
     end
   end

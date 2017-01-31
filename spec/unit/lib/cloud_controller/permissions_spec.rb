@@ -120,6 +120,38 @@ module VCAP::CloudController
       end
     end
 
+    describe '#can_read_globally?' do
+      context 'user has no membership' do
+        context 'and user is an admin' do
+          it 'returns true' do
+            set_current_user(user, { admin: true })
+            expect(permissions.can_read_globally?).to be true
+          end
+        end
+
+        context 'and the user is a read only admin' do
+          it 'returns true' do
+            set_current_user(user, { admin_read_only: true })
+            expect(permissions.can_read_globally?).to be true
+          end
+        end
+
+        context 'and user is a global auditor' do
+          it 'returns true' do
+            set_current_user_as_global_auditor
+            expect(permissions.can_read_globally?).to be true
+          end
+        end
+
+        context 'and user is not an admin' do
+          it 'returns false' do
+            set_current_user(user)
+            expect(permissions.can_read_globally?).to be false
+          end
+        end
+      end
+    end
+
     describe '#can_see_secrets_in_space?' do
       context 'user has no membership' do
         context 'and user is an admin' do

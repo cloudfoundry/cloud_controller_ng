@@ -404,8 +404,7 @@ RSpec.describe PackagesController, type: :controller do
     let!(:admin_package) { VCAP::CloudController::PackageModel.make }
 
     before do
-      allow_user_read_access(user, space: space)
-      stub_readable_space_guids_for(user, space)
+      allow_user_read_access_for(user, spaces: [space])
     end
 
     it 'returns 200' do
@@ -467,24 +466,9 @@ RSpec.describe PackagesController, type: :controller do
       end
     end
 
-    context 'admin' do
+    context 'when the user has global read access' do
       before do
-        set_current_user_as_admin(user: user)
-      end
-
-      it 'lists all the packages' do
-        get :index
-
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
-        expect(response_guids).to match_array([user_package_1, user_package_2, admin_package].map(&:guid))
-      end
-    end
-
-    context 'read only admin' do
-      before do
-        disallow_user_read_access(user, space: space)
-        allow(controller).to receive(:readable_space_guids).and_return([])
-        set_current_user_as_admin_read_only(user: user)
+        allow_user_global_read_access(user)
       end
 
       it 'lists all the packages' do

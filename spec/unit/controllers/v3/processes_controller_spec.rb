@@ -8,8 +8,7 @@ RSpec.describe ProcessesController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      stub_readable_space_guids_for(user, space)
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
     end
 
     it 'returns 200 and lists the processes' do
@@ -101,20 +100,8 @@ RSpec.describe ProcessesController, type: :controller do
       let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app, type: 'peppa') }
       let!(:process3) { VCAP::CloudController::ProcessModel.make }
 
-      context 'admin' do
-        before { set_current_user_as_admin }
-
-        it 'returns 200 and lists all processes' do
-          get :index
-
-          response_guids = parsed_body['resources'].map { |r| r['guid'] }
-          expect(response.status).to eq(200)
-          expect(response_guids).to match_array([process1.guid, process2.guid, process3.guid])
-        end
-      end
-
-      context 'read only admin' do
-        before { set_current_user_as_admin_read_only }
+      context 'when the user has global read access' do
+        before { allow_user_global_read_access(user) }
 
         it 'returns 200 and lists all processes' do
           get :index

@@ -13,8 +13,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     before do
       set_current_user(user)
-      allow_user_read_access(user, space: space_1)
-      allow(controller).to receive(:readable_space_guids).and_return([space_1.guid])
+      allow_user_read_access_for(user, spaces: [space_1])
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
@@ -27,14 +26,13 @@ RSpec.describe AppsV3Controller, type: :controller do
       expect(response_guids).to match_array([app_model_1.guid])
     end
 
-    context 'admin' do
+    context 'when the user has global read access' do
       let!(:app_model_1) { VCAP::CloudController::AppModel.make }
       let!(:app_model_2) { VCAP::CloudController::AppModel.make }
       let!(:app_model_3) { VCAP::CloudController::AppModel.make }
 
       before do
-        set_current_user_as_admin
-        disallow_user_read_access(user, space: space_1)
+        allow_user_global_read_access(user)
         VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
         VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
         VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_3, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
@@ -45,54 +43,6 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         response_guids = parsed_body['resources'].map { |r| r['guid'] }
         expect(response.status).to eq(200)
-        expect(response_guids).to match_array([app_model_1, app_model_2, app_model_3].map(&:guid))
-      end
-    end
-
-    context 'read only admin' do
-      let!(:app_model_1) { VCAP::CloudController::AppModel.make }
-      let!(:app_model_2) { VCAP::CloudController::AppModel.make }
-      let!(:app_model_3) { VCAP::CloudController::AppModel.make }
-
-      before do
-        allow(controller).to receive(:readable_space_guids).and_return([])
-        disallow_user_read_access(user, space: space_1)
-        set_current_user_as_admin_read_only
-
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_3, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
-      end
-
-      it 'fetches all the apps' do
-        get :index
-
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
-        expect(response.status).to eq(200)
-        expect(response_guids).to match_array([app_model_1, app_model_2, app_model_3].map(&:guid))
-      end
-    end
-
-    context 'global_auditor' do
-      let!(:app_model_1) { VCAP::CloudController::AppModel.make }
-      let!(:app_model_2) { VCAP::CloudController::AppModel.make }
-      let!(:app_model_3) { VCAP::CloudController::AppModel.make }
-
-      before do
-        allow(controller).to receive(:readable_space_guids).and_return([])
-        disallow_user_read_access(user, space: space_1)
-        set_current_user_as_global_auditor
-
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_3, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
-      end
-
-      it 'fetches all the apps' do
-        get :index
-
-        expect(response.status).to eq(200)
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
         expect(response_guids).to match_array([app_model_1, app_model_2, app_model_3].map(&:guid))
       end
     end

@@ -196,8 +196,7 @@ RSpec.describe RouteMappingsController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
-      stub_readable_space_guids_for(user, space)
+      allow_user_read_access_for(user, spaces: [space])
     end
 
     it 'returns route mappings the user has roles to see' do
@@ -289,27 +288,9 @@ RSpec.describe RouteMappingsController, type: :controller do
     end
 
     context 'permissions' do
-      context 'admin' do
+      context 'when the user has global read access' do
         before do
-          set_current_user_as_admin
-        end
-
-        it 'lists all route_mappings' do
-          route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app_guid: app.guid)
-          route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app_guid: app.guid)
-          route_mapping_3 = VCAP::CloudController::RouteMappingModel.make
-
-          get :index
-
-          response_guids = parsed_body['resources'].map { |r| r['guid'] }
-          expect(response.status).to eq(200)
-          expect(response_guids).to match_array([route_mapping_1.guid, route_mapping_2.guid, route_mapping_3.guid])
-        end
-      end
-
-      context 'admin read only' do
-        before do
-          set_current_user_as_admin_read_only
+          allow_user_global_read_access(user)
         end
 
         it 'lists all route_mappings' do

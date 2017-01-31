@@ -48,7 +48,7 @@ class IsolationSegmentsController < ApplicationController
 
     fetcher = IsolationSegmentListFetcher.new(message: message)
 
-    dataset = if roles.admin? || roles.admin_read_only?
+    dataset = if can_read_globally?
                 fetcher.fetch_all
               else
                 fetcher.fetch_for_organizations(org_guids: readable_org_guids)
@@ -88,7 +88,7 @@ class IsolationSegmentsController < ApplicationController
     resource_not_found!(:isolation_segment) unless can_list_organizations?(isolation_segment_model)
 
     fetcher = IsolationSegmentOrganizationsFetcher.new(isolation_segment_model)
-    organizations = if roles.admin? || roles.admin_read_only?
+    organizations = if can_read_globally?
                       fetcher.fetch_all
                     else
                       fetcher.fetch_for_organizations(org_guids: readable_org_guids)
@@ -102,7 +102,7 @@ class IsolationSegmentsController < ApplicationController
     resource_not_found!(:isolation_segment) unless can_read_isolation_segment?(isolation_segment_model)
 
     fetcher = IsolationSegmentSpacesFetcher.new(isolation_segment_model)
-    spaces = if roles.admin? || roles.admin_read_only?
+    spaces = if can_read_globally?
                fetcher.fetch_all
              else
                fetcher.fetch_for_spaces(space_guids: readable_space_guids)
@@ -160,13 +160,13 @@ class IsolationSegmentsController < ApplicationController
   end
 
   def can_read_isolation_segment?(isolation_segment)
-    roles.admin? ||
+    can_read_globally? ||
       isolation_segment.spaces.any? { |space| can_read?(space.guid, space.organization.guid) } ||
       isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
   end
 
   def can_list_organizations?(isolation_segment)
-    roles.admin? || isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
+    can_read_globally? || isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
   end
 
   def find_isolation_segment(guid)

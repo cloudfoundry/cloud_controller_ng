@@ -39,6 +39,11 @@ shared_examples :admin_read_only_access do
   it_behaves_like :read_only_access
 end
 
+shared_examples :global_auditor_access do
+  include_context :global_auditor_setup
+  it_behaves_like :read_only_access
+end
+
 shared_context :admin_setup do
   before do
     token = { 'scope' => [::VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] }

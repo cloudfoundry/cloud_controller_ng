@@ -27,6 +27,11 @@ RSpec.describe ApplicationController, type: :controller do
       head 200
     end
 
+    def read_globally_access
+      can_read_globally?
+      head 200
+    end
+
     def write_access
       can_write?(params[:space_guid])
       head 200
@@ -287,6 +292,21 @@ RSpec.describe ApplicationController, type: :controller do
       get :secret_access, space_guid: space.guid
 
       expect(permissions).to have_received(:can_see_secrets_in_space?).with(space.guid, space.organization_guid)
+    end
+  end
+
+  describe '#can_read_globally?' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'asks for #can_read_globally? on behalf of the current user' do
+      routes.draw { get 'read_globally_access' => 'anonymous#read_globally_access' }
+
+      permissions = instance_double(VCAP::CloudController::Permissions, can_read_globally?: true)
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      get :read_globally_access
+
+      expect(permissions).to have_received(:can_read_globally?)
     end
   end
 
