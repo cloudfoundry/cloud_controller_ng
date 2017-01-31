@@ -5,7 +5,8 @@ module VCAP::CloudController
   RSpec.describe PackageCreate do
     let(:app) { AppModel.make }
     let(:type) { 'docker' }
-    let(:message) { PackageCreateMessage.new({ type: type, app_guid: app.guid }) }
+    let(:relationships) { { app: { guid: app.guid } } }
+    let(:message) { PackageCreateMessage.new({ type: type, relationships: relationships }) }
 
     describe '#create' do
       let(:user_guid) { 'gooid' }
@@ -26,7 +27,7 @@ module VCAP::CloudController
           user_guid,
           user_email,
           {
-            'app_guid' => app.guid,
+            'relationships' => relationships,
             'type' => type,
           }
         )
@@ -38,7 +39,7 @@ module VCAP::CloudController
         let(:message) do
           data = {
             type: 'docker',
-            app_guid: app.guid,
+            relationships: relationships,
             data: {
               image: 'registry/image:latest'
             }

@@ -96,18 +96,10 @@ class PackagesController < ApplicationController
   end
 
   def create
-    if params[:source_package_guid]
-      create_copy
-    else
-      create_new
-    end
-  end
-
-  def create_new
-    message = PackageCreateMessage.create_from_http_request(params[:app_guid], params[:body])
+    message = PackageCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    app = AppModel.where(guid: params[:app_guid]).eager(:space, :organization).all.first
+    app = AppModel.where(guid: message.app_guid).eager(:space, :organization).all.first
     app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     unauthorized! unless can_write?(app.space.guid)
 

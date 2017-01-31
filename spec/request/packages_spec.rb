@@ -11,7 +11,7 @@ RSpec.describe 'Packages' do
   let(:host) { TestConfig.config[:external_domain] }
   let(:link_prefix) { "#{scheme}://#{host}" }
 
-  describe 'POST /v3/apps/:guid/packages' do
+  describe 'POST /v3/packages' do
     let(:guid) { app_model.guid }
 
     before do
@@ -20,16 +20,13 @@ RSpec.describe 'Packages' do
     end
 
     let(:type) { 'docker' }
-    let(:data) do
-      {
-        image: 'registry/image:latest'
-      }
-    end
+    let(:data) { { image: 'registry/image:latest' } }
+    let(:relationships) { { app: { guid: app_model.guid } } }
 
     describe 'creation' do
       it 'creates a package' do
         expect {
-          post "/v3/apps/#{guid}/packages", { type: type, data: data }, user_header
+          post '/v3/packages', { type: type, data: data, relationships: relationships }, user_header
         }.to change { VCAP::CloudController::PackageModel.count }.by(1)
 
         package = VCAP::CloudController::PackageModel.last
@@ -54,7 +51,8 @@ RSpec.describe 'Packages' do
           package_guid: package.guid,
           request: {
             type: type,
-            data: data
+            data: data,
+            relationships: relationships
           }
         }.to_json
 

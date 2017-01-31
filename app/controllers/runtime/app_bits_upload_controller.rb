@@ -28,7 +28,8 @@ module VCAP::CloudController
 
       raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'cannot upload bits to a docker app') if app.docker?
 
-      create_message = PackageCreateMessage.new({ type: 'bits', app_guid: app.app.guid })
+      relationships = { app: { guid: app.app.guid } }
+      create_message = PackageCreateMessage.new({ type: 'bits', relationships: relationships })
       package = PackageCreate.create_without_event(create_message)
 
       unless params['resources']
