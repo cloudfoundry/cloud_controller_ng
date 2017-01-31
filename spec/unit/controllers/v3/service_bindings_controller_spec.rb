@@ -34,7 +34,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       stub_bind(service_instance, opts)
       service_instance.service.requires = ['syslog_drain']
@@ -56,7 +56,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     context 'permissions' do
       context 'when the user has read, but not write permissions to the space' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -310,7 +310,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_secret_access(user, space: space)
     end
 
@@ -327,7 +327,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     context 'permissions' do
       context 'when the user has read-only permissions' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           allow_user_secret_access(user, space: space)
           disallow_user_write_access(user, space: space)
         end
@@ -479,7 +479,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       stub_unbind(service_binding)
     end
@@ -501,7 +501,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
 
       context 'when the user has read, but not write persimmons on the space' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 

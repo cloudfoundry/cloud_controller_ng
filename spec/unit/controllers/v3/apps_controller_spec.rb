@@ -100,7 +100,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     before do
       set_current_user(user)
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_secret_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
@@ -164,7 +164,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
     end
 
@@ -405,7 +405,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the user is a space manager/org manager and thus can see the space but not create apps' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -430,7 +430,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     before do
       user = VCAP::CloudController::User.make
       set_current_user(user)
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
     end
 
@@ -758,7 +758,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the user can read but cannot write to the app' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -779,7 +779,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
@@ -820,7 +820,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the user can read but cannot write to the app' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -865,7 +865,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
@@ -1006,7 +1006,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     before do
       set_current_user(user)
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
@@ -1050,7 +1050,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the user can read but cannot write to the app' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -1095,7 +1095,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     before do
       set_current_user(user)
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
@@ -1239,7 +1239,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     before do
       app_model.add_droplet(droplet)
       set_current_user(user)
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
@@ -1344,7 +1344,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the user can read but not update the application' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -1369,7 +1369,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     before do
       app_model.add_droplet(droplet)
       set_current_user(user)
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
     end
 
     it 'returns a 200 OK and the droplet' do
@@ -1434,7 +1434,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         let(:org) { space.organization }
 
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 

@@ -22,7 +22,7 @@ RSpec.describe RouteMappingsController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
     end
 
@@ -125,7 +125,7 @@ RSpec.describe RouteMappingsController, type: :controller do
 
       context 'when the user can read but cannot write to the space' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -144,7 +144,7 @@ RSpec.describe RouteMappingsController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
     end
 
     it 'successfully get a route mapping' do
@@ -276,7 +276,7 @@ RSpec.describe RouteMappingsController, type: :controller do
 
       context 'when the user can read, but not write to the space' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -325,7 +325,7 @@ RSpec.describe RouteMappingsController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
     end
 
@@ -351,7 +351,7 @@ RSpec.describe RouteMappingsController, type: :controller do
     context 'permissions' do
       context 'when the user can read, but not write to the space' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 

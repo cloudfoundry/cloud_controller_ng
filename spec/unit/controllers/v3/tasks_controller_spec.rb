@@ -25,7 +25,7 @@ RSpec.describe TasksController, type: :controller do
     let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: tasks_enabled, error_message: nil)
 
@@ -103,7 +103,7 @@ RSpec.describe TasksController, type: :controller do
 
       context 'when the user does not have write permissions on the app space' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -251,7 +251,7 @@ RSpec.describe TasksController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_secret_access(user, space: space)
     end
 
@@ -293,7 +293,7 @@ RSpec.describe TasksController, type: :controller do
 
       context 'when the user has read, but not write permissions on the app space' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -475,7 +475,7 @@ RSpec.describe TasksController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       locator = CloudController::DependencyLocator.instance
       allow(locator).to receive(:nsync_client).and_return(client)
@@ -530,7 +530,7 @@ RSpec.describe TasksController, type: :controller do
 
       context 'when the user has read, but not write permissions on the app space' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 

@@ -529,7 +529,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
     let(:space) { VCAP::CloudController::Space.make }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
     end
 
     context 'when using query params' do

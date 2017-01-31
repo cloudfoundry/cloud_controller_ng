@@ -15,7 +15,7 @@ RSpec.describe PackagesController, type: :controller do
 
     before do
       @request.env.merge!(form_headers)
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
     end
 
@@ -146,7 +146,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the user can read but not write to the space' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -170,7 +170,7 @@ RSpec.describe PackagesController, type: :controller do
       blob = instance_double(CloudController::Blobstore::FogBlob, public_download_url: 'http://package.example.com')
       allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
       allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_secret_access(user, space: space)
     end
 
@@ -277,7 +277,7 @@ RSpec.describe PackagesController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
     end
 
     it 'returns a 200 OK and the package' do
@@ -331,7 +331,7 @@ RSpec.describe PackagesController, type: :controller do
     let(:space) { package.space }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
     end
 
@@ -381,7 +381,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the user can read but cannot write to the package' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -552,7 +552,7 @@ RSpec.describe PackagesController, type: :controller do
       let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
       before do
-        allow_user_read_access(user, space: space)
+        allow_user_read_access_for(user, spaces: [space])
         allow_user_write_access(user, space: space)
       end
 
@@ -679,9 +679,8 @@ RSpec.describe PackagesController, type: :controller do
       let(:destination_space) { target_app_model.space }
 
       before do
-        allow_user_read_access(user, space: source_space)
+        allow_user_read_access_for(user, spaces: [source_space, destination_space])
         allow_user_write_access(user, space: source_space)
-        allow_user_read_access(user, space: destination_space)
         allow_user_write_access(user, space: destination_space)
       end
 
@@ -727,7 +726,7 @@ RSpec.describe PackagesController, type: :controller do
 
         context 'when the user cannot modify the source target_app' do
           before do
-            allow_user_read_access(user, space: source_space)
+            allow_user_read_access_for(user, spaces: [source_space, destination_space])
             disallow_user_write_access(user, space: source_space)
           end
 
@@ -754,7 +753,7 @@ RSpec.describe PackagesController, type: :controller do
 
         context 'when the user cannot create the package' do
           before do
-            allow_user_read_access(user, space: destination_space)
+            allow_user_read_access_for(user, spaces: [destination_space])
             disallow_user_write_access(user, space: destination_space)
           end
 

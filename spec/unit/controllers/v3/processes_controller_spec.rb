@@ -154,7 +154,7 @@ RSpec.describe ProcessesController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_secret_access(user, space: space)
     end
 
@@ -264,7 +264,7 @@ RSpec.describe ProcessesController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
     end
 
@@ -339,7 +339,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'when the user can read but not write to the process due to membership' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -373,7 +373,7 @@ RSpec.describe ProcessesController, type: :controller do
     before do
       allow(index_stopper).to receive(:stop_index)
       allow(CloudController::DependencyLocator.instance).to receive(:index_stopper).and_return(index_stopper)
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
     end
 
@@ -471,7 +471,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'when the user can read but not write to the process due to membership' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -492,7 +492,7 @@ RSpec.describe ProcessesController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
     end
 
@@ -564,7 +564,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'when the user can read but not write to the process due to membership' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -653,7 +653,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'when the user can read but cannot write to the process' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -686,7 +686,7 @@ RSpec.describe ProcessesController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
       allow(instances_reporters).to receive(:stats_for_app).and_return(stats)
     end

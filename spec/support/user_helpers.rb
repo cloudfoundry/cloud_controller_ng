@@ -67,10 +67,6 @@ module UserHelpers
     nil
   end
 
-  def allow_user_read_access(user, space:)
-    allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(true)
-  end
-
   def allow_user_secret_access(user, space:)
     allow(permissions_double(user)).to receive(:can_see_secrets_in_space?).with(space.guid, space.organization_guid).and_return(true)
   end

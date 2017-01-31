@@ -17,7 +17,7 @@ RSpec.describe DropletsController, type: :controller do
     let(:space) { app_model.space }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
       allow(stagers).to receive(:stager_for_app).and_return(double(:stager, stage: nil))
@@ -404,7 +404,7 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the user can read but cannot write to the package due to roles' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -437,8 +437,7 @@ RSpec.describe DropletsController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: source_space)
-      allow_user_read_access(user, space: target_space)
+      allow_user_read_access_for(user, spaces: [source_space, target_space])
       allow_user_write_access(user, space: target_space)
     end
 
@@ -476,7 +475,7 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the user is a member of the space where source droplet exists' do
         before do
-          allow_user_read_access(user, space: source_space)
+          allow_user_read_access_for(user, spaces: [source_space])
         end
 
         context 'when the user does not have read access to the target space' do
@@ -494,7 +493,7 @@ RSpec.describe DropletsController, type: :controller do
 
         context 'when the user has read access, but not write access to the target space' do
           before do
-            allow_user_read_access(user, space: target_space)
+            allow_user_read_access_for(user, spaces: [source_space, target_space])
             disallow_user_write_access(user, space: target_space)
           end
 
@@ -548,7 +547,7 @@ RSpec.describe DropletsController, type: :controller do
     let(:space) { droplet.space }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_secret_access(user, space: space)
     end
 
@@ -608,7 +607,7 @@ RSpec.describe DropletsController, type: :controller do
     let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stop_stage: nil) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       CloudController::DependencyLocator.instance.register(:stagers, stagers)
     end
@@ -871,7 +870,7 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the user has read access, but not write access to the space' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
