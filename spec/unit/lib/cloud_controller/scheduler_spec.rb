@@ -39,7 +39,7 @@ module VCAP::CloudController
         schedule.start
 
         expect(clock).to have_received(:schedule_frequent_job).
-          with(:diego_sync, Jobs::Diego::Sync, priority: -10)
+          with(:diego_sync, Jobs::Diego::Sync, priority: -10, queue: 'sync-queue', allow_only_one_job_in_queue: true)
       end
 
       describe 'high availability' do

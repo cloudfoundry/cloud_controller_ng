@@ -82,6 +82,50 @@ module VCAP::CloudController
         expect(Jobs::Enqueuer).to have_received(:new).with(an_instance_of(some_class), anything)
       end
 
+      it 'enqueues into the correct queue bucket' do
+        clock.schedule_frequent_job(:some_name, some_class, queue: 'custom-queue')
+
+        expect(Jobs::Enqueuer).to have_received(:new).with(an_instance_of(some_class), { queue: 'custom-queue' })
+      end
+
+      context 'when "allow_only_one_job_in_queue" is true' do
+        context 'when there are no jobs in the specified queue running' do
+          it 'schedules the job' do
+            clock.schedule_frequent_job(:some_name, some_class, queue: 'custom-queue', allow_only_one_job_in_queue: true)
+
+            expect(Jobs::Enqueuer).to have_received(:new).with(an_instance_of(some_class), { queue: 'custom-queue' })
+          end
+        end
+
+        context 'when the only job in the specified queue was failed' do
+          before do
+            empty_job = double(perform: nil)
+            enqueued_job = Delayed::Job.enqueue(empty_job, queue: 'custom-queue', attempts: 1)
+            enqueued_job.update(failed_at: Time.now)
+          end
+
+          it 'schedules the job' do
+            clock.schedule_frequent_job(:some_name, some_class, queue: 'custom-queue', allow_only_one_job_in_queue: true)
+
+            expect(Jobs::Enqueuer).to have_received(:new).with(an_instance_of(some_class), { queue: 'custom-queue' })
+          end
+        end
+
+        context 'when the only job in the specified queue running' do
+          before do
+            empty_job = double(perform: nil)
+            enqueued_job = Delayed::Job.enqueue(empty_job, queue: 'custom-queue')
+            enqueued_job.update(locked_at: Time.now - 20.minutes)
+          end
+
+          it 'does not schedule another job' do
+            clock.schedule_frequent_job(:some_name, some_class, queue: 'custom-queue', allow_only_one_job_in_queue: true)
+
+            expect(Jobs::Enqueuer).not_to have_received(:new).with(an_instance_of(some_class), { queue: 'custom-queue' })
+          end
+        end
+      end
+
       it 'configures the job with expiration_in_seconds from the config' do
         allow(some_class).to receive(:new)
 
@@ -99,7 +143,7 @@ module VCAP::CloudController
         expect(logger).to have_received(:info).with(/Queueing/)
       end
 
-      context 'without setting an expriation' do
+      context 'without setting an expiration' do
         let(:config) { { some_name: { frequency_in_seconds: 507 } } }
         let(:some_class) { Class.new }
 
