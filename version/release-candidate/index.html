@@ -4210,15 +4210,20 @@ In the case where the specified isolation segment is the system-wide shared segm
           <h3 id="create-a-package">Create a package</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
-<pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/apps/:guid/packages</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<pre class="highlight http"><code><span class="nf">POST</span> <span class="nn">/v3/packages</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/packages"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "type": "docker",
+    "relationships": {
+      "app": {
+        "guid": [guid]
+      }
+    }
     "data": {
       "image": "registry/image:latest"
     }
@@ -4262,6 +4267,15 @@ In the case where the specified isolation segment is the system-wide shared segm
 <ul class="method-list-group">
   <li class="method-list-item">
     <h4 class="method-list-item-label">
+      relationships[&lsquo;app&rsquo;]['guid&rsquo;]
+
+      <span class="method-list-item-type method-list-item-type-required">required</span>
+    </h4>
+
+    <p class="method-list-item-description">Guid of the app to which you would like to associate the package.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
       type
 
       <span class="method-list-item-type method-list-item-type-required">required</span>
@@ -4280,7 +4294,7 @@ In the case where the specified isolation segment is the system-wide shared segm
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      data[&lsquo;image&rsquo;]
+      data['image&rsquo;]
 
       <span class="method-list-item-type">optional</span>
     </h4>
