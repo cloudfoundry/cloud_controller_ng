@@ -5,9 +5,10 @@ module VCAP::CloudController
   RSpec.describe DropletDelete do
     let(:user) { User.make }
     let(:user_email) { 'user@example.com' }
+    let(:user_audit_info) { UserAuditInfo.new(user_email: 'user@example.com', user_guid: user.guid) }
     let(:stagers) { instance_double(Stagers) }
 
-    subject(:droplet_delete) { DropletDelete.new(user, user_email, stagers) }
+    subject(:droplet_delete) { DropletDelete.new(user_audit_info, stagers) }
 
     describe '#delete' do
       let!(:droplet) { DropletModel.make(:staged) }
@@ -22,8 +23,7 @@ module VCAP::CloudController
       it 'creates an audit event' do
         expect(Repositories::DropletEventRepository).to receive(:record_delete).with(
           instance_of(DropletModel),
-          user,
-          user_email,
+          user_audit_info,
           droplet.app.name,
           droplet.app.space_guid,
           droplet.app.space.organization_guid

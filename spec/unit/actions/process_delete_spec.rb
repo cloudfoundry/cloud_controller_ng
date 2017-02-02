@@ -3,9 +3,8 @@ require 'actions/process_delete'
 
 module VCAP::CloudController
   RSpec.describe ProcessDelete do
-    subject(:process_delete) { described_class.new(user_guid, user_email) }
-    let(:user_guid) { 'user-guid' }
-    let(:user_email) { 'user@example.com' }
+    subject(:process_delete) { described_class.new(user_audit_info) }
+    let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
     let(:space) { Space.make }
     let(:app) { AppModel.make(space: space) }
 

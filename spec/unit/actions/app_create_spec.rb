@@ -4,9 +4,9 @@ require 'cloud_controller/diego/lifecycles/app_buildpack_lifecycle'
 
 module VCAP::CloudController
   RSpec.describe AppCreate do
-    let(:user) { double(:user, guid: 'single') }
-    let(:user_email) { 'user-email' }
-    subject(:app_create) { AppCreate.new(user, user_email) }
+    let(:user_audit_info) { UserAuditInfo.new(user_email: 'gooid', user_guid: 'amelia@cats.com') }
+
+    subject(:app_create) { AppCreate.new(user_audit_info) }
 
     describe '#create' do
       let(:space) { Space.make }
@@ -44,8 +44,7 @@ module VCAP::CloudController
           expect_any_instance_of(Repositories::AppEventRepository).
             to receive(:record_app_create).with(instance_of(AppModel),
               space,
-              user.guid,
-              user_email,
+              user_audit_info,
               {
                 'name'                  => 'my-app',
                 'relationships'         => { 'space' => { 'guid' => space_guid } },

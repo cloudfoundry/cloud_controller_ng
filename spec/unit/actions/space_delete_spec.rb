@@ -3,8 +3,9 @@ require 'actions/space_delete'
 
 module VCAP::CloudController
   RSpec.describe SpaceDelete do
-    subject(:space_delete) { SpaceDelete.new(user.id, user_email, services_event_repository) }
-    let(:services_event_repository) { Repositories::ServiceEventRepository.new(user: user, user_email: user_email) }
+    subject(:space_delete) { SpaceDelete.new(user_audit_info, services_event_repository) }
+    let(:services_event_repository) { Repositories::ServiceEventRepository.new(user_audit_info) }
+    let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
 
     describe '#delete' do
       let!(:space) { Space.make }

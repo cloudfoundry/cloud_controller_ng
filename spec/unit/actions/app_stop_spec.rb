@@ -5,6 +5,7 @@ module VCAP::CloudController
   RSpec.describe AppStop do
     let(:user_guid) { 'diug' }
     let(:user_email) { 'guy@place.io' }
+    let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
 
     let(:app) { AppModel.make(desired_state: 'STARTED') }
     let!(:process1) { AppFactory.make(app: app, state: 'STARTED', type: 'this') }
@@ -12,22 +13,21 @@ module VCAP::CloudController
 
     describe '#stop' do
       it 'sets the desired state on the app' do
-        described_class.stop(app: app, user_guid: user_guid, user_email: user_email)
+        described_class.stop(app: app, user_audit_info: user_audit_info)
         expect(app.desired_state).to eq('STOPPED')
       end
 
       it 'creates an audit event' do
         expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_stop).with(
           app,
-          user_guid,
-          user_email
+          user_audit_info,
         )
 
-        described_class.stop(app: app, user_guid: user_guid, user_email: user_email)
+        described_class.stop(app: app, user_audit_info: user_audit_info)
       end
 
       it 'prepares the sub-processes of the app' do
-        described_class.stop(app: app, user_guid: user_guid, user_email: user_email)
+        described_class.stop(app: app, user_audit_info: user_audit_info)
         app.processes.each do |process|
           expect(process.started?).to eq(false)
           expect(process.state).to eq('STOPPED')
@@ -41,7 +41,7 @@ module VCAP::CloudController
 
         it 'raises a InvalidApp exception' do
           expect {
-            described_class.stop(app: app, user_guid: user_guid, user_email: user_email)
+            described_class.stop(app: app, user_audit_info: user_audit_info)
           }.to raise_error(AppStop::InvalidApp, 'some message')
         end
       end

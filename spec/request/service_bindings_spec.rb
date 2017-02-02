@@ -4,10 +4,11 @@ RSpec.describe 'v3 service bindings' do
   let(:app_model) { VCAP::CloudController::AppModel.make }
   let(:space) { app_model.space }
   let(:user) { make_developer_for_space(space) }
-  let(:user_headers) { headers_for(user) }
+  let(:user_headers) { headers_for(user, user_name: user_name) }
   let(:scheme) { TestConfig.config[:external_protocol] }
   let(:host) { TestConfig.config[:external_domain] }
   let(:link_prefix) { "#{scheme}://#{host}" }
+  let(:user_name) { 'room' }
 
   describe 'POST /v3/service_bindings' do
     context 'managed service instance' do
@@ -80,6 +81,7 @@ RSpec.describe 'v3 service bindings' do
             actee_name:        '',
             actor:             user.guid,
             actor_type:        'user',
+            actor_username:    user_name,
             space_guid:        space.guid,
             organization_guid: space.organization.guid
           })
@@ -185,6 +187,7 @@ RSpec.describe 'v3 service bindings' do
             actee_name:        '',
             actor:             user.guid,
             actor_type:        'user',
+            actor_username:    user_name,
             space_guid:        space.guid,
             organization_guid: space.organization.guid,
             metadata:          '{}'
@@ -211,6 +214,7 @@ RSpec.describe 'v3 service bindings' do
             actee_name:        '',
             actor:             user.guid,
             actor_type:        'user',
+            actor_username:    user_name,
             space_guid:        space.guid,
             organization_guid: space.organization.guid,
             metadata:          '{}'

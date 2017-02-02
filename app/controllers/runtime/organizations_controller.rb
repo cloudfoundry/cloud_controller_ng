@@ -194,8 +194,7 @@ module VCAP::CloudController
           org,
           user,
           role,
-          SecurityContext.current_user,
-          SecurityContext.current_user_email,
+          UserAuditInfo.from_context(SecurityContext),
           request_attrs
         )
 
@@ -212,8 +211,7 @@ module VCAP::CloudController
           Organization.first(guid: guid),
           user,
           role.to_s,
-          SecurityContext.current_user,
-          SecurityContext.current_user_email,
+          UserAuditInfo.from_context(SecurityContext),
           {}
         )
 
@@ -229,7 +227,7 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name)
       end
 
-      delete_action = OrganizationDelete.new(SpaceDelete.new(current_user.guid, current_user_email, @services_event_repository))
+      delete_action = OrganizationDelete.new(SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository))
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, guid, delete_action)
       enqueue_deletion_job(deletion_job)
     end
@@ -277,7 +275,7 @@ module VCAP::CloudController
       org = find_guid_and_validate_access(:update, guid)
       org.send("add_#{role}", user)
 
-      @user_event_repository.record_organization_role_add(org, user, role, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+      @user_event_repository.record_organization_role_add(org, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)
 
       [HTTP::CREATED, object_renderer.render_json(self.class, org, @opts)]
     end

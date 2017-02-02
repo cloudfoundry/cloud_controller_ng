@@ -3,7 +3,9 @@ require 'spec_helper'
 module VCAP::Services::ServiceBrokers
   RSpec.describe ServiceBrokerRemover do
     subject(:remover) { ServiceBrokerRemover.new(services_events_repository) }
-    let(:services_events_repository) { VCAP::CloudController::Repositories::ServiceEventRepository.new(user: user, user_email: email) }
+    let(:services_events_repository) do
+      VCAP::CloudController::Repositories::ServiceEventRepository.new(VCAP::CloudController::UserAuditInfo.new(user_guid: user.guid, user_email: email))
+    end
     let(:broker) { VCAP::CloudController::ServiceBroker.make }
     let(:dashboard_client_manager) { instance_double(VCAP::Services::SSO::DashboardClientManager) }
     let(:security_context) { class_double(VCAP::CloudController::SecurityContext, current_user: user, current_user_email: email) }

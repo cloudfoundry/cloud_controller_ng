@@ -15,7 +15,7 @@ module VCAP::CloudController
     end
 
     let(:user) { User.make }
-    let(:user_email) { 'user@example.com' }
+    let(:user_audit_info) { UserAuditInfo.new(user_email: 'user@example.com', user_guid: user.guid) }
 
     let(:memory_limit_calculator) { double(:memory_limit_calculator) }
     let(:disk_limit_calculator) { double(:disk_limit_calculator) }
@@ -71,15 +71,14 @@ module VCAP::CloudController
       it 'creates an audit event' do
         expect(Repositories::DropletEventRepository).to receive(:record_create_by_staging).with(
           instance_of(DropletModel),
-          user,
-          user_email,
+          user_audit_info,
           staging_message.audit_hash,
           app.name,
           space.guid,
           org.guid
         )
 
-        action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user: user, user_email: user_email)
+        action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
       end
 
       context 'creating a droplet' do
@@ -87,7 +86,7 @@ module VCAP::CloudController
           droplet = nil
 
           expect {
-            droplet = action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user: user, user_email: user_email)
+            droplet = action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
           }.to change { DropletModel.count }.by(1)
 
           expect(droplet.state).to eq(DropletModel::STAGING_STATE)
@@ -103,7 +102,7 @@ module VCAP::CloudController
 
       context 'creating a stage request' do
         it 'initiates a staging request' do
-          droplet = action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user: user, user_email: user_email)
+          droplet = action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
           expect(stager).to have_received(:stage) do |staging_details|
             expect(staging_details.package).to eq(package)
             expect(staging_details.droplet).to eq(droplet)
@@ -130,7 +129,7 @@ module VCAP::CloudController
               end
 
               it 'does not set an isolation segment' do
-                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user: user, user_email: user_email)
+                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
                 expect(stager).to have_received(:stage) do |staging_details|
                   expect(staging_details.isolation_segment).to be_nil
                 end
@@ -144,7 +143,7 @@ module VCAP::CloudController
               end
 
               it 'sets the isolation segment' do
-                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user: user, user_email: user_email)
+                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
                 expect(stager).to have_received(:stage) do |staging_details|
                   expect(staging_details.isolation_segment).to eq(isolation_segment_model.name)
                 end
@@ -160,7 +159,7 @@ module VCAP::CloudController
                   end
 
                   it 'does not set the isolation segment' do
-                    action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user: user, user_email: user_email)
+                    action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
                     expect(stager).to have_received(:stage) do |staging_details|
                       expect(staging_details.isolation_segment).to be_nil
                     end
@@ -175,7 +174,7 @@ module VCAP::CloudController
                   end
 
                   it 'sets the IS from the space' do
-                    action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user: user, user_email: user_email)
+                    action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
                     expect(stager).to have_received(:stage) do |staging_details|
                       expect(staging_details.isolation_segment).to eq(isolation_segment_model_2.name)
                     end
@@ -195,7 +194,7 @@ module VCAP::CloudController
                 end
 
                 it 'sets the isolation segment' do
-                  action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user: user, user_email: user_email)
+                  action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
                   expect(stager).to have_received(:stage) do |staging_details|
                     expect(staging_details.isolation_segment).to eq(isolation_segment_model.name)
                   end
@@ -211,7 +210,7 @@ module VCAP::CloudController
           let(:package) { PackageModel.make(app: app, state: PackageModel::PENDING_STATE) }
           it 'raises an InvalidPackage exception' do
             expect {
-              action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user: user, user_email: user_email)
+              action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
             }.to raise_error(DropletCreate::InvalidPackage, /not ready/)
           end
         end
@@ -224,7 +223,7 @@ module VCAP::CloudController
 
             it 'raises DropletCreate::DiskLimitExceeded' do
               expect {
-                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user: user, user_email: user_email)
+                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
               }.to raise_error(DropletCreate::DiskLimitExceeded)
             end
           end
@@ -240,7 +239,7 @@ module VCAP::CloudController
 
             it 'raises DropletCreate::SpaceQuotaExceeded' do
               expect {
-                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user: user, user_email: user_email)
+                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
               }.to raise_error(DropletCreate::SpaceQuotaExceeded, 'helpful message')
             end
           end
@@ -254,7 +253,7 @@ module VCAP::CloudController
 
             it 'raises DropletCreate::OrgQuotaExceeded' do
               expect {
-                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user: user, user_email: user_email)
+                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
               }.to raise_error(DropletCreate::OrgQuotaExceeded, 'helpful message')
             end
           end

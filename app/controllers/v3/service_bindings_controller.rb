@@ -20,7 +20,7 @@ class ServiceBindingsController < ApplicationController
     unauthorized! unless can_write?(app.space.guid)
 
     begin
-      service_binding = ServiceBindingCreate.new(current_user.guid, current_user_email).create(app, service_instance, message, volume_services_enabled?)
+      service_binding = ServiceBindingCreate.new(user_audit_info).create(app, service_instance, message, volume_services_enabled?)
       render status: :created, json: Presenters::V3::ServiceBindingPresenter.new(service_binding)
     rescue ServiceBindingCreate::ServiceInstanceNotBindable
       raise CloudController::Errors::ApiError.new_from_details('UnbindableService')
@@ -57,7 +57,7 @@ class ServiceBindingsController < ApplicationController
     binding_not_found! unless binding && can_read?(binding.space.guid, binding.space.organization.guid)
     unauthorized! unless can_write?(binding.space.guid)
 
-    ServiceBindingDelete.new(current_user.guid, current_user_email).single_delete_sync(binding)
+    ServiceBindingDelete.new(user_audit_info).single_delete_sync(binding)
 
     head :no_content
 

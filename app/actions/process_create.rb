@@ -2,9 +2,8 @@ require 'repositories/process_event_repository'
 
 module VCAP::CloudController
   class ProcessCreate
-    def initialize(user_guid, user_email)
-      @user_guid  = user_guid
-      @user_email = user_email
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
     end
 
     def create(app, message)
@@ -19,7 +18,7 @@ module VCAP::CloudController
       process = nil
       app.class.db.transaction do
         process = app.add_process(attrs)
-        Repositories::ProcessEventRepository.record_create(process, @user_guid, @user_email)
+        Repositories::ProcessEventRepository.record_create(process, @user_audit_info)
       end
 
       process

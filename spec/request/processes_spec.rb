@@ -4,7 +4,8 @@ RSpec.describe 'Processes' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space, name: 'my_app') }
   let(:developer) { make_developer_for_space(space) }
-  let(:developer_headers) { headers_for(developer) }
+  let(:developer_headers) { headers_for(developer, user_name: user_name) }
+  let(:user_name) { 'ProcHudson' }
   let(:scheme) { TestConfig.config[:external_protocol] }
   let(:host) { TestConfig.config[:external_domain] }
   let(:link_prefix) { "#{scheme}://#{host}" }
@@ -495,6 +496,7 @@ RSpec.describe 'Processes' do
         actee_name:        'my_app',
         actor:             developer.guid,
         actor_type:        'user',
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid
       })
@@ -580,6 +582,7 @@ RSpec.describe 'Processes' do
         actee_name:        'my_app',
         actor:             developer.guid,
         actor_type:        'user',
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid
       })
@@ -615,6 +618,7 @@ RSpec.describe 'Processes' do
         actee_name:        'my_app',
         actor:             developer.guid,
         actor_type:        'user',
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid
       })
@@ -993,6 +997,7 @@ RSpec.describe 'Processes' do
         actee_name:        'my_app',
         actor:             developer.guid,
         actor_type:        'user',
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid
       })
@@ -1028,6 +1033,7 @@ RSpec.describe 'Processes' do
         actee_name:        'my_app',
         actor:             developer.guid,
         actor_type:        'user',
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid
       })

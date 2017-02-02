@@ -3,7 +3,8 @@ require 'spec_helper'
 RSpec.describe 'Packages' do
   let(:email) { 'potato@house.com' }
   let(:user) { VCAP::CloudController::User.make }
-  let(:user_header) { headers_for(user, email: email) }
+  let(:user_name) { 'clarence' }
+  let(:user_header) { headers_for(user, email: email, user_name: user_name) }
   let(:space) { VCAP::CloudController::Space.make }
   let(:space_guid) { space.guid }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space_guid) }
@@ -66,6 +67,7 @@ RSpec.describe 'Packages' do
           actor:             user.guid,
           actor_type:        'user',
           actor_name:        email,
+          actor_username:    user_name,
           actee:             package.app.guid,
           actee_type:        'app',
           actee_name:        package.app.name,
@@ -122,6 +124,7 @@ RSpec.describe 'Packages' do
           actor:             user.guid,
           actor_type:        'user',
           actor_name:        email,
+          actor_username:    user_name,
           actee:             package.app.guid,
           actee_type:        'app',
           actee_name:        package.app.name,
@@ -634,6 +637,7 @@ RSpec.describe 'Packages' do
         actor:             user.guid,
         actor_type:        'user',
         actor_name:        email,
+        actor_username:    user_name,
         actee:             'woof',
         actee_type:        'app',
         actee_name:        'meow',
@@ -689,6 +693,7 @@ RSpec.describe 'Packages' do
           actor:             user.guid,
           actor_type:        'user',
           actor_name:        email,
+          actor_username:    user_name,
           actee:             'woof-guid',
           actee_type:        'app',
           actee_name:        'meow',
@@ -730,6 +735,7 @@ RSpec.describe 'Packages' do
         actor:             user.guid,
         actor_type:        'user',
         actor_name:        email,
+        actor_username:    user_name,
         actee:             app_guid,
         actee_type:        'app',
         actee_name:        app_name,

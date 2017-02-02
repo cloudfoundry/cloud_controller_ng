@@ -70,6 +70,10 @@ class ApplicationController < ActionController::Base
     VCAP::CloudController::SecurityContext.current_user_email
   end
 
+  def user_audit_info
+    VCAP::CloudController::UserAuditInfo.from_context(VCAP::CloudController::SecurityContext)
+  end
+
   def request_id
     ::VCAP::Request.current_id
   end

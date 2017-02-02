@@ -2,23 +2,22 @@ require 'spec_helper'
 
 RSpec.describe 'Tasks' do
   let(:space) { VCAP::CloudController::Space.make }
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { make_developer_for_space(space) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
   let(:droplet) do
     VCAP::CloudController::DropletModel.make(:staged,
-      app_guid:     app_model.guid,
-      state:        VCAP::CloudController::DropletModel::STAGED_STATE,
+      app_guid: app_model.guid,
+      state:    VCAP::CloudController::DropletModel::STAGED_STATE,
     )
   end
-  let(:developer_headers) { headers_for(user) }
+  let(:developer_headers) { headers_for(user, email: user_email, user_name: user_name) }
   let(:scheme) { TestConfig.config[:external_protocol] }
   let(:host) { TestConfig.config[:external_domain] }
   let(:link_prefix) { "#{scheme}://#{host}" }
+  let(:user_email) { 'user@email.example.com' }
+  let(:user_name) { 'Task McNamara' }
 
   before do
-    space.organization.add_user user
-    space.add_developer user
-
     stub_request(:post, 'http://nsync.service.cf.internal:8787/v1/tasks').to_return(status: 202)
 
     VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: true, error_message: nil)
@@ -244,20 +243,34 @@ RSpec.describe 'Tasks' do
 
   describe 'PUT /v3/tasks/:guid/cancel' do
     it 'returns a json representation of the task with the requested guid' do
-      task      = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', app_guid: app_model.guid
-      task_guid = task.guid
+      task = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', app_guid: app_model.guid
 
-      stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/tasks/#{task_guid}").to_return(status: 202)
+      stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/tasks/#{task.guid}").to_return(status: 202)
 
-      put "/v3/tasks/#{task_guid}/cancel", {}, admin_headers
+      put "/v3/tasks/#{task.guid}/cancel", nil, developer_headers
 
       expect(last_response.status).to eq(202)
       parsed_body = JSON.load(last_response.body)
-      expect(parsed_body['guid']).to eq(task_guid)
+      expect(parsed_body['guid']).to eq(task.guid)
       expect(parsed_body['name']).to eq('task')
       expect(parsed_body['command']).to eq('echo task')
       expect(parsed_body['state']).to eq('CANCELING')
       expect(parsed_body['result']).to eq({ 'failure_reason' => nil })
+
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type:              'audit.app.task.cancel',
+        actor:             user.guid,
+        actor_type:        'user',
+        actor_name:        user_email,
+        actor_username:    user_name,
+        actee:             app_model.guid,
+        actee_type:        'app',
+        actee_name:        app_model.name,
+        space_guid:        space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(event.metadata['task_guid']).to eq(task.guid)
     end
   end
 
@@ -501,13 +514,35 @@ RSpec.describe 'Tasks' do
       expect(last_response.status).to eq(202)
       expect(parsed_response).to be_a_response_like(expected_response)
       expect(VCAP::CloudController::TaskModel.find(guid: guid)).to be_present
+
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type:              'audit.app.task.create',
+        actor:             user.guid,
+        actor_type:        'user',
+        actor_name:        user_email,
+        actor_username:    user_name,
+        actee:             app_model.guid,
+        actee_type:        'app',
+        actee_name:        app_model.name,
+        space_guid:        space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(event.metadata).to eq({
+        'task_guid' => guid,
+        'request'   => {
+          'name'         => 'best task ever',
+          'command'      => 'PRIVATE DATA HIDDEN',
+          'memory_in_mb' => 1234,
+        }
+      })
     end
 
     context 'when requesting a specific droplet' do
       let(:non_assigned_droplet) do
         VCAP::CloudController::DropletModel.make(:staged,
-          app_guid:     app_model.guid,
-          state:        VCAP::CloudController::DropletModel::STAGED_STATE,
+          app_guid: app_model.guid,
+          state:    VCAP::CloudController::DropletModel::STAGED_STATE,
         )
       end
 

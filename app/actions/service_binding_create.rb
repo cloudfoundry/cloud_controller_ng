@@ -12,9 +12,8 @@ module VCAP::CloudController
 
     include VCAP::CloudController::LockCheck
 
-    def initialize(user_guid, user_email)
-      @user_guid  = user_guid
-      @user_email = user_email
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
     end
 
     def create(app, service_instance, message, volume_mount_services_enabled)
@@ -38,7 +37,7 @@ module VCAP::CloudController
       begin
         binding.save
 
-        Repositories::ServiceBindingEventRepository.record_create(binding, @user_guid, @user_email, message.audit_hash)
+        Repositories::ServiceBindingEventRepository.record_create(binding, @user_audit_info, message.audit_hash)
       rescue => e
         logger.error "Failed to save state of create for service binding #{binding.guid} with exception: #{e}"
         mitigate_orphan(binding)

@@ -114,16 +114,14 @@ module VCAP::CloudController
           Space.first(guid: related_guid),
           user,
           name.to_s.singularize,
-          SecurityContext.current_user,
-          SecurityContext.current_user_email,
+          UserAuditInfo.from_context(SecurityContext),
           {})
       elsif find_model == Organization
         @user_event_repository.record_organization_role_remove(
           Organization.first(guid: related_guid),
           user,
           name.to_s.singularize,
-          SecurityContext.current_user,
-          SecurityContext.current_user_email,
+          UserAuditInfo.from_context(SecurityContext),
           {})
       end
 
@@ -143,7 +141,7 @@ module VCAP::CloudController
                'developer'
              end
 
-      @user_event_repository.record_space_role_add(Space.first(guid: space_guid), user, role, SecurityContext.current_user, SecurityContext.current_user_email)
+      @user_event_repository.record_space_role_add(Space.first(guid: space_guid), user, role, UserAuditInfo.from_context(SecurityContext))
 
       response
     end
@@ -163,7 +161,7 @@ module VCAP::CloudController
                'user'
              end
 
-      @user_event_repository.record_organization_role_add(Organization.first(guid: org_guid), user, role, SecurityContext.current_user, SecurityContext.current_user_email)
+      @user_event_repository.record_organization_role_add(Organization.first(guid: org_guid), user, role, UserAuditInfo.from_context(SecurityContext))
 
       response
     end

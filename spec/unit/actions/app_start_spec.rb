@@ -5,6 +5,7 @@ module VCAP::CloudController
   RSpec.describe AppStart do
     let(:user_guid) { 'some-guid' }
     let(:user_email) { '1@2.3' }
+    let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
 
     describe '#start' do
       let(:environment_variables) { { 'FOO' => 'bar' } }
@@ -28,12 +29,12 @@ module VCAP::CloudController
         end
 
         it 'starts the app' do
-          described_class.start(app: app, user_guid: user_guid, user_email: user_email)
+          described_class.start(app: app, user_audit_info: user_audit_info)
           expect(app.desired_state).to eq('STARTED')
         end
 
         it 'sets the docker image on the process' do
-          described_class.start(app: app, user_guid: user_guid, user_email: user_email)
+          described_class.start(app: app, user_audit_info: user_audit_info)
 
           process1.reload
           expect(process1.docker_image).to eq(droplet.docker_receipt_image)
@@ -55,18 +56,17 @@ module VCAP::CloudController
         end
 
         it 'sets the desired state on the app' do
-          described_class.start(app: app, user_guid: user_guid, user_email: user_email)
+          described_class.start(app: app, user_audit_info: user_audit_info)
           expect(app.desired_state).to eq('STARTED')
         end
 
         it 'creates an audit event' do
           expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_start).with(
             app,
-            user_guid,
-            user_email
+            user_audit_info,
           )
 
-          described_class.start(app: app, user_guid: user_guid, user_email: user_email)
+          described_class.start(app: app, user_audit_info: user_audit_info)
         end
 
         context 'when the app is invalid' do
@@ -76,7 +76,7 @@ module VCAP::CloudController
 
           it 'raises a InvalidApp exception' do
             expect {
-              described_class.start(app: app, user_guid: user_guid, user_email: user_email)
+              described_class.start(app: app, user_audit_info: user_audit_info)
             }.to raise_error(AppStart::InvalidApp, 'some message')
           end
         end
@@ -92,7 +92,7 @@ module VCAP::CloudController
           let(:package) { PackageModel.make(app: app, package_hash: 'some-awesome-thing', state: PackageModel::READY_STATE) }
 
           it 'sets the package hash correctly on the process' do
-            described_class.start(app: app, user_guid: user_guid, user_email: user_email)
+            described_class.start(app: app, user_audit_info: user_audit_info)
 
             process1.reload
             expect(process1.package_hash).to eq(package.package_hash)

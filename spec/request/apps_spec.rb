@@ -2,11 +2,13 @@ require 'spec_helper'
 
 RSpec.describe 'Apps' do
   let(:user) { VCAP::CloudController::User.make }
-  let(:user_header) { headers_for(user) }
+  let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
   let(:space) { VCAP::CloudController::Space.make }
   let(:scheme) { TestConfig.config[:external_protocol] }
   let(:host) { TestConfig.config[:external_domain] }
   let(:link_prefix) { "#{scheme}://#{host}" }
+  let(:user_email) { Sham.email }
+  let(:user_name) { 'some-username' }
 
   before do
     space.organization.add_user(user)
@@ -77,6 +79,8 @@ RSpec.describe 'Apps' do
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
+        actor_name:        user_email,
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid,
       })
@@ -141,6 +145,8 @@ RSpec.describe 'Apps' do
           actee_name:        'my_app',
           actor:             user.guid,
           actor_type:        'user',
+          actor_name:        user_email,
+          actor_username:    user_name,
           space_guid:        space.guid,
           organization_guid: space.organization.guid,
         })
@@ -552,6 +558,8 @@ RSpec.describe 'Apps' do
         actee_name:        'app_name',
         actor:             user.guid,
         actor_type:        'user',
+        actor_name:        user_email,
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid
       })
@@ -581,7 +589,7 @@ RSpec.describe 'Apps' do
         }
       }
 
-      patch "/v3/apps/#{app_model.guid}", update_request, headers_for(user)
+      patch "/v3/apps/#{app_model.guid}", update_request, user_header
       expect(last_response.status).to eq(200)
 
       app_model.reload
@@ -626,6 +634,8 @@ RSpec.describe 'Apps' do
         actee_name:        'new-name',
         actor:             user.guid,
         actor_type:        'user',
+        actor_name:        user_email,
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid
       })
@@ -695,6 +705,8 @@ RSpec.describe 'Apps' do
         actee_name:        'app-name',
         actor:             user.guid,
         actor_type:        'user',
+        actor_name:        user_email,
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid,
       })
@@ -762,6 +774,8 @@ RSpec.describe 'Apps' do
         actee_name:        'app-name',
         actor:             user.guid,
         actor_type:        'user',
+        actor_name:        user_email,
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid,
       })
@@ -906,6 +920,8 @@ RSpec.describe 'Apps' do
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
+        actor_name:        user_email,
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid
       })
@@ -943,6 +959,8 @@ RSpec.describe 'Apps' do
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
+        actor_name:        user_email,
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid
       })
@@ -956,6 +974,8 @@ RSpec.describe 'Apps' do
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
+        actor_name:        user_email,
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid
       })
@@ -989,6 +1009,8 @@ RSpec.describe 'Apps' do
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
+        actor_name:        user_email,
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid
       })
@@ -1028,6 +1050,8 @@ RSpec.describe 'Apps' do
         actee_name:        'my_app',
         actor:             user.guid,
         actor_type:        'user',
+        actor_name:        user_email,
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid
       })

@@ -3,10 +3,9 @@ module VCAP::CloudController
     class DropletNotFound < StandardError; end
     class InvalidApp < StandardError; end
 
-    def initialize(user, user_email)
-      @user       = user
-      @user_email = user_email
-      @logger     = Steno.logger('cc.action.app_update')
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
+      @logger = Steno.logger('cc.action.app_update')
     end
 
     def update(app, message, lifecycle)
@@ -25,8 +24,7 @@ module VCAP::CloudController
         Repositories::AppEventRepository.new.record_app_update(
           app,
           app.space,
-          @user.guid,
-          @user_email,
+          @user_audit_info,
           message.audit_hash
         )
       end

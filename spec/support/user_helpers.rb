@@ -56,6 +56,7 @@ module UserHelpers
         email: opts[:email],
         scope: scopes
       }
+      encoding_opts[:user_name] = opts[:user_name] if opts[:user_name]
 
       encoding_opts[:exp] = 0 if opts[:expired]
 

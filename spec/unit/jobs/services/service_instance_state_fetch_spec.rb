@@ -54,8 +54,7 @@ module VCAP::CloudController
             name,
             client_attrs,
             service_instance.guid,
-            user.guid,
-            user_email,
+            UserAuditInfo.new(user_guid: user.guid, user_email: user_email),
             request_attrs,
           )
         end

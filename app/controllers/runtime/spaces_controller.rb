@@ -131,9 +131,9 @@ module VCAP::CloudController
       raise_if_has_dependent_associations!(space) unless recursive_delete?
       raise_if_dependency_present!(space) unless recursive_delete?
 
-      @space_event_repository.record_space_delete_request(space, SecurityContext.current_user, SecurityContext.current_user_email, recursive_delete?)
+      @space_event_repository.record_space_delete_request(space, UserAuditInfo.from_context(SecurityContext), recursive_delete?)
 
-      delete_action = SpaceDelete.new(current_user.guid, current_user_email, @services_event_repository)
+      delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository)
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Space, guid, delete_action)
       enqueue_deletion_job(deletion_job)
     end
@@ -247,7 +247,7 @@ module VCAP::CloudController
       space = find_guid_and_validate_access(:update, guid)
       space.send("add_#{role}", user)
 
-      @user_event_repository.record_space_role_add(space, user, role, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+      @user_event_repository.record_space_role_add(space, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)
 
       [HTTP::CREATED, object_renderer.render_json(self.class, space, @opts)]
     end
@@ -259,15 +259,15 @@ module VCAP::CloudController
 
       space.send("remove_#{role}", user)
 
-      @user_event_repository.record_space_role_remove(space, user, role, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+      @user_event_repository.record_space_role_remove(space, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)
     end
 
     def after_create(space)
-      @space_event_repository.record_space_create(space, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+      @space_event_repository.record_space_create(space, UserAuditInfo.from_context(SecurityContext), request_attrs)
     end
 
     def after_update(space)
-      @space_event_repository.record_space_update(space, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+      @space_event_repository.record_space_update(space, UserAuditInfo.from_context(SecurityContext), request_attrs)
     end
 
     def raise_if_dependency_present!(space)

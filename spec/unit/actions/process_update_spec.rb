@@ -3,7 +3,7 @@ require 'actions/process_update'
 
 module VCAP::CloudController
   RSpec.describe ProcessUpdate do
-    subject(:process_update) { ProcessUpdate.new(user_guid, user_email) }
+    subject(:process_update) { ProcessUpdate.new(user_audit_info) }
 
     let(:health_check) do
       {
@@ -25,6 +25,7 @@ module VCAP::CloudController
     end
     let(:user_guid) { 'user-guid' }
     let(:user_email) { 'user@example.com' }
+    let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
 
     describe '#update' do
       it 'updates the requested changes on the process' do
@@ -70,8 +71,7 @@ module VCAP::CloudController
       it 'creates an audit event' do
         expect(Repositories::ProcessEventRepository).to receive(:record_update).with(
           process,
-          user_guid,
-          user_email,
+          user_audit_info,
           {
             'command'      => 'new',
             'ports'        => [1234, 5678],

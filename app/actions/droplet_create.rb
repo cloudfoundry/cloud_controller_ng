@@ -24,7 +24,7 @@ module VCAP::CloudController
       @environment_builder     = environment_presenter
     end
 
-    def create_and_stage(package:, lifecycle:, message:, user:, user_email:, start_after_staging: false, record_event: true)
+    def create_and_stage(package:, lifecycle:, message:, user_audit_info:, start_after_staging: false, record_event: true)
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
 
       staging_details                     = get_staging_details(package, lifecycle)
@@ -44,7 +44,7 @@ module VCAP::CloudController
         staging_details.droplet = droplet
         lifecycle.create_lifecycle_data_model(droplet)
 
-        record_audit_event(droplet, message, package, user, user_email) if record_event
+        record_audit_event(droplet, message, package, user_audit_info) if record_event
       end
 
       load_association(droplet)
@@ -59,16 +59,16 @@ module VCAP::CloudController
     end
 
     def create_and_stage_without_event(package:, lifecycle:, message:, start_after_staging: false)
-      create_and_stage(package: package, lifecycle: lifecycle, message: message, user: nil, user_email: nil, start_after_staging: start_after_staging, record_event: false)
+      create_and_stage(package: package, lifecycle: lifecycle, message: message,
+                       user_audit_info: UserAuditInfo.new(user_email: nil, user_guid: nil), start_after_staging: start_after_staging, record_event: false)
     end
 
     private
 
-    def record_audit_event(droplet, message, package, user, user_email)
+    def record_audit_event(droplet, message, package, user_audit_info)
       Repositories::DropletEventRepository.record_create_by_staging(
         droplet,
-        user,
-        user_email,
+        user_audit_info,
         message.audit_hash,
         package.app.name,
         package.app.space_guid,

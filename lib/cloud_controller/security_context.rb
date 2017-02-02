@@ -59,6 +59,10 @@ module VCAP::CloudController
       token['email'] if valid_token?
     end
 
+    def self.current_user_name
+      token['user_name'] if valid_token?
+    end
+
     def self.current_user_has_email?(email)
       current_user_email && current_user_email.downcase == email.downcase
     end

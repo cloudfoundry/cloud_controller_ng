@@ -4,7 +4,8 @@ RSpec.describe 'Droplets' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
   let(:developer) { make_developer_for_space(space) }
-  let(:developer_headers) { headers_for(developer) }
+  let(:developer_headers) { headers_for(developer, user_name: user_name) }
+  let(:user_name) { 'sundance kid' }
 
   let(:parsed_response) { MultiJson.load(last_response.body) }
   let(:scheme) { TestConfig.config[:external_protocol] }
@@ -114,6 +115,7 @@ RSpec.describe 'Droplets' do
         actee_name:        'my-app',
         actor:             developer.guid,
         actor_type:        'user',
+        actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid,
       )

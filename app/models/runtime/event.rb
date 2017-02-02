@@ -17,7 +17,7 @@ module VCAP::CloudController
 
     serialize_attributes :json, :metadata
 
-    export_attributes :type, :actor, :actor_type, :actor_name, :actee,
+    export_attributes :type, :actor, :actor_type, :actor_name, :actor_username, :actee,
       :actee_type, :actee_name, :timestamp, :metadata, :space_guid,
       :organization_guid
 

@@ -104,13 +104,19 @@ module VCAP::CloudController
           end
 
           context 'when the restage completes without error' do
+            let(:user_audit_info) { UserAuditInfo.from_context(SecurityContext) }
+            before do
+              allow(UserAuditInfo).to receive(:from_context).and_return(user_audit_info)
+            end
+
             it 'generates an audit.app.restage event' do
               expect {
                 restage_request
               }.to change { Event.count }.by(1)
 
               expect(last_response.status).to eq(201)
-              expect(app_event_repository).to have_received(:record_app_restage).with(application, account.guid, SecurityContext.current_user_email)
+              expect(app_event_repository).to have_received(:record_app_restage).with(application,
+                user_audit_info)
             end
           end
 

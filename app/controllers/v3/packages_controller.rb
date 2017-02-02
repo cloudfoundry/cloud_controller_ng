@@ -48,11 +48,10 @@ class PackagesController < ApplicationController
 
     begin
       PackageUpload.new.upload_async(
-        message:    message,
-        package:    package,
-        config:     configuration,
-        user_guid:  current_user.guid,
-        user_email: current_user_email
+        message:         message,
+        package:         package,
+        config:          configuration,
+        user_audit_info: user_audit_info
       )
     rescue PackageUpload::InvalidPackage => e
       unprocessable!(e.message)
@@ -71,8 +70,7 @@ class PackagesController < ApplicationController
 
     VCAP::CloudController::Repositories::PackageEventRepository.record_app_package_download(
       package,
-      current_user.guid,
-      current_user_email,
+      user_audit_info
     )
 
     send_package_blob(package)
@@ -90,7 +88,7 @@ class PackagesController < ApplicationController
     package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
     unauthorized! unless can_write?(package.space.guid)
 
-    PackageDelete.new(current_user.guid, current_user_email).delete(package)
+    PackageDelete.new(user_audit_info).delete(package)
 
     head :no_content
   end
@@ -103,7 +101,7 @@ class PackagesController < ApplicationController
     app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     unauthorized! unless can_write?(app.space.guid)
 
-    package = PackageCreate.create(message: message, user_guid: current_user.guid, user_email: current_user_email)
+    package = PackageCreate.create(message: message, user_audit_info: user_audit_info)
 
     render status: :created, json: Presenters::V3::PackagePresenter.new(package)
   rescue PackageCreate::InvalidPackage => e
@@ -122,8 +120,7 @@ class PackagesController < ApplicationController
     package = PackageCopy.new.copy(
       destination_app_guid: params[:app_guid],
       source_package:       source_package,
-      user_guid:            current_user.guid,
-      user_email:           current_user_email
+      user_audit_info:      user_audit_info
     )
 
     render status: :created, json: Presenters::V3::PackagePresenter.new(package)

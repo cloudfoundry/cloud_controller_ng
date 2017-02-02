@@ -2,21 +2,17 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe RouteDelete do
-    let(:app_event_repository) { instance_double(Repositories::AppEventRepository) }
-    let(:route_event_repository) { instance_double(Repositories::RouteEventRepository) }
-
-    let(:user) { instance_double(User, guid: '1234') }
-    let(:user_email) { 'user@email.dads' }
-
-    let(:route_delete_action) do
+    subject(:route_delete_action) do
       RouteDelete.new(
         app_event_repository: app_event_repository,
         route_event_repository: route_event_repository,
-        user: user,
-        user_email: user_email
+        user_audit_info: user_audit_info
       )
     end
 
+    let(:app_event_repository) { instance_double(Repositories::AppEventRepository) }
+    let(:route_event_repository) { instance_double(Repositories::RouteEventRepository) }
+    let(:user_audit_info) { UserAuditInfo.new(user_guid: 'user-guid', user_email: 'user-email') }
     let(:recursive) { false }
     let!(:route) { Route.make }
 
@@ -35,7 +31,7 @@ module VCAP::CloudController
       it 'creates a route delete audit event' do
         route_delete_action.delete_sync(route: route, recursive: recursive)
 
-        expect(route_event_repository).to have_received(:record_route_delete_request).with(route, user, user_email, false)
+        expect(route_event_repository).to have_received(:record_route_delete_request).with(route, user_audit_info, false)
       end
 
       context 'when there are route mappings' do
@@ -55,8 +51,8 @@ module VCAP::CloudController
 
           route_delete_action.delete_sync(route: route, recursive: recursive)
 
-          expect(app_event_repository).to have_received(:record_unmap_route).with(app, route, user.guid, user_email, route_mapping: route_mapping).once
-          expect(app_event_repository).to have_received(:record_unmap_route).with(app_2, route, user.guid, user_email, route_mapping: route_mapping_2).once
+          expect(app_event_repository).to have_received(:record_unmap_route).with(app, route, user_audit_info, route_mapping: route_mapping).once
+          expect(app_event_repository).to have_received(:record_unmap_route).with(app_2, route, user_audit_info, route_mapping: route_mapping_2).once
         end
       end
 

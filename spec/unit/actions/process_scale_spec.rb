@@ -3,13 +3,12 @@ require 'actions/process_scale'
 
 module VCAP::CloudController
   RSpec.describe ProcessScale do
-    subject(:process_scale) { ProcessScale.new(user, user_email, process, message) }
+    subject(:process_scale) { ProcessScale.new(user_audit_info, process, message) }
     let(:valid_message_params) { { instances: 2, memory_in_mb: 100, disk_in_mb: 200 } }
     let(:message) { ProcessScaleMessage.new(valid_message_params) }
     let(:app) { AppModel.make }
     let!(:process) { AppFactory.make(disk_quota: 50, app: app) }
-    let(:user) { User.make }
-    let(:user_email) { 'user@example.com' }
+    let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
 
     describe '#scale' do
       it 'scales the process record' do
@@ -54,13 +53,12 @@ module VCAP::CloudController
       it 'creates a process audit event' do
         expect(Repositories::ProcessEventRepository).to receive(:record_scale).with(
           process,
-            user.guid,
-            user_email,
-            {
-              'instances'    => 2,
-              'memory_in_mb' => 100,
-              'disk_in_mb'   => 200
-            }
+          user_audit_info,
+          {
+            'instances'    => 2,
+            'memory_in_mb' => 100,
+            'disk_in_mb'   => 200
+          }
         )
 
         process_scale.scale

@@ -3,10 +3,10 @@ require 'actions/current_process_types'
 
 module VCAP::CloudController
   RSpec.describe CurrentProcessTypes do
-    let(:user) { double(:user, guid: Sham.guid) }
     let(:droplet) { nil }
     let(:app) { AppModel.make(droplet: droplet, name: 'my_app') }
-    subject(:current_process_types) { CurrentProcessTypes.new(user.guid, Sham.email) }
+    let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
+    subject(:current_process_types) { CurrentProcessTypes.new(user_audit_info) }
 
     describe '#process_current_droplet' do
       let(:process_types) { { web: 'thing', other: 'stuff' } }

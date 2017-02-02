@@ -335,7 +335,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
       before do
         user                   = VCAP::CloudController::User.make
         space_event_repository = VCAP::CloudController::Repositories::SpaceEventRepository.new
-        space_event_repository.record_space_update(space, user, 'user@example.com', { 'name' => 'new_name' })
+        space_event_repository.record_space_update(space, VCAP::CloudController::UserAuditInfo.new(user_guid: user.guid, user_email: 'user@example.com'), { 'name' => 'new_name' })
       end
 
       standard_model_list :event, VCAP::CloudController::EventsController, outer_model: :space

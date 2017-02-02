@@ -3,11 +3,10 @@ require 'actions/process_terminate'
 
 module VCAP::CloudController
   RSpec.describe ProcessTerminate do
-    subject(:process_terminate) { ProcessTerminate.new(user_guid, user_email, process, index) }
+    subject(:process_terminate) { ProcessTerminate.new(user_audit_info, process, index) }
     let(:app) { AppModel.make }
     let!(:process) { AppFactory.make(app: app) }
-    let(:user_guid) { 'user-guid' }
-    let(:user_email) { 'user@example.com' }
+    let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
     let(:index) { 0 }
 
     let(:index_stopper) { double(IndexStopper, stop_index: true) }
@@ -26,8 +25,7 @@ module VCAP::CloudController
       it 'creates an audit event' do
         expect(Repositories::ProcessEventRepository).to receive(:record_terminate).with(
           process,
-          user_guid,
-          user_email,
+          user_audit_info,
           index
         )
         process_terminate.terminate

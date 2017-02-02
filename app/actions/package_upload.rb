@@ -2,7 +2,7 @@ module VCAP::CloudController
   class PackageUpload
     class InvalidPackage < StandardError; end
 
-    def upload_async(message:, package:, config:, user_guid:, user_email:, record_event: true)
+    def upload_async(message:, package:, config:, user_audit_info:, record_event: true)
       logger.info("uploading package bits for package #{package.guid}")
 
       upload_job = build_job(message, package)
@@ -16,7 +16,7 @@ module VCAP::CloudController
 
         enqueued_job = Jobs::Enqueuer.new(upload_job, queue: Jobs::LocalQueue.new(config)).enqueue
 
-        record_upload(package, user_guid, user_email) if record_event
+        record_upload(package, user_audit_info) if record_event
       end
 
       enqueued_job
@@ -25,7 +25,7 @@ module VCAP::CloudController
     end
 
     def upload_async_without_event(message:, package:, config:)
-      upload_async(message: message, package: package, config: config, user_guid: nil, user_email: nil, record_event: false)
+      upload_async(message: message, package: package, config: config, user_audit_info: UserAuditInfo.new(user_email: nil, user_guid: nil), record_event: false)
     end
 
     def upload_sync_without_event(message, package)
@@ -39,11 +39,10 @@ module VCAP::CloudController
 
     private
 
-    def record_upload(package, user_guid, user_email)
+    def record_upload(package, user_audit_info)
       Repositories::PackageEventRepository.record_app_package_upload(
         package,
-        user_guid,
-        user_email)
+        user_audit_info)
     end
 
     def build_job(message, package)

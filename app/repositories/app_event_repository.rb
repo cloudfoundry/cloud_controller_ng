@@ -8,7 +8,7 @@ module VCAP::CloudController
                            :docker_credentials_json,
                            :encrypted_docker_credentials_json].freeze
       CENSORED_MESSAGE  = 'PRIVATE DATA HIDDEN'.freeze
-      SYSTEM_ACTOR_HASH = { guid: 'system', type: 'system', name: 'system' }.freeze
+      SYSTEM_ACTOR_HASH = { guid: 'system', type: 'system', name: 'system', user_name: 'system' }.freeze
 
       def create_app_exit_event(app, droplet_exited_payload)
         Loggregator.emit(app.guid, "App instance exited with guid #{app.guid} payload: #{droplet_exited_payload}")
@@ -18,50 +18,50 @@ module VCAP::CloudController
         create_app_audit_event('app.crash', app, app.space, actor, metadata)
       end
 
-      def record_app_update(app, space, actor_guid, actor_name, request_attrs)
+      def record_app_update(app, space, user_audit_info, request_attrs)
         audit_hash = app_audit_hash(request_attrs)
         Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{audit_hash})")
 
-        actor    = { name: actor_name, guid: actor_guid, type: 'user' }
+        actor    = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         metadata = { request: audit_hash }
         create_app_audit_event('audit.app.update', app, space, actor, metadata)
       end
 
-      def record_app_map_droplet(app, space, actor_guid, actor_name, request_attrs)
+      def record_app_map_droplet(app, space, user_audit_info, request_attrs)
         audit_hash = app_audit_hash(request_attrs)
         Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{audit_hash})")
 
-        actor    = { name: actor_name, guid: actor_guid, type: 'user' }
+        actor    = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         metadata = { request: audit_hash }
         create_app_audit_event('audit.app.droplet.mapped', app, space, actor, metadata)
       end
 
-      def record_app_create(app, space, actor_guid, actor_name, request_attrs)
+      def record_app_create(app, space, user_audit_info, request_attrs)
         Loggregator.emit(app.guid, "Created app with guid #{app.guid}")
 
-        actor    = { name: actor_name, guid: actor_guid, type: 'user' }
+        actor    = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         metadata = { request: app_audit_hash(request_attrs) }
         create_app_audit_event('audit.app.create', app, space, actor, metadata)
       end
 
-      def record_app_start(app, actor_guid, actor_name)
+      def record_app_start(app, user_audit_info)
         Loggregator.emit(app.guid, "Starting app with guid #{app.guid}")
 
-        actor = { name: actor_name, guid: actor_guid, type: 'user' }
+        actor = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         create_app_audit_event('audit.app.start', app, app.space, actor, nil)
       end
 
-      def record_app_stop(app, actor_guid, actor_name)
+      def record_app_stop(app, user_audit_info)
         Loggregator.emit(app.guid, "Stopping app with guid #{app.guid}")
 
-        actor = { name: actor_name, guid: actor_guid, type: 'user' }
+        actor = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         create_app_audit_event('audit.app.stop', app, app.space, actor, nil)
       end
 
-      def record_app_delete_request(app, space, actor_guid, actor_name, recursive=nil)
+      def record_app_delete_request(app, space, user_audit_info, recursive=nil)
         Loggregator.emit(app.guid, "Deleted app with guid #{app.guid}")
 
-        actor    = { name: actor_name, guid: actor_guid, type: 'user' }
+        actor    = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         metadata = nil
         unless recursive.nil?
           metadata = { request: { recursive: recursive } }
@@ -69,8 +69,13 @@ module VCAP::CloudController
         create_app_audit_event('audit.app.delete-request', app, space, actor, metadata)
       end
 
-      def record_map_route(app, route, actor_guid, actor_name, route_mapping: nil)
-        actor_hash = actor_guid.nil? ? SYSTEM_ACTOR_HASH : { guid: actor_guid, name: actor_name, type: 'user' }
+      def actor_or_system_hash(user_audit_info)
+        return SYSTEM_ACTOR_HASH if user_audit_info.user_guid.nil?
+        { guid: user_audit_info.user_guid, name: user_audit_info.user_email, user_name: user_audit_info.user_name, type: 'user' }
+      end
+
+      def record_map_route(app, route, user_audit_info, route_mapping: nil)
+        actor_hash = actor_or_system_hash(user_audit_info)
         metadata   = { route_guid: route.guid }
         if route_mapping
           metadata[:app_port]           = route_mapping.app_port
@@ -80,8 +85,8 @@ module VCAP::CloudController
         create_app_audit_event('audit.app.map-route', app, app.space, actor_hash, metadata)
       end
 
-      def record_unmap_route(app, route, actor_guid, actor_name, route_mapping: nil)
-        actor_hash = actor_guid.nil? ? SYSTEM_ACTOR_HASH : { guid: actor_guid, name: actor_name, type: 'user' }
+      def record_unmap_route(app, route, user_audit_info, route_mapping: nil)
+        actor_hash = actor_or_system_hash(user_audit_info)
         metadata   = { route_guid: route.guid }
         if route_mapping
           metadata[:route_mapping_guid] = route_mapping.guid
@@ -90,30 +95,30 @@ module VCAP::CloudController
         create_app_audit_event('audit.app.unmap-route', app, app.space, actor_hash, metadata)
       end
 
-      def record_app_restage(app, actor_guid, actor_name)
-        actor_hash = { name: actor_name, guid: actor_guid, type: 'user' }
+      def record_app_restage(app, user_audit_info)
+        actor_hash = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         create_app_audit_event('audit.app.restage', app, app.space, actor_hash, {})
       end
 
-      def record_src_copy_bits(dest_app, src_app, actor_guid, actor_name)
-        actor_hash = { name: actor_name, guid: actor_guid, type: 'user' }
+      def record_src_copy_bits(dest_app, src_app, user_audit_info)
+        actor_hash = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         metadata   = { destination_guid: dest_app.guid }
         create_app_audit_event('audit.app.copy-bits', src_app, src_app.space, actor_hash, metadata)
       end
 
-      def record_dest_copy_bits(dest_app, src_app, actor_guid, actor_name)
-        actor_hash = { name: actor_name, guid: actor_guid, type: 'user' }
+      def record_dest_copy_bits(dest_app, src_app, user_audit_info)
+        actor_hash = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         metadata   = { source_guid: src_app.guid }
         create_app_audit_event('audit.app.copy-bits', dest_app, dest_app.space, actor_hash, metadata)
       end
 
-      def record_app_ssh_unauthorized(app, actor_guid, actor_name, index)
-        actor_hash = { name: actor_name, guid: actor_guid, type: 'user' }
+      def record_app_ssh_unauthorized(app, user_audit_info, index)
+        actor_hash = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         create_app_audit_event('audit.app.ssh-unauthorized', app, app.space, actor_hash, { index: index })
       end
 
-      def record_app_ssh_authorized(app, actor_guid, actor_name, index)
-        actor_hash = { name: actor_name, guid: actor_guid, type: 'user' }
+      def record_app_ssh_authorized(app, user_audit_info, index)
+        actor_hash = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         create_app_audit_event('audit.app.ssh-authorized', app, app.space, actor_hash, { index: index })
       end
 
@@ -121,16 +126,17 @@ module VCAP::CloudController
 
       def create_app_audit_event(type, app, space, actor, metadata)
         Event.create(
-          space:      space,
-          type:       type,
-          timestamp:  Sequel::CURRENT_TIMESTAMP,
-          actee:      app.guid,
-          actee_type: 'app',
-          actee_name: app.name,
-          actor:      actor[:guid],
-          actor_type: actor[:type],
-          actor_name: actor[:name],
-          metadata:   metadata
+          space:          space,
+          type:           type,
+          timestamp:      Sequel::CURRENT_TIMESTAMP,
+          actee:          app.guid,
+          actee_type:     'app',
+          actee_name:     app.name,
+          actor:          actor[:guid],
+          actor_type:     actor[:type],
+          actor_name:     actor[:name],
+          actor_username: actor[:user_name],
+          metadata:       metadata
         )
       end
 

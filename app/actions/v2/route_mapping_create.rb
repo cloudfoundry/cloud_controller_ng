@@ -8,11 +8,10 @@ module VCAP::CloudController
       class AppPortNotSupportedError < InvalidRouteMapping; end
       class RouteServiceNotSupportedError < InvalidRouteMapping; end
 
-      def initialize(user, user_email, route, process)
-        @user       = user
-        @user_email = user_email
-        @route      = route
-        @process    = process
+      def initialize(user_audit_info, route, process)
+        @user_audit_info = user_audit_info
+        @route           = route
+        @process         = process
       end
 
       def add(request_attrs)
@@ -29,7 +28,7 @@ module VCAP::CloudController
           app_port:      get_port(request_attrs)
         })
 
-        VCAP::CloudController::RouteMappingCreate.new(@user, @user_email, @process.app, @route, @process, message).add
+        VCAP::CloudController::RouteMappingCreate.new(@user_audit_info, @process.app, @route, @process, message).add
       end
 
       private

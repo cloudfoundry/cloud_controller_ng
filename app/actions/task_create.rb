@@ -11,7 +11,7 @@ module VCAP::CloudController
       @config = config
     end
 
-    def create(app, message, user_guid, user_email, droplet: nil)
+    def create(app, message, user_audit_info, droplet: nil)
       droplet ||= app.droplet
       no_assigned_droplet! unless droplet
       validate_maximum_disk!(message)
@@ -34,7 +34,7 @@ module VCAP::CloudController
         app.update(max_task_sequence_id: app.max_task_sequence_id + 1)
 
         app_usage_event_repository.create_from_task(task, 'TASK_STARTED')
-        task_event_repository.record_task_create(task, user_guid, user_email)
+        task_event_repository.record_task_create(task, user_audit_info)
       end
 
       if bypass_bridge?

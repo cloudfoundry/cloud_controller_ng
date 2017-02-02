@@ -56,18 +56,6 @@ RSpec.describe TasksController, type: :controller do
       expect(app_model.tasks.first).to eq(VCAP::CloudController::TaskModel.last)
     end
 
-    it 'passes user info to the task creator' do
-      task = VCAP::CloudController::TaskModel.make
-      task_create = instance_double(VCAP::CloudController::TaskCreate, create: task)
-      allow(VCAP::CloudController::TaskCreate).to receive(:new).and_return(task_create)
-
-      set_current_user(user, email: 'user-email')
-
-      post :create, app_guid: app_model.guid, body: req_body
-
-      expect(task_create).to have_received(:create).with(anything, anything, user.guid, 'user-email', droplet: nil)
-    end
-
     context 'permissions' do
       context 'when the task_creation feature flag is disabled' do
         let(:tasks_enabled) { false }

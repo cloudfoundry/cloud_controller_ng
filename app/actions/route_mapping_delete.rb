@@ -1,8 +1,7 @@
 module VCAP::CloudController
   class RouteMappingDelete
-    def initialize(user, user_email)
-      @user       = user
-      @user_email = user_email
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
     end
 
     def delete(route_mappings)
@@ -17,8 +16,7 @@ module VCAP::CloudController
           event_repository.record_unmap_route(
             route_mapping.app,
             route_mapping.route,
-            @user.try(:guid),
-            @user_email,
+            @user_audit_info,
             route_mapping: route_mapping
           )
 

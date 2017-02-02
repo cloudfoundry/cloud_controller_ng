@@ -4,11 +4,12 @@ require 'actions/task_delete'
 module VCAP::CloudController
   RSpec.describe TaskDelete do
     describe '#delete' do
-      subject(:task_delete) { described_class.new('user-guid', 'user@example.com') }
+      subject(:task_delete) { described_class.new(user_audit_info) }
 
       let!(:task1) { TaskModel.make(state: TaskModel::SUCCEEDED_STATE) }
       let!(:task2) { TaskModel.make(state: TaskModel::SUCCEEDED_STATE) }
       let(:task_dataset) { TaskModel.all }
+      let(:user_audit_info) { instance_double(VCAP::CloudController::UserAuditInfo).as_null_object }
 
       it 'deletes the tasks' do
         expect {
@@ -39,8 +40,6 @@ module VCAP::CloudController
           expect(event.type).to eq('audit.app.task.cancel')
           expect(event.metadata['task_guid']).to eq(task1.guid)
           expect(event.actee).to eq(task1.app.guid)
-          expect(event.actor).to eq('user-guid')
-          expect(event.actor_name).to eq('user@example.com')
         end
       end
     end

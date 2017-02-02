@@ -7,12 +7,14 @@ module VCAP::CloudController
       let(:user) { User.make }
       let(:space) { Space.make }
       let(:user_email) { 'email address' }
+      let(:user_name) { 'user name' }
+      let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user.guid, user_name: user_name) }
 
       subject(:space_event_repository) { SpaceEventRepository.new }
 
       describe '#record_space_create' do
         it 'records event correctly' do
-          event = space_event_repository.record_space_create(space, user, user_email, request_attrs)
+          event = space_event_repository.record_space_create(space, user_audit_info, request_attrs)
           event.reload
           expect(event.space).to eq(space)
           expect(event.type).to eq('audit.space.create')
@@ -22,21 +24,14 @@ module VCAP::CloudController
           expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq('user')
           expect(event.actor_name).to eq(user_email)
+          expect(event.actor_username).to eq(user_name)
           expect(event.metadata).to eq({ 'request' => request_attrs })
-        end
-
-        context 'when the user email is unknown' do
-          it 'leaves actor name empty' do
-            event = space_event_repository.record_space_create(space, user, nil, request_attrs)
-            event.reload
-            expect(event.actor_name).to eq(nil)
-          end
         end
       end
 
       describe '#record_space_update' do
         it 'records event correctly' do
-          event = space_event_repository.record_space_update(space, user, user_email, request_attrs)
+          event = space_event_repository.record_space_update(space, user_audit_info, request_attrs)
           event.reload
           expect(event.space).to eq(space)
           expect(event.type).to eq('audit.space.update')
@@ -46,6 +41,7 @@ module VCAP::CloudController
           expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq('user')
           expect(event.actor_name).to eq(user_email)
+          expect(event.actor_username).to eq(user_name)
           expect(event.metadata).to eq({ 'request' => request_attrs })
         end
       end
@@ -58,7 +54,7 @@ module VCAP::CloudController
         end
 
         it 'records event correctly' do
-          event = space_event_repository.record_space_delete_request(space, user, user_email, recursive)
+          event = space_event_repository.record_space_delete_request(space, user_audit_info, recursive)
           event.reload
           expect(event.space).to be_nil
           expect(event.type).to eq('audit.space.delete-request')
@@ -68,6 +64,7 @@ module VCAP::CloudController
           expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq('user')
           expect(event.actor_name).to eq(user_email)
+          expect(event.actor_username).to eq(user_name)
           expect(event.metadata).to eq({ 'request' => { 'recursive' => true } })
         end
       end
