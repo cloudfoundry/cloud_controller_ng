@@ -1,6 +1,109 @@
 Cloud Controller NG
 
 Copyright (c) 2012-2015 Pivotal Software, Inc. All Rights Reserved.
+Copyright (c) 2015 - Present CloudFoundry.org Foundation, Inc. All Rights Reserved.
+
+Portions of this project contain software that is protected under the
+following copyright notices:
+
+Copyright (c) 2004-2013 David Heinemeier Hansson
+Copyright (c) 2009 Marc-Andre Lafortune
+Copyright (c) 2003-2012 Jim Weirich (jim.weirich@gmail.com)
+Copyright (c) 2006-2012 Nick Sieger <nicksieger@gmail.com>
+Copyright (c) 2011 Anthony Bouch
+Portions Copyright (c) 2011 Dylan Vaughn
+Copyright (c) 2009 John Nunemaker
+Copyright (c) 2005-2012 Thomas Uehlinger
+Copyright (C) 2005  Kent Sibilev <ksibilev@yahoo.com>
+Copyright (C) 2008 Rocky Bernstein (rocky@gnu.org)
+Copyright (C) 2008 Anders Lindgren
+Copyright (c) 2012 Gabriel Horner
+Copyright (C) 2007, 2008 Rocky Bernstein <rockyb@rubyforge.net>
+Copyright (c) 2002-2007  K.Kosako  <sndgk393 AT ybb DOT ne DOT jp>
+Copyright (c) 2009-2012 Dan Kubb
+Copyright (c) 2012 Markus Schirp (packaging)
+(MIT License) - Copyright (c) 2011 Ilya Grigorik
+Copyright (c) 2010-2013 {geemus (Wesley Beary)}[http://github.com/geemus]
+Copyright (c) 2013 [geemus (Wesley Beary)](http://github.com/geemus)
+Copyright (c) 2009 {geemus (Wesley Beary)}[http://github.com/geemus]
+Copyright (c) 2010 Michael Bleigh and Intridea, Inc.
+Copyright (c) 2009-2013 Thibaud Guillaume-Gentil
+Copyright (c) 2010-2013 Thibaud Guillaume-Gentil
+Copyright (c) 2009 Intridea, Inc.
+Copyright (c) 2008 The Ruby I18n team
+Copyright (c) 2013 Thibaud Guillaume-Gentil
+Copyright (c) 2011 Brian Durand
+Copyright (c) 2008 Peter Yandell
+Copyright (c) 2011 John Mair (banisterfiend)
+Copyright (c) 2010-2013 Michael Bleigh, Josh Kalderimis, Erik Michaels-Ober, Pavel Pravosud
+Copyright (c) 2010-2013 Erik Michaels-Ober
+Copyright (c) 2007-2012 Nick Sieger nick@nicksieger.com
+Copyright (c) 2010-2011 Brian Lopez - http://github.com/brianmario
+Copyright (c) 2010, 2011 Derek Collison <derek.collison@gmail.com>. All rights reserved.
+Copyright (c) 2000-2004 Minero Aoki
+Copyright (c) 2000-2005 Minero Aoki
+Copyright (c) 2008 - 2012:
+* {Aaron Patterson}[http://tenderlovemaking.com]
+* {Mike Dalessio}[http://mike.daless.io]
+* {Charles Nutter}[http://blog.headius.com]
+* {Sergio Arbeo}[http://www.serabe.com]
+* {Patrick Mahoney}[http://polycrystal.org]
+* {Yoko Harada}[http://yokolet.blogspot.com]
+Copyright (c) 2011 by Ryan Tomayko <r@tomayko.com>
+Copyright (c) 2011 by The Free Software Foundation or maybe
+Copyright (c) 2007, 2008, 2009, 2010, 2011, 2012 Christian Neukirchen <purl.org/net/chneukirchen>
+Copyright (c) 2009 Joshua Peek
+Copyright (c) 2011 Konstantin Haase
+Copyright (c) 2008-2009 Bryan Helmkamp, Engine Yard Inc.
+Copyright (c) 2003, 2004 Jim Weirich
+Copyright (c) 2010-2012 Thibaud Guillaume-Gentil & Travis Tilley
+Copyright (c) 2009 Nathan Weizenbaum
+Copyright (c) 2010 Nathan Weizenbaum
+Copyright (c) 2009 Chad Humphries, David Chelimsky
+Copyright (c) 2006 David Chelimsky, The RSpec Development Team
+Copyright (c) 2005 Steven Baker
+Copyright (c) 2009 Chad Humphries, David Chelimsky
+Copyright (c) 2006 David Chelimsky, The RSpec Development Team
+Copyright (c) 2005 Steven Baker
+Copyright (c) 2006 David Chelimsky, The RSpec Development Team
+Copyright (c) 2005 Steven Baker
+Copyright (c) 2006 David Chelimsky, The RSpec Development Team
+Copyright (c) 2005 Steven Baker
+Copyright (c) 2007-2008 Sharon Rosner
+Copyright (c) 2008-2013 Jeremy Evans
+Copyright (c) 2010-2012 Christoph Olszowka
+Copyright (c) 2010-2011 Christoph Olszowka
+Copyright (c) 2007 Christian Bach
+Copyright (c) 2007, 2008, 2009, 2010, 2011 Blake Mizerany
+Copyright (c) 2008-2011 Nicolas Sanguinetti, entp.com, Konstantin Haase
+Copyright (c) 2012 Lee Jarvis
+Copyright (c) 2008 Yehuda Katz, Eric Hodel, et al.
+Copyright (c) 2010 Ryan Tomayko <http://tomayko.com/about>
+Copyright (c) 2012  Travis Jeffery, John Trupiano
+Copyright (c) 2011-2012 Piotr Solnica
+Copyright (c) 2012 Vincent Landgraf
+Copyright (c) 2009-2010 Bartosz Blimke
+Copyright (c) 2008-2011 Brian Lopez - http://github.com/brianmario
+Copyright (C) 2006-2013 Bob Aman
+Copyright (c) [2009-2012] VMware, Inc. All Rights Reserved.
+Copyright (C) 2011 FURUHASHI Sadayuki
+Copyright (C) 2008-2012 FURUHASHI Sadayuki
+Copyright (c) 2008-2012 Ruby-FFI contributors
+libffi @VERSION@ - Copyright (c) 2011 Anthony Green
+                    - Copyright (c) 1996-2003, 2007, 2008 Red Hat, Inc.
+Copyright (C) 2008, 2009 Wayne Meissner
+Copyright (C) 2009 Luc Heinrich
+Copyright (c) 2010, Wayne Meissner
+EventMachine is Copyright (C) 2006-07 by Francis Cianfrocca.
+This file is Copyright (C) 2000-2005 by Minero Aoki
+This file is Copyright (C) 2007 by Tony Arcieri
+Copyright (C) 2000-2012  NAKAMURA, Hiroshi  <nahi@ruby-lang.org>.
+Copyright (C) 1993-2010 Yukihiro Matsumoto. All rights reserved.
+Orignal version Copyright (c) 2005 Zed A. Shaw
+ Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ Copyright (C) 1989, 1991 Free Software Foundation, Inc.,
+ Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ Copyright (C) 1991, 1999 Free Software Foundation, Inc.
 
 This product is licensed to you under the Apache License, Version 2.0 (the "License").  
 You may not use this product except in compliance with the License.  
