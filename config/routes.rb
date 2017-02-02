@@ -46,20 +46,10 @@ Rails.application.routes.draw do
   get '/apps/:app_guid/droplets', to: 'droplets#index'
   get '/packages/:package_guid/droplets', to: 'droplets#index'
 
-  # route_mappings
-  post '/route_mappings', to: 'route_mappings#create'
-  get '/route_mappings', to: 'route_mappings#index'
-  get '/route_mappings/:route_mapping_guid', to: 'route_mappings#show'
-  delete '/route_mappings/:route_mapping_guid', to: 'route_mappings#destroy'
-  get '/apps/:app_guid/route_mappings', to: 'route_mappings#index'
-
-  # tasks
-  get '/tasks', to: 'tasks#index'
-  get '/tasks/:task_guid', to: 'tasks#show'
-  put '/tasks/:task_guid/cancel', to: 'tasks#cancel'
-
-  post '/apps/:app_guid/tasks', to: 'tasks#create'
-  get '/apps/:app_guid/tasks', to: 'tasks#index'
+  # errors
+  match '404', to: 'errors#not_found', via: :all
+  match '500', to: 'errors#internal_error', via: :all
+  match '400', to: 'errors#bad_request', via: :all
 
   # isolation_segments
   post '/isolation_segments', to: 'isolation_segments#create'
@@ -73,14 +63,27 @@ Rails.application.routes.draw do
   get '/isolation_segments/:guid/relationships/organizations', to: 'isolation_segments#relationships_orgs'
   get '/isolation_segments/:guid/relationships/spaces', to: 'isolation_segments#relationships_spaces'
 
+  # organizations
+  get '/organizations', to: 'organizations_v3#index'
+
+  # route_mappings
+  post '/route_mappings', to: 'route_mappings#create'
+  get '/route_mappings', to: 'route_mappings#index'
+  get '/route_mappings/:route_mapping_guid', to: 'route_mappings#show'
+  delete '/route_mappings/:route_mapping_guid', to: 'route_mappings#destroy'
+  get '/apps/:app_guid/route_mappings', to: 'route_mappings#index'
+
   # service_bindings
   post '/service_bindings', to: 'service_bindings#create'
   get '/service_bindings/:guid', to: 'service_bindings#show'
   get '/service_bindings', to: 'service_bindings#index'
   delete '/service_bindings/:guid', to: 'service_bindings#destroy'
 
-  # errors
-  match '404', to: 'errors#not_found', via: :all
-  match '500', to: 'errors#internal_error', via: :all
-  match '400', to: 'errors#bad_request', via: :all
+  # tasks
+  get '/tasks', to: 'tasks#index'
+  get '/tasks/:task_guid', to: 'tasks#show'
+  put '/tasks/:task_guid/cancel', to: 'tasks#cancel'
+
+  post '/apps/:app_guid/tasks', to: 'tasks#create'
+  get '/apps/:app_guid/tasks', to: 'tasks#index'
 end

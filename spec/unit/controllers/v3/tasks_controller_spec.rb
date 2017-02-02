@@ -339,9 +339,8 @@ RSpec.describe TasksController, type: :controller do
         get :index, params
 
         parsed_response = parsed_body
-        response_guids = parsed_response['resources'].map { |r| r['guid'] }
         expect(parsed_response['pagination']['total_results']).to eq(2)
-        expect(response_guids.length).to eq(per_page)
+        expect(parsed_response['resources'].length).to eq(per_page)
       end
     end
 
