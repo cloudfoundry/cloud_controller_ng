@@ -22,7 +22,14 @@ module VCAP::CloudController
       # block. This is to work around the fact that Sequel doesn't let us manage the transactions ourselves with a
       # non-block syntax
       Locking.db.transaction do
-        Locking[name: 'clock'].lock!
+        loop do
+          begin
+            Locking[name: 'clock'].lock!
+            break
+          rescue Sequel::DatabaseError => e
+            Steno.logger('cc.background').info('Clock lock wait timeout exceeded. Retrying.', error: e.message)
+          end
+        end
 
         CLEANUPS.each { |c| @clock.schedule_cleanup(c[:name], c[:class], c[:time]) }
         @clock.schedule_frequent_job(:pending_droplets, Jobs::Runtime::PendingDropletCleanup)
