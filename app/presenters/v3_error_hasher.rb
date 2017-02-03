@@ -10,13 +10,13 @@ class V3ErrorHasher < BaseErrorHasher
   def unsanitized_hash
     return { 'errors' => [UNKNOWN_ERROR_HASH.dup] } if error.nil?
 
-    if api_error?
-      payload = api_error_hash
-    elsif services_error?
-      payload = services_error_hash
-    else
-      payload = UNKNOWN_ERROR_HASH.dup
-    end
+    payload = if api_error?
+                api_error_hash
+              elsif services_error?
+                services_error_hash
+              else
+                UNKNOWN_ERROR_HASH.dup
+              end
     payload['test_mode_info'] = test_mode_hash
 
     { 'errors' => [payload] }
@@ -52,11 +52,11 @@ class V3ErrorHasher < BaseErrorHasher
   end
 
   def test_mode_hash
-    if error.respond_to?(:name)
-      debug_title = "CF-#{error.name}"
-    else
-      debug_title = "CF-#{error.class.name.demodulize}"
-    end
+    debug_title = if error.respond_to?(:name)
+                    "CF-#{error.name}"
+                  else
+                    "CF-#{error.class.name.demodulize}"
+                  end
 
     info = {
       'detail'    => error.message,
