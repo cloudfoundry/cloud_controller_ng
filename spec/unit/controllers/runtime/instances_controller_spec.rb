@@ -132,7 +132,7 @@ module VCAP::CloudController
                 CloudController::Errors::InstancesUnavailable.new(SomeInstancesException.new))
             end
 
-            it "returns '220001 InstancesError'" do
+            it "returns '220002 InstancesUnavailable'" do
               get "/v2/apps/#{@app.guid}/instances"
 
               expect(last_response.status).to eq(503)
