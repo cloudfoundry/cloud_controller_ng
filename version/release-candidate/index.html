@@ -97,6 +97,7 @@
 
 
           
+          
 
 
 
@@ -4118,6 +4119,152 @@ In the case where the specified isolation segment is the system-wide shared segm
 </code></pre>
 
 <p>This endpoint lists the spaces to which the isolation segment is assigned.  For an Admin, this will list all associated spaces in the system.  For an org manager, this will list only those associated spaces belonging to orgs for which the user is a manager.  For any other user, this will list only those associated spaces to which the user has access.</p>
+
+          <h2 id="organizations">Organizations</h2>
+
+<p>An org is a development account that an individual or multiple collaborators can own and use. All collaborators access an org with user accounts. Collaborators in an org share a resource quota plan, applications, services availability, and custom domains.</p>
+
+          <div class='no-margin'></div>
+
+<h3 id="the-organization-object">The organization object</h3>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guid
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Unique GUID for the organization</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      name
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">User-facing name of the organization.</p>
+  </li>
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      created_at
+
+        <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">    The time with zone when the object was created.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      updated_at
+
+        <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">    The time with zone when the object was last updated.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      links
+
+        <span class="method-list-item-type">object</span>
+    </h4>
+
+    <p class="method-list-item-description">    Links to related resources.
+</p>
+  </li>
+
+
+</ul>
+
+          <h3 id="list-organizations">List organizations</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/organizations</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+
+{
+  "pagination": {
+    "total_results": 2,
+    "total_pages": 1,
+    "first": {
+      "href": "https://api.bosh-lite.com/v3/organizations?page=1&amp;per_page=50"
+    },
+    "last": {
+      "href": "https://api.bosh-lite.com/v3/organizations?page=1&amp;per_page=50"
+    },
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "885735b5-aea4-4cf5-8e44-961af0e41920",
+      "created_at": "2017-02-01T01:33:58Z",
+      "updated_at": "2017-02-01T01:33:58Z",
+      "name": "org1",
+      "links": {}
+    },
+    {
+    "guid": "d4c91047-7b29-4fda-b7f9-04033e5c9c9f",
+    "created_at": "2017-02-02T00:14:30Z",
+    "updated_at": "2017-02-02T00:14:30Z",
+    "name": "org2",
+    "links": {}
+    },
+  ]
+}
+
+</code></pre>
+
+<p>This endpoint retrieves the organizations the user has access to.</p>
+
+<h4 id="query-parameters">Query Parameters</h4>
+
+<ul class="method-list-group">
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      page
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      per_page
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
+  </li>
+
+
+</ul>
 
           <h2 id="packages">Packages</h2>
 
