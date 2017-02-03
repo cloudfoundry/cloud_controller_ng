@@ -81,11 +81,12 @@ module VCAP::CloudController::Diego
       end
 
       context 'when bbs returns a response with an error' do
+        let(:error_type) { ::Diego::Bbs::Models::Error::Type::InvalidRecord }
         before do
           allow(bbs_client).to receive(:cancel_task).and_return(
             ::Diego::Bbs::Models::TaskLifecycleResponse.new(
               error: ::Diego::Bbs::Models::Error.new(
-                type:    ::Diego::Bbs::Models::Error::Type::InvalidRecord,
+                type: error_type,
                 message: 'error message'
               )))
         end
@@ -95,6 +96,16 @@ module VCAP::CloudController::Diego
             client.stop_staging(staging_guid)
           }.to raise_error(CloudController::Errors::ApiError, /stop staging failed: error message/) do |e|
             expect(e.name).to eq('StagerError')
+          end
+        end
+
+        context 'if the error is a "ResourceNotFound"' do
+          let(:error_type) { ::Diego::Bbs::Models::Error::Type::ResourceNotFound }
+
+          it 'does not raise an error' do
+            expect {
+              client.stop_staging(staging_guid)
+            }.not_to raise_error
           end
         end
       end
