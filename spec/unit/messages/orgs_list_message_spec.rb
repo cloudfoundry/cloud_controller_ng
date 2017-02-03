@@ -6,6 +6,7 @@ module VCAP::CloudController
     describe '.from_params' do
       let(:params) do
         {
+          'names' => 'Case,Molly',
           'page' => 1,
           'per_page' => 5
         }
@@ -18,6 +19,7 @@ module VCAP::CloudController
 
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
+        expect(message.names).to eq(['Case', 'Molly'])
       end
 
       it 'converts requested keys to symbols' do
@@ -25,19 +27,21 @@ module VCAP::CloudController
 
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
+        expect(message.requested?(:names)).to be_truthy
       end
     end
 
     describe '#to_param_hash' do
       let(:opts) do
         {
+          names: ['Case', 'Molly'],
           page: 1,
           per_page: 5,
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = []
+        expected_params = [:names]
         expect(OrgsListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -46,8 +50,9 @@ module VCAP::CloudController
       it 'accepts a set of fields' do
         expect {
           OrgsListMessage.new({
-            page:               1,
-            per_page:           5,
+            names: [],
+            page: 1,
+            per_page: 5,
           })
         }.not_to raise_error
       end
@@ -62,6 +67,14 @@ module VCAP::CloudController
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
+      end
+
+      describe 'validations' do
+        it 'validates names is an array' do
+          message = OrgsListMessage.new names: 'not array'
+          expect(message).to be_invalid
+          expect(message.errors[:names].length).to eq 1
+        end
       end
     end
   end

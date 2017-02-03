@@ -26,6 +26,19 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       ])
     end
 
+    describe 'query params' do
+      describe 'names' do
+        it 'returns orgs with matching names' do
+          get :index, names: 'Marmot,Beaver'
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['resources'].map { |r| r['name'] }).to match_array([
+            'Marmot', 'Beaver'
+          ])
+        end
+      end
+    end
+
     context 'when pagination options are specified' do
       let(:page) { 2 }
       let(:per_page) { 1 }

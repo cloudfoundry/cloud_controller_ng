@@ -9,7 +9,7 @@ class OrganizationsV3Controller < ApplicationController
     invalid_param!(message.pagination_options.errors.full_messages) unless message.pagination_options.valid?
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
-      dataset: readable_orgs,
+      dataset: readable_orgs(message),
       path: '/v3/organizations',
       message: message
     )
@@ -17,7 +17,11 @@ class OrganizationsV3Controller < ApplicationController
 
   private
 
-  def readable_orgs
-    can_read_globally? ? OrgListFetcher.new.fetch_all : OrgListFetcher.new.fetch(readable_org_guids)
+  def readable_orgs(message)
+    if can_read_globally?
+      OrgListFetcher.new.fetch_all(message: message)
+    else
+      OrgListFetcher.new.fetch(message: message, guids: readable_org_guids)
+    end
   end
 end
