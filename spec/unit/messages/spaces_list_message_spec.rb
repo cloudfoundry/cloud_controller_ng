@@ -7,7 +7,8 @@ module VCAP::CloudController
       let(:params) do
         {
           'page' => 1,
-          'per_page' => 5
+          'per_page' => 5,
+          'names' => 'foo,bar'
         }
       end
 
@@ -18,6 +19,7 @@ module VCAP::CloudController
 
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
+        expect(message.names).to eql(['foo', 'bar'])
       end
 
       it 'converts requested keys to symbols' do
@@ -25,6 +27,15 @@ module VCAP::CloudController
 
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
+        expect(message.requested?(:names)).to be_truthy
+      end
+
+      describe 'validations' do
+        it 'validates names is an array' do
+          message = SpacesListMessage.new names: 'not array'
+          expect(message).to be_invalid
+          expect(message.errors[:names].length).to eq 1
+        end
       end
     end
   end

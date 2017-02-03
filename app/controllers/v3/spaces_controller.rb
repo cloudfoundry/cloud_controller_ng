@@ -8,7 +8,7 @@ class SpacesV3Controller < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
-      dataset: readable_spaces,
+      dataset: readable_spaces(message: message),
       path: '/v3/spaces',
       message: message
     )
@@ -16,11 +16,11 @@ class SpacesV3Controller < ApplicationController
 
   private
 
-  def readable_spaces
+  def readable_spaces(message:)
     if can_read_globally?
-      SpaceListFetcher.new.fetch_all
+      SpaceListFetcher.new.fetch_all(message: message)
     else
-      SpaceListFetcher.new.fetch(guids: readable_space_guids)
+      SpaceListFetcher.new.fetch(message: message, guids: readable_space_guids)
     end
   end
 end

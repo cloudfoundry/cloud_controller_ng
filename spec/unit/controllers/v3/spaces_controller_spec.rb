@@ -109,5 +109,41 @@ RSpec.describe SpacesV3Controller, type: :controller do
         ])
       end
     end
+
+    describe 'filters' do
+      context 'when the user has global read access' do
+        before do
+          allow_user_global_read_access(user)
+        end
+
+        describe 'names' do
+          it 'returns the list of matching spaces' do
+            get :index, { names: 'Alpaca,Horse' }
+
+            expect(response.status).to eq(200)
+            expect(parsed_body['resources'].map { |s| s['name'] }).to match_array([
+              'Alpaca', 'Horse',
+            ])
+          end
+        end
+      end
+
+      context 'when the user does NOT have global read access' do
+        before do
+          org1.add_manager(user)
+        end
+
+        describe 'names' do
+          it 'returns the list of matching spaces' do
+            get :index, { names: 'Alpaca,Horse' }
+
+            expect(response.status).to eq(200)
+            expect(parsed_body['resources'].map { |s| s['name'] }).to match_array([
+              'Alpaca',
+            ])
+          end
+        end
+      end
+    end
   end
 end
