@@ -4,6 +4,7 @@ module VCAP::CloudController
   RSpec.describe VCAP::CloudController::SpacesController do
     let(:organization_one) { Organization.make }
     let(:space_one) { Space.make(organization: organization_one) }
+    let(:user_email) { Sham.email }
 
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:name) }
@@ -605,9 +606,10 @@ module VCAP::CloudController
     end
 
     describe 'audit events' do
+      let(:user_email) { Sham.email }
       let(:space) { Space.make }
 
-      before { set_current_user_as_admin }
+      before { set_current_user_as_admin(email: user_email) }
 
       it 'logs audit.space.create when creating a space' do
         request_body = { organization_guid: space.organization.guid, name: 'space_name' }.to_json
@@ -1688,7 +1690,7 @@ module VCAP::CloudController
           before do
             allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
             organization_one.add_user(user)
-            set_current_user_as_admin
+            set_current_user_as_admin(email: user_email)
           end
 
           it "makes the user a space #{role}" do
@@ -1777,7 +1779,7 @@ module VCAP::CloudController
             allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
             organization_one.add_user(user)
             space_one.send("add_#{role}", user)
-            set_current_user_as_admin
+            set_current_user_as_admin(email: user_email)
           end
 
           it "unsets the user as a space #{role}" do
@@ -1869,7 +1871,7 @@ module VCAP::CloudController
 
           before do
             space.organization.add_user(user)
-            set_current_user_as_admin
+            set_current_user_as_admin(email: user_email)
             allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({ user.guid => user.username })
           end
 
@@ -1917,7 +1919,7 @@ module VCAP::CloudController
           before do
             space.organization.add_user(user)
             space.send("add_#{role}", user)
-            set_current_user_as_admin
+            set_current_user_as_admin(email: user_email)
             allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).with([user.guid]).and_return({ user.guid => user.username })
           end
 

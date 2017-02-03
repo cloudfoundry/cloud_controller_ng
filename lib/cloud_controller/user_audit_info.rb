@@ -3,7 +3,7 @@ module VCAP::CloudController
     attr_reader :user_email, :user_name, :user_guid
 
     def initialize(user_email:, user_name: nil, user_guid:)
-      @user_email = user_email
+      @user_email = user_email || ''
       @user_name  = user_name || ''
       @user_guid  = user_guid
     end

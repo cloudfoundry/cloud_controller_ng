@@ -19,5 +19,24 @@ module VCAP::CloudController
         expect(info.user_guid).to eq('the-guid')
       end
     end
+
+    context 'defaults' do
+      let(:security_context) do
+        class_double(SecurityContext,
+          current_user_email: nil,
+          current_user_name:  nil,
+          current_user:       User.new(guid: 'the-guid')
+        )
+      end
+
+      describe '.from_context' do
+        it 'defaults to empty strings from a nil-valued Security Context' do
+          info = described_class.from_context(security_context)
+          expect(info.user_email).to eq('')
+          expect(info.user_name).to eq('')
+          expect(info.user_guid).to eq('the-guid')
+        end
+      end
+    end
   end
 end

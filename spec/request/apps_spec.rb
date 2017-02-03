@@ -539,6 +539,7 @@ RSpec.describe 'Apps' do
     let!(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
     let!(:droplet) { VCAP::CloudController::DropletModel.make(package: package, app: app_model) }
     let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
+    let(:user_email) { nil }
 
     it 'deletes an App' do
       delete "/v3/apps/#{app_model.guid}", nil, user_header
@@ -558,7 +559,7 @@ RSpec.describe 'Apps' do
         actee_name:        'app_name',
         actor:             user.guid,
         actor_type:        'user',
-        actor_name:        user_email,
+        actor_name:        '',
         actor_username:    user_name,
         space_guid:        space.guid,
         organization_guid: space.organization.guid
