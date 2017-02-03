@@ -104,7 +104,7 @@ module VCAP::CloudController
 
         it 'processes Sequel Validation errors using translate_validation_exception' do
           get '/test_validation_error'
-          expect(decoded_response['description']).to eq('validation failed')
+          expect(decoded_response['description']).to eq('An unknown error occurred.')
         end
 
         it 'processes BlobstoreError using translate_validation_exception' do

@@ -20,7 +20,7 @@ RSpec.describe ErrorsController, type: :controller do
       get :internal_error
 
       expect(response.status).to eq(500)
-      expect(parsed_body['errors'].first['detail']).to eq('sad things')
+      expect(parsed_body['errors'].first['detail']).to eq('An unknown error occurred.')
     end
   end
 
