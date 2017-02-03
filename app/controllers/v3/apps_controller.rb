@@ -21,7 +21,6 @@ class AppsV3Controller < ApplicationController
   def index
     message = AppsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
-    invalid_param!(message.pagination_options.errors.full_messages) unless message.pagination_options.valid?
 
     dataset = if can_read_globally?
                 AppListFetcher.new.fetch_all(message)

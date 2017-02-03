@@ -6,7 +6,6 @@ class OrganizationsV3Controller < ApplicationController
   def index
     message = OrgsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
-    invalid_param!(message.pagination_options.errors.full_messages) unless message.pagination_options.valid?
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       dataset: readable_orgs(message),

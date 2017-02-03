@@ -44,7 +44,6 @@ class IsolationSegmentsController < ApplicationController
   def index
     message = IsolationSegmentsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
-    invalid_param!(message.pagination_options.errors.full_messages) unless message.pagination_options.valid?
 
     fetcher = IsolationSegmentListFetcher.new(message: message)
 
