@@ -16,6 +16,7 @@ includes:
   - api_resources/processes
   - api_resources/route_mappings
   - api_resources/service_bindings
+  - api_resources/spaces
   - api_resources/tasks
   - introduction/introduction
   - concepts/concepts
@@ -108,6 +109,9 @@ includes:
   - experimental_resources/service_bindings/get
   - experimental_resources/service_bindings/delete
   - experimental_resources/service_bindings/list
+  - experimental_resources/spaces/header
+  - experimental_resources/spaces/object
+  - experimental_resources/spaces/list
 
 search: true
 ---

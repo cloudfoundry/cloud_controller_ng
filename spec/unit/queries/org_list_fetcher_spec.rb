@@ -17,7 +17,7 @@ module VCAP::CloudController
     describe '#fetch' do
       let(:org_guids) { [org1.guid, org3.guid, org4.guid] }
 
-      it 'fetch_all includes all the orgs with the provided guids' do
+      it 'includes all the orgs with the provided guids' do
         results = fetcher.fetch(message: message, guids: org_guids).all
         expect(results).to match_array([org1, org3, org4])
       end

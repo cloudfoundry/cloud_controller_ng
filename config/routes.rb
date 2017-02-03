@@ -79,6 +79,9 @@ Rails.application.routes.draw do
   get '/service_bindings', to: 'service_bindings#index'
   delete '/service_bindings/:guid', to: 'service_bindings#destroy'
 
+  # spaces
+  get '/spaces', to: 'spaces_v3#index'
+
   # tasks
   get '/tasks', to: 'tasks#index'
   get '/tasks/:task_guid', to: 'tasks#show'

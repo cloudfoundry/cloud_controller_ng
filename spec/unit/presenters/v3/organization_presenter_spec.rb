@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'presenters/v3/app_presenter'
+require 'presenters/v3/organization_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe OrganizationPresenter do
