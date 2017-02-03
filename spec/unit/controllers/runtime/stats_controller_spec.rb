@@ -118,6 +118,24 @@ module VCAP::CloudController
           end
         end
 
+        context 'when instance reporter raises an ApiError' do
+          before do
+            allow(instances_reporters).to receive(:stats_for_app).and_raise(
+              CloudController::Errors::ApiError.new_from_details('ServerError')
+            )
+            set_current_user(@developer)
+          end
+
+          it 'does not re-raise as a StatsError' do
+            @app.update(state: 'STARTED')
+
+            get "/v2/apps/#{@app.guid}/stats"
+
+            expect(last_response.status).to eq(500)
+            expect(last_response.body).to match('Server error')
+          end
+        end
+
         context 'when there is an error finding instances' do
           before do
             allow(instances_reporters).to receive(:stats_for_app).and_raise(CloudController::Errors::ApiError.new_from_details('StatsError', 'msg'))
