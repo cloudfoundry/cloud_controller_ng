@@ -27,7 +27,7 @@ module VCAP::CloudController
             Locking[name: 'clock'].lock!
             break
           rescue Sequel::DatabaseError => e
-            Steno.logger('cc.background').info('Clock lock wait timeout exceeded. Retrying.', error: e.message)
+            Steno.logger('cc.background').info('Another clock has acquired the lock and is performing normal operations. Reattempting to acquire lock.', error: e.message)
           end
         end
 
