@@ -85,6 +85,7 @@ module VCAP::Services::SSO::UAA
         client_secret:          client_attrs['secret'],
         redirect_uri:           client_attrs['redirect_uri'],
         scope:                  filter_uaa_client_scope,
+        authorities:            ['uaa.resource'],
         authorized_grant_types: ['authorization_code']
       }
     end

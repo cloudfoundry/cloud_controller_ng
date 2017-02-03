@@ -38,6 +38,7 @@ module VCAP::Services::SSO::UAA
             client_secret:          nil,
             redirect_uri:           nil,
             scope:                  ['openid', 'cloud_controller_service_permissions.read'],
+            authorities:            ['uaa.resource'],
             authorized_grant_types: ['authorization_code'],
             action:                 'add'
           },
@@ -46,6 +47,7 @@ module VCAP::Services::SSO::UAA
             client_secret:          nil,
             redirect_uri:           nil,
             scope:                  ['openid', 'cloud_controller_service_permissions.read'],
+            authorities:            ['uaa.resource'],
             authorized_grant_types: ['authorization_code'],
             action:                 'update' },
           {
@@ -53,6 +55,7 @@ module VCAP::Services::SSO::UAA
             client_secret:          nil,
             redirect_uri:           nil,
             scope:                  ['openid', 'cloud_controller_service_permissions.read'],
+            authorities:            ['uaa.resource'],
             authorized_grant_types: ['authorization_code'],
             action:                 'delete'
           }
@@ -267,6 +270,7 @@ module VCAP::Services::SSO::UAA
             client_secret:          nil,
             redirect_uri:           nil,
             scope:                  expected_scope,
+            authorities:            ['uaa.resource'],
             authorized_grant_types: ['authorization_code'],
             action:                 'add'
           }

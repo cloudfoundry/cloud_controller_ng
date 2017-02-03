@@ -375,6 +375,7 @@ RSpec.describe 'Service Broker' do
             'client_secret'          => nil,
             'redirect_uri'           => nil,
             'scope'                  => ['openid', 'cloud_controller_service_permissions.read'],
+            'authorities'            => ['uaa.resource'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'delete'
           },
@@ -383,6 +384,7 @@ RSpec.describe 'Service Broker' do
             'client_secret'          => nil,
             'redirect_uri'           => nil,
             'scope'                  => ['openid', 'cloud_controller_service_permissions.read'],
+            'authorities'            => ['uaa.resource'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'delete'
           },
@@ -391,6 +393,7 @@ RSpec.describe 'Service Broker' do
             'client_secret'          => service_2[:dashboard_client][:secret],
             'redirect_uri'           => service_2[:dashboard_client][:redirect_uri],
             'scope'                  => ['openid', 'cloud_controller_service_permissions.read'],
+            'authorities'            => ['uaa.resource'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'add'
           },
@@ -399,6 +402,7 @@ RSpec.describe 'Service Broker' do
             'client_secret'          => 'SUPERsecret',
             'redirect_uri'           => service_3[:dashboard_client][:redirect_uri],
             'scope'                  => ['openid', 'cloud_controller_service_permissions.read'],
+            'authorities'            => ['uaa.resource'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'update,secret'
           },
@@ -407,6 +411,7 @@ RSpec.describe 'Service Broker' do
             'client_secret'          => service_4[:dashboard_client][:secret],
             'redirect_uri'           => service_4[:dashboard_client][:redirect_uri],
             'scope'                  => ['openid', 'cloud_controller_service_permissions.read'],
+            'authorities'            => ['uaa.resource'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'add'
           },
@@ -415,6 +420,7 @@ RSpec.describe 'Service Broker' do
             'client_secret'          => service_5[:dashboard_client][:secret],
             'redirect_uri'           => 'http://nowhere.net',
             'scope'                  => ['openid', 'cloud_controller_service_permissions.read'],
+            'authorities'            => ['uaa.resource'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'update,secret'
           },
@@ -423,6 +429,7 @@ RSpec.describe 'Service Broker' do
             'client_secret'          => service_6[:dashboard_client][:secret],
             'redirect_uri'           => service_6[:dashboard_client][:redirect_uri],
             'scope'                  => ['openid', 'cloud_controller_service_permissions.read'],
+            'authorities'            => ['uaa.resource'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'update,secret'
           }
@@ -627,6 +634,7 @@ HEREDOC
             client_secret:          nil,
             redirect_uri:           nil,
             scope:                  ['openid', 'cloud_controller_service_permissions.read'],
+            authorities:            ['uaa.resource'],
             authorized_grant_types: ['authorization_code'],
             action:                 'delete'
           },
@@ -635,6 +643,7 @@ HEREDOC
             client_secret:          nil,
             redirect_uri:           nil,
             scope:                  ['openid', 'cloud_controller_service_permissions.read'],
+            authorities:            ['uaa.resource'],
             authorized_grant_types: ['authorization_code'],
             action:                 'delete'
           }
