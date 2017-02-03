@@ -45,6 +45,19 @@ module VCAP::CloudController
 
           expect(instances_reporters.number_of_starting_and_running_instances_for_process(diego_app)).to eq(2)
         end
+
+        context 'when the reporter throws an InstancesUnavailable' do
+          before do
+            allow(tps_instances_reporter).to receive(:number_of_starting_and_running_instances_for_process).and_raise(
+              CloudController::Errors::InstancesUnavailable.new('custom error'))
+          end
+
+          it 're-raises an as api error and retains the original error message' do
+            expect {
+              instances_reporters.number_of_starting_and_running_instances_for_process(diego_app)
+            }.to raise_error(CloudController::Errors::ApiError, /custom error/)
+          end
+        end
       end
 
       context 'when the app is a Diego app and uses the local instances reporter' do
@@ -54,6 +67,19 @@ module VCAP::CloudController
           allow(diego_instances_reporter).to receive(:number_of_starting_and_running_instances_for_process).with(diego_app).and_return(2)
 
           expect(instances_reporters.number_of_starting_and_running_instances_for_process(diego_app)).to eq(2)
+        end
+
+        context 'when the reporter throws an InstancesUnavailable' do
+          before do
+            allow(diego_instances_reporter).to receive(:number_of_starting_and_running_instances_for_process).and_raise(
+              CloudController::Errors::InstancesUnavailable.new('custom error'))
+          end
+
+          it 're-raises an as api error and retains the original error message' do
+            expect {
+              instances_reporters.number_of_starting_and_running_instances_for_process(diego_app)
+            }.to raise_error(CloudController::Errors::ApiError, /custom error/)
+          end
         end
       end
     end
@@ -73,6 +99,18 @@ module VCAP::CloudController
 
           expect(instances_reporters.all_instances_for_app(diego_app)).to eq(4)
         end
+
+        context 'when the reporter throws an InstancesUnavailable' do
+          before do
+            allow(tps_instances_reporter).to receive(:all_instances_for_app).and_raise(CloudController::Errors::InstancesUnavailable.new('custom error'))
+          end
+
+          it 're-raises an as api error and retains the original error message' do
+            expect {
+              instances_reporters.all_instances_for_app(diego_app)
+            }.to raise_error(CloudController::Errors::ApiError, /custom error/)
+          end
+        end
       end
 
       context 'when the app is a Diego app and uses the local instances reporter' do
@@ -82,6 +120,18 @@ module VCAP::CloudController
           allow(diego_instances_reporter).to receive(:all_instances_for_app).with(diego_app).and_return(4)
 
           expect(instances_reporters.all_instances_for_app(diego_app)).to eq(4)
+        end
+
+        context 'when the reporter throws an InstancesUnavailable' do
+          before do
+            allow(diego_instances_reporter).to receive(:all_instances_for_app).and_raise(CloudController::Errors::InstancesUnavailable.new('custom error'))
+          end
+
+          it 're-raises an as api error and retains the original error message' do
+            expect {
+              instances_reporters.all_instances_for_app(diego_app)
+            }.to raise_error(CloudController::Errors::ApiError, /custom error/)
+          end
         end
       end
     end
@@ -101,6 +151,18 @@ module VCAP::CloudController
 
           expect(instances_reporters.crashed_instances_for_app(diego_app)).to eq(6)
         end
+
+        context 'when the reporter throws an InstancesUnavailable' do
+          before do
+            allow(tps_instances_reporter).to receive(:crashed_instances_for_app).and_raise(CloudController::Errors::InstancesUnavailable.new('custom error'))
+          end
+
+          it 're-raises an as api error and retains the original error message' do
+            expect {
+              instances_reporters.crashed_instances_for_app(diego_app)
+            }.to raise_error(CloudController::Errors::ApiError, /custom error/)
+          end
+        end
       end
 
       context 'when the app is a Diego app and uses the local instances reporter' do
@@ -110,6 +172,18 @@ module VCAP::CloudController
           allow(diego_instances_reporter).to receive(:crashed_instances_for_app).with(diego_app).and_return(6)
 
           expect(instances_reporters.crashed_instances_for_app(diego_app)).to eq(6)
+        end
+
+        context 'when the reporter throws an InstancesUnavailable' do
+          before do
+            allow(diego_instances_reporter).to receive(:crashed_instances_for_app).and_raise(CloudController::Errors::InstancesUnavailable.new('custom error'))
+          end
+
+          it 're-raises an as api error and retains the original error message' do
+            expect {
+              instances_reporters.crashed_instances_for_app(diego_app)
+            }.to raise_error(CloudController::Errors::ApiError, /custom error/)
+          end
         end
       end
     end

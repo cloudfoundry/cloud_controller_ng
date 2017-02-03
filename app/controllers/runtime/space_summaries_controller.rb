@@ -47,8 +47,6 @@ module VCAP::CloudController
           running_instances: instances[process.guid],
         }.merge(process.to_hash)
       end
-    rescue CloudController::Errors::InstancesUnavailable => e
-      raise CloudController::Errors::ApiError.new_from_details('InstancesUnavailable', e.to_s)
     end
 
     def services_summary(space)

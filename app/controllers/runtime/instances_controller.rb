@@ -27,8 +27,6 @@ module VCAP::CloudController
 
       instances = instances_reporters.all_instances_for_app(app)
       MultiJson.dump(instances)
-    rescue CloudController::Errors::InstancesUnavailable => e
-      raise CloudController::Errors::ApiError.new_from_details('InstancesUnavailable', e.to_s)
     end
 
     delete "#{path_guid}/instances/:index", :kill_instance
