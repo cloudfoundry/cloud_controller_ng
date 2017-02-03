@@ -18,6 +18,8 @@ module VCAP::CloudController
 
     def stats_for_app(app)
       reporter_for_app(app).stats_for_app(app)
+    rescue CloudController::Errors::InstancesUnavailable => e
+      raise CloudController::Errors::ApiError.new_from_details('StatsUnavailable', ['Stats server temporarily unavailable.', e.to_s])
     end
 
     def number_of_starting_and_running_instances_for_processes(apps)
