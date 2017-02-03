@@ -11,6 +11,7 @@ includes:
   - api_resources/apps
   - api_resources/droplets
   - api_resources/isolation_segments
+  - api_resources/organizations
   - api_resources/packages
   - api_resources/processes
   - api_resources/route_mappings
@@ -61,6 +62,9 @@ includes:
   - experimental_resources/isolation_segments/unassign
   - experimental_resources/isolation_segments/list_organizations
   - experimental_resources/isolation_segments/list_spaces
+  - experimental_resources/organizations/header
+  - experimental_resources/organizations/object
+  - experimental_resources/organizations/list
   - experimental_resources/packages/header
   - experimental_resources/packages/object
   - experimental_resources/packages/create

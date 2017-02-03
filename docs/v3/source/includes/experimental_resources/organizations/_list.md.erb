@@ -1,0 +1,40 @@
+### List organizations
+
+```
+Definition
+```
+
+```http
+GET /v3/organizations HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/organizations" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :paginated_list_of_organizations, '/v3/organizations' %>
+```
+
+This endpoint retrieves the organizations the user has access to.
+
+#### Query Parameters
+
+<ul class="method-list-group">
+
+<%= yield_content :page_query_param %>
+
+<%= yield_content :per_page_query_param %>
+</ul>
