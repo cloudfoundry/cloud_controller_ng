@@ -111,6 +111,7 @@
           
 
           
+          
 
 
           <h1 id="introduction">Introduction</h1>
@@ -4211,6 +4212,7 @@ In the case where the specified isolation segment is the system-wide shared segm
     "last": {
       "href": "https://api.bosh-lite.com/v3/organizations?page=1&amp;per_page=50"
     },
+    "next": null,
     "previous": null
   },
   "resources": [
@@ -4222,12 +4224,12 @@ In the case where the specified isolation segment is the system-wide shared segm
       "links": {}
     },
     {
-    "guid": "d4c91047-7b29-4fda-b7f9-04033e5c9c9f",
-    "created_at": "2017-02-02T00:14:30Z",
-    "updated_at": "2017-02-02T00:14:30Z",
-    "name": "org2",
-    "links": {}
-    },
+      "guid": "d4c91047-7b29-4fda-b7f9-04033e5c9c9f",
+      "created_at": "2017-02-02T00:14:30Z",
+      "updated_at": "2017-02-02T00:14:30Z",
+      "name": "org2",
+      "links": {}
+    }
   ]
 }
 
@@ -7517,6 +7519,152 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
     <p class="method-list-item-description">    Value to sort by. Defaults to ascending, or prepend with &ldquo;-&rdquo; to sort descending.
     <br>Possible values are <code>created_at</code>, <code>updated_at</code>.
+</p>
+  </li>
+
+
+</ul>
+
+          <h2 id="spaces">Spaces</h2>
+
+<p>Every application and service is scoped to a space. Each org contains at least one space. A space provides users with access to a shared location for application development, deployment, and maintenance.</p>
+
+          <div class='no-margin'></div>
+
+<h3 id="the-space-object">The space object</h3>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guid
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Unique GUID for the space</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      name
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">User-facing name of the space.</p>
+  </li>
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      created_at
+
+        <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">    The time with zone when the object was created.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      updated_at
+
+        <span class="method-list-item-type">datetime</span>
+    </h4>
+
+    <p class="method-list-item-description">    The time with zone when the object was last updated.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      links
+
+        <span class="method-list-item-type">object</span>
+    </h4>
+
+    <p class="method-list-item-description">    Links to related resources.
+</p>
+  </li>
+
+
+</ul>
+
+          <h3 id="list-spaces">List spaces</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/spaces</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+
+{
+  "pagination": {
+    "total_results": 2,
+    "total_pages": 1,
+    "first": {
+      "href": "https://api.bosh-lite.com/v3/spaces?page=1&amp;per_page=50"
+    },
+    "last": {
+      "href": "https://api.bosh-lite.com/v3/spaces?page=1&amp;per_page=50"
+    },
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "885735b5-aea4-4cf5-8e44-961af0e41920",
+      "created_at": "2017-02-01T01:33:58Z",
+      "updated_at": "2017-02-01T01:33:58Z",
+      "name": "space1",
+      "links": {}
+    },
+    {
+    "guid": "d4c91047-7b29-4fda-b7f9-04033e5c9c9f",
+    "created_at": "2017-02-02T00:14:30Z",
+    "updated_at": "2017-02-02T00:14:30Z",
+    "name": "space2",
+    "links": {}
+    },
+  ]
+}
+
+</code></pre>
+
+<p>This endpoint retrieves the spaces the user has access to.</p>
+
+<h4 id="query-parameters">Query Parameters</h4>
+
+<ul class="method-list-group">
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      page
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      per_page
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
 </p>
   </li>
 
