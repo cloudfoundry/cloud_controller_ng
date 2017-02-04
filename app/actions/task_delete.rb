@@ -18,7 +18,11 @@ module VCAP::CloudController
       Repositories::TaskEventRepository.new.record_task_cancel(task, @user_audit_info)
 
       begin
-        nsync_client.cancel_task(task)
+        if bypass_bridge?
+          bbs_task_client.cancel_task(task.guid)
+        else
+          nsync_client.cancel_task(task)
+        end
       rescue => e
         logger.error("failed to send cancel task request for task '#{task.guid}': #{e.message}")
         # we want to continue deleting tasks, the backend will become eventually consistent and cancel
@@ -26,8 +30,16 @@ module VCAP::CloudController
       end
     end
 
+    def bypass_bridge?
+      !!HashUtils.dig(Config.config, :diego, :temporary_local_tasks)
+    end
+
     def nsync_client
       CloudController::DependencyLocator.instance.nsync_client
+    end
+
+    def bbs_task_client
+      CloudController::DependencyLocator.instance.bbs_task_client
     end
 
     def logger
