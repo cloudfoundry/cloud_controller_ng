@@ -100,6 +100,12 @@ class ApplicationController < ActionController::Base
     VCAP::CloudController::Permissions.new(current_user).can_read_globally?
   end
 
+  def can_read_isolation_segment?(isolation_segment)
+    can_read_globally? ||
+      isolation_segment.spaces.any? { |space| can_read?(space.guid, space.organization.guid) } ||
+      isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
+  end
+
   def can_see_secrets?(space)
     VCAP::CloudController::Permissions.new(current_user).can_see_secrets_in_space?(space.guid, space.organization.guid)
   end

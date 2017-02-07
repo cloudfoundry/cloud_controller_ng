@@ -158,12 +158,6 @@ class IsolationSegmentsController < ApplicationController
     [isolation_segment_model, organizations]
   end
 
-  def can_read_isolation_segment?(isolation_segment)
-    can_read_globally? ||
-      isolation_segment.spaces.any? { |space| can_read?(space.guid, space.organization.guid) } ||
-      isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
-  end
-
   def can_list_organizations?(isolation_segment)
     can_read_globally? || isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
   end

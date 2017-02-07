@@ -456,7 +456,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(parsed_body['guid']).to eq(isolation_segment.guid)
           expect(parsed_body['name']).to eq(isolation_segment.name)
           expect(parsed_body['links']['self']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}")
-          expect(parsed_body['links']['organizations']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations")
+          expect(parsed_body['links']['organizations']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/organizations")
           expect(parsed_body['links']['spaces']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces")
         end
       end
@@ -502,7 +502,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
               expect(parsed_body['guid']).to eq(isolation_segment.guid)
               expect(parsed_body['name']).to eq(isolation_segment.name)
               expect(parsed_body['links']['self']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}")
-              expect(parsed_body['links']['organizations']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations")
+              expect(parsed_body['links']['organizations']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/organizations")
               expect(parsed_body['links']['spaces']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces")
             end
           end

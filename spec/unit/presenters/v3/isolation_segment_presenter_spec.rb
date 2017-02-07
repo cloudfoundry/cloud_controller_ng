@@ -14,7 +14,7 @@ module VCAP::CloudController::Presenters::V3
       it 'presents the isolation_segment as json' do
         links = {
           self: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
-          organizations: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations" },
+          organizations: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/organizations" },
           spaces: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces" },
         }
 

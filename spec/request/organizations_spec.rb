@@ -60,4 +60,52 @@ RSpec.describe 'Organizations' do
       )
     end
   end
+
+  describe 'GET /v3/isolation_segments/:guid/organizations' do
+    let(:isolation_segment1) { VCAP::CloudController::IsolationSegmentModel.make(name: 'awesome_seg') }
+    let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+
+    before do
+      assigner.assign(isolation_segment1, [organization2, organization3])
+    end
+
+    it 'returns a paginated list of orgs entitled to the isolation segment' do
+      get "/v3/isolation_segments/#{isolation_segment1.guid}/organizations?per_page=2", nil, user_header
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'pagination' => {
+            'total_results' => 2,
+            'total_pages' => 1,
+            'first' => {
+              'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment1.guid}/organizations?page=1&per_page=2"
+            },
+            'last' => {
+              'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment1.guid}/organizations?page=1&per_page=2"
+            },
+            'next' => nil,
+            'previous' => nil
+          },
+          'resources' => [
+            {
+              'guid' => organization2.guid,
+              'name' => 'Dungeon World',
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {}
+            },
+            {
+              'guid' => organization3.guid,
+              'name' => 'The Sprawl',
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {}
+            }
+          ]
+        }
+      )
+    end
+  end
 end

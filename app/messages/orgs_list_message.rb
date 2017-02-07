@@ -2,7 +2,7 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class OrgsListMessage < ListMessage
-    ALLOWED_KEYS = [:page, :per_page, :names].freeze
+    ALLOWED_KEYS = [:page, :per_page, :names, :isolation_segment_guid].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 
@@ -15,7 +15,7 @@ module VCAP::CloudController
     end
 
     def to_param_hash
-      super(exclude: [:page, :per_page])
+      super(exclude: [:page, :per_page, :isolation_segment_guid])
     end
 
     def self.from_params(params)
