@@ -281,27 +281,27 @@ module VCAP::CloudController
                     AppModel.make(space: space)
                   end
 
-                  it 'cannot change the default isolation segment to the shared segment' do
+                  it 'sets the default to the shared segment but does not affect running apps' do
                     expect {
                       assigner.assign(shared_segment, [org])
                       org.update(default_isolation_segment_model: shared_segment)
-                    }.to raise_error(CloudController::Errors::ApiError, /Please delete all Apps from Space/)
+                    }.to_not raise_error
 
                     org.reload
-                    expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+                    expect(org.default_isolation_segment_model).to eq(shared_segment)
                   end
                 end
               end
 
               context 'and a space has an app' do
-                it 'raises an UnableToPerform exception and does not set the default' do
+                it 'sets the default but does not affect running apps' do
                   AppModel.make(space: space)
                   expect {
                     org.update(default_isolation_segment_guid: isolation_segment_model.guid)
-                  }.to raise_error(CloudController::Errors::ApiError, /Please delete all Apps from Space/)
+                  }.to_not raise_error
 
                   org.reload
-                  expect(org.default_isolation_segment_model).to eq(nil)
+                  expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
                 end
 
                 it 'sets the default when assigning the shared segment as the default' do
@@ -364,13 +364,13 @@ module VCAP::CloudController
                   AppModel.make(space: space)
                 end
 
-                it 'raises a 400 UnableToPerform' do
+                it 'removes the default isolation segment but does not affect running apps' do
                   expect {
                     org.update(default_isolation_segment_model: nil)
-                  }.to raise_error(CloudController::Errors::ApiError, /Removing default Isolation Segment/)
+                  }.to_not raise_error
 
                   org.reload
-                  expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+                  expect(org.default_isolation_segment_model).to be_nil
                 end
               end
             end

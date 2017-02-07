@@ -95,12 +95,9 @@ module VCAP::CloudController
                 AppModel.make(space: space)
               end
 
-              it 'does not remove the org from the Isolation Segment' do
-                expect {
-                  subject.unassign(isolation_segment_model, org)
-                }.to raise_error CloudController::Errors::ApiError, /Removing default Isolation Segment could not be completed/
-
-                expect(isolation_segment_model.organizations).to contain_exactly(org, org2)
+              it 'removes the Organization form the Isolation Segment' do
+                subject.unassign(isolation_segment_model, org)
+                expect(isolation_segment_model.organizations).to eq([org2])
               end
             end
           end

@@ -219,15 +219,6 @@ module VCAP::CloudController
 
     private
 
-    def check_spaces_without_isolation_segments_empty!(action)
-      Space.dataset.where(isolation_segment_guid: nil, organization: self).each do |space|
-        raise CloudController::Errors::ApiError.new_from_details(
-          'UnableToPerform',
-          "#{action} default Isolation Segment",
-          "Please delete all Apps from Space #{space.name} first.") unless space.app_models.empty?
-      end
-    end
-
     def validate_default_isolation_segment(isolation_segment_model)
       if isolation_segment_model
         validate_default_isolation_segment_set(isolation_segment_model)
@@ -242,9 +233,6 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
                                                                  "Could not find Isolation Segment with guid: #{isolation_segment_model.guid}")
       end
-
-      check_spaces_without_isolation_segments_empty!('Setting') unless initial_value(:default_isolation_segment_guid).eql?(nil) &&
-        isolation_segment_model.is_shared_segment?
     end
 
     def validate_default_isolation_segment_unset
@@ -254,8 +242,6 @@ module VCAP::CloudController
           'Cannot unset the Default Isolation Segment.',
           'Please change the Default Isolation Segment for your Organization before attempting to remove the default.')
       end
-
-      check_spaces_without_isolation_segments_empty!('Removing')
     end
 
     def validate_quota_on_create
