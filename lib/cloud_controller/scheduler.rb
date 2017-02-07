@@ -17,27 +17,12 @@ module VCAP::CloudController
     end
 
     def start
-      # The Locking model has its own DB connection defined in lib/cloud_controller/db.rb
-      # For that reason, the transaction below is not effectively wrapping transactions that may happen nested in its
-      # block. This is to work around the fact that Sequel doesn't let us manage the transactions ourselves with a
-      # non-block syntax
-      Locking.db.transaction do
-        loop do
-          begin
-            Locking[name: 'clock'].lock!
-            break
-          rescue Sequel::DatabaseError => e
-            Steno.logger('cc.background').info('Another clock has acquired the lock and is performing normal operations. Reattempting to acquire lock.', error: e.message)
-          end
-        end
+      CLEANUPS.each { |c| @clock.schedule_cleanup(c[:name], c[:class], c[:time]) }
+      @clock.schedule_frequent_job(:pending_droplets, Jobs::Runtime::PendingDropletCleanup)
+      @clock.schedule_daily(:expired_blob_cleanup, Jobs::Runtime::ExpiredBlobCleanup, '00:00')
+      @clock.schedule_frequent_job(:diego_sync, Jobs::Diego::Sync, priority: -10, queue: 'sync-queue', allow_only_one_job_in_queue: true)
 
-        CLEANUPS.each { |c| @clock.schedule_cleanup(c[:name], c[:class], c[:time]) }
-        @clock.schedule_frequent_job(:pending_droplets, Jobs::Runtime::PendingDropletCleanup)
-        @clock.schedule_daily(:expired_blob_cleanup, Jobs::Runtime::ExpiredBlobCleanup, '00:00')
-        @clock.schedule_frequent_job(:diego_sync, Jobs::Diego::Sync, priority: -10, queue: 'sync-queue', allow_only_one_job_in_queue: true)
-
-        Clockwork.run
-      end
+      Clockwork.run
     end
   end
 end
