@@ -4,14 +4,17 @@ module VCAP::CloudController
   module Diego
     module Buildpack
       RSpec.describe DesiredLrpBuilder do
-        subject(:builder) { described_class.new(config, app_request) }
-        let(:app_request) do
+        subject(:builder) { described_class.new(config, opts) }
+        let(:opts) do
           {
-            'stack' => 'potato-stack',
-            'droplet_uri' => 'droplet-uri',
-            'droplet_hash' => 'droplet-hash',
-            'process_guid' => 'p-guid',
-            'ports' => ports,
+            stack: 'potato-stack',
+            droplet_uri: 'droplet-uri',
+            droplet_hash: 'droplet-hash',
+            process_guid: 'p-guid',
+            ports: ports,
+            checksum_algorithm: 'checksum-algorithm',
+            checksum_value: 'checksum-value',
+            start_command: 'dd if=/dev/random of=/dev/null',
           }
         end
         let(:ports) { [1111, 2222, 3333] }
@@ -27,6 +30,12 @@ module VCAP::CloudController
           }
         end
         let(:use_privileged_containers_for_running) { false }
+
+        describe '#start_command' do
+          it 'returns the passed in start command' do
+            expect(builder.start_command).to eq('dd if=/dev/random of=/dev/null')
+          end
+        end
 
         describe '#root_fs' do
           it 'returns a constructed root_fs' do
@@ -63,8 +72,8 @@ module VCAP::CloudController
                         user: 'vcap',
                         from: 'droplet-uri',
                         cache_key: 'droplets-p-guid',
-                        checksum_algorithm: 'sha1',
-                        checksum_value: 'droplet-hash',
+                        checksum_algorithm: 'checksum-algorithm',
+                        checksum_value: 'checksum-value',
                       )
                     )
                   ],
@@ -118,6 +127,17 @@ module VCAP::CloudController
           end
 
           xcontext 'when the ports array is empty'
+        end
+
+        describe '#port_environment_variables' do
+          let(:ports) { [11, 22, 33] }
+
+          it 'returns the array of environment variables' do
+            expect(builder.port_environment_variables).to match_array([
+              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '11'),
+              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_PORT', value: '11'),
+            ])
+          end
         end
       end
     end

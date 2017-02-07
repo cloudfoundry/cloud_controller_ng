@@ -31,10 +31,11 @@ Rails.application.routes.draw do
   get '/packages', to: 'packages#index'
   get '/packages/:guid', to: 'packages#show'
   post '/packages/:guid/upload', to: 'packages#upload'
+  post '/packages', to: 'packages#create'
   get '/packages/:guid/download', to: 'packages#download'
   delete '/packages/:guid', to: 'packages#destroy'
   get '/apps/:app_guid/packages', to: 'packages#index'
-  post '/apps/:app_guid/packages', to: 'packages#create'
+  post '/apps/:app_guid/packages', to: 'packages#create_copy'
 
   # droplets
   post '/packages/:package_guid/droplets', to: 'droplets#create'
@@ -45,20 +46,10 @@ Rails.application.routes.draw do
   get '/apps/:app_guid/droplets', to: 'droplets#index'
   get '/packages/:package_guid/droplets', to: 'droplets#index'
 
-  # route_mappings
-  post '/route_mappings', to: 'route_mappings#create'
-  get '/route_mappings', to: 'route_mappings#index'
-  get '/route_mappings/:route_mapping_guid', to: 'route_mappings#show'
-  delete '/route_mappings/:route_mapping_guid', to: 'route_mappings#destroy'
-  get '/apps/:app_guid/route_mappings', to: 'route_mappings#index'
-
-  # tasks
-  get '/tasks', to: 'tasks#index'
-  get '/tasks/:task_guid', to: 'tasks#show'
-  put '/tasks/:task_guid/cancel', to: 'tasks#cancel'
-
-  post '/apps/:app_guid/tasks', to: 'tasks#create'
-  get '/apps/:app_guid/tasks', to: 'tasks#index'
+  # errors
+  match '404', to: 'errors#not_found', via: :all
+  match '500', to: 'errors#internal_error', via: :all
+  match '400', to: 'errors#bad_request', via: :all
 
   # isolation_segments
   post '/isolation_segments', to: 'isolation_segments#create'
@@ -67,10 +58,20 @@ Rails.application.routes.draw do
   delete '/isolation_segments/:guid', to: 'isolation_segments#destroy'
   put '/isolation_segments/:guid', to: 'isolation_segments#update'
   post '/isolation_segments/:guid/relationships/organizations', to: 'isolation_segments#assign_allowed_organizations'
-  delete '/isolation_segments/:guid/relationships/organizations', to: 'isolation_segments#unassign_allowed_organizations'
+  delete '/isolation_segments/:guid/relationships/organizations/:org_guid', to: 'isolation_segments#unassign_allowed_organization'
 
   get '/isolation_segments/:guid/relationships/organizations', to: 'isolation_segments#relationships_orgs'
   get '/isolation_segments/:guid/relationships/spaces', to: 'isolation_segments#relationships_spaces'
+
+  # organizations
+  get '/organizations', to: 'organizations_v3#index'
+
+  # route_mappings
+  post '/route_mappings', to: 'route_mappings#create'
+  get '/route_mappings', to: 'route_mappings#index'
+  get '/route_mappings/:route_mapping_guid', to: 'route_mappings#show'
+  delete '/route_mappings/:route_mapping_guid', to: 'route_mappings#destroy'
+  get '/apps/:app_guid/route_mappings', to: 'route_mappings#index'
 
   # service_bindings
   post '/service_bindings', to: 'service_bindings#create'
@@ -78,8 +79,14 @@ Rails.application.routes.draw do
   get '/service_bindings', to: 'service_bindings#index'
   delete '/service_bindings/:guid', to: 'service_bindings#destroy'
 
-  # errors
-  match '404', to: 'errors#not_found', via: :all
-  match '500', to: 'errors#internal_error', via: :all
-  match '400', to: 'errors#bad_request', via: :all
+  # spaces
+  get '/spaces', to: 'spaces_v3#index'
+
+  # tasks
+  get '/tasks', to: 'tasks#index'
+  get '/tasks/:task_guid', to: 'tasks#show'
+  put '/tasks/:task_guid/cancel', to: 'tasks#cancel'
+
+  post '/apps/:app_guid/tasks', to: 'tasks#create'
+  get '/apps/:app_guid/tasks', to: 'tasks#index'
 end

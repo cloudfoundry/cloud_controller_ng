@@ -14,7 +14,7 @@ namespace :jobs do
 
   desc "Start a delayed_job worker."
   task :generic, [:name] do |t, args|
-    CloudController::DelayedWorker.new(queues: ['cc-generic'],
+    CloudController::DelayedWorker.new(queues: ['cc-generic', 'sync-queue'],
                                        name: args.name).start_working
   end
 

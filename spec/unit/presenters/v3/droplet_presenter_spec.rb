@@ -14,7 +14,9 @@ module VCAP::CloudController::Presenters::V3
         staging_memory_in_mb:  234,
         staging_disk_in_mb:    934,
         execution_metadata:    'black-box-string',
-        package_guid:          'abcdefabcdef12345'
+        package_guid:          'abcdefabcdef12345',
+        droplet_hash:          'droplet-sha1-checksum',
+        sha256_checksum:       'droplet-sha256-checksum',
       )
     end
     let(:scheme) { TestConfig.config[:external_protocol] }
@@ -49,8 +51,8 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:error]).to eq('FAILED - things went all sorts of bad')
 
           expect(result[:lifecycle][:type]).to eq('buildpack')
-          expect(result[:lifecycle][:data]['stack']).to eq('the-happiest-stack')
-          expect(result[:lifecycle][:data]['buildpack']).to eq('the-happiest-buildpack')
+          expect(result[:lifecycle][:data][:stack]).to eq('the-happiest-stack')
+          expect(result[:lifecycle][:data][:buildpacks]).to eq(['the-happiest-buildpack'])
           expect(result[:environment_variables]).to eq({ 'elastic' => 'runtime' })
           expect(result[:staging_memory_in_mb]).to eq(234)
           expect(result[:staging_disk_in_mb]).to eq(934)
@@ -65,8 +67,8 @@ module VCAP::CloudController::Presenters::V3
           let(:buildpack_receipt_buildpack) { 'https://amelia:meow@neopets.com' }
 
           it 'obfuscates the username and password' do
-            expect(result[:lifecycle][:data]['buildpack']).to eq('https://***:***@neopets.com')
-            expect(result[:result][:buildpack][:name]).to eq('https://***:***@neopets.com')
+            expect(result[:lifecycle][:data][:buildpacks]).to eq(['https://***:***@neopets.com'])
+            expect(result[:result][:buildpacks]).to eq([{ name: 'https://***:***@neopets.com', detect_output: 'the-happiest-buildpack-detect-output' }])
           end
         end
 
@@ -80,7 +82,44 @@ module VCAP::CloudController::Presenters::V3
           end
         end
 
+        context 'when there is no buildpack' do
+          let(:buildpack) { nil }
+
+          before do
+            droplet.lifecycle_data.buildpack = buildpack
+            droplet.save
+          end
+
+          it 'has an empty array of buildpacks' do
+            expect(result[:lifecycle][:data][:buildpacks]).to eq([])
+          end
+        end
+
         describe 'result' do
+          context 'when droplet is in a "staging" state' do
+            before do
+              droplet.state = VCAP::CloudController::DropletModel::STAGED_STATE
+              droplet.droplet_hash = nil
+              droplet.sha256_checksum = nil
+              droplet.save
+            end
+
+            it 'has the correct result' do
+              expect(result[:result][:hash]).to eq(type: 'sha1', value: nil)
+            end
+          end
+
+          context 'when the droplet does not have a sha256 checksum calculated' do
+            before do
+              droplet.sha256_checksum = nil
+              droplet.save
+            end
+
+            it 'has the correct result' do
+              expect(result[:result][:hash]).to eq(type: 'sha1', value: 'droplet-sha1-checksum')
+            end
+          end
+
           context 'when droplet is in a "final" state' do
             before do
               droplet.state = VCAP::CloudController::DropletModel::FINAL_STATES.first
@@ -105,10 +144,9 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'has the correct result' do
-            expect(result[:result][:hash]).to eq(type: 'sha1', value: nil)
+            expect(result[:result][:hash]).to eq(type: 'sha256', value: 'droplet-sha256-checksum')
             expect(result[:result][:stack]).to eq('the-happiest-stack')
-            expect(result[:result][:buildpack][:name]).to eq('the-happiest-buildpack')
-            expect(result[:result][:buildpack][:detect_output]).to eq('the-happiest-buildpack-detect-output')
+            expect(result[:result][:buildpacks]).to eq([{ name: 'the-happiest-buildpack', detect_output: 'the-happiest-buildpack-detect-output' }])
           end
         end
 

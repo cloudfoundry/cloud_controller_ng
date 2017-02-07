@@ -15,7 +15,7 @@ module VCAP::CloudController
     describe '#create_lifecycle_data_model' do
       let(:request_data) do
         {
-          buildpack: 'cool-buildpack',
+          buildpacks: ['cool-buildpack'],
           stack:     'cool-stack'
         }
       end
@@ -100,7 +100,7 @@ module VCAP::CloudController
 
           context 'and specified by the staging message even if specified by the app' do
             let(:staging_message) do
-              DropletCreateMessage.new(lifecycle: { data: { buildpack: staging_buildpack.name }, type: 'buildpack' })
+              DropletCreateMessage.new(lifecycle: { data: { buildpacks: [staging_buildpack.name] }, type: 'buildpack' })
             end
 
             before do
@@ -116,7 +116,7 @@ module VCAP::CloudController
 
         context 'when the buildpack is not in the system' do
           let(:staging_message) do
-            DropletCreateMessage.new(lifecycle: { data: { buildpack: 'git://cool-buildpack' }, type: 'buildpack' })
+            DropletCreateMessage.new(lifecycle: { data: { buildpacks: ['git://cool-buildpack'] }, type: 'buildpack' })
           end
 
           it 'is nil' do

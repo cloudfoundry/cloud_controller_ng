@@ -10,7 +10,7 @@ module VCAP::CloudController
         staging_guid = staging_details.droplet.guid
 
         if do_local_staging
-          task_definition = recipe_builder.build_staging_task(config, staging_details)
+          task_definition = task_recipe_builder.build_staging_task(config, staging_details)
           bbs_stager_client.stage(staging_guid, task_definition)
         else
           staging_message = protocol.stage_package_request(config, staging_details)
@@ -33,8 +33,7 @@ module VCAP::CloudController
 
         process_guid = ProcessGuid.from_process(process)
         if bypass_bridge?
-          desire_message = protocol.desire_app_message(process, config[:default_health_check_timeout])
-          app_recipe_builder = AppRecipeBuilder.new(config: config, process: process, app_request: desire_message)
+          app_recipe_builder = AppRecipeBuilder.new(config: config, process: process)
           DesireAppHandler.create_or_update_app(process_guid, app_recipe_builder, bbs_apps_client)
         else
           desire_message = protocol.desire_app_request(process, config[:default_health_check_timeout])
@@ -78,8 +77,8 @@ module VCAP::CloudController
         @protocol ||= Protocol.new
       end
 
-      def recipe_builder
-        @recipe_builder ||= RecipeBuilder.new
+      def task_recipe_builder
+        @task_recipe_builder ||= TaskRecipeBuilder.new
       end
 
       def stager_client

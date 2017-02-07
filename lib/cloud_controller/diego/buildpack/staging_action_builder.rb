@@ -15,19 +15,23 @@ module VCAP::CloudController
         def action
           download_actions = [
             ::Diego::Bbs::Models::DownloadAction.new(
-              artifact: 'app package',
-              from:     lifecycle_data[:app_bits_download_uri],
-              to:       '/tmp/app',
-              user:     'vcap'
+              artifact:           'app package',
+              from:               lifecycle_data[:app_bits_download_uri],
+              to:                 '/tmp/app',
+              user:               'vcap',
+              checksum_algorithm: lifecycle_data[:app_bits_checksum][:type],
+              checksum_value:     lifecycle_data[:app_bits_checksum][:value],
             )
           ]
-          if lifecycle_data[:build_artifacts_cache_download_uri]
-            download_actions << ::Diego::Bbs::Models::DownloadAction.new(
-              artifact: 'build artifacts cache',
-              from:     lifecycle_data[:build_artifacts_cache_download_uri],
-              to:       '/tmp/cache',
-              user:     'vcap'
-            )
+          if lifecycle_data[:build_artifacts_cache_download_uri] && lifecycle_data[:buildpack_cache_checksum].present?
+            download_actions << try_action(::Diego::Bbs::Models::DownloadAction.new({
+              artifact:           'build artifacts cache',
+              from:               lifecycle_data[:build_artifacts_cache_download_uri],
+              to:                 '/tmp/cache',
+              user:               'vcap',
+              checksum_algorithm: 'sha256',
+              checksum_value:     lifecycle_data[:buildpack_cache_checksum],
+            }))
           end
 
           skip_detect = lifecycle_data[:buildpacks].count == 1 && !!lifecycle_data[:buildpacks].first[:skip_detect]
@@ -85,12 +89,18 @@ module VCAP::CloudController
             lifecycle_data[:buildpacks].map do |buildpack|
               next if buildpack[:name] == 'custom'
 
-              ::Diego::Bbs::Models::CachedDependency.new(
-                name:      buildpack[:name],
-                from:      buildpack[:url],
-                to:        "/tmp/buildpacks/#{Digest::MD5.hexdigest(buildpack[:key])}",
-                cache_key: buildpack[:key],
-              )
+              buildpack_dependency = {
+                name:               buildpack[:name],
+                from:               buildpack[:url],
+                to:                 "/tmp/buildpacks/#{Digest::MD5.hexdigest(buildpack[:key])}",
+                cache_key:          buildpack[:key],
+              }
+              if buildpack[:sha256]
+                buildpack_dependency[:checksum_algorithm] = 'sha256'
+                buildpack_dependency[:checksum_value] = buildpack[:sha256]
+              end
+
+              ::Diego::Bbs::Models::CachedDependency.new(buildpack_dependency)
             end.compact
           )
         end

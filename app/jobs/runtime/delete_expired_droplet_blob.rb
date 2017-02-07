@@ -14,7 +14,7 @@ module VCAP::CloudController
           droplet = DropletModel.find(guid: droplet_guid)
           return unless droplet
           BlobstoreDelete.new(droplet.blobstore_key, :droplet_blobstore).perform
-          droplet.update(droplet_hash: nil)
+          droplet.update(droplet_hash: nil, sha256_checksum: nil)
         end
 
         def job_name_in_configuration

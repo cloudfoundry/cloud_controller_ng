@@ -95,6 +95,45 @@ module VCAP::CloudController
         end
       end
 
+      describe 'GET /v2/route_mappings' do
+        let(:space) { Space.make }
+        let(:developer) { make_developer_for_space(space) }
+        let(:route) { Route.make(space: space) }
+        let(:app_obj) { AppFactory.make(space: space) }
+        let(:route_mapping) { RouteMappingModel.make(app: app_obj, route: route) }
+
+        before do
+          set_current_user(developer)
+        end
+
+        it 'returns the route mappings' do
+          get "/v2/route_mappings/#{route_mapping.guid}"
+
+          expect(last_response).to have_status_code(200)
+          expect(last_response.body).to include route_mapping.guid
+        end
+
+        context 'when there is no route' do
+          it 'cannot find a route' do
+            get '/v2/route_mappings/nonexistent-guid'
+
+            expect(last_response).to have_status_code(404)
+            expect(last_response.body).to include 'RouteMappingNotFound'
+          end
+        end
+
+        context "when the route mapping's process type is not 'web'" do
+          let(:route_mapping) { RouteMappingModel.make(app: app_obj, route: route, process_type: 'foo') }
+
+          it 'returns a 404 NotFound' do
+            get "/v2/route_mappings/#{route_mapping.guid}"
+
+            expect(last_response).to have_status_code(404)
+            expect(last_response.body).to include 'RouteMappingNotFound'
+          end
+        end
+      end
+
       describe 'POST /v2/route_mappings' do
         let(:space) { Space.make }
         let(:route) { Route.make(space: space) }

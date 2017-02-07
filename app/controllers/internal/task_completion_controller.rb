@@ -7,28 +7,35 @@ module VCAP::CloudController
   class TasksCompletionController < RestController::BaseController
     allow_unauthenticated_access
 
-    def initialize(*)
-      super
+    post '/internal/v3/tasks/:task_guid/completed', :v3_complete_task
+    def v3_complete_task(task_guid)
       auth = Rack::Auth::Basic::Request.new(env)
       unless auth.provided? && auth.basic? && auth.credentials == InternalApi.credentials
         raise CloudController::Errors::NotAuthenticated
       end
+
+      complete_task(task_guid, read_body)
+
+      [200, '{}']
     end
 
-    post '/internal/v3/tasks/:task_guid/completed', :complete_task
-    def complete_task(task_guid)
-      task_response = read_body
-      task = TaskModel.find(guid: task_guid)
-      raise CloudController::Errors::ApiError.new_from_details('NotFound') unless task
-      raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') if task_guid != task_response[:task_guid]
-      raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') if [TaskModel::SUCCEEDED_STATE, TaskModel::FAILED_STATE].include? task.state
-
-      Diego::TaskCompletionHandler.new.complete_task(task, task_response)
+    post '/internal/v4/tasks/:task_guid/completed', :v4_complete_task
+    def v4_complete_task(task_guid)
+      complete_task(task_guid, read_body)
 
       [200, '{}']
     end
 
     private
+
+    def complete_task(task_guid, task_response)
+      task = TaskModel.find(guid: task_guid)
+      raise CloudController::Errors::NotFound.new_from_details('ResourceNotFound', "Task not found: #{task_guid}") unless task
+      raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') if task_guid != task_response[:task_guid]
+      raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') if [TaskModel::SUCCEEDED_STATE, TaskModel::FAILED_STATE].include? task.state
+
+      Diego::TaskCompletionHandler.new.complete_task(task, task_response)
+    end
 
     def read_body
       task_response = {}

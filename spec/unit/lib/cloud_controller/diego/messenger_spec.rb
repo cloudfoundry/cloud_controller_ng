@@ -11,14 +11,14 @@ module VCAP::CloudController
       let(:bbs_stager_client) { instance_double(BbsStagerClient) }
       let(:config) { TestConfig.config }
       let(:protocol) { instance_double(Diego::Protocol) }
-      let(:recipe_builder) { instance_double(Diego::RecipeBuilder) }
+      let(:task_recipe_builder) { instance_double(Diego::TaskRecipeBuilder) }
 
       before do
         CloudController::DependencyLocator.instance.register(:bbs_stager_client, bbs_stager_client)
         CloudController::DependencyLocator.instance.register(:stager_client, stager_client)
         CloudController::DependencyLocator.instance.register(:nsync_client, nsync_client)
         allow(Diego::Protocol).to receive(:new).and_return(protocol)
-        allow(Diego::RecipeBuilder).to receive(:new).and_return(recipe_builder)
+        allow(Diego::TaskRecipeBuilder).to receive(:new).and_return(task_recipe_builder)
       end
 
       describe '#send_stage_request' do
@@ -49,14 +49,14 @@ module VCAP::CloudController
           before do
             TestConfig.override(diego: { temporary_local_staging: true })
             staging_details.lifecycle = instance_double(BuildpackLifecycle, type: Lifecycles::BUILDPACK)
-            allow(recipe_builder).to receive(:build_staging_task).and_return(message)
+            allow(task_recipe_builder).to receive(:build_staging_task).and_return(message)
             allow(bbs_stager_client).to receive(:stage)
           end
 
           it 'sends the staging message to the bbs' do
             messenger.send_stage_request(config, staging_details)
 
-            expect(recipe_builder).to have_received(:build_staging_task).with(config, staging_details)
+            expect(task_recipe_builder).to have_received(:build_staging_task).with(config, staging_details)
             expect(bbs_stager_client).to have_received(:stage).with(staging_guid, message)
           end
         end
@@ -90,8 +90,7 @@ module VCAP::CloudController
             CloudController::DependencyLocator.instance.register(:bbs_apps_client, bbs_apps_client)
             TestConfig.override(diego: { temporary_local_apps: true })
 
-            allow(protocol).to receive(:desire_app_message).and_return(message)
-            allow(Diego::AppRecipeBuilder).to receive(:new).with(config: config, process: process, app_request: message).and_return(app_recipe_builder)
+            allow(Diego::AppRecipeBuilder).to receive(:new).with(config: config, process: process).and_return(app_recipe_builder)
           end
 
           it 'attempts to create or update the app by delegating to the desire app handler' do
@@ -99,7 +98,6 @@ module VCAP::CloudController
             messenger.send_desire_request(process, config)
 
             expect(DesireAppHandler).to have_received(:create_or_update_app).with(process_guid, app_recipe_builder, bbs_apps_client)
-            expect(protocol).to have_received(:desire_app_message).with(process, default_health_check_timeout)
           end
         end
       end

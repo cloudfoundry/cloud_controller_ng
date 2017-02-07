@@ -48,10 +48,19 @@ module CloudController::Packager
         expect(package_blobstore.exists?(blobstore_key)).to be true
       end
 
-      it 'returns the sha of the uploaded package' do
-        allow_any_instance_of(Digester).to receive(:digest_path).and_return('expected-sha')
+      it 'returns the sha1 and sha256 of the uploaded package' do
+        sha1_digester = instance_double(Digester, digest_path: 'expected-sha1')
+        sha256_digester = instance_double(Digester, digest_path: 'expected-sha256')
+
+        allow(Digester).to receive(:new).with(no_args).and_return(sha1_digester)
+        allow(Digester).to receive(:new).with(algorithm: Digest::SHA256).and_return(sha256_digester)
+
         result_sha = packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
-        expect(result_sha).to eq('expected-sha')
+
+        expect(result_sha).to eq({
+          sha1: 'expected-sha1',
+          sha256: 'expected-sha256'
+        })
       end
 
       context 'when the zip file uploaded is invalid' do

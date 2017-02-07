@@ -6,8 +6,9 @@ RSpec.describe 'Route Mappings' do
   let(:process) { VCAP::CloudController::App.make(:process, app: app_model, type: 'worker', ports: [8888]) }
   let(:route) { VCAP::CloudController::Route.make(space: space) }
   let(:developer) { make_developer_for_space(space) }
+  let(:user_name) { 'roto' }
   let(:developer_headers) do
-    headers_for(developer)
+    headers_for(developer, user_name: user_name)
   end
   let(:scheme) { TestConfig.config[:external_protocol] }
   let(:host) { TestConfig.config[:external_domain] }
@@ -69,6 +70,7 @@ RSpec.describe 'Route Mappings' do
         actee_name:        app_model.name,
         actor:             developer.guid,
         actor_type:        'user',
+        actor_username:    user_name,
         space_guid:        space.guid,
         metadata:          {
                              route_guid:         route.guid,
@@ -238,6 +240,7 @@ RSpec.describe 'Route Mappings' do
         actee_name:        app_model.name,
         actor:             developer.guid,
         actor_type:        'user',
+        actor_username:    user_name,
         space_guid:        space.guid,
         metadata:          {
                              route_guid:         route.guid,

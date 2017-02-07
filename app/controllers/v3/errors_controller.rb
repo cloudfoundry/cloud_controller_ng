@@ -1,6 +1,6 @@
 class ErrorsController < ApplicationController
   def not_found
-    error = CloudController::Errors::ApiError.new_from_details('NotFound')
+    error = CloudController::Errors::NotFound.new_from_details('NotFound')
     presenter = ErrorPresenter.new(error, Rails.env.test?, V3ErrorHasher.new(error))
     render status: :not_found, json: presenter
   end

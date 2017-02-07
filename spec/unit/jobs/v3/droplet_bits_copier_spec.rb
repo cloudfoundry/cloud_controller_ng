@@ -11,7 +11,7 @@ module VCAP::CloudController
         CloudController::Blobstore::FogClient.new(connection_config: { provider: 'Local', local_root: blobstore_dir },
                                                   directory_key: 'droplet')
       end
-      let(:source_droplet) { DropletModel.make(:buildpack, droplet_hash: 'abcdef1234', state: DropletModel::STAGED_STATE) }
+      let(:source_droplet) { DropletModel.make(:buildpack, droplet_hash: 'abcdef1234', sha256_checksum: '4321fedcba', state: DropletModel::STAGED_STATE) }
       let(:destination_droplet) { DropletModel.make(:buildpack, droplet_hash: nil, state: DropletModel::STAGING_STATE) }
 
       before do
@@ -52,6 +52,10 @@ module VCAP::CloudController
           destination_droplet.reload
           expect(destination_droplet.droplet_hash).to eq(source_droplet.droplet_hash)
           expect(destination_droplet.state).to eq(source_droplet.state)
+        end
+
+        it 'updates the destination sha256_checksum' do
+          expect { job.perform }.to change { destination_droplet.reload.sha256_checksum }.from(nil).to(source_droplet.sha256_checksum)
         end
 
         context 'when the copy fails' do

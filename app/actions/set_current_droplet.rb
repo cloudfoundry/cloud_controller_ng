@@ -4,10 +4,9 @@ module VCAP::CloudController
   class SetCurrentDroplet
     class InvalidApp < StandardError; end
 
-    def initialize(user, user_email)
-      @user       = user
-      @user_email = user_email
-      @logger     = Steno.logger('cc.action.procfile_parse')
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
+      @logger = Steno.logger('cc.action.procfile_parse')
     end
 
     def update_to(app, droplet)
@@ -21,8 +20,7 @@ module VCAP::CloudController
         Repositories::AppEventRepository.new.record_app_map_droplet(
           app,
           app.space,
-          @user.guid,
-          @user_email,
+          @user_audit_info,
           assign_droplet
         )
 
@@ -39,7 +37,7 @@ module VCAP::CloudController
     private
 
     def setup_processes(app)
-      CurrentProcessTypes.new(@user.guid, @user_email).process_current_droplet(app)
+      CurrentProcessTypes.new(@user_audit_info).process_current_droplet(app)
     end
   end
 end

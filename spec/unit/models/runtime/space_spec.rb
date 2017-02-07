@@ -140,7 +140,7 @@ module VCAP::CloudController
           }.to have_queried_db_times(//, 0)
 
           expect(@eager_loaded_space).to eql(space)
-          expect(@eager_loaded_domains).to eql([private_domain1, private_domain2, shared_domain])
+          expect(@eager_loaded_domains).to match_array([private_domain1, private_domain2, shared_domain])
           expect(@eager_loaded_domains).to eql(org.domains)
         end
 
@@ -221,6 +221,10 @@ module VCAP::CloudController
           eager_space = Space.eager(:security_groups).all.first
           expect(eager_space.security_groups).to match_array [associated_sg, default_sg, another_default_sg]
         end
+
+        it 'can be deleted when associated' do
+          expect { space.destroy }.not_to raise_error
+        end
       end
 
       describe 'staging_security_groups' do
@@ -237,6 +241,10 @@ module VCAP::CloudController
         it 'works when eager loading' do
           eager_space = Space.eager(:staging_security_groups).all.first
           expect(eager_space.staging_security_groups).to match_array [associated_sg, default_sg, another_default_sg]
+        end
+
+        it 'can be deleted when associated' do
+          expect { space.destroy }.not_to raise_error
         end
       end
 

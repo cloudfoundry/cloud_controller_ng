@@ -11,11 +11,12 @@ module VCAP::CloudController
       let(:config) { { name: 'local', index: '1' } }
       let(:user_guid) { 'gooid' }
       let(:user_email) { 'utako.loves@cats.com' }
+      let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
 
       it 'enqueues and returns an upload job' do
         returned_job = nil
         expect {
-          returned_job = package_upload.upload_async(message: message, package: package, config: config, user_guid: user_guid, user_email: user_email)
+          returned_job = package_upload.upload_async(message: message, package: package, config: config, user_audit_info: user_audit_info)
         }.to change { Delayed::Job.count }.by(1)
 
         job = Delayed::Job.last
@@ -26,18 +27,17 @@ module VCAP::CloudController
       end
 
       it 'changes the state to pending' do
-        package_upload.upload_async(message: message, package: package, config: config, user_guid: user_guid, user_email: user_email)
+        package_upload.upload_async(message: message, package: package, config: config, user_audit_info: user_audit_info)
         expect(PackageModel.find(guid: package.guid).state).to eq(PackageModel::PENDING_STATE)
       end
 
       it 'creates an audit event' do
         expect(Repositories::PackageEventRepository).to receive(:record_app_package_upload).with(
           instance_of(PackageModel),
-          user_guid,
-          user_email
+          user_audit_info
         )
 
-        package_upload.upload_async(message: message, package: package, config: config, user_guid: user_guid, user_email: user_email)
+        package_upload.upload_async(message: message, package: package, config: config, user_audit_info: user_audit_info)
       end
 
       context 'when the package is invalid' do
@@ -47,7 +47,7 @@ module VCAP::CloudController
 
         it 'raises InvalidPackage' do
           expect {
-            package_upload.upload_async(message: message, package: package, config: config, user_guid: user_guid, user_email: user_email)
+            package_upload.upload_async(message: message, package: package, config: config, user_audit_info: user_audit_info)
           }.to raise_error(PackageUpload::InvalidPackage)
         end
       end

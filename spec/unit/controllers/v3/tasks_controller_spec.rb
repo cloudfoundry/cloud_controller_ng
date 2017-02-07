@@ -25,7 +25,7 @@ RSpec.describe TasksController, type: :controller do
     let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: tasks_enabled, error_message: nil)
 
@@ -54,18 +54,6 @@ RSpec.describe TasksController, type: :controller do
 
       expect(app_model.reload.tasks.count).to eq(1)
       expect(app_model.tasks.first).to eq(VCAP::CloudController::TaskModel.last)
-    end
-
-    it 'passes user info to the task creator' do
-      task = VCAP::CloudController::TaskModel.make
-      task_create = instance_double(VCAP::CloudController::TaskCreate, create: task)
-      allow(VCAP::CloudController::TaskCreate).to receive(:new).and_return(task_create)
-
-      set_current_user(user, email: 'user-email')
-
-      post :create, app_guid: app_model.guid, body: req_body
-
-      expect(task_create).to have_received(:create).with(anything, anything, user.guid, 'user-email', droplet: nil)
     end
 
     context 'permissions' do
@@ -103,7 +91,7 @@ RSpec.describe TasksController, type: :controller do
 
       context 'when the user does not have write permissions on the app space' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -251,7 +239,7 @@ RSpec.describe TasksController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_secret_access(user, space: space)
     end
 
@@ -293,7 +281,7 @@ RSpec.describe TasksController, type: :controller do
 
       context 'when the user has read, but not write permissions on the app space' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -318,8 +306,7 @@ RSpec.describe TasksController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
-      stub_readable_space_guids_for(user, space)
+      allow_user_read_access_for(user, spaces: [space])
     end
 
     it 'returns tasks the user has read access' do
@@ -352,9 +339,8 @@ RSpec.describe TasksController, type: :controller do
         get :index, params
 
         parsed_response = parsed_body
-        response_guids = parsed_response['resources'].map { |r| r['guid'] }
         expect(parsed_response['pagination']['total_results']).to eq(2)
-        expect(response_guids.length).to eq(per_page)
+        expect(parsed_response['resources'].length).to eq(per_page)
       end
     end
 
@@ -427,27 +413,9 @@ RSpec.describe TasksController, type: :controller do
       end
     end
 
-    context 'admin' do
+    context 'when the user has global read access' do
       before do
-        set_current_user_as_admin
-      end
-
-      it 'returns a 200 and all tasks' do
-        task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
-        task_2 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
-        task_3 = VCAP::CloudController::TaskModel.make
-
-        get :index
-
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
-        expect(response.status).to eq(200)
-        expect(response_guids).to match_array([task_1, task_2, task_3].map(&:guid))
-      end
-    end
-
-    context 'admin read only' do
-      before do
-        set_current_user_as_admin_read_only
+        allow_user_global_read_access(user)
       end
 
       it 'returns a 200 and all tasks' do
@@ -494,7 +462,7 @@ RSpec.describe TasksController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       locator = CloudController::DependencyLocator.instance
       allow(locator).to receive(:nsync_client).and_return(client)
@@ -549,7 +517,7 @@ RSpec.describe TasksController, type: :controller do
 
       context 'when the user has read, but not write permissions on the app space' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 

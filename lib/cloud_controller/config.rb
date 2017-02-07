@@ -73,9 +73,11 @@ module VCAP::CloudController
         },
 
         :uaa => {
-          :url                => String,
-          :resource_id        => String,
+          :url                        => String,
+          :resource_id                => String,
           optional(:symmetric_secret) => String,
+          :internal_url               => String,
+          :ca_file                    => String,
         },
 
         :logging => {
@@ -283,24 +285,25 @@ module VCAP::CloudController
         :shared_isolation_segment_name => String,
 
         optional(:diego) => {
-          temporary_local_staging:               bool,
-          temporary_local_tasks:                 bool,
-          temporary_local_apps:                  bool,
-          nsync_url:                             String,
-          stager_url:                            String,
-          tps_url:                               String,
-          file_server_url:                       String,
-          cc_uploader_url:                       String,
-          use_privileged_containers_for_running: bool,
-          use_privileged_containers_for_staging: bool,
-          lifecycle_bundles:                     Hash,
-
           bbs: {
             url:         String,
             ca_file:     String,
             cert_file:   String,
             key_file:    String,
-          }
+          },
+          cc_uploader_url:                       String,
+          file_server_url:                       String,
+          lifecycle_bundles:                     Hash,
+          nsync_url:                             String,
+          pid_limit:                             Integer,
+          stager_url:                            String,
+          temporary_local_staging:               bool,
+          temporary_local_tasks:                 bool,
+          temporary_local_apps:                  bool,
+          temporary_local_tps:                   bool,
+          tps_url:                               String,
+          use_privileged_containers_for_running: bool,
+          use_privileged_containers_for_staging: bool,
         },
       }
     end
@@ -355,7 +358,7 @@ module VCAP::CloudController
         stagers = Stagers.new(@config, message_bus, dea_pool)
         dependency_locator.register(:stagers, stagers)
 
-        dependency_locator.register(:instances_reporters, InstancesReporters.new(tps_client, hm_client))
+        dependency_locator.register(:instances_reporters, InstancesReporters.new)
         dependency_locator.register(:index_stopper, IndexStopper.new(runners))
 
         Dea::Client.configure(@config, message_bus, dea_pool, blobstore_url_generator)
@@ -440,7 +443,16 @@ module VCAP::CloudController
       def sanitize(config)
         sanitize_grace_period(config)
         sanitize_staging_auth(config)
+        sanitize_diego_properties(config)
+
         config
+      end
+
+      def sanitize_diego_properties(config)
+        pid_limit = HashUtils.dig(config, :diego, :pid_limit)
+        if pid_limit
+          config[:diego][:pid_limit] = 0 if pid_limit < 0
+        end
       end
 
       def sanitize_grace_period(config)

@@ -49,7 +49,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links]).to eq(links)
         expect(result[:lifecycle][:type]).to eq('buildpack')
         expect(result[:lifecycle][:data][:stack]).to eq('the-happiest-stack')
-        expect(result[:lifecycle][:data][:buildpack]).to eq('git://***:***@github.com/repo')
+        expect(result[:lifecycle][:data][:buildpacks]).to eq(['git://***:***@github.com/repo'])
       end
 
       context 'if there are no processes' do

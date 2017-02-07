@@ -5,9 +5,9 @@ module VCAP::CloudController
     let(:url) { 'http://uaa.example.com' }
     let(:client_id) { 'client_id' }
     let(:secret) { 'secret_key' }
-    let(:uaa_options) { { skip_ssl_validation: false } }
+    let(:uaa_options) { { skip_ssl_validation: false, ssl_ca_file: 'path/to/ca/file' } }
 
-    let(:uaa_client) { UaaClient.new(url, client_id, secret) }
+    subject(:uaa_client) { UaaClient.new(uaa_target: url, client_id: client_id, secret: secret, ca_file: 'path/to/ca/file') }
     let(:auth_header) { 'bearer STUFF' }
     let(:token_info) { double(CF::UAA::TokenInfo, auth_header: auth_header) }
     let(:token_issuer) { double(CF::UAA::TokenIssuer, client_credentials_grant: token_info) }
@@ -26,16 +26,6 @@ module VCAP::CloudController
 
       it 'caches the scim' do
         expect(uaa_client.scim).to be(uaa_client.scim)
-      end
-
-      context 'when skip_ssl_validation is true' do
-        let(:uaa_options) { { skip_ssl_validation: true } }
-        let(:uaa_client) { UaaClient.new(url, client_id, secret, uaa_options) }
-
-        it 'skips ssl validation for TokenIssuer and Scim creation' do
-          scim = uaa_client.scim
-          expect(scim.instance_variable_get(:@skip_ssl_validation)).to eq(true)
-        end
       end
     end
 

@@ -113,10 +113,10 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         context 'when update-service-broker' do
-          before { setup_broker }
           after { delete_broker }
 
           before do
+            setup_broker
             stub_catalog_fetch(broker_response_status)
 
             put("/v2/service_brokers/#{@broker_guid}",

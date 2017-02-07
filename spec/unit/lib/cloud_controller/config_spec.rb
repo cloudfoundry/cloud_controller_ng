@@ -246,6 +246,7 @@ module VCAP::CloudController
             config_hash['staging']['auth']['user'] = 'f@t:%a'
             config_hash['staging']['auth']['password'] = 'm@/n!'
             config_hash['minimum_candidate_stagers'] = 0
+            config_hash['diego']['pid_limit'] = -5
 
             File.open(File.join(tmpdir, 'incorrect_overridden_config.yml'), 'w') do |f|
               YAML.dump(config_hash, f)
@@ -264,7 +265,11 @@ module VCAP::CloudController
             expect(config_from_file[:app_bits_upload_grace_period_in_seconds]).to eq(0)
           end
 
-          it 'URL-encodes staging auth as neccesary' do
+          it 'sets a negative "pid_limit" to 0' do
+            expect(config_from_file[:diego][:pid_limit]).to eq(0)
+          end
+
+          it 'URL-encodes staging auth as necessary' do
             expect(config_from_file[:staging][:auth][:user]).to eq('f%40t%3A%25a')
             expect(config_from_file[:staging][:auth][:password]).to eq('m%40%2Fn!')
           end

@@ -56,7 +56,10 @@ module VCAP::CloudController
         docker_type_requested    = request_attrs.key?('docker_image')
 
         if docker_type_requested
-          create_message = PackageCreateMessage.new({ type: 'docker', app_guid: app.guid, data: { image: request_attrs['docker_image'] } })
+          relationships = { app: { guid: app.guid } }
+          create_message = PackageCreateMessage.new({ type: 'docker',
+                                                      relationships: relationships,
+                                                      data: { image: request_attrs['docker_image'] } })
           PackageCreate.create_without_event(create_message)
         elsif buildpack_type_requested || !docker_type_requested
           # it is important to create the lifecycle model with the app instead of doing app.buildpack_lifecycle_data_model = x

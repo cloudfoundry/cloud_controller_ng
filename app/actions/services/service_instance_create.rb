@@ -41,8 +41,7 @@ module VCAP::CloudController
         'service-instance-state-fetch',
         service_instance.client.attrs,
         service_instance.guid,
-        @services_event_repository.user.guid,
-        @services_event_repository.current_user_email,
+        @services_event_repository.user_audit_info,
         request_attrs,
       )
       enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')

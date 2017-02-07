@@ -9,8 +9,8 @@ module VCAP::CloudController
     def upload_buildpack(buildpack, bits_file_path, new_filename)
       return false if buildpack.locked
 
-      sha1 = Digester.new.digest_path(bits_file_path)
-      new_key = "#{buildpack.guid}_#{sha1}"
+      sha256 = Digester.new(algorithm: Digest::SHA256).digest_path(bits_file_path)
+      new_key = "#{buildpack.guid}_#{sha256}"
       missing_bits = buildpack.key && !buildpack_blobstore.exists?(buildpack.key)
 
       return false if !new_bits?(buildpack, new_key) && !new_filename?(buildpack, new_filename) && !missing_bits
@@ -26,7 +26,11 @@ module VCAP::CloudController
         Buildpack.db.transaction do
           buildpack.lock!
           old_buildpack_key = buildpack.key
-          buildpack.update_from_hash(key: new_key, filename: new_filename)
+          buildpack.update(
+            key: new_key,
+            filename: new_filename,
+            sha256_checksum: sha256,
+          )
         end
       rescue Sequel::Error
         BuildpackBitsDelete.delete_when_safe(new_key, 0)

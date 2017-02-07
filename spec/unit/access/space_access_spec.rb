@@ -14,6 +14,12 @@ module VCAP::CloudController
     it_behaves_like :admin_full_access
     it_behaves_like :admin_read_only_access
 
+    context 'as a global auditor' do
+      include_context :global_auditor_setup
+
+      it_behaves_like :read_only_access
+    end
+
     context 'as an organization manager' do
       before { org.add_manager(user) }
       it_behaves_like :full_access

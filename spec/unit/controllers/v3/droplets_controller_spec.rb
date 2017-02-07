@@ -17,7 +17,7 @@ RSpec.describe DropletsController, type: :controller do
     let(:space) { app_model.space }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
       allow(stagers).to receive(:stager_for_app).and_return(double(:stager, stage: nil))
@@ -60,7 +60,7 @@ RSpec.describe DropletsController, type: :controller do
 
     describe 'buildpack lifecycle' do
       describe 'buildpack request' do
-        let(:req_body) { { lifecycle: { type: 'buildpack', data: { buildpack: buildpack_request } } } }
+        let(:req_body) { { lifecycle: { type: 'buildpack', data: { buildpacks: [buildpack_request] } } } }
         let(:buildpack) { VCAP::CloudController::Buildpack.make }
 
         context 'when a git url is requested' do
@@ -119,6 +119,27 @@ RSpec.describe DropletsController, type: :controller do
 
             expect(response.status).to eq(201)
             expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to eq(app_model.lifecycle_data.buildpack)
+          end
+        end
+
+        context 'when an empty array of buildpacks is specified' do
+          let(:req_body) { { lifecycle: { type: 'buildpack', data: { buildpacks: [] } } } }
+
+          it 'does NOT set a buildpack on the droplet lifecycle data' do
+            post :create, { package_guid: package.guid, body: req_body }
+
+            expect(response.status).to eq(201)
+            expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to be_nil
+          end
+        end
+
+        context 'when buildpacks is null' do
+          let(:req_body) { { lifecycle: { type: 'buildpack', data: { buildpacks: nil } } } }
+
+          it 'does NOT set a buildpack on the droplet lifecycle data' do
+            post :create, { package_guid: package.guid, body: req_body }
+            expect(response.status).to eq(201)
+            expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to be_nil
           end
         end
       end
@@ -309,7 +330,9 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the space quota is exceeded' do
         before do
-          allow(droplet_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::DropletCreate::SpaceQuotaExceeded)
+          allow(droplet_create).to receive(:create_and_stage).and_raise(
+            VCAP::CloudController::DropletCreate::SpaceQuotaExceeded.new('helpful message')
+          )
         end
 
         it 'returns 422 Unprocessable' do
@@ -317,12 +340,15 @@ RSpec.describe DropletsController, type: :controller do
 
           expect(response.status).to eq(422)
           expect(response.body).to include("space's memory limit exceeded")
+          expect(response.body).to include('helpful message')
         end
       end
 
       context 'when the org quota is exceeded' do
         before do
-          allow(droplet_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::DropletCreate::OrgQuotaExceeded)
+          allow(droplet_create).to receive(:create_and_stage).and_raise(
+            VCAP::CloudController::DropletCreate::OrgQuotaExceeded.new('helpful message')
+          )
         end
 
         it 'returns 422 Unprocessable' do
@@ -330,6 +356,7 @@ RSpec.describe DropletsController, type: :controller do
 
           expect(response.status).to eq(422)
           expect(response.body).to include("organization's memory limit exceeded")
+          expect(response.body).to include('helpful message')
         end
       end
 
@@ -377,7 +404,7 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the user can read but cannot write to the package due to roles' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -410,8 +437,7 @@ RSpec.describe DropletsController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: source_space)
-      allow_user_read_access(user, space: target_space)
+      allow_user_read_access_for(user, spaces: [source_space, target_space])
       allow_user_write_access(user, space: target_space)
     end
 
@@ -449,7 +475,7 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the user is a member of the space where source droplet exists' do
         before do
-          allow_user_read_access(user, space: source_space)
+          allow_user_read_access_for(user, spaces: [source_space])
         end
 
         context 'when the user does not have read access to the target space' do
@@ -467,7 +493,7 @@ RSpec.describe DropletsController, type: :controller do
 
         context 'when the user has read access, but not write access to the target space' do
           before do
-            allow_user_read_access(user, space: target_space)
+            allow_user_read_access_for(user, spaces: [source_space, target_space])
             disallow_user_write_access(user, space: target_space)
           end
 
@@ -521,7 +547,7 @@ RSpec.describe DropletsController, type: :controller do
     let(:space) { droplet.space }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_secret_access(user, space: space)
     end
 
@@ -581,7 +607,7 @@ RSpec.describe DropletsController, type: :controller do
     let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stop_stage: nil) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       CloudController::DependencyLocator.instance.register(:stagers, stagers)
     end
@@ -655,8 +681,7 @@ RSpec.describe DropletsController, type: :controller do
     let!(:admin_droplet) { VCAP::CloudController::DropletModel.make }
 
     before do
-      allow_user_read_access(user, space: space)
-      stub_readable_space_guids_for(user, space)
+      allow_user_read_access_for(user, spaces: [space])
     end
 
     it 'returns 200' do
@@ -818,6 +843,7 @@ RSpec.describe DropletsController, type: :controller do
       context 'when the user does not have read scope' do
         before do
           set_current_user(VCAP::CloudController::User.make, scopes: [])
+          disallow_user_global_read_access(user)
         end
 
         it 'returns a 403 Not Authorized error' do
@@ -828,29 +854,15 @@ RSpec.describe DropletsController, type: :controller do
         end
       end
 
-      context 'when the user is an admin' do
+      context 'when the user has global read access' do
         before do
-          disallow_user_read_access(user, space: space)
-          set_current_user_as_admin(user: user)
+          allow_user_global_read_access(user)
         end
 
         it 'returns all droplets' do
           get :index
 
-          response_guids = parsed_body['resources'].map { |r| r['guid'] }
-          expect(response_guids).to match_array([user_droplet_1, user_droplet_2, admin_droplet].map(&:guid))
-        end
-      end
-
-      context 'when the user is a read only admin' do
-        before do
-          disallow_user_read_access(user, space: space)
-          set_current_user_as_admin_read_only(user: user)
-        end
-
-        it 'returns all droplets' do
-          get :index
-
+          expect(response.status).to eq(200)
           response_guids = parsed_body['resources'].map { |r| r['guid'] }
           expect(response_guids).to match_array([user_droplet_1, user_droplet_2, admin_droplet].map(&:guid))
         end
@@ -858,7 +870,7 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the user has read access, but not write access to the space' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 

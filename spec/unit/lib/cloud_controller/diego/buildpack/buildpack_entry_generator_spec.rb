@@ -13,8 +13,12 @@ module VCAP::CloudController
 
         let(:blobstore_url_generator) { double('fake url generator') }
 
-        let!(:java_buildpack) { VCAP::CloudController::Buildpack.create(name: 'java', key: 'java-buildpack-key', position: 1) }
-        let!(:ruby_buildpack) { VCAP::CloudController::Buildpack.create(name: 'ruby', key: 'ruby-buildpack-key', position: 2) }
+        let!(:java_buildpack) do
+          VCAP::CloudController::Buildpack.create(name: 'java', key: 'java-buildpack-key', position: 1, sha256_checksum: 'checksum')
+        end
+        let!(:ruby_buildpack) do
+          VCAP::CloudController::Buildpack.create(name: 'ruby', key: 'ruby-buildpack-key', position: 2, sha256_checksum: 'checksum')
+        end
 
         before do
           allow(blobstore_url_generator).to receive(:app_package_download_url).and_return(app_package_download_url)
@@ -57,7 +61,7 @@ module VCAP::CloudController
 
             it 'should use that buildpack' do
               expect(buildpack_entry_generator.buildpack_entries(buildpack_info)).to eq([
-                { name: 'java', key: 'java-buildpack-key', url: admin_buildpack_download_url, skip_detect: true }
+                { name: 'java', key: 'java-buildpack-key', url: admin_buildpack_download_url, skip_detect: true, sha256: 'checksum' }
               ])
             end
 
@@ -77,8 +81,8 @@ module VCAP::CloudController
 
             it 'should use the list of admin buildpacks' do
               expect(buildpack_entry_generator.buildpack_entries(buildpack_info)).to eq([
-                { name: 'java', key: 'java-buildpack-key', url: admin_buildpack_download_url },
-                { name: 'ruby', key: 'ruby-buildpack-key', url: admin_buildpack_download_url },
+                { name: 'java', key: 'java-buildpack-key', url: admin_buildpack_download_url, sha256: 'checksum' },
+                { name: 'ruby', key: 'ruby-buildpack-key', url: admin_buildpack_download_url, sha256: 'checksum' },
               ])
             end
           end

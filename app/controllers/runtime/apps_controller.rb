@@ -102,11 +102,11 @@ module VCAP::CloudController
 
     def self.translate_memory_validation_exception(memory_errors)
       if memory_errors.include?(:space_quota_exceeded)
-        CloudController::Errors::ApiError.new_from_details('SpaceQuotaMemoryLimitExceeded')
+        CloudController::Errors::ApiError.new_from_details('SpaceQuotaMemoryLimitExceeded', 'app requested more memory than available')
       elsif memory_errors.include?(:space_instance_memory_limit_exceeded)
         CloudController::Errors::ApiError.new_from_details('SpaceQuotaInstanceMemoryLimitExceeded')
       elsif memory_errors.include?(:quota_exceeded)
-        CloudController::Errors::ApiError.new_from_details('AppMemoryQuotaExceeded')
+        CloudController::Errors::ApiError.new_from_details('AppMemoryQuotaExceeded', 'app requested more memory than available')
       elsif memory_errors.include?(:zero_or_less)
         CloudController::Errors::ApiError.new_from_details('AppMemoryInvalid')
       elsif memory_errors.include?(:instance_memory_limit_exceeded)
@@ -130,13 +130,12 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_bindings', app.class.table_name)
       end
 
-      AppDelete.new(SecurityContext.current_user.guid, SecurityContext.current_user_email).delete_without_event(app.app)
+      AppDelete.new(UserAuditInfo.from_context(SecurityContext)).delete_without_event(app.app)
 
       @app_event_repository.record_app_delete_request(
         app,
         space,
-        SecurityContext.current_user.guid,
-        SecurityContext.current_user_email,
+        UserAuditInfo.from_context(SecurityContext),
         recursive_delete?)
 
       [HTTP::NO_CONTENT, nil]
@@ -181,6 +180,10 @@ module VCAP::CloudController
 
     private
 
+    def user_audit_info
+      @user_audit_info ||= UserAuditInfo.from_context(SecurityContext)
+    end
+
     def blob_dispatcher
       BlobDispatcher.new(blobstore: @blobstore, controller: self)
     end
@@ -224,7 +227,7 @@ module VCAP::CloudController
         set_header('X-App-Staging-Log', stager_response.streaming_log_url)
       end
 
-      @app_event_repository.record_app_update(app, app.space, SecurityContext.current_user.guid, SecurityContext.current_user_email, request_attrs)
+      @app_event_repository.record_app_update(app, app.space, user_audit_info, request_attrs)
     end
 
     def update(guid)
@@ -259,8 +262,7 @@ module VCAP::CloudController
       @app_event_repository.record_app_create(
         process,
         process.space,
-        SecurityContext.current_user.guid,
-        SecurityContext.current_user_email,
+        user_audit_info,
         request_attrs)
 
       [
@@ -284,7 +286,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', route_guid) unless route
 
       begin
-        V2::RouteMappingCreate.new(SecurityContext.current_user, SecurityContext.current_user_email, route, app).add(request_attrs)
+        V2::RouteMappingCreate.new(user_audit_info, route, app).add(request_attrs)
       rescue RouteMappingCreate::DuplicateRouteMapping
         # the route is already mapped, consider the request successful
       rescue V2::RouteMappingCreate::TcpRoutingDisabledError
@@ -314,7 +316,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', route_guid) unless route
 
       route_mapping = RouteMappingModel.find(app: process.app, route: route, process: process)
-      RouteMappingDelete.new(SecurityContext.current_user, SecurityContext.current_user_email).delete(route_mapping)
+      RouteMappingDelete.new(user_audit_info).delete(route_mapping)
 
       after_update(process)
 
@@ -334,7 +336,7 @@ module VCAP::CloudController
       service_binding = ServiceBinding.find(guid: request_attrs['service_binding'])
       raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', service_binding_guid) unless service_binding
 
-      ServiceBindingDelete.new(SecurityContext.current_user.guid, SecurityContext.current_user_email).single_delete_sync(service_binding)
+      ServiceBindingDelete.new(UserAuditInfo.from_context(SecurityContext)).single_delete_sync(service_binding)
 
       after_update(process)
 

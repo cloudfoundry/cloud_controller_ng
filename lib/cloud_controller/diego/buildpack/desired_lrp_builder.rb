@@ -4,35 +4,44 @@ module VCAP::CloudController
       class DesiredLrpBuilder
         include ::Diego::ActionBuilder
 
-        def initialize(config, app_request)
+        attr_reader :start_command
+
+        def initialize(config, opts)
           @config = config
-          @app_request = app_request
+          @stack = opts[:stack]
+          @droplet_uri = opts[:droplet_uri]
+          @process_guid = opts[:process_guid]
+          @droplet_hash = opts[:droplet_hash]
+          @ports = opts[:ports]
+          @checksum_algorithm = opts[:checksum_algorithm]
+          @checksum_value = opts[:checksum_value]
+          @start_command = opts[:start_command]
         end
 
         def cached_dependencies
-          lifecycle_bundle_key = "buildpack/#{@app_request['stack']}".to_sym
+          lifecycle_bundle_key = "buildpack/#{@stack}".to_sym
           [
             ::Diego::Bbs::Models::CachedDependency.new(
               from: LifecycleBundleUriGenerator.uri(@config[:diego][:lifecycle_bundles][lifecycle_bundle_key]),
               to: '/tmp/lifecycle',
-              cache_key: "buildpack-#{@app_request['stack']}-lifecycle"
+              cache_key: "buildpack-#{@stack}-lifecycle"
             )
           ]
         end
 
         def root_fs
-          "preloaded:#{@app_request['stack']}"
+          "preloaded:#{@stack}"
         end
 
         def setup
           serial([
             ::Diego::Bbs::Models::DownloadAction.new(
-              from: @app_request['droplet_uri'],
+              from: @droplet_uri,
               to: '.',
-              cache_key: "droplets-#{@app_request['process_guid']}",
+              cache_key: "droplets-#{@process_guid}",
               user: 'vcap',
-              checksum_algorithm: 'sha1',
-              checksum_value: @app_request['droplet_hash'],
+              checksum_algorithm: @checksum_algorithm,
+              checksum_value: @checksum_value,
             )
           ])
         end
@@ -42,7 +51,14 @@ module VCAP::CloudController
         end
 
         def ports
-          @app_request['ports'] || [DEFAULT_APP_PORT]
+          @ports || [DEFAULT_APP_PORT]
+        end
+
+        def port_environment_variables
+          [
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: ports.first.to_s),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_PORT', value: ports.first.to_s),
+          ]
         end
 
         def privileged?

@@ -1,147 +1,172 @@
+require 'cloud_controller/diego/process_stats_generator'
+require 'traffic_controller/client'
+require 'utils/workpool'
+
 module VCAP::CloudController
   module Diego
     class InstancesReporter
-      attr_reader :tps_client
+      UNKNOWN_INSTANCE_COUNT = -1
 
-      def initialize(tps_client)
-        @tps_client = tps_client
+      def initialize(bbs_instances_client, traffic_controller_client)
+        @bbs_instances_client      = bbs_instances_client
+        @traffic_controller_client = traffic_controller_client
       end
 
       def all_instances_for_app(process)
-        result    = {}
-        instances = tps_client.lrp_instances(process)
+        instances = {}
+        bbs_instances_client.lrp_instances(process).each do |actual_lrp|
+          next unless actual_lrp.actual_lrp_key.index < process.instances
 
-        for_each_desired_instance(instances, process) do |instance|
-          info = {
-            state: instance[:state],
-            uptime: instance[:uptime],
-            since: instance[:since],
+          current_time_ns = Time.now.to_f * 1e9
+          translated_state = LrpStateTranslator.translate_lrp_state(actual_lrp)
+          result = {
+            state:  translated_state,
+            uptime: nanoseconds_to_seconds(current_time_ns - actual_lrp.since),
+            since:  nanoseconds_to_seconds(actual_lrp.since),
           }
-          info[:details] = instance[:details] if instance[:details]
-          result[instance[:index]] = info
+
+          result[:details] = actual_lrp.placement_error if actual_lrp.placement_error.present?
+
+          instances[actual_lrp.actual_lrp_key.index] = result
         end
 
-        fill_unreported_instances_with_down_instances(result, process)
-      rescue CloudController::Errors::InstancesUnavailable => e
-        raise e
+        fill_unreported_instances_with_down_instances(instances, process)
       rescue => e
+        raise e if e.is_a? CloudController::Errors::InstancesUnavailable
+        logger.error('all_instances_for_app.error', error: e.to_s)
         raise CloudController::Errors::InstancesUnavailable.new(e)
       end
 
       def number_of_starting_and_running_instances_for_processes(processes)
-        result = {}
+        instances = {}
+        workpool = WorkPool.new(50)
+        queue = Queue.new
 
-        instances_map = tps_client.bulk_lrp_instances(processes)
-        processes.each do |application|
-          running_indices = Set.new
-
-          for_each_desired_instance(instances_map[application.guid] || [], application) do |instance|
-            next unless instance[:state] == 'RUNNING' || instance[:state] == 'STARTING'
-            running_indices.add(instance[:index])
+        processes.each do |process|
+          workpool.submit(instances, process) do |i, p|
+            queue << [p.guid, number_of_starting_and_running_instances_for_process(p)]
           end
-
-          result[application.guid] = running_indices.length
         end
 
-        result
-      rescue CloudController::Errors::InstancesUnavailable
-        processes.each { |process| result[process.guid] = -1 }
-        result
-      rescue => e
-        logger.error('tps.error', error: e.to_s)
-        processes.each { |process| result[process.guid] = -1 }
-        result
+        workpool.drain
+        until queue.empty?
+          guid, info = queue.pop
+          instances[guid] = info
+        end
+
+        instances
       end
 
       def number_of_starting_and_running_instances_for_process(process)
         return 0 unless process.started?
-        instances = tps_client.lrp_instances(process)
 
         running_indices = Set.new
+        bbs_instances_client.lrp_instances(process).each do |actual_lrp|
+          next unless actual_lrp.actual_lrp_key.index < process.instances
+          next unless running_or_starting?(actual_lrp)
 
-        for_each_desired_instance(instances, process) do |instance|
-          next unless instance[:state] == 'RUNNING' || instance[:state] == 'STARTING'
-          running_indices.add(instance[:index])
+          running_indices.add(actual_lrp.actual_lrp_key.index)
         end
 
         running_indices.length
-      rescue CloudController::Errors::InstancesUnavailable
-        return -1
       rescue => e
-        logger.error('tps.error', error: e.to_s)
-        return -1
+        logger.error('number_of_starting_and_running_instances_for_process.error', error: e.to_s)
+        return UNKNOWN_INSTANCE_COUNT
       end
 
       def crashed_instances_for_app(process)
-        result    = []
-        instances = tps_client.lrp_instances(process)
+        crashed_instances = []
+        bbs_instances_client.lrp_instances(process).each do |actual_lrp|
+          next unless actual_lrp.state == ::Diego::ActualLRPState::CRASHED
+          next unless actual_lrp.actual_lrp_key.index < process.instances
 
-        for_each_desired_instance(instances, process) do |instance|
-          if instance[:state] == 'CRASHED'
-            result << {
-                'instance' => instance[:instance_guid],
-                'uptime' => instance[:uptime],
-                'since' => instance[:since],
-            }
-          end
+          crashed_instances << {
+            'instance' => actual_lrp.actual_lrp_instance_key.instance_guid,
+            'uptime'   => 0,
+            'since'    => nanoseconds_to_seconds(actual_lrp.since),
+          }
         end
+        crashed_instances
 
-        result
-
-      rescue CloudController::Errors::InstancesUnavailable => e
-        raise e
       rescue => e
+        raise e if e.is_a? CloudController::Errors::InstancesUnavailable
+        logger.error('crashed_instances_for_app.error', error: e.to_s)
         raise CloudController::Errors::InstancesUnavailable.new(e)
       end
 
       def stats_for_app(process)
-        result    = {}
-        instances = tps_client.lrp_instances_stats(process)
+        result       = {}
+        current_time = Time.now.to_f
+        formatted_current_time = Time.now.to_datetime.rfc3339
 
-        for_each_desired_instance(instances, process) do |instance|
-          usage = instance[:stats] || {}
+        logger.debug('stats_for_app.fetching_container_metrics', process_guid: process.guid)
+        envelopes = @traffic_controller_client.container_metrics(
+          app_guid: process.guid,
+          auth_token: VCAP::CloudController::SecurityContext.auth_token,
+        )
+        actual_lrps = bbs_instances_client.lrp_instances(process)
+
+        stats = {}
+        envelopes.each do |envelope|
+          container_metrics                      = envelope.containerMetric
+          stats[container_metrics.instanceIndex] = {
+            time: formatted_current_time,
+            cpu:  container_metrics.cpuPercentage / 100,
+            mem:  container_metrics.memoryBytes,
+            disk: container_metrics.diskBytes,
+          }
+        end
+
+        actual_lrps.each do |actual_lrp|
+          next unless actual_lrp.actual_lrp_key.index < process.instances
           info = {
-            state: instance[:state],
+            state: LrpStateTranslator.translate_lrp_state(actual_lrp),
             stats: {
-              name: process.name,
-              uris: process.uris,
-              host: instance[:host],
-              port: instance[:port],
-              net_info: instance[:net_info],
-              uptime: instance[:uptime],
+              name:       process.name,
+              uris:       process.uris,
+              host:       actual_lrp.actual_lrp_net_info.address,
+              port:       get_default_port(actual_lrp.actual_lrp_net_info),
+              net_info:   actual_lrp.actual_lrp_net_info.to_hash,
+              uptime:     nanoseconds_to_seconds(current_time * 1e9 - actual_lrp.since),
               mem_quota:  process[:memory] * 1024 * 1024,
               disk_quota: process[:disk_quota] * 1024 * 1024,
-              fds_quota: process.file_descriptors,
-              usage: {
-                  time: usage[:time] || Time.now.utc.to_s,
-                  cpu:  usage[:cpu] || 0,
-                  mem:  usage[:mem] || 0,
-                  disk: usage[:disk] || 0,
-              }
+              fds_quota:  process.file_descriptors,
+              usage:      stats[actual_lrp.actual_lrp_key.index] || {
+                time: formatted_current_time,
+                cpu:  0,
+                mem:  0,
+                disk: 0,
+              },
             }
           }
-          info[:details] = instance[:details] if instance[:details]
-          result[instance[:index]] = info
+          info[:details]                          = actual_lrp.placement_error if actual_lrp.placement_error.present?
+          result[actual_lrp.actual_lrp_key.index] = info
         end
 
         fill_unreported_instances_with_down_instances(result, process)
-      rescue CloudController::Errors::InstancesUnavailable => e
-        raise e
       rescue => e
+        raise e if e.is_a? CloudController::Errors::InstancesUnavailable
+        logger.error('stats_for_app.error', error: e.to_s)
         raise CloudController::Errors::InstancesUnavailable.new(e)
       end
 
       private
 
-      def for_each_desired_instance(instances, process)
-        instances.each do |instance|
-          next unless instance_is_desired?(instance, process)
-          yield(instance)
-        end
+      attr_reader :bbs_instances_client
+
+      def logger
+        @logger ||= Steno.logger('cc.diego.instances_reporter')
       end
 
-      def instance_is_desired?(instance, process)
-        instance[:index] < process.instances
+      def running_or_starting?(lrp)
+        translated_state = LrpStateTranslator.translate_lrp_state(lrp)
+        return true if VCAP::CloudController::Diego::LRP_RUNNING == translated_state
+        return true if VCAP::CloudController::Diego::LRP_STARTING == translated_state
+        false
+      end
+
+      def nanoseconds_to_seconds(time)
+        (time / 1e9).to_i
       end
 
       def fill_unreported_instances_with_down_instances(reported_instances, process)
@@ -157,8 +182,29 @@ module VCAP::CloudController
         reported_instances
       end
 
-      def logger
-        @logger ||= Steno.logger('cc.diego.instances_reporter')
+      def get_default_port(net_info)
+        net_info.ports.each do |port_mapping|
+          return port_mapping.host_port if port_mapping.container_port == DEFAULT_APP_PORT
+        end
+
+        0
+      end
+    end
+
+    class LrpStateTranslator
+      def self.translate_lrp_state(lrp)
+        case lrp.state
+        when ::Diego::ActualLRPState::RUNNING
+          VCAP::CloudController::Diego::LRP_RUNNING
+        when ::Diego::ActualLRPState::CLAIMED
+          VCAP::CloudController::Diego::LRP_STARTING
+        when ::Diego::ActualLRPState::UNCLAIMED
+          lrp.placement_error.present? ? VCAP::CloudController::Diego::LRP_DOWN : VCAP::CloudController::Diego::LRP_STARTING
+        when ::Diego::ActualLRPState::CRASHED
+          VCAP::CloudController::Diego::LRP_CRASHED
+        else
+          VCAP::CloudController::Diego::LRP_UNKNOWN
+        end
       end
     end
   end

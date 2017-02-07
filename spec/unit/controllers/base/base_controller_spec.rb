@@ -104,7 +104,7 @@ module VCAP::CloudController
 
         it 'processes Sequel Validation errors using translate_validation_exception' do
           get '/test_validation_error'
-          expect(decoded_response['description']).to eq('validation failed')
+          expect(decoded_response['description']).to eq('An unknown error occurred.')
         end
 
         it 'processes BlobstoreError using translate_validation_exception' do
@@ -175,6 +175,18 @@ module VCAP::CloudController
             it 'does not raise error' do
               get '/test_unauthenticated'
               expect(last_response.body).to eq 'unauthenticated_response'
+            end
+          end
+
+          context 'when the token is invalid/ expired' do
+            before do
+              VCAP::CloudController::SecurityContext.set(nil, :invalid_token, nil)
+            end
+
+            it 'returns an invalid token error to the user' do
+              get '/test_endpoint'
+              expect(last_response.status).to eq 401
+              expect(last_response.body).to match /InvalidAuthToken/
             end
           end
         end

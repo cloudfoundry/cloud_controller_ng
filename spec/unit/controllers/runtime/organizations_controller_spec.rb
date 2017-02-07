@@ -4,6 +4,7 @@ module VCAP::CloudController
   RSpec.describe VCAP::CloudController::OrganizationsController do
     let(:org) { Organization.make }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+    let(:user_email) { Sham.email }
 
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:name) }
@@ -1217,7 +1218,7 @@ module VCAP::CloudController
 
           before do
             allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
-            set_current_user_as_admin
+            set_current_user_as_admin(email: user_email)
           end
 
           it "makes the user an org #{role}" do
@@ -1316,7 +1317,7 @@ module VCAP::CloudController
           before do
             allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
             org.send("add_#{role}", user)
-            set_current_user_as_admin
+            set_current_user_as_admin(email: user_email)
           end
 
           it "unsets the user as an org #{role}" do

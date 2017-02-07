@@ -15,7 +15,7 @@ module CloudController
             'buildpack'                   => buildpack_name_or_url(app.buildpack),
             'detected_buildpack'          => app.detected_buildpack,
             'detected_buildpack_guid'     => app.detected_buildpack_guid,
-            'environment_json'            => redact(app.environment_json, admin_or_developer?(app)),
+            'environment_json'            => redact(app.environment_json, can_read_env?(app)),
             'memory'                      => app.memory,
             'instances'                   => app.instances,
             'disk_quota'                  => app.disk_quota,
@@ -53,9 +53,8 @@ module CloudController
           end
         end
 
-        def admin_or_developer?(app)
-          admin_override = VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
-          admin_override || app.space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
+        def can_read_env?(app)
+          VCAP::CloudController::Security::AccessContext.new.can?(:read_env, app)
         end
 
         def redact(attr, has_permission=false)

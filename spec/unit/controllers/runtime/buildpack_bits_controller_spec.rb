@@ -5,9 +5,9 @@ module VCAP::CloudController
     let(:user) { make_user }
     let(:tmpdir) { Dir.mktmpdir }
     let(:filename) { 'file.zip' }
-    let(:sha_valid_zip) { Digester.new.digest_file(valid_zip) }
-    let(:sha_valid_zip2) { Digester.new.digest_file(valid_zip2) }
-    let(:sha_valid_tar_gz) { Digester.new.digest_file(valid_tar_gz) }
+    let(:sha_valid_zip) { Digester.new(algorithm: Digest::SHA256).digest_file(valid_zip) }
+    let(:sha_valid_zip2) { Digester.new(algorithm: Digest::SHA256).digest_file(valid_zip2) }
+    let(:sha_valid_tar_gz) { Digester.new(algorithm: Digest::SHA256).digest_file(valid_tar_gz) }
     let(:valid_zip) do
       zip_name = File.join(tmpdir, filename)
       TestZip.create(zip_name, 1, 1024)

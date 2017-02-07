@@ -11,7 +11,7 @@ module VCAP::CloudController
         CloudController::Blobstore::FogClient.new(connection_config: { provider: 'Local', local_root: blobstore_dir },
                                                   directory_key: 'package')
       end
-      let(:source_package) { PackageModel.make(type: 'bits', package_hash: 'something') }
+      let(:source_package) { PackageModel.make(type: 'bits', package_hash: 'something', sha256_checksum: 'sha256') }
       let(:destination_package) { PackageModel.make(type: 'bits') }
 
       before do
@@ -39,14 +39,16 @@ module VCAP::CloudController
           expect(package_blobstore.exists?(destination_package.guid)).to be_truthy
         end
 
-        it 'updates the destination package_hash and state' do
+        it 'updates the destination package_hash, sha256_checksum and state' do
           expect(destination_package.package_hash).not_to eq(source_package.package_hash)
+          expect(destination_package.sha256_checksum).not_to eq(source_package.sha256_checksum)
           expect(destination_package.state).not_to eq(VCAP::CloudController::PackageModel::READY_STATE)
 
           job.perform
 
           destination_package.reload
           expect(destination_package.package_hash).to eq(source_package.package_hash)
+          expect(destination_package.sha256_checksum).to eq(source_package.sha256_checksum)
           expect(destination_package.state).to eq(VCAP::CloudController::PackageModel::READY_STATE)
         end
 

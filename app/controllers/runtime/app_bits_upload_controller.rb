@@ -17,7 +17,7 @@ module VCAP::CloudController
     def check_authentication(op)
       auth                  = env['HTTP_AUTHORIZATION']
       grace_period          = config.fetch(:app_bits_upload_grace_period_in_seconds, 0)
-      relaxed_token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa], grace_period)
+      relaxed_token_decoder = VCAP::CloudController::UaaTokenDecoder.new(config, grace_period)
       VCAP::CloudController::Security::SecurityContextConfigurer.new(relaxed_token_decoder).configure(auth)
       super
     end
@@ -28,7 +28,8 @@ module VCAP::CloudController
 
       raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'cannot upload bits to a docker app') if app.docker?
 
-      create_message = PackageCreateMessage.new({ type: 'bits', app_guid: app.app.guid })
+      relationships = { app: { guid: app.app.guid } }
+      create_message = PackageCreateMessage.new({ type: 'bits', relationships: relationships })
       package = PackageCreate.create_without_event(create_message)
 
       unless params['resources']
@@ -71,8 +72,8 @@ module VCAP::CloudController
       copier = PackageCopy.new
       copier.copy_without_event(dest_app.app.guid, src_app.latest_package)
 
-      @app_event_repository.record_src_copy_bits(dest_app, src_app, SecurityContext.current_user.guid, SecurityContext.current_user_email)
-      @app_event_repository.record_dest_copy_bits(dest_app, src_app, SecurityContext.current_user.guid, SecurityContext.current_user_email)
+      @app_event_repository.record_src_copy_bits(dest_app, src_app, UserAuditInfo.from_context(SecurityContext))
+      @app_event_repository.record_dest_copy_bits(dest_app, src_app, UserAuditInfo.from_context(SecurityContext))
 
       [HTTP::CREATED, JobPresenter.new(copier.enqueued_job).to_json]
     end

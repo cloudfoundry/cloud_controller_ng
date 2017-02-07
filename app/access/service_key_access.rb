@@ -15,6 +15,15 @@ module VCAP::CloudController
       service_key.service_instance.space.has_developer?(context.user)
     end
 
+    def read_env?(service_key)
+      return true if admin_user? || admin_read_only_user?
+      service_key.space.has_developer?(context.user)
+    end
+
+    def read_env_with_token?(service_key)
+      read_with_token?(service_key)
+    end
+
     def index?(_, params=nil)
       return true if admin_user? || admin_read_only_user?
       return true unless params && params.key?(:related_obj)

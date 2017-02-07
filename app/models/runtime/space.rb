@@ -122,6 +122,7 @@ module VCAP::CloudController
       processes: :destroy,
       routes: :destroy,
       security_groups: :nullify,
+      staging_security_groups: :nullify,
     )
 
     export_attributes :name, :organization_guid, :space_quota_definition_guid, :allow_ssh

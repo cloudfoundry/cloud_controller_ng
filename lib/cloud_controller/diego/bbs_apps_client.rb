@@ -77,6 +77,26 @@ module VCAP::CloudController
         end
       end
 
+      def fetch_scheduling_infos
+        logger.info('fetch.scheduling.infos.request')
+
+        handle_diego_errors do
+          response = @client.desired_lrp_scheduling_infos(APP_LRP_DOMAIN)
+          logger.info('fetch.scheduling.infos.response', error: response.error)
+          response
+        end.desired_lrp_scheduling_infos
+      end
+
+      def bump_freshness
+        logger.info('bump.freshness.request')
+
+        handle_diego_errors do
+          response = @client.upsert_domain(domain: APP_LRP_DOMAIN, ttl: APP_LRP_DOMAIN_TTL)
+          logger.info('bump.freshness.response', error: response.error)
+          response
+        end
+      end
+
       private
 
       def handle_diego_errors

@@ -26,7 +26,7 @@
   error_collector:
     enabled: true
     capture_source: true
-    ignore_errors: "CloudController::Errors::NotStaged,CloudController::Errors::NotAuthenticated,Sinatra::NotFound"
+    ignore_errors: "CloudController::Errors::NotStaged,CloudController::Errors::NotAuthenticated,Sinatra::NotFound,ActionController::RoutingError,CloudController::Errors::NotFound,CloudController::Errors::InvalidAuthToken"
 
 <%= properties.cc.newrelic.environment_name %>_background:
   <<: *common_settings

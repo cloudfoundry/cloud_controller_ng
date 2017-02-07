@@ -12,13 +12,14 @@ module VCAP::CloudController
     describe '#copy' do
       let(:user_guid) { 'gooid' }
       let(:user_email) { 'amelia@cats.com' }
+      let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
 
       before do
         allow(Repositories::PackageEventRepository).to receive(:record_app_package_copy)
       end
 
       it 'creates the package with the correct values' do
-        result = package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_guid: user_guid, user_email: user_email)
+        result = package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
 
         expect(target_app.packages.first).to eq(result)
         created_package = PackageModel.find(guid: result.guid)
@@ -28,7 +29,7 @@ module VCAP::CloudController
 
       it 'copies over docker info' do
         source_package = PackageModel.make(type: 'docker', docker_image: 'image-magick.com')
-        result = package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_guid: user_guid, user_email: user_email)
+        result = package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
         created_package = PackageModel.find(guid: result.guid)
 
         expect(created_package.image).to eq('image-magick.com')
@@ -37,12 +38,11 @@ module VCAP::CloudController
       it 'creates an audit event' do
         expect(Repositories::PackageEventRepository).to receive(:record_app_package_copy).with(
           instance_of(PackageModel),
-          user_guid,
-          user_email,
+          user_audit_info,
           source_package.guid
         )
 
-        package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_guid: user_guid, user_email: user_email)
+        package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
       end
 
       describe 'package state' do
@@ -50,7 +50,7 @@ module VCAP::CloudController
           let(:type) { 'bits' }
 
           it 'sets the state to COPYING_STATE' do
-            result = package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_guid: user_guid, user_email: user_email)
+            result = package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
             expect(result.type).to eq('bits')
             expect(result.state).to eq(PackageModel::COPYING_STATE)
           end
@@ -58,7 +58,7 @@ module VCAP::CloudController
           it 'enqueues a job to copy the bits in the blobstore' do
             package = nil
             expect {
-              package = package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_guid: user_guid, user_email: user_email)
+              package = package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
             }.to change { Delayed::Job.count }.by(1)
 
             job = Delayed::Job.last
@@ -71,14 +71,14 @@ module VCAP::CloudController
 
         context 'when the type is docker' do
           it 'sets the state to READY_STATE' do
-            result = package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_guid: user_guid, user_email: user_email)
+            result = package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
             expect(result.type).to eq('docker')
             expect(result.state).to eq(PackageModel::READY_STATE)
           end
 
           it 'does no enqueue a job to copy the bits in the blobstore' do
             expect {
-              package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_guid: user_guid, user_email: user_email)
+              package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
             }.not_to change { Delayed::Job.count }
           end
         end
@@ -91,7 +91,7 @@ module VCAP::CloudController
 
         it 'raises an InvalidPackage error' do
           expect {
-            package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_guid: user_guid, user_email: user_email)
+            package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
           }.to raise_error(PackageCopy::InvalidPackage, 'the message')
         end
       end
@@ -101,7 +101,7 @@ module VCAP::CloudController
 
         it 'raises an InvalidPackage error' do
           expect {
-            package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_guid: user_guid, user_email: user_email)
+            package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
           }.to raise_error(PackageCopy::InvalidPackage, 'Source and destination app cannot be the same')
         end
       end

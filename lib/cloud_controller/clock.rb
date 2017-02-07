@@ -18,14 +18,25 @@ module VCAP::CloudController
       end
     end
 
-    def schedule_frequent_cleanup(name, klass)
+    def schedule_frequent_job(name, klass, queue: 'cc-generic', priority: nil, allow_only_one_job_in_queue: false)
       config = @config.fetch(name.to_sym)
 
-      Clockwork.every(config.fetch(:frequency_in_seconds), "#{name}.cleanup.job") do |_|
+      Clockwork.every(config.fetch(:frequency_in_seconds), "#{name}.job") do |_|
+        if allow_only_one_job_in_queue && running_job?(queue)
+          @logger.info("Skipping enqueue of #{name} as one is already running")
+          next
+        end
+
         @logger.info("Queueing #{klass} at #{Time.now.utc}")
-        expiration = config.fetch(:expiration_in_seconds)
-        job        = klass.new(expiration)
-        Jobs::Enqueuer.new(job, queue: 'cc-generic').enqueue
+        expiration = config[:expiration_in_seconds]
+        job = if expiration
+                klass.new(expiration)
+              else
+                klass.new
+              end
+        opts = { queue: queue }
+        opts[:priority] = priority if priority
+        Jobs::Enqueuer.new(job, opts).enqueue
       end
     end
 
@@ -34,6 +45,12 @@ module VCAP::CloudController
         @logger.info("Queueing #{klass} at #{Time.now.utc}")
         Jobs::Enqueuer.new(klass.new, queue: 'cc-generic').enqueue
       end
+    end
+
+    private
+
+    def running_job?(queue)
+      Delayed::Job.where(queue: queue, failed_at: nil).exclude(locked_at: nil).count > 0
     end
   end
 end

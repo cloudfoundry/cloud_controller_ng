@@ -4,12 +4,13 @@ module VCAP::CloudController
   module Diego
     module Docker
       RSpec.describe DesiredLrpBuilder do
-        subject(:builder) { described_class.new(config, app_request) }
-        let(:app_request) do
+        subject(:builder) { described_class.new(config, opts) }
+        let(:opts) do
           {
-            'ports' => ports,
-            'docker_image' => 'user/repo:tag',
-            'execution_metadata' => execution_metadata,
+            ports: ports,
+            docker_image: 'user/repo:tag',
+            execution_metadata: execution_metadata,
+            start_command: 'dd if=/dev/random of=/dev/null',
           }
         end
         let(:config) do
@@ -116,6 +117,22 @@ module VCAP::CloudController
             it 'uses the user from the execution metadata' do
               expect(builder.action_user).to eq('foobar')
             end
+          end
+        end
+
+        describe '#start_command' do
+          it 'returns the passed in start command' do
+            expect(builder.start_command).to eq('dd if=/dev/random of=/dev/null')
+          end
+        end
+
+        describe '#port_environment_variables' do
+          let(:ports) { [11, 22, 33] }
+
+          it 'returns the array of environment variables' do
+            expect(builder.port_environment_variables).to match_array([
+              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '11'),
+            ])
           end
         end
       end

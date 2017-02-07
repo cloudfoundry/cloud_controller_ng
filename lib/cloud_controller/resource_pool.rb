@@ -4,10 +4,9 @@
 # If there are other attributes, such as in legacy calls to "match_resources",
 # they will be ignored and preserved.
 
-require 'fog'
-require 'fog/azurerm'
 require 'httpclient'
 require 'steno'
+require 'cloud_controller/blobstore/fog/providers'
 
 class VCAP::CloudController::ResourcePool
   VALID_SHA_LENGTH = 40

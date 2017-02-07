@@ -86,20 +86,18 @@ module VCAP::CloudController
         expect(parsed_response['services'].map { |service_json| service_json['guid'] }).to_not include service_instance2.guid
       end
 
-      context 'when the instances reporter fails' do
+      context 'when an app is deleted concurrently' do
+        let(:deleted_app) { AppFactory.make(space: space) }
         before do
-          allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_processes).and_raise(
-            CloudController::Errors::InstancesUnavailable.new(RuntimeError.new('something went wrong.')))
+          deleted_app.app = nil
+          allow_any_instance_of(Space).to receive(:apps).and_return([app_obj, deleted_app])
         end
 
-        it "returns '220001 InstancesError'" do
+        it 'ignores the process with the deleted app' do
           get "/v2/spaces/#{space.guid}/summary"
-
-          expect(last_response.status).to eq(503)
-
-          parsed_response = MultiJson.load(last_response.body)
-          expect(parsed_response['code']).to eq(220002)
-          expect(parsed_response['description']).to eq('Instances information unavailable: something went wrong.')
+          expect(last_response.status).to eq(200)
+          expect(space.apps).to match([app_obj, deleted_app])
+          expect(last_response.body).not_to include(deleted_app.guid)
         end
       end
     end

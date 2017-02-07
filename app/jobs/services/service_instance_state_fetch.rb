@@ -4,14 +4,13 @@ module VCAP::CloudController
       class ServiceInstanceStateFetch < VCAP::CloudController::Jobs::CCJob
         attr_accessor :name, :client_attrs, :service_instance_guid, :services_event_repository, :request_attrs, :poll_interval, :end_timestamp
 
-        def initialize(name, client_attrs, service_instance_guid, user_guid, user_email, request_attrs, end_timestamp=nil)
+        def initialize(name, client_attrs, service_instance_guid, user_audit_info, request_attrs, end_timestamp=nil)
           @name                  = name
           @client_attrs          = client_attrs
           @service_instance_guid = service_instance_guid
           @request_attrs         = request_attrs
           @end_timestamp         = end_timestamp || new_end_timestamp
-          @user_email            = user_email
-          @user_guid             = user_guid
+          @user_audit_info       = user_audit_info
           update_polling_interval
         end
 
@@ -44,10 +43,10 @@ module VCAP::CloudController
           Time.now + VCAP::CloudController::Config.config[:broker_client_max_async_poll_duration_minutes].minutes
         end
 
-        def get_repository(user_guid, user_email)
-          user = User.find(guid: user_guid)
+        def repository
+          user = User.find(guid: @user_audit_info.user_guid)
           if user
-            Repositories::ServiceEventRepository.new(user: user, user_email: user_email)
+            Repositories::ServiceEventRepository.new(@user_audit_info)
           end
         end
 
@@ -80,7 +79,7 @@ module VCAP::CloudController
         end
 
         def record_event(service_instance, request_attrs)
-          services_event_repository = get_repository(@user_guid, @user_email)
+          services_event_repository = repository
           return unless services_event_repository
           type = service_instance.last_operation.type
           services_event_repository.record_service_instance_event(type, service_instance, request_attrs)

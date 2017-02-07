@@ -19,36 +19,48 @@ module VCAP::CloudController
 
     context 'for a logged in user (defensive)' do
       it_behaves_like :no_access
+
+      it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
 
       it_behaves_like :no_access
+
+      it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
 
     context 'organization manager (defensive)' do
       before { org.add_manager(user) }
 
       it_behaves_like :no_access
+
+      it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
 
     context 'organization billing manager (defensive)' do
       before { org.add_billing_manager(user) }
 
       it_behaves_like :no_access
+
+      it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
 
     context 'organization auditor (defensive)' do
       before { org.add_auditor(user) }
 
       it_behaves_like :no_access
+
+      it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
 
     context 'organization user (defensive)' do
       before { org.add_user(user) }
 
       it_behaves_like :no_access
+
+      it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
 
     context 'space auditor' do
@@ -58,6 +70,8 @@ module VCAP::CloudController
       end
 
       it_behaves_like :no_access
+
+      it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
 
     context 'space manager (defensive)' do
@@ -67,6 +81,8 @@ module VCAP::CloudController
       end
 
       it_behaves_like :no_access
+
+      it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
 
     context 'space developer' do
@@ -79,6 +95,7 @@ module VCAP::CloudController
       it { is_expected.to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.to allow_op_on_object :delete, object }
+      it { is_expected.to allow_op_on_object(:read_env, object) }
 
       context 'when the organization is suspended' do
         before { allow(object).to receive(:in_suspended_org?).and_return(true) }

@@ -8,7 +8,7 @@ module VCAP::CloudController
       @config = config
     end
 
-    def cancel(task:, user:, email:)
+    def cancel(task:, user_audit_info:)
       reject_invalid_states!(task)
 
       TaskModel.db.transaction do
@@ -16,7 +16,7 @@ module VCAP::CloudController
         task.state = TaskModel::CANCELING_STATE
         task.save
 
-        task_event_repository.record_task_cancel(task, user.guid, email)
+        task_event_repository.record_task_cancel(task, user_audit_info)
       end
 
       if bypass_bridge?

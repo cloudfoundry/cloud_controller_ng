@@ -11,10 +11,12 @@ includes:
   - api_resources/apps
   - api_resources/droplets
   - api_resources/isolation_segments
+  - api_resources/organizations
   - api_resources/packages
   - api_resources/processes
   - api_resources/route_mappings
   - api_resources/service_bindings
+  - api_resources/spaces
   - api_resources/tasks
   - introduction/introduction
   - concepts/concepts
@@ -61,6 +63,9 @@ includes:
   - experimental_resources/isolation_segments/unassign
   - experimental_resources/isolation_segments/list_organizations
   - experimental_resources/isolation_segments/list_spaces
+  - experimental_resources/organizations/header
+  - experimental_resources/organizations/object
+  - experimental_resources/organizations/list
   - experimental_resources/packages/header
   - experimental_resources/packages/object
   - experimental_resources/packages/create
@@ -104,6 +109,9 @@ includes:
   - experimental_resources/service_bindings/get
   - experimental_resources/service_bindings/delete
   - experimental_resources/service_bindings/list
+  - experimental_resources/spaces/header
+  - experimental_resources/spaces/object
+  - experimental_resources/spaces/list
 
 search: true
 ---

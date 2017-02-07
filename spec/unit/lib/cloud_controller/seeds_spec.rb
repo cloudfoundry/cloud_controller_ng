@@ -283,7 +283,7 @@ module VCAP::CloudController
 
           it 'adds both as shared domains' do
             Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
-            expect(Domain.shared_domains.map(&:name)).to eq(['app.example.com', 'example.com'])
+            expect(Domain.shared_domains.map(&:name)).to match_array(['app.example.com', 'example.com'])
             expect(Domain.private_domains.map(&:name)).to eq([])
           end
         end

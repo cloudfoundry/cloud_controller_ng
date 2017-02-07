@@ -41,7 +41,7 @@ module VCAP::CloudController
     private
 
     def visible_spaces(org)
-      org.user_visible_relationship_dataset(:spaces, SecurityContext.current_user, SecurityContext.admin?).eager(:apps).all
+      org.user_visible_relationship_dataset(:spaces, @access_context.user, @access_context.admin_override).eager(:apps).all
     end
   end
 end

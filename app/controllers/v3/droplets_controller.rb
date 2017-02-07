@@ -25,7 +25,7 @@ class DropletsController < ApplicationController
       package, dataset = DropletListFetcher.new(message: message).fetch_for_package
       package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
     else
-      dataset = if roles.admin? || roles.admin_read_only?
+      dataset = if can_read_globally?
                   DropletListFetcher.new(message: message).fetch_all
                 else
                   DropletListFetcher.new(message: message).fetch_for_spaces(space_guids: readable_space_guids)
@@ -47,7 +47,7 @@ class DropletsController < ApplicationController
 
     unauthorized! unless can_write?(space.guid)
 
-    droplet_deletor = DropletDelete.new(current_user.guid, current_user_email, stagers)
+    droplet_deletor = DropletDelete.new(user_audit_info, stagers)
     droplet_deletor.delete(droplet)
 
     head :no_content
@@ -64,7 +64,7 @@ class DropletsController < ApplicationController
     app_not_found! unless destination_app && can_read?(destination_app.space.guid, destination_app.organization.guid)
     unauthorized! unless can_write?(destination_app.space.guid)
 
-    droplet = DropletCopy.new(source_droplet).copy(destination_app, current_user.guid, current_user_email)
+    droplet = DropletCopy.new(source_droplet).copy(destination_app, user_audit_info)
 
     render status: :created, json: Presenters::V3::DropletPresenter.new(droplet)
   rescue DropletCopy::InvalidCopyError => e
@@ -89,20 +89,19 @@ class DropletsController < ApplicationController
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     droplet = DropletCreate.new.create_and_stage(
-      package:    package,
-      lifecycle:  lifecycle,
-      message:    staging_message,
-      user:       current_user,
-      user_email: current_user_email
+      package:         package,
+      lifecycle:       lifecycle,
+      message:         staging_message,
+      user_audit_info: user_audit_info
     )
 
     render status: :created, json: Presenters::V3::DropletPresenter.new(droplet)
   rescue DropletCreate::InvalidPackage => e
     invalid_request!(e.message)
-  rescue DropletCreate::SpaceQuotaExceeded
-    unprocessable!("space's memory limit exceeded")
-  rescue DropletCreate::OrgQuotaExceeded
-    unprocessable!("organization's memory limit exceeded")
+  rescue DropletCreate::SpaceQuotaExceeded => e
+    unprocessable!("space's memory limit exceeded: #{e.message}")
+  rescue DropletCreate::OrgQuotaExceeded => e
+    unprocessable!("organization's memory limit exceeded: #{e.message}")
   rescue DropletCreate::DiskLimitExceeded
     unprocessable!('disk limit exceeded')
   end

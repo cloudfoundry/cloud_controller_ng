@@ -75,6 +75,7 @@ logging:
 loggregator:
   router: "127.0.0.1:3456"
   url: "ws://loggregator.vcap.me:80"
+  internal_url: 'http://loggregator-trafficcontroller.service.cf.internal:8081'
 
 doppler:
   enabled: false
@@ -85,8 +86,10 @@ db:
 
 uaa:
   url: "http://localhost:8080/uaa"
+  internal_url: "https://uaa.service.cf.internal"
   resource_id: "cloud_controller"
   symmetric_secret: "tokensecret"
+  ca_file: "spec/fixtures/certs/uaa_ca.crt"
 
 hm9000:
   url: "http://localhost:5155"
@@ -227,6 +230,7 @@ diego:
   temporary_local_staging: false
   temporary_local_tasks: false
   temporary_local_apps: false
+  temporary_local_tps: false
   nsync_url: http://nsync.service.cf.internal:8787
   stager_url: http://stager.service.cf.internal:8888
   tps_url: http://tps.service.cf.internal:1518
@@ -245,3 +249,4 @@ diego:
     key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.key
     cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.crt
     ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_ca.crt
+  pid_limit: 2048

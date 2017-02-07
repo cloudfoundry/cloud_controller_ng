@@ -2,9 +2,14 @@ module VCAP::CloudController
   module Diego
     module Docker
       class DesiredLrpBuilder
-        def initialize(config, app_request)
+        attr_reader :start_command
+
+        def initialize(config, opts)
           @config = config
-          @app_request = app_request
+          @docker_image = opts[:docker_image]
+          @execution_metadata = opts[:execution_metadata]
+          @ports = opts[:ports]
+          @start_command = opts[:start_command]
         end
 
         def cached_dependencies
@@ -16,7 +21,7 @@ module VCAP::CloudController
         end
 
         def root_fs
-          DockerURIConverter.new.convert(@app_request['docker_image'])
+          DockerURIConverter.new.convert(@docker_image)
         end
 
         def setup
@@ -28,10 +33,10 @@ module VCAP::CloudController
         end
 
         def ports
-          if @app_request['ports'].length > 0
-            return @app_request['ports']
+          if @ports.length > 0
+            return @ports
           end
-          execution_metadata = MultiJson.load(@app_request['execution_metadata'])
+          execution_metadata = MultiJson.load(@execution_metadata)
           if execution_metadata['ports'].empty?
             return [DEFAULT_APP_PORT]
           end
@@ -41,12 +46,18 @@ module VCAP::CloudController
           tcp_ports.map { |port| port['port'].to_i }
         end
 
+        def port_environment_variables
+          [
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: ports.first.to_s),
+          ]
+        end
+
         def privileged?
           false
         end
 
         def action_user
-          execution_metadata = MultiJson.load(@app_request['execution_metadata'])
+          execution_metadata = MultiJson.load(@execution_metadata)
           user = execution_metadata['user']
           if user.nil? || user.empty?
             'root'

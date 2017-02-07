@@ -23,7 +23,7 @@ class TasksController < ApplicationController
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
       show_secrets = can_see_secrets?(app.space)
     else
-      dataset = if roles.admin? || roles.admin_read_only?
+      dataset = if can_read_globally?
                   TaskListFetcher.new.fetch_all(message: message)
                 else
                   TaskListFetcher.new.fetch_for_spaces(message: message, space_guids: readable_space_guids)
@@ -50,7 +50,7 @@ class TasksController < ApplicationController
     unauthorized! unless can_write?(space.guid)
     droplet_not_found! if message.requested?(:droplet_guid) && droplet.nil?
 
-    task = TaskCreate.new(configuration).create(app, message, current_user.guid, current_user_email, droplet: droplet)
+    task = TaskCreate.new(configuration).create(app, message, user_audit_info, droplet: droplet)
 
     render status: :accepted, json: Presenters::V3::TaskPresenter.new(task)
   rescue TaskCreate::InvalidTask, TaskCreate::TaskCreateError => e
@@ -62,8 +62,7 @@ class TasksController < ApplicationController
     task_not_found! unless task && can_read?(space.guid, org.guid)
 
     unauthorized! unless can_write?(space.guid)
-
-    TaskCancel.new(configuration).cancel(task: task, user: current_user, email: current_user_email)
+    TaskCancel.new(configuration).cancel(task: task, user_audit_info: user_audit_info)
 
     render status: :accepted, json: Presenters::V3::TaskPresenter.new(task.reload)
   rescue TaskCancel::InvalidCancel => e

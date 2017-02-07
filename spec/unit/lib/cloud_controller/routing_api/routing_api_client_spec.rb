@@ -2,14 +2,14 @@ require 'spec_helper'
 
 module VCAP::CloudController::RoutingApi
   RSpec.describe Client do
-    let(:token_issuer) { double(:token_issuer) }
-    let(:token_info) { double(:token_info) }
+    let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient, token_info: token_info) }
+    let(:token_info) { instance_double(CF::UAA::TokenInfo, auth_header: 'bearer my-token') }
     let(:routing_api_url) { 'http://routing-api.example.com' }
     let(:skip_cert_verify) { false }
     let(:body) { nil }
     let(:status) { 400 }
     let(:path) { '/routing/v1/router_groups' }
-    let(:routing_api) { Client.new(routing_api_url, token_issuer, skip_cert_verify) }
+    let(:routing_api) { Client.new(routing_api_url, uaa_client, skip_cert_verify) }
 
     before do
       if !routing_api_url.nil?
@@ -17,9 +17,6 @@ module VCAP::CloudController::RoutingApi
         uri.path = path
         stub_request(:get, uri.to_s).
           to_return(status: status, body: body)
-
-        allow(token_issuer).to receive(:client_credentials_grant).and_return(token_info)
-        allow(token_info).to receive(:auth_header).and_return('bearer my-token')
       end
     end
 
@@ -64,9 +61,6 @@ module VCAP::CloudController::RoutingApi
           expect(a_request(:get, routing_api_url + path).
                      with(headers: { 'Authorization' => 'bearer my-token' })).
             to have_been_made.times(1)
-
-          expect(token_issuer).to have_received(:client_credentials_grant)
-          expect(token_info).to have_received(:auth_header)
         end
 
         it 'does not set the HTTPClient::SSLConfig' do
@@ -75,24 +69,9 @@ module VCAP::CloudController::RoutingApi
         end
 
         context 'when fetching a token' do
-          context 'and token_issuer raises a CF::UAA::NotFound error' do
+          context 'and uaa_client raises a CF::UAA::BadResponse error' do
             before do
-              allow(token_issuer).to receive(:client_credentials_grant).and_raise(CF::UAA::NotFound)
-            end
-
-            it 'raises a UaaUnavailable' do
-              expect {
-                routing_api.router_groups
-              }.to raise_error UaaUnavailable
-
-              expect(a_request(:get, routing_api_url + path)).
-                to have_been_made.times(0)
-            end
-          end
-
-          context 'and token_issuer raises a CF::UAA::BadResponse error' do
-            before do
-              allow(token_issuer).to receive(:client_credentials_grant).and_raise(CF::UAA::BadResponse)
+              allow(uaa_client).to receive(:token_info).and_raise(CF::UAA::BadResponse)
             end
 
             it 'raises a UaaUnavailable' do

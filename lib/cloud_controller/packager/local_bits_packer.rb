@@ -19,7 +19,11 @@ module CloudController
 
           rezipped_package = local_app_bits.create_package
           package_blobstore.cp_to_blobstore(rezipped_package.path, blobstore_key)
-          Digester.new.digest_path(rezipped_package)
+
+          {
+            sha1:   Digester.new.digest_path(rezipped_package),
+            sha256: Digester.new(algorithm: Digest::SHA256).digest_path(rezipped_package),
+          }
         end
       end
 

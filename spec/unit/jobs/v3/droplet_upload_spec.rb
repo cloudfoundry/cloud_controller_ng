@@ -22,10 +22,13 @@ module VCAP::CloudController
       it { is_expected.to be_a_valid_job }
 
       describe '#perform' do
-        it 'updates the droplet hash' do
-          digest = Digester.new.digest_file(local_file)
+        it 'updates the droplet checksums' do
+          sha1_digest = Digester.new.digest_file(local_file)
+          sha256_digest = Digester.new(algorithm: Digest::SHA256).digest_file(local_file)
+
           job.perform
-          expect(droplet.refresh.droplet_hash).to eq(digest)
+          expect(droplet.refresh.droplet_hash).to eq(sha1_digest)
+          expect(droplet.refresh.sha256_checksum).to eq(sha256_digest)
         end
 
         it 'uploads the droplet to the blobstore' do
@@ -87,8 +90,9 @@ module VCAP::CloudController
               worker.work_off 1
             end
 
-            it 'does not record the droplet hash' do
+            it 'does not record the droplet checksums' do
               expect(droplet.refresh.droplet_hash).to be_nil
+              expect(droplet.refresh.sha256_checksum).to be_nil
             end
 
             it 'records the failure' do
@@ -117,7 +121,6 @@ module VCAP::CloudController
           context 'if the file is missing' do
             before do
               FileUtils.rm_f(local_file)
-              # allow(CloudController::DropletUploader).to receive(:new).and_raise(RuntimeError, 'File not found')
               worker.work_off 1
             end
 

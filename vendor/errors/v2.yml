@@ -401,7 +401,7 @@
 100005:
   name: AppMemoryQuotaExceeded
   http_code: 400
-  message: "You have exceeded your organization's memory limit."
+  message: "You have exceeded your organization's memory limit: %s"
 
 100006:
   name: AppMemoryInvalid
@@ -941,7 +941,7 @@
 310003:
   name: SpaceQuotaMemoryLimitExceeded
   http_code: 400
-  message: "You have exceeded your space's memory limit."
+  message: "You have exceeded your space's memory limit: %s"
 
 310004:
   name: SpaceQuotaInstanceMemoryLimitExceeded

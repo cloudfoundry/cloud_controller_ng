@@ -57,6 +57,7 @@ module VCAP::CloudController
         context 'and the app failed to stage' do
           before do
             app.latest_package.update(state: 'FAILED')
+            app.app.update(droplet_guid: nil)
           end
 
           it 'returns 0' do
@@ -69,29 +70,43 @@ module VCAP::CloudController
     end
 
     describe '#number_of_starting_and_running_instances_for_processes' do
-      let(:running_apps) do
+      let(:space_with_running_apps) { Space.make }
+      let(:space_with_stopped_apps) { Space.make }
+      let(:space_with_failed_apps) { Space.make }
+      let(:space_with_pending_apps) { Space.make }
+
+      let!(:running_apps) do
         Array.new(3) do
-          AppFactory.make(state: 'STARTED')
+          AppFactory.make(state: 'STARTED', space: space_with_running_apps)
         end
       end
 
-      let(:stopped_apps) do
+      let!(:stopped_apps) do
         Array.new(3) do
-          AppFactory.make(state: 'STOPPED')
+          AppFactory.make(state: 'STOPPED', space: space_with_stopped_apps)
         end
       end
 
-      let(:failed_apps) do
-        a = AppFactory.make(state: 'STARTED')
+      let!(:failed_apps) do
+        a = AppFactory.make(state: 'STARTED', space: space_with_failed_apps)
         a.latest_package.update(state: 'FAILED')
+        a.app.update(droplet_guid: nil)
         [a]
       end
 
-      let(:pending_apps) do
-        [App.make(state: 'STARTED')]
+      let!(:pending_apps) do
+        a = AppFactory.make(state: 'STARTED', space: space_with_pending_apps)
+        a.latest_package.update(state: VCAP::CloudController::PackageModel::PENDING_STATE)
+        a.app.update(droplet_guid: nil)
+        [a]
       end
 
-      let(:apps) { running_apps + stopped_apps + failed_apps + pending_apps }
+      context 'when there are no proccesses' do
+        it 'returns an empty hash' do
+          result = subject.number_of_starting_and_running_instances_for_processes(Space.make.apps)
+          expect(result).to eq({})
+        end
+      end
 
       describe 'stopped apps' do
         before do
@@ -153,6 +168,8 @@ module VCAP::CloudController
       describe 'running apps' do
         before do
           allow(health_manager_client).to receive(:healthy_instances_bulk) do |apps|
+            running_apps.each { |running| expect(apps).to include(running) }
+
             apps.each_with_object({}) do |app, hash|
               hash[app.guid] = 3
             end
@@ -160,7 +177,7 @@ module VCAP::CloudController
         end
 
         it 'should ask the health manager for active instances for running apps' do
-          expect(health_manager_client).to receive(:healthy_instances_bulk).with(running_apps)
+          expect(health_manager_client).to receive(:healthy_instances_bulk)
 
           result = subject.number_of_starting_and_running_instances_for_processes(running_apps)
           expect(result.length).to be(3)
@@ -169,10 +186,13 @@ module VCAP::CloudController
       end
 
       describe 'started apps that failed to stage' do
+        let(:space) { Space.make }
+
         let!(:staging_failed_apps) do
           Array.new(3) do
-            AppFactory.make(state: 'STARTED').tap do |a|
+            AppFactory.make(state: 'STARTED', space: space).tap do |a|
               a.latest_package.update(state: 'FAILED')
+              a.app.update(droplet_guid: nil)
             end
           end
         end

@@ -12,8 +12,7 @@ module VCAP::Services::ServiceBrokers
     let(:service_description) { Sham.description }
     let(:service_event_repository) do
       VCAP::CloudController::Repositories::ServiceEventRepository.new(
-        user: VCAP::CloudController::SecurityContext.current_user,
-        user_email: VCAP::CloudController::SecurityContext.current_user_email,
+        VCAP::CloudController::UserAuditInfo.from_context(VCAP::CloudController::SecurityContext)
       )
     end
 

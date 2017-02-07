@@ -37,18 +37,16 @@ module VCAP::CloudController
 
     def app_summary(space)
       instances = instances_reporters.number_of_starting_and_running_instances_for_processes(space.apps)
-      space.apps.collect do |app|
+      space.apps.reject { |process| process.app.nil? }.collect do |process|
         {
-          guid:              app.guid,
-          urls:              app.routes.map(&:uri),
-          routes:            app.routes.map(&:as_summary_json),
-          service_count:     app.service_bindings_dataset.count,
-          service_names:     app.service_bindings_dataset.map(&:service_instance).map(&:name),
-          running_instances: instances[app.guid],
-        }.merge(app.to_hash)
+          guid:              process.guid,
+          urls:              process.routes.map(&:uri),
+          routes:            process.routes.map(&:as_summary_json),
+          service_count:     process.service_bindings_dataset.count,
+          service_names:     process.service_bindings_dataset.map(&:service_instance).map(&:name),
+          running_instances: instances[process.guid],
+        }.merge(process.to_hash)
       end
-    rescue CloudController::Errors::InstancesUnavailable => e
-      raise CloudController::Errors::ApiError.new_from_details('InstancesUnavailable', e.to_s)
     end
 
     def services_summary(space)

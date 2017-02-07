@@ -5,7 +5,7 @@ module VCAP::CloudController
     class InvalidPackage < StandardError; end
 
     class << self
-      def create(message:, user_guid:, user_email:, record_event: true)
+      def create(message:, user_audit_info:, record_event: true)
         Steno.logger('cc.action.package_create').info("creating package type #{message.type} for app #{message.app_guid}")
 
         package              = PackageModel.new
@@ -16,7 +16,7 @@ module VCAP::CloudController
 
         package.db.transaction do
           package.save
-          record_audit_event(package, message, user_guid, user_email) if record_event
+          record_audit_event(package, message, user_audit_info) if record_event
         end
 
         package
@@ -25,16 +25,15 @@ module VCAP::CloudController
       end
 
       def create_without_event(message)
-        create(message: message, user_guid: nil, user_email: nil, record_event: false)
+        create(message: message, user_audit_info: UserAuditInfo.new(user_guid: nil, user_email: nil), record_event: false)
       end
 
       private
 
-      def record_audit_event(package, message, user_guid, user_email)
+      def record_audit_event(package, message, user_audit_info)
         Repositories::PackageEventRepository.record_app_package_create(
           package,
-          user_guid,
-          user_email,
+          user_audit_info,
           message.audit_hash)
       end
 

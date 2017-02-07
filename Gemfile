@@ -7,13 +7,13 @@ gem 'rake'
 # nats wants to lock us to an older version. we already use eventmachine 1.0.9, so do not want a downgrade.
 gem 'eventmachine', '~> 1.0.9'
 
-# Note: We had to overwrite the Gemfile.lock to use this specific version of fog-google
-# that has not been updated in the fog gem. See https://www.pivotaltracker.com/story/show/128669549 for more info
-gem 'fog-google', '~> 0.4.0'
-gem 'google-api-client', '~> 0.8.6'
-gem 'fog-azure-rm', '~> 0.1.2'
+gem 'fog-azure-rm'
+gem 'fog-aws'
+gem 'fog-local'
+gem 'fog-openstack'
+gem 'fog-google'
+gem 'google-api-client', '~> 0.8.6' # required for fog-google
 
-gem 'fog'
 gem 'i18n'
 gem 'nokogiri', '~> 1.6.8'
 gem 'unf'
@@ -53,7 +53,7 @@ gem 'nats', git: 'https://github.com/nats-io/ruby-nats', ref: '8571cf9d685b60630
 # We need to use https for git urls as the git protocol is blocked by various
 # firewalls
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
-gem 'cf-uaa-lib', '~> 3.1.0', git: 'https://github.com/cloudfoundry/cf-uaa-lib.git', ref: 'b1e11235dc6cd7d8d4680e005526de37201305ea'
+gem 'cf-uaa-lib', '~> 3.7.0'
 gem 'cf-message-bus', '~> 0.3.0'
 gem 'bits_service_client'
 

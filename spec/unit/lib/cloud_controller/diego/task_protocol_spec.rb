@@ -18,7 +18,7 @@ module VCAP::CloudController
         let(:user) { 'user' }
         let(:password) { 'password' }
         let(:internal_service_hostname) { 'internal_service_hostname' }
-        let(:external_port) { 8080 }
+        let(:tls_port) { 8080 }
         let(:config) do
           {
             internal_api:              {
@@ -26,7 +26,7 @@ module VCAP::CloudController
               auth_password: password,
             },
             internal_service_hostname: internal_service_hostname,
-            external_port:             external_port,
+            tls_port:             tls_port,
             default_app_disk_in_mb:    1024,
           }
         end
@@ -43,7 +43,7 @@ module VCAP::CloudController
 
         context 'the task has a buildpack droplet' do
           let(:app) { AppModel.make }
-          let(:droplet) { DropletModel.make(:buildpack, app_guid: app.guid, droplet_hash: 'some_hash') }
+          let(:droplet) { DropletModel.make(:buildpack, app_guid: app.guid, droplet_hash: 'some_hash', sha256_checksum: 'droplet-sha256-checksum') }
 
           before do
             allow(egress_rules).to receive(:running).with(app).and_return(['running_egress_rule'])
@@ -67,7 +67,7 @@ module VCAP::CloudController
               'droplet_hash'        => 'some_hash',
               'lifecycle'           => Lifecycles::BUILDPACK,
               'command'             => 'be rake my panda',
-              'completion_callback' => "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed",
+              'completion_callback' => "https://#{internal_service_hostname}:#{tls_port}/internal/v4/tasks/#{task.guid}/completed",
               'log_source'          => 'APP/TASK/' + task.name,
               'volume_mounts'       => an_instance_of(Array)
             })
@@ -78,7 +78,7 @@ module VCAP::CloudController
           let(:org) { Organization.make }
           let(:space) { Space.make(organization: org) }
           let(:app) { AppModel.make(space: space) }
-          let(:droplet) { DropletModel.make(:buildpack, app_guid: app.guid, droplet_hash: 'some_hash') }
+          let(:droplet) { DropletModel.make(:buildpack, app_guid: app.guid, droplet_hash: 'some_hash', sha256_checksum: 'droplet-sha256-checksum') }
           let(:task) { TaskModel.make(app_guid: app.guid, droplet_guid: droplet.guid, command: 'be rake my panda', memory_in_mb: 2048, disk_in_mb: 2048) }
 
           let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
@@ -179,7 +179,7 @@ module VCAP::CloudController
               'docker_path'         => 'cloudfoundry/capi-docker',
               'lifecycle'           => Lifecycles::DOCKER,
               'command'             => 'be rake my panda',
-              'completion_callback' => "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/tasks/#{task.guid}/completed",
+              'completion_callback' => "https://#{internal_service_hostname}:#{tls_port}/internal/v4/tasks/#{task.guid}/completed",
               'log_source'          => 'APP/TASK/' + task.name,
               'volume_mounts'       => an_instance_of(Array)
             })

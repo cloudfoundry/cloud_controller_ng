@@ -62,6 +62,7 @@ module VCAP::CloudController::BrokerApiHelper
 
   def setup_broker(catalog=nil)
     stub_catalog_fetch(200, catalog)
+    UAARequests.stub_all
 
     post('/v2/service_brokers',
          { name: 'broker-name', broker_url: 'http://broker-url', auth_username: 'username', auth_password: 'password' }.to_json,

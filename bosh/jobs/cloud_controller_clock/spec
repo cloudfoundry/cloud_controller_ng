@@ -32,7 +32,7 @@ properties:
     description: "Domain reserved for CF operator, base URL where the login, uaa, and other non-user apps listen"
   system_domain_organization:
     description: "An organization that will be created as part of the seeding process. When the system_domain is not shared with (in the list of) app_domains, this is required as the system_domain will be created as a PrivateDomain in this organization."
-    default: ""
+    default: "system"
   app_domains:
     description: "Array of domains for user apps (example: 'user.app.space.foo', a user app called 'neat' will listen at 'http://neat.user.app.space.foo')"
     example:  |
@@ -119,6 +119,10 @@ properties:
   cc.pending_droplets.frequency_in_seconds:
     description: "How often the droplet pending cleanup job runs"
     default: 300
+
+  cc.diego_sync.frequency_in_seconds:
+    description: "How often to synchronize CC's database with Diego's"
+    default: 30
 
   cc.external_protocol:
     default: "https"
@@ -385,6 +389,14 @@ properties:
     description: "Symmetric secret used to decode uaa tokens. Used for testing."
   uaa.url:
     description: "URL of the UAA server"
+  uaa.ssl.port:
+    description: "The port used by UAA for ssl connections"
+    default: 8443
+  uaa.port:
+    description: "The port used by UAA for non-ssl connections"
+  cc.uaa.internal_url:
+    description: "The internal url used by UAA"
+    default: "uaa.service.cf.internal"
   login.protocol:
     description: "http or https"
     default: "https"
@@ -396,9 +408,6 @@ properties:
     description: "Port of the hm9000 Api Server"
     default: 5155
 
-  uaa.jwt.verification_key:
-    default: ""
-    description: "ssl cert defined in the manifest by the UAA, required by the cc to communicate with UAA"
   login.enabled:
     default: true
     description: "whether use login as the authorization endpoint or not"

@@ -52,13 +52,12 @@ module VCAP::CloudController
       current_user = SecurityContext.current_user || nil
       current_user_guid = current_user.nil? ? NON_EXISTENT_CURRENT_USER : current_user.guid
       current_user_email = SecurityContext.current_user_email || NON_EXISTENT_CURRENT_USER_EMAIL
-      @app_event_repository.record_app_ssh_unauthorized(app, current_user_guid, current_user_email, index)
+      user_audit_info = UserAuditInfo.new(user_guid: current_user_guid, user_email: current_user_email)
+      @app_event_repository.record_app_ssh_unauthorized(app, user_audit_info, index)
     end
 
     def record_ssh_authorized_event(app, index)
-      current_user = SecurityContext.current_user
-      current_user_email = SecurityContext.current_user_email
-      @app_event_repository.record_app_ssh_authorized(app, current_user.guid, current_user_email, index)
+      @app_event_repository.record_app_ssh_authorized(app, UserAuditInfo.from_context(SecurityContext), index)
     end
   end
 end

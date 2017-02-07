@@ -35,6 +35,7 @@ templates:
   post-start.sh.erb: bin/post-start
   migrate_db.sh.erb: bin/migrate_db
   seed_db.sh.erb: bin/seed_db
+  uaa_ca.crt.erb: config/certs/uaa_ca.crt
 
 packages:
   - capi_utils
@@ -44,6 +45,13 @@ packages:
   - libpq
   - libmariadb
   - ruby-2.3
+
+provides:
+- name: cloud_controller
+  type: cloud_controller
+  properties:
+  - system_domain
+  - app_domains
 
 properties:
   ssl.skip_cert_verify:
@@ -56,7 +64,7 @@ properties:
     description: "Domain reserved for CF operator, base URL where the login, uaa, and other non-user apps listen"
   system_domain_organization:
     description: "An organization that will be created as part of the seeding process. When the system_domain is not shared with (in the list of) app_domains, this is required as the system_domain will be created as a PrivateDomain in this organization."
-    default: ""
+    default: "system"
   app_domains:
     description: "Array of domains for user apps (example: 'user.app.space.foo', a user app called 'neat' will listen at 'http://neat.user.app.space.foo')"
     example:  |
@@ -462,6 +470,16 @@ properties:
     description: "Symmetric secret used to decode uaa tokens. Used for testing."
   uaa.url:
     description: "URL of the UAA server"
+  uaa.ca_cert:
+    description: "The certificate authority being used by UAA"
+  uaa.ssl.port:
+    description: "The port used by UAA for ssl connections"
+    default: 8443
+  uaa.port:
+    description: "The port used by UAA for non-ssl connections"
+  cc.uaa.internal_url:
+    description: "The internal url used by UAA"
+    default: "uaa.service.cf.internal"
   login.protocol:
     description: "http or https"
     default: "https"
@@ -474,9 +492,6 @@ properties:
     description: "Port of the hm9000 Api Server"
     default: 5155
 
-  uaa.jwt.verification_key:
-    default: ""
-    description: "ssl cert defined in the manifest by the UAA, required by the cc to communicate with UAA"
   login.enabled:
     default: true
     description: "whether use login as the authorization endpoint or not"
@@ -790,13 +805,10 @@ properties:
 
   cc.mutual_tls.ca_cert:
     description: "PEM-encoded CA certificate for secure, mutually authenticated TLS communication"
-    default: "temporary default, remove with temporary_local_staging"
   cc.mutual_tls.public_cert:
     description: "PEM-encoded certificate for secure, mutually authenticated TLS communication"
-    default: "temporary default, remove with temporary_local_staging"
   cc.mutual_tls.private_key:
     description: "PEM-encoded key for secure, mutually authenticated TLS communication"
-    default: "temporary default, remove with temporary_local_staging"
 
   cc.diego.nsync_url:
     default: http://nsync.service.cf.internal:8787
@@ -841,3 +853,13 @@ properties:
   cc.diego.temporary_local_apps:
     description: "Temporary flag to manage app state directly to the bbs from cc"
     default: false
+  cc.diego.temporary_local_tps:
+    description: "Temporary flag to fetch app instances directly to the bbs from cc"
+    default: false
+  cc.diego.pid_limit:
+    description: "Maximum pid limit for containerized work running user-provided code"
+    default: 1024
+
+  cc.loggregator.internal_url:
+    description: "Internal url used to communicate with traffic_controller"
+    default: "http://loggregator-trafficcontroller.service.cf.internal:8081"

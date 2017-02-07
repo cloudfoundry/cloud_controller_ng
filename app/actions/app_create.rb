@@ -2,10 +2,9 @@ module VCAP::CloudController
   class AppCreate
     class InvalidApp < StandardError; end
 
-    def initialize(user, user_email)
-      @user       = user
-      @user_email = user_email
-      @logger     = Steno.logger('cc.action.app_create')
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
+      @logger = Steno.logger('cc.action.app_create')
     end
 
     def create(message, lifecycle)
@@ -22,8 +21,7 @@ module VCAP::CloudController
         Repositories::AppEventRepository.new.record_app_create(
           app,
           app.space,
-          @user.guid,
-          @user_email,
+          @user_audit_info,
           message.audit_hash
         )
       end

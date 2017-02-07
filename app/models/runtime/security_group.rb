@@ -19,7 +19,7 @@ module VCAP::CloudController
       right_key: :staging_space_id,
       left_key: :staging_security_group_id
 
-    add_association_dependencies spaces: :nullify
+    add_association_dependencies spaces: :nullify, staging_spaces: :nullify
 
     def validate
       validates_presence :name

@@ -3,13 +3,13 @@ module VCAP::CloudController::RoutingApi
   class UaaUnavailable < StandardError; end
 
   class Client
-    attr_reader :skip_cert_verify, :routing_api_uri, :token_issuer
+    attr_reader :skip_cert_verify, :routing_api_uri, :uaa_client
 
     ROUTER_GROUPS_PATH = '/routing/v1/router_groups'.freeze
 
-    def initialize(routing_api_uri, token_issuer, skip_cert_verify)
+    def initialize(routing_api_uri, uaa_client, skip_cert_verify)
       @routing_api_uri = URI(routing_api_uri) if routing_api_uri
-      @token_issuer = token_issuer
+      @uaa_client = uaa_client
       @skip_cert_verify = skip_cert_verify
     end
 
@@ -62,8 +62,8 @@ module VCAP::CloudController::RoutingApi
     end
 
     def token_info
-      token_issuer.client_credentials_grant
-    rescue CF::UAA::NotFound, CF::UAA::BadResponse => e
+      uaa_client.token_info
+    rescue CF::UAA::BadResponse => e
       logger.error("uaa request for token failed: #{e.inspect}")
       raise UaaUnavailable
     end

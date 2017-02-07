@@ -177,6 +177,7 @@ logging:
 loggregator:
   router: <%= host %>:<%= port %>
   url: ws<%= "s" if p("logger_endpoint.use_ssl") %>://loggregator.<%= p("system_domain") %>:<%= p("logger_endpoint.port") %>
+  internal_url: <%= p("cc.loggregator.internal_url") %>
 <% end %>
 
 doppler:
@@ -208,11 +209,12 @@ login:
 <% end %>
 uaa :
   url: <%= p("uaa.url", "#{scheme}://uaa.#{system_domain}") %>
+  internal_url: <%= "https://#{p("cc.uaa.internal_url")}:#{p("uaa.ssl.port")}" %>
   resource_id: <%= p("cc.uaa_resource_id") %>
   <% if_p("uaa.cc.token_secret") do |token_secret| %>
   symmetric_secret: "<%= token_secret %>"
   <% end %>
-  verification_key: <%= p("uaa.jwt.verification_key") ? ("|\n      " + p("uaa.jwt.verification_key").gsub("\n", "\n      ")) : '~' %>
+  ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/uaa_ca.crt
 
 hm9000:
   url: <%= p("hm9000.url", "https://hm9000.#{system_domain}") %>
@@ -426,21 +428,23 @@ rate_limiter:
   reset_interval_in_minutes: <%= p("cc.rate_limiter.reset_interval_in_minutes") %>
 
 diego:
-  temporary_local_staging: <%= p("cc.diego.temporary_local_staging") %>
-  temporary_local_tasks: <%= p("cc.diego.temporary_local_tasks") %>
-  temporary_local_apps: <%= p("cc.diego.temporary_local_apps") %>
-  nsync_url: <%= p("cc.diego.nsync_url") %>
-  stager_url: <%= p("cc.diego.stager_url") %>
-  tps_url: <%= p("cc.diego.tps_url") %>
-  file_server_url: <%= p("cc.diego.file_server_url") %>
-  cc_uploader_url: <%= p("cc.diego.cc_uploader_url") %>
-  use_privileged_containers_for_running: <%= p("cc.diego.use_privileged_containers_for_running") %>
-  use_privileged_containers_for_staging: <%= p("cc.diego.use_privileged_containers_for_staging") %>
-  lifecycle_bundles: <%= p("cc.diego.lifecycle_bundles").to_json %>
-  insecure_docker_registry_list: <%= p("cc.diego.insecure_docker_registry_list") %>
-  docker_staging_stack: <%= p("cc.diego.docker_staging_stack") %>
   bbs:
     url: <%= p("cc.diego.bbs.url") %>
     key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls.key
     cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls.crt
     ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls_ca.crt
+  cc_uploader_url: <%= p("cc.diego.cc_uploader_url") %>
+  docker_staging_stack: <%= p("cc.diego.docker_staging_stack") %>
+  file_server_url: <%= p("cc.diego.file_server_url") %>
+  insecure_docker_registry_list: <%= p("cc.diego.insecure_docker_registry_list") %>
+  lifecycle_bundles: <%= p("cc.diego.lifecycle_bundles").to_json %>
+  nsync_url: <%= p("cc.diego.nsync_url") %>
+  pid_limit: <%= p("cc.diego.pid_limit") %>
+  stager_url: <%= p("cc.diego.stager_url") %>
+  temporary_local_staging: <%= p("cc.diego.temporary_local_staging") %>
+  temporary_local_tasks: <%= p("cc.diego.temporary_local_tasks") %>
+  temporary_local_apps: <%= p("cc.diego.temporary_local_apps") %>
+  temporary_local_tps: <%= p("cc.diego.temporary_local_tps") %>
+  tps_url: <%= p("cc.diego.tps_url") %>
+  use_privileged_containers_for_running: <%= p("cc.diego.use_privileged_containers_for_running") %>
+  use_privileged_containers_for_staging: <%= p("cc.diego.use_privileged_containers_for_staging") %>

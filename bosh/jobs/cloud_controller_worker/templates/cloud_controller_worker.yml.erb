@@ -151,6 +151,7 @@ logging:
 loggregator:
   router: <%= host %>:<%= port %>
   url: ws<%= "s" if p("logger_endpoint.use_ssl") %>://loggregator.<%= p("system_domain") %>:<%= p("logger_endpoint.port") %>
+  internal_url: <%= p("cc.loggregator.internal_url") %>
 <% end %>
 
 <% db = p("ccdb.databases").find { |db| db["tag"] == "cc" } %>
@@ -176,11 +177,12 @@ login:
 <% end %>
 uaa:
   url: <%= p("uaa.url", "#{scheme}://uaa.#{system_domain}") %>
+  internal_url: <%= "https://#{p("cc.uaa.internal_url")}:#{p("uaa.ssl.port")}" %>
   resource_id: <%= p("cc.uaa_resource_id") %>
+  ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/uaa_ca.crt
   <% if_p("uaa.cc.token_secret") do |token_secret| %>
   symmetric_secret: "<%= token_secret %>"
   <% end %>
-  verification_key: <%= p("uaa.jwt.verification_key") ? ("|\n      " + p("uaa.jwt.verification_key").gsub("\n", "\n      ")) : '~' %>
 
 hm9000:
   url: <%= p("hm9000.url", "https://hm9000.#{system_domain}") %>
@@ -354,6 +356,7 @@ diego:
   temporary_local_staging: <%= p("cc.diego.temporary_local_staging") %>
   temporary_local_tasks: <%= p("cc.diego.temporary_local_tasks") %>
   temporary_local_apps: <%= p("cc.diego.temporary_local_apps") %>
+  temporary_local_tps: <%= p("cc.diego.temporary_local_tps") %>
   nsync_url: <%= p("cc.diego.nsync_url") %>
   stager_url: <%= p("cc.diego.stager_url") %>
   tps_url: <%= p("cc.diego.tps_url") %>
@@ -367,3 +370,4 @@ diego:
     key_file: /var/vcap/jobs/cloud_controller_worker/config/certs/mutual_tls.key
     cert_file: /var/vcap/jobs/cloud_controller_worker/config/certs/mutual_tls.crt
     ca_file: /var/vcap/jobs/cloud_controller_worker/config/certs/mutual_tls_ca.crt
+  pid_limit: <%= p("cc.diego.pid_limit") %>

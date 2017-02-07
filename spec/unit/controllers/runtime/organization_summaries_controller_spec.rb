@@ -70,6 +70,32 @@ module VCAP::CloudController
         end
       end
 
+      context 'admin_read_only users' do
+        before do
+          set_current_user_as_admin_read_only
+          get "/v2/organizations/#{org.guid}/summary"
+        end
+
+        it 'return organization data' do
+          expect(last_response.status).to eq(200)
+          expect(decoded_response['guid']).to eq(org.guid)
+          expect(decoded_response['name']).to eq(org.name)
+          expect(decoded_response['status']).to eq('active')
+          expect(decoded_response['spaces'].size).to eq(num_spaces)
+        end
+
+        it 'should return the correct info for all spaces' do
+          expect(decoded_response['spaces']).to include(
+            'guid' => @spaces.first.guid,
+            'name' => @spaces.first.name,
+            'app_count' => num_apps,
+            'service_count' => num_services,
+            'mem_dev_total' => free_mem_size * num_free_apps,
+            'mem_prod_total' => prod_mem_size * num_prod_apps,
+          )
+        end
+      end
+
       context 'non-admin users' do
         before do
           org.add_user member

@@ -24,8 +24,8 @@ module VCAP::CloudController
           end
         end
         [HTTP::OK, MultiJson.dump(stats)]
-      rescue CloudController::Errors::InstancesUnavailable => e
-        raise ApiError.new_from_details('StatsUnavailable', ['Stats server temporarily unavailable.', e.to_s])
+      rescue CloudController::Errors::ApiError => e
+        raise e
       rescue StandardError => e
         raise ApiError.new_from_details('StatsError', e)
       end

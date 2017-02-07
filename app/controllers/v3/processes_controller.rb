@@ -24,7 +24,7 @@ class ProcessesController < ApplicationController
       app, dataset = ProcessListFetcher.new(message).fetch_for_app
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
-      dataset = if roles.admin? || roles.admin_read_only?
+      dataset = if can_read_globally?
                   ProcessListFetcher.new(message).fetch_all
                 else
                   ProcessListFetcher.new(message).fetch_for_spaces(space_guids: readable_space_guids)
@@ -56,7 +56,7 @@ class ProcessesController < ApplicationController
     process_not_found! unless process && can_read?(process.space.guid, process.organization.guid)
     unauthorized! unless can_write?(process.space.guid)
 
-    ProcessUpdate.new(current_user.guid, current_user_email).update(process, message)
+    ProcessUpdate.new(user_audit_info).update(process, message)
 
     render status: :ok, json: Presenters::V3::ProcessPresenter.new(process)
   rescue ProcessUpdate::InvalidProcess => e
@@ -75,7 +75,7 @@ class ProcessesController < ApplicationController
 
     unauthorized! unless can_write?(space.guid)
 
-    ProcessTerminate.new(current_user.guid, current_user_email, process, params[:index].to_i).terminate
+    ProcessTerminate.new(user_audit_info, process, params[:index].to_i).terminate
 
     head :no_content
   rescue ProcessTerminate::InstanceNotFound
@@ -99,7 +99,7 @@ class ProcessesController < ApplicationController
 
     unauthorized! unless can_write?(space.guid)
 
-    ProcessScale.new(current_user, current_user_email, process, message).scale
+    ProcessScale.new(user_audit_info, process, message).scale
 
     render status: :accepted, json: Presenters::V3::ProcessPresenter.new(process)
   rescue ProcessScale::InvalidProcess => e

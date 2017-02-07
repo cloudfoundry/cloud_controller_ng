@@ -140,29 +140,6 @@ module VCAP::CloudController
           expect(svc_resp['last_operation']['updated_at']).to be
         end
       end
-
-      context 'when the instances reporter fails' do
-        class SomeInstancesException < RuntimeError
-          def to_s
-            "It's the end of the world as we know it."
-          end
-        end
-
-        before do
-          allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_process).and_raise(
-            CloudController::Errors::InstancesUnavailable.new(SomeInstancesException.new))
-
-          get "/v2/apps/#{@app.guid}/summary"
-        end
-
-        it "returns '220001 InstancesError'" do
-          expect(last_response.status).to eq(503)
-
-          parsed_response = MultiJson.load(last_response.body)
-          expect(parsed_response['code']).to eq(220002)
-          expect(parsed_response['description']).to eq("Instances information unavailable: It's the end of the world as we know it.")
-        end
-      end
     end
   end
 end

@@ -146,8 +146,12 @@ module VCAP::CloudController
       end
 
       let(:decoded_response) { MultiJson.load(last_response.body) }
+      let(:user_audit_info) { UserAuditInfo.from_context(SecurityContext) }
 
       describe 'events' do
+        before do
+          allow(UserAuditInfo).to receive(:from_context).and_return(user_audit_info)
+        end
         it 'records app create' do
           set_current_user(admin_user, admin: true)
 
@@ -157,7 +161,7 @@ module VCAP::CloudController
           post '/v2/apps', MultiJson.dump(initial_hash)
 
           app = App.last
-          expect(app_event_repository).to have_received(:record_app_create).with(app, app.space, admin_user.guid, SecurityContext.current_user_email, expected_attrs)
+          expect(app_event_repository).to have_received(:record_app_create).with(app, app.space, user_audit_info, expected_attrs)
         end
       end
 
@@ -782,11 +786,11 @@ module VCAP::CloudController
           it 'records app update with whitelisted attributes' do
             allow(app_event_repository).to receive(:record_app_update).and_call_original
 
-            expect(app_event_repository).to receive(:record_app_update) do |recorded_app, recorded_space, user_guid, user_name, attributes|
+            expect(app_event_repository).to receive(:record_app_update) do |recorded_app, recorded_space, user_audit_info, attributes|
               expect(recorded_app.guid).to eq(app_obj.guid)
               expect(recorded_app.instances).to eq(2)
-              expect(user_guid).to eq(admin_user.guid)
-              expect(user_name).to eq(SecurityContext.current_user_email)
+              expect(user_audit_info.user_guid).to eq(SecurityContext.current_user)
+              expect(user_audit_info.user_name).to eq(SecurityContext.current_user_email)
               expect(attributes).to eq({ 'instances' => 2 })
             end
 
@@ -1400,11 +1404,23 @@ module VCAP::CloudController
             set_current_user(developer, { scopes: ['cloud_controller.write'] })
           end
 
-          it 'returns InvalidAuthToken' do
+          it 'returns InsufficientScope' do
             get "/v2/apps/#{app_obj.guid}/env"
             expect(last_response.status).to eql(403)
             expect(JSON.parse(last_response.body)['description']).to eql('Your token lacks the necessary scopes to access this resource.')
           end
+        end
+      end
+
+      context 'when the user is a global auditor' do
+        before do
+          set_current_user_as_global_auditor
+        end
+
+        it 'should not be able to read environment variables' do
+          get "/v2/apps/#{app_obj.guid}/env"
+          expect(last_response.status).to eql(403)
+          expect(JSON.parse(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
         end
       end
 

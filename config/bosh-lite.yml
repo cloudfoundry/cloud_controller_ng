@@ -84,6 +84,7 @@ logging:
 loggregator:
   router: 127.0.0.1:3457
   url: wss://loggregator.bosh-lite.com:443
+  internal_url: 'http://loggregator-trafficcontroller.service.cf.internal:8081'
 
 doppler:
   enabled: false
@@ -99,6 +100,7 @@ login:
 
 uaa:
   url: https://uaa.bosh-lite.com
+  internal_url: https://uaa.service.cf.internal:8443
   resource_id: cloud_controller,cloud_controller_service_permissions
   verification_key: |
       -----BEGIN PUBLIC KEY-----
@@ -107,6 +109,7 @@ uaa:
       qHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug
       spULZVNRxq7veq/fzwIDAQAB
       -----END PUBLIC KEY-----
+  ca_file: "spec/fixtures/certs/uaa_ca.crt"
 
 hm9000:
   url: https://hm9000.bosh-lite.com
@@ -116,7 +119,7 @@ hm9000:
 staging:
   timeout_in_seconds: 900
   minimum_staging_memory_mb: 1024
-  minimum_staging_disk_mb: 6144
+  minimum_staging_disk_mb: 4096
   minimum_staging_file_descriptor_limit: 16384
   auth:
     user: upload-user
@@ -270,11 +273,12 @@ diego:
   temporary_local_staging: true
   temporary_local_tasks: true
   temporary_local_apps: true
-  nsync_url: http://10.244.16.14:8787
-  stager_url: http://10.244.16.14:8888
-  tps_url: http://10.244.16.14:1518
-  file_server_url: http://10.244.16.22:8080
-  cc_uploader_url: http://10.244.16.14:9090
+  temporary_local_tps: true
+  nsync_url: http://10.244.16.5:8787
+  stager_url: http://10.244.16.5:8888
+  tps_url: http://10.244.16.5:1518
+  file_server_url: http://file-server.service.cf.internal:8080
+  cc_uploader_url: http://cc-uploader.service.cf.internal:9090
   use_privileged_containers_for_running: false
   use_privileged_containers_for_staging: false
   lifecycle_bundles:
@@ -288,6 +292,7 @@ diego:
     key_file: spec/fixtures/certs/bbs_client.key
     cert_file: spec/fixtures/certs/bbs_client.crt
     ca_file: spec/fixtures/certs/bbs_ca.crt
+  pid_limit: 1024
 
 shared_isolation_segment_name: shared
 

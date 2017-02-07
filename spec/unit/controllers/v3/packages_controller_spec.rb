@@ -15,7 +15,7 @@ RSpec.describe PackagesController, type: :controller do
 
     before do
       @request.env.merge!(form_headers)
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
     end
 
@@ -146,7 +146,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the user can read but not write to the space' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -170,7 +170,7 @@ RSpec.describe PackagesController, type: :controller do
       blob = instance_double(CloudController::Blobstore::FogBlob, public_download_url: 'http://package.example.com')
       allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
       allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_secret_access(user, space: space)
     end
 
@@ -179,17 +179,6 @@ RSpec.describe PackagesController, type: :controller do
 
       expect(response.status).to eq(302)
       expect(response.headers['Location']).to eq('http://package.example.com')
-    end
-
-    it 'creates an audit event' do
-      allow(VCAP::CloudController::Repositories::PackageEventRepository).to receive(:record_app_package_download)
-      get :download, guid: package.guid
-
-      expect(VCAP::CloudController::Repositories::PackageEventRepository).to have_received(:record_app_package_download) do |package, user_guid, user_name|
-        expect(package).to eq package
-        expect(user_guid).to eq user.guid
-        expect(user_name).to eq 'utako'
-      end
     end
 
     context 'when the package is not of type bits' do
@@ -277,7 +266,7 @@ RSpec.describe PackagesController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
     end
 
     it 'returns a 200 OK and the package' do
@@ -331,7 +320,7 @@ RSpec.describe PackagesController, type: :controller do
     let(:space) { package.space }
 
     before do
-      allow_user_read_access(user, space: space)
+      allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
     end
 
@@ -381,7 +370,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the user can read but cannot write to the package' do
         before do
-          allow_user_read_access(user, space: space)
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
         end
 
@@ -404,8 +393,7 @@ RSpec.describe PackagesController, type: :controller do
     let!(:admin_package) { VCAP::CloudController::PackageModel.make }
 
     before do
-      allow_user_read_access(user, space: space)
-      stub_readable_space_guids_for(user, space)
+      allow_user_read_access_for(user, spaces: [space])
     end
 
     it 'returns 200' do
@@ -467,24 +455,9 @@ RSpec.describe PackagesController, type: :controller do
       end
     end
 
-    context 'admin' do
+    context 'when the user has global read access' do
       before do
-        set_current_user_as_admin(user: user)
-      end
-
-      it 'lists all the packages' do
-        get :index
-
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
-        expect(response_guids).to match_array([user_package_1, user_package_2, admin_package].map(&:guid))
-      end
-    end
-
-    context 'read only admin' do
-      before do
-        disallow_user_read_access(user, space: space)
-        allow(controller).to receive(:readable_space_guids).and_return([])
-        set_current_user_as_admin_read_only(user: user)
+        allow_user_global_read_access(user)
       end
 
       it 'lists all the packages' do
@@ -560,15 +533,21 @@ RSpec.describe PackagesController, type: :controller do
   end
 
   describe '#create' do
-    describe '#create_new' do
+    describe '#create' do
       let(:app_model) { VCAP::CloudController::AppModel.make }
+      let(:app_guid) { app_model.guid }
       let(:space) { app_model.space }
       let(:org) { space.organization }
-      let(:req_body) { { type: 'bits' } }
+      let(:req_body) do
+        {
+          type: 'bits',
+          relationships: { app: { guid: app_guid } }
+        }
+      end
       let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
       before do
-        allow_user_read_access(user, space: space)
+        allow_user_read_access_for(user, spaces: [space])
         allow_user_write_access(user, space: space)
       end
 
@@ -576,7 +555,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns a 201 and the package' do
           expect(app_model.packages.count).to eq(0)
 
-          post :create, app_guid: app_model.guid, body: req_body
+          post :create, body: req_body
 
           expect(response.status).to eq 201
           expect(app_model.reload.packages.count).to eq(1)
@@ -587,10 +566,15 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         context 'with an invalid type field' do
-          let(:req_body) { { type: 'ninja' } }
+          let(:req_body) do
+            {
+              type: 'ninja',
+              relationships: { app: { guid: app_model.guid } }
+            }
+          end
 
           it 'returns an UnprocessableEntity error' do
-            post :create, app_guid: app_model.guid, body: req_body
+            post :create, body: req_body
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -599,8 +583,10 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         context 'when the app does not exist' do
+          let(:app_guid) { 'bogus-guid' }
+
           it 'returns a 404 ResourceNotFound error' do
-            post :create, app_guid: 'bogus', body: req_body
+            post :create, body: req_body
 
             expect(response.status).to eq 404
             expect(response.body).to include 'ResourceNotFound'
@@ -665,6 +651,7 @@ RSpec.describe PackagesController, type: :controller do
       context 'docker' do
         let(:req_body) do
           {
+            relationships: { app: { guid: app_model.guid } },
             type: 'docker',
             data: {
               image: 'registry/image:latest'
@@ -674,7 +661,7 @@ RSpec.describe PackagesController, type: :controller do
 
         it 'returns a 201' do
           expect(app_model.packages.count).to eq(0)
-          post :create, app_guid: app_model.guid, body: req_body
+          post :create, body: req_body
 
           expect(response.status).to eq 201
 
@@ -695,16 +682,15 @@ RSpec.describe PackagesController, type: :controller do
       let(:destination_space) { target_app_model.space }
 
       before do
-        allow_user_read_access(user, space: source_space)
+        allow_user_read_access_for(user, spaces: [source_space, destination_space])
         allow_user_write_access(user, space: source_space)
-        allow_user_read_access(user, space: destination_space)
         allow_user_write_access(user, space: destination_space)
       end
 
       it 'returns a 201 and the response' do
         expect(target_app_model.packages.count).to eq(0)
 
-        post :create, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+        post :create_copy, app_guid: target_app_model.guid, source_package_guid: original_package.guid
 
         copied_package = target_app_model.reload.packages.first
         response_guid  = parsed_body['guid']
@@ -721,7 +707,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 403 NotAuthorized error' do
-            post :create, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+            post :create_copy, app_guid: target_app_model.guid, source_package_guid: original_package.guid
 
             expect(response.status).to eq 403
             expect(response.body).to include 'NotAuthorized'
@@ -734,7 +720,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 404 ResourceNotFound error' do
-            post :create, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+            post :create_copy, app_guid: target_app_model.guid, source_package_guid: original_package.guid
 
             expect(response.status).to eq 404
             expect(response.body).to include 'ResourceNotFound'
@@ -743,12 +729,12 @@ RSpec.describe PackagesController, type: :controller do
 
         context 'when the user cannot modify the source target_app' do
           before do
-            allow_user_read_access(user, space: source_space)
+            allow_user_read_access_for(user, spaces: [source_space, destination_space])
             disallow_user_write_access(user, space: source_space)
           end
 
           it 'returns a 403 NotAuthorized error' do
-            post :create, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+            post :create_copy, app_guid: target_app_model.guid, source_package_guid: original_package.guid
 
             expect(response.status).to eq 403
             expect(response.body).to include 'NotAuthorized'
@@ -761,7 +747,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 404 ResourceNotFound error' do
-            post :create, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+            post :create_copy, app_guid: target_app_model.guid, source_package_guid: original_package.guid
 
             expect(response.status).to eq 404
             expect(response.body).to include 'ResourceNotFound'
@@ -770,12 +756,12 @@ RSpec.describe PackagesController, type: :controller do
 
         context 'when the user cannot create the package' do
           before do
-            allow_user_read_access(user, space: destination_space)
+            allow_user_read_access_for(user, spaces: [destination_space])
             disallow_user_write_access(user, space: destination_space)
           end
 
           it 'returns a 403 NotAuthorized error' do
-            post :create, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+            post :create_copy, app_guid: target_app_model.guid, source_package_guid: original_package.guid
 
             expect(response.status).to eq 403
             expect(response.body).to include 'NotAuthorized'
@@ -785,7 +771,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the source package does not exist' do
         it 'returns a 404 ResourceNotFound error' do
-          post :create, app_guid: target_app_model.guid, source_package_guid: 'bogus package guid'
+          post :create_copy, app_guid: target_app_model.guid, source_package_guid: 'bogus package guid'
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -794,7 +780,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the target target_app does not exist' do
         it 'returns a 404 ResourceNotFound error' do
-          post :create, app_guid: 'bogus', source_package_guid: original_package.guid
+          post :create_copy, app_guid: 'bogus', source_package_guid: original_package.guid
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -807,7 +793,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns 422' do
-          post :create, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+          post :create_copy, app_guid: target_app_model.guid, source_package_guid: original_package.guid
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'

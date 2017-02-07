@@ -134,11 +134,11 @@ module VCAP::CloudController::RestController
       if VCAP::CloudController::SecurityContext.missing_token?
         raise CloudController::Errors::NotAuthenticated
       elsif VCAP::CloudController::SecurityContext.invalid_token?
-        raise CloudController::Errors::ApiError.new_from_details('InvalidAuthToken')
+        raise CloudController::Errors::InvalidAuthToken
       else
         logger.error 'Unexpected condition: valid token with no user/client id ' \
                        "or admin scope. Token hash: #{VCAP::CloudController::SecurityContext.token}"
-        raise CloudController::Errors::ApiError.new_from_details('InvalidAuthToken')
+        raise CloudController::Errors::InvalidAuthToken
       end
     end
 

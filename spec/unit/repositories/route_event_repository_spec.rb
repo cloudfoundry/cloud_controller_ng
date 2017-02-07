@@ -7,12 +7,14 @@ module VCAP::CloudController
       let(:route) { Route.make }
       let(:request_attrs) { { 'host' => 'dora', 'domain_guid' => route.domain.guid, 'space_guid' => route.space.guid } }
       let(:user_email) { 'some@email.com' }
+      let(:user_name) { 'some-user' }
+      let(:actor_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_name: user_name, user_email: user_email) }
 
       subject(:route_event_repository) { RouteEventRepository.new }
 
       describe '#record_route_create' do
         it 'records event correctly' do
-          event = route_event_repository.record_route_create(route, user, user_email, request_attrs)
+          event = route_event_repository.record_route_create(route, actor_audit_info, request_attrs)
           event.reload
           expect(event.space).to eq(route.space)
           expect(event.type).to eq('audit.route.create')
@@ -22,21 +24,14 @@ module VCAP::CloudController
           expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq('user')
           expect(event.actor_name).to eq(user_email)
+          expect(event.actor_username).to eq(user_name)
           expect(event.metadata).to eq({ 'request' => request_attrs })
-        end
-
-        context 'when the user email is unknown' do
-          it 'leaves actor name empty' do
-            event = route_event_repository.record_route_create(route, user, nil, request_attrs)
-            event.reload
-            expect(event.actor_name).to eq(nil)
-          end
         end
       end
 
       describe '#record_route_update' do
         it 'records event correctly' do
-          event = route_event_repository.record_route_update(route, user, user_email, request_attrs)
+          event = route_event_repository.record_route_update(route, actor_audit_info, request_attrs)
           event.reload
           expect(event.space).to eq(route.space)
           expect(event.type).to eq('audit.route.update')
@@ -46,6 +41,7 @@ module VCAP::CloudController
           expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq('user')
           expect(event.actor_name).to eq(user_email)
+          expect(event.actor_username).to eq(user_name)
           expect(event.metadata).to eq({ 'request' => request_attrs })
         end
       end
@@ -58,7 +54,7 @@ module VCAP::CloudController
         end
 
         it 'records event correctly' do
-          event = route_event_repository.record_route_delete_request(route, user, user_email, recursive)
+          event = route_event_repository.record_route_delete_request(route, actor_audit_info, recursive)
           event.reload
           expect(event.space).to eq(route.space)
           expect(event.type).to eq('audit.route.delete-request')
@@ -68,6 +64,7 @@ module VCAP::CloudController
           expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq('user')
           expect(event.actor_name).to eq(user_email)
+          expect(event.actor_username).to eq(user_name)
           expect(event.metadata).to eq({ 'request' => { 'recursive' => true } })
         end
       end

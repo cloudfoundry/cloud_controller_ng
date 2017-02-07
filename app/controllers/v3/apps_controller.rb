@@ -21,9 +21,8 @@ class AppsV3Controller < ApplicationController
   def index
     message = AppsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
-    invalid_param!(message.pagination_options.errors.full_messages) unless message.pagination_options.valid?
 
-    dataset = if roles.admin? || roles.admin_read_only?
+    dataset = if can_read_globally?
                 AppListFetcher.new.fetch_all(message)
               else
                 AppListFetcher.new.fetch(message, readable_space_guids)
@@ -56,7 +55,7 @@ class AppsV3Controller < ApplicationController
     lifecycle = AppLifecycleProvider.provide_for_create(message)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
-    app = AppCreate.new(current_user, current_user_email).create(message, lifecycle)
+    app = AppCreate.new(user_audit_info).create(message, lifecycle)
 
     render status: :created, json: Presenters::V3::AppPresenter.new(app)
   rescue AppCreate::InvalidApp => e
@@ -75,7 +74,7 @@ class AppsV3Controller < ApplicationController
     lifecycle = AppLifecycleProvider.provide_for_update(message, app)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
-    app = AppUpdate.new(current_user, current_user_email).update(app, message, lifecycle)
+    app = AppUpdate.new(user_audit_info).update(app, message, lifecycle)
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppUpdate::DropletNotFound
@@ -90,7 +89,7 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
 
-    AppDelete.new(current_user.guid, current_user_email).delete(app)
+    AppDelete.new(user_audit_info).delete(app)
 
     head :no_content
   rescue AppDelete::InvalidDelete => e
@@ -106,7 +105,7 @@ class AppsV3Controller < ApplicationController
       FeatureFlag.raise_unless_enabled!(:diego_docker)
     end
 
-    AppStart.start(app: app, user_guid: current_user.guid, user_email: current_user_email)
+    AppStart.start(app: app, user_audit_info: user_audit_info)
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppStart::InvalidApp => e
@@ -118,7 +117,7 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
 
-    AppStop.stop(app: app, user_guid: current_user.guid, user_email: current_user_email)
+    AppStop.stop(app: app, user_audit_info: user_audit_info)
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppStop::InvalidApp => e
@@ -149,7 +148,7 @@ class AppsV3Controller < ApplicationController
 
     droplet_not_found! if droplet.nil?
 
-    SetCurrentDroplet.new(current_user, current_user_email).update_to(app, droplet)
+    SetCurrentDroplet.new(user_audit_info).update_to(app, droplet)
 
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
   rescue SetCurrentDroplet::InvalidApp => e

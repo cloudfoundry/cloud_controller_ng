@@ -62,6 +62,7 @@ module Diego
         repeated ::Diego::Bbs::Models::VolumeMount, :volume_mounts, 18
         optional ::Diego::Bbs::Models::Network, :network, 19
         repeated :string, :PlacementTags, 20
+        optional :int32, :max_pids, 21
       end
 
       class Task

@@ -23,7 +23,8 @@ module VCAP::CloudController
         it { is_expected.to allow_op_on_object :read, object }
         it { is_expected.not_to allow_op_on_object :read_for_update, object }
         it { is_expected.not_to allow_op_on_object :update, object }
-        it { is_expected.to allow_op_on_object :index, object.class }
+        it { is_expected.to allow_op_on_object :index, object }
+        it { is_expected.to allow_op_on_object :read_env, object }
       end
 
       context 'full access' do
@@ -32,7 +33,8 @@ module VCAP::CloudController
         it { is_expected.to allow_op_on_object :read, object }
         it { is_expected.to allow_op_on_object :read_for_update, object }
         it { is_expected.to allow_op_on_object :update, object }
-        it { is_expected.to allow_op_on_object :index, object.class }
+        it { is_expected.to allow_op_on_object :index, object }
+        it { is_expected.to allow_op_on_object :read_env, object }
       end
     end
 
@@ -40,6 +42,7 @@ module VCAP::CloudController
       it { is_expected.not_to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.not_to allow_op_on_object :update, object }
+      it { is_expected.not_to allow_op_on_object :read_env, object }
     end
 
     context 'a user that isnt logged in (defensive)' do
@@ -47,6 +50,7 @@ module VCAP::CloudController
       it { is_expected.not_to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.not_to allow_op_on_object :update, object }
+      it { is_expected.not_to allow_op_on_object :read_env, object }
     end
 
     context 'organization manager (defensive)' do
@@ -54,7 +58,8 @@ module VCAP::CloudController
       it { is_expected.to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.not_to allow_op_on_object :update, object }
-      it { is_expected.to allow_op_on_object :index, object.class }
+      it { is_expected.to allow_op_on_object :index, object }
+      it { is_expected.not_to allow_op_on_object :read_env, object }
     end
 
     context 'organization billing manager (defensive)' do
@@ -62,6 +67,7 @@ module VCAP::CloudController
       it { is_expected.not_to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.not_to allow_op_on_object :update, object }
+      it { is_expected.not_to allow_op_on_object :read_env, object }
     end
 
     context 'organization auditor (defensive)' do
@@ -69,6 +75,7 @@ module VCAP::CloudController
       it { is_expected.not_to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.not_to allow_op_on_object :update, object }
+      it { is_expected.not_to allow_op_on_object :read_env, object }
     end
 
     context 'organization user (defensive)' do
@@ -76,6 +83,7 @@ module VCAP::CloudController
       it { is_expected.not_to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.not_to allow_op_on_object :update, object }
+      it { is_expected.not_to allow_op_on_object :read_env, object }
     end
 
     context 'space auditor' do
@@ -87,7 +95,8 @@ module VCAP::CloudController
       it { is_expected.to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.not_to allow_op_on_object :update, object }
-      it { is_expected.to allow_op_on_object :index, object.class }
+      it { is_expected.to allow_op_on_object :index, object }
+      it { is_expected.not_to allow_op_on_object :read_env, object }
     end
 
     context 'space manager (defensive)' do
@@ -99,7 +108,8 @@ module VCAP::CloudController
       it { is_expected.to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.not_to allow_op_on_object :update, object }
-      it { is_expected.to allow_op_on_object :index, object.class }
+      it { is_expected.to allow_op_on_object :index, object }
+      it { is_expected.not_to allow_op_on_object :read_env, object }
     end
 
     context 'space developer' do
@@ -109,6 +119,7 @@ module VCAP::CloudController
       end
 
       it { is_expected.to allow_op_on_object :read, object }
+      it { is_expected.to allow_op_on_object :read_env, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
 
       context 'when the organization is suspended' do
@@ -116,7 +127,7 @@ module VCAP::CloudController
         it { is_expected.to allow_op_on_object :read, object }
         it { is_expected.not_to allow_op_on_object :read_for_update, object }
         it { is_expected.not_to allow_op_on_object :update, object }
-        it { is_expected.to allow_op_on_object :index, object.class }
+        it { is_expected.to allow_op_on_object :index, object }
       end
     end
 
@@ -136,7 +147,7 @@ module VCAP::CloudController
       it { is_expected.to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.not_to allow_op_on_object :update, object }
-      it { is_expected.to allow_op_on_object :index, object.class }
+      it { is_expected.to allow_op_on_object :index, object }
     end
 
     context 'any user using client without cloud_controller.read' do
@@ -155,6 +166,7 @@ module VCAP::CloudController
       it { is_expected.not_to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.not_to allow_op_on_object :update, object }
+      it { is_expected.not_to allow_op_on_object :read_env, object }
     end
   end
 end

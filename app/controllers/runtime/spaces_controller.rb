@@ -4,7 +4,7 @@ require 'queries/space_user_roles_fetcher'
 module VCAP::CloudController
   class SpacesController < RestController::ModelController
     def self.dependencies
-      [:space_event_repository, :username_and_roles_populating_collection_renderer, :username_lookup_uaa_client, :services_event_repository, :user_event_repository]
+      [:space_event_repository, :username_and_roles_populating_collection_renderer, :uaa_client, :services_event_repository, :user_event_repository]
     end
 
     define_attributes do
@@ -46,7 +46,7 @@ module VCAP::CloudController
       @space_event_repository = dependencies.fetch(:space_event_repository)
       @user_event_repository = dependencies.fetch(:user_event_repository)
       @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
-      @username_lookup_uaa_client = dependencies.fetch(:username_lookup_uaa_client)
+      @uaa_client = dependencies.fetch(:uaa_client)
       @services_event_repository = dependencies.fetch(:services_event_repository)
     end
 
@@ -109,10 +109,9 @@ module VCAP::CloudController
         relation_name = :managed_service_instances
       end
 
-      admin_override = SecurityContext.admin? || SecurityContext.admin_read_only?
       service_instances = Query.filtered_dataset_from_query_params(
         model_class,
-        space.user_visible_relationship_dataset(relation_name, SecurityContext.current_user, admin_override),
+        space.user_visible_relationship_dataset(relation_name, @access_context.user, @access_context.admin_override),
         ServiceInstancesController.query_parameters,
         @opts)
       service_instances.filter(space: space)
@@ -132,9 +131,9 @@ module VCAP::CloudController
       raise_if_has_dependent_associations!(space) unless recursive_delete?
       raise_if_dependency_present!(space) unless recursive_delete?
 
-      @space_event_repository.record_space_delete_request(space, SecurityContext.current_user, SecurityContext.current_user_email, recursive_delete?)
+      @space_event_repository.record_space_delete_request(space, UserAuditInfo.from_context(SecurityContext), recursive_delete?)
 
-      delete_action = SpaceDelete.new(current_user.guid, current_user_email, @services_event_repository)
+      delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository)
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Space, guid, delete_action)
       enqueue_deletion_job(deletion_job)
     end
@@ -151,7 +150,7 @@ module VCAP::CloudController
         username = parse_and_validate_json(body)['username']
 
         begin
-          user_id = @username_lookup_uaa_client.id_for_username(username)
+          user_id = @uaa_client.id_for_username(username)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         rescue UaaEndpointDisabled
@@ -163,7 +162,7 @@ module VCAP::CloudController
       end
 
       define_method("add_#{role}_by_user_id") do |guid, user_id|
-        username = @username_lookup_uaa_client.usernames_for_ids([user_id])[user_id]
+        username = @uaa_client.usernames_for_ids([user_id])[user_id]
 
         add_role(guid, role, user_id, username ? username : '')
       end
@@ -181,7 +180,7 @@ module VCAP::CloudController
         username = parse_and_validate_json(body)['username']
 
         begin
-          user_id = @username_lookup_uaa_client.id_for_username(username)
+          user_id = @uaa_client.id_for_username(username)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         rescue UaaEndpointDisabled
@@ -206,7 +205,7 @@ module VCAP::CloudController
                   find_guid_and_validate_access(:update, guid)
                 end
 
-        username = @username_lookup_uaa_client.usernames_for_ids([user_id])[user_id]
+        username = @uaa_client.usernames_for_ids([user_id])[user_id]
         remove_role(space, role, user_id, username ? username : '')
 
         [HTTP::NO_CONTENT, nil]
@@ -248,7 +247,7 @@ module VCAP::CloudController
       space = find_guid_and_validate_access(:update, guid)
       space.send("add_#{role}", user)
 
-      @user_event_repository.record_space_role_add(space, user, role, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+      @user_event_repository.record_space_role_add(space, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)
 
       [HTTP::CREATED, object_renderer.render_json(self.class, space, @opts)]
     end
@@ -260,15 +259,15 @@ module VCAP::CloudController
 
       space.send("remove_#{role}", user)
 
-      @user_event_repository.record_space_role_remove(space, user, role, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+      @user_event_repository.record_space_role_remove(space, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)
     end
 
     def after_create(space)
-      @space_event_repository.record_space_create(space, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+      @space_event_repository.record_space_create(space, UserAuditInfo.from_context(SecurityContext), request_attrs)
     end
 
     def after_update(space)
-      @space_event_repository.record_space_update(space, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+      @space_event_repository.record_space_update(space, UserAuditInfo.from_context(SecurityContext), request_attrs)
     end
 
     def raise_if_dependency_present!(space)

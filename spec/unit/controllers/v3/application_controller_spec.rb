@@ -27,6 +27,11 @@ RSpec.describe ApplicationController, type: :controller do
       head 200
     end
 
+    def read_globally_access
+      can_read_globally?
+      head 200
+    end
+
     def write_access
       can_write?(params[:space_guid])
       head 200
@@ -38,6 +43,10 @@ RSpec.describe ApplicationController, type: :controller do
 
     def blobstore_error
       raise CloudController::Blobstore::BlobstoreError.new('it broke!')
+    end
+
+    def not_found
+      raise CloudController::Errors::NotFound.new_from_details('NotFound')
     end
   end
 
@@ -79,6 +88,22 @@ RSpec.describe ApplicationController, type: :controller do
     context 'cloud_controller.admin_read_only' do
       before do
         set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.admin_read_only'])
+      end
+
+      it 'grants reading access' do
+        get :index
+        expect(response.status).to eq(200)
+      end
+
+      it 'should show a specific item' do
+        get :show, id: 1
+        expect(response.status).to eq(204)
+      end
+    end
+
+    context 'cloud_controller.global_auditor' do
+      before do
+        set_current_user_as_global_auditor
       end
 
       it 'grants reading access' do
@@ -270,6 +295,21 @@ RSpec.describe ApplicationController, type: :controller do
     end
   end
 
+  describe '#can_read_globally?' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'asks for #can_read_globally? on behalf of the current user' do
+      routes.draw { get 'read_globally_access' => 'anonymous#read_globally_access' }
+
+      permissions = instance_double(VCAP::CloudController::Permissions, can_read_globally?: true)
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      get :read_globally_access
+
+      expect(permissions).to have_received(:can_read_globally?)
+    end
+  end
+
   describe '#can_write?' do
     let!(:user) { set_current_user(VCAP::CloudController::User.make) }
 
@@ -304,6 +344,17 @@ RSpec.describe ApplicationController, type: :controller do
       get :api_explode
       expect(response.status).to eq(400)
       expect(parsed_body['errors'].first['detail']).to eq('The request is invalid')
+    end
+  end
+
+  describe '#handle_not_found' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'rescues from NotFound error and renders an error presenter' do
+      routes.draw { get 'not_found' => 'anonymous#not_found' }
+      get :not_found
+      expect(response.status).to eq(404)
+      expect(parsed_body['errors'].first['detail']).to eq('Unknown request')
     end
   end
 end

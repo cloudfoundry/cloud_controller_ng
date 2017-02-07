@@ -68,6 +68,9 @@
   <div class="article">
     <h2>List all Security Groups for the Space</h2>
     <h3>GET /v2/spaces/:guid/security_groups</h3>
+    <p class="explanation">
+      This includes security groups that have <code>running_default</code> set to <code>true</code> as well as security groups that belong to this space.
+    </p>
 
       <h3>Request</h3>
       <h4>Route</h4>
@@ -280,6 +283,7 @@ Cookie: </pre>
         "running_default": false,
         "staging_default": false,
         "spaces_url": "/v2/security_groups/3da034d1-f0e3-4bfe-8d42-0bf2822fe8cc/spaces"
+        "staging_spaces_url": "/v2/security_groups/3da034d1-f0e3-4bfe-8d42-0bf2822fe8cc/staging_spaces"
       }
     }
   ]

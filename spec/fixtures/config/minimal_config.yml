@@ -52,6 +52,8 @@ hm9000:
 uaa:
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"
+  internal_url: "https://uaa.service.cf.internal"
+  ca_file: "spec/fixtures/certs/uaa_ca.crt"
 
 logging:
   level: fatal # Keep at fatal to avoid lots of extraneous output in tests
@@ -142,3 +144,23 @@ default_staging_security_groups:
 - defaults
 default_running_security_groups:
 - defaults
+
+diego:
+  bbs:
+    url: 'url-value'
+    ca_file: 'ca_file-value'
+    cert_file: 'cert_file-value'
+    key_file: 'key_file-value'
+  cc_uploader_url: 'cc_uploader_url-value'
+  file_server_url: 'file_server_url-value'
+  lifecycle_bundles: {}
+  nsync_url: 'nsync_url-value'
+  pid_limit: 1024
+  stager_url: 'stager_url-value'
+  temporary_local_staging: false
+  temporary_local_tasks: false
+  temporary_local_apps: false
+  temporary_local_tps: false
+  tps_url: 'tps_url-value'
+  use_privileged_containers_for_running: false
+  use_privileged_containers_for_staging: false

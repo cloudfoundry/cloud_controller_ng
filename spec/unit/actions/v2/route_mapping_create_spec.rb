@@ -3,10 +3,11 @@ require 'spec_helper'
 module VCAP::CloudController
   module V2
     RSpec.describe RouteMappingCreate do
-      subject(:action) { described_class.new(user, user_email, route, process) }
+      subject(:action) { described_class.new(user_audit_info, route, process) }
 
       let(:user) { User.make }
       let(:user_email) { 'tim@example.com' }
+      let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
 
       describe '#add' do
         let(:route) { Route.make }

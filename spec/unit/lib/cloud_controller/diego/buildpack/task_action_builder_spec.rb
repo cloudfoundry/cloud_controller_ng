@@ -46,8 +46,8 @@ module VCAP::CloudController
               to: '.',
               cache_key: '',
               user: 'vcap',
-              checksum_algorithm: 'sha1',
-              checksum_value: task.droplet.droplet_hash
+              checksum_algorithm: 'sha256',
+              checksum_value: task.droplet.sha256_checksum,
             )
           end
 
@@ -71,6 +71,34 @@ module VCAP::CloudController
             expect(actions.length).to eq(2)
             expect(actions[0].download_action).to eq(download_app_droplet_action)
             expect(actions[1].run_action).to eq(run_task_action)
+          end
+
+          context 'when the droplet does not have a sha256 checksum calculated' do
+            let(:download_app_droplet_action) do
+              ::Diego::Bbs::Models::DownloadAction.new(
+                from: download_uri,
+                to: '.',
+                cache_key: '',
+                user: 'vcap',
+                checksum_algorithm: 'sha1',
+                checksum_value: task.droplet.droplet_hash,
+              )
+            end
+
+            before do
+              task.droplet.sha256_checksum = nil
+              task.droplet.save
+            end
+
+            it 'uses sha1 in the download droplet action' do
+              result = builder.action
+
+              serial_action = result.serial_action
+              actions       = serial_action.actions
+
+              expect(actions.length).to eq(2)
+              expect(actions[0].download_action).to eq(download_app_droplet_action)
+            end
           end
         end
 

@@ -1,8 +1,7 @@
 module VCAP::CloudController
   class PackageDelete
-    def initialize(user_guid, user_email)
-      @user_guid = user_guid
-      @user_email = user_email
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
     end
 
     def delete(packages)
@@ -15,8 +14,7 @@ module VCAP::CloudController
 
         Repositories::PackageEventRepository.record_app_package_delete(
           package,
-          @user_guid,
-          @user_email)
+          @user_audit_info)
       end
     end
   end

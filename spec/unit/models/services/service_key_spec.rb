@@ -94,7 +94,12 @@ module VCAP::CloudController
       let(:manager) { make_manager_for_space(service_key.service_instance.space) }
 
       it 'does not redact creds for an admin' do
-        allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true)
+        set_current_user_as_admin
+        expect(service_key.to_hash['credentials']).not_to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
+      end
+
+      it 'does not redact creds for an admin_read_only' do
+        set_current_user_as_admin_read_only
         expect(service_key.to_hash['credentials']).not_to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
       end
 

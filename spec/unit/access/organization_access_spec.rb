@@ -40,6 +40,12 @@ module VCAP::CloudController
       end
     end
 
+    context 'global auditor' do
+      include_context :global_auditor_setup
+
+      it_behaves_like :read_only_access
+    end
+
     context 'a manager for the organization' do
       before do
         object.add_manager(user)

@@ -4,6 +4,10 @@ require 'cloud_controller/diego/constants'
 module VCAP::CloudController
   module Diego
     class BbsStagerClient
+      ACCEPTABLE_DIEGO_ERRORS = [
+        ::Diego::Bbs::Models::Error::Type::ResourceNotFound,
+      ].freeze
+
       def initialize(client)
         @client = client
       end
@@ -37,7 +41,7 @@ module VCAP::CloudController
 
         logger.info('stop.staging.response', staging_guid: staging_guid, error: response.error)
 
-        if response.error
+        if response.error && !ACCEPTABLE_DIEGO_ERRORS.include?(response.error.type)
           raise CloudController::Errors::ApiError.new_from_details('StagerError', "stop staging failed: #{response.error.message}")
         end
 

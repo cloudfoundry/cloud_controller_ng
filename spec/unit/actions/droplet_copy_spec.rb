@@ -12,15 +12,17 @@ module VCAP::CloudController
       VCAP::CloudController::DropletModel.make(lifecycle_type,
         app_guid:              source_app.guid,
         droplet_hash:          'abcdef',
+        sha256_checksum:          'droplet-sha256-checksum',
         process_types:         { web: 'bundle exec rails s' },
         environment_variables: { 'THING' => 'STUFF' },
         state:                 VCAP::CloudController::DropletModel::STAGED_STATE)
     end
+    let(:user_audit_info) { UserAuditInfo.new(user_email: 'user-email', user_guid: 'user_guid') }
 
     describe '#copy' do
       it 'copies the passed in droplet to the target app' do
         expect {
-          droplet_copy.copy(target_app, 'user-guid', 'user-email')
+          droplet_copy.copy(target_app, user_audit_info)
         }.to change { DropletModel.count }.by(1)
 
         copied_droplet = DropletModel.last
@@ -28,6 +30,7 @@ module VCAP::CloudController
         expect(copied_droplet.state).to eq DropletModel::COPYING_STATE
         expect(copied_droplet.buildpack_receipt_buildpack_guid).to eq source_droplet.buildpack_receipt_buildpack_guid
         expect(copied_droplet.droplet_hash).to be nil
+        expect(copied_droplet.sha256_checksum).to be nil
         expect(copied_droplet.environment_variables).to eq(nil)
         expect(copied_droplet.process_types).to eq({ 'web' => 'bundle exec rails s' })
         expect(copied_droplet.buildpack_receipt_buildpack).to eq source_droplet.buildpack_receipt_buildpack
@@ -44,15 +47,14 @@ module VCAP::CloudController
         expect(Repositories::DropletEventRepository).to receive(:record_create_by_copying).with(
           String, # the copied_droplet doesn't exist yet to know its guid
           source_droplet.guid,
-          'user-guid',
-          'user-email',
+          user_audit_info,
           target_app.guid,
           'target-app-name',
           target_app.space_guid,
           target_app.space.organization_guid
         )
 
-        droplet_copy.copy(target_app, 'user-guid', 'user-email')
+        droplet_copy.copy(target_app, user_audit_info)
       end
 
       context 'when the source droplet is not STAGED' do
@@ -62,7 +64,7 @@ module VCAP::CloudController
 
         it 'raises' do
           expect {
-            droplet_copy.copy(target_app, 'user-guid', 'user-email')
+            droplet_copy.copy(target_app, user_audit_info)
           }.to raise_error(/source droplet is not staged/)
         end
       end
@@ -70,7 +72,7 @@ module VCAP::CloudController
       context 'when lifecycle is buildpack' do
         it 'creates a buildpack_lifecycle_data record for the new droplet' do
           expect {
-            droplet_copy.copy(target_app, 'user-guid', 'user-email')
+            droplet_copy.copy(target_app, user_audit_info)
           }.to change { BuildpackLifecycleDataModel.count }.by(1)
 
           copied_droplet = DropletModel.last
@@ -83,7 +85,7 @@ module VCAP::CloudController
           copied_droplet = nil
 
           expect {
-            copied_droplet = droplet_copy.copy(target_app, 'user-guid', 'user-email')
+            copied_droplet = droplet_copy.copy(target_app, user_audit_info)
           }.to change { Delayed::Job.count }.by(1)
 
           job = Delayed::Job.last
@@ -103,7 +105,7 @@ module VCAP::CloudController
 
         it 'copies a docker droplet' do
           expect {
-            droplet_copy.copy(target_app, 'user-guid', 'user-email')
+            droplet_copy.copy(target_app, user_audit_info)
           }.to change { DropletModel.count }.by(1)
 
           copied_droplet = DropletModel.last

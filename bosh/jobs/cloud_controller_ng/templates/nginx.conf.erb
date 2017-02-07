@@ -3,6 +3,7 @@
 error_log <%= p("cc.nginx_error_log_destination") %> <%= p("cc.nginx_error_log_level") %>;
 error_log syslog:server=127.0.0.1,severity=error,tag=vcap_nginx_error <%= p("cc.nginx_error_log_level") %>;
 pid       /var/vcap/sys/run/nginx_cc/nginx.pid;
+worker_processes auto;
 
 events {
   worker_connections  8192;
@@ -23,7 +24,7 @@ http {
   tcp_nopush           on;
   tcp_nodelay          on;  #disable nagel's algorithm
 
-  keepalive_timeout  75 20; #inherited from router
+  keepalive_timeout  70; #inherited from router
 
   <% if_p("cc.nginx_rate_limit_general") do %>
   limit_req_zone $http_authorization zone=all:10m rate=<%=p("cc.nginx_rate_limit_general")['limit'] %>;
@@ -48,37 +49,45 @@ http {
     server unix:/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock;
   }
 
+  # This block ensures the endpoings it serves are handled by mutual TLS.
+  # Refer to the 'return 403' statement in the http block to see how we secure those endpoints.
   server {
     listen <%= p("cc.tls_port") %> ssl;
 
-    ssl_certificate /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls.crt;
-    ssl_certificate_key /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls.key;
+    # XXX: Do these go in the other server block as well?
+    # Settings for #137308417
+    #keepalive 32;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    ssl_ciphers DHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_certificate        /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls.crt;
+    ssl_certificate_key    /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls.key;
     ssl_client_certificate /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls_ca.crt;
-    ssl_verify_client on;
+    ssl_verify_client      on;
+    ssl_protocols          TLSv1.2;
+
+    server_name  _;
+    server_name_in_redirect off;
+    <% if p("request_timeout_in_seconds").to_i > 0 %>
+      proxy_send_timeout          <%= p("request_timeout_in_seconds") %>;
+      proxy_read_timeout          <%= p("request_timeout_in_seconds") %>;
+    <% end %>
+    proxy_buffering             off;
+    proxy_set_header            Host $host;
+    proxy_set_header            X-Real_IP $remote_addr;
+    proxy_set_header            X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_redirect              off;
+    proxy_connect_timeout       10;
 
     location ~ /internal/v3/staging/.*/droplet_completed {
-      access_log                  <%= p("cc.nginx_access_log_destination") %>  main;
-      access_log                  syslog:server=127.0.0.1,severity=info,tag=vcap_nginx_access main;
-      proxy_buffering             off;
-      proxy_set_header            Host $host;
-      proxy_set_header            X-Real_IP $remote_addr;
-      proxy_set_header            X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_redirect              off;
-      proxy_connect_timeout       10;
-      proxy_pass                  http://cloud_controller;
+      proxy_pass http://cloud_controller;
+    }
 
-      <% if_p("cc.nginx_rate_limit_general") do %>
-      limit_req zone=all burst=<%= p("cc.nginx_rate_limit_general")['burst'] %> nodelay;
-      <% end %>
-
-      <% if_p("cc.nginx_rate_limit_zones") do %>
-        <% p("cc.nginx_rate_limit_zones").each do |zone| %>
-      location <%= zone['location'] %> {
-        limit_req zone=<%= zone['name'] %> burst=<%= zone['burst'] %> nodelay;
-        proxy_pass                  http://cloud_controller;
-      }
-        <% end %>
-      <% end %>
+    location /internal/v4/ {
+      proxy_pass http://cloud_controller;
     }
   }
 
@@ -95,6 +104,10 @@ http {
       proxy_send_timeout          <%= p("request_timeout_in_seconds") %>;
       proxy_read_timeout          <%= p("request_timeout_in_seconds") %>;
     <% end %>
+
+    location /internal/v4/ {
+      return 403 'HTTPS is required';
+    }
 
     # proxy and log all CC traffic
     location / {

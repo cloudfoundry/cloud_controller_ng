@@ -180,6 +180,10 @@ module VCAP::CloudController
       current_droplet.try(:droplet_hash)
     end
 
+    def droplet_checksum
+      current_droplet.try(:checksum)
+    end
+
     def package_updated_at
       latest_package.try(:created_at)
     end
@@ -541,8 +545,7 @@ module VCAP::CloudController
     end
 
     def to_hash(opts={})
-      admin_override = VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
-      opts[:redact] = if admin_override || space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
+      opts[:redact] = if VCAP::CloudController::Security::AccessContext.new.can?(:read_env, self)
                         %w(docker_credentials_json)
                       else
                         %w(environment_json system_env_json docker_credentials_json)

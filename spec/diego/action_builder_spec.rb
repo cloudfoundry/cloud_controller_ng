@@ -130,5 +130,18 @@ module Diego
         expect(serial_action[:codependent_action].actions).to match_array([described_class.action(action1), described_class.action(action2)])
       end
     end
+
+    describe 'try_action' do
+      it 'wraps an action in a try action' do
+        action = Bbs::Models::RunAction.new
+
+        try_action = described_class.try_action(action)
+
+        expect(try_action).to be_a(Bbs::Models::Action)
+        expect(try_action[:try_action]).to be_a(Bbs::Models::TryAction)
+        expect(try_action[:try_action].action).to be_a(Bbs::Models::Action)
+        expect(try_action[:try_action].action).to eq(described_class.action(action))
+      end
+    end
   end
 end

@@ -78,6 +78,7 @@ module VCAP::CloudController
     app { AppModel.make }
     staging_memory_in_mb { 123 }
     droplet_hash { Sham.guid }
+    sha256_checksum { Sham.guid }
     buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(droplet: object.save) }
   end
 
@@ -96,6 +97,50 @@ module VCAP::CloudController
     droplet { DropletModel.make(:staged, app: app) }
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::RUNNING_STATE }
+    memory_in_mb { 256 }
+    sequence_id { Sham.sequence_id }
+  end
+
+  TaskModel.blueprint(:running) do
+    guid { Sham.guid }
+    app { AppModel.make }
+    name { Sham.name }
+    droplet { DropletModel.make(:staged, app: app) }
+    command { 'bundle exec rake' }
+    state { VCAP::CloudController::TaskModel::RUNNING_STATE }
+    memory_in_mb { 256 }
+    sequence_id { Sham.sequence_id }
+  end
+
+  TaskModel.blueprint(:canceling) do
+    guid { Sham.guid }
+    app { AppModel.make }
+    name { Sham.name }
+    droplet { DropletModel.make(:staged, app: app) }
+    command { 'bundle exec rake' }
+    state { VCAP::CloudController::TaskModel::CANCELING_STATE }
+    memory_in_mb { 256 }
+    sequence_id { Sham.sequence_id }
+  end
+
+  TaskModel.blueprint(:succeeded) do
+    guid { Sham.guid }
+    app { AppModel.make }
+    name { Sham.name }
+    droplet { DropletModel.make(:staged, app: app) }
+    command { 'bundle exec rake' }
+    state { VCAP::CloudController::TaskModel::SUCCEEDED_STATE }
+    memory_in_mb { 256 }
+    sequence_id { Sham.sequence_id }
+  end
+
+  TaskModel.blueprint(:pending) do
+    guid { Sham.guid }
+    app { AppModel.make }
+    name { Sham.name }
+    droplet { DropletModel.make(:staged, app: app) }
+    command { 'bundle exec rake' }
+    state { VCAP::CloudController::TaskModel::PENDING_STATE }
     memory_in_mb { 256 }
     sequence_id { Sham.sequence_id }
   end
@@ -223,6 +268,24 @@ module VCAP::CloudController
     instances { 1 }
     type { Sham.name }
     metadata { {} }
+  end
+
+  App.blueprint(:diego_runnable) do
+    app { AppModel.make(droplet: DropletModel.make(:staged)) }
+    diego { true }
+    instances { 1 }
+    type { Sham.name }
+    metadata { {} }
+    state { 'STARTED' }
+  end
+
+  App.blueprint(:dea_runnable) do
+    app { AppModel.make(droplet: DropletModel.make(:staged)) }
+    diego { false }
+    instances { 1 }
+    type { Sham.name }
+    metadata { {} }
+    state { 'STARTED' }
   end
 
   App.blueprint(:docker) do

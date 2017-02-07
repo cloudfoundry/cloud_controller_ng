@@ -23,6 +23,10 @@ module VCAP::CloudController
       roles.admin_read_only?
     end
 
+    def self.global_auditor?
+      roles.global_auditor?
+    end
+
     def self.roles
       VCAP::CloudController::Roles.new(token)
     end
@@ -53,6 +57,10 @@ module VCAP::CloudController
 
     def self.current_user_email
       token['email'] if valid_token?
+    end
+
+    def self.current_user_name
+      token['user_name'] if valid_token?
     end
 
     def self.current_user_has_email?(email)

@@ -11,6 +11,8 @@
 # wget https://raw.githubusercontent.com/cloudfoundry/cloud_controller_ng/master/scripts/find_error -O /usr/local/bin/find_error
 # chmod +x /usr/local/bin/find_error
 
+source /var/vcap/jobs/cloud_controller_ng/bin/ruby_version.sh
+
 request_id=$1
 zgrep --no-filename "$request_id" /var/vcap/sys/log/cloud_controller_ng/cloud_controller* | \
 grep "Request failed: 500" | \

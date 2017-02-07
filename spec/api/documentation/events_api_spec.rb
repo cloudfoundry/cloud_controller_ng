@@ -198,11 +198,12 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     let(:service_event_repository) do
-      VCAP::CloudController::Repositories::ServiceEventRepository.new(user: test_user, user_email: test_user_email)
+      VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
     end
+    let(:user_audit_info) { VCAP::CloudController::UserAuditInfo.new(user_guid: test_user.guid, user_email: test_user_email) }
 
     example 'List App Create Events' do
-      app_event_repository.record_app_create(test_app, test_app.space, test_user.guid, test_user_email, app_request)
+      app_event_repository.record_app_create(test_app, test_app.space, user_audit_info, app_request)
 
       client.get '/v2/events?q=type:audit.app.create', {}, headers
       expect(status).to eq(200)
@@ -219,7 +220,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List App Start Events' do
-      app_event_repository.record_app_start(test_v3app, test_user.guid, test_user_email)
+      app_event_repository.record_app_start(test_v3app, user_audit_info)
 
       client.get '/v2/events?q=type:audit.app.start', {}, headers
       expect(status).to eq(200)
@@ -236,7 +237,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List App Stop Events' do
-      app_event_repository.record_app_stop(test_v3app, test_user.guid, test_user_email)
+      app_event_repository.record_app_stop(test_v3app, user_audit_info)
 
       client.get '/v2/events?q=type:audit.app.stop', {}, headers
       expect(status).to eq(200)
@@ -270,7 +271,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List App Update Events' do
-      app_event_repository.record_app_update(test_app, test_app.space, test_user.guid, test_user_email, app_request)
+      app_event_repository.record_app_update(test_app, test_app.space, user_audit_info, app_request)
 
       client.get '/v2/events?q=type:audit.app.update', {}, headers
       expect(status).to eq(200)
@@ -289,7 +290,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List App Delete Events' do
-      app_event_repository.record_app_delete_request(test_app, test_app.space, test_user.guid, test_user_email, false)
+      app_event_repository.record_app_delete_request(test_app, test_app.space, user_audit_info, false)
 
       client.get '/v2/events?q=type:audit.app.delete-request', {}, headers
       expect(status).to eq(200)
@@ -306,7 +307,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List App SSH Authorized Events' do
-      app_event_repository.record_app_ssh_authorized(test_app, test_user.guid, test_user_email, 1)
+      app_event_repository.record_app_ssh_authorized(test_app, user_audit_info, 1)
 
       client.get '/v2/events?q=type:audit.app.ssh-authorized', {}, headers
       expect(status).to eq(200)
@@ -323,7 +324,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List App SSH Unauthorized Events' do
-      app_event_repository.record_app_ssh_unauthorized(test_app, test_user.guid, test_user_email, 1)
+      app_event_repository.record_app_ssh_unauthorized(test_app, user_audit_info, 1)
 
       client.get '/v2/events?q=type:audit.app.ssh-unauthorized', {}, headers
       expect(status).to eq(200)
@@ -340,9 +341,9 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List events associated with an App since January 1, 2014' do
-      app_event_repository.record_app_create(test_app, test_app.space, test_user.guid, test_user_email, app_request)
-      app_event_repository.record_app_update(test_app, test_app.space, test_user.guid, test_user_email, app_request)
-      app_event_repository.record_app_delete_request(test_app, test_app.space, test_user.guid, test_user_email, false)
+      app_event_repository.record_app_create(test_app, test_app.space, user_audit_info, app_request)
+      app_event_repository.record_app_update(test_app, test_app.space, user_audit_info, app_request)
+      app_event_repository.record_app_delete_request(test_app, test_app.space, user_audit_info, false)
 
       client.get "/v2/events?q=actee:#{test_app.guid}&q=#{CGI.escape('timestamp>2014-01-01 00:00:00-04:00')}", {}, headers
       expect(status).to eq(200)
@@ -359,7 +360,11 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Space Create Events' do
-      space_event_repository.record_space_create(test_space, test_user, test_user_email, space_request)
+      space_event_repository.record_space_create(
+        test_space,
+        user_audit_info,
+        space_request
+      )
 
       client.get '/v2/events?q=type:audit.space.create', {}, headers
       expect(status).to eq(200)
@@ -376,7 +381,11 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Space Update Events' do
-      space_event_repository.record_space_update(test_space, test_user, test_user_email, space_request)
+      space_event_repository.record_space_update(
+        test_space,
+        user_audit_info,
+        space_request
+      )
 
       client.get '/v2/events?q=type:audit.space.update', {}, headers
       expect(status).to eq(200)
@@ -393,7 +402,11 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Space Delete Events' do
-      space_event_repository.record_space_delete_request(test_space, test_user, test_user_email, true)
+      space_event_repository.record_space_delete_request(
+        test_space,
+        user_audit_info,
+        true
+      )
 
       client.get '/v2/events?q=type:audit.space.delete-request', {}, headers
       expect(status).to eq(200)
@@ -410,7 +423,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Associate Role Space Events' do
-      user_event_repository.record_space_role_add(test_space, test_assignee, 'auditor', test_user, test_user_email)
+      user_event_repository.record_space_role_add(test_space, test_assignee, 'auditor', user_audit_info)
 
       client.get '/v2/events?q=type:audit.user.space_auditor_add', {}, headers
       expect(status).to eq(200)
@@ -427,7 +440,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Remove Role Space Events' do
-      user_event_repository.record_space_role_remove(test_space, test_assignee, 'auditor', test_user, test_user_email)
+      user_event_repository.record_space_role_remove(test_space, test_assignee, 'auditor', user_audit_info)
 
       client.get '/v2/events?q=type:audit.user.space_auditor_remove', {}, headers
       expect(status).to eq(200)
@@ -444,7 +457,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Route Create Events' do
-      route_event_repository.record_route_create(test_route, test_user, test_user_email, route_request)
+      route_event_repository.record_route_create(test_route, user_audit_info, route_request)
 
       client.get '/v2/events?q=type:audit.route.create', {}, headers
       expect(status).to eq(200)
@@ -461,7 +474,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Route Update Events' do
-      route_event_repository.record_route_update(test_route, test_user, test_user_email, route_request)
+      route_event_repository.record_route_update(test_route, user_audit_info, route_request)
 
       client.get '/v2/events?q=type:audit.route.update', {}, headers
       expect(status).to eq(200)
@@ -478,7 +491,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Route Delete Events' do
-      route_event_repository.record_route_delete_request(test_route, test_user, test_user_email, true)
+      route_event_repository.record_route_delete_request(test_route, user_audit_info, true)
 
       client.get '/v2/events?q=type:audit.route.delete-request', {}, headers
       expect(status).to eq(200)

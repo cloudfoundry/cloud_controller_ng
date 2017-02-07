@@ -10,13 +10,12 @@ module VCAP::CloudController
           'id'              => String,
           'instances'       => Integer,
           'state'           => String,
-          'memory'          => Integer,
           'package_state'   => String,
-          'updated_at'      => Time,
           'version'         => String
         },
       )
     end
+
     required :bulk_token, Hash
   end
 
@@ -68,19 +67,25 @@ module VCAP::CloudController
     end
 
     def bulk_apps
-      batch_size = Integer(params.fetch('batch_size'))
       bulk_token = MultiJson.load(params.fetch('bulk_token'))
       last_id = Integer(bulk_token['id'] || 0)
+
+      if last_id > 0
+        return BulkResponse.new(
+          results: {},
+          bulk_token: { 'id' => 0 }
+        ).encode
+      end
 
       dependency_locator = ::CloudController::DependencyLocator.instance
       runners = dependency_locator.runners
 
-      apps_hm9k, next_last_id = runners.dea_apps_hm9k(batch_size, last_id)
+      apps_hm9k, bulk_token_id = runners.dea_apps_hm9k
       app_hashes = apps_hm9k.each_with_object({}) { |app, acc| acc[app['id']] = app }
 
       BulkResponse.new(
         results: app_hashes,
-        bulk_token: { 'id' => next_last_id }
+        bulk_token: { 'id' => bulk_token_id }
       ).encode
     rescue IndexError => e
       raise ApiError.new_from_details('BadQueryParameter', e.message)

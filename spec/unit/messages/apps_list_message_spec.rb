@@ -88,6 +88,13 @@ module VCAP::CloudController
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
       end
 
+      describe 'order_by' do
+        it 'allows name' do
+          message = AppsListMessage.new(order_by: 'name')
+          expect(message).to be_valid
+        end
+      end
+
       describe 'validations' do
         it 'validates names is an array' do
           message = AppsListMessage.new names: 'not array'

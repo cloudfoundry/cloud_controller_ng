@@ -3,6 +3,10 @@ module VCAP::CloudController
     class AccessContext
       include ::Allowy::Context
 
+      def admin_override
+        VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only? || VCAP::CloudController::SecurityContext.global_auditor?
+      end
+
       def roles
         VCAP::CloudController::SecurityContext.roles
       end

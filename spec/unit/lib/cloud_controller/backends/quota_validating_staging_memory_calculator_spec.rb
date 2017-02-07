@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'cloud_controller/backends/staging_memory_calculator'
+require 'cloud_controller/backends/quota_validating_staging_memory_calculator'
 
 module VCAP::CloudController
-  RSpec.describe StagingMemoryCalculator do
-    let(:calculator) { StagingMemoryCalculator.new }
+  RSpec.describe QuotaValidatingStagingMemoryCalculator do
+    let(:calculator) { described_class.new }
 
     describe '#get_limit' do
       let(:minimum_limit) { 10 }
@@ -44,7 +44,7 @@ module VCAP::CloudController
           it 'raises MemoryLimitCalculator::SpaceQuotaExceeded' do
             expect {
               calculator.get_limit(requested_limit, space, org)
-            }.to raise_error(StagingMemoryCalculator::SpaceQuotaExceeded)
+            }.to raise_error(QuotaValidatingStagingMemoryCalculator::SpaceQuotaExceeded, /staging requires 100M memory/)
           end
         end
 
@@ -54,7 +54,7 @@ module VCAP::CloudController
           it 'raises MemoryLimitCalculator::OrgQuotaExceeded' do
             expect {
               calculator.get_limit(requested_limit, space, org)
-            }.to raise_error(StagingMemoryCalculator::OrgQuotaExceeded)
+            }.to raise_error(QuotaValidatingStagingMemoryCalculator::OrgQuotaExceeded, /staging requires 100M memory/)
           end
         end
       end
@@ -73,7 +73,7 @@ module VCAP::CloudController
       context 'when the value is in the configuration' do
         let(:expected_limit) { 99 }
         before do
-          VCAP::CloudController::Config.config[:minimum_staging_memory_mb] = expected_limit
+          VCAP::CloudController::Config.config[:staging][:minimum_staging_memory_mb] = expected_limit
         end
 
         it 'returns the configured value' do
@@ -83,7 +83,7 @@ module VCAP::CloudController
 
       context 'when there is no configured value' do
         before do
-          VCAP::CloudController::Config.config[:minimum_staging_memory_mb] = nil
+          VCAP::CloudController::Config.config[:staging][:minimum_staging_memory_mb] = nil
         end
 
         it 'returns 1024' do

@@ -14,15 +14,22 @@ module VCAP::CloudController
         end
 
         def action
+          download_droplet_action = ::Diego::Bbs::Models::DownloadAction.new(
+            from: lifecycle_data[:droplet_uri],
+            to: '.',
+            cache_key: '',
+            user: 'vcap',
+          )
+          if task.droplet.sha256_checksum
+            download_droplet_action.checksum_algorithm = 'sha256'
+            download_droplet_action.checksum_value = task.droplet.sha256_checksum
+          else
+            download_droplet_action.checksum_algorithm = 'sha1'
+            download_droplet_action.checksum_value = task.droplet.droplet_hash
+          end
+
           serial([
-            ::Diego::Bbs::Models::DownloadAction.new(
-              from: lifecycle_data[:droplet_uri],
-              to: '.',
-              cache_key: '',
-              user: 'vcap',
-              checksum_algorithm: 'sha1',
-              checksum_value: task.droplet.droplet_hash
-            ),
+            download_droplet_action,
             ::Diego::Bbs::Models::RunAction.new(
               user: 'vcap',
               path: '/tmp/lifecycle/launcher',

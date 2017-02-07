@@ -3305,7 +3305,7 @@ module VCAP::CloudController
         end
 
         context 'when the user does not have either necessary scope' do
-          it 'returns InvalidAuthToken' do
+          it 'returns InsufficientScope' do
             set_current_user(developer, { scopes: ['cloud_controller.write'] })
             get "/v2/service_instances/#{instance.guid}/permissions"
             expect(last_response.status).to eql(403)

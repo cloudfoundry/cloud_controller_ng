@@ -2,9 +2,8 @@ module VCAP::CloudController
   class ProcessTerminate
     class InstanceNotFound < StandardError; end
 
-    def initialize(user_guid, user_email, process, index)
-      @user_guid  = user_guid
-      @user_email = user_email
+    def initialize(user_audit_info, process, index)
+      @user_audit_info = user_audit_info
       @process    = process
       @index      = index
     end
@@ -20,8 +19,7 @@ module VCAP::CloudController
     def record_audit_events
       Repositories::ProcessEventRepository.record_terminate(
         @process,
-        @user_guid,
-        @user_email,
+        @user_audit_info,
         @index
       )
     end

@@ -50,7 +50,10 @@ module CloudController::Packager
 
       it 'returns the uploaded file hash' do
         result_hash = packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
-        expect(result_hash).to eq(Digester.new.digest_file(package_file))
+        expect(result_hash).to eq({
+          sha1:   Digester.new.digest_file(package_file),
+          sha256: Digester.new(algorithm: Digest::SHA256).digest_file(package_file),
+        })
       end
 
       shared_examples 'a packaging failure' do
@@ -86,7 +89,10 @@ module CloudController::Packager
 
         it 'returns the correct package hash in the app' do
           result_hash = packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
-          expect(result_hash).to eq(Digester.new.digest_file(package_file))
+          expect(result_hash).to eq({
+            sha1:   Digester.new.digest_file(package_file),
+            sha256: Digester.new(algorithm: Digest::SHA256).digest_file(package_file),
+          })
         end
       end
 

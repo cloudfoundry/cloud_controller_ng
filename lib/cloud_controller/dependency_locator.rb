@@ -8,12 +8,14 @@ require 'cloud_controller/upload_handler'
 require 'cloud_controller/blob_sender/nginx_blob_sender'
 require 'cloud_controller/blob_sender/default_blob_sender'
 require 'cloud_controller/blob_sender/missing_blob_handler'
-require 'cloud_controller/diego/recipe_builder'
+require 'traffic_controller/client'
+require 'cloud_controller/diego/task_recipe_builder'
 require 'cloud_controller/diego/app_recipe_builder'
 require 'cloud_controller/diego/stager_client'
 require 'cloud_controller/diego/bbs_apps_client'
 require 'cloud_controller/diego/bbs_stager_client'
 require 'cloud_controller/diego/bbs_task_client'
+require 'cloud_controller/diego/bbs_instances_client'
 require 'cloud_controller/diego/tps_client'
 require 'cloud_controller/diego/messenger'
 require 'cloud_controller/blobstore/client_provider'
@@ -78,8 +80,16 @@ module CloudController
       @dependencies[:bbs_task_client] || register(:bbs_task_client, build_bbs_task_client)
     end
 
+    def bbs_instances_client
+      @dependencies[:bbs_instances_client] || register(:bbs_instances_client, build_bbs_instances_client)
+    end
+
     def tps_client
       @dependencies[:tps_client] || raise('tps_client not set')
+    end
+
+    def traffic_controller_client
+      @dependencies[:traffic_controller_client] || register(:traffic_controller_client, build_traffic_controller_client)
     end
 
     def upload_handler
@@ -178,10 +188,7 @@ module CloudController
     end
 
     def services_event_repository
-      Repositories::ServiceEventRepository.new(
-        user: SecurityContext.current_user,
-        user_email: SecurityContext.current_user_email
-      )
+      Repositories::ServiceEventRepository.new(UserAuditInfo.from_context(SecurityContext))
     end
 
     def service_manager
@@ -197,7 +204,7 @@ module CloudController
     end
 
     def username_populating_object_renderer
-      create_object_renderer(object_transformer: UsernamePopulator.new(username_lookup_uaa_client))
+      create_object_renderer(object_transformer: UsernamePopulator.new(uaa_client))
     end
 
     def paginated_collection_renderer
@@ -209,36 +216,39 @@ module CloudController
     end
 
     def username_populating_collection_renderer
-      create_paginated_collection_renderer(collection_transformer: UsernamePopulator.new(username_lookup_uaa_client))
+      create_paginated_collection_renderer(collection_transformer: UsernamePopulator.new(uaa_client))
     end
 
     def username_and_roles_populating_collection_renderer
-      create_paginated_collection_renderer(collection_transformer: UsernamesAndRolesPopulator.new(username_lookup_uaa_client))
+      create_paginated_collection_renderer(collection_transformer: UsernamesAndRolesPopulator.new(uaa_client))
     end
 
     def router_group_type_populating_collection_renderer
       create_paginated_collection_renderer(collection_transformer: RouterGroupTypePopulator.new(routing_api_client))
     end
 
-    def username_lookup_uaa_client
-      client_id = @config[:cloud_controller_username_lookup_client_name]
-      secret = @config[:cloud_controller_username_lookup_client_secret]
-      target = @config[:uaa][:url]
-      skip_cert_verify = @config[:skip_cert_verify]
-      UaaClient.new(target, client_id, secret, { skip_ssl_validation: skip_cert_verify })
+    def uaa_client
+      UaaClient.new(
+        uaa_target: @config[:uaa][:internal_url],
+        client_id:  @config[:cloud_controller_username_lookup_client_name],
+        secret:     @config[:cloud_controller_username_lookup_client_secret],
+        ca_file:    @config[:uaa][:ca_file]
+      )
     end
 
     def routing_api_client
       return RoutingApi::DisabledClient.new if @config[:routing_api].nil?
+
+      uaa_client = UaaClient.new(
+        uaa_target: @config[:uaa][:internal_url],
+        client_id:  HashUtils.dig(@config, :routing_api, :routing_client_name),
+        secret:     HashUtils.dig(@config, :routing_api, :routing_client_secret),
+        ca_file:    @config[:uaa][:ca_file]
+      )
+
       skip_cert_verify = @config[:skip_cert_verify]
-
-      client_id = @config[:routing_api] && @config[:routing_api][:routing_client_name]
-      secret = @config[:routing_api] && @config[:routing_api][:routing_client_secret]
-      uaa_target = @config[:uaa][:url]
-      token_issuer = CF::UAA::TokenIssuer.new(uaa_target, client_id, secret, { skip_ssl_validation: skip_cert_verify })
-
-      routing_api_url = @config[:routing_api] && @config[:routing_api][:url]
-      RoutingApi::Client.new(routing_api_url, token_issuer, skip_cert_verify)
+      routing_api_url  = HashUtils.dig(@config, :routing_api, :url)
+      RoutingApi::Client.new(routing_api_url, uaa_client, skip_cert_verify)
     end
 
     def missing_blob_handler
@@ -319,6 +329,21 @@ module CloudController
       )
 
       VCAP::CloudController::Diego::BbsTaskClient.new(bbs_client)
+    end
+
+    def build_bbs_instances_client
+      bbs_client = ::Diego::Client.new(
+        url:              HashUtils.dig(@config, :diego, :bbs, :url),
+        ca_cert_file:     HashUtils.dig(@config, :diego, :bbs, :ca_file),
+        client_cert_file: HashUtils.dig(@config, :diego, :bbs, :cert_file),
+        client_key_file:  HashUtils.dig(@config, :diego, :bbs, :key_file)
+      )
+
+      VCAP::CloudController::Diego::BbsInstancesClient.new(bbs_client)
+    end
+
+    def build_traffic_controller_client
+      TrafficController::Client.new(url: HashUtils.dig(@config, :loggregator, :internal_url))
     end
 
     def create_object_renderer(opts={})

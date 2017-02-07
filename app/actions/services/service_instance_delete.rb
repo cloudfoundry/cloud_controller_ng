@@ -68,10 +68,7 @@ module VCAP::CloudController
     end
 
     def delete_service_bindings(service_instance)
-      ServiceBindingDelete.new(
-        @event_repository.user.guid,
-        @event_repository.current_user_email
-      ).delete(service_instance.service_bindings)
+      ServiceBindingDelete.new(@event_repository.user_audit_info).delete(service_instance.service_bindings)
     end
 
     def delete_service_keys(service_instance)
@@ -83,8 +80,7 @@ module VCAP::CloudController
         'service-instance-state-fetch',
         service_instance.client.attrs,
         service_instance.guid,
-        @event_repository.user.guid,
-        @event_repository.current_user_email,
+        @event_repository.user_audit_info,
         {},
       )
     end

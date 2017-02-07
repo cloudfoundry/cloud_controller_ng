@@ -2,9 +2,8 @@ require 'actions/services/service_instance_delete'
 
 module VCAP::CloudController
   class SpaceDelete
-    def initialize(user_guid, user_email, services_event_repository)
-      @user_guid = user_guid
-      @user_email = user_email
+    def initialize(user_audit_info, services_event_repository)
+      @user_audit_info = user_audit_info
       @services_event_repository = services_event_repository
     end
 
@@ -38,8 +37,6 @@ module VCAP::CloudController
 
     private
 
-    attr_reader :user_guid, :user_email
-
     def service_broker_remover(services_event_repository)
       VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(services_event_repository)
     end
@@ -54,7 +51,7 @@ module VCAP::CloudController
     end
 
     def delete_apps(space_model)
-      AppDelete.new(user_guid, user_email).delete(space_model.app_models)
+      AppDelete.new(@user_audit_info).delete(space_model.app_models)
     end
 
     def delete_service_brokers(space_model)

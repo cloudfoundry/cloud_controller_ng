@@ -39,7 +39,7 @@ module VCAP::CloudController
 
       V2::AppStage.new(stagers: @stagers).stage(process)
 
-      @app_event_repository.record_app_restage(process, SecurityContext.current_user.guid, SecurityContext.current_user_email)
+      @app_event_repository.record_app_restage(process, UserAuditInfo.from_context(SecurityContext))
 
       [
         HTTP::CREATED,

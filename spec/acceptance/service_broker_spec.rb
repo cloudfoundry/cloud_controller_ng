@@ -303,7 +303,7 @@ RSpec.describe 'Service Broker' do
         # set up a fake broker catalog that includes dashboard_client for services
         stub_catalog_fetch(200, services: [service_1, service_2, service_3, service_4, service_5, service_6])
         UAARequests.stub_all
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/.*}).to_return(status: 404)
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/.*}).to_return(status: 404)
 
         # add that broker to the CC
         post('/v2/service_brokers',
@@ -321,24 +321,24 @@ RSpec.describe 'Service Broker' do
         WebMock.reset!
 
         UAARequests.stub_all
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/.*}).to_return(status: 404)
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-1}).to_return(
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/.*}).to_return(status: 404)
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-1}).to_return(
           body:    { client_id: 'client-1' }.to_json,
           status:  200,
           headers: { 'content-type' => 'application/json' })
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-2}).to_return(
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-2}).to_return(
           body:    { client_id: 'client-2' }.to_json,
           status:  200,
           headers: { 'content-type' => 'application/json' })
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-3}).to_return(
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-3}).to_return(
           body:    { client_id: 'client-3' }.to_json,
           status:  200,
           headers: { 'content-type' => 'application/json' })
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-5}).to_return(
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-5}).to_return(
           body:    { client_id: 'client-5' }.to_json,
           status:  200,
           headers: { 'content-type' => 'application/json' })
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-6}).to_return(
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-6}).to_return(
           body:    { client_id: 'client-6' }.to_json,
           status:  200,
           headers: { 'content-type' => 'application/json' })
@@ -356,7 +356,7 @@ RSpec.describe 'Service Broker' do
 
         stub_catalog_fetch(200, services: [service_1, service_2, service_3, service_4, service_5, service_6])
 
-        stub_request(:post, %r{http://localhost:8080/uaa/oauth/clients/tx/modify}).
+        stub_request(:post, %r{https://uaa.service.cf.internal/oauth/clients/tx/modify}).
           to_return(
             status: 200,
             headers: { 'content-type' => 'application/json' },
@@ -375,6 +375,7 @@ RSpec.describe 'Service Broker' do
             'client_secret'          => nil,
             'redirect_uri'           => nil,
             'scope'                  => ['openid', 'cloud_controller_service_permissions.read'],
+            'authorities'            => ['uaa.resource'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'delete'
           },
@@ -383,6 +384,7 @@ RSpec.describe 'Service Broker' do
             'client_secret'          => nil,
             'redirect_uri'           => nil,
             'scope'                  => ['openid', 'cloud_controller_service_permissions.read'],
+            'authorities'            => ['uaa.resource'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'delete'
           },
@@ -391,6 +393,7 @@ RSpec.describe 'Service Broker' do
             'client_secret'          => service_2[:dashboard_client][:secret],
             'redirect_uri'           => service_2[:dashboard_client][:redirect_uri],
             'scope'                  => ['openid', 'cloud_controller_service_permissions.read'],
+            'authorities'            => ['uaa.resource'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'add'
           },
@@ -399,6 +402,7 @@ RSpec.describe 'Service Broker' do
             'client_secret'          => 'SUPERsecret',
             'redirect_uri'           => service_3[:dashboard_client][:redirect_uri],
             'scope'                  => ['openid', 'cloud_controller_service_permissions.read'],
+            'authorities'            => ['uaa.resource'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'update,secret'
           },
@@ -407,6 +411,7 @@ RSpec.describe 'Service Broker' do
             'client_secret'          => service_4[:dashboard_client][:secret],
             'redirect_uri'           => service_4[:dashboard_client][:redirect_uri],
             'scope'                  => ['openid', 'cloud_controller_service_permissions.read'],
+            'authorities'            => ['uaa.resource'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'add'
           },
@@ -415,6 +420,7 @@ RSpec.describe 'Service Broker' do
             'client_secret'          => service_5[:dashboard_client][:secret],
             'redirect_uri'           => 'http://nowhere.net',
             'scope'                  => ['openid', 'cloud_controller_service_permissions.read'],
+            'authorities'            => ['uaa.resource'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'update,secret'
           },
@@ -423,12 +429,13 @@ RSpec.describe 'Service Broker' do
             'client_secret'          => service_6[:dashboard_client][:secret],
             'redirect_uri'           => service_6[:dashboard_client][:redirect_uri],
             'scope'                  => ['openid', 'cloud_controller_service_permissions.read'],
+            'authorities'            => ['uaa.resource'],
             'authorized_grant_types' => ['authorization_code'],
             'action'                 => 'update,secret'
           }
         ]
 
-        expect(a_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').with do |req|
+        expect(a_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').with do |req|
           client_modifications = JSON.parse(req.body)
           expect(client_modifications).to match_array(expected_client_modifications)
         end).to have_been_made
@@ -585,7 +592,7 @@ HEREDOC
         # set up a fake broker catalog that includes dashboard_client for services
         stub_catalog_fetch(200, services: [service_1, service_2, service_3])
         UAARequests.stub_all
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/.*}).to_return(status: 404)
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/.*}).to_return(status: 404)
 
         # add that broker to the CC
         post('/v2/service_brokers',
@@ -600,16 +607,16 @@ HEREDOC
         expect(last_response).to have_status_code(201)
         @service_broker_guid = decoded_response.fetch('metadata').fetch('guid')
 
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-1}).to_return(
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-1}).to_return(
           body:    { client_id: 'client-1' }.to_json,
           status:  200,
           headers: { 'content-type' => 'application/json' })
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-2}).to_return(
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-2}).to_return(
           body:    { client_id: 'client-2' }.to_json,
           status:  200,
           headers: { 'content-type' => 'application/json' })
 
-        stub_request(:post, %r{http://localhost:8080/uaa/oauth/clients/tx/modify}).
+        stub_request(:post, %r{https://uaa.service.cf.internal/oauth/clients/tx/modify}).
           to_return(
             status: 200,
             headers: { 'content-type' => 'application/json' },
@@ -627,6 +634,7 @@ HEREDOC
             client_secret:          nil,
             redirect_uri:           nil,
             scope:                  ['openid', 'cloud_controller_service_permissions.read'],
+            authorities:            ['uaa.resource'],
             authorized_grant_types: ['authorization_code'],
             action:                 'delete'
           },
@@ -635,13 +643,14 @@ HEREDOC
             client_secret:          nil,
             redirect_uri:           nil,
             scope:                  ['openid', 'cloud_controller_service_permissions.read'],
+            authorities:            ['uaa.resource'],
             authorized_grant_types: ['authorization_code'],
             action:                 'delete'
           }
         ].to_json
 
         expect(
-          a_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').
+          a_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').
           with(
             body: expected_json_body
         )).to have_been_made

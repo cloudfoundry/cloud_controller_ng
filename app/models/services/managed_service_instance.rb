@@ -120,10 +120,8 @@ module VCAP::CloudController
     end
 
     def dashboard_url
-      admin_context = VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
-      unless admin_context || space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
-        return ''
-      end
+      access_context = VCAP::CloudController::Security::AccessContext.new
+      return '' unless access_context.can?(:read_env, self)
       super
     end
 

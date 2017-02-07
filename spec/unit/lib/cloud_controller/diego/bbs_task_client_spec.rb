@@ -99,5 +99,87 @@ module VCAP::CloudController::Diego
         end
       end
     end
+
+    describe '#fetch_tasks' do
+      let(:bbs_tasks) { [::Diego::Bbs::Models::Task.new] }
+      let(:error) { nil }
+
+      before do
+        allow(bbs_client).to receive(:tasks).and_return(::Diego::Bbs::Models::TasksResponse.new(tasks: bbs_tasks, error: error))
+      end
+
+      it 'returns the fetched list of tasks' do
+        expect(client.fetch_tasks).to eq(bbs_tasks)
+        expect(bbs_client).to have_received(:tasks).with(domain: TASKS_DOMAIN)
+      end
+
+      context 'when the bbs returns a response with an error' do
+        let(:error) do
+          ::Diego::Bbs::Models::Error.new(message: 'error message')
+        end
+
+        it 'raises an api error' do
+          expect {
+            client.fetch_tasks
+          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+            expect(e.name).to eq('TaskError')
+          end
+        end
+      end
+
+      context 'when bbs client errors' do
+        before do
+          allow(bbs_client).to receive(:tasks).and_raise(::Diego::Error.new('boom'))
+        end
+
+        it 'raises an api error' do
+          expect {
+            client.fetch_tasks
+          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+            expect(e.name).to eq('TaskWorkersUnavailable')
+          end
+        end
+      end
+    end
+
+    describe '#bump_freshness' do
+      let(:bbs_response) { ::Diego::Bbs::Models::UpsertDomainResponse.new(error: error) }
+      let(:error) { nil }
+
+      before do
+        allow(bbs_client).to receive(:upsert_domain).with(domain: TASKS_DOMAIN, ttl: TASKS_DOMAIN_TTL).and_return(bbs_response)
+      end
+
+      it 'sends the upsert domain to diego' do
+        client.bump_freshness
+        expect(bbs_client).to have_received(:upsert_domain).with(domain: TASKS_DOMAIN, ttl: TASKS_DOMAIN_TTL)
+      end
+
+      context 'when the bbs response contains any other error' do
+        let(:error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::UnknownError, message: 'error message') }
+
+        it 'raises an api error' do
+          expect {
+            client.bump_freshness
+          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+            expect(e.name).to eq('TaskError')
+          end
+        end
+      end
+
+      context 'when bbs client errors' do
+        before do
+          allow(bbs_client).to receive(:upsert_domain).and_raise(::Diego::Error.new('boom'))
+        end
+
+        it 'raises an api error' do
+          expect {
+            client.bump_freshness
+          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+            expect(e.name).to eq('TaskWorkersUnavailable')
+          end
+        end
+      end
+    end
   end
 end

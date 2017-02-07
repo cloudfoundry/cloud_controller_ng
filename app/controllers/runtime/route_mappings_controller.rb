@@ -13,8 +13,9 @@ module VCAP::CloudController
     query_parameters :app_guid, :route_guid
 
     def read(guid)
-      obj = find_guid(guid)
-      raise CloudController::Errors::ApiError.new_from_details('RouteMappingNotFound', guid) unless obj.process_type == 'web'
+      obj = RouteMappingModel.where(guid: guid).eager(:route, :process, app: :space).all.first
+      raise CloudController::Errors::ApiError.new_from_details('RouteMappingNotFound', guid) unless obj && obj.process_type == 'web'
+
       validate_access(:read, obj)
       object_renderer.render_json(self.class, obj, @opts)
     end
@@ -31,7 +32,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', request_attrs['app_guid']) unless process
       raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(process.space.guid)
 
-      route_mapping = V2::RouteMappingCreate.new(SecurityContext.current_user, SecurityContext.current_user_email, route, process).add(request_attrs)
+      route_mapping = V2::RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process).add(request_attrs)
 
       if !request_attrs.key?('app_port') && !process.ports.blank?
         add_warning("Route has been mapped to app port #{route_mapping.app_port}.")
@@ -63,7 +64,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('RouteMappingNotFound', guid) unless route_mapping
       raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(route_mapping.space.guid)
 
-      RouteMappingDelete.new(SecurityContext.current_user, SecurityContext.current_user_email).delete(route_mapping)
+      RouteMappingDelete.new(UserAuditInfo.from_context(SecurityContext)).delete(route_mapping)
 
       [HTTP::NO_CONTENT, nil]
     end
