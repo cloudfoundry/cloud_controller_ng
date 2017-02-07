@@ -97,6 +97,7 @@
 
 
           
+
           
 
 
@@ -3659,7 +3660,7 @@ environment variables listed on the source droplet.</p>
          "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
       },
       "organizations": {
-         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/organizations"
       }
    }
 }
@@ -3710,7 +3711,7 @@ environment variables listed on the source droplet.</p>
          "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
       },
       "organizations": {
-         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/organizations"
       }
    }
 }
@@ -3750,7 +3751,7 @@ environment variables listed on the source droplet.</p>
          "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
       },
       "organizations": {
-         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/organizations"
       }
    }
 }
@@ -3835,7 +3836,7 @@ environment variables listed on the source droplet.</p>
                "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
             },
             "organizations": {
-               "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"
+               "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/organizations"
             }
          }
       },
@@ -3852,7 +3853,7 @@ environment variables listed on the source droplet.</p>
                "href": "https://api.example.org/v3/isolation_segments/68d54d31-9b3a-463b-ba94-e8e4c32edbac/relationships/spaces"
             },
             "organizations": {
-               "href": "https://api.example.org/v3/isolation_segments/68d54d31-9b3a-463b-ba94-e8e4c32edbac/relationships/organizations"
+               "href": "https://api.example.org/v3/isolation_segments/68d54d31-9b3a-463b-ba94-e8e4c32edbac/organizations"
             }
          }
       },
@@ -3869,7 +3870,7 @@ environment variables listed on the source droplet.</p>
                "href": "https://api.example.org/v3/isolation_segments/ecdc67c3-a71e-43ff-bddf-048930b8cd03/relationships/spaces"
             },
             "organizations": {
-               "href": "https://api.example.org/v3/isolation_segments/ecdc67c3-a71e-43ff-bddf-048930b8cd03/relationships/organizations"
+               "href": "https://api.example.org/v3/isolation_segments/ecdc67c3-a71e-43ff-bddf-048930b8cd03/organizations"
             }
          }
       },
@@ -3886,7 +3887,7 @@ environment variables listed on the source droplet.</p>
                "href": "https://api.example.org/v3/isolation_segments/424c89e4-4353-46b7-9bf4-f90bd9bacac0/relationships/spaces"
             },
             "organizations": {
-               "href": "https://api.example.org/v3/isolation_segments/424c89e4-4353-46b7-9bf4-f90bd9bacac0/relationships/organizations"
+               "href": "https://api.example.org/v3/isolation_segments/424c89e4-4353-46b7-9bf4-f90bd9bacac0/organizations"
             }
          }
       },
@@ -3900,7 +3901,7 @@ environment variables listed on the source droplet.</p>
                "href": "https://api.example.org/v3/isolation_segments/0a79fcec-a648-4eb8-a6c3-2b5be39047c7/relationships/spaces"
             },
             "organizations": {
-               "href": "https://api.example.org/v3/isolation_segments/0a79fcec-a648-4eb8-a6c3-2b5be39047c7/relationships/organizations"
+               "href": "https://api.example.org/v3/isolation_segments/0a79fcec-a648-4eb8-a6c3-2b5be39047c7/organizations"
             }
          }
       }
@@ -4015,7 +4016,7 @@ environment variables listed on the source droplet.</p>
          "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
       },
       "organizations": {
-         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/organizations"
       }
    }
 }
@@ -4064,7 +4065,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/:guid/relationships/organizations"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]/relationships/organizations"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -4098,7 +4099,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/:guid/relationships/spaces"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]/relationships/spaces"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -4240,6 +4241,98 @@ In the case where the specified isolation segment is the system-wide shared segm
 </code></pre>
 
 <p>This endpoint retrieves the organizations the user has access to.</p>
+
+<h4 id="query-parameters">Query Parameters</h4>
+
+<ul class="method-list-group">
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      names
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">array of strings</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of organization names to filter by. <br>Example: <code>names=name1,name2</code></p>
+  </li>
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      page
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Page to display. Possible values are all integers >= 1.
+</p>
+  </li>
+
+
+
+    <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      per_page
+
+        <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">    Number of results per page. Possible values are 1 through 5000.
+</p>
+  </li>
+
+
+</ul>
+
+          <h3 id="list-organizations-for-isolation-segment">List organizations for isolation segment</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/isolation_segments/:guid/organizations</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]/organizations"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+
+  {
+    "pagination": {
+    "total_results": 2,
+    "total_pages": 1,
+    "first": {
+      "href": "https://api.bosh-lite.com/v3/isolation_segments/933b4c58-120b-499a-b85d-4b6fc9e2903b/organizations?page=1&amp;per_page=50"
+    },
+    "last": {
+      "href": "https://api.bosh-lite.com/v3/isolation_segments/933b4c58-120b-499a-b85d-4b6fc9e2903b/organizations?page=1&amp;per_page=50"
+    },
+    "next": null,
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "885735b5-aea4-4cf5-8e44-961af0e41920",
+      "created_at": "2017-02-01T01:33:58Z",
+      "updated_at": "2017-02-01T01:33:58Z",
+      "name": "org1",
+      "links": {}
+    },
+    {
+      "guid": "d4c91047-7b29-4fda-b7f9-04033e5c9c9f",
+      "created_at": "2017-02-02T00:14:30Z",
+      "updated_at": "2017-02-02T00:14:30Z",
+      "name": "org2",
+      "links": {}
+    }
+  ]
+}
+
+</code></pre>
+
+<p>This endpoint retrieves the organizations entitled to the isolation segment. It only returns the organizations the user has access to.</p>
 
 <h4 id="query-parameters">Query Parameters</h4>
 
