@@ -282,13 +282,13 @@ module VCAP::CloudController
                 AppModel.make(space: space)
               end
 
-              it 'raises an error' do
+              it 'adds the isolation segment but does not affect the running app' do
                 expect {
                   space.update(isolation_segment_guid: isolation_segment_model.guid)
-                }.to raise_error(CloudController::Errors::ApiError, /Cannot change the Isolation Segment for a Space containing Apps/)
+                }.to_not raise_error
                 space.reload
 
-                expect(space.isolation_segment_model).to be_nil
+                expect(space.isolation_segment_model).to eq(isolation_segment_model)
               end
             end
           end
@@ -312,13 +312,13 @@ module VCAP::CloudController
               AppModel.make(space: space)
             end
 
-            it 'raises an error' do
+            it 'removes the isolation segment but does not affect the running apps' do
               expect {
                 space.update(isolation_segment_model: nil)
-              }.to raise_error(CloudController::Errors::ApiError, /Removing the Isolation Segment from the Space/)
+              }.to_not raise_error
               space.reload
 
-              expect(space.isolation_segment_model).to eq(isolation_segment_model)
+              expect(space.isolation_segment_model).to eq(nil)
             end
 
             it 'can delete the space' do

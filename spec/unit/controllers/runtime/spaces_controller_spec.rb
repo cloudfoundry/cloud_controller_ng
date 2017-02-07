@@ -1473,39 +1473,17 @@ module VCAP::CloudController
           space.save
         end
 
-        context 'when the space does not contain apps' do
-          context 'and we have permission' do
-            before do
-              set_current_user_as_admin
-            end
-
-            it 'successfully removes the isolation segment' do
-              delete "/v2/spaces/#{space.guid}/isolation_segment"
-              expect(last_response.status).to eq 200
-
-              space.reload
-              expect(space.isolation_segment_model).to be_nil
-            end
-          end
-        end
-
-        context 'when the space contains apps' do
+        context 'and we have permission' do
           before do
-            AppModel.make(space: space)
+            set_current_user_as_admin
           end
 
-          context 'and we have permission' do
-            before do
-              set_current_user_as_admin
-            end
+          it 'successfully removes the isolation segment' do
+            delete "/v2/spaces/#{space.guid}/isolation_segment"
+            expect(last_response.status).to eq 200
 
-            it 'returns a 400' do
-              delete "/v2/spaces/#{space.guid}/isolation_segment"
-              expect(last_response.status).to eq 400
-
-              space.reload
-              expect(space.isolation_segment_model).to eq(isolation_segment_model)
-            end
+            space.reload
+            expect(space.isolation_segment_model).to be_nil
           end
         end
       end
