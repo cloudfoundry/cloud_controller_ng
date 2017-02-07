@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/package_upload_message'
+require 'messages/packages/package_upload_message'
 
 module VCAP::CloudController
   RSpec.describe PackageUploadMessage do

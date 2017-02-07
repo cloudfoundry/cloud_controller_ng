@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/isolation_segment_create_message'
+require 'messages/isolation_segments/isolation_segment_create_message'
 
 module VCAP::CloudController
   RSpec.describe IsolationSegmentCreateMessage do

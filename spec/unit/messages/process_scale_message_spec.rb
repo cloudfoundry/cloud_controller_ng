@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/process_scale_message'
+require 'messages/processes/process_scale_message'
 
 module VCAP::CloudController
   RSpec.describe ProcessScaleMessage do

@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/processes_list_message'
+require 'messages/processes/processes_list_message'
 
 module VCAP::CloudController
   RSpec.describe ProcessesListMessage do

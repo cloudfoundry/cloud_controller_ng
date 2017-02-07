@@ -1,6 +1,6 @@
 require 'messages/base_message'
-require 'messages/package_create/bits_data_validator'
-require 'messages/package_create/docker_data_validator'
+require 'messages/packages/package_create/bits_data_validator'
+require 'messages/packages/package_create/docker_data_validator'
 
 module VCAP::CloudController
   class PackageCreateMessage < BaseMessage

@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/service_bindings_list_message'
+require 'messages/service_bindings/service_bindings_list_message'
 
 module VCAP::CloudController
   RSpec.describe ServiceBindingsListMessage do

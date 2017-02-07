@@ -1,6 +1,6 @@
 require 'presenters/v3/paginated_list_presenter'
+require 'messages/orgs/orgs_list_message'
 require 'presenters/v3/one_to_one_relationship_presenter'
-require 'messages/orgs_list_message'
 require 'messages/orgs_default_iso_seg_update_message'
 require 'fetchers/org_list_fetcher'
 require 'actions/set_default_isolation_segment'

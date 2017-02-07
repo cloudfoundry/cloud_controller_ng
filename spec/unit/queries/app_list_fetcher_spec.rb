@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/apps_list_message'
+require 'messages/apps/apps_list_message'
 
 module VCAP::CloudController
   RSpec.describe AppListFetcher do

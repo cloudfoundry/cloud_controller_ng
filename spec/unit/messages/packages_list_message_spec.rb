@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/packages_list_message'
+require 'messages/packages/packages_list_message'
 
 module VCAP::CloudController
   RSpec.describe PackagesListMessage do

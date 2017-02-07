@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/droplet_create_message'
+require 'messages/droplets/droplet_create_message'
 
 module VCAP::CloudController
   RSpec.describe DropletCreateMessage do

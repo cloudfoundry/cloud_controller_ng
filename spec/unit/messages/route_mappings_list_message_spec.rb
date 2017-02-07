@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/route_mappings_list_message'
+require 'messages/route_mappings/route_mappings_list_message'
 
 module VCAP::CloudController
   RSpec.describe RouteMappingsListMessage do

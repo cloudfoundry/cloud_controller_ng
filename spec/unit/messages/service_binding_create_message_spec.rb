@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/service_binding_create_message'
+require 'messages/service_bindings/service_binding_create_message'
 
 module VCAP::CloudController
   RSpec.describe ServiceBindingCreateMessage do
