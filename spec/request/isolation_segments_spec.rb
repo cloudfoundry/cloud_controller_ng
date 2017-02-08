@@ -369,7 +369,7 @@ RSpec.describe 'IsolationSegmentModels' do
     end
   end
 
-  describe 'PUT /v3/isolation_segments/:guid' do
+  describe 'PATCH /v3/isolation_segments/:guid' do
     it 'updates the specified isolation segment' do
       isolation_segment_model = VCAP::CloudController::IsolationSegmentModel.make(name: 'my_segment')
 
@@ -389,7 +389,7 @@ RSpec.describe 'IsolationSegmentModels' do
         }
       }
 
-      put "/v3/isolation_segments/#{isolation_segment_model.guid}", update_request, user_header
+      patch "/v3/isolation_segments/#{isolation_segment_model.guid}", update_request, user_header
 
       parsed_response = MultiJson.load(last_response.body)
       expect(last_response.status).to eq(200)
