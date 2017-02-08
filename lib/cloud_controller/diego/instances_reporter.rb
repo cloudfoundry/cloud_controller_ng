@@ -105,6 +105,7 @@ module VCAP::CloudController
           auth_token: VCAP::CloudController::SecurityContext.auth_token,
         )
         actual_lrps = bbs_instances_client.lrp_instances(process)
+        desired_lrp = bbs_instances_client.desired_lrp_instance(process)
 
         stats = {}
         envelopes.each do |envelope|
@@ -121,6 +122,7 @@ module VCAP::CloudController
           next unless actual_lrp.actual_lrp_key.index < process.instances
           info = {
             state: LrpStateTranslator.translate_lrp_state(actual_lrp),
+            isolation_segment: desired_lrp.PlacementTags.first,
             stats: {
               name:       process.name,
               uris:       process.uris,

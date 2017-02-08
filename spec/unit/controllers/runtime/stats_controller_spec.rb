@@ -167,6 +167,51 @@ module VCAP::CloudController
             }
           end
 
+          describe 'isolation segments' do
+            context 'when using local tps and the app is running in an isolation segment' do
+              let(:stats) do
+                {
+                  '0' => {
+                    state: 'RUNNING',
+                    isolation_segment: 'isolation-segment-name',
+                    stats: {
+                      name: 'foo',
+                      uris: 'some-uris',
+                      host: 'my-host',
+                      port: 1234,
+                      net_info: { 'foo' => 'bar' },
+                      uptime: 1,
+                      mem_quota: 1,
+                      disk_quota: 2,
+                      fds_quota: 3,
+                      usage: {
+                        time: 4,
+                        cpu: 5,
+                        mem: 6,
+                        disk: 7,
+                      }
+                    }
+                  }
+                }
+              end
+
+              it 'should include the isolation segment name for the app' do
+                set_current_user(@developer)
+
+                @app.state = 'STARTED'
+                @app.instances = 1
+                @app.save
+
+                @app.refresh
+
+                get "/v2/apps/#{@app.guid}/stats"
+
+                expect(last_response.status).to eq(200)
+                expect(MultiJson.load(last_response.body)['0']['isolation_segment']).to eq('isolation-segment-name')
+              end
+            end
+          end
+
           it 'should return the stats without the net_info field' do
             set_current_user(@developer)
 

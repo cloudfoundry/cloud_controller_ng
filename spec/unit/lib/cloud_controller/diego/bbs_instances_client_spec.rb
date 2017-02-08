@@ -52,5 +52,50 @@ module VCAP::CloudController::Diego
         end
       end
     end
+
+    describe '#desired_lrp_instance' do
+      let(:bbs_response) { ::Diego::Bbs::Models::DesiredLRPResponse.new(desired_lrp: desired_lrp) }
+      let(:desired_lrp) { ::Diego::Bbs::Models::DesiredLRP.new(PlacementTags: ['bieber']) }
+      let(:process) { VCAP::CloudController::AppFactory.make }
+      let(:process_guid) { ProcessGuid.from_process(process) }
+
+      before do
+        allow(bbs_client).to receive(:desired_lrp_by_process_guid).with(process_guid).and_return(bbs_response)
+      end
+
+      it 'sends the lrp instances request to diego' do
+        client.desired_lrp_instance(process)
+        expect(bbs_client).to have_received(:desired_lrp_by_process_guid).with(process_guid)
+      end
+
+      it 'returns the desired LRP' do
+        resolved_desired_lrp = ::Diego::Bbs::Models::DesiredLRP.new(PlacementTags: ['bieber'])
+        expect(client.desired_lrp_instance(process)).to eq(resolved_desired_lrp)
+      end
+
+      context 'when the response contains an error' do
+        let(:bbs_response) do
+          ::Diego::Bbs::Models::DesiredLRPResponse.new(error: ::Diego::Bbs::Models::Error.new(message: 'error-message'))
+        end
+
+        it 'raises' do
+          expect {
+            client.desired_lrp_instance(process)
+          }.to raise_error(CloudController::Errors::InstancesUnavailable, 'error-message')
+        end
+      end
+
+      context 'when a Diego error is thrown' do
+        before do
+          allow(bbs_client).to receive(:desired_lrp_by_process_guid).with(process_guid).and_raise(::Diego::Error.new('boom'))
+        end
+
+        it 're-raises with a CC Error' do
+          expect {
+            client.desired_lrp_instance(process)
+          }.to raise_error(CloudController::Errors::InstancesUnavailable, 'boom')
+        end
+      end
+    end
   end
 end

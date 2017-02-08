@@ -23,6 +23,14 @@ module VCAP::CloudController
         end
       end
 
+      def desired_lrp_instance(process)
+        process_guid = ProcessGuid.from_process(process)
+        response = handle_diego_errors do
+          @client.desired_lrp_by_process_guid(process_guid)
+        end
+        response.desired_lrp
+      end
+
       private
 
       def handle_diego_errors

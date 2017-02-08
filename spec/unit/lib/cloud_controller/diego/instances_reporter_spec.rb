@@ -443,6 +443,7 @@ module VCAP::CloudController
       describe '#stats_for_app' do
         let(:desired_instances) { bbs_actual_lrps_response.length }
         let(:bbs_actual_lrps_response) { [actual_lrp_1] }
+        let(:bbs_desired_lrp_response) { ::Diego::Bbs::Models::DesiredLRP.new PlacementTags: ['isolation-segment-name'] }
         let(:formatted_current_time) { Time.now.to_datetime.rfc3339 }
 
         let(:lrp_1_net_info) do
@@ -480,6 +481,7 @@ module VCAP::CloudController
           {
             0 => {
               state:   'RUNNING',
+              isolation_segment: 'isolation-segment-name',
               stats:   {
                 name:       process.name,
                 uris:       process.uris,
@@ -504,12 +506,21 @@ module VCAP::CloudController
 
         before do
           allow(bbs_instances_client).to receive(:lrp_instances).and_return(bbs_actual_lrps_response)
+          allow(bbs_instances_client).to receive(:desired_lrp_instance).and_return(bbs_desired_lrp_response)
           allow(traffic_controller_client).to receive(:container_metrics).with(auth_token: 'my-token', app_guid: process.guid).and_return(traffic_controller_response)
           allow(VCAP::CloudController::SecurityContext).to receive(:auth_token).and_return('my-token')
         end
 
         it 'returns a map of stats & states per index in the correct units' do
           expect(instances_reporter.stats_for_app(process)).to eq(expected_stats_response)
+        end
+
+        context 'when there is no isolation segment for the app' do
+          let(:bbs_desired_lrp_response) { ::Diego::Bbs::Models::DesiredLRP.new PlacementTags: [] }
+
+          it 'returns nil for the isolation_segment' do
+            expect(instances_reporter.stats_for_app(process)[0][:isolation_segment]).to eq(nil)
+          end
         end
 
         context 'when the default port could not be found' do
