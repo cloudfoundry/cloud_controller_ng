@@ -4,9 +4,6 @@ require 'presenters/v3/pagination_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe PaginationPresenter do
     let(:presenter) { PaginationPresenter.new }
-    let(:scheme) { TestConfig.config[:external_protocol] }
-    let(:host) { TestConfig.config[:external_domain] }
-    let(:link_prefix) { "#{scheme}://#{host}" }
 
     it 'has consistent presentation' do
       paginated_result = VCAP::CloudController::PaginatedResult.new(double(:results), 2, VCAP::CloudController::PaginationOptions.new(page: 1, per_page: 2))

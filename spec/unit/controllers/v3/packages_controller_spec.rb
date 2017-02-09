@@ -1,10 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe PackagesController, type: :controller do
-  let(:scheme) { TestConfig.config[:external_protocol] }
-  let(:host) { TestConfig.config[:external_domain] }
-  let(:link_prefix) { "#{scheme}://#{host}" }
-
   describe '#upload' do
     let(:package) { VCAP::CloudController::PackageModel.make }
     let(:space) { package.space }

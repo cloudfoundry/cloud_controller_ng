@@ -47,6 +47,7 @@ RSpec.configure do |rspec_config|
   rspec_config.include Rack::Test::Methods
   rspec_config.include ModelCreation
   rspec_config.include TimeHelpers
+  rspec_config.include LinkHelpers
   rspec_config.include BackgroundJobHelpers
 
   rspec_config.include ServiceBrokerHelpers

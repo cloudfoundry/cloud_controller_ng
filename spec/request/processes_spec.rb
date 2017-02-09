@@ -6,9 +6,6 @@ RSpec.describe 'Processes' do
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer, user_name: user_name) }
   let(:user_name) { 'ProcHudson' }
-  let(:scheme) { TestConfig.config[:external_protocol] }
-  let(:host) { TestConfig.config[:external_domain] }
-  let(:link_prefix) { "#{scheme}://#{host}" }
 
   describe 'GET /v3/processes' do
     let!(:web_process) {

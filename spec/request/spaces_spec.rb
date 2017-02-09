@@ -9,10 +9,6 @@ RSpec.describe 'Spaces' do
   let!(:space3)            { VCAP::CloudController::Space.make name: 'Agricola', organization: organization }
   let!(:unaccesable_space) { VCAP::CloudController::Space.make name: 'Ghost Stories', organization: organization }
 
-  let(:scheme) { TestConfig.config[:external_protocol] }
-  let(:host) { TestConfig.config[:external_domain] }
-  let(:link_prefix) { "#{scheme}://#{host}" }
-
   before do
     organization.add_user(user)
     space1.add_developer(user)

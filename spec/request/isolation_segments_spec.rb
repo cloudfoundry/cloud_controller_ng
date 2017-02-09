@@ -5,9 +5,6 @@ RSpec.describe 'IsolationSegmentModels' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { admin_headers_for(user) }
   let(:space) { VCAP::CloudController::Space.make }
-  let(:scheme) { TestConfig.config[:external_protocol] }
-  let(:host) { TestConfig.config[:external_domain] }
-  let(:link_prefix) { "#{scheme}://#{host}" }
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
   describe 'POST /v3/isolation_segments' do

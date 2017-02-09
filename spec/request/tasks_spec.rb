@@ -11,9 +11,6 @@ RSpec.describe 'Tasks' do
     )
   end
   let(:developer_headers) { headers_for(user, email: user_email, user_name: user_name) }
-  let(:scheme) { TestConfig.config[:external_protocol] }
-  let(:host) { TestConfig.config[:external_domain] }
-  let(:link_prefix) { "#{scheme}://#{host}" }
   let(:user_email) { 'user@email.example.com' }
   let(:user_name) { 'Task McNamara' }
 

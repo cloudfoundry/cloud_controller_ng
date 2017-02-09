@@ -1,10 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe AppsV3Controller, type: :controller do
-  let(:scheme) { TestConfig.config[:external_protocol] }
-  let(:host) { TestConfig.config[:external_domain] }
-  let(:link_prefix) { "#{scheme}://#{host}" }
-
   describe '#index' do
     let(:app_model_1) { VCAP::CloudController::AppModel.make }
     let!(:app_model_2) { VCAP::CloudController::AppModel.make }

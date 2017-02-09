@@ -5,9 +5,6 @@ RSpec.describe 'v3 service bindings' do
   let(:space) { app_model.space }
   let(:user) { make_developer_for_space(space) }
   let(:user_headers) { headers_for(user, user_name: user_name) }
-  let(:scheme) { TestConfig.config[:external_protocol] }
-  let(:host) { TestConfig.config[:external_domain] }
-  let(:link_prefix) { "#{scheme}://#{host}" }
   let(:user_name) { 'room' }
 
   describe 'POST /v3/service_bindings' do

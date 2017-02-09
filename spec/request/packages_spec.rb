@@ -8,9 +8,6 @@ RSpec.describe 'Packages' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:space_guid) { space.guid }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space_guid) }
-  let(:scheme) { TestConfig.config[:external_protocol] }
-  let(:host) { TestConfig.config[:external_domain] }
-  let(:link_prefix) { "#{scheme}://#{host}" }
 
   describe 'POST /v3/packages' do
     let(:guid) { app_model.guid }

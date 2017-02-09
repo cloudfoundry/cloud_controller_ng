@@ -19,9 +19,6 @@ module VCAP::CloudController::Presenters::V3
         sha256_checksum:       'droplet-sha256-checksum',
       )
     end
-    let(:scheme) { TestConfig.config[:external_protocol] }
-    let(:host) { TestConfig.config[:external_domain] }
-    let(:link_prefix) { "#{scheme}://#{host}" }
 
     describe '#to_hash' do
       let(:result) { DropletPresenter.new(droplet).to_hash }

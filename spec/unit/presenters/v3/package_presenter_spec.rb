@@ -6,9 +6,6 @@ module VCAP::CloudController::Presenters::V3
     describe '#to_hash' do
       let(:result) { PackagePresenter.new(package).to_hash }
       let(:package) { VCAP::CloudController::PackageModel.make(type: 'package_type', sha256_checksum: 'sha256') }
-      let(:scheme) { TestConfig.config[:external_protocol] }
-      let(:host) { TestConfig.config[:external_domain] }
-      let(:link_prefix) { "#{scheme}://#{host}" }
 
       it 'presents the package as json' do
         links = {

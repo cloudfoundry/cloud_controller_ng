@@ -5,9 +5,6 @@ require 'messages/route_mappings_list_message'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RouteMappingPresenter do
     subject(:presenter) { described_class.new(route_mapping) }
-    let(:scheme) { TestConfig.config[:external_protocol] }
-    let(:host) { TestConfig.config[:external_domain] }
-    let(:link_prefix) { "#{scheme}://#{host}" }
 
     let(:route_mapping) do
       VCAP::CloudController::RouteMappingModel.make(

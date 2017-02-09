@@ -10,9 +10,6 @@ module VCAP::CloudController::Presenters::V3
     let(:pagination_options) { double('pagination', per_page: 50, page: 1, order_by: 'monkeys', order_direction: 'asc') }
     let(:paginator) { instance_double(VCAP::CloudController::SequelPaginator) }
     let(:paginated_result) { VCAP::CloudController::PaginatedResult.new(set, 2, pagination_options) }
-    let(:scheme) { TestConfig.config[:external_protocol] }
-    let(:host) { TestConfig.config[:external_domain] }
-    let(:link_prefix) { "#{scheme}://#{host}" }
 
     before do
       allow(VCAP::CloudController::SequelPaginator).to receive(:new).and_return(paginator)

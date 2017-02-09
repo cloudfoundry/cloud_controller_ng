@@ -8,10 +8,6 @@ RSpec.describe 'Organizations' do
   let!(:organization3)            { VCAP::CloudController::Organization.make name: 'The Sprawl' }
   let!(:unaccesable_organization) { VCAP::CloudController::Organization.make name: 'D&D' }
 
-  let(:scheme) { TestConfig.config[:external_protocol] }
-  let(:host) { TestConfig.config[:external_domain] }
-  let(:link_prefix) { "#{scheme}://#{host}" }
-
   before do
     organization1.add_user(user)
     organization2.add_user(user)

@@ -8,9 +8,6 @@ RSpec.describe 'Droplets' do
   let(:user_name) { 'sundance kid' }
 
   let(:parsed_response) { MultiJson.load(last_response.body) }
-  let(:scheme) { TestConfig.config[:external_protocol] }
-  let(:host) { TestConfig.config[:external_domain] }
-  let(:link_prefix) { "#{scheme}://#{host}" }
 
   describe 'POST /v3/packages/:guid/droplets' do
     let(:diego_staging_response) do

@@ -9,10 +9,6 @@ RSpec.describe IsolationSegmentsController, type: :controller do
   let(:org3) { VCAP::CloudController::Organization.make }
   let(:space) { VCAP::CloudController::Space.make(organization: org1) }
 
-  let(:scheme) { TestConfig.config[:external_protocol] }
-  let(:host) { TestConfig.config[:external_domain] }
-  let(:link_prefix) { "#{scheme}://#{host}" }
-
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
   describe '#relationships_orgs' do

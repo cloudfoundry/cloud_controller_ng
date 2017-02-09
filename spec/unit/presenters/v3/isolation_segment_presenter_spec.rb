@@ -4,9 +4,6 @@ require 'presenters/v3/isolation_segment_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe IsolationSegmentPresenter do
     let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
-    let(:scheme) { TestConfig.config[:external_protocol] }
-    let(:host) { TestConfig.config[:external_domain] }
-    let(:link_prefix) { "#{scheme}://#{host}" }
 
     describe '#to_hash' do
       let(:result) { IsolationSegmentPresenter.new(isolation_segment).to_hash }

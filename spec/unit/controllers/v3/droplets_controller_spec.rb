@@ -1,10 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe DropletsController, type: :controller do
-  let(:scheme) { TestConfig.config[:external_protocol] }
-  let(:host) { TestConfig.config[:external_domain] }
-  let(:link_prefix) { "#{scheme}://#{host}" }
-
   describe '#create' do
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:stagers) { instance_double(VCAP::CloudController::Stagers) }

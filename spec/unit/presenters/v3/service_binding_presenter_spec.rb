@@ -13,9 +13,6 @@ module VCAP::CloudController::Presenters::V3
       syslog_drain_url: 'syslog:/syslog.com',
       volume_mounts: volume_mounts)
     }
-    let(:scheme) { TestConfig.config[:external_protocol] }
-    let(:host) { TestConfig.config[:external_domain] }
-    let(:link_prefix) { "#{scheme}://#{host}" }
 
     describe '#to_hash' do
       let(:result) { presenter.to_hash }

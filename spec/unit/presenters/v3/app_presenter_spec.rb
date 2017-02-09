@@ -9,9 +9,6 @@ module VCAP::CloudController::Presenters::V3
         desired_state: 'STOPPED',
       )
     end
-    let(:scheme) { TestConfig.config[:external_protocol] }
-    let(:host) { TestConfig.config[:external_domain] }
-    let(:link_prefix) { "#{scheme}://#{host}" }
 
     before do
       app.lifecycle_data.update(

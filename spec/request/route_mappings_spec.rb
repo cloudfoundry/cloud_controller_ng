@@ -10,9 +10,6 @@ RSpec.describe 'Route Mappings' do
   let(:developer_headers) do
     headers_for(developer, user_name: user_name)
   end
-  let(:scheme) { TestConfig.config[:external_protocol] }
-  let(:host) { TestConfig.config[:external_domain] }
-  let(:link_prefix) { "#{scheme}://#{host}" }
 
   before do
     allow(ApplicationController).to receive(:configuration).and_return(TestConfig.config)
