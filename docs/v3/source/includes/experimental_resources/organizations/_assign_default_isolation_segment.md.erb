@@ -36,6 +36,8 @@ HTTP/1.1 200 OK
 This endpoint sets the default isolation segment for a given organization.  Only Admins and Org Managers can set the default.
 Only isolation segments that are entitled to the organization are eligible to be the default isolation segment.
 
+Apps will not run in the new default isolation segment until they are restarted.
+
 #### Body Parameters
 
 <ul class="method-list-group">
