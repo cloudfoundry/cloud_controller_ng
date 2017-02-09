@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/buildpack_lifecycle_fetcher'
+require 'fetchers/buildpack_lifecycle_fetcher'
 
 module VCAP::CloudController
   RSpec.describe BuildpackLifecycleFetcher do

@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/isolation_segment_organizations_fetcher'
+require 'fetchers/isolation_segment_organizations_fetcher'
 
 module VCAP::CloudController
   RSpec.describe IsolationSegmentOrganizationsFetcher do

@@ -9,7 +9,7 @@
   "app/models/v3/persistence/*.rb": {"type": "unit", "alternate": "spec/unit/models/runtime/v3/persistence/{}_spec.rb"},
   "app/models/*.rb": {"type": "unit", "alternate": "spec/unit/models/{}_spec.rb"},
   "app/presenters/*.rb": {"type": "unit", "alternate": "spec/unit/presenters/{}_spec.rb"},
-  "app/queries/*.rb": {"type": "unit", "alternate": "spec/unit/queries/{}_spec.rb"},
+  "app/fetchers/*.rb": {"type": "unit", "alternate": "spec/unit/fetchers/{}_spec.rb"},
   "app/repositories/*.rb": {"type": "unit", "alternate": "spec/unit/repositories/{}_spec.rb"},
   "middleware/*.rb": {"type": "unit", "alternate": "spec/unit/middleware/{}_spec.rb"},
   "lib/cloud_controller/*.rb": {"type":"unit", "alternate": "spec/unit/lib/cloud_controller/{}_spec.rb"},

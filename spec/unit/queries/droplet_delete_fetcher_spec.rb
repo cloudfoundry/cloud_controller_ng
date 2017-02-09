@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/droplet_delete_fetcher'
+require 'fetchers/droplet_delete_fetcher'
 
 module VCAP::CloudController
   RSpec.describe DropletDeleteFetcher do

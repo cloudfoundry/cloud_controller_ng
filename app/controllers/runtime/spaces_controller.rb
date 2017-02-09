@@ -1,5 +1,5 @@
 require 'actions/space_delete'
-require 'queries/space_user_roles_fetcher'
+require 'fetchers/space_user_roles_fetcher'
 
 module VCAP::CloudController
   class SpacesController < RestController::ModelController

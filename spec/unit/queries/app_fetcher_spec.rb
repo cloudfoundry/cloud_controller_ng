@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/app_fetcher'
+require 'fetchers/app_fetcher'
 
 module VCAP::CloudController
   RSpec.describe AppFetcher do

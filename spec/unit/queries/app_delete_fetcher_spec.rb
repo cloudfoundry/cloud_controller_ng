@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/app_delete_fetcher'
+require 'fetchers/app_delete_fetcher'
 
 module VCAP::CloudController
   RSpec.describe AppDeleteFetcher do

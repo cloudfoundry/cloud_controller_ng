@@ -1,5 +1,5 @@
-require 'queries/service_binding_create_fetcher'
-require 'queries/service_binding_list_fetcher'
+require 'fetchers/service_binding_create_fetcher'
+require 'fetchers/service_binding_list_fetcher'
 require 'presenters/v3/service_binding_presenter'
 require 'messages/service_binding_create_message'
 require 'messages/service_bindings_list_message'

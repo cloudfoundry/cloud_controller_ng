@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/service_instance_fetcher'
+require 'fetchers/service_instance_fetcher'
 
 module VCAP::CloudController
   RSpec.describe ServiceInstanceFetcher do

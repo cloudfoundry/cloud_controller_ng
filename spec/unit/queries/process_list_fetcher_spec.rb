@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/process_list_fetcher'
+require 'fetchers/process_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe ProcessListFetcher do

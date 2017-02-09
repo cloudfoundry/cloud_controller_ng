@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/assign_current_droplet_fetcher'
+require 'fetchers/assign_current_droplet_fetcher'
 
 module VCAP::CloudController
   RSpec.describe AssignCurrentDropletFetcher do

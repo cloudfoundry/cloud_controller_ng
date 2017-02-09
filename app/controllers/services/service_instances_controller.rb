@@ -4,7 +4,7 @@ require 'actions/services/service_instance_create'
 require 'actions/services/service_instance_update'
 require 'controllers/services/lifecycle/service_instance_deprovisioner'
 require 'controllers/services/lifecycle/service_instance_purger'
-require 'queries/service_instance_fetcher'
+require 'fetchers/service_instance_fetcher'
 
 module VCAP::CloudController
   class ServiceInstancesController < RestController::ModelController

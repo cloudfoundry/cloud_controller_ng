@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'messages/orgs_list_message'
-require 'queries/org_list_fetcher'
+require 'fetchers/org_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe OrgListFetcher do

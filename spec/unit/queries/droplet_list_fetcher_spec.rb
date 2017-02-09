@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/droplet_list_fetcher'
+require 'fetchers/droplet_list_fetcher'
 require 'messages/droplets_list_message'
 
 module VCAP::CloudController

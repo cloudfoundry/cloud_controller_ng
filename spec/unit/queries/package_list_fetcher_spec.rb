@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/package_list_fetcher'
+require 'fetchers/package_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe PackageListFetcher do

@@ -11,9 +11,9 @@ require 'messages/isolation_segments_list_message'
 require 'presenters/v3/isolation_segment_presenter'
 require 'presenters/v3/relationship_presenter'
 
-require 'queries/isolation_segment_list_fetcher'
-require 'queries/isolation_segment_organizations_fetcher'
-require 'queries/isolation_segment_spaces_fetcher'
+require 'fetchers/isolation_segment_list_fetcher'
+require 'fetchers/isolation_segment_organizations_fetcher'
+require 'fetchers/isolation_segment_spaces_fetcher'
 
 class IsolationSegmentsController < ApplicationController
   def create

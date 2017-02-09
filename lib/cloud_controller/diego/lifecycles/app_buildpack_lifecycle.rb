@@ -1,6 +1,6 @@
 require 'cloud_controller/diego/lifecycles/buildpack_info'
 require 'cloud_controller/diego/lifecycles/buildpack_lifecycle_data_validator'
-require 'queries/buildpack_lifecycle_fetcher'
+require 'fetchers/buildpack_lifecycle_fetcher'
 
 module VCAP::CloudController
   class AppBuildpackLifecycle

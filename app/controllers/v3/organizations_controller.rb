@@ -1,6 +1,6 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'messages/orgs_list_message'
-require 'queries/org_list_fetcher'
+require 'fetchers/org_list_fetcher'
 require 'controllers/v3/mixins/sub_resource'
 
 class OrganizationsV3Controller < ApplicationController

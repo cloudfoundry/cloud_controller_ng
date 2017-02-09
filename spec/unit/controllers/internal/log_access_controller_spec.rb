@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/log_access_fetcher'
+require 'fetchers/log_access_fetcher'
 
 module VCAP::CloudController
   RSpec.describe LogAccessController do

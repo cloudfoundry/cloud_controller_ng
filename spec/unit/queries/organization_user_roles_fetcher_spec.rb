@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/organization_user_roles_fetcher'
+require 'fetchers/organization_user_roles_fetcher'
 
 module VCAP::CloudController
   RSpec.describe OrganizationUserRolesFetcher do

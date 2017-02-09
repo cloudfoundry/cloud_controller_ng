@@ -1,4 +1,4 @@
-require 'queries/log_access_fetcher'
+require 'fetchers/log_access_fetcher'
 
 module VCAP::CloudController
   class LogAccessController < RestController::BaseController

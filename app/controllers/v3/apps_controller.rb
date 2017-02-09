@@ -12,10 +12,10 @@ require 'messages/app_create_message'
 require 'presenters/v3/app_presenter'
 require 'presenters/v3/app_env_presenter'
 require 'presenters/v3/paginated_list_presenter'
-require 'queries/app_list_fetcher'
-require 'queries/app_fetcher'
-require 'queries/app_delete_fetcher'
-require 'queries/assign_current_droplet_fetcher'
+require 'fetchers/app_list_fetcher'
+require 'fetchers/app_fetcher'
+require 'fetchers/app_delete_fetcher'
+require 'fetchers/assign_current_droplet_fetcher'
 
 class AppsV3Controller < ApplicationController
   def index

@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'isolation_segment_assign'
-require 'queries/isolation_segment_list_fetcher'
+require 'fetchers/isolation_segment_list_fetcher'
 require 'messages/isolation_segments_list_message'
 
 module VCAP::CloudController

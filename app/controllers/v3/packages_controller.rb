@@ -1,6 +1,6 @@
 require 'presenters/v3/package_presenter'
 require 'presenters/v3/paginated_list_presenter'
-require 'queries/package_list_fetcher'
+require 'fetchers/package_list_fetcher'
 require 'actions/package_delete'
 require 'actions/package_upload'
 require 'actions/package_create'

@@ -1,6 +1,6 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'messages/spaces_list_message'
-require 'queries/space_list_fetcher'
+require 'fetchers/space_list_fetcher'
 
 class SpacesV3Controller < ApplicationController
   def index

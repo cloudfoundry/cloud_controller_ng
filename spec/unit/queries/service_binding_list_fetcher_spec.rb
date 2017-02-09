@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/service_binding_list_fetcher'
+require 'fetchers/service_binding_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe ServiceBindingListFetcher do

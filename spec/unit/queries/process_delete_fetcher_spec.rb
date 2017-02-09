@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/process_delete_fetcher'
+require 'fetchers/process_delete_fetcher'
 
 module VCAP::CloudController
   RSpec.describe ProcessDeleteFetcher do

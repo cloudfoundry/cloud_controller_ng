@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/space_list_fetcher'
+require 'fetchers/space_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe SpaceListFetcher do

@@ -1,5 +1,5 @@
 require 'actions/organization_delete'
-require 'queries/organization_user_roles_fetcher'
+require 'fetchers/organization_user_roles_fetcher'
 
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController

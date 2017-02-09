@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'queries/isolation_segment_spaces_fetcher'
+require 'fetchers/isolation_segment_spaces_fetcher'
 
 module VCAP::CloudController
   RSpec.describe IsolationSegmentSpacesFetcher do
