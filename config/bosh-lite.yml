@@ -8,13 +8,14 @@ pid_filename: /tmp/cloud_controller.pid
 newrelic_enabled: false
 development_mode: false
 
-message_bus_servers:
-  - nats://nats:nats@10.244.0.6:4222
+message_bus:
+  servers:
+    - nats://nats:nats@10.244.0.6:4222
 
 external_protocol: https
 external_domain: api.bosh-lite.com
 
-system_domain_organization: 
+system_domain_organization:
 system_domain: bosh-lite.com
 app_domains: [ bosh-lite.com ]
 
@@ -150,8 +151,8 @@ resource_pool:
   maximum_size: 536870912
   resource_directory_key: bosh-lite.com-cc-resources
   cdn:
-    uri: 
-    key_pair_id: 
+    uri:
+    key_pair_id:
     private_key: ""
   fog_connection: {}
 
@@ -167,8 +168,8 @@ packages:
   max_valid_packages_stored: 5
   max_package_size: 1073741824
   cdn:
-    uri: 
-    key_pair_id: 
+    uri:
+    key_pair_id:
     private_key: ""
   fog_connection: {}
 
@@ -182,8 +183,8 @@ droplets:
     password: blobstore-password
   droplet_directory_key: bosh-lite.com-cc-droplets
   cdn:
-    uri: 
-    key_pair_id: 
+    uri:
+    key_pair_id:
     private_key: ""
   fog_connection: {}
   max_staged_droplets_stored: 5
@@ -198,8 +199,8 @@ buildpacks:
     password: blobstore-password
   buildpack_directory_key: bosh-lite.com-cc-buildpacks
   cdn:
-    uri: 
-    key_pair_id: 
+    uri:
+    key_pair_id:
     private_key: ""
   fog_connection: {}
 
@@ -232,7 +233,7 @@ default_to_diego_backend: false
 
 skip_cert_verify: true
 
-install_buildpacks: 
+install_buildpacks:
 - name: staticfile_buildpack
   package: staticfile-buildpack
 - name: java_buildpack

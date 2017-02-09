@@ -76,7 +76,7 @@ module VCAP::CloudController
 
       EM.run do
         begin
-          message_bus = MessageBus::Configurer.new(servers: @config[:message_bus_servers], logger: logger).go
+          message_bus = MessageBus::Configurer.new({ logger: logger }.merge(@config[:message_bus])).go
 
           start_cloud_controller(message_bus)
 
