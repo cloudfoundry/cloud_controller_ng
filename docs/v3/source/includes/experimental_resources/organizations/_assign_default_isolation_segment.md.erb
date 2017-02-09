@@ -1,0 +1,52 @@
+### Assign default isolation segment
+
+```
+Definition
+```
+
+```http
+PATCH /v3/organizations/:guid/relationships/default_isolation_segment HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/organizations/[guid]/relationships/default_isolation_segment" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -d '{
+    "data": {
+      "guid": "[iso-seg-guid]"
+     }
+   }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :default_isolation_segment_relationship, '/v3/organizations/:guid/relationships/default_isolation_segment' %>
+```
+
+This endpoint sets the default isolation segment for a given organization.  Only Admins and Org Managers can set the default.
+Only isolation segments that are entitled to the organization are eligible to be the default isolation segment.
+
+#### Body Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      data[guid]
+
+      <span class="method-list-item-type"/>
+    </h4>
+
+    <p class="method-list-item-description">Guid of isolation segment to set as default. Setting guid to null will remove the default isolation segment.</p>
+  </li>
+</ul>
+

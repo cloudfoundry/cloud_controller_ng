@@ -57,6 +57,25 @@ module VCAP::CloudController
 
         expect(organization.tasks).to include(task.reload)
       end
+
+      describe 'isolation_segment_guids' do
+        let(:assigner) { IsolationSegmentAssign.new }
+
+        it 'returns a list of all associated isolation segments guids' do
+          organization = Organization.make
+          iso_seg_1 = IsolationSegmentModel.make
+          iso_seg_2 = IsolationSegmentModel.make
+          iso_seg_3 = IsolationSegmentModel.make
+
+          assigner.assign(iso_seg_1, [organization])
+          assigner.assign(iso_seg_2, [organization])
+          assigner.assign(iso_seg_3, [organization])
+
+          expect(organization.isolation_segment_guids).to match_array([
+            iso_seg_1.guid, iso_seg_2.guid, iso_seg_3.guid
+          ])
+        end
+      end
     end
 
     describe 'destroying' do

@@ -1,6 +1,9 @@
 require 'presenters/v3/paginated_list_presenter'
+require 'presenters/v3/one_to_one_relationship_presenter'
 require 'messages/orgs_list_message'
+require 'messages/orgs_default_iso_seg_update_message'
 require 'fetchers/org_list_fetcher'
+require 'actions/set_default_isolation_segment'
 require 'controllers/v3/mixins/sub_resource'
 
 class OrganizationsV3Controller < ApplicationController
@@ -23,7 +26,40 @@ class OrganizationsV3Controller < ApplicationController
     )
   end
 
+  def update_default_isolation_segment
+    message = OrgDefaultIsoSegUpdateMessage.create_from_http_request(unmunged_body)
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    iso_seg_guid = message.default_isolation_segment_guid
+    org, isolation_segment = fetch_for_set_default(params[:guid], iso_seg_guid)
+    org_not_found! unless org && can_read_from_org?(org.guid)
+    unauthorized! unless roles.admin? || org.managers.include?(current_user)
+
+    SetDefaultIsolationSegment.new.set(org, isolation_segment, message)
+
+    render status: :ok, json: Presenters::V3::OneToOneRelationshipPresenter.new("organizations/#{org.guid}", isolation_segment, 'default_isolation_segment')
+  rescue SetDefaultIsolationSegment::InvalidRelationship
+    unprocessable!("Unable to set #{iso_seg_guid} as the default isolation segment. Ensure it has been entitled to this organization.")
+  rescue SetDefaultIsolationSegment::InvalidOrg => e
+    unprocessable!(e.message)
+  end
+
   private
+
+  def fetch_for_set_default(org_guid, iso_seg_guid)
+    [
+      Organization.where(guid: org_guid).first,
+      IsolationSegmentModel.where(guid: iso_seg_guid).first
+    ]
+  end
+
+  def org_not_found!
+    resource_not_found!(:organization)
+  end
+
+  def isolation_segment_not_found!
+    resource_not_found!(:isolation_segment)
+  end
 
   def fetch_orgs(message)
     if can_read_globally?

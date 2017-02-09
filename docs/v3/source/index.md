@@ -67,6 +67,7 @@ includes:
   - experimental_resources/organizations/object
   - experimental_resources/organizations/list
   - experimental_resources/organizations/list_for_isolation_segment
+  - experimental_resources/organizations/assign_default_isolation_segment
   - experimental_resources/packages/header
   - experimental_resources/packages/object
   - experimental_resources/packages/create

@@ -5,10 +5,6 @@ module SubResource
     resource_not_found!(:app)
   end
 
-  def isolation_segment_not_found!
-    resource_not_found!(:isolation_segment_guid)
-  end
-
   def base_url(resource:)
     if app_nested?
       "/v3/apps/#{params[:app_guid]}/#{resource}"

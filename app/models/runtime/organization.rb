@@ -217,6 +217,10 @@ module VCAP::CloudController
       billing_enabled
     end
 
+    def isolation_segment_guids
+      isolation_segment_models.map(&:guid)
+    end
+
     private
 
     def validate_default_isolation_segment(isolation_segment_model)
@@ -228,7 +232,6 @@ module VCAP::CloudController
     end
 
     def validate_default_isolation_segment_set(isolation_segment_model)
-      isolation_segment_guids = isolation_segment_models.map(&:guid)
       unless isolation_segment_guids.include?(isolation_segment_model.guid)
         raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
                                                                  "Could not find Isolation Segment with guid: #{isolation_segment_model.guid}")

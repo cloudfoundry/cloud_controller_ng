@@ -175,4 +175,161 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       end
     end
   end
+
+  describe '#update_default_isolation_segment' do
+    let(:user) { VCAP::CloudController::User.make }
+    let(:org) { VCAP::CloudController::Organization.make(name: 'Water') }
+    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'default_seg') }
+    let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+    let(:unassigner) { VCAP::CloudController::IsolationSegmentUnassign.new }
+    let(:req_body) do
+      {
+        data: { guid: isolation_segment.guid }
+      }.to_json
+    end
+
+    before do
+      set_current_user(user, { admin: true })
+      allow_user_read_access_for(user, orgs: [org])
+      assigner.assign(isolation_segment, [org])
+    end
+
+    it 'updates the organization' do
+      expect(org.default_isolation_segment_guid).to eq(nil)
+
+      patch :update_default_isolation_segment, req_body, { guid: org.guid }
+
+      org.reload
+      expect(response.status).to eq(200)
+      expect(org.default_isolation_segment_guid).to eq(isolation_segment.guid)
+      expect(parsed_body['data']['guid']).to eq(isolation_segment.guid)
+    end
+
+    context 'when the requested data is null' do
+      let(:req_body) do
+        {
+          data: nil
+        }.to_json
+      end
+
+      before do
+        org.default_isolation_segment_guid = 'prev-iso-seg'
+      end
+      it 'should update the org default iso seg guid to null' do
+        expect(org.default_isolation_segment_guid).to eq('prev-iso-seg')
+
+        patch :update_default_isolation_segment, req_body, { guid: org.guid }
+
+        org.reload
+        expect(response.status).to eq(200)
+        expect(org.default_isolation_segment_guid).to be_nil
+        expect(parsed_body['data']).to be_nil
+      end
+    end
+
+    context 'when the requested isolation segment has not been entitled to the org' do
+      let(:org2) { VCAP::CloudController::Organization.make }
+      before do
+        allow_user_read_access_for(user, orgs: [org2])
+      end
+
+      it 'throws an UnprocessableEntity error ' do
+        patch :update_default_isolation_segment, req_body, { guid: org2.guid }
+
+        org.reload
+        expect(response.status).to eq(422)
+        expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include("Unable to set #{isolation_segment.guid} as the default isolation segment. Ensure it has been entitled to this organization.")
+      end
+    end
+
+    context 'when the organization does not exist' do
+      it 'throws ResourceNotFound error' do
+        patch :update_default_isolation_segment, req_body, { guid: 'cest-ne-pas-un-org' }
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include 'ResourceNotFound'
+        expect(response.body).to include 'Organization not found'
+      end
+    end
+
+    context 'when the isolation segment does not exist' do
+      let(:req_body) do
+        {
+          data: { guid: 'garbage-guid' }
+        }.to_json
+      end
+
+      it 'throws UnprocessableEntity error' do
+        patch :update_default_isolation_segment, req_body, { guid: org.guid }
+
+        expect(response.status).to eq(422)
+        expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include 'Unable to set garbage-guid as the default isolation segment. Ensure it has been entitled to this organization.'
+      end
+    end
+
+    context 'when the org is invalid' do
+      before do
+        allow_any_instance_of(VCAP::CloudController::SetDefaultIsolationSegment).to receive(:set).and_raise(
+          VCAP::CloudController::SetDefaultIsolationSegment::InvalidOrg.new('bad org!'))
+      end
+
+      it 'returns 422' do
+        patch :update_default_isolation_segment, req_body, { guid: org.guid }
+
+        expect(response.status).to eq(422)
+        expect(response.body).to include('UnprocessableEntity')
+        expect(response.body).to include('bad org!')
+      end
+    end
+
+    context 'when the request provides invalid data' do
+      let(:req_body) do
+        {
+          data: { guid: 123 }
+        }.to_json
+      end
+
+      it 'returns 422' do
+        patch :update_default_isolation_segment, req_body, { guid: org.guid }
+
+        expect(response.status).to eq(422)
+        expect(response.body).to include('UnprocessableEntity')
+        expect(response.body).to include('123 must be a string')
+      end
+    end
+
+    context 'permissions' do
+      context 'when the user does not have permissions to read from organization' do
+        before do
+          allow_user_read_access_for(user)
+        end
+
+        it 'throws ResourceNotFound error' do
+          patch :update_default_isolation_segment, req_body, { guid: org.guid }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'Organization not found'
+        end
+      end
+
+      context 'when the user is not an admin or org manager for that org' do
+        before do
+          allow_user_read_access_for(user, orgs: [org])
+          set_current_user(user, { admin: false })
+        end
+
+        it 'throws Unauthorized error' do
+          patch :update_default_isolation_segment, req_body, { guid: org.guid }
+
+          expect(org.managers).not_to include(user)
+          expect(user.admin).to be_falsey
+          expect(response.status).to eq(403)
+          expect(response.body).to include 'NotAuthorized'
+        end
+      end
+    end
+  end
 end
