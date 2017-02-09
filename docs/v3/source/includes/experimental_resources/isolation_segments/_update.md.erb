@@ -5,7 +5,7 @@ Definition
 ```
 
 ```http
-PUT /v3/isolation_segments/:guid HTTP/1.1
+PATCH /v3/isolation_segments/:guid HTTP/1.1
 ```
 
 ```
@@ -14,7 +14,7 @@ Example Request
 
 ```shell
 curl "https://api.example.org/v3/isolation_segments/[guid]" \
-  -X PUT \
+  -X PATCH \
   -H "Authorization: bearer [token]" \
   -d '{
     "name": "my_isolation_segment"
