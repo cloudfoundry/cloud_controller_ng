@@ -95,7 +95,7 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
       expect(parsed_response).to include(
         {
             'name' => 'task_creation',
-            'enabled' => false,
+            'enabled' => true,
             'error_message' => nil,
             'url' => '/v2/config/feature_flags/task_creation'
         })
@@ -290,7 +290,7 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
       expect(parsed_response).to eq(
         {
           'name'          => 'task_creation',
-          'enabled'       => false,
+          'enabled'       => true,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/task_creation'
         })

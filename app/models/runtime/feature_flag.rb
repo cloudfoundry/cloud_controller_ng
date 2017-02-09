@@ -15,7 +15,7 @@ module VCAP::CloudController
       diego_docker: false,
       set_roles_by_username: true,
       unset_roles_by_username: true,
-      task_creation: false,
+      task_creation: true,
       env_var_visibility: true,
       space_scoped_private_broker_creation: true,
       space_developer_env_var_visibility: true
