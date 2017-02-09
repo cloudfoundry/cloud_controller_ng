@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/cloudfoundry/cloud_controller_ng.png)](https://travis-ci.org/cloudfoundry/cloud_controller_ng)
 [![Code Climate](https://codeclimate.com/github/cloudfoundry/cloud_controller_ng.png)](https://codeclimate.com/github/cloudfoundry/cloud_controller_ng)
 [![Test Coverage](https://codeclimate.com/repos/51c3523bf3ea005a650124e6/badges/da59f8dc2c9862d749c6/coverage.png)](https://codeclimate.com/repos/51c3523bf3ea005a650124e6/feed)
+[![slack.cloudfoundry.org](https://slack.cloudfoundry.org/badge.svg)](https://cloudfoundry.slack.com/messages/capi/)
 
 # cloud_controller_ng
 
