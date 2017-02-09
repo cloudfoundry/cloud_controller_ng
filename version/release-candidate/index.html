@@ -3723,12 +3723,12 @@ environment variables listed on the source droplet.</p>
           <h3 id="update-an-isolation-segment">Update an isolation segment</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
-<pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/isolation_segments/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<pre class="highlight http"><code><span class="nf">PATCH</span> <span class="nn">/v3/isolation_segments/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]"</span> <span class="se">\</span>
-  -X PUT <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "name": "my_isolation_segment"
