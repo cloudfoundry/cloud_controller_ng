@@ -292,12 +292,14 @@ module VCAP::CloudController
         apps, _ = runners.dea_apps_hm9k
         expect(apps.count).to eq(6)
 
-        expect(apps.last).to include(
-          'id'            => last_app.guid,
-          'instances'     => last_app.instances,
-          'state'         => last_app.state,
-          'package_state' => 'STAGED',
-          'version'       => last_app.version,
+        expect(apps).to include(
+          {
+            'id'            => last_app.guid,
+            'instances'     => last_app.instances,
+            'state'         => last_app.state,
+            'package_state' => 'STAGED',
+            'version'       => last_app.version,
+          }
         )
       end
 
