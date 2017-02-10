@@ -3,54 +3,50 @@
 [![Test Coverage](https://codeclimate.com/repos/51c3523bf3ea005a650124e6/badges/da59f8dc2c9862d749c6/coverage.png)](https://codeclimate.com/repos/51c3523bf3ea005a650124e6/feed)
 [![slack.cloudfoundry.org](https://slack.cloudfoundry.org/badge.svg)](https://cloudfoundry.slack.com/messages/capi/)
 
-# cloud_controller_ng
+# API documentation
 
-This repository contains the code for the Cloud Controller. The NG signifies
-that this is a "next generation" component and this is not backward-compatible
-with the original cloud_controller. This version adds significant new
-functionality including the additional mandatory "organization" and "space"
-hierarchy that all users, applications and services must use. For more information, please consult our [wiki](https://github.com/cloudfoundry/cloud_controller_ng/wiki).
+* [V3 API Docs](http://v3-apidocs.cloudfoundry.org)
+* [V2 API Docs](http://apidocs.cloudfoundry.org)
 
 ## Components
 
 ### Cloud Controller
 
-The Cloud Controller itself is written in Ruby and provides REST API endpoints
-for clients to access the system. The Cloud Controller maintains a database with
-tables for orgs, spaces, apps, services, service instances, user roles, and more.
+The Cloud Controller provides REST API endpoints to create and manage apps, services, user roles, and more!
 
-### Database (CC_DB)
+### Database
 
-The Cloud Controller database has been tested with Postgres and Mysql.
+The Cloud Controller supports Postgres and Mysql.
 
-### Blob Store
+### Blobstore
 
-The Cloud Controller manages a blob store for:
+The Cloud Controller manages a blobstore for:
 
-- resources - files that are uploaded to the Cloud Controller with a unique SHA
-  such that they can be reused without re-uploading the file
+* Resource cache: During package upload resource matching, Cloud Controller will only upload files it doesn't already have in this cache.
+* App packages: Unstaged files for an application
+* Droplets: An executable containing an app and its runtime dependencies
+* Buildpacks: Set of programs that transform packages into droplets
+* Buildpack cache: Cached dependencies and build artifacts to speed up future staging
+ 
+Cloud Controller currently supports [webdav](http://www.webdav.org/) and the following [fog](http://fog.io) connectors: 
 
-- app packages - unstaged files that represent an application
+* Azure
+* Openstack
+* Local (NFS)
+* Google
+* AWS
 
-- droplets - the result of taking an app package and staging it
-  (processesing a buildpack) and getting it ready to run
+### Runtime
 
-The blob store uses [FOG][fog] such that it can use abstractions like
-Amazon S3 or an NFS-mounted file system for storage.
+The Cloud Controller uses [Diego](https://github.com/cloudfoundry/diego-release) to stage and run apps and tasks.
 
-[fog]: http://fog.io/
+See [Diego Design Notes](https://github.com/cloudfoundry/diego-design-notes) for more details.
 
-## NATS Messaging
+## Contributing
 
-The Cloud Controller interacts with other core components of the Cloud Foundry
-platform using the NATS message bus. For example, it performs the following using NATS:
+Please read the [contributors' guide](https://github.com/cloudfoundry/cloud_controller_ng/blob/master/CONTRIBUTING.md)
 
-- Instructs a DEA to stage an application (processes a buildpack for the app) to prepare it to run
-- Instructs a DEA to start or stop an application
-- Receives information from the Health Manager about applications
-
-## Testing
-
+### Testing
 **TLDR:** Always run `bundle exec rake` before committing
 
 To maintain a consistent and effective approach to testing, please refer to `spec/README.md` and
@@ -83,7 +79,6 @@ You will also need a database called:
 
     `cc_test_integration_cc`
 
-
 ### Running tests on a single file
 
 The development team typically will run the specs to a single file as (e.g.)
@@ -94,17 +89,9 @@ The development team typically will run the specs to a single file as (e.g.)
 
     bundle exec rake spec
 
-## Static Analysis
-
-To help maintain code consistency, rubocop is used to enforce code conventions and best practices.
-
 ### Running static analysis
 
     bundle exec rubocop
-
-## API documentation
-
-API documentation for the latest build of master can be found here: http://apidocs.cloudfoundry.org
 
 ## Logs
 
@@ -120,24 +107,7 @@ Here are some use cases for the different log levels:
 * `debug2` - CC created a service, updated a service
 * `debug` - CC syncs resource pool, CC uploaded a file
 
-### Database migration logs
-
-The logs for database migrations are written to standard out.
-
 ## Configuration
 
-The Cloud Controller uses a YAML configuration file.
-For an example, see `config/cloud_controller.yml`.
-Some of the keys that are read from this configuration file are:
-
-* `logging` - a [steno configuration hash](http://github.com/cloudfoundry/steno#from-yaml-file)
-* `bulk_api` - basic auth credentials for the application state bulk API. In Cloud Foundry,
-this endpoint is used by the health manager to retrieve the expected state of every user
-application.
-* `uaa` - URL and credentials for connecting to the [UAA](http://github.com/cloudfoundry/uaa),
-Cloud Foundry's OAuth 2.0 server.
-
-## Contributing
-
-Please read the [contributors' guide](https://github.com/cloudfoundry/cloud_controller_ng/blob/master/CONTRIBUTING.md)
+The Cloud Controller uses a YAML configuration file. For an example, see `config/cloud_controller.yml`.
 
