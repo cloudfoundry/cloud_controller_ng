@@ -49,7 +49,7 @@ Please read the [contributors' guide](https://github.com/cloudfoundry/cloud_cont
 ### Testing
 **TLDR:** Always run `bundle exec rake` before committing
 
-To maintain a consistent and effective approach to testing, please refer to `spec/README.md` and
+To maintain a consistent and effective approach to testing, please refer to [the spec README](spec/README.md) and
 keep it up to date, documenting the purpose of the various types of tests.
 
 By default `rspec` will randomly pick between postgres and mysql.
