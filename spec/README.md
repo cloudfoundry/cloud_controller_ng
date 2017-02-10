@@ -1,4 +1,4 @@
-# Types of Tests
+# Testing the Cloud Controller
 
 ## External to the Cloud Controller
 
@@ -26,7 +26,7 @@ Controller tests typically integrated with several collaborators, but handle edg
 
 #### API Version Spec
 
-This [test](spec/api/api_version_spec.rb) exists to remind developers when they are making user facing changes to the API. 
+This [test](spec/api/api_version_spec.rb) exists to remind developers when they are making user facing changes to the API, and to be mindful of any potentially backwards incompatible changes. 
 
 ### Service Broker API Compatibility
 
