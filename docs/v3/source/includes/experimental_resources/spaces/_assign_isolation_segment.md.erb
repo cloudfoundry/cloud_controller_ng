@@ -1,0 +1,51 @@
+### Assign an isolation segment
+
+```
+Definition
+```
+
+```http
+PATCH /v3/spaces/:guid/relationships/isolation_segment HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/spaces/78573535-abd4-4cf5-8e44-961af0e41920/relationships/isolation_segment \
+  -X PATCH \
+  -H "Authorization: bearer [token]"
+  -d '{"data": {"guid": "e4c91047-3b29-4fda-b7f9-04033e5a9c9f"}}'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :assign_isolation_segment, '/v3/spaces' %>
+```
+
+This endpoint assigns an isolation segment to the space.
+The space's parent organization must have already been
+entitled to the isolation_segment.
+
+#### Body Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      data[guid]
+
+      <span class="method-list-item-type"/>
+    </h4>
+
+    <p class="method-list-item-description">
+      Guid of the isolation segment to assign to the space.
+      Setting data to null with unassign the isolation segment.
+    </p>
+  </li>
+</ul>

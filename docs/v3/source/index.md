@@ -114,6 +114,6 @@ includes:
   - experimental_resources/spaces/header
   - experimental_resources/spaces/object
   - experimental_resources/spaces/list
-
+  - experimental_resources/spaces/assign_isolation_segment
 search: true
 ---
