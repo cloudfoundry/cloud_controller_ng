@@ -35,6 +35,10 @@ services:
   - mysql
   - postgresql
 
+addons:
+  code_climate:
+    repo_token: 870bc78f6d6257a97e7a2150c787294062775852f2608e132226d0d2a936bd05
+
 env:
   global:
     - secure: "ikEVVNPGAX1NqgBPXdjxcPJ3ihO9TyTtaN4iX3d2Wv0GdlSKgRqtCXrWuttVfYGqSoHHWwvCR3qum7N44akLsntrkcIQXGu6CsTsvqDC+vAKHtC31TVmuTEXZyIYA7455+B+a8nMsrO5LjX1ylucV1ZhGLzA84lMRQYkr6PklK0=" # CODECLIMATE_REPO_TOKEN
