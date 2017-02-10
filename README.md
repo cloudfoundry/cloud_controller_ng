@@ -3,10 +3,13 @@
 [![Test Coverage](https://codeclimate.com/repos/51c3523bf3ea005a650124e6/badges/da59f8dc2c9862d749c6/coverage.png)](https://codeclimate.com/repos/51c3523bf3ea005a650124e6/feed)
 [![slack.cloudfoundry.org](https://slack.cloudfoundry.org/badge.svg)](https://cloudfoundry.slack.com/messages/capi/)
 
-# API documentation
+# Welcome to the Cloud Controller
+
+## Helpful Resources
 
 * [V3 API Docs](http://v3-apidocs.cloudfoundry.org)
 * [V2 API Docs](http://apidocs.cloudfoundry.org)
+* [Continuous Integration Pipelines](https://capi.ci.cf-app.com)
 
 ## Components
 
