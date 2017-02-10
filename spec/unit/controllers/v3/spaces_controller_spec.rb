@@ -146,4 +146,121 @@ RSpec.describe SpacesV3Controller, type: :controller do
       end
     end
   end
+
+  describe '#update' do
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    let!(:org1) { VCAP::CloudController::Organization.make(name: 'Lyle\'s Farm') }
+    let!(:org2) { VCAP::CloudController::Organization.make(name: 'Greg\'s Ranch') }
+    let!(:space1) { VCAP::CloudController::Space.make(name: 'Lamb', organization: org1) }
+    let!(:space2) { VCAP::CloudController::Space.make(name: 'Alpaca', organization: org1) }
+    let!(:space3) { VCAP::CloudController::Space.make(name: 'Horse', organization: org2) }
+    let!(:space4) { VCAP::CloudController::Space.make(name: 'Buffalo') }
+    let!(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let!(:update_message) { { 'data' => { 'guid' => isolation_segment_model.guid } } }
+
+    context 'when the user is an admin' do
+      before do
+        set_current_user_as_admin
+      end
+
+      context 'when the org has been entitled with the isolation segment' do
+        before do
+          VCAP::CloudController::IsolationSegmentAssign.new.assign(isolation_segment_model, [org1])
+        end
+
+        it 'can assign an isolation segment to a space in org1' do
+          patch :update, guid: space1.guid, body: update_message
+
+          expect(response.status).to eq(200)
+          space1.reload
+          expect(space1.isolation_segment_guid).to eq(isolation_segment_model.guid)
+          expect(parsed_body['data']['guid']).to eq(isolation_segment_model.guid)
+          expect(parsed_body['links']['self']['href']).to include("v3/spaces/#{space1.guid}/relationships/isolation_segment")
+        end
+
+        it 'can remove an isolation segment from a space' do
+          patch :update, guid: space1.guid, body: update_message
+
+          expect(response.status).to eq(200)
+          space1.reload
+          expect(space1.isolation_segment_guid).to eq(isolation_segment_model.guid)
+
+          patch :update, guid: space1.guid, body: { data: nil }
+          expect(response.status).to eq(200)
+          space1.reload
+          expect(space1.isolation_segment_guid).to eq(nil)
+          expect(parsed_body['links']['self']['href']).to include("v3/spaces/#{space1.guid}/relationships/isolation_segment")
+        end
+      end
+
+      context 'when the org has not been entitled with the isolation segment' do
+        it 'will not assign an isolation segment to a space in a different org' do
+          patch :update, guid: space3.guid, body: update_message
+
+          expect(response.status).to eq(422)
+          expect(parsed_body['errors'][0]['detail']).to include(
+            "Unable to set '#{isolation_segment_model.guid}' as the isolation segment. Ensure it has been entitled to organization '#{org2.name}'."
+          )
+        end
+      end
+
+      context 'when the isolation segment cannot be found' do
+        let!(:update_message) { { 'data' => { 'guid' => 'potato' } } }
+
+        it 'raises an error' do
+          patch :update, guid: space1.guid, body: update_message
+
+          expect(response.status).to eq(404)
+        end
+      end
+    end
+
+    context 'permissions' do
+      context 'when the user does not have permissions to read from the space' do
+        before do
+          allow_user_read_access_for(user, orgs: [], spaces: [])
+        end
+
+        it 'throws ResourceNotFound error' do
+          patch :update, guid: space1.guid, body: update_message
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'Space not found'
+        end
+      end
+
+      context 'when the user does not have permissions to write from the space' do
+        before do
+          set_current_user(user)
+          allow_user_read_access_for(user, orgs: [org1], spaces: [space1])
+          disallow_user_write_access(user, space: space1)
+          VCAP::CloudController::IsolationSegmentAssign.new.assign(isolation_segment_model, [org1])
+        end
+
+        context 'when assigning an isolation segment' do
+          let!(:update_message) { { 'data' => { 'guid' => isolation_segment_model.guid } } }
+
+          it 'throws Unauthorized error' do
+            patch :update, guid: space1.guid, body: update_message
+
+            expect(response.body).to include 'NotAuthorized'
+            expect(response.status).to eq(403)
+          end
+        end
+
+        context 'when unassigning an isolation segment' do
+          let!(:update_message) { { 'data' => nil } }
+
+          it 'throws Unauthorized error' do
+            patch :update, guid: space1.guid, body: update_message
+
+            expect(response.status).to eq(403)
+            expect(response.body).to include 'NotAuthorized'
+          end
+        end
+      end
+    end
+  end
 end

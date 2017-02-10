@@ -9,12 +9,13 @@ module VCAP::CloudController
     let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'JB') }
     let(:isolation_segment_guid) { isolation_segment.guid }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
-    let(:message) { VCAP::CloudController::OrgDefaultIsoSegUpdateMessage.new(
-      {
-        data: { 'guid' => isolation_segment_guid }
-      }
-    )
-    }
+    let(:message) do
+      VCAP::CloudController::OrgDefaultIsoSegUpdateMessage.new(
+        {
+          data: { 'guid' => isolation_segment_guid }
+        }
+      )
+    end
 
     describe '#set' do
       context 'when the org is entitled to the isolation segment' do

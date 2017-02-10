@@ -226,6 +226,52 @@ module VCAP::CloudController::Validators
       end
     end
 
+    describe 'SpaceUpdateValidator' do
+      class SpaceUpdateMessage < VCAP::CloudController::BaseMessage
+        attr_accessor :data
+
+        validates_with SpaceUpdateValidator
+
+        def allowed_keys
+          [:data]
+        end
+      end
+      context 'when the message data is nil' do
+        let(:message) { SpaceUpdateMessage.new(data: nil) }
+        it 'is ok' do
+          expect(message).to be_valid
+        end
+      end
+
+      context 'when the message data field is missing' do
+        let(:message) { SpaceUpdateMessage.new }
+        it 'is assigns nil data field' do
+          expect(message).to be_valid
+        end
+      end
+
+      context 'when the message data field is a guid only' do
+        let(:message) { SpaceUpdateMessage.new(data: { 'guid' => 'g1' }) }
+        it 'is happy' do
+          expect(message).to be_valid
+        end
+      end
+
+      context 'when other fields are present' do
+        let(:message) { SpaceUpdateMessage.new(data: { 'guidx' => 'g2' }) }
+        it 'is missing the guid field' do
+          expect(message).not_to be_valid
+        end
+      end
+
+      context 'when other fields are present' do
+        let(:message) { SpaceUpdateMessage.new(data: { 'guid' => 'g1', 'guidx' => 'g2' }) }
+        it 'is not happy' do
+          expect(message).not_to be_valid
+        end
+      end
+    end
+
     describe 'RelationshipValidator' do
       class RelationshipMessage < VCAP::CloudController::BaseMessage
         attr_accessor :relationships
