@@ -28,8 +28,8 @@ class SpacesV3Controller < ApplicationController
     message = SpaceUpdateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    if message.data
-      isolation_segment_model = IsolationSegmentModel.where(guid: message.data['guid']).first
+    if message.isolation_segment_guid
+      isolation_segment_model = IsolationSegmentModel.where(guid: message.isolation_segment_guid).first
       resource_not_found!(:isolation_segment) unless isolation_segment_model && can_read_isolation_segment?(isolation_segment_model)
 
       if !org_is_entitled(org, isolation_segment_model)

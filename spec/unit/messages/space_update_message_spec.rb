@@ -17,7 +17,7 @@ module VCAP::CloudController
 
         expect(message).to be_a(SpaceUpdateMessage)
         expect(message.data).to be_a(Hash)
-        expect(message.data['guid']).to eq('foobar')
+        expect(message.isolation_segment_guid).to eq('foobar')
       end
 
       it 'converts requested keys to symbols' do
@@ -41,10 +41,11 @@ module VCAP::CloudController
       context 'when data is nil' do
         let(:params) { { data: nil } }
 
-        it 'is valid' do
+        it 'is valid and returns the correct message' do
           message = SpaceUpdateMessage.new(params)
 
           expect(message).to be_valid
+          expect(message.isolation_segment_guid).to eq(nil)
         end
       end
 

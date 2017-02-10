@@ -14,6 +14,11 @@ module VCAP::CloudController
     validates :data, hash: true, allow_nil: true
     validates_with SpaceUpdateValidator
 
+    def isolation_segment_guid
+      return data['guid'] if data
+      nil
+    end
+
     private
 
     def allowed_keys
