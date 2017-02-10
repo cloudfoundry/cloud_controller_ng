@@ -98,6 +98,7 @@
 
           
 
+
           
 
 
@@ -4374,6 +4375,58 @@ In the case where the specified isolation segment is the system-wide shared segm
   </li>
 
 
+</ul>
+
+          <h3 id="assign-default-isolation-segment">Assign default isolation segment</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">PATCH</span> <span class="nn">/v3/organizations/:guid/relationships/default_isolation_segment</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[guid]/relationships/default_isolation_segment"</span> <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "data": {
+      "guid": "[iso-seg-guid]"
+     }
+   }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+
+{
+  "data": {
+    "guid": "9d8e007c-ce52-4ea7-8a57-f2825d2c6b39"
+  },
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/organizations/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/relationships/default_isolation_segment"
+    },
+  }
+}
+
+</code></pre>
+
+<p>This endpoint sets the default isolation segment for a given organization.  Only Admins and Org Managers can set the default.
+Only isolation segments that are entitled to the organization are eligible to be the default isolation segment.</p>
+
+<p>Apps will not run in the new default isolation segment until they are restarted.</p>
+
+<h4 id="body-parameters">Body Parameters</h4>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      data[guid]
+
+      <span class="method-list-item-type"/>
+    </h4>
+
+    <p class="method-list-item-description">Guid of isolation segment to set as default. Setting guid to null will remove the default isolation segment.</p>
+  </li>
 </ul>
 
           <h2 id="packages">Packages</h2>
