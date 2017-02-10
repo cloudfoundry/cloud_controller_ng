@@ -1,7 +1,7 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'messages/spaces/spaces_list_message'
 require 'actions/space_update'
-require 'messages/space_update_message'
+require 'messages/spaces/space_update_message'
 require 'fetchers/space_list_fetcher'
 
 class SpacesV3Controller < ApplicationController
