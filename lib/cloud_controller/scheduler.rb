@@ -13,7 +13,8 @@ module VCAP::CloudController
     ].freeze
 
     def initialize(config)
-      @clock = Clock.new(config)
+      @clock  = Clock.new(config)
+      @logger = Steno.logger('cc.clock')
     end
 
     def start
@@ -22,6 +23,7 @@ module VCAP::CloudController
       @clock.schedule_daily(:expired_blob_cleanup, Jobs::Runtime::ExpiredBlobCleanup, '00:00')
       @clock.schedule_frequent_job(:diego_sync, Jobs::Diego::Sync, priority: -10, queue: 'sync-queue', allow_only_one_job_in_queue: true)
 
+      Clockwork.error_handler { |error| @logger.error(error) }
       Clockwork.run
     end
   end

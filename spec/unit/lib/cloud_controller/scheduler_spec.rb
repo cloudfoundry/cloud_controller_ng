@@ -14,6 +14,14 @@ module VCAP::CloudController
         allow(Clockwork).to receive(:run)
       end
 
+      it 'configures Clockwork with a logger' do
+        error = StandardError.new 'Boom!'
+        allow(Clockwork).to receive(:error_handler).and_yield(error)
+        expect_any_instance_of(Steno::Logger).to receive(:error).with(error)
+
+        schedule.start
+      end
+
       it 'runs Clockwork' do
         schedule.start
 
