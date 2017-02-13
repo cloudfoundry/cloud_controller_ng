@@ -230,6 +230,7 @@ diego:
   temporary_local_staging: false
   temporary_local_tasks: false
   temporary_local_apps: false
+  temporary_local_sync: false
   temporary_local_tps: false
   nsync_url: http://nsync.service.cf.internal:8787
   stager_url: http://stager.service.cf.internal:8888

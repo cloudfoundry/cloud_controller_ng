@@ -300,6 +300,7 @@ module VCAP::CloudController
           temporary_local_staging:               bool,
           temporary_local_tasks:                 bool,
           temporary_local_apps:                  bool,
+          temporary_local_sync:                  bool,
           temporary_local_tps:                   bool,
           tps_url:                               String,
           use_privileged_containers_for_running: bool,

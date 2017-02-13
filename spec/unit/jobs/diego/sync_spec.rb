@@ -11,8 +11,7 @@ module VCAP::CloudController
         let(:config) do
           {
             diego: {
-              temporary_local_apps: true,
-              temporary_local_tasks: true,
+              temporary_local_sync: true
             },
           }
         end
@@ -50,12 +49,11 @@ module VCAP::CloudController
           expect(tasks_sync).to have_received(:sync).once
         end
 
-        context 'when local apps are disabled' do
+        context 'when local sync are disabled' do
           let(:config) do
             {
               diego: {
-                temporary_local_apps: false,
-                temporary_local_tasks: true,
+                temporary_local_sync: false
               },
             }
           end
@@ -63,17 +61,6 @@ module VCAP::CloudController
           it 'does not sync processes' do
             job.perform
             expect(processes_sync).not_to have_received(:sync)
-          end
-        end
-
-        context 'when local tasks are disabled' do
-          let(:config) do
-            {
-              diego: {
-                temporary_local_apps: true,
-                temporary_local_tasks: false,
-              },
-            }
           end
 
           it 'does not sync tasks' do

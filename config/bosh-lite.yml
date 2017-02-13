@@ -273,6 +273,7 @@ diego:
   temporary_local_staging: true
   temporary_local_tasks: true
   temporary_local_apps: true
+  temporary_local_sync: true
   temporary_local_tps: true
   nsync_url: http://10.244.16.5:8787
   stager_url: http://10.244.16.5:8888
