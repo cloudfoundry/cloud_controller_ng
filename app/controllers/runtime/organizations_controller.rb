@@ -285,9 +285,26 @@ module VCAP::CloudController
     end
 
     def after_create(organization)
-      return if SecurityContext.admin?
-      organization.add_user(user)
-      organization.add_manager(user)
+      unless SecurityContext.admin?
+        organization.add_user(user)
+        organization.add_manager(user)
+      end
+
+      organization.users.each do |user|
+        @user_event_repository.record_organization_role_add(organization, user, 'user', UserAuditInfo.from_context(SecurityContext), request_attrs)
+      end
+
+      organization.auditors.each do |auditor|
+        @user_event_repository.record_organization_role_add(organization, auditor, 'auditor', UserAuditInfo.from_context(SecurityContext), request_attrs)
+      end
+
+      organization.billing_managers.each do |billing_manager|
+        @user_event_repository.record_organization_role_add(organization, billing_manager, 'billing_manager', UserAuditInfo.from_context(SecurityContext), request_attrs)
+      end
+
+      organization.managers.each do |manager|
+        @user_event_repository.record_organization_role_add(organization, manager, 'manager', UserAuditInfo.from_context(SecurityContext), request_attrs)
+      end
     end
   end
 end

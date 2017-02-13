@@ -1287,6 +1287,67 @@ module VCAP::CloudController
       end
     end
 
+    describe 'POST /v2/spaces' do
+      let(:org) { Organization.make }
+      let(:name) { 'MySpace' }
+
+      context 'setting roles at space creation time' do
+        let(:other_user) { User.make }
+
+        before do
+          set_current_user_as_admin
+          org.add_user(other_user)
+          org.save
+          org.reload
+        end
+
+        context 'assigning a space manager' do
+          it 'records an event of type audit.user.space_manager_add' do
+            event = Event.find(type: 'audit.user.space_manager_add', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { name: name, organization_guid: org.guid, manager_guids: [other_user.guid] }.to_json
+            post '/v2/spaces', request_body
+
+            expect(last_response).to have_status_code(201)
+
+            event = Event.find(type: 'audit.user.space_manager_add', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+
+        context 'assigning a space auditor' do
+          it 'records an event of type audit.user.space_auditor_add' do
+            event = Event.find(type: 'audit.user.space_auditor_add', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { name: name, organization_guid: org.guid, auditor_guids: [other_user.guid] }.to_json
+            post '/v2/spaces', request_body
+
+            expect(last_response).to have_status_code(201)
+
+            event = Event.find(type: 'audit.user.space_auditor_add', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+
+        context 'assigning a space developer' do
+          it 'records an event of type audit.user.space_developer_add' do
+            event = Event.find(type: 'audit.user.space_developer_add', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { name: name, organization_guid: org.guid, developer_guids: [other_user.guid] }.to_json
+            post '/v2/spaces', request_body
+
+            expect(last_response).to have_status_code(201)
+
+            event = Event.find(type: 'audit.user.space_developer_add', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+      end
+    end
+
     describe 'PUT /v2/spaces/:guid' do
       let(:user) { set_current_user(User.make) }
       let(:isolation_segment_model) { IsolationSegmentModel.make }

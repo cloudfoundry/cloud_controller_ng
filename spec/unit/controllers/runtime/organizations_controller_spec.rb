@@ -315,6 +315,75 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'setting roles at org creation time' do
+        let(:other_user) { User.make }
+        let(:name) { 'myorg' }
+
+        before do
+          set_current_user_as_admin
+        end
+
+        context 'assigning an org manager' do
+          it 'records an event of type audit.user.organization_manager_add' do
+            event = Event.find(type: 'audit.user.organization_manager_add', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { name: name, manager_guids: [other_user.guid] }.to_json
+            post '/v2/organizations', request_body
+
+            expect(last_response).to have_status_code(201)
+
+            event = Event.find(type: 'audit.user.organization_manager_add', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+
+        context 'assigning an auditor' do
+          it 'records an event of type audit.user.organization_auditor_add' do
+            event = Event.find(type: 'audit.user.organization_auditor_add', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { name: name, auditor_guids: [other_user.guid] }.to_json
+            post '/v2/organizations', request_body
+
+            expect(last_response).to have_status_code(201)
+
+            event = Event.find(type: 'audit.user.organization_auditor_add', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+
+        context 'assigning a billing manager' do
+          it 'records an event of type audit.user.organization_billing_manager_add' do
+            event = Event.find(type: 'audit.user.organization_billing_manager_add', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { name: name, billing_manager_guids: [other_user.guid] }.to_json
+            post '/v2/organizations', request_body
+
+            expect(last_response).to have_status_code(201)
+
+            event = Event.find(type: 'audit.user.organization_billing_manager_add', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+
+        context 'assigning a user' do
+          it 'records an event of type audit.user.organization_user_add' do
+            event = Event.find(type: 'audit.user.organization_user_add', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { name: name, user_guids: [other_user.guid] }.to_json
+            post '/v2/organizations', request_body
+
+            expect(last_response).to have_status_code(201)
+
+            event = Event.find(type: 'audit.user.organization_user_add', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+      end
     end
 
     describe 'GET /v2/organizations/:guid/user_roles' do
