@@ -16,6 +16,7 @@ Example Request
 curl "https://api.example.org/v3/organizations/[guid]/relationships/default_isolation_segment" \
   -X PATCH \
   -H "Authorization: bearer [token]" \
+  -H "Content-Type: application/json" \
   -d '{
     "data": {
       "guid": "[iso-seg-guid]"
