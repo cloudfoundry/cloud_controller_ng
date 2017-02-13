@@ -1,8 +1,9 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'messages/spaces/spaces_list_message'
-require 'actions/space_update'
 require 'messages/spaces/space_update_message'
+require 'actions/space_update'
 require 'fetchers/space_list_fetcher'
+require 'presenters/v3/paginated_list_presenter'
 
 class SpacesV3Controller < ApplicationController
   def index
@@ -28,27 +29,29 @@ class SpacesV3Controller < ApplicationController
     message = SpaceUpdateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    if message.isolation_segment_guid
-      isolation_segment_model = IsolationSegmentModel.where(guid: message.isolation_segment_guid).first
-      resource_not_found!(:isolation_segment) unless isolation_segment_model && can_read_isolation_segment?(isolation_segment_model)
+    iso_seg_guid = message.isolation_segment_guid
+    if iso_seg_guid
+      isolation_segment = IsolationSegmentModel.where(guid: iso_seg_guid).first
+      unprocessable_iso_seg(iso_seg_guid) unless isolation_segment && can_read_isolation_segment?(isolation_segment)
 
-      if !org_is_entitled(org, isolation_segment_model)
-        raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity',
-          "Unable to set '#{isolation_segment_model.guid}' as the isolation segment. Ensure it has been entitled to organization '#{org.name}'.")
-      end
+      entitled_iso_segs = org.isolation_segment_guids
+      unprocessable_iso_seg(iso_seg_guid) unless entitled_iso_segs.include?(iso_seg_guid)
 
-      SpaceUpdate.new(user_audit_info).update(space, isolation_segment_model, message)
+      SpaceUpdate.new(user_audit_info).update(space, isolation_segment, message)
     else
       SpaceUpdate.new(user_audit_info).update(space, nil, message)
     end
 
-    render status: :ok, json: Presenters::V3::OneToOneRelationshipPresenter.new("spaces/#{space.guid}", isolation_segment_model, 'isolation_segment')
+    render status: :ok, json: Presenters::V3::OneToOneRelationshipPresenter.new("spaces/#{space.guid}", isolation_segment, 'isolation_segment')
+  rescue SpaceUpdate::InvalidSpace => e
+    unprocessable!(e.message)
   end
 
   private
 
-  def org_is_entitled(org, isolation_segment_model)
-    org.isolation_segment_models.map(&:guid).include?(isolation_segment_model.guid)
+  def unprocessable_iso_seg(iso_seg_guid)
+    raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity',
+      "Unable to set #{iso_seg_guid} as the isolation segment. Ensure it has been entitled to the organization that this space belongs to.")
   end
 
   def readable_spaces(message:)

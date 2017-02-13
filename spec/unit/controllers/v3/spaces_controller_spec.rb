@@ -199,8 +199,8 @@ RSpec.describe SpacesV3Controller, type: :controller do
           patch :update, guid: space3.guid, body: update_message
 
           expect(response.status).to eq(422)
-          expect(parsed_body['errors'][0]['detail']).to include(
-            "Unable to set '#{isolation_segment_model.guid}' as the isolation segment. Ensure it has been entitled to organization '#{org2.name}'."
+          expect(response.body).to include(
+            "Unable to set #{isolation_segment_model.guid} as the isolation segment. Ensure it has been entitled to the organization that this space belongs to."
           )
         end
       end
@@ -211,7 +211,10 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'raises an error' do
           patch :update, guid: space1.guid, body: update_message
 
-          expect(response.status).to eq(404)
+          expect(response.status).to eq(422)
+          expect(response.body).to include(
+            'Unable to set potato as the isolation segment. Ensure it has been entitled to the organization that this space belongs to.'
+          )
         end
       end
     end
