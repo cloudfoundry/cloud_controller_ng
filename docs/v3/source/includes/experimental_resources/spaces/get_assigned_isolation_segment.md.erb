@@ -1,0 +1,49 @@
+### Get assigned isolation segment
+
+```
+Definition
+```
+
+```http
+GET /v3/spaces/:guid/relationships/isolation_segment HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/spaces/[guid]/relationships/isolation_segment" \
+  -X GET \
+  -H "Authorization: bearer [token]" \
+  -H "Content-Type: application/json"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :space_isolation_segment_relationship, '/v3/spaces' %>
+```
+
+This endpoint retrieves the isolation segment currently assigned to the space.
+
+#### Body Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      data[guid]
+
+      <span class="method-list-item-type"/>
+    </h4>
+
+    <p class="method-list-item-description">
+      Guid of the isolation segment to assign to the space.
+      data will be null if there is no isolation segment assigned.
+    </p>
+  </li>
+</ul>
