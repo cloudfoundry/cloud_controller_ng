@@ -26,14 +26,24 @@ class OrganizationsV3Controller < ApplicationController
     )
   end
 
+  def show_default_isolation_segment
+    org = fetch_org(params[:guid])
+    org_not_found! unless org && can_read_from_org?(org.guid)
+
+    isolation_segment = fetch_isolation_segment(org.default_isolation_segment_guid)
+
+    render status: :ok, json: Presenters::V3::OneToOneRelationshipPresenter.new("organizations/#{org.guid}", isolation_segment, 'default_isolation_segment')
+  end
+
   def update_default_isolation_segment
     message = OrgDefaultIsoSegUpdateMessage.create_from_http_request(unmunged_body)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    iso_seg_guid = message.default_isolation_segment_guid
-    org, isolation_segment = fetch_for_set_default(params[:guid], iso_seg_guid)
+    org = fetch_org(params[:guid])
     org_not_found! unless org && can_read_from_org?(org.guid)
     unauthorized! unless roles.admin? || org.managers.include?(current_user)
+    iso_seg_guid = message.default_isolation_segment_guid
+    isolation_segment = fetch_isolation_segment(iso_seg_guid)
 
     SetDefaultIsolationSegment.new.set(org, isolation_segment, message)
 
@@ -46,19 +56,20 @@ class OrganizationsV3Controller < ApplicationController
 
   private
 
-  def fetch_for_set_default(org_guid, iso_seg_guid)
-    [
-      Organization.where(guid: org_guid).first,
-      IsolationSegmentModel.where(guid: iso_seg_guid).first
-    ]
-  end
-
   def org_not_found!
     resource_not_found!(:organization)
   end
 
   def isolation_segment_not_found!
     resource_not_found!(:isolation_segment)
+  end
+
+  def fetch_org(guid)
+    Organization.where(guid: guid).first
+  end
+
+  def fetch_isolation_segment(guid)
+    IsolationSegmentModel.where(guid: guid).first
   end
 
   def fetch_orgs(message)

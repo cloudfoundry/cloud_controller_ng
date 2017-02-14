@@ -1,0 +1,34 @@
+### Get default isolation segment
+
+```
+Definition
+```
+
+```http
+GET /v3/organizations/:guid/relationships/default_isolation_segment HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/organizations/[guid]/relationships/default_isolation_segment" \
+  -X GET \
+  -H "Authorization: bearer [token]" \
+  -H "Content-Type: application/json" \
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :default_isolation_segment_relationship, '/v3/organizations/:guid/relationships/default_isolation_segment' %>
+```
+
+This endpoint retrieves the default isolation segment for a given organization.
+
+

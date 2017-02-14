@@ -66,6 +66,7 @@ Rails.application.routes.draw do
   # organizations
   get '/organizations', to: 'organizations_v3#index'
   get '/isolation_segments/:isolation_segment_guid/organizations', to: 'organizations_v3#index'
+  get '/organizations/:guid/relationships/default_isolation_segment', to: 'organizations_v3#show_default_isolation_segment'
   patch '/organizations/:guid/relationships/default_isolation_segment', to: 'organizations_v3#update_default_isolation_segment'
 
   # route_mappings

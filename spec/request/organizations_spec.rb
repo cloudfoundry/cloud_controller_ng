@@ -105,6 +105,36 @@ RSpec.describe 'Organizations' do
     end
   end
 
+  describe 'GET /v3/organizations/:guid/relationships/default_isolation_segment' do
+    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'default_seg') }
+    let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+
+    before do
+      set_current_user(user, { admin: true })
+      allow_user_read_access_for(user, orgs: [organization1])
+      assigner.assign(isolation_segment, [organization1])
+      organization1.update(default_isolation_segment_guid: isolation_segment.guid)
+    end
+
+    it 'shows the default isolation segment for the organization' do
+      get "/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment", nil, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
+
+      expected_response = {
+        'data' => {
+          'guid' => isolation_segment.guid
+        },
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment" },
+        }
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
+
   describe 'PATCH /v3/organizations/:guid/relationships/default_isolation_segment' do
     let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'default_seg') }
     let(:update_request) do
