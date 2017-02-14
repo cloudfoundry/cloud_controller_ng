@@ -266,4 +266,27 @@ RSpec.describe SpacesV3Controller, type: :controller do
       end
     end
   end
+
+  describe '#index_isolation_segment' do
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    let!(:org) { VCAP::CloudController::Organization.make(name: 'Lyle\'s Farm') }
+    let!(:space) { VCAP::CloudController::Space.make(name: 'Lamb', organization: org) }
+    let!(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+
+    context 'when the user has global read access' do
+      before do
+        allow_user_global_read_access(user)
+        VCAP::CloudController::IsolationSegmentAssign.new.assign(isolation_segment_model, [org])
+        space.update(isolation_segment_guid: isolation_segment_model.guid)
+      end
+
+      it 'returns a 200 and the isolation segment associated with the space' do
+        get :index_isolation_segment, guid: space.guid
+
+        expect(response.status).to eq(200)
+        expect(parsed_body['data']['guid']).to eq(isolation_segment_model.guid)
+      end
+    end
+  end
 end

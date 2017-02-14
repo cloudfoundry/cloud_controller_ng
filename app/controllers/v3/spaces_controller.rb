@@ -47,6 +47,12 @@ class SpacesV3Controller < ApplicationController
     unprocessable!(e.message)
   end
 
+  def index_isolation_segment
+    space = Space.where(guid: params[:guid]).first
+    isolation_segment = IsolationSegmentModel.where(guid: space.isolation_segment_guid).first
+    render status: :ok, json: Presenters::V3::OneToOneRelationshipPresenter.new("spaces/#{space.guid}", isolation_segment, 'isolation_segment')
+  end
+
   private
 
   def unprocessable_iso_seg(iso_seg_guid)
