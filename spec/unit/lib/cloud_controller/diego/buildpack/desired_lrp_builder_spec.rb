@@ -136,6 +136,7 @@ module VCAP::CloudController
             expect(builder.port_environment_variables).to match_array([
               ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '11'),
               ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_PORT', value: '11'),
+              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_HOST', value: '0.0.0.0'),
             ])
           end
         end
