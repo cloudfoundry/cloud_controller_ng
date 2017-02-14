@@ -274,9 +274,9 @@ RSpec.describe SpacesV3Controller, type: :controller do
     let!(:space) { VCAP::CloudController::Space.make(name: 'Lamb', organization: org) }
     let!(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
 
-    context 'when the user has global read access' do
+    context 'when the user has permissions to read from the space' do
       before do
-        allow_user_global_read_access(user)
+        allow_user_read_access_for(user, orgs: [org], spaces: [space])
         VCAP::CloudController::IsolationSegmentAssign.new.assign(isolation_segment_model, [org])
         space.update(isolation_segment_guid: isolation_segment_model.guid)
       end
@@ -286,6 +286,38 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         expect(response.status).to eq(200)
         expect(parsed_body['data']['guid']).to eq(isolation_segment_model.guid)
+      end
+
+      context 'when the space does not exist' do
+        it 'returns a 404' do
+          get :index_isolation_segment, guid: 'potato'
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('Space not found')
+        end
+      end
+
+      context 'when the space is not associated with an isolation segment' do
+        before { space.update(isolation_segment_guid: nil) }
+
+        it 'returns a 200' do
+          get :index_isolation_segment, guid: space.guid
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['data']).to eq(nil)
+        end
+      end
+    end
+
+    context 'when the user does not have permissions to read from the space' do
+      before { allow_user_read_access_for(user, orgs: [], spaces: []) }
+
+      it 'throws ResourceNotFound error' do
+        get :index_isolation_segment, guid: space.guid
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include 'ResourceNotFound'
+        expect(response.body).to include 'Space not found'
       end
     end
   end

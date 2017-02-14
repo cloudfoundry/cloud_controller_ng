@@ -49,6 +49,11 @@ class SpacesV3Controller < ApplicationController
 
   def index_isolation_segment
     space = Space.where(guid: params[:guid]).first
+    resource_not_found!(:space) unless space
+
+    org = space.organization
+    resource_not_found!(:space) unless can_read?(space.guid, org.guid)
+
     isolation_segment = IsolationSegmentModel.where(guid: space.isolation_segment_guid).first
     render status: :ok, json: Presenters::V3::OneToOneRelationshipPresenter.new("spaces/#{space.guid}", isolation_segment, 'isolation_segment')
   end
