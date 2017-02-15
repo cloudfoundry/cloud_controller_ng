@@ -4434,6 +4434,37 @@ Only isolation segments that are entitled to the organization are eligible to be
   </li>
 </ul>
 
+          <h3 id="get-default-isolation-segment">Get default isolation segment</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/organizations/:guid/relationships/default_isolation_segment</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[guid]/relationships/default_isolation_segment"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+
+{
+  "data": {
+    "guid": "9d8e007c-ce52-4ea7-8a57-f2825d2c6b39"
+  },
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/organizations/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/relationships/default_isolation_segment"
+    },
+  }
+}
+
+</code></pre>
+
+<p>This endpoint retrieves the default isolation segment for a given organization.</p>
+
           <h2 id="packages">Packages</h2>
 
 <p>A package is an application&rsquo;s &lsquo;source code&rsquo;; either raw bits for your application or a pointer to these bits.</p>
