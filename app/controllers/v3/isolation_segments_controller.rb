@@ -10,6 +10,7 @@ require 'messages/isolation_segments/isolation_segments_list_message'
 
 require 'presenters/v3/isolation_segment_presenter'
 require 'presenters/v3/relationship_presenter'
+require 'presenters/v3/one_to_many_relationship_presenter'
 
 require 'fetchers/isolation_segment_list_fetcher'
 require 'fetchers/isolation_segment_organizations_fetcher'
@@ -116,7 +117,7 @@ class IsolationSegmentsController < ApplicationController
 
     organization_assigner.assign(isolation_segment_model, orgs)
 
-    render status: :created, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
+    render status: :created, json: Presenters::V3::OneToManyRelationshipPresenter.new("isolation_segments/#{isolation_segment_model.guid}", isolation_segment_model.organizations)
   end
 
   def unassign_allowed_organization

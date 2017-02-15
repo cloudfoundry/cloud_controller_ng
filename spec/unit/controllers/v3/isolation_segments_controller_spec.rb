@@ -202,13 +202,13 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
   describe '#assign_allowed_organizations' do
     let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:org_2) { VCAP::CloudController::Organization.make }
+    let(:org1) { VCAP::CloudController::Organization.make }
+    let(:org2) { VCAP::CloudController::Organization.make }
 
     let(:req_body) do
       {
         data: [
-          { guid: org.guid }
+          { guid: org1.guid }
         ]
       }
     end
@@ -222,26 +222,31 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
 
         expect(response.status).to eq 201
-        expect(parsed_body['guid']).to eq(isolation_segment_model.guid)
-        expect(isolation_segment_model.organizations).to contain_exactly(org)
+        expect(parsed_body['data'][0]['guid']).to eq(org1.guid)
+        expect(isolation_segment_model.organizations).to contain_exactly(org1)
       end
 
       it 'assigns multiple organizations to the isolation segment' do
-        req_body[:data] << { guid: org_2.guid }
+        req_body[:data] << { guid: org2.guid }
         post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
 
         expect(response.status).to eq 201
 
-        expect(parsed_body['guid']).to eq(isolation_segment_model.guid)
+        entitled_guids = []
+        parsed_body['data'].each do |item|
+          entitled_guids << item['guid']
+        end
 
-        org.reload
-        org_2.reload
-        expect(isolation_segment_model.organizations).to contain_exactly(org, org_2)
+        expect(entitled_guids).to contain_exactly(org1.guid, org2.guid)
+
+        org1.reload
+        org2.reload
+        expect(isolation_segment_model.organizations).to contain_exactly(org1, org2)
       end
 
       context 'when the isolation segment does not exist' do
         it 'returns a 404' do
-          post :assign_allowed_organizations, guid: 'some-guid', org_guid: org.guid
+          post :assign_allowed_organizations, guid: 'some-guid', org_guid: org1.guid
           expect(response.status).to eq 404
         end
       end
@@ -263,7 +268,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         let(:req_body) do
           {
             data: [
-              { guid: org.guid },
+              { guid: org1.guid },
               { guid: 'bogus-guid' }
             ]
           }
@@ -274,13 +279,13 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(response.status).to eq 404
 
           expect(isolation_segment_model.organizations).to be_empty
-          expect(org.default_isolation_segment_model).to be_nil
+          expect(org1.default_isolation_segment_model).to be_nil
         end
       end
 
       context 'when the isolation segment has already been assigned to the specified organization' do
         before do
-          assigner.assign(isolation_segment_model, [org])
+          assigner.assign(isolation_segment_model, [org1])
         end
 
         it 'returns a 201 and leaves the existing assignment intact' do
@@ -288,7 +293,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
           expect(response.status).to eq 201
 
-          expect(isolation_segment_model.organizations).to include(org)
+          expect(isolation_segment_model.organizations).to include(org1)
         end
       end
     end

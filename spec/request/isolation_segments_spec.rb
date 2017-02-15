@@ -111,14 +111,12 @@ RSpec.describe 'IsolationSegmentModels' do
       expect(last_response.status).to eq(201)
 
       expected_response = {
-        'name'       => isolation_segment.name,
-        'guid'       => isolation_segment.guid,
-        'created_at' => iso8601,
-        'updated_at' => iso8601,
-        'links'      => {
-          'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
-          'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces" },
-          'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/organizations" },
+        'data' => [
+          { 'guid' => org1.guid }
+        ],
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations" },
+          'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/organizations" },
         }
       }
 
