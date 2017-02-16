@@ -7926,6 +7926,54 @@ entitled to the isolation_segment.</p>
   </li>
 </ul>
 
+          <h3 id="get-assigned-isolation-segment">Get assigned isolation segment</h3>
+<pre class="highlight plaintext"><code>Definition
+</code></pre>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/spaces/:guid/relationships/isolation_segment</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]/relationships/isolation_segment"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-Type: application/json"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+
+{
+  "data": {
+    "guid": "e4c91047-3b29-4fda-b7f9-04033e5a9c9f"
+  },
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/relationships/isolation_segment"
+    },
+  }
+}
+
+</code></pre>
+
+<p>This endpoint retrieves the isolation segment currently assigned to the space.</p>
+
+<h4 id="body-parameters">Body Parameters</h4>
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      data[guid]
+
+      <span class="method-list-item-type"/>
+    </h4>
+
+    <p class="method-list-item-description">
+      Guid of the isolation segment to assign to the space.
+      data will be null if there is no isolation segment assigned.
+    </p>
+  </li>
+</ul>
+
       </div>
       <div class="dark-box">
           <div class="lang-selector">
