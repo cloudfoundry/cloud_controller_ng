@@ -24,9 +24,6 @@
             "self": {
                "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c"
             },
-            "spaces": {
-               "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
-            },
             "organizations": {
                "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/organizations"
             }
@@ -40,9 +37,6 @@
          "links": {
             "self": {
                "href": "https://api.example.org/v3/isolation_segments/68d54d31-9b3a-463b-ba94-e8e4c32edbac"
-            },
-            "spaces": {
-               "href": "https://api.example.org/v3/isolation_segments/68d54d31-9b3a-463b-ba94-e8e4c32edbac/relationships/spaces"
             },
             "organizations": {
                "href": "https://api.example.org/v3/isolation_segments/68d54d31-9b3a-463b-ba94-e8e4c32edbac/organizations"
@@ -58,9 +52,6 @@
             "self": {
                "href": "https://api.example.org/v3/isolation_segments/ecdc67c3-a71e-43ff-bddf-048930b8cd03"
             },
-            "spaces": {
-               "href": "https://api.example.org/v3/isolation_segments/ecdc67c3-a71e-43ff-bddf-048930b8cd03/relationships/spaces"
-            },
             "organizations": {
                "href": "https://api.example.org/v3/isolation_segments/ecdc67c3-a71e-43ff-bddf-048930b8cd03/organizations"
             }
@@ -75,9 +66,6 @@
             "self": {
                "href": "https://api.example.org/v3/isolation_segments/424c89e4-4353-46b7-9bf4-f90bd9bacac0"
             },
-            "spaces": {
-               "href": "https://api.example.org/v3/isolation_segments/424c89e4-4353-46b7-9bf4-f90bd9bacac0/relationships/spaces"
-            },
             "organizations": {
                "href": "https://api.example.org/v3/isolation_segments/424c89e4-4353-46b7-9bf4-f90bd9bacac0/organizations"
             }
@@ -89,8 +77,8 @@
          "created_at": "2016-10-19T20:29:33Z",
          "updated_at": "2016-11-08T16:41:26Z",
          "links": {
-            "spaces": {
-               "href": "https://api.example.org/v3/isolation_segments/0a79fcec-a648-4eb8-a6c3-2b5be39047c7/relationships/spaces"
+            "self": {
+              "href": "https://api.example.org/v3/isolation_segments/0a79fcec-a648-4eb8-a6c3-2b5be39047c7"
             },
             "organizations": {
                "href": "https://api.example.org/v3/isolation_segments/0a79fcec-a648-4eb8-a6c3-2b5be39047c7/organizations"
@@ -111,9 +99,6 @@
       "self": {
          "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c"
       },
-      "spaces": {
-         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
-      },
       "organizations": {
          "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/organizations"
       }
@@ -130,9 +115,6 @@
    "links": {
       "self": {
          "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c"
-      },
-      "spaces": {
-         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
       },
       "organizations": {
          "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/organizations"
@@ -179,15 +161,19 @@
 {
   "data": [
     {
-      "guid": "68d54d31-9b3a-463b-ba94-e8e4c32edbac",
+      "guid": "68d54d31-9b3a-463b-ba94-e8e4c32edbac"
     },
     {
-      "guid": "b19f6525-cbd3-4155-b156-dc0c2a431b4c",
+      "guid": "b19f6525-cbd3-4155-b156-dc0c2a431b4c"
     }
-  ]
+  ],
   "links":  {
-    "self": { "href": "https://api.example.org/v3/isolation_segments/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"}
-    "related": { "href": "https://api.example.org/v3/isolation_segments/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/organizations"}
+    "self": {
+      "href": "https://api.example.org/v3/isolation_segments/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"
+    },
+    "related": {
+      "href": "https://api.example.org/v3/isolation_segments/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/organizations"
+    }
   }
 }
 <% end %>

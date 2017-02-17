@@ -26,7 +26,6 @@ RSpec.describe 'IsolationSegmentModels' do
         'updated_at' => iso8601,
         'links'      => {
           'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{created_isolation_segment.guid}" },
-          'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{created_isolation_segment.guid}/relationships/spaces" },
           'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{created_isolation_segment.guid}/organizations" },
         }
       }
@@ -160,7 +159,6 @@ RSpec.describe 'IsolationSegmentModels' do
           'updated_at' => iso8601,
           'links'      => {
             'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}" },
-            'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" },
             'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" },
           }
         }
@@ -192,7 +190,6 @@ RSpec.describe 'IsolationSegmentModels' do
           'updated_at' => iso8601,
           'links'      => {
             'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}" },
-            'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" },
             'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" },
           }
         }
@@ -231,7 +228,6 @@ RSpec.describe 'IsolationSegmentModels' do
             'updated_at' => iso8601,
             'links'      => {
               'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{shared_guid}" },
-              'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{shared_guid}/relationships/spaces" },
               'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{shared_guid}/organizations" },
             }
           }
@@ -277,7 +273,6 @@ RSpec.describe 'IsolationSegmentModels' do
               'updated_at'  =>  iso8601,
               'links'       =>  {
                 'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[1].guid}" },
-                'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[1].guid}/relationships/spaces" },
                 'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[1].guid}/organizations" },
               }
             },
@@ -288,7 +283,6 @@ RSpec.describe 'IsolationSegmentModels' do
               'updated_at'  =>  iso8601,
               'links'       =>  {
                 'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[2].guid}" },
-                'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[2].guid}/relationships/spaces" },
                 'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[2].guid}/organizations" },
               }
             },
@@ -379,7 +373,6 @@ RSpec.describe 'IsolationSegmentModels' do
         'updated_at' => iso8601,
         'links'      => {
           'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}" },
-          'spaces' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" },
           'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" },
         }
       }

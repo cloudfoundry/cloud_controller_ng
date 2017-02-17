@@ -12,7 +12,6 @@ module VCAP::CloudController::Presenters::V3
         links = {
           self: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
           organizations: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/organizations" },
-          spaces: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces" },
         }
 
         expect(result[:guid]).to eq(isolation_segment.guid)

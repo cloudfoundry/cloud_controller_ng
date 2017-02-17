@@ -25,7 +25,6 @@ module VCAP::CloudController
           {
             self: { href: url_builder.build_url(path: "/v3/isolation_segments/#{isolation_segment.guid}") },
             organizations: { href: url_builder.build_url(path: "/v3/isolation_segments/#{isolation_segment.guid}/organizations") },
-            spaces: { href: url_builder.build_url(path: "/v3/isolation_segments/#{isolation_segment.guid}/relationships/spaces") },
           }
         end
       end
