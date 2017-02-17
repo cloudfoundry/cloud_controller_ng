@@ -84,8 +84,8 @@ Rails.application.routes.draw do
 
   # spaces
   get '/spaces', to: 'spaces_v3#index'
-  patch '/spaces/:guid/relationships/isolation_segment', to: 'spaces_v3#update'
-  get '/spaces/:guid/relationships/isolation_segment', to: 'spaces_v3#index_isolation_segment'
+  get '/spaces/:guid/relationships/isolation_segment', to: 'spaces_v3#show_isolation_segment'
+  patch '/spaces/:guid/relationships/isolation_segment', to: 'spaces_v3#update_isolation_segment'
 
   # tasks
   get '/tasks', to: 'tasks#index'

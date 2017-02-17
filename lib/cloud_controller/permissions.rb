@@ -35,6 +35,12 @@ class VCAP::CloudController::Permissions
     can_read_globally? || membership.has_any_roles?(ROLES_FOR_ORG_READING, nil, org_guid)
   end
 
+  def can_read_from_isolation_segment?(isolation_segment)
+    can_read_globally? ||
+      isolation_segment.spaces.any? { |space| can_read_from_space?(space.guid, space.organization.guid) } ||
+      isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
+  end
+
   def can_read_from_space?(space_guid, org_guid)
     can_read_globally? || membership.has_any_roles?(ROLES_FOR_READING, space_guid, org_guid)
   end

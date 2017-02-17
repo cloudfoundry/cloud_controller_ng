@@ -32,6 +32,11 @@ RSpec.describe ApplicationController, type: :controller do
       head 200
     end
 
+    def isolation_segment_read_access
+      can_read_from_isolation_segment?(VCAP::CloudController::IsolationSegmentModel.find(guid: params[:iso_seg]))
+      head 200
+    end
+
     def write_access
       can_write?(params[:space_guid])
       head 200
@@ -307,6 +312,22 @@ RSpec.describe ApplicationController, type: :controller do
       get :read_globally_access
 
       expect(permissions).to have_received(:can_read_globally?)
+    end
+  end
+
+  describe '#can_read_from_isolation_segment?' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'asks for #can_read_from_isolation_segment? on behalf of the current user' do
+      routes.draw { get 'isolation_segment_read_access' => 'anonymous#isolation_segment_read_access' }
+
+      iso_seg = VCAP::CloudController::IsolationSegmentModel.make
+      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_isolation_segment?: true)
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      get :isolation_segment_read_access, iso_seg: iso_seg.guid
+
+      expect(permissions).to have_received(:can_read_from_isolation_segment?).with(iso_seg)
     end
   end
 

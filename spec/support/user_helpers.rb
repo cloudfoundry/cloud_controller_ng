@@ -94,6 +94,14 @@ module UserHelpers
     allow(permissions_double(user)).to receive(:can_read_globally?).and_return(true)
   end
 
+  def allow_user_read_access_for_isolation_segment(user)
+    allow(permissions_double(user)).to receive(:can_read_from_isolation_segment?).and_return(true)
+  end
+
+  def disallow_user_read_access_for_isolation_segment(user)
+    allow(permissions_double(user)).to receive(:can_read_from_isolation_segment?).and_return(false)
+  end
+
   def disallow_user_global_read_access(user)
     allow(permissions_double(user)).to receive(:can_read_globally?).and_return(false)
   end

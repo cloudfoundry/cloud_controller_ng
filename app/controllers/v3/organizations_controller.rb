@@ -86,7 +86,7 @@ class OrganizationsV3Controller < ApplicationController
     else
       isolation_segment, dataset = OrgListFetcher.new.fetch_for_isolation_segment(message: message, guids: readable_org_guids)
     end
-    isolation_segment_not_found! unless isolation_segment && can_read_isolation_segment?(isolation_segment)
+    isolation_segment_not_found! unless isolation_segment && can_read_from_isolation_segment?(isolation_segment)
     dataset
   end
 end

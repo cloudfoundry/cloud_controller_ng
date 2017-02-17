@@ -1,9 +1,8 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'messages/spaces/spaces_list_message'
-require 'messages/spaces/space_update_message'
-require 'actions/space_update'
+require 'messages/spaces/space_update_isolation_segment_message'
+require 'actions/space_update_isolation_segment'
 require 'fetchers/space_list_fetcher'
-require 'presenters/v3/paginated_list_presenter'
 
 class SpacesV3Controller < ApplicationController
   def index
@@ -17,52 +16,58 @@ class SpacesV3Controller < ApplicationController
     )
   end
 
-  def update
-    space = Space.where(guid: params[:guid]).first
-    resource_not_found!(:space) unless space
-
+  def update_isolation_segment
+    space = fetch_space(params[:guid])
+    space_not_found! unless space
     org = space.organization
-    resource_not_found!(:org) unless org
-    resource_not_found!(:space) unless can_read?(space.guid, org.guid)
-    unauthorized! unless can_write?(space.guid)
+    org_not_found! unless org
+    space_not_found! unless can_read?(space.guid, org.guid)
+    unauthorized! unless roles.admin? || space.organization.managers.include?(current_user) || space.managers.include?(current_user)
 
-    message = SpaceUpdateMessage.create_from_http_request(params[:body])
+    message = SpaceUpdateIsolationSegmentMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    iso_seg_guid = message.isolation_segment_guid
-    if iso_seg_guid
-      isolation_segment = IsolationSegmentModel.where(guid: iso_seg_guid).first
-      unprocessable_iso_seg(iso_seg_guid) unless isolation_segment && can_read_isolation_segment?(isolation_segment)
+    SpaceUpdateIsolationSegment.new(user_audit_info).update(space, org, message)
 
-      entitled_iso_segs = org.isolation_segment_guids
-      unprocessable_iso_seg(iso_seg_guid) unless entitled_iso_segs.include?(iso_seg_guid)
-
-      SpaceUpdate.new(user_audit_info).update(space, isolation_segment, message)
-    else
-      SpaceUpdate.new(user_audit_info).update(space, nil, message)
-    end
-
+    isolation_segment = fetch_isolation_segment(message.isolation_segment_guid)
     render status: :ok, json: Presenters::V3::OneToOneRelationshipPresenter.new("spaces/#{space.guid}", isolation_segment, 'isolation_segment')
-  rescue SpaceUpdate::InvalidSpace => e
+  rescue SpaceUpdateIsolationSegment::InvalidSpace => e
     unprocessable!(e.message)
+  rescue SpaceUpdateIsolationSegment::InvalidRelationship
+    unprocessable_iso_seg(message.isolation_segment_guid)
   end
 
-  def index_isolation_segment
-    space = Space.where(guid: params[:guid]).first
-    resource_not_found!(:space) unless space
+  def show_isolation_segment
+    space = fetch_space(params[:guid])
+    space_not_found! unless space
 
     org = space.organization
-    resource_not_found!(:space) unless can_read?(space.guid, org.guid)
+    space_not_found! unless can_read?(space.guid, org.guid)
 
-    isolation_segment = IsolationSegmentModel.where(guid: space.isolation_segment_guid).first
+    isolation_segment = fetch_isolation_segment(space.isolation_segment_guid)
     render status: :ok, json: Presenters::V3::OneToOneRelationshipPresenter.new("spaces/#{space.guid}", isolation_segment, 'isolation_segment')
   end
 
   private
 
+  def fetch_space(guid)
+    Space.where(guid: guid).first
+  end
+
+  def fetch_isolation_segment(guid)
+    IsolationSegmentModel.where(guid: guid).first
+  end
+
+  def space_not_found!
+    resource_not_found!(:space)
+  end
+
+  def org_not_found!
+    resource_not_found!(:org)
+  end
+
   def unprocessable_iso_seg(iso_seg_guid)
-    raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity',
-      "Unable to set #{iso_seg_guid} as the isolation segment. Ensure it has been entitled to the organization that this space belongs to.")
+    unprocessable!("Unable to set #{iso_seg_guid} as the isolation segment. Ensure it has been entitled to the organization that this space belongs to.")
   end
 
   def readable_spaces(message:)

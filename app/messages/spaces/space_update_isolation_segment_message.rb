@@ -1,7 +1,7 @@
 require 'messages/base_message'
 
 module VCAP::CloudController
-  class OrgDefaultIsoSegUpdateMessage < BaseMessage
+  class SpaceUpdateIsolationSegmentMessage < BaseMessage
     ALLOWED_KEYS = [:data].freeze
 
     attr_accessor(*ALLOWED_KEYS)
@@ -14,7 +14,7 @@ module VCAP::CloudController
     validates :data, presence: true, hash: true, allow_nil: true
     validate :data_content, if: data_requested?
 
-    def default_isolation_segment_guid
+    def isolation_segment_guid
       return data['guid'] if data
       nil
     end
@@ -27,7 +27,7 @@ module VCAP::CloudController
     end
 
     def self.create_from_http_request(body)
-      OrgDefaultIsoSegUpdateMessage.new(body.symbolize_keys)
+      SpaceUpdateIsolationSegmentMessage.new(body.symbolize_keys)
     end
 
     private

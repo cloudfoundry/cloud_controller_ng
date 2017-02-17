@@ -75,25 +75,6 @@ module VCAP::CloudController::Validators
     end
   end
 
-  class SpaceUpdateValidator < ActiveModel::Validator
-    def validate(record)
-      data = record.data
-      return if data.nil?
-      if !data.is_a?(Hash)
-        record.errors.add(:data, 'data must be a hash')
-        return
-      end
-      if data.keys != ['guid']
-        record.errors.add(:data, "Invalid keys: #{data.keys.sort.join(', ')}")
-      end
-      guid = data.fetch('guid', '')
-
-      if !guid.is_a?(String)
-        record.errors.add(:data, 'isolation segment guid is not a string')
-      end
-    end
-  end
-
   class RelationshipValidator < ActiveModel::Validator
     def validate(record)
       return if !record.relationships.is_a?(Hash)

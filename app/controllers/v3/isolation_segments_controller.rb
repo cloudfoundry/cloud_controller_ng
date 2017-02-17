@@ -37,7 +37,7 @@ class IsolationSegmentsController < ApplicationController
 
   def show
     isolation_segment_model = find_isolation_segment(params[:guid])
-    resource_not_found!(:isolation_segment) unless can_read_isolation_segment?(isolation_segment_model)
+    resource_not_found!(:isolation_segment) unless can_read_from_isolation_segment?(isolation_segment_model)
 
     render status: :ok, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
   end
@@ -99,7 +99,7 @@ class IsolationSegmentsController < ApplicationController
 
   def relationships_spaces
     isolation_segment_model = find_isolation_segment(params[:guid])
-    resource_not_found!(:isolation_segment) unless can_read_isolation_segment?(isolation_segment_model)
+    resource_not_found!(:isolation_segment) unless can_read_from_isolation_segment?(isolation_segment_model)
 
     fetcher = IsolationSegmentSpacesFetcher.new(isolation_segment_model)
     spaces = if can_read_globally?

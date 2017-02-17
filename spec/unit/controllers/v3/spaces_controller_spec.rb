@@ -147,7 +147,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
     end
   end
 
-  describe '#update' do
+  describe '#update_isolation_segment' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     let!(:org1) { VCAP::CloudController::Organization.make(name: 'Lyle\'s Farm') }
@@ -158,6 +158,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
     let!(:space4) { VCAP::CloudController::Space.make(name: 'Buffalo') }
     let!(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
     let!(:update_message) { { 'data' => { 'guid' => isolation_segment_model.guid } } }
+    let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
     context 'when the user is an admin' do
       before do
@@ -166,11 +167,11 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       context 'when the org has been entitled with the isolation segment' do
         before do
-          VCAP::CloudController::IsolationSegmentAssign.new.assign(isolation_segment_model, [org1])
+          assigner.assign(isolation_segment_model, [org1])
         end
 
         it 'can assign an isolation segment to a space in org1' do
-          patch :update, guid: space1.guid, body: update_message
+          patch :update_isolation_segment, guid: space1.guid, body: update_message
 
           expect(response.status).to eq(200)
           space1.reload
@@ -180,13 +181,13 @@ RSpec.describe SpacesV3Controller, type: :controller do
         end
 
         it 'can remove an isolation segment from a space' do
-          patch :update, guid: space1.guid, body: update_message
+          patch :update_isolation_segment, guid: space1.guid, body: update_message
 
           expect(response.status).to eq(200)
           space1.reload
           expect(space1.isolation_segment_guid).to eq(isolation_segment_model.guid)
 
-          patch :update, guid: space1.guid, body: { data: nil }
+          patch :update_isolation_segment, guid: space1.guid, body: { data: nil }
           expect(response.status).to eq(200)
           space1.reload
           expect(space1.isolation_segment_guid).to eq(nil)
@@ -196,7 +197,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       context 'when the org has not been entitled with the isolation segment' do
         it 'will not assign an isolation segment to a space in a different org' do
-          patch :update, guid: space3.guid, body: update_message
+          patch :update_isolation_segment, guid: space3.guid, body: update_message
 
           expect(response.status).to eq(422)
           expect(response.body).to include(
@@ -209,7 +210,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         let!(:update_message) { { 'data' => { 'guid' => 'potato' } } }
 
         it 'raises an error' do
-          patch :update, guid: space1.guid, body: update_message
+          patch :update_isolation_segment, guid: space1.guid, body: update_message
 
           expect(response.status).to eq(422)
           expect(response.body).to include(
@@ -226,7 +227,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         end
 
         it 'throws ResourceNotFound error' do
-          patch :update, guid: space1.guid, body: update_message
+          patch :update_isolation_segment, guid: space1.guid, body: update_message
 
           expect(response.status).to eq(404)
           expect(response.body).to include 'ResourceNotFound'
@@ -234,55 +235,61 @@ RSpec.describe SpacesV3Controller, type: :controller do
         end
       end
 
-      context 'when the user does not have permissions to write from the space' do
+      context 'when the user is an org manager but NOT a space manager' do
         before do
-          set_current_user(user)
-          allow_user_read_access_for(user, orgs: [org1], spaces: [space1])
-          disallow_user_write_access(user, space: space1)
-          VCAP::CloudController::IsolationSegmentAssign.new.assign(isolation_segment_model, [org1])
+          assigner.assign(isolation_segment_model, [org1])
+          org1.add_manager(user)
         end
 
-        context 'when assigning an isolation segment' do
-          let!(:update_message) { { 'data' => { 'guid' => isolation_segment_model.guid } } }
+        it 'returns a successful response' do
+          patch :update_isolation_segment, guid: space1.guid, body: update_message
 
-          it 'throws Unauthorized error' do
-            patch :update, guid: space1.guid, body: update_message
+          expect(response.status).to eq(200)
+        end
+      end
 
-            expect(response.body).to include 'NotAuthorized'
-            expect(response.status).to eq(403)
-          end
+      context 'when the user is a space manager but NOT an org manager' do
+        before do
+          assigner.assign(isolation_segment_model, [org1])
+          org1.add_user(user)
+          space1.add_manager(user)
         end
 
-        context 'when unassigning an isolation segment' do
-          let!(:update_message) { { 'data' => nil } }
+        it 'returns a successful response' do
+          patch :update_isolation_segment, guid: space1.guid, body: update_message
 
-          it 'throws Unauthorized error' do
-            patch :update, guid: space1.guid, body: update_message
+          expect(response.status).to eq(200)
+        end
+      end
 
-            expect(response.status).to eq(403)
-            expect(response.body).to include 'NotAuthorized'
-          end
+      context 'when the user is not an org manager nor a space manager' do
+        it 'returns an Unauthorized error' do
+          patch :update_isolation_segment, guid: space1.guid, body: update_message
+
+          expect(response.status).to eq(401)
+          expect(response.body).to include 'Authentication error'
         end
       end
     end
   end
 
-  describe '#index_isolation_segment' do
+  describe '#show_isolation_segment' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     let!(:org) { VCAP::CloudController::Organization.make(name: 'Lyle\'s Farm') }
     let!(:space) { VCAP::CloudController::Space.make(name: 'Lamb', organization: org) }
     let!(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
     context 'when the user has permissions to read from the space' do
       before do
         allow_user_read_access_for(user, orgs: [org], spaces: [space])
-        VCAP::CloudController::IsolationSegmentAssign.new.assign(isolation_segment_model, [org])
+        assigner.assign(isolation_segment_model, [org])
         space.update(isolation_segment_guid: isolation_segment_model.guid)
       end
 
       it 'returns a 200 and the isolation segment associated with the space' do
-        get :index_isolation_segment, guid: space.guid
+        get :show_isolation_segment, guid: space.guid
 
         expect(response.status).to eq(200)
         expect(parsed_body['data']['guid']).to eq(isolation_segment_model.guid)
@@ -290,7 +297,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       context 'when the space does not exist' do
         it 'returns a 404' do
-          get :index_isolation_segment, guid: 'potato'
+          get :show_isolation_segment, guid: 'potato'
 
           expect(response.status).to eq(404)
           expect(response.body).to include('Space not found')
@@ -301,7 +308,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         before { space.update(isolation_segment_guid: nil) }
 
         it 'returns a 200' do
-          get :index_isolation_segment, guid: space.guid
+          get :show_isolation_segment, guid: space.guid
 
           expect(response.status).to eq(200)
           expect(parsed_body['data']).to eq(nil)
@@ -313,7 +320,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       before { allow_user_read_access_for(user, orgs: [], spaces: []) }
 
       it 'throws ResourceNotFound error' do
-        get :index_isolation_segment, guid: space.guid
+        get :show_isolation_segment, guid: space.guid
 
         expect(response.status).to eq(404)
         expect(response.body).to include 'ResourceNotFound'
