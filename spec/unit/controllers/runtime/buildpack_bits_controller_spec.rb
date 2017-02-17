@@ -48,10 +48,11 @@ module VCAP::CloudController
 
       context '/v2/buildpacks/:guid/bits' do
         before do
+          @cache = Delayed::Worker.delay_jobs
           Delayed::Worker.delay_jobs = false
         end
 
-        after { Delayed::Worker.delay_jobs = true }
+        after { Delayed::Worker.delay_jobs = @cache }
 
         let(:upload_body) { { buildpack: valid_zip, buildpack_name: valid_zip.path } }
 

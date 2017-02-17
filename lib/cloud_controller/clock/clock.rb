@@ -1,56 +1,55 @@
 require 'clockwork'
+require 'cloud_controller/clock/distributed_scheduler'
 
 module VCAP::CloudController
   class Clock
-    def initialize(config)
-      @config = config
-      @logger = Steno.logger('cc.clock')
-    end
+    FREQUENT_FUDGE_FACTOR = 1.second.freeze
+    DAILY_FUDGE_FACTOR    = 1.minute.freeze
 
-    def schedule_cleanup(name, klass, at)
-      config = @config.fetch(name.to_sym)
+    def schedule_daily_job(name:, at:)
+      job_opts = {
+        name:     name,
+        interval: 1.day,
+        at:       at,
+        fudge:    DAILY_FUDGE_FACTOR,
+      }
 
-      Clockwork.every(1.day, "#{name}.cleanup.job", at: at) do |_|
-        @logger.info("Queueing #{klass} at #{Time.now.utc}")
-        cutoff_age_in_days = config.fetch(:cutoff_age_in_days)
-        job                = klass.new(cutoff_age_in_days)
+      schedule_job(job_opts) do
+        job = yield
         Jobs::Enqueuer.new(job, queue: 'cc-generic').enqueue
       end
     end
 
-    def schedule_frequent_job(name, klass, queue: 'cc-generic', priority: nil, allow_only_one_job_in_queue: false)
-      config = @config.fetch(name.to_sym)
+    def schedule_frequent_worker_job(name:, interval:)
+      job_opts = {
+        name:     name,
+        interval: interval,
+        fudge:    FREQUENT_FUDGE_FACTOR,
+      }
 
-      Clockwork.every(config.fetch(:frequency_in_seconds), "#{name}.job") do |_|
-        if allow_only_one_job_in_queue && running_job?(queue)
-          @logger.info("Skipping enqueue of #{name} as one is already running")
-          next
-        end
-
-        @logger.info("Queueing #{klass} at #{Time.now.utc}")
-        expiration = config[:expiration_in_seconds]
-        job = if expiration
-                klass.new(expiration)
-              else
-                klass.new
-              end
-        opts = { queue: queue }
-        opts[:priority] = priority if priority
-        Jobs::Enqueuer.new(job, opts).enqueue
+      schedule_job(job_opts) do
+        job = yield
+        Jobs::Enqueuer.new(job, queue: 'cc-generic').enqueue
       end
     end
 
-    def schedule_daily(name, klass, at)
-      Clockwork.every(1.day, "#{name}.cleanup.job", at: at) do |_|
-        @logger.info("Queueing #{klass} at #{Time.now.utc}")
-        Jobs::Enqueuer.new(klass.new, queue: 'cc-generic').enqueue
+    def schedule_frequent_inline_job(name:, interval:)
+      job_opts = {
+        name:     name,
+        interval: interval,
+        fudge:    FREQUENT_FUDGE_FACTOR,
+      }
+
+      schedule_job(job_opts) do
+        job = yield
+        Jobs::Enqueuer.new(job).run_inline
       end
     end
 
     private
 
-    def running_job?(queue)
-      Delayed::Job.where(queue: queue, failed_at: nil).exclude(locked_at: nil).count > 0
+    def schedule_job(name:, interval:, at: nil, fudge:)
+      DistributedScheduler.new.schedule_periodic_job(name: name, interval: interval, at: at, fudge: fudge) { yield }
     end
   end
 end

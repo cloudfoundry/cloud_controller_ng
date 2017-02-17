@@ -571,3 +571,62 @@ properties:
   cc.bits_service.password:
     description: "Password for the bits-service"
     default: ""
+
+  cc.diego.bbs.url:
+    description: "URL of the BBS Server"
+    default: https://bbs.service.cf.internal:8889
+
+  cc.mutual_tls.ca_cert:
+    description: "PEM-encoded CA certificate for secure, mutually authenticated TLS communication"
+  cc.mutual_tls.public_cert:
+    description: "PEM-encoded certificate for secure, mutually authenticated TLS communication"
+  cc.mutual_tls.private_key:
+    description: "PEM-encoded key for secure, mutually authenticated TLS communication"
+
+  cc.diego.nsync_url:
+    default: http://nsync.service.cf.internal:8787
+    description: "URL of the Diego nsync service"
+  cc.diego.stager_url:
+    default: http://stager.service.cf.internal:8888
+    description: "URL of the Diego stager service"
+  cc.diego.tps_url:
+    default: http://tps.service.cf.internal:1518
+    description: "URL of the Diego tps service"
+  cc.diego.file_server_url:
+    description: "URL of file server"
+    default: http://file-server.service.cf.internal:8080
+  cc.diego.cc_uploader_url:
+    description: "URL of cc uploader"
+    default: http://cc-uploader.service.cf.internal:9090
+  cc.diego.use_privileged_containers_for_running:
+    description: "Whether or not to use privileged containers for running buildpack apps and tasks."
+    default: false
+  cc.diego.use_privileged_containers_for_staging:
+    description: "Whether or not to use privileged containers for staging tasks."
+    default: false
+  cc.diego.lifecycle_bundles:
+    description: "List of lifecycle bundles arguments for different stacks"
+    default:
+      "buildpack/cflinuxfs2": "buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
+      "buildpack/windows2012R2": "windows_app_lifecycle/windows_app_lifecycle.tgz"
+      "docker": "docker_app_lifecycle/docker_app_lifecycle.tgz"
+
+  cc.diego.temporary_local_staging:
+    description: "Temporary flag to enable staging directly to the bbs from cc"
+    default: false
+  cc.diego.temporary_local_tasks:
+    description: "Temporary flag to run tasks directly to the bbs from cc"
+    default: false
+  cc.diego.temporary_local_apps:
+    description: "Temporary flag to manage app state directly to the bbs from cc"
+    default: false
+  cc.diego.temporary_local_sync:
+    description: "Temporary flag to manage app state directly to the bbs from cc"
+    default: false
+  cc.diego.temporary_local_tps:
+    description: "Temporary flag to manage app state directly to the bbs from cc"
+    default: false
+
+  cc.diego.pid_limit:
+    description: "Maximum pid limit for containerized work running user-provided code"
+    default: 1024

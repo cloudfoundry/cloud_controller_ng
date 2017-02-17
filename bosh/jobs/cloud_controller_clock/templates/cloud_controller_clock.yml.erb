@@ -351,3 +351,24 @@ bits_service:
   username: <%= p("cc.bits_service.username") %>
   password: <%= p("cc.bits_service.password") %>
   <% end %>
+
+diego:
+  temporary_local_staging: <%= p("cc.diego.temporary_local_staging") %>
+  temporary_local_tasks: <%= p("cc.diego.temporary_local_tasks") %>
+  temporary_local_apps: <%= p("cc.diego.temporary_local_apps") %>
+  temporary_local_sync: <%= p("cc.diego.temporary_local_sync") %>
+  temporary_local_tps: <%= p("cc.diego.temporary_local_tps") %>
+  nsync_url: <%= p("cc.diego.nsync_url") %>
+  stager_url: <%= p("cc.diego.stager_url") %>
+  tps_url: <%= p("cc.diego.tps_url") %>
+  file_server_url: <%= p("cc.diego.file_server_url") %>
+  cc_uploader_url: <%= p("cc.diego.cc_uploader_url") %>
+  use_privileged_containers_for_running: <%= p("cc.diego.use_privileged_containers_for_running") %>
+  use_privileged_containers_for_staging: <%= p("cc.diego.use_privileged_containers_for_staging") %>
+  lifecycle_bundles: <%= p("cc.diego.lifecycle_bundles").to_json %>
+  bbs:
+    url: <%= p("cc.diego.bbs.url") %>
+    key_file: /var/vcap/jobs/cloud_controller_worker/config/certs/mutual_tls.key
+    cert_file: /var/vcap/jobs/cloud_controller_worker/config/certs/mutual_tls.crt
+    ca_file: /var/vcap/jobs/cloud_controller_worker/config/certs/mutual_tls_ca.crt
+  pid_limit: <%= p("cc.diego.pid_limit") %>

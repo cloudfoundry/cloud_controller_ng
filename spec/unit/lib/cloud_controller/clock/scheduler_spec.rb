@@ -6,15 +6,30 @@ module VCAP::CloudController
     describe '#start' do
       subject(:schedule) { Scheduler.new(config) }
 
-      let(:clock) { instance_double(Clock, schedule_cleanup: nil, schedule_frequent_job: nil, schedule_daily: nil) }
-      let(:config) { double }
+      let(:clock) { instance_double(Clock) }
+      let(:config) do
+        {
+          app_usage_events: { cutoff_age_in_days: 1, },
+          app_events: { cutoff_age_in_days: 2, },
+          audit_events: { cutoff_age_in_days: 3, },
+          failed_jobs: { cutoff_age_in_days: 4, },
+          service_usage_events: { cutoff_age_in_days: 5, },
+          completed_tasks: { cutoff_age_in_days: 6, },
+          pending_droplets: { frequency_in_seconds: 300, expiration_in_seconds: 600 },
+          diego_sync: { frequency_in_seconds: 30 },
+        }
+      end
 
       before do
-        allow(Clock).to receive(:new).with(config).and_return(clock)
+        allow(Clock).to receive(:new).with(no_args).and_return(clock)
         allow(Clockwork).to receive(:run)
       end
 
       it 'configures Clockwork with a logger' do
+        allow(clock).to receive(:schedule_frequent_worker_job)
+        allow(clock).to receive(:schedule_frequent_inline_job)
+        allow(clock).to receive(:schedule_daily_job)
+
         error = StandardError.new 'Boom!'
         allow(Clockwork).to receive(:error_handler).and_yield(error)
         expect_any_instance_of(Steno::Logger).to receive(:error).with(error)
@@ -23,31 +38,86 @@ module VCAP::CloudController
       end
 
       it 'runs Clockwork' do
+        allow(clock).to receive(:schedule_frequent_worker_job)
+        allow(clock).to receive(:schedule_frequent_inline_job)
+        allow(clock).to receive(:schedule_daily_job)
+
         schedule.start
 
         expect(Clockwork).to have_received(:run)
       end
 
       it 'schedules cleanup for all daily jobs' do
-        schedule.start
+        allow(clock).to receive(:schedule_frequent_worker_job)
+        allow(clock).to receive(:schedule_frequent_inline_job)
 
-        Scheduler::CLEANUPS.map { |cleanup| cleanup[:class] }.each do |klass|
-          expect(clock).to have_received(:schedule_cleanup).with(an_instance_of(Symbol), klass, an_instance_of(String))
+        expect(clock).to receive(:schedule_daily_job) do |args, &block|
+          expect(args).to eql(name: 'app_usage_events', at: '18:00')
+          expect(Jobs::Runtime::AppUsageEventsCleanup).to receive(:new).with(1).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::AppUsageEventsCleanup)
         end
+
+        expect(clock).to receive(:schedule_daily_job) do |args, &block|
+          expect(args).to eql(name: 'app_events', at: '19:00')
+          expect(Jobs::Runtime::AppEventsCleanup).to receive(:new).with(2).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::AppEventsCleanup)
+        end
+
+        expect(clock).to receive(:schedule_daily_job) do |args, &block|
+          expect(args).to eql(name: 'audit_events', at: '20:00')
+          expect(Jobs::Runtime::EventsCleanup).to receive(:new).with(3).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::EventsCleanup)
+        end
+
+        expect(clock).to receive(:schedule_daily_job) do |args, &block|
+          expect(args).to eql(name: 'failed_jobs', at: '21:00')
+          expect(Jobs::Runtime::FailedJobsCleanup).to receive(:new).with(4).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::FailedJobsCleanup)
+        end
+
+        expect(clock).to receive(:schedule_daily_job) do |args, &block|
+          expect(args).to eql(name: 'service_usage_events', at: '22:00')
+          expect(Jobs::Services::ServiceUsageEventsCleanup).to receive(:new).with(5).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Services::ServiceUsageEventsCleanup)
+        end
+
+        expect(clock).to receive(:schedule_daily_job) do |args, &block|
+          expect(args).to eql(name: 'completed_tasks', at: '23:00')
+          expect(Jobs::Runtime::PruneCompletedTasks).to receive(:new).with(6).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::PruneCompletedTasks)
+        end
+
+        expect(clock).to receive(:schedule_daily_job) do |args, &block|
+          expect(args).to eql(name: 'expired_blob_cleanup', at: '00:00')
+          expect(Jobs::Runtime::ExpiredBlobCleanup).to receive(:new).with(no_args).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::ExpiredBlobCleanup)
+        end
+
+        schedule.start
       end
 
-      it 'schedules the frequent cleanup' do
-        schedule.start
+      it 'schedules the frequent worker jobs' do
+        allow(clock).to receive(:schedule_daily_job)
+        allow(clock).to receive(:schedule_frequent_inline_job)
+        expect(clock).to receive(:schedule_frequent_worker_job) do |args, &block|
+          expect(args).to eql(name: 'pending_droplets', interval: 300)
+          expect(Jobs::Runtime::PendingDropletCleanup).to receive(:new).with(600).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::PendingDropletCleanup)
+        end
 
-        expect(clock).to have_received(:schedule_frequent_job).
-          with(:pending_droplets, Jobs::Runtime::PendingDropletCleanup)
+        schedule.start
       end
 
-      it 'schedules diego syncs' do
-        schedule.start
+      it 'schedules the frequent inline jobs' do
+        allow(clock).to receive(:schedule_daily_job)
+        allow(clock).to receive(:schedule_frequent_worker_job)
+        expect(clock).to receive(:schedule_frequent_inline_job) do |args, &block|
+          expect(args).to eql(name: 'diego_sync', interval: 30)
+          expect(Jobs::Diego::Sync).to receive(:new).with(no_args).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Diego::Sync)
+        end
 
-        expect(clock).to have_received(:schedule_frequent_job).
-          with(:diego_sync, Jobs::Diego::Sync, priority: -10, queue: 'sync-queue', allow_only_one_job_in_queue: true)
+        schedule.start
       end
     end
   end

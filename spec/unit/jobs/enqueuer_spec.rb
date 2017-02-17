@@ -27,5 +27,31 @@ module VCAP::CloudController::Jobs
         Enqueuer.new(wrapped_job, opts).enqueue
       end
     end
+
+    describe '#run_inline' do
+      let(:wrapped_job) { Runtime::ModelDeletion.new('one', 'two') }
+      let(:opts) { {} }
+
+      it 'schedules the job to run immediately in-process' do
+        expect(Delayed::Job).to receive(:enqueue) do
+          expect(Delayed::Worker.delay_jobs).to be(false)
+        end
+
+        expect(Delayed::Worker.delay_jobs).to be(true)
+        Enqueuer.new(wrapped_job, opts).run_inline
+        expect(Delayed::Worker.delay_jobs).to be(true)
+      end
+
+      context 'when executing the job fails' do
+        it 'still restores delay_jobs flag' do
+          expect(Delayed::Job).to receive(:enqueue).and_raise('Boom!')
+          expect(Delayed::Worker.delay_jobs).to be(true)
+          expect {
+            Enqueuer.new(wrapped_job, opts).run_inline
+          }.to raise_error /Boom!/
+          expect(Delayed::Worker.delay_jobs).to be(true)
+        end
+      end
+    end
   end
 end

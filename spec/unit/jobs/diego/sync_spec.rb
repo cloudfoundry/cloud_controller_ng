@@ -35,20 +35,6 @@ module VCAP::CloudController
           expect(tasks_sync).to have_received(:sync).once
         end
 
-        it 'runs at most once in parallel' do
-          allow(tasks_sync).to receive(:sync) { sleep 2 }
-
-          threads = [
-            Thread.new { job.perform },
-            Thread.new { job.perform },
-          ]
-          threads.each { |t| t.join(0.5) }
-          threads.each(&:kill)
-
-          expect(processes_sync).to have_received(:sync).once
-          expect(tasks_sync).to have_received(:sync).once
-        end
-
         context 'when local sync are disabled' do
           let(:config) do
             {

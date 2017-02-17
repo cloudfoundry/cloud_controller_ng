@@ -3,155 +3,249 @@ require 'cloud_controller/clock/clock'
 
 module VCAP::CloudController
   RSpec.describe Clock do
-    subject(:clock) { Clock.new(config) }
+    subject(:clock) { Clock.new }
 
-    let(:some_class) { Class.new { def initialize(_); end } }
+    let(:some_job_class) { Class.new { def initialize(*args); end } }
     let(:enqueuer) { instance_double(Jobs::Enqueuer, enqueue: nil) }
 
     before do
-      allow(Clockwork).to receive(:every).and_yield('dummy.scheduled.job')
+      Timecop.freeze(Time.now.utc)
       allow(Jobs::Enqueuer).to receive(:new).and_return(enqueuer)
     end
 
-    describe 'scheduling a cleanup event' do
-      let(:config) { { some_name: { cutoff_age_in_days: 31 } } }
+    after do
+      Timecop.return
+    end
 
-      it 'schedules it, and it schedules it on the cc-generic queue' do
-        clock.schedule_cleanup(:some_name, some_class, '14:00')
+    describe 'scheduling a daily event' do
+      context 'when a job has never been run' do
+        it 'schedules it at the given time' do
+          job_name = 'fake'
+          time = '12:00'
+          allow(Clockwork).to receive(:every).with(1.day, 'fake.job', at: time).and_yield(nil)
 
-        expect(Jobs::Enqueuer).to have_received(:new).with(anything, { queue: 'cc-generic' })
-        expect(enqueuer).to have_received(:enqueue)
+          clock_opts = {
+            name:     job_name,
+            at:       time,
+          }
+          clock.schedule_daily_job(clock_opts) { some_job_class.new }
+
+          expect(Jobs::Enqueuer).to have_received(:new).with(anything, { queue: 'cc-generic' })
+          expect(enqueuer).to have_received(:enqueue)
+        end
       end
 
-      it 'schedules it at the appropriate time' do
-        clock.schedule_cleanup(:some_name, some_class, '14:00')
+      context 'when a job has been run within the last day' do
+        it 'does not enqueue a new job' do
+          job_name = 'fake'
+          time = '12:00'
+          allow(Clockwork).to receive(:every).with(1.day, 'fake.job', at: time).and_yield(nil)
 
-        expect(Clockwork).to have_received(:every).with(1.day, 'some_name.cleanup.job', at: '14:00')
+          ClockJob.insert(name: job_name, last_started_at: Time.now.utc - 30.minute)
+
+          clock_opts = {
+            name:     job_name,
+            at:       time,
+          }
+          clock.schedule_daily_job(clock_opts) { some_job_class.new }
+
+          expect(Jobs::Enqueuer).to_not have_received(:new)
+        end
+
+        context 'and it ran more than 23h 59m ago' do
+          it 'enqueues a new job to account for processing time for previous clock job update' do
+            job_name = 'fake'
+            time = '12:00'
+            allow(Clockwork).to receive(:every).with(1.day, 'fake.job', at: time).and_yield(nil)
+
+            ClockJob.insert(name: job_name, last_started_at: Time.now.utc - (1.day - 1.minute + 1.second))
+
+            clock_opts = {
+              name:     job_name,
+              at:       time,
+            }
+            clock.schedule_daily_job(clock_opts) { some_job_class.new }
+
+            expect(Jobs::Enqueuer).to have_received(:new).with(anything, { queue: 'cc-generic' })
+            expect(enqueuer).to have_received(:enqueue)
+          end
+        end
       end
 
-      it 'enqueues the requested job class' do
-        clock.schedule_cleanup(:some_name, some_class, '14:00')
+      context 'when a job has been run but NOT within the specified interval' do
+        it 'does enqueues a new job' do
+          job_name = 'fake'
+          time = '12:00'
+          allow(Clockwork).to receive(:every).with(1.day, 'fake.job', at: time).and_yield(nil)
 
-        expect(Jobs::Enqueuer).to have_received(:new).with(an_instance_of(some_class), anything)
-      end
+          ClockJob.insert(name: job_name, last_started_at: Time.now.utc - 2.day)
 
-      it 'configures the job with cutoff_age_in_days from the config' do
-        allow(some_class).to receive(:new)
+          clock_opts = {
+            name:     job_name,
+            at:       time,
+          }
+          clock.schedule_daily_job(clock_opts) { some_job_class.new }
 
-        clock.schedule_cleanup(:some_name, some_class, '14:00')
-
-        expect(some_class).to have_received(:new).with(31)
-      end
-
-      it 'logs the queuing' do
-        logger = instance_double(Steno::Logger, info: nil)
-        allow(Steno).to receive(:logger).with('cc.clock').and_return(logger)
-
-        clock.schedule_cleanup(:some_name, some_class, '14:00')
-
-        expect(logger).to have_received(:info).with(/Queueing/)
+          expect(Jobs::Enqueuer).to have_received(:new).with(anything, { queue: 'cc-generic' })
+          expect(enqueuer).to have_received(:enqueue)
+        end
       end
     end
 
-    describe 'scheduling a frequent job' do
-      let(:config) { { some_name: { frequency_in_seconds: 507, expiration_in_seconds: 203 } } }
+    describe 'scheduling a frequent worker job' do
+      context 'when a job has never been run' do
+        it 'schedules it at the given interval' do
+          job_name = 'fake'
+          interval = 507.seconds
+          allow(Clockwork).to receive(:every).with(interval, 'fake.job', {}).and_yield(nil)
 
-      it 'schedules it, and it schedules it on the cc-generic queue' do
-        clock.schedule_frequent_job(:some_name, some_class)
+          clock_opts = {
+            name:     job_name,
+            interval: interval,
+          }
+          clock.schedule_frequent_worker_job(clock_opts) { some_job_class.new }
 
-        expect(Jobs::Enqueuer).to have_received(:new).with(anything, { queue: 'cc-generic' })
-        expect(enqueuer).to have_received(:enqueue)
-      end
-
-      it 'schedules it at the appropriate time' do
-        clock.schedule_frequent_job(:some_name, some_class)
-
-        expect(Clockwork).to have_received(:every).with(507, 'some_name.job')
-      end
-
-      it 'schedules it at the appropriate priority' do
-        clock.schedule_frequent_job(:some_name, some_class, priority: -123)
-
-        expect(Jobs::Enqueuer).to have_received(:new).with(anything, { priority: -123, queue: 'cc-generic' })
-        expect(enqueuer).to have_received(:enqueue)
-      end
-
-      it 'enqueues the requested job class' do
-        clock.schedule_frequent_job(:some_name, some_class)
-
-        expect(Jobs::Enqueuer).to have_received(:new).with(an_instance_of(some_class), anything)
-      end
-
-      it 'enqueues into the correct queue bucket' do
-        clock.schedule_frequent_job(:some_name, some_class, queue: 'custom-queue')
-
-        expect(Jobs::Enqueuer).to have_received(:new).with(an_instance_of(some_class), { queue: 'custom-queue' })
-      end
-
-      context 'when "allow_only_one_job_in_queue" is true' do
-        context 'when there are no jobs in the specified queue running' do
-          it 'schedules the job' do
-            clock.schedule_frequent_job(:some_name, some_class, queue: 'custom-queue', allow_only_one_job_in_queue: true)
-
-            expect(Jobs::Enqueuer).to have_received(:new).with(an_instance_of(some_class), { queue: 'custom-queue' })
-          end
-        end
-
-        context 'when the only job in the specified queue was failed' do
-          before do
-            empty_job = double(perform: nil)
-            enqueued_job = Delayed::Job.enqueue(empty_job, queue: 'custom-queue', attempts: 1)
-            enqueued_job.update(failed_at: Time.now)
-          end
-
-          it 'schedules the job' do
-            clock.schedule_frequent_job(:some_name, some_class, queue: 'custom-queue', allow_only_one_job_in_queue: true)
-
-            expect(Jobs::Enqueuer).to have_received(:new).with(an_instance_of(some_class), { queue: 'custom-queue' })
-          end
-        end
-
-        context 'when the only job in the specified queue running' do
-          before do
-            empty_job = double(perform: nil)
-            enqueued_job = Delayed::Job.enqueue(empty_job, queue: 'custom-queue')
-            enqueued_job.update(locked_at: Time.now - 20.minutes)
-          end
-
-          it 'does not schedule another job' do
-            clock.schedule_frequent_job(:some_name, some_class, queue: 'custom-queue', allow_only_one_job_in_queue: true)
-
-            expect(Jobs::Enqueuer).not_to have_received(:new).with(an_instance_of(some_class), { queue: 'custom-queue' })
-          end
-        end
-      end
-
-      it 'configures the job with expiration_in_seconds from the config' do
-        allow(some_class).to receive(:new)
-
-        clock.schedule_frequent_job(:some_name, some_class)
-
-        expect(some_class).to have_received(:new).with(203)
-      end
-
-      it 'logs the queuing' do
-        logger = instance_double(Steno::Logger, info: nil)
-        allow(Steno).to receive(:logger).with('cc.clock').and_return(logger)
-
-        clock.schedule_frequent_job(:some_name, some_class)
-
-        expect(logger).to have_received(:info).with(/Queueing/)
-      end
-
-      context 'without setting an expiration' do
-        let(:config) { { some_name: { frequency_in_seconds: 507 } } }
-        let(:some_class) { Class.new }
-
-        it 'schedules it, and it schedules it on the cc-generic queue' do
-          clock.schedule_frequent_job(:some_name, some_class)
-
-          expect(Jobs::Enqueuer).to have_received(:new).with(some_class, { queue: 'cc-generic' })
+          expect(Jobs::Enqueuer).to have_received(:new).with(anything, { queue: 'cc-generic' })
           expect(enqueuer).to have_received(:enqueue)
+        end
+      end
+
+      context 'when a job has been run within the specified interval' do
+        it 'does not enqueue a new job' do
+          job_name = 'fake'
+          interval = 507.seconds
+          allow(Clockwork).to receive(:every).with(interval, 'fake.job', {}).and_yield(nil)
+
+          ClockJob.insert(name: job_name, last_started_at: Time.now.utc - 50.seconds)
+
+          clock_opts = {
+            name:     job_name,
+            interval: interval,
+          }
+          clock.schedule_frequent_worker_job(clock_opts) { some_job_class.new }
+
+          expect(Jobs::Enqueuer).to_not have_received(:new).with(anything, { queue: 'cc-generic' })
+        end
+
+        context 'and it falls within 1 second of the interval' do
+          it 'enqueues a new job to account for processing time for previous clock job update' do
+            job_name = 'fake'
+            interval = 507.seconds
+            allow(Clockwork).to receive(:every).with(interval, 'fake.job', {}).and_yield(nil)
+
+            ClockJob.insert(name: job_name, last_started_at: Time.now.utc - interval + 1.second - 0.1.second)
+
+            clock_opts = {
+              name:     job_name,
+              interval: interval,
+            }
+            clock.schedule_frequent_worker_job(clock_opts) { some_job_class.new }
+
+            expect(Jobs::Enqueuer).to have_received(:new).with(anything, { queue: 'cc-generic' })
+            expect(enqueuer).to have_received(:enqueue)
+          end
+        end
+      end
+
+      context 'when a job has been run but NOT within the specified interval' do
+        it 'does enqueues a new job' do
+          job_name = 'fake'
+          interval = 507.seconds
+          allow(Clockwork).to receive(:every).with(interval, 'fake.job', {}).and_yield(nil)
+
+          ClockJob.insert(name: job_name, last_started_at: Time.now.utc - interval - 1)
+
+          clock_opts = {
+            name:     job_name,
+            interval: interval,
+          }
+          10.times do
+            clock.schedule_frequent_worker_job(clock_opts) { some_job_class.new }
+          end
+
+          expect(Jobs::Enqueuer).to have_received(:new).with(anything, { queue: 'cc-generic' })
+          expect(enqueuer).to have_received(:enqueue)
+        end
+      end
+    end
+
+    describe 'scheduling a frequent inline job' do
+      context 'when a job has never been run' do
+        it 'schedules it at the given interval' do
+          job_name = 'fake'
+          interval = 507.seconds
+          allow(Clockwork).to receive(:every).with(interval, 'fake.job', {}).and_yield(nil)
+
+          enqueuer = instance_double(Jobs::Enqueuer)
+          expect(enqueuer).to receive(:run_inline)
+
+          allow(Jobs::Enqueuer).to receive(:new).with(anything).and_return(enqueuer)
+
+          clock_opts = {
+            name:     job_name,
+            interval: interval,
+          }
+          clock.schedule_frequent_inline_job(clock_opts) { some_job_class.new }
+        end
+      end
+
+      context 'when a job has been run within the specified interval' do
+        it 'does not enqueue a new job' do
+          job_name = 'fake'
+          interval = 507.seconds
+          allow(Clockwork).to receive(:every).with(interval, 'fake.job', {}).and_yield(nil)
+
+          delay = Clock::FREQUENT_FUDGE_FACTOR + 1.second
+          ClockJob.insert(name: job_name, last_started_at: Time.now.utc - interval + delay)
+
+          clock_opts = {
+            name:     job_name,
+            interval: interval,
+          }
+          clock.schedule_frequent_inline_job(clock_opts) { some_job_class.new }
+          expect(Jobs::Enqueuer).to_not have_received(:new)
+        end
+
+        context 'and it falls within 1 second of the interval' do
+          it 'enqueues a new job to account for processing time for previous clock job update' do
+            job_name = 'fake'
+            interval = 507.seconds
+            allow(Clockwork).to receive(:every).with(interval, 'fake.job', {}).and_yield(nil)
+
+            ClockJob.insert(name: job_name, last_started_at: Time.now.utc - interval + 0.9.seconds)
+
+            enqueuer = instance_double(Jobs::Enqueuer)
+            expect(enqueuer).to receive(:run_inline)
+
+            allow(Jobs::Enqueuer).to receive(:new).with(anything).and_return(enqueuer)
+
+            clock_opts = {
+              name:     job_name,
+              interval: interval,
+            }
+            clock.schedule_frequent_inline_job(clock_opts) { some_job_class.new }
+          end
+        end
+      end
+
+      context 'when a job has been run but NOT within the specified interval' do
+        it 'does enqueues a new job' do
+          job_name = 'fake'
+          interval = 507.seconds
+          allow(Clockwork).to receive(:every).with(interval, 'fake.job', {}).and_yield(nil)
+
+          enqueuer = instance_double(Jobs::Enqueuer)
+          expect(enqueuer).to receive(:run_inline)
+
+          allow(Jobs::Enqueuer).to receive(:new).with(anything).and_return(enqueuer)
+
+          clock_opts = {
+            name:     job_name,
+            interval: interval,
+          }
+          10.times do
+            clock.schedule_frequent_inline_job(clock_opts) { some_job_class.new }
+          end
         end
       end
     end
