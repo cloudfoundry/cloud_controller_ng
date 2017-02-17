@@ -7,9 +7,6 @@ module Sequel::Plugins::VcapValidations
     def validates_url(attr, opts={})
       if send(attr)
         validates_format(URI.regexp(%w(http https)), attr, message: opts.fetch(:message, :url))
-
-        # models are invalidated by adding errors, not by returning false
-        self.errors.add(attr, :url) if send(attr).include?('_')
       end
     end
 

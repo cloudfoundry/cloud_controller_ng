@@ -337,7 +337,7 @@ module VCAP::CloudController
 
       context 'when the fields for creating the broker is invalid' do
         context 'when the broker url is malformed' do
-          let(:broker_url) { 'http://url_with_underscore.broker.com' }
+          let(:broker_url) { 'bad url' }
 
           it 'returns a 400 error' do
             post '/v2/service_brokers', body

@@ -18,12 +18,12 @@ RSpec.describe 'Sequel::Plugins::VcapValidations' do
     end
 
     it 'should allow a http url' do
-      @m.val = 'http://foo.com/bla'
+      @m.val = 'http://foo_bar.com/bla'
       expect(@m).to be_valid
     end
 
     it 'should allow a https url' do
-      @m.val = 'https://foo.com/bla'
+      @m.val = 'https://foo_bar.com/bla'
       expect(@m).to be_valid
     end
 
@@ -50,12 +50,6 @@ RSpec.describe 'Sequel::Plugins::VcapValidations' do
     it 'should not allow a url with only spaces' do
       @m.val = ' '
       expect(@m).not_to be_valid
-    end
-
-    it 'should not allow a url with an underscore' do
-      @m.val = 'http://under_score.example.com'
-      expect(@m).not_to be_valid
-      expect(@m.errors.on(:val)).to include :url
     end
 
     context 'with a given error message' do
