@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'cloud_controller/scheduler'
+require 'cloud_controller/clock/scheduler'
 
 module VCAP::CloudController
   RSpec.describe Scheduler do

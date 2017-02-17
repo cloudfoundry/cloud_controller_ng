@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'cloud_controller/clock'
+require 'cloud_controller/clock/clock'
 
 module VCAP::CloudController
   RSpec.describe Clock do
