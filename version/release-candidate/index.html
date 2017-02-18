@@ -96,6 +96,7 @@
 
 
 
+
           
 
 
@@ -4006,21 +4007,18 @@ environment variables listed on the source droplet.</p>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">OK</span>
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
-   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b19f6525-cbd3-4155-b156-dc0c2a431b4c"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"an_isolation_segment"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-19T20:25:04Z"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-11-08T16:41:26Z"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"spaces"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/organizations"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-   </span><span class="p">}</span><span class="w">
+  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"68d54d31-9b3a-463b-ba94-e8e4c32edbac"</span><span class="p">,</span><span class="w">
+    </span><span class="err">}</span><span class="p">,</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b19f6525-cbd3-4155-b156-dc0c2a431b4c"</span><span class="p">,</span><span class="w">
+    </span><span class="err">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+  </span><span class="s2">"links"</span><span class="err">:</span><span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"</span><span class="p">}</span><span class="w">
+    </span><span class="s2">"related"</span><span class="err">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/organizations"</span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
 </span></code></pre>
