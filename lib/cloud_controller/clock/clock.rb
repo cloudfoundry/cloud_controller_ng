@@ -38,6 +38,7 @@ module VCAP::CloudController
         name:     name,
         interval: interval,
         fudge:    FREQUENT_FUDGE_FACTOR,
+        thread:   true,
       }
 
       schedule_job(job_opts) do
@@ -48,8 +49,8 @@ module VCAP::CloudController
 
     private
 
-    def schedule_job(name:, interval:, at: nil, fudge:)
-      DistributedScheduler.new.schedule_periodic_job(name: name, interval: interval, at: at, fudge: fudge) { yield }
+    def schedule_job(job_opts)
+      DistributedScheduler.new.schedule_periodic_job(job_opts) { yield }
     end
   end
 end

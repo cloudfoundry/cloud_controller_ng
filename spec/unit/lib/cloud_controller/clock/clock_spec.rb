@@ -174,7 +174,7 @@ module VCAP::CloudController
         it 'schedules it at the given interval' do
           job_name = 'fake'
           interval = 507.seconds
-          allow(Clockwork).to receive(:every).with(interval, 'fake.job', {}).and_yield(nil)
+          allow(Clockwork).to receive(:every).with(interval, 'fake.job', { thread: true }).and_yield(nil)
 
           enqueuer = instance_double(Jobs::Enqueuer)
           expect(enqueuer).to receive(:run_inline)
@@ -193,7 +193,7 @@ module VCAP::CloudController
         it 'does not enqueue a new job' do
           job_name = 'fake'
           interval = 507.seconds
-          allow(Clockwork).to receive(:every).with(interval, 'fake.job', {}).and_yield(nil)
+          allow(Clockwork).to receive(:every).with(interval, 'fake.job', { thread: true }).and_yield(nil)
 
           delay = Clock::FREQUENT_FUDGE_FACTOR + 1.second
           ClockJob.insert(name: job_name, last_started_at: Time.now.utc - interval + delay)
@@ -210,7 +210,7 @@ module VCAP::CloudController
           it 'enqueues a new job to account for processing time for previous clock job update' do
             job_name = 'fake'
             interval = 507.seconds
-            allow(Clockwork).to receive(:every).with(interval, 'fake.job', {}).and_yield(nil)
+            allow(Clockwork).to receive(:every).with(interval, 'fake.job', { thread: true }).and_yield(nil)
 
             ClockJob.insert(name: job_name, last_started_at: Time.now.utc - interval + 0.9.seconds)
 
@@ -232,7 +232,7 @@ module VCAP::CloudController
         it 'does enqueues a new job' do
           job_name = 'fake'
           interval = 507.seconds
-          allow(Clockwork).to receive(:every).with(interval, 'fake.job', {}).and_yield(nil)
+          allow(Clockwork).to receive(:every).with(interval, 'fake.job', { thread: true }).and_yield(nil)
 
           enqueuer = instance_double(Jobs::Enqueuer)
           expect(enqueuer).to receive(:run_inline)

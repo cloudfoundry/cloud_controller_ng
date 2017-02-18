@@ -6,11 +6,12 @@ module VCAP::CloudController
       @logger = Steno.logger('cc.clock')
     end
 
-    def schedule_periodic_job(name:, interval:, at: nil, fudge:)
+    def schedule_periodic_job(name:, interval:, at: nil, thread: nil, fudge:)
       ensure_job_record_exists(name)
 
       clock_opts      = {}
       clock_opts[:at] = at if at
+      clock_opts[:thread] = thread if thread
 
       Clockwork.every(interval, "#{name}.job", clock_opts) do |_|
         need_to_run_job = false
