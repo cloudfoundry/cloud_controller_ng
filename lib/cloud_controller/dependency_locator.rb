@@ -1,5 +1,6 @@
 require 'repositories/app_event_repository'
 require 'repositories/space_event_repository'
+require 'repositories/organization_event_repository'
 require 'repositories/route_event_repository'
 require 'repositories/user_event_repository'
 require 'cloud_controller/rest_controller/object_renderer'
@@ -177,6 +178,10 @@ module CloudController
 
     def space_event_repository
       Repositories::SpaceEventRepository.new
+    end
+
+    def organization_event_repository
+      Repositories::OrganizationEventRepository.new
     end
 
     def user_event_repository
