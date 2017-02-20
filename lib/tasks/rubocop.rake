@@ -5,26 +5,49 @@ begin
   desc 'Run RuboCop'
   RuboCop::RakeTask.new(:rubocop)
 
+  def run_rubocop(changelist=nil)
+    if changelist
+      paths = changelist.uniq.grep(/.*\.rb$/)
+      if paths.size == 0
+        puts "0 uncommitted files found"
+        exit(0)
+      end
+    else
+      paths = []
+    end
+    require 'rubocop'
+    cli = RuboCop::CLI.new
+    exit_code = cli.run(paths.unshift('--auto-correct'))
+    exit(exit_code) if exit_code > 0
+  end
+
   namespace :rubocop do
     desc 'Auto-correct changed files'
     task :changed do
-      require 'rubocop'
       changelist = `git diff --name-only`.chomp.split("\n")
       changelist += `git diff --cached --name-only`.chomp.split("\n")
       changelist -= `git diff --cached --name-only --diff-filter=D`.chomp.split("\n")
-      cli = RuboCop::CLI.new
-      exit_code = cli.run(changelist.uniq.grep(/.*\.rb$/).unshift('--auto-correct'))
-      exit(exit_code) if exit_code != 0
+      run_rubocop(changelist)
     end
 
     desc 'Auto-correct files changed from origin'
     task :local do
-      require 'rubocop'
       changelist = `git diff --name-only origin`.chomp.split("\n")
-      changelist -= `git diff --cached --name-only --diff-filter=D`.chomp.split("\n")
+      changelist -= `git diff --cached --name-only --diff-filter=D origin`.chomp.split("\n")
+      run_rubocop(changelist)
+    end
+
+    desc 'Auto-correct all files'
+    task :all do
+      run_rubocop(nil)
+    end
+    
+    desc "Don't auto-correct all files"
+    task :nocorrect do
+      require 'rubocop'
       cli = RuboCop::CLI.new
-      exit_code = cli.run(changelist.uniq.grep(/.*\.rb$/).unshift('--auto-correct'))
-      exit(exit_code) if exit_code != 0
+      exit_code = cli.run()
+      exit(exit_code) if exit_code > 0
     end
   end
 rescue LoadError
