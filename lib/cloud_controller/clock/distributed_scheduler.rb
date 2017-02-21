@@ -44,10 +44,12 @@ module VCAP::CloudController
     end
 
     def need_to_run_job?(job, interval, fudge=0)
-      if job.last_started_at.nil?
+      last_started_at = job.last_started_at
+      @logger.info "Job last started at #{last_started_at}. Interval: #{interval}"
+      if last_started_at.nil?
         return true
       end
-      now >= (job.last_started_at + interval - fudge)
+      now >= (last_started_at + interval - fudge)
     end
 
     def now
