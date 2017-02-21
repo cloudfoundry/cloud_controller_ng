@@ -276,7 +276,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
               expect(response.status).to eq(422)
               expect(response.body).to include 'UnprocessableEntity'
-              expect(response.body).to include 'The request is semantically invalid: Lifecycle data must be a hash'
+              expect(response.body).to include 'Lifecycle data must be a hash'
             end
           end
         end
@@ -315,7 +315,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
             expect(response.status).to eq(422)
             expect(response.body).to include 'UnprocessableEntity'
-            expect(response.body).to include 'The request is semantically invalid: Lifecycle data must be a hash'
+            expect(response.body).to include 'Lifecycle data must be a hash'
           end
         end
       end
@@ -447,7 +447,6 @@ RSpec.describe AppsV3Controller, type: :controller do
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
-          expect(response.body).to include 'The request is semantically invalid'
         end
       end
 
@@ -465,7 +464,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
-          expect(response.body).to include 'The request is semantically invalid: environment_variables cannot start with VCAP_'
+          expect(response.body).to include 'environment_variables cannot start with VCAP_'
         end
       end
     end

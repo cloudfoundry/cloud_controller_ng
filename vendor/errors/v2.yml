@@ -61,7 +61,7 @@
 10008:
   name: UnprocessableEntity
   http_code: 422
-  message: "The request is semantically invalid: %s"
+  message: "%s"
 
 10009:
   name: UnableToPerform

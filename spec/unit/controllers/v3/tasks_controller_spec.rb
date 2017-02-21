@@ -148,7 +148,7 @@ RSpec.describe TasksController, type: :controller do
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
-        expect(response.body).to include 'The request is semantically invalid: command must be shorter than 7 characters'
+        expect(response.body).to include 'command must be shorter than 7 characters'
       end
     end
 
