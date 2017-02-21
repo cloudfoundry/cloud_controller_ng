@@ -11,6 +11,10 @@ templates:
   ruby_version.sh.erb: bin/ruby_version.sh
   console.erb: bin/console
   pre-start.sh.erb: bin/pre-start
+  mutual_tls_ca.crt.erb: config/certs/mutual_tls_ca.crt
+  mutual_tls.crt.erb: config/certs/mutual_tls.crt
+  mutual_tls.key.erb: config/certs/mutual_tls.key
+
 
 packages:
   - capi_utils
