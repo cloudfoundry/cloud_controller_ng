@@ -8,7 +8,8 @@ module VCAP::CloudController
         org.lock!
 
         space_association_error! if segment_associated_with_space?(isolation_segment, org)
-        unset_default_segment(isolation_segment, org)
+        org_association_error! if is_default_segment?(isolation_segment, org)
+
         isolation_segment.remove_organization(org)
       end
     end
@@ -23,14 +24,15 @@ module VCAP::CloudController
       organization.default_isolation_segment_model == isolation_segment
     end
 
-    def unset_default_segment(isolation_segment, organization)
-      if is_default_segment?(isolation_segment, organization)
-        organization.update(default_isolation_segment_model: nil)
-      end
-    end
-
     def space_association_error!
       raise IsolationSegmentUnassignError.new('Please delete the Space associations for your Isolation Segment.')
+    end
+
+    def org_association_error!
+      raise CloudController::Errors::ApiError.new_from_details(
+        'UnableToPerform',
+        'Cannot unset the Default Isolation Segment.',
+        'Please change the Default Isolation Segment for your Organization before attempting to remove the default.')
     end
   end
 end

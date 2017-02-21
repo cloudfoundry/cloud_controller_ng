@@ -185,7 +185,7 @@ module VCAP::CloudController
       validates_includes ORG_STATUS_VALUES, :status, allow_missing: true
 
       if column_changed?(:default_isolation_segment_guid)
-        validate_default_isolation_segment(default_isolation_segment_model) unless @destroying
+        validate_default_isolation_segment
       end
     end
 
@@ -223,27 +223,17 @@ module VCAP::CloudController
 
     private
 
-    def validate_default_isolation_segment(isolation_segment_model)
-      if isolation_segment_model
-        validate_default_isolation_segment_set(isolation_segment_model)
-      else
-        validate_default_isolation_segment_unset
-      end
+    def validate_default_isolation_segment
+      return if @destroying
+      return if default_isolation_segment_model.nil?
+
+      validate_default_isolation_segment_exists
     end
 
-    def validate_default_isolation_segment_set(isolation_segment_model)
-      unless isolation_segment_guids.include?(isolation_segment_model.guid)
+    def validate_default_isolation_segment_exists
+      unless isolation_segment_guids.include?(default_isolation_segment_model.guid)
         raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
-                                                                 "Could not find Isolation Segment with guid: #{isolation_segment_model.guid}")
-      end
-    end
-
-    def validate_default_isolation_segment_unset
-      if isolation_segment_models.length > 1
-        raise CloudController::Errors::ApiError.new_from_details(
-          'UnableToPerform',
-          'Cannot unset the Default Isolation Segment.',
-          'Please change the Default Isolation Segment for your Organization before attempting to remove the default.')
+                                                                 "Could not find Isolation Segment with guid: #{default_isolation_segment_model.guid}")
       end
     end
 

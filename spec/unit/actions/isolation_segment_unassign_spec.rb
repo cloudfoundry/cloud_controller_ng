@@ -32,75 +32,13 @@ module VCAP::CloudController
           org.update(default_isolation_segment_model: isolation_segment_model)
         end
 
-        context 'when there is only one isolation segment for an organization' do
-          it 'can remove the Organization from the Isolation Segment' do
+        it "does not remove the organization's default Isolation Segment" do
+          expect {
             subject.unassign(isolation_segment_model, org)
-            expect(isolation_segment_model.organizations).to eq([org2])
-          end
+          }.to raise_error CloudController::Errors::ApiError, /Cannot unset the Default Isolation Segment/
 
-          it "removes the organization's default Isolation Segment" do
-            subject.unassign(isolation_segment_model, org)
-            expect(org.default_isolation_segment_model).to be_nil
-          end
-        end
-
-        context 'when there are multiple IS for an organization' do
-          before do
-            assigner.assign(isolation_segment_model_2, [org])
-          end
-
-          it 'cannot remove the Organization from the isolation segment' do
-            expect {
-              subject.unassign(isolation_segment_model, org)
-            }.to raise_error CloudController::Errors::ApiError, /Cannot unset the Default Isolation Segment/
-
-            expect(isolation_segment_model.organizations).to contain_exactly(org, org2)
-          end
-
-          it "does not remove the organization's default Isolation Segment" do
-            expect {
-              subject.unassign(isolation_segment_model, org)
-            }.to raise_error CloudController::Errors::ApiError, /Cannot unset the Default Isolation Segment/
-
-            org.reload
-            expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
-          end
-        end
-
-        context 'and the Organization has a space assigned' do
-          let!(:space) { Space.make(organization: org) }
-
-          it 'allows the isolation segment to remove the organization' do
-            subject.unassign(isolation_segment_model, org)
-            expect(isolation_segment_model.organizations).to eq([org2])
-          end
-
-          context 'and the space is assigned the Isolation Segment' do
-            before do
-              space.update(isolation_segment_model: isolation_segment_model)
-            end
-
-            it 'does not remove the org from the Isolation Segment' do
-              expect {
-                subject.unassign(isolation_segment_model, org)
-              }.to raise_error IsolationSegmentUnassign::IsolationSegmentUnassignError, 'Please delete the Space associations for your Isolation Segment.'
-
-              expect(isolation_segment_model.organizations).to contain_exactly(org, org2)
-            end
-          end
-
-          context 'and the space has no assigned isolation segment' do
-            context 'and the space has an app' do
-              before do
-                AppModel.make(space: space)
-              end
-
-              it 'removes the Organization form the Isolation Segment' do
-                subject.unassign(isolation_segment_model, org)
-                expect(isolation_segment_model.organizations).to eq([org2])
-              end
-            end
-          end
+          org.reload
+          expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
         end
       end
 
@@ -110,6 +48,17 @@ module VCAP::CloudController
         it 'allows the isolation segment to remove the organization' do
           subject.unassign(isolation_segment_model, org)
           expect(isolation_segment_model.organizations).to eq([org2])
+        end
+
+        context 'and the space has an app' do
+          before do
+            AppModel.make(space: space)
+          end
+
+          it 'removes the Organization from the Isolation Segment' do
+            subject.unassign(isolation_segment_model, org)
+            expect(isolation_segment_model.organizations).to eq([org2])
+          end
         end
 
         context 'and the space is assigned the Isolation Segment' do
@@ -123,17 +72,6 @@ module VCAP::CloudController
             }.to raise_error IsolationSegmentUnassign::IsolationSegmentUnassignError, 'Please delete the Space associations for your Isolation Segment.'
 
             expect(isolation_segment_model.organizations).to contain_exactly(org, org2)
-          end
-        end
-
-        context 'and the space has an app' do
-          before do
-            AppModel.make(space: space)
-          end
-
-          it 'removes the Organization form the Isolation Segment' do
-            subject.unassign(isolation_segment_model, org)
-            expect(isolation_segment_model.organizations).to eq([org2])
           end
         end
       end

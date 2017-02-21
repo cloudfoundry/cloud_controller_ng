@@ -394,23 +394,6 @@ module VCAP::CloudController
               end
             end
           end
-
-          context 'and there are more that one isolation segments in the allowed list' do
-            let(:isolation_segment_model_2) { IsolationSegmentModel.make }
-
-            before do
-              assigner.assign(isolation_segment_model_2, [org])
-            end
-
-            it 'raises a 400 UnableToPerform' do
-              expect {
-                org.update(default_isolation_segment_model: nil)
-              }.to raise_error(CloudController::Errors::ApiError, /Please change the Default Isolation Segment for your Organization/)
-
-              org.reload
-              expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
-            end
-          end
         end
       end
     end
