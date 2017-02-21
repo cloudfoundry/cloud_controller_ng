@@ -22,3 +22,5 @@ task :rubocop_autocorrect do
   exit_code = cli.run(%w(--auto-correct))
   exit(exit_code) if exit_code != 0
 end
+
+Rake::Task['doc:app'].clear

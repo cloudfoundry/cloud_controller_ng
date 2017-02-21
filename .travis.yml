@@ -46,5 +46,4 @@ env:
   matrix:
     - COVERAGE=true DB=postgres TASKS=spec:all
     - DB=mysql TASKS=spec:all
-    - DB=postgres TASKS=spec:api
     - TASKS=rubocop
