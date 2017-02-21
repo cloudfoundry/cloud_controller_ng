@@ -42,11 +42,9 @@ module VCAP::CloudController
             process.app.update(droplet_guid: nil)
           end
 
-          it 'does not desire an app and raises an exception' do
+          it 'does not send the desired LRP request' do
             expect(messenger).to_not receive(:send_desire_request)
-            expect { runner.scale }.to raise_error(
-              CloudController::Errors::ApiError, /App has not finished staging/
-            )
+            expect { runner.scale }.to_not raise_error
           end
         end
       end
