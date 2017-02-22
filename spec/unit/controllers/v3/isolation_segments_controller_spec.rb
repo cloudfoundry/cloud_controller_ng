@@ -235,7 +235,9 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         it 'does not assign any of the valid orgs and returns a 404' do
           post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
-          expect(response.status).to eq 404
+          expect(response.status).to eq 422
+          expect(response.body).to include 'bogus-guid'
+          expect(response.body).to_not include org1.guid
 
           expect(isolation_segment_model.organizations).to be_empty
           expect(org1.default_isolation_segment_model).to be_nil

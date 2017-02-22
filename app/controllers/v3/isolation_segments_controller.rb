@@ -152,7 +152,11 @@ class IsolationSegmentsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     organizations = Organization.where(guid: message.guids).all
-    resources_not_found!("Organization guids: #{message.guids - organizations.map(&:guid)} cannot be found") unless organizations.length == message.guids.length
+    missing_guids = message.guids - organizations.map(&:guid)
+    unless missing_guids.empty?
+      guid_list = missing_guids.map { |g| "'#{g}'" }.join(', ')
+      unprocessable!("Unable to entitle organizations [#{guid_list}] for the isolation segment. Ensure the organizations exist.")
+    end
 
     [isolation_segment_model, organizations]
   end
