@@ -132,8 +132,6 @@ class IsolationSegmentsController < ApplicationController
     organization_unassigner.unassign(isolation_segment_model, org)
 
     head :no_content
-  rescue IsolationSegmentUnassign::IsolationSegmentUnassignError => e
-    unprocessable!(e.message)
   end
 
   private

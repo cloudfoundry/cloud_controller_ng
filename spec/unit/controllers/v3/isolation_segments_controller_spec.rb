@@ -284,20 +284,6 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         expect(response.status).to eq 204
       end
 
-      context 'when an IsolationSegmentUnassignError is raised from the action' do
-        let(:unassigner) { double('unassigner') }
-
-        before do
-          allow(VCAP::CloudController::IsolationSegmentUnassign).to receive(:new).and_return(unassigner)
-          allow(unassigner).to receive(:unassign).and_raise(VCAP::CloudController::IsolationSegmentUnassign::IsolationSegmentUnassignError.new('error'))
-        end
-
-        it 'returns an unprocessable error' do
-          post :unassign_allowed_organization, guid: isolation_segment_model.guid, org_guid: org.guid
-          expect(response.status).to eq 422
-        end
-      end
-
       context 'when a request body is supplied' do
         let(:req_body) do
           {

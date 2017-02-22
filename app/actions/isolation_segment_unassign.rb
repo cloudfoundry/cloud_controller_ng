@@ -29,7 +29,7 @@ module VCAP::CloudController
     end
 
     def space_association_error!(associated_spaces)
-      space_list = associated_spaces.map { |s| "'#{s.name}'"}.join(', ')
+      space_list = associated_spaces.map { |s| "'#{s.name}'" }.join(', ')
       raise CloudController::Errors::ApiError.new_from_details(
         'UnprocessableEntity',
         "Cannot remove the entitlement while this Isolation Segment is assigned to any Spaces. Currently assigned to: [#{space_list}]",
