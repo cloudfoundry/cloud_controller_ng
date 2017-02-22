@@ -537,6 +537,192 @@ module VCAP::CloudController
       end
     end
 
+    describe 'PUT /v2/organizations/:guid' do
+      context 'setting roles at org update time' do
+        let(:other_user) { User.make }
+        let(:name) { 'myorg' }
+        let(:uri) { "/v2/organizations/#{org.guid}"}
+
+        before do
+          set_current_user_as_admin
+        end
+
+        context 'assigning an org manager' do
+          it 'records an event of type audit.user.organization_manager_add' do
+            event = Event.find(type: 'audit.user.organization_manager_add', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { name: name, manager_guids: [other_user.guid] }.to_json
+            put uri, request_body
+
+            expect(last_response).to have_status_code(201)
+
+            expect(org.managers).to include(other_user)
+
+            event = Event.find(type: 'audit.user.organization_manager_add', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+
+          context 'when there is already another org manager' do
+            let(:mgr) { User.make }
+
+            before do
+              org.add_manager(mgr)
+            end
+
+            it 'does not record an event for existing org managers' do
+              request_body = { name: name, manager_guids: [other_user.guid, mgr.guid] }.to_json
+              put uri, request_body
+
+              expect(last_response).to have_status_code(201)
+
+              event = Event.find(type: 'audit.user.organization_manager_add', actee: mgr.guid)
+              expect(event).to be_nil
+            end
+          end
+
+        end
+
+        context 'deassigning an org manager' do
+          let(:another_user) { User.make }
+
+          before do
+            org.add_manager(other_user)
+            org.add_manager(another_user)
+          end
+
+          it 'records an event of type audit.user.organization_manager_remove' do
+            event = Event.find(type: 'audit.user.organization_manager_remove', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { name: name, manager_guids: [another_user.guid] }.to_json
+            put uri, request_body
+
+            expect(last_response).to have_status_code(201)
+            org.reload
+            expect(org.managers).to_not include(other_user)
+
+            event = Event.find(type: 'audit.user.organization_manager_remove', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+
+        context 'assigning an auditor' do
+          it 'records an event of type audit.user.organization_auditor_add' do
+            event = Event.find(type: 'audit.user.organization_auditor_add', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { name: name, auditor_guids: [other_user.guid] }.to_json
+            put uri, request_body
+
+            expect(last_response).to have_status_code(201)
+
+            expect(org.auditors).to include(other_user)
+
+            event = Event.find(type: 'audit.user.organization_auditor_add', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+
+        context 'deassigning an auditor' do
+          before do
+            org.add_auditor(other_user)
+          end
+
+          it 'records an event of type audit.user.organization_auditor_remove' do
+            event = Event.find(type: 'audit.user.organization_auditor_remove', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { name: name, auditor_guids: [] }.to_json
+            put uri, request_body
+
+            expect(last_response).to have_status_code(201)
+            org.reload
+            expect(org.auditors).to_not include(other_user)
+
+            event = Event.find(type: 'audit.user.organization_auditor_remove', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+
+        context 'assigning a billing manager' do
+          it 'records an event of type audit.user.organization_billing_manager_add' do
+            event = Event.find(type: 'audit.user.organization_billing_manager_add', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { name: name, billing_manager_guids: [other_user.guid] }.to_json
+            put uri, request_body
+
+            expect(last_response).to have_status_code(201)
+
+            expect(org.billing_managers).to include(other_user)
+
+            event = Event.find(type: 'audit.user.organization_billing_manager_add', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+
+        context 'deassigning a billing manager' do
+          before do
+            org.add_billing_manager(other_user)
+          end
+
+          it 'records an event of type audit.user.organization_billing_manager_remove' do
+            event = Event.find(type: 'audit.user.organization_billing_manager_remove', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { name: name, billing_manager_guids: [] }.to_json
+            put uri, request_body
+
+            expect(last_response).to have_status_code(201)
+            org.reload
+            expect(org.billing_managers).to_not include(other_user)
+
+            event = Event.find(type: 'audit.user.organization_billing_manager_remove', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+
+        context 'assigning a user' do
+          it 'records an event of type audit.user.organization_user_add' do
+            event = Event.find(type: 'audit.user.organization_user_add', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { name: name, user_guids: [other_user.guid] }.to_json
+            put uri, request_body
+
+            expect(last_response).to have_status_code(201)
+
+            expect(org.users).to include(other_user)
+
+            event = Event.find(type: 'audit.user.organization_user_add', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+
+        context 'removing a user' do
+          before do
+            org.add_user(other_user)
+          end
+
+          it 'records an event of type audit.user.organization_user_remove' do
+            event = Event.find(type: 'audit.user.organization_user_remove', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { name: name, user_guids: [] }.to_json
+            put uri, request_body
+
+            expect(last_response).to have_status_code(201)
+            org.reload
+            expect(org.users).to_not include(other_user)
+
+            event = Event.find(type: 'audit.user.organization_user_remove', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+      end
+    end
+
     describe 'GET /v2/organizations/:guid/user_roles' do
       context 'for an organization that does not exist' do
         it 'returns a 404' do
@@ -936,7 +1122,7 @@ module VCAP::CloudController
           expect(org.users).not_to include(user)
         end
 
-        it 'should not remove the user if they attempt to delete the user through an update' do
+        it 'should not remove the user if the user belongs to a space within the org' do
           org.add_space(org_space_full)
           put "/v2/organizations/#{org.guid}", MultiJson.dump('user_guids' => [])
           expect(last_response.status).to eql(400)
