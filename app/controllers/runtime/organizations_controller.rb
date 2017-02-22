@@ -59,14 +59,44 @@ module VCAP::CloudController
       end
     end
 
-    def before_update(obj)
+    def before_update(org)
       if request_attrs['default_isolation_segment_guid']
         raise CloudController::Errors::ApiError.new_from_details(
           'ResourceNotFound',
           'Could not find Isolation Segment to set as the default.') unless IsolationSegmentModel.first(guid: request_attrs['default_isolation_segment_guid'])
       end
 
-      super(obj)
+
+
+      super(org)
+    end
+
+    def update(guid)
+      json_msg = self.class::UpdateMessage.decode(body)
+      @request_attrs = json_msg.extract(stringify_keys: true)
+      logger.debug 'cc.update', guid: guid, attributes: redact_attributes(:update, request_attrs)
+      raise InvalidRequest unless request_attrs
+
+      org = find_guid(guid)
+
+      before_update(org)
+
+      current_role_guids = {}
+
+      model.db.transaction do
+        org.lock!
+
+        current_role_guids = get_current_role_guids(org)
+
+        validate_access(:read_for_update, org, request_attrs)
+        org.update_from_hash(request_attrs)
+        validate_access(:update, org, request_attrs)
+      end
+
+      generate_role_events_on_update(org, current_role_guids)
+      after_update(org)
+
+      [HTTP::CREATED, object_renderer.render_json(self.class, org, @opts)]
     end
 
     get '/v2/organizations/:guid/user_roles', :enumerate_user_roles
@@ -317,6 +347,66 @@ module VCAP::CloudController
     def after_update(organization)
       @organization_event_repository.record_organization_update(organization, UserAuditInfo.from_context(SecurityContext), request_attrs)
       super(organization)
+    end
+
+    def get_current_role_guids(org)
+      current_role_guids = {}
+
+      %w(user manager billing_manager auditor).each do |role|
+        key = "#{role}_guids"
+
+        if request_attrs[key]
+          current_role_guids[role] = []
+          org.send(role.pluralize.to_sym).each do |user|
+            current_role_guids[role] << user.guid
+          end
+        end
+      end
+
+      current_role_guids
+    end
+
+    def generate_role_events_on_update(organization, current_role_guids)
+      %w(manager auditor user billing_manager).each do |role|
+        key = "#{role}_guids"
+
+        user_guids_removed = []
+
+        if request_attrs[key]
+          user_guids_added = request_attrs[key]
+
+          if current_role_guids[role]
+            user_guids_added = request_attrs[key] - current_role_guids[role]
+            user_guids_removed = current_role_guids[role] - request_attrs[key]
+          end
+
+          user_guids_added.each do |user_id|
+            user = User.first(guid: user_id) || User.create(guid: user_id)
+            user.username = '' unless user.username
+
+            @user_event_repository.record_organization_role_add(
+                organization,
+                user,
+                role,
+                UserAuditInfo.from_context(SecurityContext),
+                request_attrs
+            )
+          end
+
+          user_guids_removed.each do |user_id|
+            user = User.first(guid: user_id)
+            user.username = '' unless user.username
+
+            @user_event_repository.record_organization_role_remove(
+                organization,
+                user,
+                role,
+                UserAuditInfo.from_context(SecurityContext),
+                request_attrs
+            )
+          end
+        end
+      end
     end
   end
 end
