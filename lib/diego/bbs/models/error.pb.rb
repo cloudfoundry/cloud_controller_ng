@@ -50,6 +50,7 @@ module Diego
           define :Deserialize, 27
           define :Deadlock, 28
           define :Unrecoverable, 29
+          define :LockCollision, 30
         end
 
       end

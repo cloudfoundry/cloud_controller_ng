@@ -132,6 +132,12 @@ module VCAP::CloudController
           ]
         end
 
+        let(:expected_certificate_properties) do
+          ::Diego::Bbs::Models::CertificateProperties.new(
+            organizational_unit: ["app:#{process.app.guid}"],
+          )
+        end
+
         let(:lrp_builder_ports) { [4444, 5555] }
 
         let(:rule_dns_everywhere) do
@@ -263,6 +269,7 @@ module VCAP::CloudController
             expect(lrp.start_timeout_ms).to eq(12 * 1000)
             expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
             expect(lrp.PlacementTags).to eq(['placement-tag'])
+            expect(lrp.certificate_properties).to eq(expected_certificate_properties)
           end
 
           context 'when a volume mount is provided' do
@@ -726,6 +733,7 @@ module VCAP::CloudController
             expect(lrp.start_timeout_ms).to eq(12 * 1000)
             expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
             expect(lrp.PlacementTags).to eq(['placement-tag'])
+            expect(lrp.certificate_properties).to eq(expected_certificate_properties)
           end
 
           context 'cpu weight' do

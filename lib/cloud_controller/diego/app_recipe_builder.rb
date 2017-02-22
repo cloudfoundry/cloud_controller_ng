@@ -66,6 +66,9 @@ module VCAP::CloudController
           PlacementTags:                    [IsolationSegmentSelector.for_space(process.space)],
           routes:                           ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes),
           max_pids:                         @config[:diego][:pid_limit],
+          certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
+            organizational_unit: ["app:#{process.app.guid}"]
+          ),
         )
       end
 

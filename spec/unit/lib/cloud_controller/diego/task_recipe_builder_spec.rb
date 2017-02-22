@@ -64,6 +64,11 @@ module VCAP::CloudController
             log: true
           )
         end
+        let(:certificate_properties) do
+          ::Diego::Bbs::Models::CertificateProperties.new(
+            organizational_unit: ["app:#{app.guid}"],
+          )
+        end
 
         before do
           SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }], staging_default: true)
@@ -133,6 +138,7 @@ module VCAP::CloudController
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
             expect(result.PlacementTags).to eq(['potato-segment'])
             expect(result.max_pids).to eq(100)
+            expect(result.certificate_properties).to eq(certificate_properties)
           end
 
           it 'gives the task a TrustedSystemCertificatesPath' do
@@ -265,6 +271,11 @@ module VCAP::CloudController
 
             expect(result.max_pids).to eq(100)
           end
+
+          it 'sets the certificate_properties' do
+            result = task_recipe_builder.build_staging_task(config, staging_details)
+            expect(result.certificate_properties).to eq(certificate_properties)
+          end
         end
       end
 
@@ -343,6 +354,12 @@ module VCAP::CloudController
         )]
         }
 
+        let(:certificate_properties) do
+          ::Diego::Bbs::Models::CertificateProperties.new(
+            organizational_unit: ["app:#{task.app.guid}"],
+          )
+        end
+
         context 'with a buildpack backend' do
           let(:droplet) { DropletModel.make(:buildpack, app: app) }
 
@@ -395,6 +412,7 @@ module VCAP::CloudController
             expect(result.cpu_weight).to eq(25)
             expect(result.PlacementTags).to eq([isolation_segment])
             expect(result.max_pids).to eq(100)
+            expect(result.certificate_properties).to eq(certificate_properties)
           end
 
           context 'when a volume mount is provided' do
@@ -528,6 +546,7 @@ module VCAP::CloudController
             expect(result.cpu_weight).to eq(25)
             expect(result.PlacementTags).to eq([isolation_segment])
             expect(result.max_pids).to eq(100)
+            expect(result.certificate_properties).to eq(certificate_properties)
           end
 
           context 'when a volume mount is provided' do

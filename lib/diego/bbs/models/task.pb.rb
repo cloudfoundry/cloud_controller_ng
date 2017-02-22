@@ -16,6 +16,7 @@ require 'security_group.pb'
 require 'cached_dependency.pb'
 require 'volume_mount.pb'
 require 'network.pb'
+require 'certificate_properties.pb'
 
 module Diego
   module Bbs
@@ -63,6 +64,7 @@ module Diego
         optional ::Diego::Bbs::Models::Network, :network, 19
         repeated :string, :PlacementTags, 20
         optional :int32, :max_pids, 21
+        optional ::Diego::Bbs::Models::CertificateProperties, :certificate_properties, 22
       end
 
       class Task

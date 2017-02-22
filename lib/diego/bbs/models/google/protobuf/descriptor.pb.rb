@@ -195,7 +195,7 @@ module Google
       optional :string, :java_package, 1
       optional :string, :java_outer_classname, 8
       optional :bool, :java_multiple_files, 10, :default => false
-      optional :bool, :java_generate_equals_and_hash, 20, :deprecated => true
+      optional :bool, :java_generate_equals_and_hash, 20, :default => false
       optional :bool, :java_string_check_utf8, 27, :default => false
       optional ::Google::Protobuf::FileOptions::OptimizeMode, :optimize_for, 9, :default => ::Google::Protobuf::FileOptions::OptimizeMode::SPEED
       optional :string, :go_package, 11
