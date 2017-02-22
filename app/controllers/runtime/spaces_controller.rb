@@ -69,6 +69,34 @@ module VCAP::CloudController
       )
     end
 
+    def update(guid)
+      json_msg = self.class::UpdateMessage.decode(body)
+      @request_attrs = json_msg.extract(stringify_keys: true)
+      logger.debug 'cc.update', guid: guid, attributes: redact_attributes(:update, request_attrs)
+      raise InvalidRequest unless request_attrs
+
+      space = find_guid(guid)
+
+      before_update(space)
+
+      current_role_guids = {}
+
+      model.db.transaction do
+        space.lock!
+
+        current_role_guids = get_current_role_guids(space)
+
+        validate_access(:read_for_update, space, request_attrs)
+        space.update_from_hash(request_attrs)
+        validate_access(:update, space, request_attrs)
+      end
+
+      generate_role_events_on_update(space, current_role_guids)
+      after_update(space)
+
+      [HTTP::CREATED, object_renderer.render_json(self.class, space, @opts)]
+    end
+
     get '/v2/spaces/:guid/services', :enumerate_services
     def enumerate_services(guid)
       space = find_guid_and_validate_access(:read, guid)
@@ -294,5 +322,65 @@ module VCAP::CloudController
 
     define_messages
     define_routes
+
+    def get_current_role_guids(space)
+      current_role_guids = {}
+
+      %w(developer manager auditor).each do |role|
+        key = "#{role}_guids"
+
+        if request_attrs[key]
+          current_role_guids[role] = []
+          space.send(role.pluralize.to_sym).each do |user|
+            current_role_guids[role] << user.guid
+          end
+        end
+      end
+
+      current_role_guids
+    end
+
+    def generate_role_events_on_update(space, current_role_guids)
+      %w(manager auditor developer).each do |role|
+        key = "#{role}_guids"
+
+        user_guids_removed = []
+
+        if request_attrs[key]
+          user_guids_added = request_attrs[key]
+
+          if current_role_guids[role]
+            user_guids_added = request_attrs[key] - current_role_guids[role]
+            user_guids_removed = current_role_guids[role] - request_attrs[key]
+          end
+
+          user_guids_added.each do |user_id|
+            user = User.first(guid: user_id) || User.create(guid: user_id)
+            user.username = '' unless user.username
+
+            @user_event_repository.record_space_role_add(
+                space,
+                user,
+                role,
+                UserAuditInfo.from_context(SecurityContext),
+                request_attrs
+            )
+          end
+
+          user_guids_removed.each do |user_id|
+            user = User.first(guid: user_id)
+            user.username = '' unless user.username
+
+            @user_event_repository.record_space_role_remove(
+                space,
+                user,
+                role,
+                UserAuditInfo.from_context(SecurityContext),
+                request_attrs
+            )
+          end
+        end
+      end
+    end
   end
 end

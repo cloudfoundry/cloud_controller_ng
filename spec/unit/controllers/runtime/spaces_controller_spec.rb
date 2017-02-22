@@ -1455,6 +1455,154 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'setting roles at space update time' do
+        let(:other_user) { User.make }
+        let(:uri) { "/v2/spaces/#{space.guid}"}
+
+        before do
+          set_current_user_as_admin
+          space.organization.add_user(other_user)
+        end
+
+        context 'assigning a space manager' do
+          it 'records an event of type audit.user.space_manager_add' do
+            event = Event.find(type: 'audit.user.space_manager_add', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { manager_guids: [other_user.guid] }.to_json
+            put uri, request_body
+
+            expect(last_response).to have_status_code(201)
+
+            expect(space.managers).to include(other_user)
+
+            event = Event.find(type: 'audit.user.space_manager_add', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+
+          context 'when there is already another space manager' do
+            let(:mgr) { User.make }
+
+            before do
+              space.organization.add_user(mgr)
+              space.add_manager(mgr)
+            end
+
+            it 'does not record an event for existing space managers' do
+              request_body = { manager_guids: [other_user.guid, mgr.guid] }.to_json
+              put uri, request_body
+
+              expect(last_response).to have_status_code(201)
+
+              event = Event.find(type: 'audit.user.space_manager_add', actee: mgr.guid)
+              expect(event).to be_nil
+            end
+          end
+
+        end
+
+        context 'deassigning an space manager' do
+          let(:another_user) { User.make }
+
+          before do
+            space.organization.add_user(another_user)
+            space.add_manager(other_user)
+            space.add_manager(another_user)
+          end
+
+          it 'records an event of type audit.user.space_manager_remove' do
+            event = Event.find(type: 'audit.user.space_manager_remove', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { manager_guids: [another_user.guid] }.to_json
+            put uri, request_body
+
+            expect(last_response).to have_status_code(201)
+            space.reload
+            expect(space.managers).to_not include(other_user)
+
+            event = Event.find(type: 'audit.user.space_manager_remove', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+
+        context 'assigning an auditor' do
+          it 'records an event of type audit.user.space_auditor_add' do
+            event = Event.find(type: 'audit.user.space_auditor_add', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { auditor_guids: [other_user.guid] }.to_json
+            put uri, request_body
+
+            expect(last_response).to have_status_code(201)
+
+            expect(space.auditors).to include(other_user)
+
+            event = Event.find(type: 'audit.user.space_auditor_add', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+
+        context 'deassigning an auditor' do
+          before do
+            space.add_auditor(other_user)
+          end
+
+          it 'records an event of type audit.user.space_auditor_remove' do
+            event = Event.find(type: 'audit.user.space_auditor_remove', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { auditor_guids: [] }.to_json
+            put uri, request_body
+
+            expect(last_response).to have_status_code(201)
+            space.reload
+            expect(space.auditors).to_not include(other_user)
+
+            event = Event.find(type: 'audit.user.space_auditor_remove', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+
+        context 'assigning a developer' do
+          it 'records an event of type audit.user.space_developer_add' do
+            event = Event.find(type: 'audit.user.space_developer_add', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { developer_guids: [other_user.guid] }.to_json
+            put uri, request_body
+
+            expect(last_response).to have_status_code(201)
+
+            expect(space.developers).to include(other_user)
+
+            event = Event.find(type: 'audit.user.space_developer_add', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+
+        context 'removing a developer' do
+          before do
+            space.add_developer(other_user)
+          end
+
+          it 'records an event of type audit.user.space_developer_remove' do
+            event = Event.find(type: 'audit.user.space_developer_remove', actee: other_user.guid)
+            expect(event).to be_nil
+
+            request_body = { developer_guids: [] }.to_json
+            put uri, request_body
+
+            expect(last_response).to have_status_code(201)
+            space.reload
+            expect(space.developers).to_not include(other_user)
+
+            event = Event.find(type: 'audit.user.space_developer_remove', actee: other_user.guid)
+            expect(event).not_to be_nil
+          end
+        end
+      end
     end
 
     describe 'DELETE /v2/spaces/:guid/isolation_segment' do
