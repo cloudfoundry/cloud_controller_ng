@@ -233,7 +233,7 @@ module VCAP::CloudController
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, guid, delete_action)
       response = enqueue_deletion_job(deletion_job)
 
-      @organization_event_repository.record_organization_delete_request(org, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+      @organization_event_repository.record_organization_delete_request(org, UserAuditInfo.from_context(SecurityContext), request_attrs)
 
       response
     end
@@ -291,14 +291,14 @@ module VCAP::CloudController
     end
 
     def after_create(organization)
-      @organization_event_repository.record_organization_create(organization, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+      @organization_event_repository.record_organization_create(organization, UserAuditInfo.from_context(SecurityContext), request_attrs)
       return if SecurityContext.admin?
       organization.add_user(user)
       organization.add_manager(user)
     end
 
     def after_update(organization)
-      @organization_event_repository.record_organization_update(organization, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+      @organization_event_repository.record_organization_update(organization, UserAuditInfo.from_context(SecurityContext), request_attrs)
       super(organization)
     end
   end

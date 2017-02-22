@@ -208,7 +208,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     let(:user_audit_info) { VCAP::CloudController::UserAuditInfo.new(user_guid: test_user.guid, user_email: test_user_email) }
 
     example 'List Organization Create Events' do
-      organization_event_repository.record_organization_create(test_organization, test_user, test_user_email, {})
+      organization_event_repository.record_organization_create(test_organization, user_audit_info, {})
 
       client.get '/v2/events?q=type:audit.organization.create', {}, headers
       expect(status).to eq(200)
@@ -224,7 +224,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Organization Update Events' do
-      organization_event_repository.record_organization_update(test_organization, test_user, test_user_email, {})
+      organization_event_repository.record_organization_update(test_organization, user_audit_info, {})
 
       client.get '/v2/events?q=type:audit.organization.update', {}, headers
       expect(status).to eq(200)
@@ -240,7 +240,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Organization Delete Events' do
-      organization_event_repository.record_organization_delete_request(test_organization, test_user, test_user_email, {})
+      organization_event_repository.record_organization_delete_request(test_organization, user_audit_info, {})
 
       client.get '/v2/events?q=type:audit.organization.delete-request', {}, headers
       expect(status).to eq(200)

@@ -7,12 +7,14 @@ module VCAP::CloudController
       let(:user) { User.make }
       let(:organization) { Organization.make }
       let(:user_email) { 'email address' }
+      let(:user_name) { 'user name' }
+      let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user.guid, user_name: user_name) }
 
-      subject(:organization_event_repository) { OrganizationEventRepository.new }
+          subject(:organization_event_repository) { OrganizationEventRepository.new }
 
       describe '#record_organization_create' do
         it 'records event correctly' do
-          event = organization_event_repository.record_organization_create(organization, user, user_email, request_attrs)
+          event = organization_event_repository.record_organization_create(organization, user_audit_info, request_attrs)
           event.reload
           expect(event.organization_guid).to eq(organization.guid)
           expect(event.type).to eq('audit.organization.create')
@@ -24,19 +26,11 @@ module VCAP::CloudController
           expect(event.actor_name).to eq(user_email)
           expect(event.metadata).to eq({ 'request' => request_attrs })
         end
-
-        context 'when the user email is unknown' do
-          it 'leaves actor name empty' do
-            event = organization_event_repository.record_organization_create(organization, user, nil, request_attrs)
-            event.reload
-            expect(event.actor_name).to eq(nil)
-          end
-        end
       end
 
       describe '#record_organization_update' do
         it 'records event correctly' do
-          event = organization_event_repository.record_organization_update(organization, user, user_email, request_attrs)
+          event = organization_event_repository.record_organization_update(organization, user_audit_info, request_attrs)
           event.reload
           expect(event.organization_guid).to eq(organization.guid)
           expect(event.type).to eq('audit.organization.update')
@@ -58,7 +52,7 @@ module VCAP::CloudController
         end
 
         it 'records event correctly' do
-          event = organization_event_repository.record_organization_delete_request(organization, user, user_email, request_attrs)
+          event = organization_event_repository.record_organization_delete_request(organization, user_audit_info, request_attrs)
           event.reload
           expect(event.organization_guid).to eq(organization.guid)
           expect(event.type).to eq('audit.organization.delete-request')

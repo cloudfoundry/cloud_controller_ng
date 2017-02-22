@@ -269,7 +269,7 @@ module VCAP::CloudController
 
         context 'as an admin' do
           before do
-            set_current_user_as_admin
+            set_current_user_as_admin(email: user_email)
           end
 
           it 'does not add creator as an org manager' do
@@ -317,7 +317,7 @@ module VCAP::CloudController
           let(:user) { User.make }
 
           before do
-            set_current_user(user)
+            set_current_user(user, email: user_email)
           end
 
           it 'adds creator as an org manager' do
@@ -349,7 +349,7 @@ module VCAP::CloudController
       let(:org) { Organization.make }
 
       before do
-        set_current_user_as_admin
+        set_current_user_as_admin(email: user_email)
       end
 
       it 'creates an audit event of type audit.organization.update' do
@@ -862,7 +862,7 @@ module VCAP::CloudController
       let(:org) { Organization.make }
 
       before do
-        set_current_user_as_admin
+        set_current_user_as_admin(email: user_email)
       end
 
       it 'deletes the org' do
