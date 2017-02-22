@@ -32,10 +32,10 @@ module VCAP::CloudController
           org.update(default_isolation_segment_model: isolation_segment_model)
         end
 
-        it "does not remove the organization's default Isolation Segment" do
+        it 'does not remove the organization\'s default Isolation Segment' do
           expect {
             subject.unassign(isolation_segment_model, org)
-          }.to raise_error CloudController::Errors::ApiError, /Cannot unset the Default Isolation Segment/
+          }.to raise_error CloudController::Errors::ApiError, /default isolation segment/i
 
           org.reload
           expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
@@ -69,7 +69,7 @@ module VCAP::CloudController
           it 'does not remove the org from the Isolation Segment' do
             expect {
               subject.unassign(isolation_segment_model, org)
-            }.to raise_error IsolationSegmentUnassign::IsolationSegmentUnassignError, 'Please delete the Space associations for your Isolation Segment.'
+            }.to raise_error CloudController::Errors::ApiError, /assigned to.*#{space.name}/i
 
             expect(isolation_segment_model.organizations).to contain_exactly(org, org2)
           end
