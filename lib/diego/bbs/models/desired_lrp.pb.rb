@@ -10,13 +10,14 @@ require 'protobuf/message'
 # Imports
 #
 require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
-require 'modification_tag.pb'
 require 'actions.pb'
 require 'cached_dependency.pb'
-require 'security_group.pb'
+require 'certificate_properties.pb'
 require 'environment_variables.pb'
-require 'volume_mount.pb'
+require 'modification_tag.pb'
 require 'network.pb'
+require 'security_group.pb'
+require 'volume_mount.pb'
 
 module Diego
   module Bbs
@@ -72,6 +73,7 @@ module Diego
         repeated ::Diego::Bbs::Models::VolumeMount, :volume_mounts, 17
         optional ::Diego::Bbs::Models::Network, :network, 18
         optional :int64, :start_timeout_ms, 19
+        optional ::Diego::Bbs::Models::CertificateProperties, :certificate_properties, 20
       end
 
       class ProtoRoutes
@@ -132,6 +134,7 @@ module Diego
         optional ::Diego::Bbs::Models::Network, :network, 26
         repeated :string, :PlacementTags, 28
         optional :int32, :max_pids, 29
+        optional ::Diego::Bbs::Models::CertificateProperties, :certificate_properties, 30
       end
 
     end

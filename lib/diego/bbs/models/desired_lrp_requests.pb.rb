@@ -45,6 +45,7 @@ module Diego
 
       class DesiredLRPsRequest
         optional :string, :domain, 1
+        repeated :string, :process_guids, 2
       end
 
       class DesiredLRPResponse

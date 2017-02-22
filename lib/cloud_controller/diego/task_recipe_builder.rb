@@ -37,6 +37,9 @@ module VCAP::CloudController
           root_fs:                          task_action_builder.stack,
           environment_variables:            task_action_builder.task_environment_variables,
           PlacementTags:                    [VCAP::CloudController::IsolationSegmentSelector.for_space(task.space)],
+          certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
+            organizational_unit: ["app:#{task.app.guid}"]
+          ),
         )
       end
 
@@ -62,6 +65,9 @@ module VCAP::CloudController
           cached_dependencies:              action_builder.cached_dependencies,
           PlacementTags:                    find_staging_isolation_segment(staging_details),
           max_pids:                         config[:diego][:pid_limit],
+          certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
+            organizational_unit: ["app:#{staging_details.package.app_guid}"]
+          ),
         )
       end
 
