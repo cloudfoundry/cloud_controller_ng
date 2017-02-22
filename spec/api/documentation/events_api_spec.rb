@@ -201,7 +201,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
     end
 
-    let (:organization_event_repository) do
+    let(:organization_event_repository) do
       VCAP::CloudController::Repositories::OrganizationEventRepository.new
     end
 

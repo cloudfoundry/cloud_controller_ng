@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:user_name) { 'user name' }
       let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user.guid, user_name: user_name) }
 
-          subject(:organization_event_repository) { OrganizationEventRepository.new }
+      subject(:organization_event_repository) { OrganizationEventRepository.new }
 
       describe '#record_organization_create' do
         it 'records event correctly' do
