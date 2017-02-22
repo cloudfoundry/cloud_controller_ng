@@ -1,59 +1,16 @@
 require 'clockwork'
+require 'cloud_controller/clock/distributed_executor'
 
 module VCAP::CloudController
   class DistributedScheduler
-    def initialize
-      @logger = Steno.logger('cc.clock')
-    end
-
-    def schedule_periodic_job(name:, interval:, at: nil, thread: nil, fudge:)
-      ensure_job_record_exists(name)
-
+    def schedule_periodic_job(name:, interval:, at: nil, thread: nil, fudge:, timeout: nil)
       clock_opts      = {}
       clock_opts[:at] = at if at
       clock_opts[:thread] = thread if thread
 
       Clockwork.every(interval, "#{name}.job", clock_opts) do |_|
-        need_to_run_job = false
-
-        ClockJob.db.transaction do
-          job = ClockJob.find(name: name).lock!
-
-          need_to_run_job = need_to_run_job?(job, interval, fudge)
-
-          if need_to_run_job
-            @logger.info("Queueing #{name} at #{now}")
-            record_job_started(job)
-          end
-        end
-
-        if need_to_run_job
-          yield
-        end
+        DistributedExecutor.new.execute_job(name: name, interval: interval, fudge: fudge, timeout: timeout) { yield }
       end
-    end
-
-    def record_job_started(job)
-      job.update(last_started_at: now)
-    end
-
-    def ensure_job_record_exists(job_name)
-      ClockJob.find_or_create(name: job_name)
-    rescue Sequel::UniqueConstraintViolation
-      # find_or_create is not safe for concurrent access
-    end
-
-    def need_to_run_job?(job, interval, fudge=0)
-      last_started_at = job.last_started_at
-      @logger.info "Job last started at #{last_started_at}. Interval: #{interval}"
-      if last_started_at.nil?
-        return true
-      end
-      now >= (last_started_at + interval - fudge)
-    end
-
-    def now
-      Time.now.utc
     end
   end
 end

@@ -39,6 +39,7 @@ module VCAP::CloudController
         interval: interval,
         fudge:    FREQUENT_FUDGE_FACTOR,
         thread:   true,
+        timeout:  30.minutes
       }
 
       schedule_job(job_opts) do
