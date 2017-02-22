@@ -200,7 +200,60 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     let(:service_event_repository) do
       VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
     end
+
+    let (:organization_event_repository) do
+      VCAP::CloudController::Repositories::OrganizationEventRepository.new
+    end
+
     let(:user_audit_info) { VCAP::CloudController::UserAuditInfo.new(user_guid: test_user.guid, user_email: test_user_email) }
+
+    example 'List Organization Create Events' do
+      organization_event_repository.record_organization_create(test_organization, user_audit_info, {})
+
+      client.get '/v2/events?q=type:audit.organization.create', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event, expected_values: {
+        actor_type: 'user',
+        actor:      test_user.guid,
+        actor_name: test_user_email,
+        actee_type: 'organization',
+        actee_name: test_organization.name,
+        space_guid: '',
+        metadata: { 'request' => {} }
+      }
+    end
+
+    example 'List Organization Update Events' do
+      organization_event_repository.record_organization_update(test_organization, user_audit_info, {})
+
+      client.get '/v2/events?q=type:audit.organization.update', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event, expected_values: {
+        actor_type: 'user',
+        actor:      test_user.guid,
+        actor_name: test_user_email,
+        actee_type: 'organization',
+        actee_name: test_organization.name,
+        space_guid: '',
+        metadata: { 'request' => {} }
+      }
+    end
+
+    example 'List Organization Delete Events' do
+      organization_event_repository.record_organization_delete_request(test_organization, user_audit_info, {})
+
+      client.get '/v2/events?q=type:audit.organization.delete-request', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event, expected_values: {
+        actor_type: 'user',
+        actor:      test_user.guid,
+        actor_name: test_user_email,
+        actee_type: 'organization',
+        actee_name: test_organization.name,
+        space_guid: '',
+        metadata: { 'request' => {} }
+      }
+    end
 
     example 'List App Create Events' do
       app_event_repository.record_app_create(test_app, test_app.space, user_audit_info, app_request)
