@@ -25,6 +25,7 @@ class ReferentialIntegrity
   end
 
   def without_referential_integrity_mysql
+    db.disconnect
     db.run('SET FOREIGN_KEY_CHECKS = 0;')
     yield
   ensure

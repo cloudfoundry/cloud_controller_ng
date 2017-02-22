@@ -71,7 +71,7 @@ module VCAP::CloudController
       end
     end
 
-    it 'runs the passed block only once when there are multiple executors' do
+    it 'runs the passed block only once when there are multiple executors', isolation: :truncation do
       threads = []
       counter = 0
 
@@ -84,6 +84,7 @@ module VCAP::CloudController
       end
 
       threads.each(&:join)
+      expect(threads.any?(&:alive?)).to be(false)
       expect(counter).to eq(1)
     end
 
