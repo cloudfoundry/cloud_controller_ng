@@ -37,7 +37,7 @@ module VCAP::CloudController
 
     def after_destroy
       super
-
+      Locking[name: 'buildpacks'].lock!
       shifter = BuildpackShifter.new
       shifter.shift_positions_down(self)
     end

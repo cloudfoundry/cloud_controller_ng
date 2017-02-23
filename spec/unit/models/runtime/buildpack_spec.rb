@@ -389,6 +389,14 @@ module VCAP::CloudController
         )
       end
 
+      it 'grabs a lock while destroying a buildpack', isolation: :truncation do
+        buildpacks_lock = double(:buildpacks_lock)
+        allow(Locking).to receive(:[]) { buildpacks_lock }
+        allow(Locking[name: 'buildpacks']).to receive(:lock!)
+        buildpack1.destroy
+        expect(Locking[name: 'buildpacks']).to have_received(:lock!)
+      end
+
       it "doesn't shift when the last position is deleted" do
         expect {
           buildpack2.destroy
