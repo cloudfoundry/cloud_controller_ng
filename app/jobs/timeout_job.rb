@@ -1,9 +1,13 @@
 module VCAP::CloudController
   module Jobs
     class TimeoutJob < WrappingJob
+      def initialize(job, timeout)
+        super(job)
+        @timeout = timeout
+      end
+
       def perform
-        name = @handler.respond_to?(:job_name_in_configuration) ? @handler.job_name_in_configuration : :global
-        Timeout.timeout max_run_time(name) do
+        Timeout.timeout @timeout do
           super
         end
       rescue Timeout::Error
@@ -11,11 +15,7 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('JobTimeout')
       end
 
-      def max_run_time(job_name_in_configuration)
-        jobs_config = VCAP::CloudController::Config.config[:jobs]
-        job_config = jobs_config[job_name_in_configuration] || jobs_config[:global]
-        job_config[:timeout_in_seconds]
-      end
+      attr_reader :timeout
 
       def job
         @handler

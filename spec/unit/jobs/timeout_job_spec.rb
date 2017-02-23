@@ -3,7 +3,8 @@ require 'spec_helper'
 module VCAP::CloudController::Jobs
   RSpec.describe TimeoutJob do
     let(:job) { double(job_name_in_configuration: 'my-job', max_attempts: 2) }
-    let(:timeout_job) { TimeoutJob.new(job) }
+    let(:timeout) { 0.01.second }
+    let(:timeout_job) { TimeoutJob.new(job, timeout) }
 
     it 'runs the provided job' do
       expect(job).to receive(:perform)
@@ -21,16 +22,8 @@ module VCAP::CloudController::Jobs
         allow(job).to receive(:perform) { sleep(2) }
       end
 
-      it "doesn't allow the job to exceed the timeout" do
-        expect(timeout_job).to receive(:max_run_time).with('my-job').and_return(1)
+      it 'raises an error after the timeout has elapsed' do
         expect { timeout_job.perform }.to raise_error CloudController::Errors::ApiError, /job.+timed out/
-      end
-
-      context 'and the job does not specify a custom timeout error' do
-        it 'raises a CloudController::Errors::JobTimeout to ensure the error message reaches the API consumer' do
-          expect(timeout_job).to receive(:max_run_time).with('my-job').and_return(1)
-          expect { timeout_job.perform }.to raise_error CloudController::Errors::ApiError, /job.+timed out/
-        end
       end
 
       context 'and the job specifies a custom timeout error' do
@@ -44,56 +37,7 @@ module VCAP::CloudController::Jobs
         end
 
         it 'raises the timeout error the job wants' do
-          expect(timeout_job).to receive(:max_run_time).with('my-job-with-custom-timeout').and_return(1)
           expect { timeout_job.perform }.to raise_error(custom_timeout_error)
-        end
-      end
-    end
-
-    context 'when the job does not have a configuration name' do
-      let(:job) { double(max_attempts: 2) }
-
-      before do
-        allow(job).to receive(:perform).and_return(true)
-      end
-
-      it 'runs the job with the default timeout' do
-        expect { timeout_job.perform }.not_to raise_error
-      end
-    end
-
-    describe 'max_timeout' do
-      let(:config) do
-        {
-          jobs: {
-            global: {
-              timeout_in_seconds: 4.hours
-            }
-          }
-        }
-      end
-
-      before do
-        allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
-      end
-
-      context 'by default' do
-        it 'uses the configured global timeout' do
-          expect(timeout_job.max_run_time(:app_bits_packer)).to eq(4.hours)
-        end
-      end
-
-      context 'when an override is specified for this job' do
-        let(:overridden_timeout) { 5.minutes }
-
-        before do
-          config[:jobs].merge!(app_bits_packer: {
-                                 timeout_in_seconds: overridden_timeout
-          })
-        end
-
-        it 'uses the overridden timeout' do
-          expect(timeout_job.max_run_time(:app_bits_packer)).to eq(overridden_timeout)
         end
       end
     end

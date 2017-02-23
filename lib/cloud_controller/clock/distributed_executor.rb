@@ -10,7 +10,7 @@ module VCAP::CloudController
       ClockJob.db.transaction do
         job = ClockJob.find(name: name).lock!
 
-        need_to_run_job = need_to_run_job?(job, interval, fudge, timeout)
+        need_to_run_job = need_to_run_job?(job, interval, timeout, fudge)
 
         if need_to_run_job
           @logger.info("Queueing #{name} at #{now}")
@@ -37,7 +37,7 @@ module VCAP::CloudController
       # find_or_create is not safe for concurrent access
     end
 
-    def need_to_run_job?(job, interval, fudge=0, timeout)
+    def need_to_run_job?(job, interval, timeout, fudge=0)
       last_started_at = job.last_started_at
       last_completed_at = job.last_completed_at
       @logger.info "Job last started at #{last_started_at}. Last completed at #{last_completed_at} Interval: #{interval}"
