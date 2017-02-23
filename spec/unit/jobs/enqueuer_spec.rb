@@ -2,24 +2,25 @@ require 'spec_helper'
 
 module VCAP::CloudController::Jobs
   RSpec.describe Enqueuer do
+    let(:config) do
+      {
+        jobs: {
+          global: {
+            timeout_in_seconds: global_timeout,
+          }
+        }
+      }
+    end
+    let(:global_timeout) { 5.hours }
+
+    before do
+      allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
+    end
+
     describe '#enqueue' do
       let(:wrapped_job) { Runtime::ModelDeletion.new('one', 'two') }
       let(:opts) { { queue: 'my-queue' } }
       let(:request_id) { 'abc123' }
-      let(:config) do
-        {
-          jobs: {
-            global: {
-              timeout_in_seconds: global_timeout,
-            }
-          }
-        }
-      end
-      let(:global_timeout) { 5.hours }
-
-      before do
-        allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
-      end
 
       it 'delegates to Delayed::Job' do
         expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
@@ -88,6 +89,14 @@ module VCAP::CloudController::Jobs
         expect(Delayed::Worker.delay_jobs).to be(true)
         Enqueuer.new(wrapped_job, opts).run_inline
         expect(Delayed::Worker.delay_jobs).to be(true)
+      end
+
+      it 'uses the job timeout' do
+        expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+          expect(enqueued_job).to be_a TimeoutJob
+          expect(enqueued_job.timeout).to eq(global_timeout)
+        end
+        Enqueuer.new(wrapped_job, opts).run_inline
       end
 
       context 'when executing the job fails' do

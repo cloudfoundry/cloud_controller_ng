@@ -17,7 +17,7 @@ module VCAP::CloudController
 
       def run_inline
         run_immediately do
-          Delayed::Job.enqueue(@job, @opts)
+          Delayed::Job.enqueue(TimeoutJob.new(@job, job_timeout), @opts)
         end
       end
 
