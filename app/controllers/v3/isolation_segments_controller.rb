@@ -117,7 +117,7 @@ class IsolationSegmentsController < ApplicationController
 
     organization_assigner.assign(isolation_segment_model, orgs)
 
-    render status: :created, json: Presenters::V3::OneToManyRelationshipPresenter.new("isolation_segments/#{isolation_segment_model.guid}", isolation_segment_model.organizations)
+    render status: :ok, json: Presenters::V3::OneToManyRelationshipPresenter.new("isolation_segments/#{isolation_segment_model.guid}", isolation_segment_model.organizations)
   end
 
   def unassign_allowed_organization

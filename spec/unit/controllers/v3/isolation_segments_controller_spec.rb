@@ -180,7 +180,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       it 'assigns the isolation segment to the org' do
         post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
 
-        expect(response.status).to eq 201
+        expect(response.status).to eq 200
         expect(parsed_body['data'][0]['guid']).to eq(org1.guid)
         expect(isolation_segment_model.organizations).to contain_exactly(org1)
       end
@@ -189,7 +189,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         req_body[:data] << { guid: org2.guid }
         post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
 
-        expect(response.status).to eq 201
+        expect(response.status).to eq 200
 
         entitled_guids = []
         parsed_body['data'].each do |item|
@@ -249,10 +249,10 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           assigner.assign(isolation_segment_model, [org1])
         end
 
-        it 'returns a 201 and leaves the existing assignment intact' do
+        it 'returns a 200 and leaves the existing assignment intact' do
           post :assign_allowed_organizations, guid: isolation_segment_model.guid, body: req_body
 
-          expect(response.status).to eq 201
+          expect(response.status).to eq 200
 
           expect(isolation_segment_model.organizations).to include(org1)
         end
