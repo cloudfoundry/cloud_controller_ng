@@ -1,26 +1,8 @@
 require 'clockwork'
+require 'cloud_controller/clock/job_timeout_calculator'
 
 module VCAP::CloudController
   module Jobs
-    class JobTimeoutCalculator
-      def initialize(config)
-        @config = config
-      end
-
-      def calculate(job)
-        job_name = job_name(job)
-        config.dig(:jobs, job_name.to_sym, :timeout_in_seconds) || config.dig(:jobs, :global, :timeout_in_seconds)
-      end
-
-      private
-
-      attr_reader :config
-
-      def job_name(job)
-        job.try(:job_name_in_configuration) || :global
-      end
-    end
-
     class Enqueuer
       def initialize(job, opts={})
         @job = job
@@ -42,7 +24,7 @@ module VCAP::CloudController
       private
 
       def job_timeout
-        @timeout_calculator.calculate(@job)
+        @timeout_calculator.calculate(@job.try(:job_name_in_configuration))
       end
 
       def run_immediately

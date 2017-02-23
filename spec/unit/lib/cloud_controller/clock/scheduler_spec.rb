@@ -9,6 +9,9 @@ module VCAP::CloudController
       let(:clock) { instance_double(Clock) }
       let(:config) do
         {
+          jobs: {
+            global: { timeout_in_seconds: global_timeout },
+          },
           app_usage_events: { cutoff_age_in_days: 1, },
           app_events: { cutoff_age_in_days: 2, },
           audit_events: { cutoff_age_in_days: 3, },
@@ -19,6 +22,7 @@ module VCAP::CloudController
           diego_sync: { frequency_in_seconds: 30 },
         }
       end
+      let(:global_timeout) { 4.hours }
 
       before do
         allow(Clock).to receive(:new).with(no_args).and_return(clock)
@@ -112,7 +116,7 @@ module VCAP::CloudController
         allow(clock).to receive(:schedule_daily_job)
         allow(clock).to receive(:schedule_frequent_worker_job)
         expect(clock).to receive(:schedule_frequent_inline_job) do |args, &block|
-          expect(args).to eql(name: 'diego_sync', interval: 30)
+          expect(args).to eql(name: 'diego_sync', interval: 30, timeout: global_timeout)
           expect(Jobs::Diego::Sync).to receive(:new).with(no_args).and_call_original
           expect(block.call).to be_instance_of(Jobs::Diego::Sync)
         end

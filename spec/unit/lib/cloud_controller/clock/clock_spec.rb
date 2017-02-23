@@ -24,7 +24,7 @@ module VCAP::CloudController
           interval: 1.day,
           name: job_name,
           at: time,
-          fudge: Clock::DAILY_FUDGE_FACTOR
+          fudge: Clock::DAILY_FUDGE_FACTOR,
         ).and_yield
 
         clock_opts = {
@@ -33,7 +33,8 @@ module VCAP::CloudController
         }
         clock.schedule_daily_job(clock_opts) { some_job_class.new }
 
-        expect(Jobs::Enqueuer).to have_received(:new).with(instance_of(some_job_class), { queue: 'cc-generic' })
+        expected_job_opts = { queue: 'cc-generic' }
+        expect(Jobs::Enqueuer).to have_received(:new).with(instance_of(some_job_class), expected_job_opts)
         expect(enqueuer).to have_received(:enqueue)
       end
     end
@@ -49,7 +50,7 @@ module VCAP::CloudController
         expect(scheduler).to receive(:schedule_periodic_job).with(
           interval: interval,
           name: job_name,
-          fudge: Clock::FREQUENT_FUDGE_FACTOR
+          fudge: Clock::FREQUENT_FUDGE_FACTOR,
         ).and_yield
 
         clock_opts = {
@@ -58,7 +59,8 @@ module VCAP::CloudController
         }
         clock.schedule_frequent_worker_job(clock_opts) { some_job_class.new }
 
-        expect(Jobs::Enqueuer).to have_received(:new).with(instance_of(some_job_class), { queue: 'cc-generic' })
+        expected_job_opts = { queue: 'cc-generic' }
+        expect(Jobs::Enqueuer).to have_received(:new).with(instance_of(some_job_class), expected_job_opts)
         expect(enqueuer).to have_received(:enqueue)
       end
     end
@@ -67,6 +69,7 @@ module VCAP::CloudController
       it 'schedules with the given interval and name and executes the job inline in a thread with a timeout' do
         job_name = 'fake'
         interval = 507.seconds
+        timeout = 4.hours
 
         scheduler = instance_double(DistributedScheduler)
         allow(DistributedScheduler).to receive(:new).and_return scheduler
@@ -76,12 +79,13 @@ module VCAP::CloudController
           name: job_name,
           fudge: Clock::FREQUENT_FUDGE_FACTOR,
           thread: true,
-          timeout: 30.minutes
+          timeout: timeout,
         ).and_yield
 
         clock_opts = {
           name:     job_name,
           interval: interval,
+          timeout:  timeout,
         }
         clock.schedule_frequent_inline_job(clock_opts) { some_job_class.new }
 

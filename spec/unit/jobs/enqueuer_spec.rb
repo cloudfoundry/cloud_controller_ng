@@ -10,11 +10,12 @@ module VCAP::CloudController::Jobs
         {
           jobs: {
             global: {
-              timeout_in_seconds: 5.hours
+              timeout_in_seconds: global_timeout,
             }
           }
         }
       end
+      let(:global_timeout) { 5.hours }
 
       before do
         allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
@@ -25,7 +26,7 @@ module VCAP::CloudController::Jobs
           expect(enqueued_job).to be_a ExceptionCatchingJob
           expect(enqueued_job.handler).to be_a RequestJob
           expect(enqueued_job.handler.job).to be_a TimeoutJob
-          expect(enqueued_job.handler.job.timeout).to eq(5.hours)
+          expect(enqueued_job.handler.job.timeout).to eq(global_timeout)
           expect(enqueued_job.handler.job.job).to be wrapped_job
         end
         Enqueuer.new(wrapped_job, opts).enqueue
@@ -39,6 +40,39 @@ module VCAP::CloudController::Jobs
 
         ::VCAP::Request.current_id = request_id
         Enqueuer.new(wrapped_job, opts).enqueue
+      end
+
+      context 'when the config has a timeout defined for the given job' do
+        let(:config) do
+          {
+            jobs: {
+              model_deletion: {
+                timeout_in_seconds: job_timeout,
+              }
+            }
+          }
+        end
+        let(:job_timeout) { 2.hours }
+
+        it 'uses the job timeout' do
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(enqueued_job.handler.job).to be_a TimeoutJob
+            expect(enqueued_job.handler.job.timeout).to eq(job_timeout)
+          end
+          Enqueuer.new(wrapped_job, opts).enqueue
+        end
+      end
+
+      context 'when the job does NOT implement job_name_in_configuration' do
+        let(:wrapped_job) { double('job') }
+
+        it 'uses the job timeout' do
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(enqueued_job.handler.job).to be_a TimeoutJob
+            expect(enqueued_job.handler.job.timeout).to eq(global_timeout)
+          end
+          Enqueuer.new(wrapped_job, opts).enqueue
+        end
       end
     end
 
@@ -65,64 +99,6 @@ module VCAP::CloudController::Jobs
           }.to raise_error /Boom!/
           expect(Delayed::Worker.delay_jobs).to be(true)
         end
-      end
-    end
-  end
-
-  RSpec.describe JobTimeoutCalculator do
-    let(:config) do
-      {
-        jobs: {
-          global: {
-            timeout_in_seconds: global_timeout
-          }
-        }
-      }
-    end
-    let(:global_timeout) { 4.hours }
-    let(:my_job_timeout) { 2.hours }
-
-    context 'when the job implements `job_name_in_configuration`' do
-      let(:job) { double('job', job_name_in_configuration: 'my_job') }
-
-      context 'when a job is specified in the config' do
-        let(:config) do
-          {
-            jobs: {
-              my_job: {
-                timeout_in_seconds: my_job_timeout
-              }
-            }
-          }
-        end
-
-        it 'returns the job timeout from the config' do
-          expect(JobTimeoutCalculator.new(config).calculate(job)).to eq(my_job_timeout)
-        end
-      end
-
-      context 'when a job timeout is NOT specified in the config' do
-        let(:config) do
-          {
-            jobs: {
-              global: {
-                timeout_in_seconds: global_timeout
-              }
-            }
-          }
-        end
-
-        it 'returns the global timeout' do
-          expect(JobTimeoutCalculator.new(config).calculate(job)).to eq(global_timeout)
-        end
-      end
-    end
-
-    context 'when the job does NOT implement `job_name_in_configuration`' do
-      let(:job) { double('job') }
-
-      it 'returns the global timeout from the config' do
-        expect(JobTimeoutCalculator.new(config).calculate(job)).to eq(global_timeout)
       end
     end
   end

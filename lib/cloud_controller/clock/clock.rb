@@ -33,13 +33,13 @@ module VCAP::CloudController
       end
     end
 
-    def schedule_frequent_inline_job(name:, interval:)
+    def schedule_frequent_inline_job(name:, interval:, timeout:)
       job_opts = {
         name:     name,
         interval: interval,
         fudge:    FREQUENT_FUDGE_FACTOR,
         thread:   true,
-        timeout:  30.minutes
+        timeout:  timeout,
       }
 
       schedule_job(job_opts) do

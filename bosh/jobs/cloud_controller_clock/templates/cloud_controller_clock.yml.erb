@@ -88,6 +88,10 @@ jobs:
   droplet_upload:
     timeout_in_seconds: <%= timeout %>
   <% end %>
+  <% if_p("cc.jobs.diego_sync.timeout_in_seconds") do |timeout| %>
+  diego_sync:
+    timeout_in_seconds: <%= timeout %>
+  <% end %>
 
 app_events:
   cutoff_age_in_days: <%= p("cc.app_events.cutoff_age_in_days") %>
