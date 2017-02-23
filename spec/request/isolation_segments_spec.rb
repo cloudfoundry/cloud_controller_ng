@@ -107,7 +107,7 @@ RSpec.describe 'IsolationSegmentModels' do
       post "/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations", assign_request, user_header
 
       parsed_response = MultiJson.load(last_response.body)
-      expect(last_response.status).to eq(201)
+      expect(last_response.status).to eq(200)
 
       expected_response = {
         'data' => [
