@@ -7,6 +7,9 @@ module VCAP::CloudController
     def execute_job(name:, interval:, fudge:, timeout:)
       ensure_job_record_exists(name)
 
+      need_to_run_job = nil
+      job = nil
+
       ClockJob.db.transaction do
         job = ClockJob.find(name: name).lock!
 
@@ -15,9 +18,12 @@ module VCAP::CloudController
         if need_to_run_job
           @logger.info("Queueing #{name} at #{now}")
           record_job_started(job)
-          yield
-          record_job_completed(job)
         end
+      end
+
+      if need_to_run_job
+        yield
+        record_job_completed(job)
       end
     end
 
@@ -28,6 +34,7 @@ module VCAP::CloudController
     end
 
     def record_job_completed(job)
+      job.reload
       job.update(last_completed_at: now)
     end
 
