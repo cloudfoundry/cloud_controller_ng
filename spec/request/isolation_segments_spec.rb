@@ -53,12 +53,17 @@ RSpec.describe 'IsolationSegmentModels' do
         'data' => [
           { 'guid' => org1.guid },
           { 'guid' => org2.guid },
-        ]
+        ],
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations" },
+          'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" }
+        }
       }
 
       expect(parsed_response['data'].length).to eq 2
       expect(parsed_response['data']).to include(expected_response['data'][0])
       expect(parsed_response['data']).to include(expected_response['data'][1])
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 
