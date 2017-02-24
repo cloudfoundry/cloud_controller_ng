@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Presenters
     module V3
-      class OneToOneRelationshipPresenter
+      class ToOneRelationshipPresenter
         def initialize(relation_url, relationship, relationship_path)
           @relation_url = relation_url
           @relationship = relationship

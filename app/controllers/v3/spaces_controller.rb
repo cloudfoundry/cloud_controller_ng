@@ -30,7 +30,7 @@ class SpacesV3Controller < ApplicationController
     SpaceUpdateIsolationSegment.new(user_audit_info).update(space, org, message)
 
     isolation_segment = fetch_isolation_segment(message.isolation_segment_guid)
-    render status: :ok, json: Presenters::V3::OneToOneRelationshipPresenter.new("spaces/#{space.guid}", isolation_segment, 'isolation_segment')
+    render status: :ok, json: Presenters::V3::ToOneRelationshipPresenter.new("spaces/#{space.guid}", isolation_segment, 'isolation_segment')
   rescue SpaceUpdateIsolationSegment::InvalidSpace => e
     unprocessable!(e.message)
   rescue SpaceUpdateIsolationSegment::InvalidRelationship
@@ -45,7 +45,7 @@ class SpacesV3Controller < ApplicationController
     space_not_found! unless can_read?(space.guid, org.guid)
 
     isolation_segment = fetch_isolation_segment(space.isolation_segment_guid)
-    render status: :ok, json: Presenters::V3::OneToOneRelationshipPresenter.new("spaces/#{space.guid}", isolation_segment, 'isolation_segment')
+    render status: :ok, json: Presenters::V3::ToOneRelationshipPresenter.new("spaces/#{space.guid}", isolation_segment, 'isolation_segment')
   end
 
   private

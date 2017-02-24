@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'presenters/v3/one_to_one_relationship_presenter'
+require 'presenters/v3/to_one_relationship_presenter'
 
 module VCAP::CloudController::Presenters::V3
-  RSpec.describe OneToOneRelationshipPresenter do
-    class OneToOneRelationship
+  RSpec.describe ToOneRelationshipPresenter do
+    class ToOneRelationship
       def initialize(guid)
         @guid = guid
       end
@@ -13,8 +13,8 @@ module VCAP::CloudController::Presenters::V3
       end
     end
 
-    let(:relationship) { OneToOneRelationship.new(1) }
-    subject(:relationship_presenter) { OneToOneRelationshipPresenter.new('relation/guid', relationship, 'relationship_path') }
+    let(:relationship) { ToOneRelationship.new(1) }
+    subject(:relationship_presenter) { ToOneRelationshipPresenter.new('relation/guid', relationship, 'relationship_path') }
 
     describe '#to_hash' do
       let(:result) { relationship_presenter.to_hash }

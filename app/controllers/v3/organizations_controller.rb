@@ -1,6 +1,6 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'messages/orgs/orgs_list_message'
-require 'presenters/v3/one_to_one_relationship_presenter'
+require 'presenters/v3/to_one_relationship_presenter'
 require 'messages/orgs_default_iso_seg_update_message'
 require 'fetchers/org_list_fetcher'
 require 'actions/set_default_isolation_segment'
@@ -32,7 +32,7 @@ class OrganizationsV3Controller < ApplicationController
 
     isolation_segment = fetch_isolation_segment(org.default_isolation_segment_guid)
 
-    render status: :ok, json: Presenters::V3::OneToOneRelationshipPresenter.new("organizations/#{org.guid}", isolation_segment, 'default_isolation_segment')
+    render status: :ok, json: Presenters::V3::ToOneRelationshipPresenter.new("organizations/#{org.guid}", isolation_segment, 'default_isolation_segment')
   end
 
   def update_default_isolation_segment
@@ -47,7 +47,7 @@ class OrganizationsV3Controller < ApplicationController
 
     SetDefaultIsolationSegment.new.set(org, isolation_segment, message)
 
-    render status: :ok, json: Presenters::V3::OneToOneRelationshipPresenter.new("organizations/#{org.guid}", isolation_segment, 'default_isolation_segment')
+    render status: :ok, json: Presenters::V3::ToOneRelationshipPresenter.new("organizations/#{org.guid}", isolation_segment, 'default_isolation_segment')
   rescue SetDefaultIsolationSegment::InvalidRelationship
     unprocessable!("Unable to set #{iso_seg_guid} as the default isolation segment. Ensure it has been entitled to this organization.")
   rescue SetDefaultIsolationSegment::InvalidOrg => e
