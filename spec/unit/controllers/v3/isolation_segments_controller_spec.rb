@@ -677,6 +677,22 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect { isolation_segment_model1.reload }.to raise_error(Sequel::Error, 'Record not found')
           expect { isolation_segment_model2.reload }.to_not raise_error
         end
+
+        context 'when the isolation segment is associated to an organization' do
+          before do
+            allow_any_instance_of(VCAP::CloudController::IsolationSegmentDelete).to receive(:delete).
+              and_raise(VCAP::CloudController::IsolationSegmentDelete::AssociationNotEmptyError.new(
+                          'Revoke the Organization entitlements for your Isolation Segment.'))
+          end
+
+          it 'returns a 422 UnprocessableEntity error' do
+            delete :destroy, guid: isolation_segment_model1.guid
+
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
+            expect(response.body).to include('Revoke the Organization entitlements for your Isolation Segment.')
+          end
+        end
       end
 
       context 'when the isolation segment does not exist' do

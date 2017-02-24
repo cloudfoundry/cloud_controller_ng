@@ -21,7 +21,7 @@ module VCAP::CloudController
       }.to raise_error /Cannot delete the #{shared_isolation_segment_model.name}/
     end
 
-    context 'when the segment is assigned as an org\'s default' do
+    context 'when the segment is assigned as an orgs default' do
       let(:org) { Organization.make }
 
       before do
@@ -32,11 +32,12 @@ module VCAP::CloudController
       it 'raises an error' do
         expect {
           subject.delete(isolation_segment_model)
-        }.to raise_error /organization associations/i
+        }.to raise_error(VCAP::CloudController::IsolationSegmentDelete::AssociationNotEmptyError,
+          'Revoke the Organization entitlements for your Isolation Segment.')
       end
     end
 
-    context 'when the segment is assigned as a space\'s default' do
+    context 'when the segment is assigned as a spaces default' do
       let(:org) { Organization.make }
       let(:space) { Space.make(organization: org) }
 
@@ -48,7 +49,8 @@ module VCAP::CloudController
       it 'raises an error' do
         expect {
           subject.delete(isolation_segment_model)
-        }.to raise_error /space associations/i
+        }.to raise_error(VCAP::CloudController::IsolationSegmentDelete::AssociationNotEmptyError,
+          'Revoke the Organization entitlements for your Isolation Segment.')
       end
     end
   end

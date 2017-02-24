@@ -64,6 +64,8 @@ class IsolationSegmentsController < ApplicationController
     IsolationSegmentDelete.new.delete(isolation_segment_model)
 
     head :no_content
+  rescue IsolationSegmentDelete::AssociationNotEmptyError => e
+    unprocessable!(e.message)
   end
 
   def update
