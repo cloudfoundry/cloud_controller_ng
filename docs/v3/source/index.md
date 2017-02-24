@@ -90,15 +90,7 @@ includes:
   - experimental_resources/processes/scale
   - experimental_resources/processes/terminate_instance
   - experimental_resources/processes/list
-  - experimental_resources/processes/app/header
-  - experimental_resources/processes/object
-  - experimental_resources/processes/health_check_object
-  - experimental_resources/processes/stats_object
-  - experimental_resources/processes/app/get
-  - experimental_resources/processes/app/stats
-  - experimental_resources/processes/app/scale
-  - experimental_resources/processes/app/terminate_instance
-  - experimental_resources/processes/app/list
+  - experimental_resources/processes/list_for_app
   - experimental_resources/route_mappings/header
   - experimental_resources/route_mappings/object
   - experimental_resources/route_mappings/create

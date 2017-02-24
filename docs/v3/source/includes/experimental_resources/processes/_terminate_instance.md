@@ -8,6 +8,10 @@ Definition
 DELETE /v3/processes/:guid/instances/:index HTTP/1.1
 ```
 
+```http
+DELETE /v3/apps/:guid/processes/:type/instances/:index HTTP/1.1
+```
+
 ```
 Example Request
 ```

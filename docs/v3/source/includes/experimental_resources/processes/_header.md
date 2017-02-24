@@ -1,4 +1,4 @@
-## Processes By Guid
+## Processes
 
 Processes define the runnable units of an app. An app can have multiple process types, each with differing commands and scale.
 
