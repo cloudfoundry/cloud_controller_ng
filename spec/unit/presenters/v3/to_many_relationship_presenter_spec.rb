@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'presenters/v3/one_to_many_relationship_presenter'
+require 'presenters/v3/to_many_relationship_presenter'
 
 module VCAP::CloudController::Presenters::V3
-  RSpec.describe OneToManyRelationshipPresenter do
-    class OneToManyRelationship
+  RSpec.describe ToManyRelationshipPresenter do
+    class ToManyRelationship
       def initialize(guid)
         @guid = guid
       end
@@ -17,7 +17,7 @@ module VCAP::CloudController::Presenters::V3
       relationships = []
 
       (1..count).each do |i|
-        relationships << OneToManyRelationship.new(i)
+        relationships << ToManyRelationship.new(i)
       end
 
       relationships
@@ -25,7 +25,7 @@ module VCAP::CloudController::Presenters::V3
 
     let(:data) { [] }
     let(:relation_url) { 'isolation_segments/aaabbbccc' }
-    subject { OneToManyRelationshipPresenter.new(relation_url, data) }
+    subject { ToManyRelationshipPresenter.new(relation_url, data) }
     let(:url_builder) { VCAP::CloudController::Presenters::ApiUrlBuilder.new }
 
     describe '#to_hash' do
