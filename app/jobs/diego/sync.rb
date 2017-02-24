@@ -10,7 +10,15 @@ module VCAP::CloudController
           if config.dig(:diego, :temporary_local_sync)
             VCAP::CloudController::Diego::ProcessesSync.new(config).sync
             VCAP::CloudController::Diego::TasksSync.new(config).sync
+          else
+            logger.info('Skipping diego sync as the `diego.temporary_local_sync` manifest property is false')
           end
+        end
+
+        private
+
+        def logger
+          @logger ||= Steno.logger('cc.diego.sync.perform')
         end
       end
     end
