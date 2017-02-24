@@ -16,6 +16,7 @@ Example Request
 curl "https://api.example.org/v3/droplets/[guid]/copy" \
   -X POST \
   -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
   -d '{
     "relationships": {
       "app": {

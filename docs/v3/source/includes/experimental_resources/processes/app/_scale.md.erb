@@ -16,6 +16,7 @@ Example Request
 curl "https://api.example.org/v3/apps/[guid]/processes/[type]/scale" \
   -X PUT \
   -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
   -d '{
     "instances": 5,
     "memory_in_mb": 256,

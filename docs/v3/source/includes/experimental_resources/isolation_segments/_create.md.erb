@@ -16,6 +16,7 @@ Example Request
 curl "https://api.example.org/v3/isolation_segments" \
   -X POST \
   -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
   -d '{
     "name": "my_segment"
   }'

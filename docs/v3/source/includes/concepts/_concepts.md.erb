@@ -154,6 +154,7 @@ Setting the relationship while creating an object
 curl "https://api.example.org/v3/books" \
   -X POST \
   -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
   -d '{
     "color": "yellow",
     "relationships": {
@@ -176,6 +177,7 @@ Adding related resources
 curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
   -X POST \
   -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
   -d '{
     "data": [
       { "guid":"author-guid-1" },
@@ -192,6 +194,7 @@ Replacing all relationships
 curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
   -X PATCH \
   -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
   -d '{
     "data": [
       { "guid":"author-guid-3" },
@@ -208,6 +211,7 @@ Removing all relationships
 curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
   -X PATCH \
   -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
   -d '{ "data": [] }'
 ```
 
@@ -216,11 +220,9 @@ Removing specific relationships
 ```
 
 ```shell
-curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
+curl "https://api.example.org/v3/books/[guid]/relationships/authors/[author-guid]" \
   -X DELETE \
-  -H "Authorization: bearer [token]" \
-  -d '{ "data": [ { "guid":"author-guid-3" } ] }'
-  }'
+  -H "Authorization: bearer [token]"
 ```
 
 ## Errors

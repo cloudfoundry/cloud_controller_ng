@@ -16,6 +16,7 @@ Example Request
 curl "https://api.example.org/v3/service_bindings" \
   -X POST \
   -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
   -d '{
     "type": "app",
     "relationships": {

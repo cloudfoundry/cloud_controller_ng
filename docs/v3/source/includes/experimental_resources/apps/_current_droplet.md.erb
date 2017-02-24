@@ -16,6 +16,7 @@ Example Request
 curl "https://api.example.org/v3/apps/[guid]/droplets/current" \
   -X PUT \
   -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
   -d '{ "droplet_guid": "[droplet_guid]" }'
 ```
 
