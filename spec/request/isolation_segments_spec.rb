@@ -51,8 +51,8 @@ RSpec.describe 'IsolationSegmentModels' do
 
       expected_response = {
         'data' => [
-          { 'name' => org1.name, 'guid' => org1.guid, 'link' => "/v2/organizations/#{org1.guid}" },
-          { 'name' => org2.name, 'guid' => org2.guid, 'link' => "/v2/organizations/#{org2.guid}" },
+          { 'guid' => org1.guid },
+          { 'guid' => org2.guid },
         ]
       }
 

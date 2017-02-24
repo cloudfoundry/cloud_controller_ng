@@ -1,4 +1,4 @@
-### List organizations for an isolation segment
+### List organizations relationship
 
 ```
 Definition
@@ -26,7 +26,7 @@ Example Response
 HTTP/1.1 200 OK
 ```
 ```json
-<%= yield_content :related_organizations %>
+<%= yield_content :relationships_organizations %>
 ```
 
 This endpoint lists the organizations entitled for the isolation segment.  For an Admin, this will list all entitled organizations in the system.  For any other user, this will list only the entitled organizations to which the user belongs.

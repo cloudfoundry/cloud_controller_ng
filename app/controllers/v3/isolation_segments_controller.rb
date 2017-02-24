@@ -96,7 +96,7 @@ class IsolationSegmentsController < ApplicationController
                       fetcher.fetch_for_organizations(org_guids: readable_org_guids)
                     end
 
-    render status: :ok, json: Presenters::V3::RelationshipPresenter.new('organizations', organizations)
+    render status: :ok, json: Presenters::V3::OneToManyRelationshipPresenter.new('organizations', organizations)
   end
 
   def relationships_spaces
