@@ -368,6 +368,7 @@ through a relationship sub resource.</p>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/books"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "color": "yellow",
     "relationships": {
@@ -386,6 +387,7 @@ through a relationship sub resource.</p>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/books/[guid]/relationships/authors"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "data": [
       { "guid":"author-guid-1" },
@@ -398,6 +400,7 @@ through a relationship sub resource.</p>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/books/[guid]/relationships/authors"</span> <span class="se">\</span>
   -X PATCH <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "data": [
       { "guid":"author-guid-3" },
@@ -410,16 +413,15 @@ through a relationship sub resource.</p>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/books/[guid]/relationships/authors"</span> <span class="se">\</span>
   -X PATCH <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{ "data": [] }'</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Removing specific relationships
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/books/[guid]/relationships/authors"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/books/[guid]/relationships/authors/[author-guid]"</span> <span class="se">\</span>
   -X DELETE <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -d <span class="s1">'{ "data": [ { "guid":"author-guid-3" } ] }'</span>
-  <span class="o">}</span><span class="s1">'
-</span></code></pre>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
 
 <h2 id="errors">Errors</h2>
 
@@ -722,6 +724,7 @@ This section is meant to explain how clients can perform complex workflows using
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/tasks"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{ "command": "rake db:migrate" }'</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
@@ -1422,6 +1425,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "name": "my_app",
     "environment_variables": {
@@ -1687,6 +1691,7 @@ It will include environment variables for Environment Variable Groups and Servic
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]"</span> <span class="se">\</span>
   -X PATCH <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "name": "my_app",
     "environment_variables": {
@@ -1803,6 +1808,7 @@ It will include environment variables for Environment Variable Groups and Servic
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/droplets/current"</span> <span class="se">\</span>
   -X PUT <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{ "droplet_guid": "[droplet_guid]" }'</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
@@ -2613,6 +2619,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/[guid]/droplets"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "environment_variables": {
       "CUSTOM_ENV_VAR": "hello"
@@ -2751,6 +2758,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets/[guid]/copy"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "relationships": {
       "app": {
@@ -3642,6 +3650,7 @@ environment variables listed on the source droplet.</p>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "name": "my_segment"
   }'</span>
@@ -3727,6 +3736,7 @@ environment variables listed on the source droplet.</p>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]"</span> <span class="se">\</span>
   -X PATCH <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "name": "my_isolation_segment"
   }'</span> 
@@ -3974,6 +3984,7 @@ environment variables listed on the source droplet.</p>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]/relationships/organizations"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "data": [
       { "guid":"org-guid-1" },
@@ -4424,8 +4435,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[guid]/relationships/default_isolation_segment"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -H <span class="s2">"Content-Type: application/json"</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
@@ -4544,6 +4554,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "type": "docker",
     "relationships": {
@@ -5633,6 +5644,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]"</span> <span class="se">\</span>
   -X PATCH <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{ "command": "rackup" }'</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
@@ -5720,6 +5732,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]/scale"</span> <span class="se">\</span>
   -X PUT <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "instances": 5,
     "memory_in_mb": 256,
@@ -6434,6 +6447,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/processes/[type]/scale"</span> <span class="se">\</span>
   -X PUT <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "instances": 5,
     "memory_in_mb": 256,
@@ -6848,6 +6862,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/route_mappings"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "relationships": {
       "app": {
@@ -7364,6 +7379,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_bindings"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "type": "app",
     "relationships": {
@@ -7916,8 +7932,7 @@ entitled to the isolation_segment.</p>
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]/relationships/isolation_segment"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -H <span class="s2">"Content-Type: application/json"</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
