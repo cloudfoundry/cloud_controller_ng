@@ -88,6 +88,26 @@ module VCAP::CloudController
       expect(counter).to eq(1)
     end
 
+    context 'when the job errors' do
+      it 'run the job again after interval has elapsed' do
+        executed = false
+
+        expect {
+          DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
+            raise 'fake-error'
+          end
+        }.to raise_error /fake-error/
+
+        Timecop.travel(Time.now.utc + 1.minute)
+
+        DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
+          executed = true
+        end
+
+        expect(executed).to be(true)
+      end
+    end
+
     context 'when the job runs longer than its interval' do
       context 'when the job has NOT run before' do
         it 'does NOT execute the block if the previous run has not completed yet' do

@@ -48,8 +48,9 @@ module VCAP::CloudController
         @workpool.drain
 
         bbs_apps_client.bump_freshness
+        logger.info('finished-process-sync')
       rescue CloudController::Errors::ApiError => e
-        logger.info('sync-failed', error: e)
+        logger.info('sync-failed', error: e.message)
         raise BBSFetchError.new(e.message)
       end
 

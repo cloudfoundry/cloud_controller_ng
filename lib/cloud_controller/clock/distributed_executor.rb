@@ -22,8 +22,11 @@ module VCAP::CloudController
       end
 
       if need_to_run_job
-        yield
-        record_job_completed(job)
+        begin
+          yield
+        ensure
+          record_job_completed(job)
+        end
       end
     end
 
