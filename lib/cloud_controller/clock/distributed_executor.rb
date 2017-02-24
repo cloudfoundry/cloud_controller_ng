@@ -18,6 +18,8 @@ module VCAP::CloudController
         if need_to_run_job
           @logger.info("Queueing #{name} at #{now}")
           record_job_started(job)
+        else
+          @logger.info "Skipping enqueue for #{name}. Job last started at #{job.last_started_at}, last completed at #{job.last_completed_at}, interval: #{interval}"
         end
       end
 
@@ -50,7 +52,7 @@ module VCAP::CloudController
     def need_to_run_job?(job, interval, timeout, fudge=0)
       last_started_at = job.last_started_at
       last_completed_at = job.last_completed_at
-      @logger.info "Job last started at #{last_started_at}. Last completed at #{last_completed_at} Interval: #{interval}"
+
       if last_started_at.nil?
         return true
       end
