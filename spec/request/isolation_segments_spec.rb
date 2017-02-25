@@ -86,14 +86,18 @@ RSpec.describe 'IsolationSegmentModels' do
 
       expected_response = {
         'data' => [
-          { 'name' => space1.name, 'guid' => space1.guid, 'link' => "/v2/spaces/#{space1.guid}" },
-          { 'name' => space2.name, 'guid' => space2.guid, 'link' => "/v2/spaces/#{space2.guid}" },
-        ]
+          { 'guid' => space1.guid },
+          { 'guid' => space2.guid },
+        ],
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" },
+        }
       }
 
       expect(parsed_response['data'].length).to eq 2
       expect(parsed_response['data']).to include(expected_response['data'][0])
       expect(parsed_response['data']).to include(expected_response['data'][1])
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 

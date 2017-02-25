@@ -24,12 +24,14 @@ module VCAP::CloudController::Presenters::V3
     end
 
     let(:data) { [] }
-    let(:relation_url) { 'isolation_segments/aaabbbccc' }
-    subject { ToManyRelationshipPresenter.new(relation_url, data) }
+    let(:build_related) { true }
+    let(:relation_url) { 'cash/guid' }
+    let(:relationship_path) { 'money' }
+    subject(:relationship_presenter) { ToManyRelationshipPresenter.new(relation_url, data, relationship_path, build_related: build_related) }
     let(:url_builder) { VCAP::CloudController::Presenters::ApiUrlBuilder.new }
 
     describe '#to_hash' do
-      let(:result) { subject.to_hash }
+      let(:result) { relationship_presenter.to_hash }
 
       context 'when there are no relationships' do
         it 'does not populate the relationships' do
@@ -39,10 +41,10 @@ module VCAP::CloudController::Presenters::V3
         it 'provides a links section' do
           expect(result[:links]).to eq({
             self: {
-              href: url_builder.build_url(path: "/v3/#{relation_url}/relationships/organizations")
+              href: url_builder.build_url(path: "/v3/#{relation_url}/relationships/#{relationship_path}")
             },
             related: {
-              href: url_builder.build_url(path: "/v3/#{relation_url}/organizations")
+              href: url_builder.build_url(path: "/v3/#{relation_url}/#{relationship_path}")
             }
           }
           )
@@ -76,6 +78,17 @@ module VCAP::CloudController::Presenters::V3
               ]
             )
           end
+        end
+      end
+
+      context 'when build_related is false' do
+        let(:build_related) { false }
+        it 'does not include a related field in links' do
+          expect(result[:links]).to eq({
+            self: {
+              href: url_builder.build_url(path: "/v3/#{relation_url}/relationships/#{relationship_path}")
+            }
+          })
         end
       end
     end

@@ -14,7 +14,9 @@ module VCAP::CloudController::Presenters::V3
     end
 
     let(:relationship) { ToOneRelationship.new(1) }
-    subject(:relationship_presenter) { ToOneRelationshipPresenter.new('relation/guid', relationship, 'relationship_path') }
+    let(:relation_url) { 'cash/guid' }
+    let(:relationship_path) { 'money' }
+    subject(:relationship_presenter) { ToOneRelationshipPresenter.new(relation_url, relationship, relationship_path) }
 
     describe '#to_hash' do
       let(:result) { relationship_presenter.to_hash }
@@ -37,7 +39,7 @@ module VCAP::CloudController::Presenters::V3
 
           it 'returns a link to self' do
             expect(result[:links]).to eq(
-              { self: { href: "#{link_prefix}/v3/relation/guid/relationships/relationship_path" } }
+              { self: { href: "#{link_prefix}/v3/#{relation_url}/relationships/#{relationship_path}" } }
             )
           end
         end

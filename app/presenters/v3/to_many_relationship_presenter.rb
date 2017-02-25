@@ -2,10 +2,11 @@ module VCAP::CloudController
   module Presenters
     module V3
       class ToManyRelationshipPresenter
-        def initialize(relation_url, relationships)
+        def initialize(relation_url, relationships, relationship_path, build_related: true)
           @relation_url = relation_url
           @relationships = relationships
-          @url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+          @relationship_path = relationship_path
+          @build_related = build_related
         end
 
         def to_hash
@@ -16,6 +17,10 @@ module VCAP::CloudController
         end
 
         private
+
+        def url_builder
+          VCAP::CloudController::Presenters::ApiUrlBuilder.new
+        end
 
         def build_relations
           data = []
@@ -28,14 +33,14 @@ module VCAP::CloudController
         end
 
         def build_links
-          {
-            self: {
-              href: @url_builder.build_url(path: "/v3/#{@relation_url}/relationships/organizations")
-            },
-            related: {
-              href: @url_builder.build_url(path: "/v3/#{@relation_url}/organizations")
-            }
+          links = {
+            self: { href: url_builder.build_url(path: "/v3/#{@relation_url}/relationships/#{@relationship_path}") }
           }
+          if @build_related
+            links[:related] = { href: url_builder.build_url(path: "/v3/#{@relation_url}/#{@relationship_path}") }
+          end
+
+          links
         end
       end
     end

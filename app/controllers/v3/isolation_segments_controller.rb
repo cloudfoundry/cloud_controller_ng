@@ -96,7 +96,8 @@ class IsolationSegmentsController < ApplicationController
                       fetcher.fetch_for_organizations(org_guids: readable_org_guids)
                     end
 
-    render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new("isolation_segments/#{isolation_segment_model.guid}", organizations)
+    render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
+      "isolation_segments/#{isolation_segment_model.guid}", organizations, 'organizations')
   end
 
   def relationships_spaces
@@ -110,7 +111,9 @@ class IsolationSegmentsController < ApplicationController
                fetcher.fetch_for_spaces(space_guids: readable_space_guids)
              end
 
-    render status: :ok, json: Presenters::V3::RelationshipPresenter.new('spaces', spaces)
+    render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
+      "isolation_segments/#{isolation_segment_model.guid}", spaces, 'spaces',
+      build_related: false)
   end
 
   def assign_allowed_organizations
@@ -119,7 +122,8 @@ class IsolationSegmentsController < ApplicationController
 
     organization_assigner.assign(isolation_segment_model, orgs)
 
-    render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new("isolation_segments/#{isolation_segment_model.guid}", isolation_segment_model.organizations)
+    render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
+      "isolation_segments/#{isolation_segment_model.guid}", isolation_segment_model.organizations, 'organizations')
   end
 
   def unassign_allowed_organization
