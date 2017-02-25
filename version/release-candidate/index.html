@@ -96,7 +96,6 @@
 
 
 
-
           
 
 
@@ -4005,7 +4004,7 @@ environment variables listed on the source droplet.</p>
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b19f6525-cbd3-4155-b156-dc0c2a431b4c"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w">  </span><span class="p">{</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"</span><span class="w">
     </span><span class="p">},</span><span class="w">
@@ -4052,7 +4051,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 
 <p>This endpoint revokes the entitlement for the specified organization to the isolation segment.  Only Admins can revoke isolation segment entitlements.  If the isolation segment is assigned to a space within an organization, the entitlement cannot be revoked.  If the isolation segment is the organization&rsquo;s default, the entitlement cannot be revoked.</p>
 
-          <h3 id="list-organizations-for-an-isolation-segment">List organizations for an isolation segment</h3>
+          <h3 id="list-organizations-relationship">List organizations relationship</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/isolation_segments/:guid/relationships/organizations</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -4070,23 +4069,27 @@ In the case where the specified isolation segment is the system-wide shared segm
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
   </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"org1"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"68d54d31-9b3a-463b-ba94-e8e4c32edbac"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"link"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/v2/organizations/68d54d31-9b3a-463b-ba94-e8e4c32edbac"</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"68d54d31-9b3a-463b-ba94-e8e4c32edbac"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"org2"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b19f6525-cbd3-4155-b156-dc0c2a431b4c"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"link"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/v2/organizations/b19f6525-cbd3-4155-b156-dc0c2a431b4c"</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b19f6525-cbd3-4155-b156-dc0c2a431b4c"</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"related"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/organizations"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
 </span></code></pre>
 
 <p>This endpoint lists the organizations entitled for the isolation segment.  For an Admin, this will list all entitled organizations in the system.  For any other user, this will list only the entitled organizations to which the user belongs.</p>
 
-          <h3 id="list-spaces-for-an-isolation-segment">List spaces for an isolation segment</h3>
+          <h3 id="list-spaces-relationship">List spaces relationship</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/isolation_segments/:guid/relationships/spaces</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
@@ -4104,16 +4107,17 @@ In the case where the specified isolation segment is the system-wide shared segm
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
   </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"space1"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"68d54d31-9b3a-463b-ba94-e8e4c32edbac"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"link"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/v2/spaces/68d54d31-9b3a-463b-ba94-e8e4c32edbac"</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885735b5-aea4-4cf5-8e44-961af0e41920"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"space2"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b19f6525-cbd3-4155-b156-dc0c2a431b4c"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"link"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/v2/spaces/b19f6525-cbd3-4155-b156-dc0c2a431b4c"</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d4c91047-7b29-4fda-b7f9-04033e5c9c9f"</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
 </span></code></pre>
@@ -5263,7 +5267,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 </ul>
 
-          <h2 id="processes-by-guid">Processes By Guid</h2>
+          <h2 id="processes">Processes</h2>
 
 <p>Processes define the runnable units of an app. An app can have multiple process types, each with differing commands and scale.</p>
 
@@ -5522,6 +5526,8 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/processes/:guid</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 </code></pre>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/processes/:type</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]"</span> <span class="se">\</span>
@@ -5584,6 +5590,8 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/processes/:guid/stats</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/processes/:type/stats</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -5727,6 +5735,8 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 </code></pre>
 <pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/processes/:guid/scale</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 </code></pre>
+<pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/apps/:guid/processes/:type/scale</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]/scale"</span> <span class="se">\</span>
@@ -5819,6 +5829,8 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">DELETE</span> <span class="nn">/v3/processes/:guid/instances/:index</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</code></pre>
+<pre class="highlight http"><code><span class="nf">DELETE</span> <span class="nn">/v3/apps/:guid/processes/:type/instances/:index</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -6066,499 +6078,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
 
 </ul>
 
-          <h2 id="processes-by-app-and-type">Processes By App and Type</h2>
-
-<p>Processes define the runnable units of an app. An app can have multiple process types, each with differing commands and scale.</p>
-
-<p>To configure processes for an app, a Procfile should be provided in the application source.</p>
-
-          <div class='no-margin'></div>
-
-<h3 id="the-process-object">The process object</h3>
-
-<ul class="method-list-group">
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      guid
-
-        <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">    Unique GUID for the process.
-</p>
-  </li>
-
-
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      type
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Process type. A unique identifier for processes belonging to an app.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      command
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">The command is used to start the process.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      instances
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">The number of instances to run.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      memory_in_mb
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">The memory in mb allocated per instance.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      disk_in_mb
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">The disk in mb allocated per instance.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      ports
-      <span class="method-list-item-type">array of integers</span>
-    </h4>
-
-    <p class="method-list-item-description">The ports that will be open to accept traffic in the container running the process. An empty array will bind no ports to the application. <code>web</code> type processes will default to using port 8080 when ports are not provided. All other process types will default to no ports.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      health_check
-      <span class="method-list-item-type">health_check object</span>
-    </h4>
-
-    <p class="method-list-item-description">The health check to perform on the process. See <a href="#the-health_check-object">health_check</a> for more information.</p>
-  </li>
-
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      created_at
-
-        <span class="method-list-item-type">datetime</span>
-    </h4>
-
-    <p class="method-list-item-description">    The time with zone when the object was created.
-</p>
-  </li>
-
-
-
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      updated_at
-
-        <span class="method-list-item-type">datetime</span>
-    </h4>
-
-    <p class="method-list-item-description">    The time with zone when the object was last updated.
-</p>
-  </li>
-
-
-
-    <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      links
-
-        <span class="method-list-item-type">object</span>
-    </h4>
-
-    <p class="method-list-item-description">    Links to related resources.
-</p>
-  </li>
-
-
-</ul>
-
-          <div class='no-margin'></div>
-
-<h3 id="the-health_check-object">The health_check object</h3>
-
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      type
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">The type of health check to perform. Valid values are <code>port</code> and <code>process</code></p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      data[&lsquo;timeout&rsquo;]
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">The time in seconds that the health check can fail before the process is restarted.</p>
-  </li>
-</ul>
-
-          <div class='no-margin'></div>
-
-<h3 id="the-process-stats-object">The process stats object</h3>
-
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      type
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Process type. A unique identifier for processes belonging to an app.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      index
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">The zero-based index of running intances.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      state
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">The state of the instance. RUNNING, CRASHED, STARTING</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      usage[&lsquo;time&rsquo;]
-      <span class="method-list-item-type">datetime</span>
-    </h4>
-
-    <p class="method-list-item-description">The time when the usage was requested.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      usage['cpu&rsquo;]
-      <span class="method-list-item-type">number</span>
-    </h4>
-
-    <p class="method-list-item-description">The current cpu usage of the instance.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      usage['mem&rsquo;]
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">The current memory usage of the instance.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      usage['disk&rsquo;]
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">The current disk usage of the instance.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      host
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">The host the instance is running on.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      instance_ports
-      <span class="method-list-item-type">object</span>
-    </h4>
-
-    <p class="method-list-item-description">JSON array of port mappings between the network-exposed port used to communicate with the app (&ldquo;external&rdquo;) and port opened to the running process that it can listen on (&ldquo;internal&rdquo;).</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      uptime
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">The uptime in seconds for the instance.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      mem_quota
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">The maximum memory the instance is allowed to use.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      disk_quota
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">The maximum disk the instance is allowed to use.</p>
-  </li>
-   <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      fds_quota
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">The maximum file descriptors the instance is allowed to use.</p>
-  </li>
-</ul>
-
-          <h3 id="get-a-process-for-an-app">Get a process for an app</h3>
-<pre class="highlight plaintext"><code>Definition
-</code></pre>
-<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/processes/:type</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/processes/[type]"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-</code></pre>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6a901b7c-9417-4dc1-8189-d3234aa0ab82"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rackup"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">256</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"ports"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">8080</span><span class="p">],</span><span class="w">
-  </span><span class="nt">"health_check"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"port"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-23T18:48:22Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-23T18:48:42Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"scale"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"stats"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<p>This endpoint retrieves a specific process belonging to an app.</p>
-
-<h4 id="body-parameters">Body Parameters</h4>
-
-<p class='no-body-parameters-outer'>
-  <span class='no-body-parameters-required'>
-    No arguments
-  </span>
-</p>
-
-          <h3 id="get-stats-for-a-process-for-an-app">Get stats for a process for an app</h3>
-<pre class="highlight plaintext"><code>Definition
-</code></pre>
-<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/processes/:type/stats</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/processes/[type]/stats"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-</code></pre>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-    </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"index"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RUNNING"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"usage"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-23T23:17:30.476314154Z"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"cpu"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00038711029163348665</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"mem"</span><span class="p">:</span><span class="w"> </span><span class="mi">19177472</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"disk"</span><span class="p">:</span><span class="w"> </span><span class="mi">69705728</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.244.16.10"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"instance_ports"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-        </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"external"</span><span class="p">:</span><span class="w"> </span><span class="mi">64546</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">],</span><span class="w">
-      </span><span class="nt">"uptime"</span><span class="p">:</span><span class="w"> </span><span class="mi">9042</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"mem_quota"</span><span class="p">:</span><span class="w"> </span><span class="mi">268435456</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"disk_quota"</span><span class="p">:</span><span class="w"> </span><span class="mi">1073741824</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"fds_quota"</span><span class="p">:</span><span class="w"> </span><span class="mi">16384</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<p>This endpoint retrieves the stats for a specific process belonging to an app.</p>
-
-<h4 id="body-parameters">Body Parameters</h4>
-
-<p class='no-body-parameters-outer'>
-  <span class='no-body-parameters-required'>
-    No arguments
-  </span>
-</p>
-
-          <h3 id="scale-a-process-for-an-app">Scale a process for an app</h3>
-<pre class="highlight plaintext"><code>Definition
-</code></pre>
-<pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/apps/:guid/processes/:type/scale</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/processes/[type]/scale"</span> <span class="se">\</span>
-  -X PUT <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
-  -d <span class="s1">'{
-    "instances": 5,
-    "memory_in_mb": 256,
-    "disk_in_mb": 1024,
-  }'</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">OK</span>
-</code></pre>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6a901b7c-9417-4dc1-8189-d3234aa0ab82"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rackup"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">256</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"ports"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">8080</span><span class="p">],</span><span class="w">
-  </span><span class="nt">"health_check"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"port"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-23T18:48:22Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-23T18:48:42Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"scale"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"stats"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<p>This endpoint scales an existing process belonging to an app.</p>
-
-<h4 id="body-parameters">Body Parameters</h4>
-
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      instances
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">The number of instances.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      memory_in_mb
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">The memory in mb allocated per instance.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      disk_in_mb
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">The disk in mb allocated per instance.</p>
-  </li>
-</ul>
-
-          <h3 id="terminate-a-process-instance-for-an-app">Terminate a process instance for an app</h3>
-<pre class="highlight plaintext"><code>Definition
-</code></pre>
-<pre class="highlight http"><code><span class="nf">DELETE</span> <span class="nn">/v3/apps/:guid/processes/:type/instances/:index</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/processes/[type]/instances/[index]"</span> <span class="se">\</span>
-  -X DELETE <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
-</code></pre>
-
-<p>This endpoint terminates an instance of a specific process belonging to an app. Health management will eventually restart the instance.</p>
-
-<p>This allows a user to stop a single misbehaving instance of a process.</p>
-
-<h4 id="body-parameters">Body Parameters</h4>
-
-<p class='no-body-parameters-outer'>
-  <span class='no-body-parameters-required'>
-    No arguments
-  </span>
-</p>
-
-          <h3 id="list-processes-for-an-app">List processes for an app</h3>
+          <h3 id="list-processes-for-app">List processes for app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
 <pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/processes</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
