@@ -63,7 +63,7 @@ RSpec.describe 'IsolationSegmentModels' do
       expect(parsed_response['data'].length).to eq 2
       expect(parsed_response['data']).to include(expected_response['data'][0])
       expect(parsed_response['data']).to include(expected_response['data'][1])
-      expect(parsed_response).to be_a_response_like(expected_response)
+      expect(parsed_response.except('data')).to be_a_response_like(expected_response.except('data'))
     end
   end
 
