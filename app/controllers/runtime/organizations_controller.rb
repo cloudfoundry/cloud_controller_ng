@@ -252,6 +252,19 @@ module VCAP::CloudController
       end
     end
 
+    delete '/v2/organizations/:guid/default_isolation_segment', :delete_default_isolation_segment
+    def delete_default_isolation_segment(guid)
+      org = find_guid_and_validate_access(:update, guid)
+      validate_access(:update, org, nil)
+
+      org.db.transaction do
+        org.lock!
+        org.update(default_isolation_segment_guid: nil)
+      end
+
+      [HTTP::OK, object_renderer.render_json(self.class, org, @opts)]
+    end
+
     put '/v2/organizations/:guid/private_domains/:domain_guid', :share_domain
     def share_domain(guid, domain_guid)
       org = find_guid_and_validate_access(:update, guid)

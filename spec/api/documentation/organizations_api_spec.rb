@@ -382,5 +382,27 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
         end
       end
     end
+
+    describe 'Isolation Segments (Experimental)' do
+      delete '/v2/organizations/:guid/default_isolation_segment' do
+        let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
+        let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+
+        before do
+          assigner.assign(isolation_segment, [organization])
+          organization.default_isolation_segment_guid = isolation_segment.guid
+          organization.save
+        end
+
+        example 'Deleting the organization\'s default isolation segment' do
+          expect(organization.default_isolation_segment_guid).to eq(isolation_segment.guid)
+
+          client.delete "/v2/organizations/#{guid}/default_isolation_segment", {}, headers
+          
+          expect(status).to eq 200
+          expect(parsed_response['default_isolation_segment']).to be_nil
+        end
+      end
+    end
   end
 end
