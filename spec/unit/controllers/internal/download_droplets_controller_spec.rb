@@ -2,72 +2,40 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe DownloadDropletsController do
-    let(:timeout_in_seconds) { 120 }
-    let(:cc_addr) { '1.2.3.4' }
-    let(:cc_port) { 5678 }
-    let(:staging_user) { 'user' }
-    let(:staging_password) { 'password' }
-
-    let(:workspace) { Dir.mktmpdir }
-    let(:original_staging_config) do
-      {
-        external_host: cc_addr,
-        external_port: cc_port,
-        staging: {
-          auth: {
-            user: staging_user,
-            password: staging_password
-          }
-        },
-        nginx: { use_nginx: true },
-        resource_pool: {
-          resource_directory_key: 'cc-resources',
-          fog_connection: {
-            provider: 'Local',
-            local_root: Dir.mktmpdir('resourse_pool', workspace)
-          }
-        },
-        packages: {
-          fog_connection: {
-            provider: 'Local',
-            local_root: Dir.mktmpdir('packages', workspace)
-          },
-          app_package_directory_key: 'cc-packages',
-        },
-        droplets: {
-          droplet_directory_key: 'cc-droplets',
-          fog_connection: {
-            provider: 'Local',
-            local_root: Dir.mktmpdir('droplets', workspace)
-          }
-        },
-        directories: {
-          tmpdir: Dir.mktmpdir('tmpdir', workspace)
-        },
-        index: 99,
-        name: 'api_z1'
-      }
-    end
-    let(:staging_config) { original_staging_config }
-    let(:blobstore) do
-      CloudController::DependencyLocator.instance.droplet_blobstore
-    end
-
-    let(:v3_app) { AppModel.make(droplet: droplet) }
-    let(:process) { App.make(app: v3_app) }
-    let(:droplet) { DropletModel.make(state: 'STAGED') }
-
-    before do
-      Fog.unmock!
-      TestConfig.override(staging_config)
-    end
-
-    after { FileUtils.rm_rf(workspace) }
-
     describe 'GET /internal/v2/droplets/:guid/:droplet_hash/download' do
+      let(:workspace) { Dir.mktmpdir }
+      let(:original_staging_config) do
+        {
+          packages: {
+            fog_connection: {
+              provider: 'Local',
+              local_root: Dir.mktmpdir('packages', workspace)
+            },
+            app_package_directory_key: 'cc-packages',
+          },
+          droplets: {
+            droplet_directory_key: 'cc-droplets',
+            fog_connection: {
+              provider: 'Local',
+              local_root: Dir.mktmpdir('droplets', workspace)
+            }
+          },
+        }
+      end
+      let(:staging_config) { original_staging_config }
+      let(:blobstore) do
+        CloudController::DependencyLocator.instance.droplet_blobstore
+      end
+
+      let(:v3_app) { AppModel.make(droplet: droplet) }
+      let(:process) { App.make(app: v3_app) }
+      let(:droplet) { DropletModel.make(state: 'STAGED') }
+
       before do
+        Fog.unmock!
         TestConfig.override(staging_config)
       end
+      after { FileUtils.rm_rf(workspace) }
 
       def upload_droplet
         droplet_file = Tempfile.new(v3_app.guid)
@@ -78,8 +46,6 @@ module VCAP::CloudController
       end
 
       context 'when using with nginx' do
-        before { TestConfig.override(staging_config) }
-
         it 'succeeds for valid droplets' do
           upload_droplet
 
@@ -90,7 +56,7 @@ module VCAP::CloudController
       end
 
       context 'when not using with nginx' do
-        before { TestConfig.override(staging_config.merge(nginx: { use_nginx: false })) }
+        let(:staging_config) { original_staging_config.merge(nginx: { use_nginx: false }) }
 
         it 'succeeds for valid droplets' do
           upload_droplet

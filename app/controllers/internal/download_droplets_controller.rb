@@ -9,14 +9,12 @@ module VCAP::CloudController
 
     include CloudController::Errors
 
-    DROPLET_V2_PATH = '/internal/v2/droplets'.freeze
-
     # Endpoint does its own basic auth
     allow_unauthenticated_access
 
     attr_reader :blobstore
 
-    get "#{DROPLET_V2_PATH}/:guid/:droplet_checksum/download", :download_droplet
+    get '/internal/v2/droplets/:guid/:droplet_checksum/download', :download_droplet
     def download_droplet(guid, droplet_checksum)
       app = App.find(guid: guid)
       check_app_exists(app, guid)
