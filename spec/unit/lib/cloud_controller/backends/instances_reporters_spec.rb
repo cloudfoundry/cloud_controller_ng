@@ -209,10 +209,10 @@ module VCAP::CloudController
             allow(tps_instances_reporter).to receive(:stats_for_app).and_raise(CloudController::Errors::InstancesUnavailable.new('custom error'))
           end
 
-          it 're-raises an as api error and retains the original error message' do
+          it 're-raises as an ApiError' do
             expect {
               instances_reporters.stats_for_app(diego_app)
-            }.to raise_error(CloudController::Errors::ApiError, /custom error/)
+            }.to raise_error(CloudController::Errors::ApiError, /Unable to retrieve stats for a stopped process/)
           end
         end
       end
@@ -231,10 +231,10 @@ module VCAP::CloudController
             allow(diego_instances_reporter).to receive(:stats_for_app).and_raise(CloudController::Errors::InstancesUnavailable.new('custom error'))
           end
 
-          it 're-raises an as api error and retains the original error message' do
+          it 're-raises as an ApiError' do
             expect {
               instances_reporters.stats_for_app(diego_app)
-            }.to raise_error(CloudController::Errors::ApiError, /custom error/)
+            }.to raise_error(CloudController::Errors::ApiError, /Unable to retrieve stats for a stopped process/)
           end
         end
       end
