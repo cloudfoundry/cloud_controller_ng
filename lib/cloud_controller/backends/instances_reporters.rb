@@ -24,7 +24,7 @@ module VCAP::CloudController
 
     def stats_for_app(app)
       reporter_for_app(app).stats_for_app(app)
-    rescue CloudController::Errors::InstancesUnavailable => e
+    rescue CloudController::Errors::InstancesUnavailable
       raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Unable to retrieve stats for a stopped process.')
     end
 
