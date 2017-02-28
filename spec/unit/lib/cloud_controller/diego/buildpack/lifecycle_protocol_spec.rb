@@ -8,7 +8,18 @@ module VCAP
     module Diego
       module Buildpack
         RSpec.describe LifecycleProtocol do
-          subject(:lifecycle_protocol) { LifecycleProtocol.new(blobstore_url_generator) }
+          subject(:lifecycle_protocol) { LifecycleProtocol.new(blobstore_url_generator, droplet_url_generator) }
+          let(:droplet_url_generator) { instance_double(DropletUrlGenerator, perma_droplet_download_url: 'www.droplet.com') }
+          let(:blobstore_url_generator) do
+            instance_double(::CloudController::Blobstore::UrlGenerator,
+              buildpack_cache_download_url: 'cache-download-url',
+              buildpack_cache_upload_url:   'cache-upload-url',
+              package_download_url:         'package-download-url',
+              droplet_upload_url:           'droplet-upload-url',
+              droplet_download_url:         droplet_download_url,
+            )
+          end
+          let(:droplet_download_url) { 'droplet-download-url' }
 
           it_behaves_like 'a lifecycle protocol' do
             let(:app) { AppModel.make }
@@ -21,15 +32,6 @@ module VCAP
                 details.package   = package
                 details.lifecycle = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: buildpack_info)
               end
-            end
-            let(:blobstore_url_generator) do
-              instance_double(::CloudController::Blobstore::UrlGenerator,
-                buildpack_cache_download_url:            'cache-download-url',
-                buildpack_cache_upload_url:              'cache-upload-url',
-                package_download_url:                    'package-download-url',
-                droplet_upload_url:                      'droplet-upload-url',
-                unauthorized_perma_droplet_download_url: 'www.droplet.com'
-              )
             end
             let(:buildpack_info) { BuildpackInfo.new('http://some-buildpack.url', nil) }
 
@@ -47,16 +49,6 @@ module VCAP
             let(:app) { AppModel.make }
             let(:package) { PackageModel.make(app: app) }
             let(:droplet) { DropletModel.make(package: package, app: app) }
-
-            let(:blobstore_url_generator) do
-              instance_double(::CloudController::Blobstore::UrlGenerator,
-                buildpack_cache_download_url: 'cache-download-url',
-                buildpack_cache_upload_url:   'cache-upload-url',
-                package_download_url:         'package-download-url',
-                droplet_upload_url:           'droplet-upload-url'
-              )
-            end
-
             let(:buildpack) { nil }
             let(:buildpack_info) { BuildpackInfo.new(buildpack, VCAP::CloudController::Buildpack.find(name: buildpack)) }
 
@@ -134,13 +126,6 @@ module VCAP
           end
 
           describe '#desired_app_message' do
-            let(:blobstore_url_generator) do
-              instance_double(
-                ::CloudController::Blobstore::UrlGenerator,
-                unauthorized_perma_droplet_download_url: 'www.droplet.com'
-              )
-            end
-
             let(:app) { AppModel.make }
             let(:package) { PackageModel.make(app_guid: app.guid) }
             let(:droplet) do
@@ -224,16 +209,6 @@ module VCAP
               end
             end
 
-            let(:blobstore_url_generator) do
-              instance_double(
-                ::CloudController::Blobstore::UrlGenerator,
-                package_download_url:         'package_download_url',
-                buildpack_cache_download_url: 'buildpack_cache_download_url',
-                buildpack_cache_upload_url:   'buildpack_cache_upload_url',
-                droplet_upload_url:           'droplet_upload_url'
-              )
-            end
-
             before do
               allow_any_instance_of(BuildpackEntryGenerator).to receive(:buildpack_entries).and_return(['buildpacks'])
               package.app.update(buildpack_cache_sha256_checksum: 'bp-cache-checksum')
@@ -246,12 +221,12 @@ module VCAP
               expect(lifecycle_protocol.staging_action_builder(config, staging_details)).to be staging_action_builder
 
               expect(StagingActionBuilder).to have_received(:new).with(config, staging_details, hash_including({
-                app_bits_download_uri:              'package_download_url',
-                build_artifacts_cache_download_uri: 'buildpack_cache_download_url',
+                app_bits_download_uri:              'package-download-url',
+                build_artifacts_cache_download_uri: 'cache-download-url',
                 buildpacks:                         ['buildpacks'],
                 stack:                              'potato-stack',
-                build_artifacts_cache_upload_uri:   'buildpack_cache_upload_url',
-                droplet_upload_uri:                 'droplet_upload_url',
+                build_artifacts_cache_upload_uri:   'cache-upload-url',
+                droplet_upload_uri:                 'droplet-upload-url',
                 buildpack_cache_checksum:           'bp-cache-checksum',
                 app_bits_checksum:                  package.checksum_info,
               }))
@@ -259,13 +234,6 @@ module VCAP
           end
 
           describe '#task_action_builder' do
-            let(:droplet_download_url) { 'www.droplet.com' }
-            let(:blobstore_url_generator) do
-              instance_double(
-                ::CloudController::Blobstore::UrlGenerator,
-                droplet_download_url: droplet_download_url
-              )
-            end
             let(:task) { TaskModel.make }
             let(:config) { { some: 'config' } }
 
@@ -278,7 +246,7 @@ module VCAP
               expect(lifecycle_protocol.task_action_builder(config, task)).to be task_action_builder
 
               expect(TaskActionBuilder).to have_received(:new).with(config, task, {
-                droplet_uri: 'www.droplet.com',
+                droplet_uri: 'droplet-download-url',
                 stack:       'potato-stack'
               })
             end
@@ -322,12 +290,6 @@ module VCAP
                 checksum_value:     droplet.droplet_hash,
                 start_command:      'go go go',
               }
-            end
-            let(:blobstore_url_generator) do
-              instance_double(
-                ::CloudController::Blobstore::UrlGenerator,
-                unauthorized_perma_droplet_download_url: 'www.droplet.com'
-              )
             end
 
             before do

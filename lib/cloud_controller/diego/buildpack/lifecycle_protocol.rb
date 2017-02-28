@@ -1,6 +1,7 @@
 require 'cloud_controller/diego/buildpack/lifecycle_data'
 require 'cloud_controller/diego/buildpack/buildpack_entry_generator'
 require 'cloud_controller/diego/buildpack/staging_action_builder'
+require 'cloud_controller/diego/buildpack/droplet_url_generator'
 
 module VCAP
   module CloudController
@@ -9,9 +10,11 @@ module VCAP
         class LifecycleProtocol
           class InvalidDownloadUri < StandardError; end
 
-          def initialize(blobstore_url_generator=::CloudController::DependencyLocator.instance.blobstore_url_generator)
+          def initialize(blobstore_url_generator=::CloudController::DependencyLocator.instance.blobstore_url_generator,
+                         droplet_url_generator=DropletUrlGenerator.new)
             @blobstore_url_generator   = blobstore_url_generator
             @buildpack_entry_generator = BuildpackEntryGenerator.new(@blobstore_url_generator)
+            @droplet_url_generator = droplet_url_generator
           end
 
           def lifecycle_data(staging_details)
@@ -56,7 +59,7 @@ module VCAP
           def desired_app_message(process)
             {
               'start_command' => process.command.nil? ? process.detected_start_command : process.command,
-              'droplet_uri'   => @blobstore_url_generator.unauthorized_perma_droplet_download_url(process),
+              'droplet_uri'   => @droplet_url_generator.perma_droplet_download_url(process),
               'droplet_hash'  => process.current_droplet.droplet_hash,
               'checksum'      => droplet_checksum_info(process.current_droplet),
             }
@@ -75,7 +78,7 @@ module VCAP
           def builder_opts(process)
             checksum_info = droplet_checksum_info(process.current_droplet)
             {
-              droplet_uri:        @blobstore_url_generator.unauthorized_perma_droplet_download_url(process),
+              droplet_uri:        @droplet_url_generator.perma_droplet_download_url(process),
               droplet_hash:       process.current_droplet.droplet_hash,
               ports:              Protocol::OpenProcessPorts.new(process).to_a,
               process_guid:       ProcessGuid.from_process(process),

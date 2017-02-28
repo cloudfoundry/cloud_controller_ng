@@ -54,26 +54,6 @@ module CloudController
           end
         end
 
-        describe 'download unauthorized droplets permalink' do
-          let(:app) { VCAP::CloudController::AppFactory.make }
-
-          it 'gives out a url to the cloud controller' do
-            download_url = "http://api.example.com:9292/internal/v2/droplets/#{app.guid}/#{app.droplet_checksum}/download"
-            expect(url_generator.unauthorized_perma_droplet_download_url(app)).to eql(download_url)
-          end
-
-          context 'when no droplet_hash' do
-            before do
-              app.current_droplet.destroy
-              app.reload
-            end
-
-            it 'returns nil if no droplet_hash' do
-              expect(url_generator.unauthorized_perma_droplet_download_url(app)).to be_nil
-            end
-          end
-        end
-
         describe 'droplet' do
           let(:droplet) { double(:droplet) }
 
