@@ -398,7 +398,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
           expect(organization.default_isolation_segment_guid).to eq(isolation_segment.guid)
 
           client.delete "/v2/organizations/#{guid}/default_isolation_segment", {}, headers
-          
+
           expect(status).to eq 200
           expect(parsed_response['default_isolation_segment']).to be_nil
         end
