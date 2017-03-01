@@ -20,6 +20,9 @@ class RootController < ActionController::Base
           },
           organizations: {
             href: build_api_uri(path: '/organizations')
+          },
+          spaces: {
+            href: build_api_uri(path: '/spaces')
           }
         }
       }, pretty: true)
