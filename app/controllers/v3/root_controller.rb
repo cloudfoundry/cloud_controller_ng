@@ -14,6 +14,9 @@ class RootController < ActionController::Base
           },
           packages: {
             href: build_api_uri(path: '/packages')
+          },
+          isolation_segments: {
+            href: build_api_uri(path: '/isolation_segments')
           }
         }
       }, pretty: true)
