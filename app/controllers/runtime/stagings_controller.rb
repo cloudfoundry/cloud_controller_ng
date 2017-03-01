@@ -58,6 +58,7 @@ module VCAP::CloudController
     end
 
     post '/staging/v3/droplets/:guid/upload', :upload_package_droplet
+    post '/internal/v4/droplets/:guid/upload', :upload_package_droplet
     def upload_package_droplet(guid)
       droplet = DropletModel.find(guid: guid)
 
