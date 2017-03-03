@@ -235,7 +235,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         end
       end
 
-      context 'when the user is an org manager but NOT a space manager' do
+      context 'when the user is an org manager' do
         before do
           assigner.assign(isolation_segment_model, [org1])
           org1.add_manager(user)
@@ -248,26 +248,16 @@ RSpec.describe SpacesV3Controller, type: :controller do
         end
       end
 
-      context 'when the user is a space manager but NOT an org manager' do
+      context 'when the user is not an org manager' do
         before do
-          assigner.assign(isolation_segment_model, [org1])
-          org1.add_user(user)
-          space1.add_manager(user)
+          allow_user_read_access_for(user, orgs: [org1], spaces: [space1])
         end
 
-        it 'returns a successful response' do
-          patch :update_isolation_segment, guid: space1.guid, body: update_message
-
-          expect(response.status).to eq(200)
-        end
-      end
-
-      context 'when the user is not an org manager nor a space manager' do
         it 'returns an Unauthorized error' do
           patch :update_isolation_segment, guid: space1.guid, body: update_message
 
-          expect(response.status).to eq(401)
-          expect(response.body).to include 'Authentication error'
+          expect(response.status).to eq(403)
+          expect(response.body).to include 'NotAuthorized'
         end
       end
     end

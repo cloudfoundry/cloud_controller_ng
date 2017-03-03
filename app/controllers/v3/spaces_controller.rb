@@ -22,7 +22,7 @@ class SpacesV3Controller < ApplicationController
     org = space.organization
     org_not_found! unless org
     space_not_found! unless can_read?(space.guid, org.guid)
-    unauthorized! unless roles.admin? || space.organization.managers.include?(current_user) || space.managers.include?(current_user)
+    unauthorized! unless roles.admin? || space.organization.managers.include?(current_user)
 
     message = SpaceUpdateIsolationSegmentMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
