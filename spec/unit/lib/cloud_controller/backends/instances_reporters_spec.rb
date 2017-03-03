@@ -212,7 +212,19 @@ module VCAP::CloudController
           it 're-raises as an ApiError' do
             expect {
               instances_reporters.stats_for_app(diego_app)
-            }.to raise_error(CloudController::Errors::ApiError, /Unable to retrieve stats for a stopped process/)
+            }.to raise_error(CloudController::Errors::ApiError, /Stats server temporarily unavailable/i)
+          end
+        end
+
+        context 'when the reporter throws an NoRunningInstances' do
+          before do
+            allow(tps_instances_reporter).to receive(:stats_for_app).and_raise(CloudController::Errors::NoRunningInstances.new('custom error'))
+          end
+
+          it 're-raises as an ApiError' do
+            expect {
+              instances_reporters.stats_for_app(diego_app)
+            }.to raise_error(CloudController::Errors::ApiError, /There are zero running instances/i)
           end
         end
       end
@@ -234,7 +246,19 @@ module VCAP::CloudController
           it 're-raises as an ApiError' do
             expect {
               instances_reporters.stats_for_app(diego_app)
-            }.to raise_error(CloudController::Errors::ApiError, /Unable to retrieve stats for a stopped process/)
+            }.to raise_error(CloudController::Errors::ApiError, /Stats server temporarily unavailable/i)
+          end
+        end
+
+        context 'when the reporter throws an NoRunningInstances' do
+          before do
+            allow(diego_instances_reporter).to receive(:stats_for_app).and_raise(CloudController::Errors::NoRunningInstances.new('custom error'))
+          end
+
+          it 're-raises as an ApiError' do
+            expect {
+              instances_reporters.stats_for_app(diego_app)
+            }.to raise_error(CloudController::Errors::ApiError, /There are zero running instances/i)
           end
         end
       end

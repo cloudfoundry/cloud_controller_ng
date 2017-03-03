@@ -28,15 +28,18 @@ module VCAP::CloudController::Diego
         expect(client.lrp_instances(process)).to eq([resolved_actual_lrp])
       end
 
-      context 'when the response contains an error' do
+      context 'when the response contains a ResourceNotFound error' do
         let(:bbs_response) do
-          ::Diego::Bbs::Models::ActualLRPGroupsResponse.new(error: ::Diego::Bbs::Models::Error.new(message: 'error-message'))
+          ::Diego::Bbs::Models::ActualLRPGroupsResponse.new(error: ::Diego::Bbs::Models::Error.new(
+            message: 'error-message',
+            type: ::Diego::Bbs::Models::Error::Type::ResourceNotFound
+          ))
         end
 
         it 'raises' do
           expect {
             client.lrp_instances(process)
-          }.to raise_error(CloudController::Errors::InstancesUnavailable, 'error-message')
+          }.to raise_error(CloudController::Errors::NoRunningInstances)
         end
       end
 
@@ -49,6 +52,18 @@ module VCAP::CloudController::Diego
           expect {
             client.lrp_instances(process)
           }.to raise_error(CloudController::Errors::InstancesUnavailable, 'boom')
+        end
+      end
+
+      context 'when the response contains an unknown error' do
+        let(:bbs_response) do
+          ::Diego::Bbs::Models::ActualLRPGroupsResponse.new(error: ::Diego::Bbs::Models::Error.new(message: 'error-message'))
+        end
+
+        it 'raises' do
+          expect {
+            client.lrp_instances(process)
+          }.to raise_error(CloudController::Errors::InstancesUnavailable, 'error-message')
         end
       end
     end
@@ -73,15 +88,18 @@ module VCAP::CloudController::Diego
         expect(client.desired_lrp_instance(process)).to eq(resolved_desired_lrp)
       end
 
-      context 'when the response contains an error' do
+      context 'when the response contains a ResourceNotFound error' do
         let(:bbs_response) do
-          ::Diego::Bbs::Models::DesiredLRPResponse.new(error: ::Diego::Bbs::Models::Error.new(message: 'error-message'))
+          ::Diego::Bbs::Models::ActualLRPGroupsResponse.new(error: ::Diego::Bbs::Models::Error.new(
+            message: 'error-message',
+            type: ::Diego::Bbs::Models::Error::Type::ResourceNotFound
+          ))
         end
 
         it 'raises' do
           expect {
             client.desired_lrp_instance(process)
-          }.to raise_error(CloudController::Errors::InstancesUnavailable, 'error-message')
+          }.to raise_error(CloudController::Errors::NoRunningInstances)
         end
       end
 
@@ -94,6 +112,18 @@ module VCAP::CloudController::Diego
           expect {
             client.desired_lrp_instance(process)
           }.to raise_error(CloudController::Errors::InstancesUnavailable, 'boom')
+        end
+      end
+
+      context 'when the response contains an unknown error' do
+        let(:bbs_response) do
+          ::Diego::Bbs::Models::DesiredLRPResponse.new(error: ::Diego::Bbs::Models::Error.new(message: 'error-message'))
+        end
+
+        it 'raises' do
+          expect {
+            client.desired_lrp_instance(process)
+          }.to raise_error(CloudController::Errors::InstancesUnavailable, 'error-message')
         end
       end
     end

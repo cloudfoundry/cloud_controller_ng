@@ -147,7 +147,7 @@ module VCAP::CloudController
 
         fill_unreported_instances_with_down_instances(result, process)
       rescue => e
-        raise e if e.is_a? CloudController::Errors::InstancesUnavailable
+        raise e if e.is_a?(CloudController::Errors::InstancesUnavailable) || e.is_a?(CloudController::Errors::NoRunningInstances)
         logger.error('stats_for_app.error', error: e.to_s)
         raise CloudController::Errors::InstancesUnavailable.new(e)
       end

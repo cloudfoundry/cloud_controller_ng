@@ -607,6 +607,14 @@ module VCAP::CloudController
                 expect { instances_reporter.stats_for_app(process) }.to raise_error(CloudController::Errors::InstancesUnavailable, /ruh roh/)
               end
             end
+
+            context 'when the error is NoRunningInstances' do
+              let(:error) { CloudController::Errors::NoRunningInstances.new('ruh roh') }
+
+              it 'reraises the exception' do
+                expect { instances_reporter.stats_for_app(process) }.to raise_error(CloudController::Errors::NoRunningInstances)
+              end
+            end
           end
 
           context 'when an error is raised communicating with traffic controller' do
