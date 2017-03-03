@@ -144,30 +144,33 @@ module VCAP::CloudController
     alias_method(:user_provided_ports, :ports)
 
     def package_hash
-      return nil unless latest_package
+      return nil unless (cached_latest_package = latest_package)
 
-      if latest_package.bits?
-        latest_package.package_hash
-      elsif latest_package.docker?
-        latest_package.image
+      if cached_latest_package.bits?
+        cached_latest_package.package_hash
+      elsif cached_latest_package.docker?
+        cached_latest_package.image
       end
     end
 
     def package_state
-      return 'FAILED' if latest_droplet.try(:failed?)
-      return 'PENDING' if current_droplet != latest_droplet
+      cached_latest_droplet = latest_droplet
+      cached_current_droplet = current_droplet
+      return 'FAILED' if cached_latest_droplet.try(:failed?)
+      return 'PENDING' if cached_current_droplet != cached_latest_droplet
 
-      if current_droplet
-        if latest_package
-          return 'STAGED' if current_droplet.package == latest_package || current_droplet.created_at > latest_package.created_at
-          return 'FAILED' if latest_package.failed?
+      cached_latest_package = latest_package
+      if cached_current_droplet
+        if cached_latest_package
+          return 'STAGED' if cached_current_droplet.package == cached_latest_package || cached_current_droplet.created_at > cached_latest_package.created_at
+          return 'FAILED' if cached_latest_package.failed?
           return 'PENDING'
         end
 
         return 'STAGED'
       end
 
-      return 'FAILED' if latest_package.try(:failed?)
+      return 'FAILED' if cached_latest_package.try(:failed?)
 
       'PENDING'
     end
