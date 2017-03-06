@@ -78,7 +78,7 @@ properties:
         router_group_name: default-tcp
 
   app_ssh.host_key_fingerprint:
-    description: "MD5 fingerprint of the host key of the SSH proxy that brokers connections to application instances"
+    description: "Fingerprint of the host key of the SSH proxy that brokers connections to application instances. SHA256, SHA1 and MD5 hashes are supported."
     default: ~
   app_ssh.port:
     description: "External port for SSH access to application instances"
