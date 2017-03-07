@@ -632,6 +632,9 @@ properties:
   cc.diego.temporary_local_tps:
     description: "Temporary flag to manage app state directly to the bbs from cc"
     default: false
+  cc.diego.temporary_cc_uploader_mtls:
+    description: "Temporary flag to ensure droplet upload callback endpoints require mTLS"
+    default: false
 
   cc.diego.pid_limit:
     description: "Maximum pid limit for containerized work running user-provided code"

@@ -164,7 +164,8 @@ module CloudController
         blobstore_host: @config[:internal_service_hostname],
         blobstore_port: @config[:external_port],
         user: @config[:staging][:auth][:user],
-        password: @config[:staging][:auth][:password]
+        password: @config[:staging][:auth][:password],
+        mtls: HashUtils.dig(@config, :diego, :temporary_cc_uploader_mtls)
       }
 
       Blobstore::UrlGenerator.new(

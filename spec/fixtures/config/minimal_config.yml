@@ -162,6 +162,7 @@ diego:
   temporary_local_apps: false
   temporary_local_sync: false
   temporary_local_tps: false
+  temporary_cc_uploader_mtls: false
   tps_url: 'tps_url-value'
   use_privileged_containers_for_running: false
   use_privileged_containers_for_staging: false

@@ -10,7 +10,11 @@ module CloudController
       end
 
       def droplet_upload_url(droplet_guid)
-        basic_auth_uri("/staging/v3/droplets/#{droplet_guid}/upload")
+        if @blobstore_options[:mtls]
+          no_auth_uri("/internal/v4/droplets/#{droplet_guid}/upload")
+        else
+          basic_auth_uri("/staging/v3/droplets/#{droplet_guid}/upload")
+        end
       end
 
       def buildpack_cache_upload_url(app_guid, stack)

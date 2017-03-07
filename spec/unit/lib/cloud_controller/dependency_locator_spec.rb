@@ -156,6 +156,9 @@ RSpec.describe CloudController::DependencyLocator do
             user:     'username',
             password: 'password',
           }
+        },
+        diego: {
+          temporary_cc_uploader_mtls: true,
         }
       }
     end
@@ -169,7 +172,8 @@ RSpec.describe CloudController::DependencyLocator do
         blobstore_host: 'internal.service.hostname',
         blobstore_port: 8282,
         user:           'username',
-        password:       'password'
+        password:       'password',
+        mtls:           true,
       }
       expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
         with(hash_including(connection_options),

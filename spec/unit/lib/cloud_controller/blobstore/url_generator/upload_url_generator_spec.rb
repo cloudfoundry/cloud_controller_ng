@@ -47,6 +47,20 @@ module CloudController
           expect(uri.password).to eql 'password'
           expect(uri.path).to eql "/staging/v3/droplets/#{droplet_guid}/upload"
         end
+
+        describe 'when mtls is enabled for the cc_uploader' do
+          before do
+            connection_options[:mtls] = true
+          end
+
+          it 'gives out the mTLS url for droplet upload' do
+            droplet_guid = Sham.guid
+            uri          = URI.parse(url_generator.droplet_upload_url(droplet_guid))
+            expect(uri.host).to eql blobstore_host
+            expect(uri.port).to eql blobstore_port
+            expect(uri.path).to eql "/internal/v4/droplets/#{droplet_guid}/upload"
+          end
+        end
       end
     end
   end
