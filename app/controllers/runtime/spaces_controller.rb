@@ -359,7 +359,7 @@ module VCAP::CloudController
             user.username = '' unless user.username
 
             @user_event_repository.record_space_role_add(
-                space,
+              space,
                 user,
                 role,
                 UserAuditInfo.from_context(SecurityContext),
@@ -372,7 +372,7 @@ module VCAP::CloudController
             user.username = '' unless user.username
 
             @user_event_repository.record_space_role_remove(
-                space,
+              space,
                 user,
                 role,
                 UserAuditInfo.from_context(SecurityContext),

@@ -66,8 +66,6 @@ module VCAP::CloudController
           'Could not find Isolation Segment to set as the default.') unless IsolationSegmentModel.first(guid: request_attrs['default_isolation_segment_guid'])
       end
 
-
-
       super(org)
     end
 
@@ -398,7 +396,7 @@ module VCAP::CloudController
             user.username = '' unless user.username
 
             @user_event_repository.record_organization_role_add(
-                organization,
+              organization,
                 user,
                 role,
                 UserAuditInfo.from_context(SecurityContext),
@@ -411,7 +409,7 @@ module VCAP::CloudController
             user.username = '' unless user.username
 
             @user_event_repository.record_organization_role_remove(
-                organization,
+              organization,
                 user,
                 role,
                 UserAuditInfo.from_context(SecurityContext),
