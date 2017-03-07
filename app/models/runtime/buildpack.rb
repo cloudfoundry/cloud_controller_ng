@@ -35,9 +35,12 @@ module VCAP::CloudController
       full_dataset_filter
     end
 
+    def before_destroy
+      Locking[name: 'buildpacks'].lock!
+    end
+
     def after_destroy
       super
-      Locking[name: 'buildpacks'].lock!
       shifter = BuildpackShifter.new
       shifter.shift_positions_down(self)
     end

@@ -287,11 +287,6 @@ module VCAP::CloudController
         expect(Locking[name: 'buildpacks']).to have_received(:lock!)
       end
 
-      it 'has to do a SELECT FOR UPDATE' do
-        expect(Buildpack).to receive(:for_update).exactly(1).and_call_original
-        buildpacks[3].update(position: 2)
-      end
-
       it "does not update the position if it isn't specified" do
         expect {
           buildpacks.first.update(key: 'abcdef')
