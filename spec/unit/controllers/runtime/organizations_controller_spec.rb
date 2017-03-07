@@ -541,7 +541,7 @@ module VCAP::CloudController
       context 'setting roles at org update time' do
         let(:other_user) { User.make }
         let(:name) { 'myorg' }
-        let(:uri) { "/v2/organizations/#{org.guid}"}
+        let(:uri) { "/v2/organizations/#{org.guid}" }
 
         before do
           set_current_user_as_admin
@@ -580,7 +580,6 @@ module VCAP::CloudController
               expect(event).to be_nil
             end
           end
-
         end
 
         context 'deassigning an org manager' do
