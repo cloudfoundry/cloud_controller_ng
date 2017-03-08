@@ -31,6 +31,7 @@ module CloudController
           app_guid = Sham.guid
           stack    = Sham.name
           uri      = URI.parse(url_generator.buildpack_cache_upload_url(app_guid, stack))
+          expect(uri.scheme).to eql 'http'
           expect(uri.host).to eql blobstore_host
           expect(uri.port).to eql blobstore_port
           expect(uri.user).to eql 'username'
@@ -41,6 +42,7 @@ module CloudController
         it 'gives out url for droplet' do
           droplet_guid = Sham.guid
           uri          = URI.parse(url_generator.droplet_upload_url(droplet_guid))
+          expect(uri.scheme).to eql 'http'
           expect(uri.host).to eql blobstore_host
           expect(uri.port).to eql blobstore_port
           expect(uri.user).to eql 'username'
@@ -56,6 +58,7 @@ module CloudController
           it 'gives out the mTLS url for droplet upload' do
             droplet_guid = Sham.guid
             uri          = URI.parse(url_generator.droplet_upload_url(droplet_guid))
+            expect(uri.scheme).to eql 'https'
             expect(uri.host).to eql blobstore_host
             expect(uri.port).to eql blobstore_port
             expect(uri.path).to eql "/internal/v4/droplets/#{droplet_guid}/upload"

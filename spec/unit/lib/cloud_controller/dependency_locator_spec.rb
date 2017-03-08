@@ -151,6 +151,7 @@ RSpec.describe CloudController::DependencyLocator do
         internal_service_hostname: internal_service_hostname,
         external_host:             'external.host',
         external_port:             8282,
+        tls_port:                  8283,
         staging:                   {
           auth: {
             user:     'username',
@@ -169,11 +170,12 @@ RSpec.describe CloudController::DependencyLocator do
 
     it 'creates blobstore_url_generator with the internal_service_hostname, port, and blobstores' do
       connection_options = {
-        blobstore_host: 'internal.service.hostname',
-        blobstore_port: 8282,
-        user:           'username',
-        password:       'password',
-        mtls:           true,
+        blobstore_host:          'internal.service.hostname',
+        blobstore_external_port: 8282,
+        blobstore_tls_port:      8283,
+        user:                    'username',
+        password:                'password',
+        mtls:                    true,
       }
       expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
         with(hash_including(connection_options),

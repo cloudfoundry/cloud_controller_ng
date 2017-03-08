@@ -162,7 +162,8 @@ module CloudController
     def blobstore_url_generator
       connection_options = {
         blobstore_host: @config[:internal_service_hostname],
-        blobstore_port: @config[:external_port],
+        blobstore_external_port: @config[:external_port],
+        blobstore_tls_port: @config[:tls_port],
         user: @config[:staging][:auth][:user],
         password: @config[:staging][:auth][:password],
         mtls: HashUtils.dig(@config, :diego, :temporary_cc_uploader_mtls)
