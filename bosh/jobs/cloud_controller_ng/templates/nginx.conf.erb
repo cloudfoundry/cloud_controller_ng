@@ -76,11 +76,42 @@ http {
     proxy_redirect              off;
     proxy_connect_timeout       10;
 
+
+    location /internal/v4/ {
+      proxy_pass http://cloud_controller;
+    }
+
     location ~ /internal/v3/staging/.*/droplet_completed {
       proxy_pass http://cloud_controller;
     }
 
-    location /internal/v4/ {
+    location ~ /internal/v4/droplets/.*/upload {
+      # Allow download the droplets and buildpacks
+      if ($request_method = GET){
+        proxy_pass http://cloud_controller;
+      }
+
+      # Allow large uploads
+      client_max_body_size <%= p("cc.app_bits_max_body_size") %>; #already enforced upstream/but doesn't hurt.
+
+      # Pass altered request body to this location
+      upload_pass   @cc_uploads;
+
+      # Store files to this directory
+      upload_store /var/vcap/data/cloud_controller_ng/tmp/staged_droplet_uploads;
+
+      # Allow uploaded files to be read only by user
+      upload_store_access user:r;
+
+      # Set specified fields in request body
+      upload_set_form_field "droplet_path" $upload_tmp_path;
+
+      #on any error, delete uploaded files.
+      upload_cleanup 400-505;
+    }
+
+    # Pass altered request body to a backend
+    location @cc_uploads {
       proxy_pass http://cloud_controller;
     }
   }
