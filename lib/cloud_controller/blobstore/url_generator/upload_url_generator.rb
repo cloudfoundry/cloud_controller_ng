@@ -18,7 +18,11 @@ module CloudController
       end
 
       def buildpack_cache_upload_url(app_guid, stack)
-        http_basic_auth_uri("/staging/v3/buildpack_cache/#{stack}/#{app_guid}/upload")
+        if @blobstore_options[:mtls]
+          https_no_auth_uri("/internal/v4/buildpack_cache/#{stack}/#{app_guid}/upload")
+        else
+          http_buildpack_cache_upload_url(app_guid, stack)
+        end
       end
 
       def http_droplet_upload_url(droplet_guid)

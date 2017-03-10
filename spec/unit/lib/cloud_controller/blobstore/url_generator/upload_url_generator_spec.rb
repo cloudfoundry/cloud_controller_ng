@@ -63,6 +63,16 @@ module CloudController
             expect(uri.port).to eql tls_port
             expect(uri.path).to eql "/internal/v4/droplets/#{droplet_guid}/upload"
           end
+
+          it 'gives out the mTLS url for buildpack_cache upload' do
+            app_guid = Sham.guid
+            stack    = Sham.name
+            uri      = URI.parse(url_generator.buildpack_cache_upload_url(app_guid, stack))
+            expect(uri.scheme).to eql 'https'
+            expect(uri.host).to eql blobstore_host
+            expect(uri.port).to eql tls_port
+            expect(uri.path).to eql "/internal/v4/buildpack_cache/#{stack}/#{app_guid}/upload"
+          end
         end
       end
     end

@@ -19,41 +19,41 @@ module VCAP::CloudController
     let(:workspace) { Dir.mktmpdir }
     let(:original_staging_config) do
       {
-          external_host: cc_addr,
-          external_port: cc_port,
-          staging: {
-              auth: {
-                  user: staging_user,
-                  password: staging_password
-              }
+        external_host: cc_addr,
+        external_port: cc_port,
+        staging:       {
+          auth: {
+            user:     staging_user,
+            password: staging_password
+          }
+        },
+        nginx:         { use_nginx: true },
+        resource_pool: {
+          resource_directory_key: 'cc-resources',
+          fog_connection:         {
+            provider:   'Local',
+            local_root: Dir.mktmpdir('resourse_pool', workspace)
+          }
+        },
+        packages:      {
+          fog_connection:            {
+            provider:   'Local',
+            local_root: Dir.mktmpdir('packages', workspace)
           },
-          nginx: { use_nginx: true },
-          resource_pool: {
-              resource_directory_key: 'cc-resources',
-              fog_connection: {
-                  provider: 'Local',
-                  local_root: Dir.mktmpdir('resourse_pool', workspace)
-              }
-          },
-          packages: {
-              fog_connection: {
-                  provider: 'Local',
-                  local_root: Dir.mktmpdir('packages', workspace)
-              },
-              app_package_directory_key: 'cc-packages',
-          },
-          droplets: {
-              droplet_directory_key: 'cc-droplets',
-              fog_connection: {
-                  provider: 'Local',
-                  local_root: Dir.mktmpdir('droplets', workspace)
-              }
-          },
-          directories: {
-              tmpdir: Dir.mktmpdir('tmpdir', workspace)
-          },
-          index: 99,
-          name: 'api_z1'
+          app_package_directory_key: 'cc-packages',
+        },
+        droplets:      {
+          droplet_directory_key: 'cc-droplets',
+          fog_connection:        {
+            provider:   'Local',
+            local_root: Dir.mktmpdir('droplets', workspace)
+          }
+        },
+        directories:   {
+          tmpdir: Dir.mktmpdir('tmpdir', workspace)
+        },
+        index:         99,
+        name:          'api_z1'
       }
     end
     let(:staging_config) { original_staging_config }
@@ -128,7 +128,7 @@ module VCAP::CloudController
 
       def create_test_blob
         tmpdir = Dir.mktmpdir
-        file = File.new(File.join(tmpdir, 'afile.txt'), 'w')
+        file   = File.new(File.join(tmpdir, 'afile.txt'), 'w')
         file.print('test blob contents')
         file.close
         CloudController::Blobstore::FogBlob.new(file, nil)
@@ -219,10 +219,10 @@ module VCAP::CloudController
       it "returns a JSON body with full url and basic auth to query for job's status" do
         post "/staging/v3/droplets/#{droplet.guid}/upload", upload_req
 
-        job = Delayed::Job.last
-        config = VCAP::CloudController::Config.config
-        user = config[:staging][:auth][:user]
-        password = config[:staging][:auth][:password]
+        job         = Delayed::Job.last
+        config      = VCAP::CloudController::Config.config
+        user        = config[:staging][:auth][:user]
+        password    = config[:staging][:auth][:password]
         polling_url = "http://#{user}:#{password}@#{config[:internal_service_hostname]}:#{config[:external_port]}/staging/jobs/#{job.guid}"
 
         expect(decoded_response.fetch('metadata').fetch('url')).to eql(polling_url)
@@ -311,8 +311,8 @@ module VCAP::CloudController
       it "returns a JSON body with full url and basic auth to query for job's status" do
         post "/internal/v4/droplets/#{droplet.guid}/upload", upload_req
 
-        job = Delayed::Job.last
-        config = VCAP::CloudController::Config.config
+        job         = Delayed::Job.last
+        config      = VCAP::CloudController::Config.config
         polling_url = "https://#{config[:internal_service_hostname]}:#{config[:tls_port]}/internal/v4/staging_jobs/#{job.guid}"
 
         expect(decoded_response.fetch('metadata').fetch('url')).to eql(polling_url)
@@ -439,6 +439,83 @@ module VCAP::CloudController
       end
     end
 
+    describe 'POST /internal/v4/buildpack_cache/:stack/:app_guid/upload' do
+      include TempFileCreator
+
+      let(:file_content) { 'the-file-content' }
+      let(:upload_req) do
+        { upload: { droplet: Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }
+      end
+      let(:app_model) { AppModel.make }
+      let(:stack) { Sham.name }
+
+      before do
+        c = staging_config.merge({
+          diego: {
+            temporary_cc_uploader_mtls: true,
+          }
+        })
+        TestConfig.override(c)
+      end
+
+      context 'with a valid app' do
+        it 'returns 200' do
+          post "/internal/v4/buildpack_cache/#{stack}/#{app_model.guid}/upload", upload_req
+          expect(last_response.status).to eq(200)
+        end
+
+        it 'stores file path in handle.buildpack_cache_upload_path' do
+          expect {
+            post "/internal/v4/buildpack_cache/#{stack}/#{app_model.guid}/upload", upload_req
+          }.to change {
+            Delayed::Job.count
+          }.by(1)
+
+          job = Delayed::Job.last
+          expect(job.handler).to include(app_model.guid)
+          expect(job.handler).to include(stack)
+          expect(job.handler).to include('ngx.uploads')
+          expect(job.queue).to eq('cc-api_z1-99')
+          expect(job.guid).not_to be_nil
+          expect(last_response.status).to eq 200
+        end
+
+        context 'when a content-md5 is specified' do
+          it 'returns a 400 if the value does not match the md5 of the body' do
+            post "/internal/v4/buildpack_cache/#{stack}/#{app_model.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => 'the-wrong-md5'
+            expect(last_response.status).to eq(400)
+          end
+
+          it 'succeeds if the value matches the md5 of the body' do
+            content_md5 = digester.digest(file_content)
+            post "/internal/v4/buildpack_cache/#{stack}/#{app_model.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => content_md5
+            expect(last_response.status).to eq(200)
+          end
+        end
+      end
+
+      context 'with an invalid package' do
+        it 'returns 404' do
+          post '/internal/v4/buildpack_cache/bad-stack-app/upload', upload_req
+          expect(last_response.status).to eq(404)
+        end
+
+        context 'when the upload path is nil' do
+          let(:upload_req) do
+            { upload: { droplet: nil } }
+          end
+
+          it 'does not create an upload job' do
+            expect {
+              post "/internal/v4/buildpack_cache/#{stack}/#{app_model.guid}/upload", upload_req
+            }.not_to change {
+              Delayed::Job.count
+            }
+          end
+        end
+      end
+    end
+
     describe 'GET /staging/v3/buildpack_cache/:stack/:app_guid/download' do
       let(:app_model) { AppModel.make }
       let(:buildpack_cache) { Tempfile.new(app_model.guid) }
@@ -509,7 +586,7 @@ module VCAP::CloudController
       before { authorize(staging_user, staging_password) }
 
       def upload_droplet
-        tmpdir = Dir.mktmpdir
+        tmpdir  = Dir.mktmpdir
         zipname = File.join(tmpdir, 'test.zip')
         TestZip.create(zipname, 10, 1024)
         file_contents = File.read(zipname)

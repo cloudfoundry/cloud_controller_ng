@@ -96,6 +96,7 @@ module VCAP::CloudController
     end
 
     post '/staging/v3/buildpack_cache/:stack_name/:guid/upload', :upload_v3_app_buildpack_cache
+    post '/internal/v4/buildpack_cache/:stack_name/:guid/upload', :upload_v3_app_buildpack_cache
     def upload_v3_app_buildpack_cache(stack_name, guid)
       app_model = AppModel.find(guid: guid)
 
