@@ -7,13 +7,13 @@ module CloudController
       let(:blobstore_host) do
         'api.example.com'
       end
-      let(:blobstore_port) do
-        9292
-      end
+      let(:external_port) { 9292 }
+      let(:tls_port) { 9293 }
       let(:connection_options) do
         {
           blobstore_host: blobstore_host,
-          blobstore_port: blobstore_port,
+          blobstore_external_port: external_port,
+          blobstore_tls_port: tls_port,
           user:           username,
           password:       password,
         }
@@ -33,7 +33,7 @@ module CloudController
           uri      = URI.parse(url_generator.buildpack_cache_upload_url(app_guid, stack))
           expect(uri.scheme).to eql 'http'
           expect(uri.host).to eql blobstore_host
-          expect(uri.port).to eql blobstore_port
+          expect(uri.port).to eql external_port
           expect(uri.user).to eql 'username'
           expect(uri.password).to eql 'password'
           expect(uri.path).to eql "/staging/v3/buildpack_cache/#{stack}/#{app_guid}/upload"
@@ -44,7 +44,7 @@ module CloudController
           uri          = URI.parse(url_generator.droplet_upload_url(droplet_guid))
           expect(uri.scheme).to eql 'http'
           expect(uri.host).to eql blobstore_host
-          expect(uri.port).to eql blobstore_port
+          expect(uri.port).to eql external_port
           expect(uri.user).to eql 'username'
           expect(uri.password).to eql 'password'
           expect(uri.path).to eql "/staging/v3/droplets/#{droplet_guid}/upload"
@@ -60,7 +60,7 @@ module CloudController
             uri          = URI.parse(url_generator.droplet_upload_url(droplet_guid))
             expect(uri.scheme).to eql 'https'
             expect(uri.host).to eql blobstore_host
-            expect(uri.port).to eql blobstore_port
+            expect(uri.port).to eql tls_port
             expect(uri.path).to eql "/internal/v4/droplets/#{droplet_guid}/upload"
           end
         end

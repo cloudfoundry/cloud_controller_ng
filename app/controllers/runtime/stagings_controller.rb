@@ -23,6 +23,7 @@ module VCAP::CloudController
     attr_reader :config, :blobstore, :buildpack_cache_blobstore, :package_blobstore
 
     get '/staging/jobs/:guid', :find_job
+    get '/internal/v4/staging_jobs/:guid', :find_job
     def find_job(guid)
       job = Delayed::Job[guid: guid]
       StagingJobPresenter.new(job).to_json

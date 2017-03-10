@@ -108,6 +108,19 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /internal/v4/staging_jobs/:guid' do
+      let(:job) { Delayed::Job.enqueue double(perform: nil) }
+      let(:job_guid) { job.guid }
+
+      it 'returns the job' do
+        get "/internal/v4/staging_jobs/#{job_guid}"
+
+        expect(last_response.status).to eq(200)
+        expect(decoded_response(symbolize_keys: true)).to eq(StagingJobPresenter.new(job).to_hash)
+        expect(decoded_response['metadata']['guid']).to eq(job_guid)
+      end
+    end
+
     describe 'GET /staging/packages/:guid' do
       let(:package_without_bits) { PackageModel.make }
       let(:package) { PackageModel.make }
@@ -210,15 +223,9 @@ module VCAP::CloudController
         config = VCAP::CloudController::Config.config
         user = config[:staging][:auth][:user]
         password = config[:staging][:auth][:password]
-        polling_url = "http://#{user}:#{password}@#{config[:external_domain]}/staging/jobs/#{job.guid}"
+        polling_url = "http://#{user}:#{password}@#{config[:internal_service_hostname]}:#{config[:external_port]}/staging/jobs/#{job.guid}"
 
         expect(decoded_response.fetch('metadata').fetch('url')).to eql(polling_url)
-      end
-
-      it 'returns a JSON body with full url containing the correct external_protocol' do
-        TestConfig.config[:external_protocol] = 'https'
-        post "/staging/v3/droplets/#{droplet.guid}/upload", upload_req
-        expect(decoded_response.fetch('metadata').fetch('url')).to start_with('https://')
       end
 
       context 'when a content-md5 is specified' do
@@ -277,7 +284,12 @@ module VCAP::CloudController
       end
 
       before do
-        TestConfig.override(staging_config)
+        c = staging_config.merge({
+          diego: {
+            temporary_cc_uploader_mtls: true,
+          }
+        })
+        TestConfig.override(c)
       end
 
       it 'schedules a job to upload the droplet to the blobstore' do
@@ -301,9 +313,7 @@ module VCAP::CloudController
 
         job = Delayed::Job.last
         config = VCAP::CloudController::Config.config
-        user = config[:staging][:auth][:user]
-        password = config[:staging][:auth][:password]
-        polling_url = "http://#{user}:#{password}@#{config[:external_domain]}/staging/jobs/#{job.guid}"
+        polling_url = "https://#{config[:internal_service_hostname]}:#{config[:tls_port]}/internal/v4/staging_jobs/#{job.guid}"
 
         expect(decoded_response.fetch('metadata').fetch('url')).to eql(polling_url)
       end

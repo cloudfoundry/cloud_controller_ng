@@ -9,22 +9,52 @@ RSpec.describe StagingJobPresenter do
       job
     end
 
-    it 'creates a valid JSON with the correct url' do
-      user = TestConfig.config[:staging][:auth][:user]
-      password = TestConfig.config[:staging][:auth][:password]
-      polling_url = "http://#{user}:#{password}@#{TestConfig.config[:external_domain]}/staging/jobs/#{job.guid}"
+    let(:user) { TestConfig.config[:staging][:auth][:user] }
+    let(:password) { TestConfig.config[:staging][:auth][:password] }
+    let(:expected_polling_url) do
+      "http://#{user}:#{password}@#{TestConfig.config[:internal_service_hostname]}:#{TestConfig.config[:external_port]}/staging/jobs/#{job.guid}"
+    end
 
+    it 'creates a valid JSON with the http internal URL' do
       expect(StagingJobPresenter.new(job).to_hash).to eq(
         metadata: {
           guid: job.guid,
           created_at: job.created_at.iso8601,
-          url: polling_url
+          url: expected_polling_url
         },
         entity: {
           guid: job.guid,
           status: 'queued'
         }
       )
+    end
+
+    context 'when temporary_cc_uploader_mtls is true' do
+      before do
+        TestConfig.load({
+          diego: {
+            temporary_cc_uploader_mtls: true,
+          }
+        })
+      end
+
+      let(:expected_polling_url) do
+        "https://#{TestConfig.config[:internal_service_hostname]}:#{TestConfig.config[:tls_port]}/internal/v4/staging_jobs/#{job.guid}"
+      end
+
+      it 'creates a valid JSON with the https internal URL' do
+        expect(StagingJobPresenter.new(job).to_hash).to eq(
+          metadata: {
+            guid: job.guid,
+            created_at: job.created_at.iso8601,
+            url: expected_polling_url
+          },
+          entity: {
+            guid: job.guid,
+            status: 'queued'
+          }
+        )
+      end
     end
   end
 end
