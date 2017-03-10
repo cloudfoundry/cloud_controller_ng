@@ -102,6 +102,21 @@ module VCAP::CloudController
                 }.to raise_error CloudController::Errors::ApiError, /Task failed: error message/
               end
             end
+
+            context 'when the bbs task client throws an error' do
+              let(:error) { CloudController::Errors::ApiError.new }
+              before { allow(bbs_client).to receive(:desire_task).and_raise(error) }
+
+              it 'marks the task as failed and re-raises' do
+                expect(TaskModel.count).to eq(0)
+                expect {
+                  task_create_action.create(app, message, user_audit_info)
+                }.to raise_error(error)
+
+                task = TaskModel.first
+                expect(task.state).to eq(TaskModel::FAILED_STATE)
+              end
+            end
           end
         end
       end

@@ -37,13 +37,7 @@ module VCAP::CloudController
         task_event_repository.record_task_create(task, user_audit_info)
       end
 
-      if bypass_bridge?
-        task_definition = Diego::TaskRecipeBuilder.new.build_app_task(config, task)
-        dependency_locator.bbs_task_client.desire_task(task.guid, task_definition, Diego::TASKS_DOMAIN)
-        mark_task_as_running(task)
-      else
-        dependency_locator.nsync_client.desire_task(task)
-      end
+      submit_task(task)
 
       task
     rescue Diego::Buildpack::LifecycleProtocol::InvalidDownloadUri,
@@ -57,6 +51,21 @@ module VCAP::CloudController
     private
 
     attr_reader :config
+
+    def submit_task(task)
+      if bypass_bridge?
+        begin
+          task_definition = Diego::TaskRecipeBuilder.new.build_app_task(config, task)
+          dependency_locator.bbs_task_client.desire_task(task.guid, task_definition, Diego::TASKS_DOMAIN)
+          mark_task_as_running(task)
+        rescue => e
+          fail_task(task)
+          raise e
+        end
+      else
+        dependency_locator.nsync_client.desire_task(task)
+      end
+    end
 
     def bypass_bridge?
       config[:diego] && config[:diego][:temporary_local_tasks]
@@ -85,6 +94,15 @@ module VCAP::CloudController
 
     def task_event_repository
       Repositories::TaskEventRepository.new
+    end
+
+    def fail_task(task)
+      task.db.transaction do
+        task.lock!
+        task.state = TaskModel::FAILED_STATE
+        task.failure_reason = 'Unable to request task to be run'
+        task.save
+      end
     end
 
     def mark_task_as_running(task)
