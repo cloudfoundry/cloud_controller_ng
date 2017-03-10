@@ -22,7 +22,7 @@ module VCAP::CloudController::RestController
             dest.append("[#{src[i].upcase}]")
           end
         }
-        return dest.join()
+        return dest.join
       else
         return string
       end

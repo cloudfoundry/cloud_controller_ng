@@ -135,10 +135,10 @@ module Sequel::Plugins::VcapSerialization
         elsif hash.key?(attr.to_s)
           key = attr.to_s
         end
-        #unless key.nil?
-        #  value = hash[key].class == Hash ? hash[key].to_s : hash[key]
-        #  results[attr] = value
-        #end
+        # unless key.nil?
+        #   value = hash[key].class == Hash ? hash[key].to_s : hash[key]
+        #   results[attr] = value
+        # end
         results[attr] = hash[key] unless key.nil?
       end
       results

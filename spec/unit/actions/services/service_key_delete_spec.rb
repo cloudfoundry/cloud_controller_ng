@@ -50,7 +50,7 @@ module VCAP::CloudController
 
       it 'fails if the instance has another operation in progress' do
         service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
-        errors = service_key_delete.delete(service_key_dataset.where(:id => service_key_1.id))
+        errors = service_key_delete.delete(service_key_dataset.where(id: service_key_1.id))
         expect(errors.first).to be_instance_of CloudController::Errors::ApiError
       end
 

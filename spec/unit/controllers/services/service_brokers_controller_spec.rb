@@ -852,7 +852,7 @@ module VCAP::CloudController
         end
 
         context 'when the user is a space developer' do
-          let(:space) { Space.make() }
+          let(:space) { Space.make }
           let(:broker) do ServiceBroker.make(
             guid: '123',
             name: 'My Custom Service',
@@ -905,7 +905,7 @@ module VCAP::CloudController
           end
 
           context 'when the user is a space developer in another space' do
-            let(:space_outer) { Space.make() }
+            let(:space_outer) { Space.make }
             let(:broker) do ServiceBroker.make(
               guid: '123',
               name: 'My Custom Service',

@@ -2,10 +2,10 @@ RSpec::Matchers.define :have_queried_db_times do |query_regex, expected_times|
   match do |actual_blk|
     begin
       @matched_calls = []
-      execute_fn = "_execute"
+      execute_fn = '_execute'
       query_at_index = 1
       if Sequel::Model.db.database_type == :mssql
-        execute_fn = "execute"
+        execute_fn = 'execute'
         query_at_index = 0
       end
       stub = allow(Sequel::Model.db).to receive(execute_fn.to_sym)

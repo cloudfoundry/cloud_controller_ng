@@ -22,7 +22,8 @@ module VCAP::CloudController
                                                      INNER JOIN [SPACES] ON ([SPACES].[GUID] = [APPS].[SPACE_GUID])
                                                      INNER JOIN [ORGANIZATIONS] ON ([ORGANIZATIONS].[ID] = [SPACES].[ORGANIZATION_ID])
                                                      WHERE (([SYSLOG_DRAIN_URL] IS NOT NULL) AND ([SYSLOG_DRAIN_URL] != ''))
-                                                     GROUP BY [APPS].[GUID], [APPS].[NAME], [SPACES].[NAME], [ORGANIZATIONS].[NAME] ORDER BY [GUID] OFFSET #{last_id} ROWS FETCH NEXT #{batch_size} ROWS ONLY")
+                                                     GROUP BY [APPS].[GUID], [APPS].[NAME], [SPACES].[NAME], [ORGANIZATIONS].[NAME]
+                                                     ORDER BY [GUID] OFFSET #{last_id} ROWS FETCH NEXT #{batch_size} ROWS ONLY")
                            else
                              AppModel.
                                join(ServiceBinding, app_guid: :guid).
