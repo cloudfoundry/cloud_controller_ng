@@ -39,7 +39,7 @@ module VCAP::CloudController::RestController
       eager_loaded_objects = @eager_loader.eager_load_dataset(
         obj.model.dataset,
         controller,
-        default_visibility_filter,
+        opts[:default_visibility_filter] || default_visibility_filter,
         opts[:additional_visibility_filters] || {},
         inline_relations_depth,
       )
@@ -67,11 +67,20 @@ module VCAP::CloudController::RestController
       MultiJson.dump(hash, pretty: opts.fetch(:pretty, true))
     end
 
+    def render_json_with_read_privileges(controller, obj, opts)
+      render_json(controller, obj, opts.merge(default_visibility_filter: default_visibility_filter_with_read_privileges))
+    end
+
     private
 
     def default_visibility_filter
       access_context = VCAP::CloudController::Security::AccessContext.new
       proc { |ds| ds.filter(ds.model.user_visibility(access_context.user, access_context.admin_override)) }
+    end
+
+    def default_visibility_filter_with_read_privileges
+      access_context = VCAP::CloudController::Security::AccessContext.new
+      proc { |ds| ds.filter(ds.model.user_visibility_for_read(access_context.user, access_context.admin_override)) }
     end
   end
 end

@@ -42,11 +42,15 @@ module VCAP::CloudController
         dataset.filter(id: service_ids)
       end
 
-      def user_visibility_filter(current_user)
-        visible_plans = ServicePlan.user_visible(current_user)
+      def user_visibility_filter(current_user, op=nil)
+        visible_plans = ServicePlan.user_visible(current_user, op)
         ids_from_plans = visible_plans.map(&:service_id).uniq
 
         { id: ids_from_plans }
+      end
+
+      def user_visibility_for_read(current_user, _admin_override)
+        user_visibility_filter(current_user, :read)
       end
 
       def unauthenticated_visibility_filter
