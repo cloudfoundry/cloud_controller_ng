@@ -541,6 +541,26 @@ module VCAP::CloudController
           end
         end
 
+        context 'when a NoRunningInstances error is thrown' do
+          let(:error) { CloudController::Errors::NoRunningInstances.new('ruh roh') }
+          let(:expected_stats_response) do
+            {
+              0 => {
+                state:  'DOWN',
+                uptime: 0,
+              },
+            }
+          end
+
+          before do
+            allow(bbs_instances_client).to receive(:lrp_instances).with(process).and_raise(error)
+          end
+
+          it 'shows all instances as "DOWN"' do
+            expect(instances_reporter.stats_for_app(process)).to eq(expected_stats_response)
+          end
+        end
+
         context 'client data mismatch' do
           context 'when number of actual lrps < desired number of instances' do
             let(:bbs_actual_lrps_response) { [] }
@@ -555,14 +575,7 @@ module VCAP::CloudController
             end
 
             it 'provides defaults for unreported instances' do
-              expect(instances_reporter.stats_for_app(process)).to eq(
-                {
-                  0 => {
-                    state: 'DOWN',
-                    uptime: 0,
-                  }
-                }
-              )
+              expect(instances_reporter.stats_for_app(process)).to eq(expected_stats_response)
             end
           end
 
@@ -605,14 +618,6 @@ module VCAP::CloudController
 
               it 'reraises the exception' do
                 expect { instances_reporter.stats_for_app(process) }.to raise_error(CloudController::Errors::InstancesUnavailable, /ruh roh/)
-              end
-            end
-
-            context 'when the error is NoRunningInstances' do
-              let(:error) { CloudController::Errors::NoRunningInstances.new('ruh roh') }
-
-              it 'reraises the exception' do
-                expect { instances_reporter.stats_for_app(process) }.to raise_error(CloudController::Errors::NoRunningInstances)
               end
             end
           end
