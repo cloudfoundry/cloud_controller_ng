@@ -9,6 +9,7 @@ RSpec.describe Delayed::Backend::Sequel::Job do
       name == :cf_api_error
     end.last
 
-    expect(cf_api_error_properties[:db_type]).to eq('text')
+    data_type = Sequel::Model.db.database_type == :mssql ? 'varchar' : 'text'
+    expect(cf_api_error_properties[:db_type]).to eq(data_type)
   end
 end

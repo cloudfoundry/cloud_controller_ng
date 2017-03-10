@@ -11,6 +11,13 @@ module VCAP::CloudController
     end
 
     def delete(service_instance_dataset)
+      # COMMENT-FOR-REVIEW:
+      # type of `service_instance_dataset' should be Sequel::Dataset, but some times it is set as an Array. e.g.
+      # spec/unit/actions/services/service_instance_delete_spec.rb:318 `errors = service_instance_delete.delete([service_instance_1])'
+      #
+      # You can't operate data in on sequel #each, #each_with_object of dataset on mssql, you need to retrieve all data before operations,
+      # otherwise you will get an error indicating that two different queries are using the same connection at the same time.
+      service_instance_dataset = service_instance_dataset.all unless service_instance_dataset.class == Array
       service_instance_dataset.each_with_object([]) do |service_instance, errors_accumulator|
         binding_errors = delete_service_bindings(service_instance)
         binding_errors.concat delete_service_keys(service_instance)

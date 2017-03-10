@@ -10,8 +10,9 @@ module VCAP::CloudController
 
     get '/v2/syslog_drain_urls', :list
     def list
-      guid_to_drain_maps = if AppModel.db.database_type == :mssql
-                             db.fetch("SELECT [APPS].[GUID], STUFF((
+      # TODO: SET ANSI_NULLS, QUOTED_IDENTIFIER, CONCAT_NULL_YIELDS_NULL, ANSI_WARNINGS, ANSI_PADDING ON to the table when it is created? 
+      guid_to_drain_maps = if Sequel::Model.db.database_type == :mssql
+                             Sequel::Model.db.fetch("SET ANSI_NULLS, QUOTED_IDENTIFIER, CONCAT_NULL_YIELDS_NULL, ANSI_WARNINGS, ANSI_PADDING ON; SELECT [APPS].[GUID], STUFF((
                                 SELECT ',' + sb.syslog_drain_url
                                 FROM [SERVICE_BINDINGS] sb
                                 WHERE [APPS].[GUID] = sb.[APP_GUID]

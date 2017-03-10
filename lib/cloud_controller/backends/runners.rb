@@ -76,29 +76,50 @@ module VCAP::CloudController
     def dea_apps_hm9k
       # query 1
       # get all process information where the process is STARTED and running on the DEA
-      process_query = App.db["Select p.id, p.app_guid, p.instances, p.version, apps.droplet_guid from processes p
-                      inner join apps ON (apps.guid = p.app_guid AND p.state ='STARTED' AND p.diego IS FALSE)"]
+      process_query = if App.db.database_type == :mssql
+                        App.db["Select p.id, p.app_guid, p.instances, p.version, apps.droplet_guid from processes p
+                                inner join apps ON (apps.guid = p.app_guid AND p.state ='STARTED' AND p.diego = 0)"]
+                      else
+                        App.db["Select p.id, p.app_guid, p.instances, p.version, apps.droplet_guid from processes p
+                                inner join apps ON (apps.guid = p.app_guid AND p.state ='STARTED' AND p.diego IS FALSE)"]
+                      end
       processes = process_query.all
 
       # query 2
       # get all necessary droplet information. This includes:
       #    where the droplet's associated process is running on the DEA and the process is STARTED
       #    Finding only the latest droplet associated with the process
-      droplets_query = App.db["select d.id, d.guid, d.app_guid, d.created_at, d.package_guid, d.state from droplets d
-                              join processes p ON (d.app_guid = p.app_guid AND p.state ='STARTED' AND p.diego IS FALSE)
-                              inner join (select app_guid, max(created_at) as _max from droplets group by app_guid) as x
-                              ON d.app_guid = x.app_guid and d.created_at=x._max"]
+      droplets_query = if App.db.database_type == :mssql
+                         App.db["select d.id, d.guid, d.app_guid, d.created_at, d.package_guid, d.state from droplets d
+                                join processes p ON (d.app_guid = p.app_guid AND p.state ='STARTED' AND p.diego = 0)
+                                inner join (select app_guid, max(created_at) as _max from droplets group by app_guid) as x
+                                ON d.app_guid = x.app_guid and d.created_at=x._max"]
+                       else
+                         App.db["select d.id, d.guid, d.app_guid, d.created_at, d.package_guid, d.state from droplets d
+                                join processes p ON (d.app_guid = p.app_guid AND p.state ='STARTED' AND p.diego IS FALSE)
+                                inner join (select app_guid, max(created_at) as _max from droplets group by app_guid) as x
+                                ON d.app_guid = x.app_guid and d.created_at=x._max"]
+                       end
       latest_droplets = latest(droplets_query.all)
 
       # query 3
       # get all necessary package information. This includes:
       #   where the package's associated process is running on the DEA and the process is STARTED
       #   finding only the latest package associated with the process
-      packages_query = App.db["select pkg.id, pkg.guid, pkg.app_guid, pkg.created_at, pkg.state from packages pkg
-                              join processes proc ON
-                                (pkg.app_guid = proc.app_guid AND proc.state ='STARTED' AND proc.diego IS FALSE)
-                              inner join (select app_guid, max(created_at) as _max from packages group by app_guid) as x
-                              ON pkg.app_guid = x.app_guid and pkg.created_at = x._max"]
+
+      packages_query = if App.db.database_type == :mssql
+                         App.db["select pkg.id, pkg.guid, pkg.app_guid, pkg.created_at, pkg.state from packages pkg
+                                join processes prc ON
+                                  (pkg.app_guid = prc.app_guid AND prc.state ='STARTED' AND prc.diego = 0)
+                                inner join (select app_guid, max(created_at) as _max from packages group by app_guid) as x
+                                ON pkg.app_guid = x.app_guid and pkg.created_at = x._max"]
+                       else
+                         App.db["select pkg.id, pkg.guid, pkg.app_guid, pkg.created_at, pkg.state from packages pkg
+                                join processes proc ON
+                                  (pkg.app_guid = proc.app_guid AND proc.state ='STARTED' AND proc.diego IS FALSE)
+                                inner join (select app_guid, max(created_at) as _max from packages group by app_guid) as x
+                                ON pkg.app_guid = x.app_guid and pkg.created_at = x._max"]
+                       end
       latest_packages = latest(packages_query.all)
 
       process_list = []

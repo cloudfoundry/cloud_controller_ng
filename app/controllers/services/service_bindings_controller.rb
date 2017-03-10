@@ -85,6 +85,12 @@ module VCAP::CloudController
 
     private
 
+    # TODO: For mssql, dataset.sql shows that the clause is very very complicated! is it by design?
+    #      And trying to print the sql clause of the return data, it has new content .. INNER JOIN (SELECT * FROM [PROCESSES] ORDER BY [PROCESSES].[GUID]) AS [T1] ...
+    #      but mssql does not allow `order by' in subqueries. questions is why this func generates such subquery?
+    #
+    #      Reproduce error:  run 'bundle exec rspec ./spec/unit/controllers/services/service_bindings_controller_spec.rb' against mssql.
+    #                        there are several cases failed for this issue.
     def filter_dataset(dataset)
       dataset.select_all(ServiceBinding.table_name).join(App, app_guid: :app_guid, type: 'web')
     end

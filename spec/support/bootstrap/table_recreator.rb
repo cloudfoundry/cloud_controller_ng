@@ -17,7 +17,6 @@ class TableRecreator
     db.tables.each do |table|
       drop_table_unsafely(table)
     end
-
     DBMigrator.new(db).apply_migrations
 
     fake_model_tables = FakeModelTables.new(db)
@@ -43,6 +42,9 @@ class TableRecreator
 
     when :postgres
       db.drop_table(table, cascade: true)
+
+    when :mssql
+      db.drop_table(table)
     end
   end
 end

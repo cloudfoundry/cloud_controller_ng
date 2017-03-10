@@ -237,9 +237,10 @@ module VCAP::CloudController
       end
 
       it 'acquires the data in one select' do
+        pattern = App.db.database_type == :mssql ? "SELECT.*FROM.*PROCESSES.*" : "SELECT.*FROM.*processes.*"
         expect {
           runners.diego_apps_cache_data(100, 0)
-        }.to have_queried_db_times(/SELECT.*FROM.*processes.*/, 1)
+        }.to have_queried_db_times(/#{pattern}/, 1)
       end
 
       context 'with Docker app' do

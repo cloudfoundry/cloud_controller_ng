@@ -5,7 +5,7 @@ module VCAP::CloudController
     include VCAP::CloudController::LockCheck
 
     def delete(service_binding_dataset)
-      service_binding_dataset.each_with_object([]) do |service_binding, errs|
+      service_binding_dataset.all.each_with_object([]) do |service_binding, errs|
         errs.concat delete_service_binding(service_binding)
       end
     end

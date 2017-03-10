@@ -33,7 +33,15 @@ module IntegrationSetup
 
     db_connection_string = "#{TestConfig.config[:db][:database]}_integration_cc"
     if !opts[:preserve_database]
-      db = /postgres/ =~ db_connection_string ? 'postgres' : 'mysql'
+      db = 'unknown'
+      if /postgres/ =~ db_connection_string
+        db = 'postgres'
+      elsif /mysql/ =~ db_connection_string
+        db = 'mysql'
+      elsif /mssql/ =~ db_connection_string
+        db = 'mssql'
+      end
+
       env = {
         'DB_CONNECTION_STRING' => db_connection_string,
         'DB' => db

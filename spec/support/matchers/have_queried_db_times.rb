@@ -2,11 +2,17 @@ RSpec::Matchers.define :have_queried_db_times do |query_regex, expected_times|
   match do |actual_blk|
     begin
       @matched_calls = []
-      stub = allow(Sequel::Model.db).to receive(:_execute)
+      execute_fn = "_execute"
+      query_at_index = 1
+      if Sequel::Model.db.database_type == :mssql
+        execute_fn = "execute"
+        query_at_index = 0
+      end
+      stub = allow(Sequel::Model.db).to receive(execute_fn.to_sym)
       stub.and_call_original
       @calls = stub.and_record_arguments
       actual_blk.call
-      @matched_calls = @calls.select { |call| call[1] =~ query_regex }
+      @matched_calls = @calls.select { |call| call[query_at_index] =~ query_regex }
       @matched_calls.size == expected_times
     rescue => e
       @raised_exception = e

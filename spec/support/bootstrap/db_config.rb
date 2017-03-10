@@ -11,11 +11,15 @@ class DbConfig
   end
 
   def config
-    {
+    configure = {
       log_level: 'debug',
       database: connection_string,
       pool_timeout: 10
     }
+    if ENV['USEAZURESQL'] == 'true'
+      configure[:azure] = true
+    end
+    configure
   end
 
   def connection
@@ -51,7 +55,8 @@ class DbConfig
     default_connection_prefixes = {
       'mysql' => 'mysql2://root:password@localhost:3306',
       'mysql_travis' => 'mysql2://root@localhost:3306',
-      'postgres' => 'postgres://postgres@localhost:5432'
+      'postgres' => 'postgres://postgres@localhost:5432',
+      'mssql' => 'tinytds://diego:Password-123@localhost:1433'
     }
 
     db_type = 'mysql_travis' if ENV['TRAVIS'] == 'true' && db_type == 'mysql'

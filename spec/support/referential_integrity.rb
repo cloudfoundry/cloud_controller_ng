@@ -9,6 +9,8 @@ class ReferentialIntegrity
       without_referential_integrity_postgres(&block)
     when :mysql
       without_referential_integrity_mysql(&block)
+    when :mssql
+      without_referential_integrity_mssql(&block)
     end
   end
 
@@ -30,5 +32,12 @@ class ReferentialIntegrity
     yield
   ensure
     db.run('SET FOREIGN_KEY_CHECKS = 1;')
+  end
+
+  def without_referential_integrity_mssql
+    db.run(db.tables.map { |name| "ALTER TABLE #{name} NOCHECK Constraint All" }.join(';'))
+    yield
+  ensure
+    db.run(db.tables.map { |name| "ALTER TABLE #{name} CHECK Constraint ALL" }.join(';'))
   end
 end

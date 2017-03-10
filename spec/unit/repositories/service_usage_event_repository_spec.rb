@@ -88,7 +88,7 @@ module VCAP::CloudController
             ServiceUsageEvent.dataset.destroy
           end
 
-          ManagedServiceInstance.each do |service_instance|
+          ManagedServiceInstance.all.each do |service_instance|
             service_broker = service_instance.service.service_broker
             uri = URI(service_broker.broker_url)
             broker_url = uri.host + uri.path
@@ -98,7 +98,7 @@ module VCAP::CloudController
         end
 
         it 'will purge all existing events' do
-          ServiceInstance.each(&:destroy)
+          ServiceInstance.all.each(&:destroy)
 
           expect {
             repository.purge_and_reseed_service_instances!
@@ -127,7 +127,7 @@ module VCAP::CloudController
 
             repository.purge_and_reseed_service_instances!
 
-            ServiceUsageEvent.each do |event|
+            ServiceUsageEvent.all.each do |event|
               expect(event.created_at.to_i).to be >= reseed_time.to_i
             end
           end
