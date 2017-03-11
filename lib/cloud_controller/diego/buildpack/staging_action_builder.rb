@@ -43,6 +43,12 @@ module VCAP::CloudController
               "-buildpackOrder=#{lifecycle_data[:buildpacks].map { |i| i[:key] }.join(',')}",
               "-skipCertVerify=#{config[:skip_cert_verify]}",
               "-skipDetect=#{skip_detect}",
+              '-buildDir=/tmp/app',
+              '-outputDroplet=/tmp/droplet',
+              '-outputMetadata=/tmp/result.json',
+              '-outputBuildArtifactsCache=/tmp/output-cache',
+              '-buildpacksDir=/tmp/buildpacks',
+              '-buildArtifactsCacheDir=/tmp/cache',
             ],
             resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: config[:staging][:minimum_staging_file_descriptor_limit]),
             env:             BbsEnvironmentBuilder.build(staging_details.environment_variables)

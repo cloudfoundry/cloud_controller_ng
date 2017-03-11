@@ -99,7 +99,13 @@ module VCAP::CloudController
               args:            [
                 '-buildpackOrder=buildpack-1-key,buildpack-2-key',
                 '-skipCertVerify=false',
-                '-skipDetect=false'
+                '-skipDetect=false',
+                '-buildDir=/tmp/app',
+                '-outputDroplet=/tmp/droplet',
+                '-outputMetadata=/tmp/result.json',
+                '-outputBuildArtifactsCache=/tmp/output-cache',
+                '-buildpacksDir=/tmp/buildpacks',
+                '-buildArtifactsCacheDir=/tmp/cache',
               ],
               user:            'vcap',
               resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: 4),
