@@ -383,6 +383,10 @@ properties:
     default: postgres
   ccdb.address:
     description: "The address of the database server"
+  ccdb.db_type:
+    description: "The database type of database, mssql or sqlanywhere"
+  ccdb.azure:
+    description: "Whether the database is an azure sql server or not"
   ccdb.port:
     description: "The port of the database server"
   ccdb.max_connections:

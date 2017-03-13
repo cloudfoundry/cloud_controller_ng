@@ -15,8 +15,11 @@ Sequel.migration do
 
       String :process_type
       index :process_type
-
-      unique [:app_guid, :route_guid, :process_type]
+      if Sequel::Model.db.database_type != :mssql
+        unique [:app_guid, :route_guid, :process_type]
+      else
+        add_unique_constraint [:app_guid, :route_guid, :process_type], name: 'route_mappings_app_guid_route_guid_process_type_key'
+      end
     end
   end
 end

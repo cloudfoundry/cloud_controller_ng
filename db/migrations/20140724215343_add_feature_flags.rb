@@ -4,7 +4,7 @@ Sequel.migration do
       VCAP::Migration.common(self, :feature_flag)
 
       String :name, null: false
-      Boolean :enabled, null: false
+      TrueClass :enabled, null: false
 
       index :name, unique: true
     end

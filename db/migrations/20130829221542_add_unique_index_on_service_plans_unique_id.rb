@@ -10,7 +10,9 @@ Sequel.migration do
     end
 
     alter_table :service_plans do
+      drop_index :unique_id
       set_column_not_null :unique_id
+      add_index :unique_id, unique: true
     end
   end
 end

@@ -15,6 +15,14 @@ Sequel.migration do
            FROM services
            WHERE services.id = service_plans.service_id)
       SQL
+    elsif Sequel::Model.db.database_type == :mssql
+      run <<-SQL
+      UPDATE service_plans
+        SET unique_id =
+        (SELECT CONCAT(services.provider, '_', services.label, '_', service_plans.name)
+          FROM services
+          WHERE services.id = service_plans.service_id)
+      SQL
     else
       run <<-SQL
         UPDATE service_plans
@@ -26,7 +34,9 @@ Sequel.migration do
     end
 
     alter_table :service_plans do
+      drop_index :unique_id
       set_column_allow_null :unique_id, false
+      add_index :unique_id, unique: true
     end
   end
 end

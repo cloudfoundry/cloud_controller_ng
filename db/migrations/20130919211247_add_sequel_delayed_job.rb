@@ -7,8 +7,14 @@ Sequel.migration do
 
       Integer :priority, default: 0
       Integer :attempts, default: 0
-      String :handler, text: true
-      String :last_error, text: true
+
+      if Sequel::Model.db.database_type == :mssql
+        String :handler, size: :max
+        String :last_error, size: :max
+      else
+        String :handler, text: true
+        String :last_error, text: true
+      end
       Time :run_at
       Time :locked_at
       Time :failed_at
