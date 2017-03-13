@@ -1458,7 +1458,7 @@ module VCAP::CloudController
 
       context 'setting roles at space update time' do
         let(:other_user) { User.make }
-        let(:uri) { "/v2/spaces/#{space.guid}"}
+        let(:uri) { "/v2/spaces/#{space.guid}" }
 
         before do
           set_current_user_as_admin
@@ -1499,7 +1499,6 @@ module VCAP::CloudController
               expect(event).to be_nil
             end
           end
-
         end
 
         context 'deassigning an space manager' do
