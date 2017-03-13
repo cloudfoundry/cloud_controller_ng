@@ -402,7 +402,7 @@ module VCAP::CloudController
               rule_http_everywhere
             ])
             expect(result.trusted_system_certificates_path).to eq('/etc/cf-system-certificates')
-            expect(result.log_source).to eq('APP/TASK/potato-task')
+            expect(result.log_source).to eq(TASK_LOG_SOURCE)
 
             expect(result.action).to eq(task_action)
             expect(result.legacy_download_user).to eq('vcap')
@@ -532,7 +532,7 @@ module VCAP::CloudController
               rule_http_everywhere
             ])
             expect(result.completion_callback_url).to eq(expected_callback_url)
-            expect(result.log_source).to eq('APP/TASK/potato-task')
+            expect(result.log_source).to eq(TASK_LOG_SOURCE)
             expect(result.legacy_download_user).to eq('vcap')
             expect(result.trusted_system_certificates_path).to eq('/etc/cf-system-certificates')
             expect(result.volume_mounts).to eq([])

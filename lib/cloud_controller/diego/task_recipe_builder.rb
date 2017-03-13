@@ -26,7 +26,7 @@ module VCAP::CloudController
           egress_rules:                     generate_running_egress_rules(task.app),
           legacy_download_user:             STAGING_LEGACY_DOWNLOAD_USER,
           log_guid:                         task.app.guid,
-          log_source:                       "APP/TASK/#{task.name}",
+          log_source:                       TASK_LOG_SOURCE,
           max_pids:                         config[:diego][:pid_limit],
           memory_mb:                        task.memory_in_mb,
           privileged:                       config[:diego][:use_privileged_containers_for_running],
