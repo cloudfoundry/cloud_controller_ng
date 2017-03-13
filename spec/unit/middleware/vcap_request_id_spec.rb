@@ -5,10 +5,27 @@ module CloudFoundry
   module Middleware
     RSpec.describe VcapRequestId do
       let(:middleware) { described_class.new(app) }
-      let(:app) { double(:app, call: [200, {}, 'a body']) }
+      let(:app) { double(:app, call: app_response) }
+      let(:app_response) { [200, {}, 'a body'] }
       let(:uuid_regex) { '\w+-\w+-\w+-\w+-\w+' }
 
       describe 'handling the request' do
+        context 'setting the request_id in the logger' do
+          it 'has assigned it before passing the request' do
+            expect(app).to receive(:call) do |_|
+              expect(::VCAP::Request.current_id).to match(/^specific-request-id::#{uuid_regex}$/)
+              app_response
+            end
+
+            middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id')
+          end
+
+          it 'nils it out after the request has been processed' do
+            middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id')
+            expect(::VCAP::Request.current_id).to eq(nil)
+          end
+        end
+
         context 'when HTTP_X_VCAP_REQUEST_ID is passed in from outside' do
           it 'includes it in cf.request_id and appends a uuid to ensure uniqueness' do
             middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'request-id')

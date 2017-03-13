@@ -10,9 +10,11 @@ module CloudFoundry
 
       def call(env)
         env['cf.request_id'] = external_request_id(env) || internal_request_id
+        ::VCAP::Request.current_id = env['cf.request_id']
 
         status, headers, body = @app.call(env)
 
+        ::VCAP::Request.current_id = nil
         headers['X-VCAP-Request-ID'] = env['cf.request_id']
         [status, headers, body]
       end

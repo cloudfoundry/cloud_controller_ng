@@ -174,25 +174,6 @@ RSpec.describe ApplicationController, type: :controller do
     end
   end
 
-  describe 'request id' do
-    before do
-      set_current_user_as_admin
-      @request.env.merge!('cf.request_id' => 'expected-request-id')
-    end
-
-    it 'sets the vcap request current_id from the passed in rack request during request handling' do
-      get :index
-
-      # finding request id inside the controller action and returning on the body
-      expect(parsed_body['request_id']).to eq('expected-request-id')
-    end
-
-    it 'unsets the vcap request current_id after the request completes' do
-      get :index
-      expect(VCAP::Request.current_id).to be_nil
-    end
-  end
-
   describe 'https schema validation' do
     before do
       set_current_user(VCAP::CloudController::User.make)

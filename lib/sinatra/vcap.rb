@@ -97,7 +97,6 @@ module Sinatra
         logger_name = opts[:logger_name] || 'vcap.api'
         env['rack.logger'] = Steno.logger(logger_name)
 
-        ::VCAP::Request.current_id = request.env['cf.request_id']
         ::VCAP::CloudController::Diagnostics.new.request_received(request)
       end
 
@@ -105,7 +104,6 @@ module Sinatra
         headers['Content-Type'] = 'application/json;charset=utf-8'
         headers[::VCAP::Request::HEADER_NAME] = @request_guid
         ::VCAP::CloudController::Diagnostics.new.request_complete
-        ::VCAP::Request.current_id = nil
         nil
       end
     end

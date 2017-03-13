@@ -33,7 +33,6 @@ class ApplicationController < ActionController::Base
   wrap_parameters :body, format: [:json, :url_encoded_form, :multipart_form]
 
   before_action :set_locale
-  around_action :manage_request_id
   before_action :validate_scheme!, except: [:not_found, :internal_error, :bad_request]
   before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]
   before_action :check_read_permissions!, only: [:index, :show, :show_environment, :stats]
@@ -123,13 +122,6 @@ class ApplicationController < ActionController::Base
   ###
   ### FILTERS
   ###
-
-  def manage_request_id
-    ::VCAP::Request.current_id = request.env['cf.request_id']
-    yield
-  ensure
-    ::VCAP::Request.current_id = nil
-  end
 
   def check_read_permissions!
     read_scope = SecurityContext.scopes.include?('cloud_controller.read')
