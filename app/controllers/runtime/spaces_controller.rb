@@ -291,18 +291,20 @@ module VCAP::CloudController
     end
 
     def after_create(space)
-      @space_event_repository.record_space_create(space, UserAuditInfo.from_context(SecurityContext), request_attrs)
+      user_audit_info = UserAuditInfo.from_context(SecurityContext)
+
+      @space_event_repository.record_space_create(space, user_audit_info, request_attrs)
 
       space.managers.each do |mgr|
-        @user_event_repository.record_space_role_add(space, mgr, 'manager', UserAuditInfo.from_context(SecurityContext), request_attrs)
+        @user_event_repository.record_space_role_add(space, mgr, 'manager', user_audit_info, request_attrs)
       end
 
       space.auditors.each do |auditor|
-        @user_event_repository.record_space_role_add(space, auditor, 'auditor', UserAuditInfo.from_context(SecurityContext), request_attrs)
+        @user_event_repository.record_space_role_add(space, auditor, 'auditor', user_audit_info, request_attrs)
       end
 
       space.developers.each do |developer|
-        @user_event_repository.record_space_role_add(space, developer, 'developer', UserAuditInfo.from_context(SecurityContext), request_attrs)
+        @user_event_repository.record_space_role_add(space, developer, 'developer', user_audit_info, request_attrs)
       end
     end
 
@@ -341,6 +343,8 @@ module VCAP::CloudController
     end
 
     def generate_role_events_on_update(space, current_role_guids)
+      user_audit_info = UserAuditInfo.from_context(SecurityContext)
+
       %w(manager auditor developer).each do |role|
         key = "#{role}_guids"
 
@@ -362,7 +366,7 @@ module VCAP::CloudController
               space,
                 user,
                 role,
-                UserAuditInfo.from_context(SecurityContext),
+                user_audit_info,
                 request_attrs
             )
           end
@@ -375,7 +379,7 @@ module VCAP::CloudController
               space,
                 user,
                 role,
-                UserAuditInfo.from_context(SecurityContext),
+                user_audit_info,
                 request_attrs
             )
           end

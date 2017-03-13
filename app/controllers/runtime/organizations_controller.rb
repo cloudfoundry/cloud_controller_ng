@@ -332,26 +332,28 @@ module VCAP::CloudController
     end
 
     def after_create(organization)
-      @organization_event_repository.record_organization_create(organization, UserAuditInfo.from_context(SecurityContext), request_attrs)
+      user_audit_info = UserAuditInfo.from_context(SecurityContext)
+
+      @organization_event_repository.record_organization_create(organization, user_audit_info, request_attrs)
       unless SecurityContext.admin?
         organization.add_user(user)
         organization.add_manager(user)
       end
 
       organization.users.each do |user|
-        @user_event_repository.record_organization_role_add(organization, user, 'user', UserAuditInfo.from_context(SecurityContext), request_attrs)
+        @user_event_repository.record_organization_role_add(organization, user, 'user', user_audit_info, request_attrs)
       end
 
       organization.auditors.each do |auditor|
-        @user_event_repository.record_organization_role_add(organization, auditor, 'auditor', UserAuditInfo.from_context(SecurityContext), request_attrs)
+        @user_event_repository.record_organization_role_add(organization, auditor, 'auditor', user_audit_info, request_attrs)
       end
 
       organization.billing_managers.each do |billing_manager|
-        @user_event_repository.record_organization_role_add(organization, billing_manager, 'billing_manager', UserAuditInfo.from_context(SecurityContext), request_attrs)
+        @user_event_repository.record_organization_role_add(organization, billing_manager, 'billing_manager', user_audit_info, request_attrs)
       end
 
       organization.managers.each do |manager|
-        @user_event_repository.record_organization_role_add(organization, manager, 'manager', UserAuditInfo.from_context(SecurityContext), request_attrs)
+        @user_event_repository.record_organization_role_add(organization, manager, 'manager', user_audit_info, request_attrs)
       end
     end
 
@@ -378,6 +380,8 @@ module VCAP::CloudController
     end
 
     def generate_role_events_on_update(organization, current_role_guids)
+      user_audit_info = UserAuditInfo.from_context(SecurityContext)
+
       %w(manager auditor user billing_manager).each do |role|
         key = "#{role}_guids"
 
@@ -399,7 +403,7 @@ module VCAP::CloudController
               organization,
                 user,
                 role,
-                UserAuditInfo.from_context(SecurityContext),
+                user_audit_info,
                 request_attrs
             )
           end
@@ -412,7 +416,7 @@ module VCAP::CloudController
               organization,
                 user,
                 role,
-                UserAuditInfo.from_context(SecurityContext),
+                user_audit_info,
                 request_attrs
             )
           end
