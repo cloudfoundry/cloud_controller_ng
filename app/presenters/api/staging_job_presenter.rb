@@ -1,10 +1,15 @@
 require_relative 'job_presenter'
 
 class StagingJobPresenter < JobPresenter
+  def initialize(job, scheme)
+    @scheme = scheme
+    super(job)
+  end
+
   def status_url
     config = VCAP::CloudController::Config.config
 
-    if HashUtils.dig(config, :diego, :temporary_cc_uploader_mtls)
+    if @scheme == 'https'
       URI::HTTPS.build(
         host:     config[:internal_service_hostname],
         port:     config[:tls_port],

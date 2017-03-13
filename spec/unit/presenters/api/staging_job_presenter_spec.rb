@@ -16,7 +16,7 @@ RSpec.describe StagingJobPresenter do
     end
 
     it 'creates a valid JSON with the http internal URL' do
-      expect(StagingJobPresenter.new(job).to_hash).to eq(
+      expect(StagingJobPresenter.new(job, 'http').to_hash).to eq(
         metadata: {
           guid: job.guid,
           created_at: job.created_at.iso8601,
@@ -43,7 +43,7 @@ RSpec.describe StagingJobPresenter do
       end
 
       it 'creates a valid JSON with the https internal URL' do
-        expect(StagingJobPresenter.new(job).to_hash).to eq(
+        expect(StagingJobPresenter.new(job, 'https').to_hash).to eq(
           metadata: {
             guid: job.guid,
             created_at: job.created_at.iso8601,

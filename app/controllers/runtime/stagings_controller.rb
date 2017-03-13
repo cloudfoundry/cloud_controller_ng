@@ -23,10 +23,15 @@ module VCAP::CloudController
     attr_reader :config, :blobstore, :buildpack_cache_blobstore, :package_blobstore
 
     get '/staging/jobs/:guid', :find_job
-    get '/internal/v4/staging_jobs/:guid', :find_job
     def find_job(guid)
       job = Delayed::Job[guid: guid]
-      StagingJobPresenter.new(job).to_json
+      StagingJobPresenter.new(job, 'http').to_json
+    end
+
+    get '/internal/v4/staging_jobs/:guid', :find_job_mtls
+    def find_job_mtls(guid)
+      job = Delayed::Job[guid: guid]
+      StagingJobPresenter.new(job, 'https').to_json
     end
 
     get '/staging/packages/:guid', :download_package
@@ -59,7 +64,6 @@ module VCAP::CloudController
     end
 
     post '/staging/v3/droplets/:guid/upload', :upload_package_droplet
-    post '/internal/v4/droplets/:guid/upload', :upload_package_droplet
     def upload_package_droplet(guid)
       droplet = DropletModel.find(guid: guid)
 
@@ -72,7 +76,23 @@ module VCAP::CloudController
       droplet_upload_job = Jobs::V3::DropletUpload.new(upload_path, guid)
 
       job = Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::LocalQueue.new(config)).enqueue
-      [HTTP::OK, StagingJobPresenter.new(job).to_json]
+      [HTTP::OK, StagingJobPresenter.new(job, 'http').to_json]
+    end
+
+    post '/internal/v4/droplets/:guid/upload', :upload_package_droplet_mtls
+    def upload_package_droplet_mtls(guid)
+      droplet = DropletModel.find(guid: guid)
+
+      raise ApiError.new_from_details('NotFound', guid) if droplet.nil?
+      raise ApiError.new_from_details('StagingError', "malformed droplet upload request for #{guid}") unless upload_path
+      check_file_md5
+
+      logger.info 'v3-droplet.begin-upload', droplet_guid: guid
+
+      droplet_upload_job = Jobs::V3::DropletUpload.new(upload_path, guid)
+
+      job = Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::LocalQueue.new(config)).enqueue
+      [HTTP::OK, StagingJobPresenter.new(job, 'https').to_json]
     end
 
     post '/staging/v3/buildpack_cache/:stack_name/:guid/upload', :upload_v3_app_buildpack_cache
