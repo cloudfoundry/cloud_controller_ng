@@ -13,63 +13,6 @@ module VCAP::CloudController
         end
 
         def action
-          download_actions = [
-            ::Diego::Bbs::Models::DownloadAction.new(
-              artifact:           'app package',
-              from:               lifecycle_data[:app_bits_download_uri],
-              to:                 '/tmp/app',
-              user:               'vcap',
-              checksum_algorithm: lifecycle_data[:app_bits_checksum][:type],
-              checksum_value:     lifecycle_data[:app_bits_checksum][:value],
-            )
-          ]
-          if lifecycle_data[:build_artifacts_cache_download_uri] && lifecycle_data[:buildpack_cache_checksum].present?
-            download_actions << try_action(::Diego::Bbs::Models::DownloadAction.new({
-              artifact:           'build artifacts cache',
-              from:               lifecycle_data[:build_artifacts_cache_download_uri],
-              to:                 '/tmp/cache',
-              user:               'vcap',
-              checksum_algorithm: 'sha256',
-              checksum_value:     lifecycle_data[:buildpack_cache_checksum],
-            }))
-          end
-
-          skip_detect = lifecycle_data[:buildpacks].count == 1 && !!lifecycle_data[:buildpacks].first[:skip_detect]
-
-          stage_action = ::Diego::Bbs::Models::RunAction.new(
-            path:            '/tmp/lifecycle/builder',
-            user:            'vcap',
-            args:            [
-              "-buildpackOrder=#{lifecycle_data[:buildpacks].map { |i| i[:key] }.join(',')}",
-              "-skipCertVerify=#{config[:skip_cert_verify]}",
-              "-skipDetect=#{skip_detect}",
-              '-buildDir=/tmp/app',
-              '-outputDroplet=/tmp/droplet',
-              '-outputMetadata=/tmp/result.json',
-              '-outputBuildArtifactsCache=/tmp/output-cache',
-              '-buildpacksDir=/tmp/buildpacks',
-              '-buildArtifactsCacheDir=/tmp/cache',
-            ],
-            resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: config[:staging][:minimum_staging_file_descriptor_limit]),
-            env:             BbsEnvironmentBuilder.build(staging_details.environment_variables)
-          )
-
-          upload_actions = [
-            ::Diego::Bbs::Models::UploadAction.new(
-              user:     'vcap',
-              artifact: 'droplet',
-              from:     '/tmp/droplet',
-              to:       upload_droplet_uri.to_s,
-            ),
-
-            ::Diego::Bbs::Models::UploadAction.new(
-              user:     'vcap',
-              artifact: 'build artifacts cache',
-              from:     '/tmp/output-cache',
-              to:       upload_buildpack_artifacts_cache_uri.to_s,
-            )
-          ]
-
           serial([
             parallel(download_actions),
             stage_action,
@@ -120,6 +63,73 @@ module VCAP::CloudController
         end
 
         private
+
+        def download_actions
+          result = [
+            ::Diego::Bbs::Models::DownloadAction.new(
+              artifact:           'app package',
+              from:               lifecycle_data[:app_bits_download_uri],
+              to:                 '/tmp/app',
+              user:               'vcap',
+              checksum_algorithm: lifecycle_data[:app_bits_checksum][:type],
+              checksum_value:     lifecycle_data[:app_bits_checksum][:value],
+            )
+          ]
+          if lifecycle_data[:build_artifacts_cache_download_uri] && lifecycle_data[:buildpack_cache_checksum].present?
+            result << try_action(::Diego::Bbs::Models::DownloadAction.new({
+              artifact:           'build artifacts cache',
+              from:               lifecycle_data[:build_artifacts_cache_download_uri],
+              to:                 '/tmp/cache',
+              user:               'vcap',
+              checksum_algorithm: 'sha256',
+              checksum_value:     lifecycle_data[:buildpack_cache_checksum],
+            }))
+          end
+
+          result
+        end
+
+        def stage_action
+          ::Diego::Bbs::Models::RunAction.new(
+            path:            '/tmp/lifecycle/builder',
+            user:            'vcap',
+            args:            [
+              "-buildpackOrder=#{lifecycle_data[:buildpacks].map { |i| i[:key] }.join(',')}",
+              "-skipCertVerify=#{config[:skip_cert_verify]}",
+              "-skipDetect=#{skip_detect?}",
+              '-buildDir=/tmp/app',
+              '-outputDroplet=/tmp/droplet',
+              '-outputMetadata=/tmp/result.json',
+              '-outputBuildArtifactsCache=/tmp/output-cache',
+              '-buildpacksDir=/tmp/buildpacks',
+              '-buildArtifactsCacheDir=/tmp/cache',
+            ],
+            resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: config[:staging][:minimum_staging_file_descriptor_limit]),
+            env:             BbsEnvironmentBuilder.build(staging_details.environment_variables)
+          )
+        end
+
+        def upload_actions
+          [
+            ::Diego::Bbs::Models::UploadAction.new(
+              user:     'vcap',
+              artifact: 'droplet',
+              from:     '/tmp/droplet',
+              to:       upload_droplet_uri.to_s,
+            ),
+
+            ::Diego::Bbs::Models::UploadAction.new(
+              user:     'vcap',
+              artifact: 'build artifacts cache',
+              from:     '/tmp/output-cache',
+              to:       upload_buildpack_artifacts_cache_uri.to_s,
+            )
+          ]
+        end
+
+        def skip_detect?
+          lifecycle_data[:buildpacks].count == 1 && !!lifecycle_data[:buildpacks].first[:skip_detect]
+        end
 
         def lifecycle_bundle_key
           "buildpack/#{lifecycle_data[:stack]}".to_sym
