@@ -2206,7 +2206,8 @@ module VCAP::CloudController
           put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
           expect(last_response.status).to eq(400)
           expect(last_response.body).to include('InvalidRelation')
-          expect(last_response.body).to include(route.guid)
+          expect(decoded_response['description']).to include(
+            'The app cannot be mapped to this route because the route is not in this space. Apps must be mapped to routes in the same space')
 
           expect(app_obj.reload.routes).to be_empty
         end

@@ -294,7 +294,8 @@ module VCAP::CloudController
       rescue V2::RouteMappingCreate::RouteServiceNotSupportedError
         raise CloudController::Errors::InvalidRouteRelation.new("#{route.guid} - Route services are only supported for apps on Diego")
       rescue RouteMappingCreate::SpaceMismatch
-        raise CloudController::Errors::InvalidRouteRelation.new(route.guid)
+        raise CloudController::Errors::InvalidRelation.new(
+          'The app cannot be mapped to this route because the route is not in this space. Apps must be mapped to routes in the same space.')
       end
 
       after_update(app)
