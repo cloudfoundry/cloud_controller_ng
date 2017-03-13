@@ -171,6 +171,43 @@ module VCAP::CloudController
       end
     end
 
+    describe '.plan_ids_for_visible_service_instances' do
+      context 'when the service plans have service instances associated with them' do
+        let(:organization) { Organization.make }
+        let(:space) { Space.make(organization: organization) }
+        let(:other_space) { Space.make(organization: organization) }
+        let(:user) { User.make }
+        let(:broker) { ServiceBroker.make }
+        let(:service) { Service.make(service_broker: broker) }
+        let(:service_plan) { ServicePlan.make(service: service, public: true, active: true) }
+        let(:non_public_plan) { ServicePlan.make(service: service, public: false, active: true) }
+        let(:inactive_plan) { ServicePlan.make(service: service, public: true, active: false) }
+        let(:other_plan) { ServicePlan.make(service: service, public: true, active: true) }
+        let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, space: space) }
+        let!(:service_instance2) { ManagedServiceInstance.make(service_plan: non_public_plan, space: space) }
+        let!(:service_instance3) { ManagedServiceInstance.make(service_plan: inactive_plan, space: space) }
+        let!(:other_service_instance) { ManagedServiceInstance.make(service_plan: other_plan, space: other_space) }
+
+        before do
+          organization.add_user user
+          space.add_developer user
+        end
+
+        context 'when the service instances are in spaces that the user has a role in' do
+          it 'returns all plans regardless of active or public' do
+            expect(ServicePlan.plan_ids_for_visible_service_instances(user)).
+              to match_array([service_plan.id, non_public_plan.id, inactive_plan.id])
+          end
+        end
+
+        context 'when the service instances are in spaces that the user does NOT have a role in' do
+          it 'does not return service plans associated with that service instance' do
+            expect(ServicePlan.plan_ids_for_visible_service_instances(user)).not_to include(other_plan.id)
+          end
+        end
+      end
+    end
+
     describe '.organization_visible' do
       it 'returns plans that are visible to the organization' do
         hidden_private_plan = ServicePlan.make(public: false)

@@ -22,6 +22,10 @@ module Sequel::Plugins::VcapUserVisibility
       end
     end
 
+    def user_visibility_for_read(user, admin_override)
+      user_visibility(user, admin_override)
+    end
+
     # this is overridden by models to determine which objects a user can see
     def user_visibility_filter(_user)
       { id: nil }

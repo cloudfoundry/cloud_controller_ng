@@ -4,10 +4,10 @@ module VCAP::CloudController
   RSpec.describe ServicePlansController, :services do
     shared_examples 'enumerate and read plan only' do |perm_name|
       include_examples 'permission enumeration', perm_name,
-        name: 'service plan',
-        path: '/v2/service_plans',
-        permissions_overlap: true,
-        enumerate: 7
+                       name: 'service plan',
+                       path: '/v2/service_plans',
+                       permissions_overlap: true,
+                       enumerate: 7
     end
 
     describe 'Query Parameters' do
@@ -20,29 +20,34 @@ module VCAP::CloudController
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes({
-          name: { type: 'string', required: true },
-          free: { type: 'bool', required: true },
-          description: { type: 'string', required: true },
-          extra: { type: 'string' },
-          unique_id: { type: 'string' },
-          public: { type: 'bool', default: true },
-          service_guid: { type: 'string', required: true },
-          service_instance_guids: { type: '[string]' }
-        })
+        expect(described_class).
+          to have_creatable_attributes(
+            {
+              name: { type: 'string', required: true },
+              free: { type: 'bool', required: true },
+              description: { type: 'string', required: true },
+              extra: { type: 'string' },
+              unique_id: { type: 'string' },
+              public: { type: 'bool', default: true },
+              service_guid: { type: 'string', required: true },
+              service_instance_guids: { type: '[string]' }
+            }
+             )
       end
 
       it do
-        expect(described_class).to have_updatable_attributes({
-          name: { type: 'string' },
-          free: { type: 'bool' },
-          description: { type: 'string' },
-          extra: { type: 'string' },
-          unique_id: { type: 'string' },
-          public: { type: 'bool' },
-          service_guid: { type: 'string' },
-          service_instance_guids: { type: '[string]' }
-        })
+        expect(described_class).
+          to have_updatable_attributes(
+            {
+              name: { type: 'string' },
+              free: { type: 'bool' },
+              description: { type: 'string' },
+              extra: { type: 'string' },
+              unique_id: { type: 'string' },
+              public: { type: 'bool' },
+              service_guid: { type: 'string' },
+              service_instance_guids: { type: '[string]' }
+            })
       end
     end
 
@@ -181,16 +186,98 @@ module VCAP::CloudController
           expect(bindable).to eq service_plan.service.bindable
         end
       end
+
+      context 'non-admin user' do
+        let(:user) { User.make }
+
+        before do
+          set_current_user(user)
+        end
+
+        it 'returns the plan' do
+          get "/v2/service_plans/#{service_plan.guid}"
+          expect(last_response.status).to eq 200
+
+          metadata = decoded_response.fetch('metadata')
+          expect(metadata['guid']).to eq service_plan.guid
+
+          entity = decoded_response.fetch('entity')
+          expect(entity['service_guid']).to eq service_plan.service.guid
+        end
+
+        context 'when the plan is inactive' do
+          let(:inactive_plan) { ServicePlan.make(:v2, active: false, public: true) }
+
+          it 'returns a 403' do
+            get "/v2/service_plans/#{inactive_plan.guid}"
+            expect(last_response.status).to eq 403
+          end
+
+          context 'and the user has a service instance associated with that plan' do
+            let(:organization) { Organization.make }
+            let(:space) { Space.make(organization: organization) }
+
+            before do
+              space.organization.add_user(user)
+              space.add_developer(user)
+              set_current_user_as_admin
+            end
+
+            it 'returns the plan' do
+              broker = ServiceBroker.make
+              service = Service.make(service_broker: broker)
+              service_plan = ServicePlan.make(service: service, public: false, active: false)
+              ManagedServiceInstance.make(space: space, service_plan: service_plan)
+              service_plan.reload
+
+              set_current_user(user)
+              get "/v2/service_plans/#{service_plan.guid}"
+              expect(last_response.status).to eq(200), "Expected response to be 200: #{last_response.body}"
+
+              entity = decoded_response.fetch('entity')
+              expect(entity['public']).to be_falsey
+
+              metadata = decoded_response.fetch('metadata')
+              expect(metadata['guid']).to eq service_plan.guid
+
+              entity = decoded_response.fetch('entity')
+              expect(entity['service_guid']).to eq service_plan.service.guid
+            end
+
+            it 'returns the unbindable plan' do
+              broker = ServiceBroker.make
+              service = Service.make(:v2, service_broker: broker)
+              service_plan = ServicePlan.make(:v2, service: service, public: true, active: true)
+              ManagedServiceInstance.make(:v2, space: space, service_plan: service_plan)
+              service_plan.update(public: false)
+              service_plan.reload
+
+              set_current_user(user)
+              get "/v2/service_plans/#{service_plan.guid}"
+              expect(last_response.status).to eq 200
+
+              expect(decoded_response.fetch('entity')['public']).to be_falsey
+
+              metadata = decoded_response.fetch('metadata')
+              expect(metadata['guid']).to eq service_plan.guid
+
+              entity = decoded_response.fetch('entity')
+              expect(entity['service_guid']).to eq service_plan.service.guid
+            end
+          end
+        end
+      end
     end
 
     describe 'GET', '/v2/service_plans' do
       before do
         @services = {
-          public: [
-            ServicePlan.make(:v2, active: true, public: true),
-            ServicePlan.make(:v2, active: true, public: true),
-            ServicePlan.make(:v2, active: false, public: true)
-          ],
+          public:
+            [
+              ServicePlan.make(:v2, active: true, public: true),
+              ServicePlan.make(:v2, active: true, public: true),
+              ServicePlan.make(:v2, active: false, public: true)
+            ],
           private: [
             ServicePlan.make(:v2, active: true, public: false),
             ServicePlan.make(:v2, active: false, public: false)
@@ -218,6 +305,31 @@ module VCAP::CloudController
             end
 
             expect(returned_plan_guids).to include(private_broker_service_plan.guid)
+          end
+        end
+
+        context 'when a service instance is associated with an inactive plan' do
+          it 'does not list the inactive service plan' do
+            user = User.make
+            space = Space.make
+            service = Service.make
+            service_plan = ServicePlan.make(service: service, public: true, active: true)
+            ManagedServiceInstance.make(service_plan: service_plan)
+            service_plan.update(public: false)
+            service_plan.reload
+
+            space.organization.add_user(user)
+            space.add_developer(user)
+
+            set_current_user(user)
+            get '/v2/service_plans'
+            expect(last_response.status).to eq 200
+
+            returned_plan_guids = decoded_response.fetch('resources').map do |res|
+              res['metadata']['guid']
+            end
+
+            expect(returned_plan_guids).not_to include(service_plan.guid)
           end
         end
       end

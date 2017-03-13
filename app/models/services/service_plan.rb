@@ -38,13 +38,32 @@ module VCAP::CloudController
       ).&(active: true))
     end
 
-    def self.user_visibility_filter(user)
+    def self.user_visible(user, admin_override=false, op=nil)
+      dataset.filter(user_visibility(user, admin_override, op))
+    end
+
+    def self.user_visibility(user, admin_override, op=nil)
+      if !admin_override && user
+        op == :read ? user_visibility_show_filter(user) : user_visibility_list_filter(user)
+      else
+        super(user, admin_override)
+      end
+    end
+
+    def self.user_visibility_for_read(user, admin_override)
+      user_visibility(user, admin_override, :read)
+    end
+
+    def self.user_visibility_list_filter(user)
       included_ids = ServicePlanVisibility.visible_private_plan_ids_for_user(user).
                      concat(plan_ids_from_private_brokers(user))
 
-      Sequel.or(
-        { public: true, id: included_ids }
-      ).&(active: true)
+      Sequel.or({ public: true, id: included_ids }).&(active: true)
+    end
+
+    def self.user_visibility_show_filter(user)
+      list_filter = self.user_visibility_list_filter(user)
+      Sequel.|(list_filter, { id: plan_ids_for_visible_service_instances(user) })
     end
 
     def self.plan_ids_from_private_brokers(user)
@@ -53,6 +72,16 @@ module VCAP::CloudController
         join(:services, service_broker_id: :id).
         join(:service_plans, service_id: :id).
         map(&:id).flatten.uniq
+    end
+
+    def self.plan_ids_for_visible_service_instances(user)
+      plan_ids = []
+      user.spaces.each do |space|
+        space.service_instances.each do |service_instance|
+          plan_ids << service_instance.service_plan.id
+        end
+      end
+      plan_ids.uniq
     end
 
     def bindable?
