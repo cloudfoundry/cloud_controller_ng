@@ -3,6 +3,8 @@
 The Cloud Foundry team uses GitHub and accepts contributions via
 [pull request](https://help.github.com/articles/using-pull-requests).
 
+See the [wiki](https://github.com/cloudfoundry/cloud_controller_ng/wiki) for design notes and other helpful information.
+
 ## Contributor License Agreement
 
 Follow these steps to make a contribution to any of our open source repositories:
