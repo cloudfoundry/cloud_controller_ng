@@ -97,6 +97,12 @@ module VCAP::CloudController
           expect(block.call).to be_instance_of(Jobs::Runtime::ExpiredBlobCleanup)
         end
 
+        expect(clock).to receive(:schedule_daily_job) do |args, &block|
+          expect(args).to eql(name: 'expired_resource_cleanup', at: '00:30')
+          expect(Jobs::Runtime::ExpiredResourceCleanup).to receive(:new).with(no_args).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::ExpiredResourceCleanup)
+        end
+
         schedule.start
       end
 

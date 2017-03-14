@@ -12,6 +12,7 @@ module VCAP::CloudController
       { name: 'service_usage_events', job_name: 'service_usage_events_cleanup', class: Jobs::Services::ServiceUsageEventsCleanup, time: '22:00' },
       { name: 'completed_tasks', job_name: 'prune_completed_tasks', class: Jobs::Runtime::PruneCompletedTasks, time: '23:00' },
       { name: 'expired_blob_cleanup', job_name: 'expired_blob_cleanup', class: Jobs::Runtime::ExpiredBlobCleanup, time: '00:00' },
+      { name: 'expired_resource_cleanup', job_name: 'expired_resource_cleanup', class: Jobs::Runtime::ExpiredResourceCleanup, time: '00:30' },
     ].freeze
 
     def initialize(config)
