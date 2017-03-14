@@ -708,7 +708,7 @@ module VCAP::CloudController
         ServiceBinding.make(service_instance: user_provided_service_instance, app: app_obj.app)
 
         get '/v2/service_bindings?inline-relations-depth=1'
-        expect(last_response.status).to eql(200)
+        expect(last_response.status).to eql(200), "Response: #{last_response.body}"
 
         service_bindings = decoded_response['resources']
         service_instance_guids = service_bindings.map do |res|

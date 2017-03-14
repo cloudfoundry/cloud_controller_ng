@@ -163,7 +163,7 @@ module VCAP::CloudController
           expect_any_instance_of(TestModelRedactController).to receive(:redact_attributes).with(:create, redact_request_attributes)
 
           post '/v2/test_model_redact', MultiJson.dump(request_attributes)
-          expect(last_response.status).to eq(201)
+          expect(last_response.status).to eq(201), "Response: #{last_response.body}"
         end
       end
 
