@@ -3,9 +3,7 @@ require 'utils/uri_utils'
 
 module VCAP::CloudController
   class Route < Sequel::Model
-    class InvalidDomainRelation < CloudController::Errors::InvalidRelation; end
     class InvalidOrganizationRelation < CloudController::Errors::InvalidRelation; end
-    class DockerDisabled < CloudController::Errors::InvalidRelation; end
 
     many_to_one :domain
     many_to_one :space, after_set: :validate_changed_space
