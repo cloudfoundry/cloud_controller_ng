@@ -33,6 +33,29 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe 'packages' do
+        context 'expired' do
+          let!(:expired_deleted_package) { PackageModel.make(state: PackageModel::EXPIRED_STATE, package_hash: nil) }
+          let!(:expired_not_deleted_package) { PackageModel.make(state: PackageModel::EXPIRED_STATE, package_hash: 'not-nil') }
+          let!(:non_expired_package) { PackageModel.make(:staged) }
+
+          it 'deletes packages that are expired and have nil package_hash' do
+            expect { job.perform }.to change { PackageModel.count }.by(-1)
+            expect(expired_deleted_package).to_not exist
+          end
+
+          it 'does NOT delete packages that are expired but have a package_hash' do
+            job.perform
+            expect(expired_not_deleted_package).to exist
+          end
+
+          it 'does NOT delete packages that are NOT expired' do
+            job.perform
+            expect(non_expired_package).to exist
+          end
+        end
+      end
     end
   end
 end

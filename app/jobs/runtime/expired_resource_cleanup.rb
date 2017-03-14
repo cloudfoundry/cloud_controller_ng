@@ -3,8 +3,9 @@ module VCAP::CloudController
     module Runtime
       class ExpiredResourceCleanup < VCAP::CloudController::Jobs::CCJob
         def perform
-          logger.info('Deleting expired droplet models')
+          logger.info('Deleting expired droplet and package models')
           deleted_expired_droplets.each(&:destroy)
+          deleted_expired_packages.each(&:destroy)
         end
 
         def max_attempts
@@ -17,6 +18,13 @@ module VCAP::CloudController
           DropletModel.where(
             state: DropletModel::EXPIRED_STATE,
             droplet_hash: nil
+          )
+        end
+
+        def deleted_expired_packages
+          PackageModel.where(
+            state: PackageModel::EXPIRED_STATE,
+            package_hash: nil
           )
         end
 
