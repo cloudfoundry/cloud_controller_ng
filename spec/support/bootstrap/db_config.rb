@@ -56,7 +56,7 @@ class DbConfig
       'mysql' => 'mysql2://root:password@localhost:3306',
       'mysql_travis' => 'mysql2://root@localhost:3306',
       'postgres' => 'postgres://postgres@localhost:5432',
-      'mssql' => 'tinytds://diego:Password-123@localhost:1433'
+      'mssql' => 'tinytds://sa:Password-123@localhost:1433'
     }
 
     db_type = 'mysql_travis' if ENV['TRAVIS'] == 'true' && db_type == 'mysql'

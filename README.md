@@ -69,6 +69,7 @@ environment variable. Examples:
 
     DB_CONNECTION_STRING="postgres://postgres@localhost:5432/cc_test" rake
     DB_CONNECTION_STRING="mysql2://root:password@localhost:3306/cc_test" rake
+    DB_CONNECTION_STRING="tinytds://sa:Password-123@localhost:1433/cc_test" DB=mssql rake
 
 If you are running the integration specs (which are included in the full rake),
 and you are specifying DB_CONNECTION_STRING, you will also
@@ -95,6 +96,27 @@ The development team typically will run the specs to a single file as (e.g.)
 #### Running static analysis
 
     bundle exec rubocop
+   
+### Running against a local MS SQL docker image
+
+To start a local MS SQL instance on OSX / Linux:
+
+```sh
+docker run -it -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Password-123' -p 1433:1433 microsoft/mssql-server-linux
+```
+
+You can then run against this server in another terminal with `DB=mssql rake`.
+
+### Running against MS SQL on Azure
+
+To test against an MS SQL instance on Azure:
+
+```sh
+DB_CONNECTION_STRING="tinytds://$USER%40$SERVER_NAME:$PASSWORD@$SERVER_NAME.database.windows.net:1433/$DB_NAME" \
+  DB=mssql \
+  USEAZURESQL=true \
+  rake
+```
 
 ### CF Acceptance Tests (CATs)
 
