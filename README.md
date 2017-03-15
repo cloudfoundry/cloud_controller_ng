@@ -102,6 +102,7 @@ The development team typically will run the specs to a single file as (e.g.)
 To start a local MS SQL instance on OSX / Linux:
 
 ```sh
+npm install -g sql-cli
 docker run -it -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Password-123' -p 1433:1433 microsoft/mssql-server-linux
 ```
 
