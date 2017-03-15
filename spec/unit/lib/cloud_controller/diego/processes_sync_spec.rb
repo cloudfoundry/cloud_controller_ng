@@ -177,6 +177,37 @@ module VCAP::CloudController
             expect(bbs_apps_client).not_to receive(:bump_freshness)
           end
         end
+
+        context 'correctly syncs in batches' do
+          let!(:scheduling_infos) { [] }
+
+          before do
+            ProcessesSync.const_set('BATCH_SIZE', 5) # Override constant to reduce test time
+            (ProcessesSync::BATCH_SIZE + 1).times do |_|
+              process = ProcessModel.make(:diego_runnable)
+
+              lrp_info = ::Diego::Bbs::Models::DesiredLRPSchedulingInfo.new(
+                desired_lrp_key: ::Diego::Bbs::Models::DesiredLRPKey.new(
+                  process_guid: ProcessGuid.from_process(process),
+                ),
+                annotation:      process.updated_at.to_f.to_s,
+              )
+              scheduling_infos << lrp_info
+            end
+          end
+
+          it 'does nothing to the task' do
+            allow(bbs_apps_client).to receive(:desire_app)
+            allow(bbs_apps_client).to receive(:update_app)
+            allow(bbs_apps_client).to receive(:stop_app)
+
+            subject.sync
+
+            expect(bbs_apps_client).not_to have_received(:desire_app)
+            expect(bbs_apps_client).not_to have_received(:update_app)
+            expect(bbs_apps_client).not_to have_received(:stop_app)
+          end
+        end
       end
     end
   end

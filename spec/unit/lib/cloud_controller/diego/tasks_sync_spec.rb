@@ -157,6 +157,24 @@ module VCAP::CloudController
             expect(bbs_task_client).not_to receive(:bump_freshness)
           end
         end
+
+        context 'correctly syncs in batches' do
+          let!(:bbs_tasks) { [] }
+
+          before do
+            TasksSync.const_set('BATCH_SIZE', 5) # Override constant to reduce test time
+            (TasksSync::BATCH_SIZE + 1).times do |_|
+              task = TaskModel.make(:running)
+              bbs_tasks << ::Diego::Bbs::Models::Task.new(task_guid: task.guid)
+            end
+          end
+
+          it 'does nothing to the task' do
+            allow(bbs_task_client).to receive(:cancel_task)
+            subject.sync
+            expect(bbs_task_client).not_to have_received(:cancel_task)
+          end
+        end
       end
     end
   end

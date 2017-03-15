@@ -59,10 +59,10 @@ module VCAP::CloudController
       def batched_tasks
         last_id = 0
         loop do
-          tasks = TaskModel.where('tasks.id > ?', last_id).order(:id).limit(BATCH_SIZE)
+          tasks = TaskModel.where('tasks.id > ?', last_id).order(:id).limit(BATCH_SIZE).all
           yield tasks
           return if tasks.count < BATCH_SIZE
-          last_id = tasks.last[0]
+          last_id = tasks.last.id
         end
       end
 

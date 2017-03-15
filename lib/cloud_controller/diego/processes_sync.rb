@@ -19,21 +19,23 @@ module VCAP::CloudController
         logger.info('run-process-sync')
         diego_lrps = bbs_apps_client.fetch_scheduling_infos.index_by { |d| d.desired_lrp_key.process_guid }
 
-        for_processes do |process|
-          process_guid = ProcessGuid.from_process(process)
-          diego_lrp    = diego_lrps.delete(process_guid)
+        for_processes do |processes|
+          processes.each do |process|
+            process_guid = ProcessGuid.from_process(process)
+            diego_lrp    = diego_lrps.delete(process_guid)
 
-          if diego_lrp.nil?
-            @workpool.submit(process) do |p|
-              recipe_builder = AppRecipeBuilder.new(config: config, process: p)
-              bbs_apps_client.desire_app(recipe_builder.build_app_lrp)
-              logger.info('desire-lrp', process_guid: p.guid)
-            end
-          elsif process.updated_at.to_f.to_s != diego_lrp.annotation
-            @workpool.submit(process, diego_lrp) do |p, l|
-              recipe_builder = AppRecipeBuilder.new(config: config, process: p)
-              bbs_apps_client.update_app(process_guid, recipe_builder.build_app_lrp_update(l))
-              logger.info('update-lrp', process_guid: p.guid)
+            if diego_lrp.nil?
+              @workpool.submit(process) do |p|
+                recipe_builder = AppRecipeBuilder.new(config: config, process: p)
+                bbs_apps_client.desire_app(recipe_builder.build_app_lrp)
+                logger.info('desire-lrp', process_guid: p.guid)
+              end
+            elsif process.updated_at.to_f.to_s != diego_lrp.annotation
+              @workpool.submit(process, diego_lrp) do |p, l|
+                recipe_builder = AppRecipeBuilder.new(config: config, process: p)
+                bbs_apps_client.update_app(process_guid, recipe_builder.build_app_lrp_update(l))
+                logger.info('update-lrp', process_guid: p.guid)
+              end
             end
           end
         end
@@ -58,14 +60,14 @@ module VCAP::CloudController
 
       attr_reader :config
 
-      def for_processes(&block)
+      def for_processes
         last_id = 0
 
         loop do
-          processes = processes(last_id)
-          processes.each(&block)
+          processes = processes(last_id).all
+          yield processes
           return if processes.count < BATCH_SIZE
-          last_id = processes.last[0]
+          last_id = processes.last.id
         end
       end
 
