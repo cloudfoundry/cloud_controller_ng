@@ -867,7 +867,7 @@ module VCAP::CloudController
           it 'uses what is provided' do
             expect {
               org.save
-            }.to raise_error(CloudController::Errors::ApiError, /Invalid relation: Could not find VCAP::CloudController::QuotaDefinition with guid: #{quota_definition_guid}/)
+            }.to raise_error(CloudController::Errors::ApiError, /Could not find VCAP::CloudController::QuotaDefinition with guid: #{quota_definition_guid}/)
           end
         end
       end

@@ -820,7 +820,7 @@ module VCAP::CloudController
         it 'returns a 400 InvalidRelation error' do
           delete "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}"
           expect(last_response).to have_status_code(400)
-          expect(JSON.parse(last_response.body)['description']).to include('Invalid relation')
+          expect(JSON.parse(last_response.body)['description']).to eq("Route #{route.guid} is not bound to service instance #{service_instance.guid}.")
         end
       end
     end

@@ -135,11 +135,11 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
     end
 
     it 'raises an error on add using the <relation>_guids=' do
-      expect { @o.dog_guids = ['bogus-guid'] }.to raise_error(CloudController::Errors::ApiError, /Invalid relation/)
+      expect { @o.dog_guids = ['bogus-guid'] }.to raise_error(CloudController::Errors::ApiError, /Could not find/)
     end
 
     it 'raises an error using the remove_<relation>_by_guid' do
-      expect { @o.remove_dog_by_guid('bogus-guid') }.to raise_error(CloudController::Errors::ApiError, /Invalid relation/)
+      expect { @o.remove_dog_by_guid('bogus-guid') }.to raise_error(CloudController::Errors::ApiError, /Could not find/)
     end
   end
 
@@ -291,11 +291,11 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
     end
 
     it 'raises an error on add using the <relation>_guids=' do
-      expect { @d1.name_guids = ['bogus-guid'] }.to raise_error(CloudController::Errors::ApiError, /Invalid relation/)
+      expect { @d1.name_guids = ['bogus-guid'] }.to raise_error(CloudController::Errors::ApiError, /Could not find/)
     end
 
     it 'raises an error using the remove_<relation>_by_guid' do
-      expect { @d1.remove_name_by_guid('bogus-guid') }.to raise_error(CloudController::Errors::ApiError, /Invalid relation/)
+      expect { @d1.remove_name_by_guid('bogus-guid') }.to raise_error(CloudController::Errors::ApiError, /Could not find/)
     end
   end
 
@@ -438,7 +438,7 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
 
       it 'raises an error' do
         bottom = bottoms.first
-        expect { bottom.middle_guid = 'bogus-guid' }.to raise_error(CloudController::Errors::ApiError, /Invalid relation/)
+        expect { bottom.middle_guid = 'bogus-guid' }.to raise_error(CloudController::Errors::ApiError, /Could not find/)
       end
     end
   end

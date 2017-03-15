@@ -11,7 +11,7 @@
 1002:
   name: InvalidRelation
   http_code: 400
-  message: "Invalid relation: %s"
+  message: "%s"
 
 1003:
   name: InvalidContentType

@@ -1352,8 +1352,7 @@ module VCAP::CloudController
 
           put "/v2/routes/#{route.guid}/apps/#{app_obj.guid}", nil
           expect(last_response.status).to eq(400)
-          expect(last_response.body).to include('InvalidRelation')
-          expect(last_response.body).to include(app_obj.guid)
+          expect(decoded_response['description']).to match(/The requested app relation is invalid: the app and route must belong to the same space/)
 
           expect(route.reload.apps).to be_empty
         end
@@ -1367,7 +1366,7 @@ module VCAP::CloudController
         it 'fails to add the route' do
           put "/v2/routes/#{route.guid}/apps/#{app_obj.guid}", nil
           expect(last_response.status).to eq(400)
-          expect(decoded_response['description']).to match(/Invalid relation: The requested app relation is invalid: .* - Route services are only supported for apps on Diego/)
+          expect(decoded_response['description']).to match(/The requested app relation is invalid: .* - Route services are only supported for apps on Diego/)
         end
       end
 

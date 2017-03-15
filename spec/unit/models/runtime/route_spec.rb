@@ -146,7 +146,7 @@ module VCAP::CloudController
 
             context 'with a different organization' do
               it 'fails' do
-                expect { route.space = Space.make }.to raise_error(Route::InvalidOrganizationRelation)
+                expect { route.space = Space.make }.to raise_error(Route::InvalidOrganizationRelation, /Organization cannot use domain/)
               end
 
               it 'succeeds if the organization shares the domain' do

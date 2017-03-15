@@ -440,8 +440,9 @@ module VCAP::CloudController
       DatabaseUriGenerator.new(service_binding_uris).database_uri
     end
 
+    # TODO: is this actually used?
     def validate_space(space)
-      objection = CloudController::Errors::InvalidRouteRelation.new(space.guid)
+      objection = CloudController::Errors::InvalidRouteRelation.new("Cannot add route in space with guid #{route.space_guid} to app in space with guid #{space.guid}")
       raise objection unless routes.all? { |route| route.space_id == space.id }
 
       service_bindings.each { |binding| binding.validate_app_and_service_instance(self, binding.service_instance) }

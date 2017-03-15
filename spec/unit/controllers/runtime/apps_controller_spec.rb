@@ -2193,7 +2193,7 @@ module VCAP::CloudController
         it 'fails to add the route' do
           put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
           expect(last_response.status).to eq(400)
-          expect(decoded_response['description']).to match(/Invalid relation: The requested route relation is invalid: .* - Route services are only supported for apps on Diego/)
+          expect(decoded_response['description']).to match(/The requested route relation is invalid: .* - Route services are only supported for apps on Diego/)
         end
       end
 

@@ -144,8 +144,8 @@ module VCAP::CloudController
     end
 
     def validate_changed_space(new_space)
-      raise CloudController::Errors::InvalidAppRelation if apps.any? { |app| app.space.id != space.id }
-      raise InvalidOrganizationRelation if domain && !domain.usable_by_organization?(new_space.organization)
+      raise CloudController::Errors::InvalidAppRelation.new("Route and apps not in same space") if apps.any? { |app| app.space.id != space.id }
+      raise InvalidOrganizationRelation.new("Organization cannot use domain #{domain.name}") if domain && !domain.usable_by_organization?(new_space.organization)
     end
 
     def self.user_visibility_filter(user)

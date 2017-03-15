@@ -422,7 +422,7 @@ module VCAP::CloudController
               post '/v2/route_mappings', body
 
               expect(last_response.status).to eq(400)
-              expect(decoded_response['description']).to match(/Invalid relation: Route services are only supported for apps on Diego/)
+              expect(decoded_response['description']).to match(/Route services are only supported for apps on Diego/)
             end
           end
         end
