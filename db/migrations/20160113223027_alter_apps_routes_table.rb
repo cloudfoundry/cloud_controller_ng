@@ -38,7 +38,7 @@ Sequel.migration do
 
       run 'update apps_routes set guid=get_uuid();'
     elsif Sequel::Model.db.database_type == :mssql
-      run 'update apps_routes set guid=NEWID();'
+      run 'update APPS_ROUTES set GUID=NEWID();'
     end
 
     alter_table :apps_routes do

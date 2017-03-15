@@ -17,11 +17,11 @@ Sequel.migration do
       SQL
     elsif Sequel::Model.db.database_type == :mssql
       run <<-SQL
-      UPDATE service_plans
-        SET unique_id =
-        (SELECT CONCAT(services.provider, '_', services.label, '_', service_plans.name)
-          FROM services
-          WHERE services.id = service_plans.service_id)
+      UPDATE SERVICE_PLANS
+        SET UNIQUE_ID =
+        (SELECT CONCAT(SERVICES.PROVIDER, '_', SERVICES.LABEL, '_', SERVICE_PLANS.NAME)
+          FROM SERVICES
+          WHERE SERVICES.ID = SERVICE_PLANS.SERVICE_ID)
       SQL
     else
       run <<-SQL

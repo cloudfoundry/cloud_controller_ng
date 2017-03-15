@@ -10,7 +10,7 @@ Sequel.migration do
     if self.class.name =~ /mysql/i
       run "UPDATE services SET unique_id=CONCAT(provider,  '_', label)"
     elsif Sequel::Model.db.database_type == :mssql
-      run "UPDATE services SET unique_id=CONCAT(provider,  '_', label)"
+      run "UPDATE SERVICES SET UNIQUE_ID=CONCAT(PROVIDER,  '_', LABEL)"
     else
       run "UPDATE services SET unique_id=(provider || '_' || label)"
     end

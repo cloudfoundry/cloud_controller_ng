@@ -15,8 +15,13 @@ Sequel.migration do
         drop_foreign_key :app_v3_id
       end
 
-      run 'DELETE FROM apps_routes WHERE app_id IN (SELECT id FROM apps WHERE app_guid IS NOT NULL);'
-      run 'DELETE FROM apps WHERE app_guid IS NOT NULL;'
+      if Sequel::Model.db.database_type == :mssql
+        run 'DELETE FROM APPS_ROUTES WHERE APP_ID IN (SELECT ID FROM APPS WHERE APP_GUID IS NOT NULL);'
+        run 'DELETE FROM APPS WHERE APP_GUID IS NOT NULL;'
+      else
+        run 'DELETE FROM apps_routes WHERE app_id IN (SELECT id FROM apps WHERE app_guid IS NOT NULL);'
+        run 'DELETE FROM apps WHERE app_guid IS NOT NULL;'
+      end
       self[:apps_v3_routes].truncate
       self[:apps_v3].truncate
       self[:v3_droplets].truncate

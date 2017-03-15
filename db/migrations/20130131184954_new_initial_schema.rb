@@ -22,6 +22,12 @@
 # http://code.google.com/p/ruby-sequel/issues/detail?id=284
 
 Sequel.migration do
+  transaction do
+    if Sequel::Model.db.database_type == :mssql
+      run 'ALTER DATABASE CURRENT COLLATE SQL_Latin1_General_CP1_CS_AS;'
+    end
+  end
+
   change do
     # rather than creating different tables for each type of events, we're
     # going to denormalize them into one table.
