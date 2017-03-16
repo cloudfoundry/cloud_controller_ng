@@ -259,8 +259,16 @@ module VCAP::CloudController
     end
 
     def memory_remaining
-      memory_used = processes_dataset.where(state: 'STARTED').sum(Sequel.*(:memory, :instances)) || 0
+      memory_used = started_app_memory + running_task_memory
       quota_definition.memory_limit - memory_used
+    end
+
+    def running_task_memory
+      tasks_dataset.where(state: TaskModel::RUNNING_STATE).sum(:memory_in_mb) || 0
+    end
+
+    def started_app_memory
+      processes_dataset.where(state: 'STARTED').sum(Sequel.*(:memory, :instances)) || 0
     end
 
     def running_and_pending_tasks_count

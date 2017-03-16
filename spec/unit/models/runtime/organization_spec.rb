@@ -449,6 +449,30 @@ module VCAP::CloudController
         expect(org.has_remaining_memory(50)).to eq(true)
         expect(org.has_remaining_memory(51)).to eq(false)
       end
+
+      it 'includes RUNNING tasks when returning remaining memory' do
+        org = Organization.make(quota_definition: quota)
+        space = Space.make(organization: org)
+
+        app = AppFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
+        TaskModel.make(app: app.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
+        TaskModel.make(app: app.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
+
+        expect(org.has_remaining_memory(200)).to eq(true)
+        expect(org.has_remaining_memory(201)).to eq(false)
+      end
+
+      it 'does NOT include non-RUNNING tasks when returning remaining memory' do
+        org = Organization.make(quota_definition: quota)
+        space = Space.make(organization: org)
+
+        app = AppFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
+        TaskModel.make(app: app.app, memory_in_mb: 25, state: TaskModel::PENDING_STATE)
+        TaskModel.make(app: app.app, memory_in_mb: 25, state: TaskModel::SUCCEEDED_STATE)
+
+        expect(org.has_remaining_memory(250)).to eq(true)
+        expect(org.has_remaining_memory(251)).to eq(false)
+      end
     end
 
     describe '#instance_memory_limit' do
