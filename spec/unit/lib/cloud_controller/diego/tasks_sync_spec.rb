@@ -162,7 +162,7 @@ module VCAP::CloudController
           let!(:bbs_tasks) { [] }
 
           before do
-            TasksSync.const_set('BATCH_SIZE', 5) # Override constant to reduce test time
+            stub_const('VCAP::CloudController::Diego::TasksSync::BATCH_SIZE', 5)
             (TasksSync::BATCH_SIZE + 1).times do |_|
               task = TaskModel.make(:running)
               bbs_tasks << ::Diego::Bbs::Models::Task.new(task_guid: task.guid)

@@ -182,7 +182,7 @@ module VCAP::CloudController
           let!(:scheduling_infos) { [] }
 
           before do
-            ProcessesSync.const_set('BATCH_SIZE', 5) # Override constant to reduce test time
+            stub_const('VCAP::CloudController::Diego::ProcessesSync::BATCH_SIZE', 5)
             (ProcessesSync::BATCH_SIZE + 1).times do |_|
               process = ProcessModel.make(:diego_runnable)
 
