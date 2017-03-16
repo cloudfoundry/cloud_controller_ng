@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe DeleteExpiredPackageBlob do
       subject(:job) { described_class.new(package.guid) }
-      let(:package) { PackageModel.make(package_hash: 'some-hash') }
+      let(:package) { PackageModel.make(package_hash: 'some-hash', sha256_checksum: 'example-256-checksum') }
 
       it { is_expected.to be_a_valid_job }
 
@@ -13,8 +13,10 @@ module VCAP::CloudController
         job.perform
       end
 
-      it 'nils the package_hash' do
-        expect { job.perform }.to change { package.reload.package_hash }.to(nil)
+      it 'nils the package_hash and sha256_checksum values' do
+        expect { job.perform }.to change {
+          [package.reload.package_hash, package.reload.sha256_checksum]
+        }.to([nil, nil])
       end
 
       context 'when the package does not exist' do

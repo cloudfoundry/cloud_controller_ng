@@ -14,7 +14,7 @@ module VCAP::CloudController
           package = PackageModel.find(guid: package_guid)
           return unless package
           BlobstoreDelete.new(package_guid, :package_blobstore).perform
-          package.update(package_hash: nil)
+          package.update(package_hash: nil, sha256_checksum: nil)
         end
 
         def job_name_in_configuration
