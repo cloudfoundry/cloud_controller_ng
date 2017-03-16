@@ -186,9 +186,8 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'when the app is invalid' do
       before do
-        allow_any_instance_of(VCAP::CloudController::AppCreate).
-          to receive(:create).
-            and_raise(VCAP::CloudController::AppCreate::InvalidApp.new('ya done goofed'))
+        allow_any_instance_of(VCAP::CloudController::AppCreate).to receive(:create).
+          and_raise(VCAP::CloudController::AppCreate::InvalidApp.new('ya done goofed'))
       end
 
       it 'returns an UnprocessableEntity error' do
@@ -946,9 +945,8 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'when the user has an invalid app' do
       before do
-        allow(VCAP::CloudController::AppStart).
-          to receive(:start).
-            and_raise(VCAP::CloudController::AppStart::InvalidApp.new)
+        allow(VCAP::CloudController::AppStart).to receive(:start).
+          and_raise(VCAP::CloudController::AppStart::InvalidApp.new)
       end
 
       it 'returns an UnprocessableEntity error' do
@@ -1284,9 +1282,8 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'when the app is invalid' do
       before do
-        allow_any_instance_of(VCAP::CloudController::SetCurrentDroplet).
-          to receive(:update_to).
-            and_raise(VCAP::CloudController::SetCurrentDroplet::InvalidApp.new('app is broked'))
+        allow_any_instance_of(VCAP::CloudController::SetCurrentDroplet).to receive(:update_to).
+          and_raise(VCAP::CloudController::SetCurrentDroplet::InvalidApp.new('app is broked'))
       end
 
       it 'returns an UnprocessableEntity error' do

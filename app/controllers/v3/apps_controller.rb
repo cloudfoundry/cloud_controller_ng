@@ -44,8 +44,7 @@ class AppsV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = Space.where(guid: message.space_guid).first
-    space_not_found! unless space
-    space_not_found! unless can_read?(space.guid, space.organization_guid)
+    unprocessable_space! unless space && can_read?(space.guid, space.organization_guid)
     unauthorized! unless can_write?(message.space_guid)
 
     if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
@@ -170,7 +169,7 @@ class AppsV3Controller < ApplicationController
     resource_not_found!(:droplet)
   end
 
-  def space_not_found!
+  def unprocessable_space!
     unprocessable!('Space is invalid. Ensure it exists and you have access to it.')
   end
 
