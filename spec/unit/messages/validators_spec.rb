@@ -12,6 +12,22 @@ module VCAP::CloudController::Validators
       end
     end
 
+    describe 'validator extending StandaloneValidator' do
+      describe '.validate_each' do
+        it 'calls through to the instance method so it can be easily used outside of Active Models' do
+          my_validator = Class.new(ActiveModel::EachValidator) do
+            extend StandaloneValidator
+
+            def validate_each(record, attr_name, value)
+              "hello #{record} #{attr_name} #{value}"
+            end
+          end
+
+          expect(my_validator.validate_each(1, 2, 3)).to eq('hello 1 2 3')
+        end
+      end
+    end
+
     describe 'ArrayValidator' do
       let(:array_class) do
         Class.new(fake_class) do

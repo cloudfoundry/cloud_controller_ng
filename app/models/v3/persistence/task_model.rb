@@ -54,8 +54,8 @@ module VCAP::CloudController
       if environment_variables.to_json.length > ENV_VAR_MAX_LENGTH
         errors.add(:environment_variables, "exceeded the maximum length allowed of #{ENV_VAR_MAX_LENGTH} characters as json")
       end
-      validator = VCAP::CloudController::Validators::EnvironmentVariablesValidator.new({ attributes: [:environment_variables] })
-      validator.validate_each(self, :environment_variables, environment_variables)
+      VCAP::CloudController::Validators::EnvironmentVariablesValidator.
+        validate_each(self, :environment_variables, environment_variables)
     end
 
     def organization

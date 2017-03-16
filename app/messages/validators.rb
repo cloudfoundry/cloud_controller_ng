@@ -2,6 +2,12 @@ require 'active_model'
 require 'utils/uri_utils'
 
 module VCAP::CloudController::Validators
+  module StandaloneValidator
+    def validate_each(*args)
+      new(attributes: [nil]).validate_each(*args)
+    end
+  end
+
   class ArrayValidator < ActiveModel::EachValidator
     def validate_each(record, attr_name, value)
       record.errors.add(attr_name, 'must be an array') unless value.is_a? Array
@@ -21,6 +27,8 @@ module VCAP::CloudController::Validators
   end
 
   class GuidValidator < ActiveModel::EachValidator
+    extend StandaloneValidator
+
     def validate_each(record, attribute, value)
       record.errors.add attribute, 'must be a string' unless value.is_a?(String)
       record.errors.add attribute, 'must be between 1 and 200 characters' unless value.is_a?(String) && (1..200).cover?(value.size)
@@ -34,6 +42,8 @@ module VCAP::CloudController::Validators
   end
 
   class EnvironmentVariablesValidator < ActiveModel::EachValidator
+    extend StandaloneValidator
+
     def validate_each(record, attribute, value)
       if !value.is_a?(Hash)
         record.errors.add(attribute, 'must be a hash')
@@ -113,7 +123,8 @@ module VCAP::CloudController::Validators
     end
 
     def validate_guid(record, attribute, value)
-      VCAP::CloudController::BaseMessage::GuidValidator.new({ attributes: 'blah' }).validate_each(record, "#{attribute} Guid", value.values.first)
+      VCAP::CloudController::BaseMessage::GuidValidator.
+        validate_each(record, "#{attribute} Guid", value.values.first)
     end
 
     def has_correct_structure?(value)
@@ -135,10 +146,10 @@ module VCAP::CloudController::Validators
     end
 
     def validate_guids(record, attribute, value)
-      guids     = value.map(&:values).flatten
-      validator = VCAP::CloudController::BaseMessage::GuidValidator.new({ attributes: 'blah' })
+      guids = value.map(&:values).flatten
       guids.each_with_index do |guid, idx|
-        validator.validate_each(record, "#{attribute} Guid #{idx}", guid)
+        VCAP::CloudController::BaseMessage::GuidValidator.
+          validate_each(record, "#{attribute} Guid #{idx}", guid)
       end
     end
 
