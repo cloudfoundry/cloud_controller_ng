@@ -19,6 +19,7 @@ module VCAP::CloudController
                 info = { 'hostname' => r.uri }
                 info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
                 info['port'] = app_port
+                info['router_group_guid'] = r.domain.router_group_guid if r.domain.router_group_guid
                 http_info.push(info)
               elsif !route_app_port_map[r.guid].blank?
                 info = { 'router_group_guid' => r.domain.router_group_guid }
