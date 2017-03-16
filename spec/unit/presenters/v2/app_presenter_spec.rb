@@ -87,6 +87,23 @@ module CloudController::Presenters::V2
         expect(relations_presenter).to have_received(:to_hash).with(controller, app, opts, depth, parents, orphans)
       end
 
+      describe 'nil associated objects' do
+        context 'when an associated object is not present' do
+          before do
+            parent_app = app.app
+            app.destroy
+            parent_app.packages.map(&:destroy)
+            parent_app.droplets.map(&:destroy)
+            parent_app.destroy
+          end
+
+          it 'returns nil' do
+            actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+            expect(actual_entity_hash).to be_nil
+          end
+        end
+      end
+
       describe 'buildpacks' do
         context 'with a custom buildpack' do
           it 'displays the correct url' do

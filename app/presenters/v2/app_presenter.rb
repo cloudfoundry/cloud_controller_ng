@@ -41,9 +41,16 @@ module CloudController
           }
 
           entity.merge!(RelationsPresenter.new.to_hash(controller, app, opts, depth, parents, orphans))
+        rescue NoMethodError => e
+          logger.info("Error presenting app: no associated object: #{e}")
+          nil
         end
 
         private
+
+        def logger
+          @logger ||= Steno.logger('cc.presenter.app')
+        end
 
         def buildpack_name_or_url(buildpack)
           if buildpack.class == VCAP::CloudController::CustomBuildpack
