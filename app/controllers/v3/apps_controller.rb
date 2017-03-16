@@ -138,8 +138,8 @@ class AppsV3Controller < ApplicationController
   end
 
   def assign_current_droplet
-    app_guid = params[:guid]
-    droplet_guid = params[:body]['droplet_guid']
+    app_guid                 = params[:guid]
+    droplet_guid             = params[:body]['droplet_guid']
     app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
@@ -171,7 +171,7 @@ class AppsV3Controller < ApplicationController
   end
 
   def space_not_found!
-    resource_not_found!(:space)
+    unprocessable!('Space is invalid. Ensure it exists and you have access to it.')
   end
 
   def app_not_found!

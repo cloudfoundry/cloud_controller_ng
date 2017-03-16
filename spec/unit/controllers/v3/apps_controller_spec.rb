@@ -153,9 +153,9 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:space) { VCAP::CloudController::Space.make }
     let(:req_body) do
       {
-        name: 'some-name',
+        name:          'some-name',
         relationships: { space: { data: { guid: space.guid } } },
-        lifecycle: { type: 'buildpack', data: { buildpacks: ['http://some.url'], stack: nil } }
+        lifecycle:     { type: 'buildpack', data: { buildpacks: ['http://some.url'], stack: nil } }
       }
     end
 
@@ -188,7 +188,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       before do
         allow_any_instance_of(VCAP::CloudController::AppCreate).
           to receive(:create).
-          and_raise(VCAP::CloudController::AppCreate::InvalidApp.new('ya done goofed'))
+            and_raise(VCAP::CloudController::AppCreate::InvalidApp.new('ya done goofed'))
       end
 
       it 'returns an UnprocessableEntity error' do
@@ -326,11 +326,12 @@ RSpec.describe AppsV3Controller, type: :controller do
         req_body[:relationships][:space][:data][:guid] = 'made-up'
       end
 
-      it 'returns 404 space not found' do
+      it 'returns an UnprocessableEntity error' do
         post :create, body: req_body
 
-        expect(response).to have_status_code(404)
-        expect(response.body).to include('Space not found')
+        expect(response).to have_status_code(422)
+        expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include('Space is invalid. Ensure it exists and you have access to it.')
       end
     end
 
@@ -377,12 +378,12 @@ RSpec.describe AppsV3Controller, type: :controller do
           disallow_user_read_access(user, space: space)
         end
 
-        it 'returns an NotFound error' do
+        it 'returns an UnprocessableEntity error' do
           post :create, body: req_body
 
-          expect(response.status).to eq(404)
-          expect(response.body).to include 'ResourceNotFound'
-          expect(response.body).to include 'Space not found'
+          expect(response).to have_status_code(422)
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include('Space is invalid. Ensure it exists and you have access to it.')
         end
       end
 
@@ -481,7 +482,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         context 'buildpack app' do
           before do
-            app_model.lifecycle_data.stack = 'some-stack-name'
+            app_model.lifecycle_data.stack     = 'some-stack-name'
             app_model.lifecycle_data.buildpack = 'some-buildpack-name'
             app_model.lifecycle_data.save
           end
@@ -947,7 +948,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       before do
         allow(VCAP::CloudController::AppStart).
           to receive(:start).
-          and_raise(VCAP::CloudController::AppStart::InvalidApp.new)
+            and_raise(VCAP::CloudController::AppStart::InvalidApp.new)
       end
 
       it 'returns an UnprocessableEntity error' do
@@ -1285,7 +1286,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       before do
         allow_any_instance_of(VCAP::CloudController::SetCurrentDroplet).
           to receive(:update_to).
-          and_raise(VCAP::CloudController::SetCurrentDroplet::InvalidApp.new('app is broked'))
+            and_raise(VCAP::CloudController::SetCurrentDroplet::InvalidApp.new('app is broked'))
       end
 
       it 'returns an UnprocessableEntity error' do
