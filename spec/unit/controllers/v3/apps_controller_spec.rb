@@ -154,7 +154,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:req_body) do
       {
         name: 'some-name',
-        relationships: { space: { guid: space.guid } },
+        relationships: { space: { data: { guid: space.guid } } },
         lifecycle: { type: 'buildpack', data: { buildpacks: ['http://some.url'], stack: nil } }
       }
     end
@@ -205,7 +205,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         let(:req_body) do
           {
             name:          'some-name',
-            relationships: { space: { guid: space.guid } }
+            relationships: { space: { data: { guid: space.guid } } }
           }
         end
 
@@ -227,7 +227,7 @@ RSpec.describe AppsV3Controller, type: :controller do
             let(:req_body) do
               {
                 name:          'some-name',
-                relationships: { space: { guid: space.guid } },
+                relationships: { space: { data: { guid: space.guid } } },
                 lifecycle:     { type: 'buildpack', data: { stack: 'cflinuxfs2' } }
               }
             end
@@ -248,7 +248,7 @@ RSpec.describe AppsV3Controller, type: :controller do
             let(:req_body) do
               {
                 name:          'some-name',
-                relationships: { space: { guid: space.guid } },
+                relationships: { space: { data: { guid: space.guid } } },
                 lifecycle:     { type: 'buildpack', data: { buildpacks: ['blawgow'], stack: nil } }
               }
             end
@@ -266,7 +266,7 @@ RSpec.describe AppsV3Controller, type: :controller do
             let(:req_body) do
               {
                 name:          'some-name',
-                relationships: { space: { guid: space.guid } },
+                relationships: { space: { data: { guid: space.guid } } },
                 lifecycle:     { type: 'buildpack' }
               }
             end
@@ -287,7 +287,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           let(:req_body) do
             {
               name:          'some-name',
-              relationships: { space: { guid: space.guid } },
+              relationships: { space: { data: { guid: space.guid } } },
               lifecycle:     { type: 'docker', data: { foo: 'bar' } }
             }
           end
@@ -305,7 +305,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           let(:req_body) do
             {
               name:          'some-name',
-              relationships: { space: { guid: space.guid } },
+              relationships: { space: { data: { guid: space.guid } } },
               lifecycle:     { type: 'docker', data: 'yay' }
             }
           end
@@ -323,7 +323,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'when the space does not exist' do
       before do
-        req_body[:relationships][:space][:guid] = 'made-up'
+        req_body[:relationships][:space][:data][:guid] = 'made-up'
       end
 
       it 'returns 404 space not found' do
@@ -338,7 +338,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       let(:req_body) do
         {
           name:          'some-name',
-          relationships: { space: { guid: space.guid } },
+          relationships: { space: { data: { guid: space.guid } } },
           lifecycle:     { type: 'docker', data: {} }
         }
       end

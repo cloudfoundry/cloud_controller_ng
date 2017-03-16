@@ -67,7 +67,7 @@ module VCAP::CloudController::Validators
     def validate(record)
       data_message = {
         VCAP::CloudController::Lifecycles::BUILDPACK => VCAP::CloudController::BuildpackLifecycleDataMessage,
-        VCAP::CloudController::Lifecycles::DOCKER    => VCAP::CloudController::DockerLifecycleDataMessage,
+        VCAP::CloudController::Lifecycles::DOCKER => VCAP::CloudController::DockerLifecycleDataMessage,
       }
 
       lifecycle_data_message_class = data_message[record.lifecycle_type]
@@ -129,6 +129,45 @@ module VCAP::CloudController::Validators
 
     def has_correct_structure?(value)
       (value.is_a?(Hash) && (value.keys.map(&:to_s) == ['guid']))
+    end
+  end
+
+  class ToOneRelationship2Validator < ActiveModel::EachValidator
+    def validate_each(record, attribute, relationship)
+      if has_correct_structure?(relationship)
+        validate_guid(record, attribute, relationship) if relationship[:data]
+      else
+        record.errors.add(attribute, error_message(attribute))
+      end
+    end
+
+    private
+
+    def error_message(attribute)
+      "must be structured like this: \"#{attribute}: {\"data\": {\"guid\": \"valid-guid\"}}\""
+    end
+
+    def validate_guid(record, attribute, relationship)
+      VCAP::CloudController::BaseMessage::GuidValidator.
+        validate_each(record, "#{attribute} Guid", relationship.values.first.values.first)
+    end
+
+    def has_correct_structure?(relationship)
+      relationship.is_a?(Hash) &&
+        had_data_key(relationship) &&
+        data_has_correct_structure?(relationship[:data])
+    end
+
+    def had_data_key(relationship)
+      relationship.keys == [:data]
+    end
+
+    def data_has_correct_structure?(data)
+      data.nil? || (data.is_a?(Hash) && has_guid_key(data))
+    end
+
+    def has_guid_key(data)
+      (data.keys == [:guid])
     end
   end
 

@@ -6,19 +6,23 @@ module VCAP::CloudController
     describe '.create_from_http_request' do
       let(:body) {
         {
-          'name'                  => 'some-name',
+          'name' => 'some-name',
           'environment_variables' => {
             'ENVVAR' => 'env-val'
           },
           'relationships' => {
-            'space' => { 'guid' => 'some-guid' }
+            'space' => {
+              'data' => {
+                'guid' => 'some-guid'
+              }
+            }
           },
           'lifecycle' => {
-              'type'  => 'buildpack',
-              'data'  => {
-                'buildpack' => 'some-buildpack',
-                'stack'     => 'some-stack'
-              }
+            'type' => 'buildpack',
+            'data' => {
+              'buildpack' => 'some-buildpack',
+              'stack' => 'some-stack'
+            }
           }
         }
       }
@@ -29,13 +33,12 @@ module VCAP::CloudController
         expect(message).to be_a(AppCreateMessage)
         expect(message.name).to eq('some-name')
         expect(message.space_guid).to eq('some-guid')
-        expect(message.environment_variables).to eq({ 'ENVVAR' => 'env-val' })
-        expect(message.relationships).to eq({ 'space' => { 'guid' => 'some-guid' } })
+        expect(message.environment_variables).to eq({ ENVVAR: 'env-val' })
         expect(message.lifecycle).to eq(
-          { 'type' => 'buildpack',
-            'data' => {
-              'buildpack' => 'some-buildpack',
-              'stack' => 'some-stack'
+          { type: 'buildpack',
+            data: {
+              buildpack: 'some-buildpack',
+              stack: 'some-stack'
             }
           })
       end
@@ -97,9 +100,9 @@ module VCAP::CloudController
       context 'when environment_variables is not a hash' do
         let(:params) do
           {
-            name:                  'name',
+            name: 'name',
             environment_variables: 'potato',
-            relationships:         { space: { guid: 'guid' } },
+            relationships: { space: { data: { guid: 'guid' } } },
             lifecycle: {
               type: 'buildpack',
               data: {
@@ -191,7 +194,7 @@ module VCAP::CloudController
           let(:params) do
             {
               name:          'name',
-              relationships: { space: { guid: 32 } },
+              relationships: { space: { data: { guid: 32 } } },
               lifecycle: {
                 type: 'buildpack',
                 data: {
@@ -238,7 +241,7 @@ module VCAP::CloudController
             {
               name:          'name',
               relationships: {
-                space: { guid: 'guid' },
+                space: { data: { guid: 'guid' } },
                 other: 'stuff'
               },
               lifecycle: {
