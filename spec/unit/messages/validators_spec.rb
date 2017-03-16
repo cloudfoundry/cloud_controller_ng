@@ -203,27 +203,25 @@ module VCAP::CloudController::Validators
     end
 
     describe 'LifecycleValidator' do
-      class LifecycleMessage < VCAP::CloudController::BaseMessage
-        attr_accessor :lifecycle
+      let(:lifecycle_class) do
+        Class.new(fake_class) do
+          attr_accessor :lifecycle
 
-        validates_with LifecycleValidator
+          validates_with LifecycleValidator
 
-        def allowed_keys
-          [:lifecycle]
-        end
+          def lifecycle_data
+            lifecycle[:data] || lifecycle['data']
+          end
 
-        def lifecycle_data
-          lifecycle[:data] || lifecycle['data']
-        end
-
-        def lifecycle_type
-          lifecycle[:type] || lifecycle['type']
+          def lifecycle_type
+            lifecycle[:type] || lifecycle['type']
+          end
         end
       end
 
       context 'when the lifecycle type provided is invalid' do
         it 'adds lifecycle_type error message to the base class' do
-          message = LifecycleMessage.new({ lifecycle: { type: 'not valid', data: {} } })
+          message = lifecycle_class.new({ lifecycle: { type: 'not valid', data: {} } })
 
           expect(message).not_to be_valid
           expect(message.errors_on(:lifecycle_type)).to include('is not included in the list: buildpack, docker')
@@ -233,7 +231,7 @@ module VCAP::CloudController::Validators
       context 'when lifecycle type provided is buildpack' do
         context 'when the buildpack lifecycle data is invalid' do
           it 'correctly adds the buildpack data message validation errors' do
-            message = LifecycleMessage.new({ lifecycle: { type: 'buildpack', data: { buildpacks: [123] } } })
+            message = lifecycle_class.new({ lifecycle: { type: 'buildpack', data: { buildpacks: [123] } } })
 
             expect(message).to_not be_valid
             expect(message.errors_on(:lifecycle)).to include('Buildpacks can only contain strings')
@@ -311,20 +309,16 @@ module VCAP::CloudController::Validators
     end
 
     describe 'ToOneRelationshipValidator' do
-      class FooMessage < VCAP::CloudController::BaseMessage
-        attr_accessor :bar
-
-        def allowed_keys
-          [:bar]
+      let(:to_one_class) do
+        Class.new(fake_class) do
+          validates :field, to_one_relationship: true
         end
-
-        validates :bar, to_one_relationship: true
       end
 
       it 'ensures that the data has the correct structure' do
-        invalid_one = FooMessage.new({ bar: { not_a_guid: 1234 } })
-        invalid_two = FooMessage.new({ bar: { guid: { woah: 1234 } } })
-        valid       = FooMessage.new(bar: { guid: '123' })
+        invalid_one = to_one_class.new({ field: { not_a_guid: 1234 } })
+        invalid_two = to_one_class.new({ field: { guid: { woah: 1234 } } })
+        valid       = to_one_class.new(field: { guid: '123' })
 
         expect(invalid_one).not_to be_valid
         expect(invalid_two).not_to be_valid
@@ -333,20 +327,16 @@ module VCAP::CloudController::Validators
     end
 
     describe 'ToManyRelationshipValidator' do
-      class BarMessage < VCAP::CloudController::BaseMessage
-        attr_accessor :routes
-
-        def allowed_keys
-          [:routes]
+      let(:to_many_class) do
+        Class.new(fake_class) do
+          validates :field, to_many_relationship: true
         end
-
-        validates :routes, to_many_relationship: true
       end
 
       it 'ensures that the data has the correct structure' do
-        valid       = BarMessage.new({ routes: [{ guid: '1234' }, { guid: '1234' }, { guid: '1234' }, { guid: '1234' }] })
-        invalid_one = BarMessage.new({ routes: { guid: '1234' } })
-        invalid_two = BarMessage.new({ routes: [{ guid: 1234 }, { guid: 1234 }] })
+        valid       = to_many_class.new({ field: [{ guid: '1234' }, { guid: '1234' }, { guid: '1234' }, { guid: '1234' }] })
+        invalid_one = to_many_class.new({ field: { guid: '1234' } })
+        invalid_two = to_many_class.new({ field: [{ guid: 1234 }, { guid: 1234 }] })
 
         expect(valid).to be_valid
         expect(invalid_one).not_to be_valid
