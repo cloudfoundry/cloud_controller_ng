@@ -25,7 +25,8 @@ module VCAP::CloudController
         def deleted_expired_packages
           PackageModel.where(
             state: PackageModel::EXPIRED_STATE,
-            package_hash: nil
+            package_hash: nil,
+            sha256_checksum: nil,
           )
         end
 
