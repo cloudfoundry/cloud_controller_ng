@@ -581,11 +581,11 @@ RSpec.describe PackagesController, type: :controller do
         context 'when the app does not exist' do
           let(:app_guid) { 'bogus-guid' }
 
-          it 'returns a 404 ResourceNotFound error' do
+          it 'returns a 422 UnprocessableEntity error' do
             post :create, body: req_body
 
-            expect(response.status).to eq 404
-            expect(response.body).to include 'ResourceNotFound'
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
           end
         end
 
@@ -621,11 +621,11 @@ RSpec.describe PackagesController, type: :controller do
               disallow_user_read_access(user, space: space)
             end
 
-            it 'returns a 404 ResourceNotFound error' do
+            it 'returns a 422 UnprocessableEntity error' do
               post :create, app_guid: app_model.guid, body: req_body
 
-              expect(response.status).to eq 404
-              expect(response.body).to include 'ResourceNotFound'
+              expect(response.status).to eq 422
+              expect(response.body).to include 'UnprocessableEntity'
             end
           end
 

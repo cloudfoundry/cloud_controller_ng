@@ -98,7 +98,7 @@ class PackagesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app = AppModel.where(guid: message.app_guid).eager(:space, :organization).all.first
-    app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
+    unprocessable_app! unless app && can_read?(app.space.guid, app.organization.guid)
     unauthorized! unless can_write?(app.space.guid)
 
     package = PackageCreate.create(message: message, user_audit_info: user_audit_info)
@@ -141,5 +141,9 @@ class PackagesController < ApplicationController
   def send_package_blob(package)
     package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
     BlobDispatcher.new(blobstore: package_blobstore, controller: self).send_or_redirect(guid: package.guid)
+  end
+
+  def unprocessable_app!
+    unprocessable!('App is invalid. Ensure it exists and you have access to it.')
   end
 end
