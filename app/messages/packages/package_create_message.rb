@@ -24,7 +24,7 @@ module VCAP::CloudController
     end
 
     def app_guid
-      relationships.dig(:app, :data, :guid)
+      HashUtils.dig(relationships, :app, :data, :guid)
     end
 
     def docker_type?

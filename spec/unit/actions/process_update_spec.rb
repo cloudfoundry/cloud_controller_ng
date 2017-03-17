@@ -7,10 +7,8 @@ module VCAP::CloudController
 
     let(:health_check) do
       {
-        'type' => 'process',
-        'data' => {
-          'timeout' => 20
-        }
+        type: 'process',
+        data: { timeout: 20 }
       }
     end
     let(:message) { ProcessUpdateMessage.new({ command: 'new', health_check: health_check, ports: [1234, 5678] }) }
@@ -54,8 +52,8 @@ module VCAP::CloudController
       context 'when partial health check update is requested' do
         let(:health_check) do
           {
-            'type' => 'process',
-            'data' => {}
+            type: 'process',
+            data: {}
           }
         end
 
@@ -76,10 +74,8 @@ module VCAP::CloudController
             'command'      => 'new',
             'ports'        => [1234, 5678],
             'health_check' => {
-              'type' => 'process',
-              'data' => {
-                'timeout' => 20
-              }
+              type: 'process',
+              data: { timeout: 20 }
             }
           }
         )

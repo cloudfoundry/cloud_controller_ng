@@ -10,7 +10,7 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator
 
     def self.create_from_http_request(body)
-      DockerLifecycleDataMessage.new((body || {}).symbolize_keys)
+      DockerLifecycleDataMessage.new((body || {}).deep_symbolize_keys)
     end
   end
 end

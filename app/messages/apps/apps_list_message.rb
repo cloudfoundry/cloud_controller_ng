@@ -6,16 +6,16 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_KEYS)
 
+    def initialize(params={})
+      super(params.symbolize_keys)
+    end
+
     validates_with NoAdditionalParamsValidator
 
     validates :names, array: true, allow_nil: true
     validates :guids, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
-
-    def initialize(params={})
-      super(params.symbolize_keys)
-    end
 
     def to_param_hash
       super(exclude: [:page, :per_page, :order_by])

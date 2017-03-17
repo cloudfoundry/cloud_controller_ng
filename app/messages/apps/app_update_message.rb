@@ -9,7 +9,7 @@ module VCAP::CloudController
     attr_reader :app
 
     def self.create_from_http_request(body)
-      AppUpdateMessage.new(body.symbolize_keys)
+      AppUpdateMessage.new(body.deep_symbolize_keys)
     end
 
     def self.lifecycle_requested?
@@ -33,11 +33,11 @@ module VCAP::CloudController
       if: lifecycle_requested?
 
     def lifecycle_data
-      lifecycle.try(:[], 'data') || lifecycle.try(:[], :data)
+      HashUtils.dig(lifecycle, :data)
     end
 
     def lifecycle_type
-      lifecycle.try(:[], 'type') || lifecycle.try(:[], :type)
+      HashUtils.dig(lifecycle, :type)
     end
 
     def buildpack_data

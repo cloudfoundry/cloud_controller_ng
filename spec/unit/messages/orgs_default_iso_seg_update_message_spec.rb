@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'messages/orgs_default_iso_seg_update_message'
+require 'messages/orgs/orgs_default_iso_seg_update_message'
 
 module VCAP::CloudController
   RSpec.describe OrgDefaultIsoSegUpdateMessage do
     describe '.create_from_http_request' do
       let(:params) do
-        { data: { 'guid' => 'iso-seg-guid' } }
+        { 'data' => { 'guid' => 'iso-seg-guid' } }
       end
 
       it 'returns the correct OrgsUpdateMessage' do
@@ -24,14 +24,14 @@ module VCAP::CloudController
 
     describe 'validations' do
       context 'when there is no guid in the data' do
-        let(:params) do
+        let(:symbolized_body) do
           {
             data: {}
           }
         end
 
         it 'returns an error' do
-          message = OrgDefaultIsoSegUpdateMessage.new(params)
+          message = OrgDefaultIsoSegUpdateMessage.new(symbolized_body)
 
           expect(message).to_not be_valid
           expect(message.errors[:data]).to include("can't be blank")
@@ -39,14 +39,14 @@ module VCAP::CloudController
       end
 
       context 'when data is nil' do
-        let(:params) do
+        let(:symbolized_body) do
           {
             data: nil
           }
         end
 
         it 'does not error and returns the correct message' do
-          message = OrgDefaultIsoSegUpdateMessage.new(params)
+          message = OrgDefaultIsoSegUpdateMessage.new(symbolized_body)
 
           expect(message).to be_a(OrgDefaultIsoSegUpdateMessage)
           expect(message).to be_valid
@@ -55,28 +55,28 @@ module VCAP::CloudController
       end
 
       context 'when unexpected keys are requested' do
-        let(:params) {
+        let(:symbolized_body) {
           {
             unexpected: 'an-unexpected-value',
           }
         }
 
         it 'is not valid' do
-          message = OrgDefaultIsoSegUpdateMessage.new(params)
+          message = OrgDefaultIsoSegUpdateMessage.new(symbolized_body)
 
           expect(message).to_not be_valid
           expect(message.errors[:base]).to include("Unknown field(s): 'unexpected'")
         end
 
         context 'when there are unexpected keys inside data hash' do
-          let(:params) {
+          let(:symbolized_body) {
             {
-              data: { 'blah' => 'awesome-guid' },
+              data: { blah: 'awesome-guid' },
             }
           }
 
           it 'is not valid' do
-            message = OrgDefaultIsoSegUpdateMessage.new(params)
+            message = OrgDefaultIsoSegUpdateMessage.new(symbolized_body)
 
             expect(message).to_not be_valid
             expect(message.errors[:data]).to include("can only accept key 'guid'")
@@ -84,14 +84,14 @@ module VCAP::CloudController
         end
 
         context 'when there are multiple keys inside data hash' do
-          let(:params) {
+          let(:symbolized_body) {
             {
-              data: { 'blah' => 'awesome-guid', 'glob' => 'super-guid' },
+              data: { blah: 'awesome-guid', glob: 'super-guid' },
             }
           }
 
           it 'is not valid' do
-            message = OrgDefaultIsoSegUpdateMessage.new(params)
+            message = OrgDefaultIsoSegUpdateMessage.new(symbolized_body)
 
             expect(message).to_not be_valid
             expect(message.errors[:data]).to include('can only accept one key')
@@ -99,14 +99,14 @@ module VCAP::CloudController
         end
 
         context 'when the guid is not a string' do
-          let(:params) do
+          let(:symbolized_body) do
             {
-              data: { 'guid' => 32.77 }
+              data: { guid: 32.77 }
             }
           end
 
           it 'is not valid' do
-            message = OrgDefaultIsoSegUpdateMessage.new(params)
+            message = OrgDefaultIsoSegUpdateMessage.new(symbolized_body)
 
             expect(message).not_to be_valid
             expect(message.errors[:data]).not_to include("can only accept key 'guid'")

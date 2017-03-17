@@ -25,9 +25,9 @@ module VCAP::CloudController
 
         expect(message).to be_a(AppUpdateMessage)
         expect(message.name).to eq('some-name')
-        expect(message.lifecycle['data']['buildpacks'].first).to eq('some-buildpack')
-        expect(message.lifecycle['data']['stack']).to eq('some-stack')
-        expect(message.environment_variables).to eq({ 'ENVVAR' => 'env-val' })
+        expect(message.lifecycle[:data][:buildpacks].first).to eq('some-buildpack')
+        expect(message.lifecycle[:data][:stack]).to eq('some-stack')
+        expect(message.environment_variables).to eq({ ENVVAR: 'env-val' })
       end
 
       it 'converts requested keys to symbols' do
@@ -121,7 +121,9 @@ module VCAP::CloudController
         end
 
         context 'when data is not provided' do
-          let(:params) do { lifecycle: { type: 'buildpack' } } end
+          let(:params) do
+            { lifecycle: { type: 'buildpack' } }
+          end
 
           it 'is not valid' do
             message = AppUpdateMessage.new(params)

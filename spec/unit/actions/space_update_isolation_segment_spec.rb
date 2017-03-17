@@ -14,10 +14,10 @@ module VCAP::CloudController
 
     describe '#update' do
       let(:message) do
-        SpaceUpdateIsolationSegmentMessage.new({ data: { 'guid' => isolation_segment.guid } })
+        SpaceUpdateIsolationSegmentMessage.new({ data: { guid: isolation_segment.guid } })
       end
 
-      context' when the org is entitled to the isolation segment' do
+      context ' when the org is entitled to the isolation segment' do
         let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
         before do
@@ -37,9 +37,7 @@ module VCAP::CloudController
           expect_any_instance_of(Repositories::SpaceEventRepository).to receive(:record_space_update).with(
             space,
             user_audit_info,
-            {
-              'data' => { 'guid' => isolation_segment.guid }
-            }
+            { 'data' => { guid: isolation_segment.guid } }
           )
 
           space_update.update(space, org, message)
@@ -68,28 +66,27 @@ module VCAP::CloudController
           end
 
           it 'raises an invalid space error' do
-            expect { space_update.update(space, org, message) }.to raise_error(SpaceUpdateIsolationSegment::InvalidSpace)
+            expect { space_update.update(space, org, message) }.to raise_error(
+              SpaceUpdateIsolationSegment::InvalidSpace)
           end
         end
       end
 
       context 'when the org is NOT entitled to the isolation segment' do
         it 'raises an invalid relationship error' do
-          expect {
-            space_update.update(space, org, message)
-          }.to raise_error VCAP::CloudController::SpaceUpdateIsolationSegment::InvalidRelationship
+          expect { space_update.update(space, org, message) }.to raise_error(
+            VCAP::CloudController::SpaceUpdateIsolationSegment::InvalidRelationship)
         end
       end
 
       context 'when the given isolation segment does not exist' do
         let(:message) do
-          SpaceUpdateIsolationSegmentMessage.new({ data: { 'guid' => 'non-existant-guid' } })
+          SpaceUpdateIsolationSegmentMessage.new({ data: { guid: 'non-existant-guid' } })
         end
 
         it 'raises an invalid relationship error' do
-          expect {
-            space_update.update(space, org, message)
-          }.to raise_error VCAP::CloudController::SpaceUpdateIsolationSegment::InvalidRelationship
+          expect { space_update.update(space, org, message) }.to raise_error(
+            VCAP::CloudController::SpaceUpdateIsolationSegment::InvalidRelationship)
         end
       end
     end

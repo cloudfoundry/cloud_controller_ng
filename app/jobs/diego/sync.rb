@@ -7,7 +7,7 @@ module VCAP::CloudController
       class Sync < VCAP::CloudController::Jobs::CCJob
         def perform
           config = CloudController::DependencyLocator.instance.config
-          if config.dig(:diego, :temporary_local_sync)
+          if HashUtils.dig(config, :diego, :temporary_local_sync)
             VCAP::CloudController::Diego::ProcessesSync.new(config).sync
             VCAP::CloudController::Diego::TasksSync.new(config).sync
           else

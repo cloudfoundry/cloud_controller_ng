@@ -8,7 +8,7 @@ module VCAP::CloudController
     attr_accessor(*ALLOWED_KEYS)
 
     def self.create_from_http_request(body)
-      ServiceBindingCreateMessage.new(body.symbolize_keys)
+      ServiceBindingCreateMessage.new(body.deep_symbolize_keys)
     end
 
     validates_with NoAdditionalKeysValidator, RelationshipValidator, DataValidator
@@ -19,18 +19,15 @@ module VCAP::CloudController
     validates_inclusion_of :type, in: ALLOWED_TYPES, message: 'type must be app'
 
     def app_guid
-      relationships.try(:[], 'app').try(:[], 'guid') ||
-        relationships.try(:[], :app).try(:[], :guid)
+      HashUtils.dig(relationships, :app, :guid)
     end
 
     def service_instance_guid
-      relationships.try(:[], 'service_instance').try(:[], 'guid') ||
-        relationships.try(:[], :service_instance).try(:[], :guid)
+      HashUtils.dig(relationships, :service_instance, :guid)
     end
 
     def parameters
-      data.try(:[], 'parameters') ||
-        data.try(:[], :parameters)
+      HashUtils.dig(data, :parameters)
     end
 
     class Relationships < BaseMessage

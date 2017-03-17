@@ -7,7 +7,7 @@ module VCAP::CloudController
     attr_accessor(*ALLOWED_KEYS)
 
     def self.create_from_http_request(body)
-      IsolationSegmentRelationshipOrgMessage.new(body.symbolize_keys)
+      IsolationSegmentRelationshipOrgMessage.new(body.deep_symbolize_keys)
     end
 
     validates_with NoAdditionalKeysValidator
@@ -15,14 +15,14 @@ module VCAP::CloudController
     validates_each :data do |record, attr, values|
       if values.is_a? Array
         values.each do |value|
-          guid = value['guid']
+          guid = value[:guid]
           record.errors.add attr, "#{guid} not a string" if !guid.is_a? String
         end
       end
     end
 
     def guids
-      data.map { |val| val['guid'] }
+      data.map { |val| val[:guid] }
     end
 
     private

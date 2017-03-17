@@ -13,7 +13,7 @@ module VCAP::CloudController
     validates :disk_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
 
     def self.create_from_http_request(body)
-      ProcessScaleMessage.new(body.symbolize_keys)
+      ProcessScaleMessage.new(body.deep_symbolize_keys)
     end
 
     private

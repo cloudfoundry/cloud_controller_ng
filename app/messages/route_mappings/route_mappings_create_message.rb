@@ -16,31 +16,31 @@ module VCAP::CloudController
     validates :process_type, string: true, allow_nil: true
 
     def self.create_from_http_request(body)
-      RouteMappingsCreateMessage.new(body.symbolize_keys)
+      RouteMappingsCreateMessage.new(body.deep_symbolize_keys)
     end
 
     def app
-      HashUtils.dig(relationships, :app) || HashUtils.dig(relationships, 'app')
+      HashUtils.dig(relationships, :app)
     end
 
     def app_guid
-      HashUtils.dig(app, :guid) || HashUtils.dig(app, 'guid')
+      HashUtils.dig(app, :guid)
     end
 
     def process
-      HashUtils.dig(relationships, :process) || HashUtils.dig(relationships, 'process')
+      HashUtils.dig(relationships, :process)
     end
 
     def process_type
-      HashUtils.dig(process, :type) || HashUtils.dig(process, 'type') || DEFAULT_PROCESS_TYPE
+      HashUtils.dig(process, :type) || DEFAULT_PROCESS_TYPE
     end
 
     def route
-      HashUtils.dig(relationships, :route) || HashUtils.dig(relationships, 'route')
+      HashUtils.dig(relationships, :route)
     end
 
     def route_guid
-      HashUtils.dig(route, :guid) || HashUtils.dig(route, 'guid')
+      HashUtils.dig(route, :guid)
     end
 
     private

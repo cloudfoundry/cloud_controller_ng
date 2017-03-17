@@ -33,7 +33,7 @@ module VCAP::CloudController
         expect(message.requested?(:health_check_type)).to be_falsey
         expect(message.requested?(:health_check_timeout)).to be_falsey
 
-        message = ProcessUpdateMessage.new({ health_check: { 'type' => 'type', 'data' => { 'timeout' => 4 } } })
+        message = ProcessUpdateMessage.new({ health_check: { type: 'type', data: { timeout: 4 } } })
         expect(message.requested?(:health_check_type)).to be_truthy
         expect(message.requested?(:health_check_timeout)).to be_truthy
       end
@@ -43,9 +43,9 @@ module VCAP::CloudController
       it 'excludes nested health check keys' do
         message = ProcessUpdateMessage.new(
           {
-            health_check: { 'type' => 'type', 'data' => { 'timeout' => 4 } }
+            health_check: { type: 'type', data: { timeout: 4 } }
           })
-        expect(message.audit_hash).to eq({ 'health_check' => { 'type' => 'type', 'data' => { 'timeout' => 4 } } })
+        expect(message.audit_hash).to eq({ 'health_check' => { type: 'type', data: { timeout: 4 } } })
       end
     end
 

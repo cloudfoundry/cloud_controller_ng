@@ -25,7 +25,7 @@ module CloudController
         private
 
         def provide_fog(options, directory_key, root_dir)
-          cdn_uri        = options[:cdn].try(:[], :uri)
+          cdn_uri        = HashUtils.dig(options[:cdn], :uri)
           cdn            = CloudController::Blobstore::Cdn.make(cdn_uri)
 
           client = FogClient.new(

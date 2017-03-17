@@ -3,7 +3,7 @@ module VCAP::CloudController
     ALLOWED_KEYS = [:buildpacks, :stack].freeze
 
     def self.create_from_http_request(body)
-      BuildpackLifecycleDataMessage.new((body || {}).symbolize_keys)
+      BuildpackLifecycleDataMessage.new((body || {}).deep_symbolize_keys)
     end
 
     attr_accessor(*ALLOWED_KEYS)

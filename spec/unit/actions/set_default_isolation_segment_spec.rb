@@ -12,7 +12,7 @@ module VCAP::CloudController
     let(:message) do
       VCAP::CloudController::OrgDefaultIsoSegUpdateMessage.new(
         {
-          data: { 'guid' => isolation_segment_guid }
+          data: { guid: isolation_segment_guid }
         }
       )
     end

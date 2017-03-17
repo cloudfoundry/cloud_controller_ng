@@ -6,6 +6,10 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_KEYS)
 
+    def self.create_from_http_request(body)
+      OrgDefaultIsoSegUpdateMessage.new(body.deep_symbolize_keys)
+    end
+
     def self.data_requested?
       @data_requested ||= proc { |a| a.requested?(:data) }
     end
@@ -15,19 +19,16 @@ module VCAP::CloudController
     validate :data_content, if: data_requested?
 
     def default_isolation_segment_guid
-      return data['guid'] if data
-      nil
+      HashUtils.dig(data, :guid)
     end
 
     def data_content
       return if data.nil?
       errors.add(:data, 'can only accept one key') unless data.keys.length == 1
-      errors.add(:data, "can only accept key 'guid'") unless data.keys.include?('guid')
-      errors.add(:data, "#{data['guid']} must be a string") if data['guid'] && !data['guid'].is_a?(String)
-    end
-
-    def self.create_from_http_request(body)
-      OrgDefaultIsoSegUpdateMessage.new(body.symbolize_keys)
+      errors.add(:data, "can only accept key 'guid'") unless data.keys.include?(:guid)
+      if default_isolation_segment_guid && !default_isolation_segment_guid.is_a?(String)
+        errors.add(:data, "#{default_isolation_segment_guid} must be a string")
+      end
     end
 
     private

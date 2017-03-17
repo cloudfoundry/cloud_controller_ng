@@ -32,15 +32,15 @@ module VCAP::CloudController
       if: lifecycle_requested?
 
     def space_guid
-      relationships.try(:[], :space).try(:[], :data).try(:[], :guid)
+      HashUtils.dig(relationships, :space, :data, :guid)
     end
 
     def lifecycle_type
-      lifecycle.try(:[], :type)
+      HashUtils.dig(lifecycle, :type)
     end
 
     def lifecycle_data
-      lifecycle.try(:[], :data)
+      HashUtils.dig(lifecycle, :data)
     end
 
     def buildpack_data

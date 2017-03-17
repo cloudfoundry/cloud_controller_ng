@@ -12,15 +12,15 @@ module VCAP::CloudController
     validates :app_guid, guid: true
 
     def self.create_from_http_request(body)
-      DropletCopyMessage.new(body.symbolize_keys)
+      DropletCopyMessage.new(body.deep_symbolize_keys)
     end
 
     def app
-      HashUtils.dig(relationships, :app) || HashUtils.dig(relationships, 'app')
+      HashUtils.dig(relationships, :app)
     end
 
     def app_guid
-      HashUtils.dig(app, :guid) || HashUtils.dig(app, 'guid')
+      HashUtils.dig(app, :guid)
     end
 
     private
