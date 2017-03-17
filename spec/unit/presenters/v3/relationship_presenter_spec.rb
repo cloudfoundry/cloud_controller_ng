@@ -3,18 +3,20 @@ require 'presenters/v3/relationship_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RelationshipPresenter do
-    class Relationship
-      def initialize(guid, name)
-        @guid = guid
-        @name = name
-      end
+    let(:relationship_class) do
+      Class.new do
+        def initialize(guid, name)
+          @guid = guid
+          @name = name
+        end
 
-      def guid
-        @guid.to_s
-      end
+        def guid
+          @guid.to_s
+        end
 
-      def name
-        @name
+        def name
+          @name
+        end
       end
     end
 
@@ -22,7 +24,7 @@ module VCAP::CloudController::Presenters::V3
       relationships = []
 
       (1..count).each do |i|
-        relationships << Relationship.new(i, 'name-' + i.to_s)
+        relationships << relationship_class.new(i, 'name-' + i.to_s)
       end
 
       relationships

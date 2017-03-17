@@ -19,7 +19,7 @@ module VCAP::CloudController
 
       context 'when the request is valid' do
         let(:message) do
-          AppCreateMessage.create_from_http_request(
+          AppCreateMessage.new(
             {
               name: 'my-app',
               relationships: relationships,
