@@ -119,6 +119,16 @@ module VCAP::CloudController
         get "/v2/services/#{service.guid}/service_plans"
         expect(decoded_response['resources'].first['metadata']['guid']).to eq service_plan.guid
       end
+
+      it 'allows querying by service_guid' do
+        get "/v2/services/#{service.guid}/service_plans?q=service_guid:#{service.guid}"
+        expect(last_response.status).to eq(200)
+      end
+
+      it 'allows querying by service_instance_guid' do
+        get "/v2/services/#{service.guid}/service_plans?q=service_instance_guid:some-guid"
+        expect(last_response.status).to eq(200)
+      end
     end
 
     describe 'GET /v2/services' do
