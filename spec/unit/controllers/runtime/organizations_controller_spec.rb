@@ -1376,7 +1376,7 @@ module VCAP::CloudController
             expect(ServiceInstance.find(guid: service_instance_guid)).not_to be_nil
             expect(Route.find(guid: route_guid)).not_to be_nil
 
-            org_delete_jobs = Delayed::Job.where("handler like '%OrganizationDelete%'")
+            org_delete_jobs = Delayed::Job.where(Sequel.like(:handler, '%OrganizationDelete%'))
             expect(org_delete_jobs.count).to eq 1
             job = org_delete_jobs.first
 

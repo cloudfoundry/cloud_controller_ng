@@ -442,7 +442,7 @@ module VCAP::CloudController
                     elsif comparison == ' IN '
                       space_ids.where(organizations__guid: value.split(','))
                     else
-                      space_ids.where("organizations.guid #{comparison} ?", value)
+                      space_ids.where(Sequel[:organizations][:guid].send(comparison.to_sym, value))
                     end
       end
 

@@ -18,7 +18,7 @@ module VCAP::CloudController
 
     def self.delete_model_events_older_than(model, cutoff_age_in_days)
       old_events = if model.db.database_type == :mssql
-                     model.dataset.where('created_at < DATEADD(DAY, -?, CURRENT_TIMESTAMP)', cutoff_age_in_days.to_i)
+                     model.dataset.where('CREATED_AT < DATEADD(DAY, -?, CURRENT_TIMESTAMP)', cutoff_age_in_days.to_i)
                    else
                      model.dataset.where("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", cutoff_age_in_days.to_i)
                    end

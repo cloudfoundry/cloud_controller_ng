@@ -11,9 +11,9 @@ module VCAP::CloudController
         def perform
           old_delayed_jobs = if Delayed::Job.db.database_type == :mssql
                                Delayed::Job.
-                                 where('failed_at is not null').
-                                 where('failed_at >= run_at').
-                                 where('run_at < DATEADD(DAY, -?, CURRENT_TIMESTAMP)', cutoff_age_in_days.to_i)
+                                 where('FAILED_AT IS NOT NULL').
+                                 where('FAILED_AT >= RUN_AT').
+                                 where('RUN_AT < DATEADD(DAY, -?, CURRENT_TIMESTAMP)', cutoff_age_in_days.to_i)
                              else
                                Delayed::Job.
                                  where('failed_at is not null').

@@ -8,11 +8,11 @@ module VCAP::CloudController::RestController
 
     def normalize_clause(string)
       case dataset.db.database_type
-      when :postgres
-        return string
-      when :mysql
-        return string.tr('`', '"')
-      when :mssql
+        when :postgres
+          return string.tr('`', '"')
+        when :mysql
+          return string
+        when :mssql
         src = string.split('`')
         dest = []
         src.each_index { |i|

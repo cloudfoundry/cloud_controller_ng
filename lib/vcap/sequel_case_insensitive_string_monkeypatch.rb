@@ -50,7 +50,6 @@ Sequel::Mysql2::Database.class_eval do
 end
 
 Sequel::MSSQL::DatabaseMethods.class_eval do
-
   # TODO: PR a fix to Sequel library
   def foreign_key_list(table, opts=Sequel::OPTS)
     m = output_identifier_meth

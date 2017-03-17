@@ -38,7 +38,7 @@ module IntegrationSetup
         db = 'postgres'
       elsif /mysql/ =~ db_connection_string
         db = 'mysql'
-      elsif /mssql/ =~ db_connection_string
+      elsif /tinytds/ =~ db_connection_string
         db = 'mssql'
       end
 

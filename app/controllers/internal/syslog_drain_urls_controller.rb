@@ -5,13 +5,12 @@ module VCAP::CloudController
 
     get '/internal/v4/syslog_drain_urls', :list
     def list
-      # TODO
       guid_to_drain_maps = if Sequel::Model.db.database_type == :mssql
                              Sequel::Model.db.fetch("SET ANSI_NULLS, QUOTED_IDENTIFIER, CONCAT_NULL_YIELDS_NULL, ANSI_WARNINGS, ANSI_PADDING ON; SELECT
                                                          [APPS].[GUID],
                                                          [APPS].[NAME],
                                                          STUFF((
-                                                             SELECT ',' + sb.syslog_drain_url
+                                                             SELECT ',' + sb.SYSLOG_DRAIN_URL
                                                              FROM [SERVICE_BINDINGS] sb
                                                              WHERE [APPS].[GUID] = sb.[APP_GUID]
                                                              FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 1, '') AS [SYSLOG_DRAIN_URLS],

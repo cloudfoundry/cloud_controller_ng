@@ -34,7 +34,7 @@ module VCAP::CloudController
         def updated_at_past_threshold
           if Sequel::Model.db.database_type == :mssql
             return Sequel.lit(
-              'updated_at < DATEADD(SECOND, -?, ?)',
+              'UPDATED_AT < DATEADD(SECOND, -?, ?)',
                       expiration_threshold,
                       Sequel::CURRENT_TIMESTAMP
                    )
@@ -50,7 +50,7 @@ module VCAP::CloudController
         def created_at_past_threshold
           if Sequel::Model.db.database_type == :mssql
             return Sequel.lit(
-              'created_at < DATEADD(SECOND, -?, ?)',
+              'CREATED_AT < DATEADD(SECOND, -?, ?)',
                       expiration_threshold,
                       Sequel::CURRENT_TIMESTAMP
                    )

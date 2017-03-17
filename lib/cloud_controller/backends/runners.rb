@@ -26,7 +26,7 @@ module VCAP::CloudController
       App.select_all(App.table_name).
         diego.
         runnable.
-        where("#{App.table_name}.id > ?", last_id).
+        where{ Sequel[App.table_name.to_sym][:id] > last_id }.
         order("#{App.table_name}__id".to_sym).
         limit(batch_size).
         eager(:current_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
@@ -49,7 +49,7 @@ module VCAP::CloudController
       diego_apps = App.
                    diego.
                    runnable.
-                   where("#{App.table_name}.id > ?", last_id).
+                   where{ Sequel[App.table_name.to_sym][:id] > last_id }.
                    order("#{App.table_name}__id".to_sym).
                    limit(batch_size)
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
     def dea_apps(batch_size, last_id)
       query = App.select_all(App.table_name).
               dea.
-              where("#{App.table_name}.id > ?", last_id).
+              where{ Sequel[App.table_name.to_sym][:id] > last_id }.
               order("#{App.table_name}__id".to_sym).
               limit(batch_size)
 
@@ -77,8 +77,8 @@ module VCAP::CloudController
       # query 1
       # get all process information where the process is STARTED and running on the DEA
       process_query = if App.db.database_type == :mssql
-                        App.db["Select p.id, p.app_guid, p.instances, p.version, apps.droplet_guid from processes p
-                                inner join apps ON (apps.guid = p.app_guid AND p.state ='STARTED' AND p.diego = 0)"]
+                        App.db["SELECT P.ID, P.APP_GUID, P.INSTANCES, P.VERSION, APPS.DROPLET_GUID FROM PROCESSES P
+                                INNER JOIN APPS ON (APPS.GUID = P.APP_GUID AND P.STATE ='STARTED' AND P.DIEGO = 0)"]
                       else
                         App.db["Select p.id, p.app_guid, p.instances, p.version, apps.droplet_guid from processes p
                                 inner join apps ON (apps.guid = p.app_guid AND p.state ='STARTED' AND p.diego IS FALSE)"]
@@ -90,10 +90,10 @@ module VCAP::CloudController
       #    where the droplet's associated process is running on the DEA and the process is STARTED
       #    Finding only the latest droplet associated with the process
       droplets_query = if App.db.database_type == :mssql
-                         App.db["select d.id, d.guid, d.app_guid, d.created_at, d.package_guid, d.state from droplets d
-                                join processes p ON (d.app_guid = p.app_guid AND p.state ='STARTED' AND p.diego = 0)
-                                inner join (select app_guid, max(created_at) as _max from droplets group by app_guid) as x
-                                ON d.app_guid = x.app_guid and d.created_at=x._max"]
+                         App.db["SELECT D.ID, D.GUID, D.APP_GUID, D.CREATED_AT, D.PACKAGE_GUID, D.STATE FROM DROPLETS D
+                                JOIN PROCESSES P ON (D.APP_GUID = P.APP_GUID AND P.STATE ='STARTED' AND P.DIEGO = 0)
+                                INNER JOIN (SELECT APP_GUID, MAX(CREATED_AT) AS _MAX FROM DROPLETS GROUP BY APP_GUID) AS X
+                                ON D.APP_GUID = X.APP_GUID AND D.CREATED_AT=X._MAX"]
                        else
                          App.db["select d.id, d.guid, d.app_guid, d.created_at, d.package_guid, d.state from droplets d
                                 join processes p ON (d.app_guid = p.app_guid AND p.state ='STARTED' AND p.diego IS FALSE)
@@ -108,11 +108,11 @@ module VCAP::CloudController
       #   finding only the latest package associated with the process
 
       packages_query = if App.db.database_type == :mssql
-                         App.db["select pkg.id, pkg.guid, pkg.app_guid, pkg.created_at, pkg.state from packages pkg
-                                join processes prc ON
-                                  (pkg.app_guid = prc.app_guid AND prc.state ='STARTED' AND prc.diego = 0)
-                                inner join (select app_guid, max(created_at) as _max from packages group by app_guid) as x
-                                ON pkg.app_guid = x.app_guid and pkg.created_at = x._max"]
+                         App.db["SELECT PKG.ID, PKG.GUID, PKG.APP_GUID, PKG.CREATED_AT, PKG.STATE FROM PACKAGES PKG
+                                JOIN PROCESSES PRC ON
+                                  (PKG.APP_GUID = PRC.APP_GUID AND PRC.STATE ='STARTED' AND PRC.DIEGO = 0)
+                                INNER JOIN (SELECT APP_GUID, MAX(CREATED_AT) AS _MAX FROM PACKAGES GROUP BY APP_GUID) AS X
+                                ON PKG.APP_GUID = X.APP_GUID AND PKG.CREATED_AT = X._MAX"]
                        else
                          App.db["select pkg.id, pkg.guid, pkg.app_guid, pkg.created_at, pkg.state from packages pkg
                                 join processes proc ON

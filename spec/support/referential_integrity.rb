@@ -35,9 +35,9 @@ class ReferentialIntegrity
   end
 
   def without_referential_integrity_mssql
-    db.run(db.tables.map { |name| "ALTER TABLE #{name} NOCHECK Constraint All" }.join(';'))
+    db.run(db.tables.map { |name| "ALTER TABLE #{name.upcase} NOCHECK Constraint All" }.join(';'))
     yield
   ensure
-    db.run(db.tables.map { |name| "ALTER TABLE #{name} CHECK Constraint ALL" }.join(';'))
+    db.run(db.tables.map { |name| "ALTER TABLE #{name.upcase} CHECK Constraint ALL" }.join(';'))
   end
 end

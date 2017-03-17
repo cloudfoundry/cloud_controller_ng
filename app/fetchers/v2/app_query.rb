@@ -35,6 +35,9 @@ module VCAP::RestAPI
     end
 
     def name_filter(ds, cond)
+      if ds.db.database_type == :mssql
+        cond[0].sub!('name', 'NAME')
+      end
       ds.where(app: VCAP::CloudController::AppModel.filter(cond))
     end
 

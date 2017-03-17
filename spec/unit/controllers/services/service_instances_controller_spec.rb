@@ -1079,7 +1079,7 @@ module VCAP::CloudController
               it 'successfully filters on >' do
                 get "v2/service_instances?q=organization_guid>#{org2.guid}"
 
-                expect(last_response.status).to eq(200)
+                expect(last_response.status).to eq(200), "Response Body: #{last_response.body}"
                 services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
                 expect(services.length).to eq(1)
                 expect(services).to include(instance3.guid)
@@ -1088,7 +1088,7 @@ module VCAP::CloudController
               it 'successfully filters on <=' do
                 get "v2/service_instances?q=organization_guid<=#{org2.guid}"
 
-                expect(last_response.status).to eq(200)
+                expect(last_response.status).to eq(200), "Response Body: #{last_response.body}"
                 services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
                 expect(services.length).to eq(2)
                 expect(services).to include(instance1.guid)
@@ -1098,7 +1098,7 @@ module VCAP::CloudController
               it 'successfully filters on >=' do
                 get "v2/service_instances?q=organization_guid>=#{org2.guid}"
 
-                expect(last_response.status).to eq(200)
+                expect(last_response.status).to eq(200), "Response Body: #{last_response.body}"
                 services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
                 expect(services.length).to eq(2)
                 expect(services).to include(instance2.guid)

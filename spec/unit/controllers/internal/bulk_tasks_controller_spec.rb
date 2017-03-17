@@ -58,7 +58,7 @@ module VCAP::CloudController
           get task_states_endpoint, { 'batch_size' => 20,
                                       'token' => { id: task_table_entry(2).id }.to_json }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response.status).to eq(200), "Response Body: #{last_response.body}"
           expect(decoded_response['task_states'].size).to eq(3)
         end
 

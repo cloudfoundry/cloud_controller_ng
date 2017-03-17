@@ -35,6 +35,10 @@ module VCAP::RestAPI
     # @return [Sequel::Dataset]
     def filtered_dataset
       filter_args_from_query.inject(@ds) do |filter, cond|
+        # TODO: can we make better use of Sequel to always upcase column names?
+        if @ds.db.database_type == :mssql && cond[0]
+          cond[0].upcase!
+        end
         filter.filter(cond)
       end
     end
@@ -65,7 +69,6 @@ module VCAP::RestAPI
 
     def filter_args_from_query
       return {} unless query
-
       parse.collect do |key, comparison, val|
         query_filter(key, comparison, val)
       end

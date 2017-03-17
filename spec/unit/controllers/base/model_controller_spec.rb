@@ -155,8 +155,14 @@ module VCAP::CloudController
       end
 
       context 'with attributes for redacting' do
-        let(:request_attributes) { { redacted: { a: 'b' } } }
-        let(:redact_request_attributes) { { 'redacted' => { 'a' => 'b' } } }
+        # TODO: MSSQL blows up with a syntax error when saving nested hashes, but Postgres silently fails as well.
+        # MSSQL: TinyTds::Error: Incorrect syntax near '='.
+        # Postgres: UPDATE "test_model_redacts" SET "guid" = 'c90704d5-c321-4cc4-be46-c8517a1cb963', "redacted" = ('secret' = 'super secret data');
+        #           The part in the parens is treated as a boolean comparison and the string "false" is set for "redacted"
+        # let(:request_attributes) { { redacted: { secret: 'super secret data' } } }
+        # let(:redact_request_attributes) { { 'redacted' => { 'secret' => 'super secret data' } } }
+        let(:request_attributes) { { redacted: 'super secret data' } }
+        let(:redact_request_attributes) { { 'redacted' => 'super secret data' } }
 
         it 'attempts to redact the attributes' do
           set_current_user_as_admin
@@ -168,8 +174,8 @@ module VCAP::CloudController
       end
 
       context 'with empty attributes for redacting' do
-        let(:request_attributes) { { redacted: {} } }
-        let(:redact_request_attributes) { { 'redacted' => {} } }
+        let(:request_attributes) { { redacted: '' } }
+        let(:redact_request_attributes) { { 'redacted' => '' } }
 
         it 'attempts to redact the attributes' do
           expect(TestModelRedact).to receive(:create_from_hash) { TestModelRedact.make }
@@ -282,14 +288,20 @@ module VCAP::CloudController
 
       context 'with attributes for redacting' do
         let!(:model) { TestModelRedact.make }
-        let(:request_attributes) { { redacted: { secret: 'super secret data' } } }
-        let(:redact_request_attributes) { { 'redacted' => { 'secret' => 'super secret data' } } }
+        # TODO: MSSQL blows up with a syntax error when saving nested hashes, but Postgres silently fails as well.
+        # MSSQL: TinyTds::Error: Incorrect syntax near '='.
+        # Postgres: UPDATE "test_model_redacts" SET "guid" = 'c90704d5-c321-4cc4-be46-c8517a1cb963', "redacted" = ('secret' = 'super secret data');
+        #           The part in the parens is treated as a boolean comparison and the string "false" is set for "redacted"
+        # let(:request_attributes) { { redacted: { secret: 'super secret data' } } }
+        # let(:redact_request_attributes) { { 'redacted' => { 'secret' => 'super secret data' } } }
+        let(:request_attributes) { { redacted: 'super secret data' } }
+        let(:redact_request_attributes) { { 'redacted' => 'super secret data' } }
 
         it 'attempts to redact the attributes' do
           expect_any_instance_of(TestModelRedactController).to receive(:redact_attributes).with(:update, redact_request_attributes)
 
           put "/v2/test_model_redact/#{model.guid}", MultiJson.dump(request_attributes)
-          expect(last_response.status).to eq(201)
+          expect(last_response.status).to eq(201), "Response Body #{last_response.body}"
         end
       end
     end

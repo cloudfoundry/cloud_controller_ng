@@ -75,7 +75,7 @@ module VCAP::CloudController
         processes = ProcessModel.
                     diego.
                     runnable.
-                    where("#{ProcessModel.table_name}.id > ?", last_id).
+                    where{ Sequel[ProcessModel.table_name.to_sym][:id] > last_id }.
                     order("#{ProcessModel.table_name}__id".to_sym).
                     eager(:current_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
                     limit(BATCH_SIZE)
