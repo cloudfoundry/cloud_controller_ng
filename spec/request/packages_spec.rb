@@ -164,8 +164,8 @@ RSpec.describe 'Packages' do
             'guid'       => package2.guid,
             'type'       => 'bits',
             'data'       => {
-              'checksum'       => { 'type' => 'sha256', 'value' => nil },
-              'error'      => nil
+              'checksum' => { 'type' => 'sha256', 'value' => nil },
+              'error' => nil
             },
             'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
             'created_at' => iso8601,
@@ -182,8 +182,8 @@ RSpec.describe 'Packages' do
             'guid'       => package.guid,
             'type'       => 'bits',
             'data'       => {
-              'checksum'       => { 'type' => 'sha256', 'value' => nil },
-              'error'      => nil
+              'checksum' => { 'type' => 'sha256', 'value' => nil },
+              'error' => nil
             },
             'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
             'created_at' => iso8601,
@@ -319,8 +319,8 @@ RSpec.describe 'Packages' do
             'guid'       => bits_package.guid,
             'type'       => 'bits',
             'data'       => {
-              'checksum'       => { 'type' => 'sha256', 'value' => nil },
-              'error'      => nil
+              'checksum' => { 'type' => 'sha256', 'value' => nil },
+              'error' => nil
             },
             'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
             'created_at' => iso8601,
@@ -552,8 +552,8 @@ RSpec.describe 'Packages' do
         'type'       => package_model.type,
         'guid'       => guid,
         'data'       => {
-          'checksum'       => { 'type' => 'sha256', 'value' => nil },
-          'error'      => nil
+          'checksum' => { 'type' => 'sha256', 'value' => nil },
+          'error' => nil
         },
         'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
         'created_at' => iso8601,
@@ -608,8 +608,8 @@ RSpec.describe 'Packages' do
         'type'       => package_model.type,
         'guid'       => guid,
         'data'       => {
-          'checksum'       => { 'type' => 'sha256', 'value' => nil },
-          'error'      => nil
+          'checksum' => { 'type' => 'sha256', 'value' => nil },
+          'error' => nil
         },
         'state'      => VCAP::CloudController::PackageModel::PENDING_STATE,
         'created_at' => iso8601,
