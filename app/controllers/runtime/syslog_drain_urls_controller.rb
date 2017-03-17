@@ -21,14 +21,14 @@ module VCAP::CloudController
                                 WHERE ((SYSLOG_DRAIN_URL IS NOT NULL) AND (SYSLOG_DRAIN_URL != ''))
                                 GROUP BY [APPS].[GUID] ORDER BY [GUID] OFFSET #{last_id} ROWS FETCH NEXT #{batch_size} ROWS ONLY")
                            else
-                            AppModel.join(ServiceBinding, app_guid: :guid).
-                               where{ Sequel[:syslog_drain_url] !~ nil }.
-                               where{ Sequel[:syslog_drain_url] !~ '' }.
+                             AppModel.join(ServiceBinding, app_guid: :guid).
+                               where { Sequel[:syslog_drain_url] !~ nil }.
+                               where { Sequel[:syslog_drain_url] !~ '' }.
                                group("#{AppModel.table_name}__guid".to_sym).
                                select(
                                  "#{AppModel.table_name}__guid".to_sym,
-                                 aggregate_function("#{ServiceBinding.table_name}__syslog_drain_url".to_sym).as(:syslog_drain_urls)
-                               ).
+                                  aggregate_function("#{ServiceBinding.table_name}__syslog_drain_url".to_sym).as(:syslog_drain_urls)
+                                ).
                                order(:guid).
                                limit(batch_size).
                                offset(last_id).

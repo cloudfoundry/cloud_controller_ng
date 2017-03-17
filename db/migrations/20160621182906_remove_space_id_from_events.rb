@@ -1,7 +1,7 @@
 Sequel.migration do
   up do
     alter_table(:events) do
-      drop_column(:space_id, :if_exists => true)
+      drop_column(:space_id, if_exists: true)
     end
   end
 

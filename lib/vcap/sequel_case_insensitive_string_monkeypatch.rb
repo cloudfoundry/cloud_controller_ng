@@ -60,35 +60,37 @@ Sequel::MSSQL::DatabaseMethods.class_eval do
     fk = Sequel[:fk]
     fkc = Sequel[:fkc]
     ds = metadata_dataset.from(Sequel.lit('[sys].[foreign_keys]').as(:fk)).
-      join(Sequel.lit('[sys].[foreign_key_columns]').as(:fkc), :constraint_object_id => :object_id).
-      join(Sequel.lit('[sys].[all_columns]').as(:pc), :object_id => fkc[:parent_object_id],     :column_id => fkc[:parent_column_id]).
-      join(Sequel.lit('[sys].[all_columns]').as(:rc), :object_id => fkc[:referenced_object_id], :column_id => fkc[:referenced_column_id]).
-      # original implementation returned `DBO` when it should have returned `dbo`:
-      # where{{object_schema_name(fk[:parent_object_id]) => im.call(schema || current_schema)}}.
-      where{{object_schema_name(fk[:parent_object_id]) => (schema || current_schema).to_s}}.
-      where{{object_name(fk[:parent_object_id]) => im.call(table)}}.
-      select{[fk[:name],
-      fk[:delete_referential_action],
-      fk[:update_referential_action],
-      pc[:name].as(:column),
-      rc[:name].as(:referenced_column),
-      object_schema_name(fk[:referenced_object_id]).as(:schema),
-      object_name(fk[:referenced_object_id]).as(:table)]}.
-      order(fk[:name], fkc[:constraint_column_id])
+         join(Sequel.lit('[sys].[foreign_key_columns]').as(:fkc), constraint_object_id: :object_id).
+         join(Sequel.lit('[sys].[all_columns]').as(:pc), object_id: fkc[:parent_object_id],     column_id: fkc[:parent_column_id]).
+         join(Sequel.lit('[sys].[all_columns]').as(:rc), object_id: fkc[:referenced_object_id], column_id: fkc[:referenced_column_id]).
+         # original implementation returned `DBO` when it should have returned `dbo`:
+         # where{{object_schema_name(fk[:parent_object_id]) => im.call(schema || current_schema)}}.
+         where { { object_schema_name(fk[:parent_object_id]) => (schema || current_schema).to_s } }.
+         where { { object_name(fk[:parent_object_id]) => im.call(table) } }.
+         select { [fk[:name],
+                   fk[:delete_referential_action],
+                   fk[:update_referential_action],
+                   pc[:name].as(:column),
+                   rc[:name].as(:referenced_column),
+                   object_schema_name(fk[:referenced_object_id]).as(:schema),
+                   object_name(fk[:referenced_object_id]).as(:table)]
+    }.
+         order(fk[:name], fkc[:constraint_column_id])
     h = {}
     ds.each do |row|
-      if r = h[row[:name]]
+      r = h[row[:name]]
+      if r
         r[:columns] << m.call(row[:column])
         r[:key] << m.call(row[:referenced_column])
       else
         referenced_schema = m.call(row[:schema])
         referenced_table = m.call(row[:table])
-        h[row[:name]] = { :name      => m.call(row[:name]),
-          :table     => (referenced_schema == current_schema) ? referenced_table : Sequel.qualify(referenced_schema, referenced_table),
-          :columns   => [m.call(row[:column])],
-          :key       => [m.call(row[:referenced_column])],
-          :on_update => fk_action_map[row[:update_referential_action]],
-          :on_delete => fk_action_map[row[:delete_referential_action]] }
+        h[row[:name]] = { name: m.call(row[:name]),
+                          table: (referenced_schema == current_schema) ? referenced_table : Sequel.qualify(referenced_schema, referenced_table),
+                          columns: [m.call(row[:column])],
+                          key: [m.call(row[:referenced_column])],
+                          on_update: fk_action_map[row[:update_referential_action]],
+                          on_delete: fk_action_map[row[:delete_referential_action]] }
       end
     end
     h.values
@@ -99,7 +101,7 @@ Sequel::MSSQL::DatabaseMethods.class_eval do
     if server_version >= 9000000
       table_name = schema_and_table(table).compact.join('.')
       metadata_dataset.from(Sequel.lit('[sys].[default_constraints]')).
-        where{{:parent_object_id => Sequel::SQL::Function.new(:object_id, table_name.upcase), col_name(:parent_object_id, :parent_column_id) => column_name.to_s.upcase}}.
+        where { { :parent_object_id => Sequel::SQL::Function.new(:object_id, table_name.upcase), col_name(:parent_object_id, :parent_column_id) => column_name.to_s.upcase } }.
         get(:name)
     end
   end

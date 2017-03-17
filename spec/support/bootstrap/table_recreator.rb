@@ -40,21 +40,30 @@ class TableRecreator
 
   def disable_referential_integrity
     case db.database_type
-      when :mysql
-        db.execute('SET foreign_key_checks = 0')
-      when :postgres
-      when :mssql
-        # taken from http://dba.stackexchange.com/a/90034
-        db.execute("DECLARE @sql NVARCHAR(MAX); SET @sql = N''; SELECT @sql = @sql + N' ALTER TABLE ' + QUOTENAME(s.name) + N'.' + QUOTENAME(t.name) + N' DROP CONSTRAINT ' + QUOTENAME(c.name) + ';' FROM sys.objects AS c INNER JOIN sys.tables AS t ON c.parent_object_id = t.[object_id] INNER JOIN sys.schemas AS s ON t.[schema_id] = s.[schema_id] WHERE c.[type] IN ('D','C','F','PK','UQ') ORDER BY c.[type]; EXEC sys.sp_executesql @sql;")
+    when :mysql
+      db.execute('SET foreign_key_checks = 0')
+    when :postgres
+    when :mssql
+      # taken from http://dba.stackexchange.com/a/90034
+      db.execute(%{
+      DECLARE @sql NVARCHAR(MAX);
+      SET @sql = N'';
+      SELECT @sql = @sql + N' ALTER TABLE ' + QUOTENAME(s.name) + N'.' + QUOTENAME(t.name) + N' DROP CONSTRAINT ' + QUOTENAME(c.name) + ';'
+      FROM sys.objects AS c
+      INNER JOIN sys.tables AS t ON c.parent_object_id = t.[object_id]
+      INNER JOIN sys.schemas AS s ON t.[schema_id] = s.[schema_id] WHERE c.[type] IN ('D','C','F','PK','UQ')
+      ORDER BY c.[type];
+      EXEC sys.sp_executesql @sql;
+      })
     end
   end
 
   def enable_referential_integrity
     case db.database_type
-      when :mysql
-        db.execute('SET foreign_key_checks = 1')
-      when :postgres
-      when :mssql
+    when :mysql
+      db.execute('SET foreign_key_checks = 1')
+    when :postgres
+    when :mssql
     end
   end
 

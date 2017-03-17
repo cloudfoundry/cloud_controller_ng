@@ -26,7 +26,7 @@ module VCAP::CloudController
       App.select_all(App.table_name).
         diego.
         runnable.
-        where{ Sequel[App.table_name.to_sym][:id] > last_id }.
+        where { Sequel[App.table_name.to_sym][:id] > last_id }.
         order("#{App.table_name}__id".to_sym).
         limit(batch_size).
         eager(:current_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
@@ -49,7 +49,7 @@ module VCAP::CloudController
       diego_apps = App.
                    diego.
                    runnable.
-                   where{ Sequel[App.table_name.to_sym][:id] > last_id }.
+                   where { Sequel[App.table_name.to_sym][:id] > last_id }.
                    order("#{App.table_name}__id".to_sym).
                    limit(batch_size)
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
     def dea_apps(batch_size, last_id)
       query = App.select_all(App.table_name).
               dea.
-              where{ Sequel[App.table_name.to_sym][:id] > last_id }.
+              where { Sequel[App.table_name.to_sym][:id] > last_id }.
               order("#{App.table_name}__id".to_sym).
               limit(batch_size)
 

@@ -22,7 +22,7 @@ module VCAP::CloudController
       bulk_token = MultiJson.load(params.fetch('token'))
       last_id = Integer(bulk_token['id'] || 0)
 
-      tasks = TaskModel.where{ Sequel[:tasks][:id] > last_id }.order(:id).limit(batch_size).all
+      tasks = TaskModel.where { Sequel[:tasks][:id] > last_id }.order(:id).limit(batch_size).all
       id_for_next_token = tasks.empty? ? nil : tasks.last.id
       presented_task_states = task_states(tasks)
 
