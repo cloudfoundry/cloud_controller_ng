@@ -35,7 +35,7 @@ module VCAP::CloudController
         def buildpack_data
           {
             error: package.error,
-            hash:  package.checksum_info,
+            checksum:  package.checksum_info,
           }
         end
 

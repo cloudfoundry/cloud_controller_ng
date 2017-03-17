@@ -17,7 +17,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:type]).to eq(package.type)
         expect(result[:state]).to eq(package.state)
         expect(result[:data][:error]).to eq(package.error)
-        expect(result[:data][:hash]).to eq({ type: 'sha256', value: 'sha256' })
+        expect(result[:data][:checksum]).to eq({ type: 'sha256', value: 'sha256' })
         expect(result[:created_at]).to eq(package.created_at)
         expect(result[:updated_at]).to eq(package.updated_at)
         expect(result[:links]).to include(links)
