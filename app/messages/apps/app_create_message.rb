@@ -8,7 +8,7 @@ module VCAP::CloudController
     attr_accessor(*ALLOWED_KEYS)
 
     def self.create_from_http_request(body)
-      AppCreateMessage.new(body.symbolize_keys)
+      AppCreateMessage.new(body.deep_symbolize_keys)
     end
 
     def self.lifecycle_requested?
@@ -32,16 +32,15 @@ module VCAP::CloudController
       if: lifecycle_requested?
 
     def space_guid
-      relationships.try(:[], 'space').try(:[], 'guid') ||
-        relationships.try(:[], :space).try(:[], :guid)
+      relationships.try(:[], :space).try(:[], :data).try(:[], :guid)
     end
 
     def lifecycle_type
-      lifecycle.try(:[], 'type') || lifecycle.try(:[], :type)
+      lifecycle.try(:[], :type)
     end
 
     def lifecycle_data
-      lifecycle.try(:[], 'data') || lifecycle.try(:[], :data)
+      lifecycle.try(:[], :data)
     end
 
     def buildpack_data
@@ -57,7 +56,7 @@ module VCAP::CloudController
 
       validates_with NoAdditionalKeysValidator
 
-      validates :space, presence: true, allow_nil: false, to_one_relationship: true
+      validates :space, presence: true, allow_nil: false, to_one_relationship_2: true
     end
 
     private
