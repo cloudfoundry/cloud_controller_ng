@@ -17,7 +17,8 @@ module VCAP::CloudController
         def deleted_expired_droplets
           DropletModel.where(
             state: DropletModel::EXPIRED_STATE,
-            droplet_hash: nil
+            droplet_hash: nil,
+            sha256_checksum: nil,
           )
         end
 
