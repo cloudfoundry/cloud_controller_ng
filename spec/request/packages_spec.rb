@@ -19,7 +19,7 @@ RSpec.describe 'Packages' do
 
     let(:type) { 'docker' }
     let(:data) { { image: 'registry/image:latest' } }
-    let(:relationships) { { app: { guid: app_model.guid } } }
+    let(:relationships) { { app: { data: { guid: app_model.guid } } } }
 
     describe 'creation' do
       it 'creates a package' do

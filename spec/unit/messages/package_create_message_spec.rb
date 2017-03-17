@@ -4,7 +4,7 @@ require 'messages/packages/package_create_message'
 module VCAP::CloudController
   RSpec.describe PackageCreateMessage do
     describe '.create_from_http_request' do
-      let(:body) { { 'type' => 'docker', 'relationships' => { 'app' => { 'guid' => 'guid' } } } }
+      let(:body) { { 'type' => 'docker', 'relationships' => { 'app' => { 'data' => { 'guid' => 'guid' } } } } }
 
       it 'returns the correct PackageCreateMessage' do
         message = PackageCreateMessage.create_from_http_request(body)
@@ -22,7 +22,7 @@ module VCAP::CloudController
     end
 
     describe 'validations' do
-      let(:relationships) { { app: { guid: 'some-guid' } } }
+      let(:relationships) { { app: { data: { guid: 'some-guid' } } } }
 
       context 'when unexpected keys are requested' do
         let(:params) { { relationships: relationships, type: 'bits', unexpected: 'foo', extra: 'bar' } }
@@ -50,7 +50,7 @@ module VCAP::CloudController
         let(:params) { { relationships: relationships, type: 'bits' } }
 
         context 'when guid is invalid' do
-          let(:relationships) { { app: { guid: nil } } }
+          let(:relationships) { { app: { data: { guid: nil } } } }
 
           it 'is not valid' do
             message = PackageCreateMessage.new(params)

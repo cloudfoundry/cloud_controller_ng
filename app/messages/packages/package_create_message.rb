@@ -24,7 +24,7 @@ module VCAP::CloudController
     end
 
     def app_guid
-      relationships.try(:[], :app).try(:[], :guid)
+      relationships.dig(:app, :data, :guid)
     end
 
     def docker_type?
@@ -44,7 +44,7 @@ module VCAP::CloudController
 
       validates_with NoAdditionalKeysValidator
 
-      validates :app, presence: true, allow_nil: false, to_one_relationship: true
+      validates :app, presence: true, allow_nil: false, to_one_relationship_2: true
     end
 
     private

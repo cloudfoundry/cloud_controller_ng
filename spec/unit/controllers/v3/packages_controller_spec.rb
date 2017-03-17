@@ -537,7 +537,7 @@ RSpec.describe PackagesController, type: :controller do
       let(:req_body) do
         {
           type: 'bits',
-          relationships: { app: { guid: app_guid } }
+          relationships: { app: { data: { guid: app_guid } } }
         }
       end
       let(:user) { set_current_user(VCAP::CloudController::User.make) }
@@ -565,7 +565,7 @@ RSpec.describe PackagesController, type: :controller do
           let(:req_body) do
             {
               type: 'ninja',
-              relationships: { app: { guid: app_model.guid } }
+              relationships: { app: { data: { guid: app_model.guid } } }
             }
           end
 
@@ -647,7 +647,7 @@ RSpec.describe PackagesController, type: :controller do
       context 'docker' do
         let(:req_body) do
           {
-            relationships: { app: { guid: app_model.guid } },
+            relationships: { app: { data: { guid: app_model.guid } } },
             type: 'docker',
             data: {
               image: 'registry/image:latest'

@@ -69,7 +69,7 @@ module VCAP::CloudController
           validate_custom_buildpack!(process.reload)
 
         elsif docker_type_requested && !case_insensitive_equals(process.docker_image, request_attrs['docker_image'])
-          relationships = { app: { guid: app.guid } }
+          relationships = { app: { data: { guid: app.guid } } }
           create_message = PackageCreateMessage.new({ type: 'docker',
                                                       relationships: relationships,
                                                       data: { image: request_attrs['docker_image'] } })

@@ -56,7 +56,7 @@ module VCAP::CloudController
         docker_type_requested    = request_attrs.key?('docker_image')
 
         if docker_type_requested
-          relationships = { app: { guid: app.guid } }
+          relationships = { app: { data: { guid: app.guid } } }
           create_message = PackageCreateMessage.new({ type: 'docker',
                                                       relationships: relationships,
                                                       data: { image: request_attrs['docker_image'] } })
