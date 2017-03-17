@@ -13,7 +13,7 @@
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      data['timeout']
+      data[timeout]
       <span class="method-list-item-type">integer</span>
     </h4>
 

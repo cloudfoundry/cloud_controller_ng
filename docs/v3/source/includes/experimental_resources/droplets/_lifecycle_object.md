@@ -17,7 +17,7 @@ Lifecycle objects describe buildpacks or docker images.
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      data['buildpacks']
+      data[buildpacks]
       <span class="method-list-item-type">array of strings</span>
     </h4>
 
@@ -28,7 +28,7 @@ Lifecycle objects describe buildpacks or docker images.
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      data['stack']
+      data[stack]
       <span class="method-list-item-type">string</span>
     </h4>
 

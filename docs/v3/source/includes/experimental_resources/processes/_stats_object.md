@@ -29,7 +29,7 @@
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      usage['time']
+      usage[time]
       <span class="method-list-item-type">datetime</span>
     </h4>
 
@@ -37,7 +37,7 @@
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      usage['cpu']
+      usage[cpu]
       <span class="method-list-item-type">number</span>
     </h4>
 
@@ -45,7 +45,7 @@
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      usage['mem']
+      usage[mem]
       <span class="method-list-item-type">integer</span>
     </h4>
 
@@ -53,7 +53,7 @@
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      usage['disk']
+      usage[disk]
       <span class="method-list-item-type">integer</span>
     </h4>
 

@@ -21,7 +21,9 @@ curl "https://api.example.org/v3/packages" \
     "type": "docker",
     "relationships": {
       "app": {
-        "guid": [guid]
+        "data": {
+          "guid": [guid]
+        }
       }
     },
     "data": {
@@ -48,12 +50,12 @@ This endpoint creates a new package.
 <ul class="method-list-group">
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      relationships['app']['guid']
+      relationships[app][data][guid]
 
       <span class="method-list-item-type method-list-item-type-required">required</span>
     </h4>
 
-    <p class="method-list-item-description">Guid of the app to which you would like to associate the package.</p>
+    <p class="method-list-item-description">Guid of the app to associate the package with.</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -75,7 +77,7 @@ This endpoint creates a new package.
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      data['image']
+      data[image]
 
       <span class="method-list-item-type">optional</span>
     </h4>
