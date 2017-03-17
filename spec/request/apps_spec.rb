@@ -16,21 +16,17 @@ RSpec.describe 'Apps' do
     it 'creates an app' do
       buildpack      = VCAP::CloudController::Buildpack.make
       create_request = {
-        name: 'my_app',
+        name:                  'my_app',
         environment_variables: { open: 'source' },
-        lifecycle: {
+        lifecycle:             {
           type: 'buildpack',
           data: {
-            stack: nil,
+            stack:      nil,
             buildpacks: [buildpack.name]
           }
         },
-        relationships: {
-          space: {
-            data: {
-              guid: space.guid
-            }
-          }
+        relationships:         {
+          space: { guid: space.guid }
         }
       }
 
@@ -101,7 +97,7 @@ RSpec.describe 'Apps' do
             data: {}
           },
           relationships:         {
-            space: { data: { guid: space.guid } }
+            space: { guid: space.guid }
           }
         }
 

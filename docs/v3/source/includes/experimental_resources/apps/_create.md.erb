@@ -30,9 +30,7 @@ curl "https://api.example.org/v3/apps" \
     },
     "relationships": {
       "space": {
-        "data": {
-          "guid": "2f35885d-0c9d-4423-83ad-fd05066f8576"
-        }
+        "guid": "2f35885d-0c9d-4423-83ad-fd05066f8576"
       }
     }
   }'
@@ -64,12 +62,12 @@ This endpoint creates a new app.
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      relationships[space][data][guid]
+      relationships[space][guid]
 
       <span class="method-list-item-type method-list-item-type-required">required</span>
     </h4>
 
-    <p class="method-list-item-description">Guid of the space that will contain the app.</p>
+    <p class="method-list-item-description">Guid for a particular space</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">

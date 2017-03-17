@@ -326,44 +326,6 @@ module VCAP::CloudController::Validators
       end
     end
 
-    describe 'ToOneRelationship2Validator' do
-      let(:to_one_class) do
-        Class.new(fake_class) do
-          validates :field, to_one_relationship_2: true
-        end
-      end
-
-      it 'ensures that the data has the correct structure' do
-        bad_guid_key = to_one_class.new({ field: { data: { not_a_guid: '1234' } } })
-        bad_guid_value = to_one_class.new({ field: { data: { guid: { woah: '1234' } } } })
-
-        bad_data_key = to_one_class.new({ field: { not_data: '1234' } })
-        bad_data_value = to_one_class.new({ field: { data: '1234' } })
-        missing_data = to_one_class.new({ field: '1234' })
-
-        valid = to_one_class.new(field: { data: { guid: '1234' } })
-
-        expect(bad_guid_key).not_to be_valid
-        expect(bad_guid_value).not_to be_valid
-        expect(bad_data_key).not_to be_valid
-        expect(bad_data_value).not_to be_valid
-        expect(missing_data).not_to be_valid
-        expect(valid).to be_valid
-      end
-
-      it 'allows for nil value in data' do
-        valid = to_one_class.new(field: { data: nil })
-
-        expect(valid).to be_valid
-      end
-
-      it 'adds an error if the field is not structured correctly' do
-        invalid = to_one_class.new({ field: { data: { not_a_guid: 1234 } } })
-        expect(invalid).not_to be_valid
-        expect(invalid.errors[:field]).to include 'must be structured like this: "field: {"data": {"guid": "valid-guid"}}"'
-      end
-    end
-
     describe 'ToManyRelationshipValidator' do
       let(:to_many_class) do
         Class.new(fake_class) do
