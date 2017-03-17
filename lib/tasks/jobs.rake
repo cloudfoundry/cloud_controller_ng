@@ -25,17 +25,18 @@ namespace :jobs do
         max_priority: ENV['MAX_PRIORITY'],
         queues: options.fetch(:queues),
         worker_name: options[:name],
-        quiet: false
+        quiet: true,
       }
     end
 
     def start_working
       BackgroundJobEnvironment.new(RakeConfig.config).setup_environment
-      Delayed::Worker.destroy_failed_jobs = false
-      Delayed::Worker.max_attempts = 3
-      Delayed::Worker.plugins << DeserializationRetry
       logger = Steno.logger("cc-worker")
       logger.info("Starting job with options #{@queue_options}")
+      Delayed::Worker.destroy_failed_jobs = false
+      Delayed::Worker.max_attempts = 3
+      Delayed::Worker.logger = logger
+      Delayed::Worker.plugins << DeserializationRetry
       worker = Delayed::Worker.new(@queue_options)
       worker.name = @queue_options[:worker_name]
       worker.start
