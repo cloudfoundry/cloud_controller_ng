@@ -1438,7 +1438,9 @@ information for your packages, droplets, processes, tasks, and more.</p>
     },
     "relationships": {
       "space": {
-        "guid": "2f35885d-0c9d-4423-83ad-fd05066f8576"
+        "data": {
+          "guid": "2f35885d-0c9d-4423-83ad-fd05066f8576"
+        }
       }
     }
   }'</span>
@@ -1518,12 +1520,12 @@ information for your packages, droplets, processes, tasks, and more.</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      relationships[space][guid]
+      relationships[space][data][guid]
 
       <span class="method-list-item-type method-list-item-type-required">required</span>
     </h4>
 
-    <p class="method-list-item-description">Guid for a particular space</p>
+    <p class="method-list-item-description">Guid of the space that will contain the app.</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -2562,7 +2564,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      data[&lsquo;buildpacks&rsquo;]
+      data[buildpacks]
       <span class="method-list-item-type">array of strings</span>
     </h4>
 
@@ -2573,7 +2575,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      data['stack&rsquo;]
+      data[stack]
       <span class="method-list-item-type">string</span>
     </h4>
 
@@ -4563,7 +4565,9 @@ Only isolation segments that are entitled to the organization are eligible to be
     "type": "docker",
     "relationships": {
       "app": {
-        "guid": [guid]
+        "data": {
+          "guid": [guid]
+        }
       }
     },
     "data": {
@@ -4609,12 +4613,12 @@ Only isolation segments that are entitled to the organization are eligible to be
 <ul class="method-list-group">
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      relationships[&lsquo;app&rsquo;]['guid&rsquo;]
+      relationships[app][data][guid]
 
       <span class="method-list-item-type method-list-item-type-required">required</span>
     </h4>
 
-    <p class="method-list-item-description">Guid of the app to which you would like to associate the package.</p>
+    <p class="method-list-item-description">Guid of the app to associate the package with.</p>
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
@@ -4636,7 +4640,7 @@ Only isolation segments that are entitled to the organization are eligible to be
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      data['image&rsquo;]
+      data[image]
 
       <span class="method-list-item-type">optional</span>
     </h4>
@@ -5402,7 +5406,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      data[&lsquo;timeout&rsquo;]
+      data[timeout]
       <span class="method-list-item-type">integer</span>
     </h4>
 
@@ -5441,7 +5445,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      usage[&lsquo;time&rsquo;]
+      usage[time]
       <span class="method-list-item-type">datetime</span>
     </h4>
 
@@ -5449,7 +5453,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      usage['cpu&rsquo;]
+      usage[cpu]
       <span class="method-list-item-type">number</span>
     </h4>
 
@@ -5457,7 +5461,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      usage['mem&rsquo;]
+      usage[mem]
       <span class="method-list-item-type">integer</span>
     </h4>
 
@@ -5465,7 +5469,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      usage['disk&rsquo;]
+      usage[disk]
       <span class="method-list-item-type">integer</span>
     </h4>
 
@@ -6437,7 +6441,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      relationships[&lsquo;app&rsquo;]['guid&rsquo;]
+      relationships[app][guid]
 
       <span class="method-list-item-type method-list-item-type-required">required</span>
     </h4>
@@ -6446,7 +6450,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      relationships['route&rsquo;]['guid&rsquo;]
+      relationships[route][guid]
 
       <span class="method-list-item-type method-list-item-type-required">required</span>
     </h4>
@@ -6455,7 +6459,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      relationships['process&rsquo;]['type&rsquo;]
+      relationships[process][type]
 
       <span class="method-list-item-type">optional</span>
     </h4>
@@ -6964,7 +6968,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      relationships[&lsquo;app&rsquo;]['guid&rsquo;]
+      relationships[app][guid]
 
       <span class="method-list-item-type method-list-item-type-required">required</span>
     </h4>
@@ -6973,7 +6977,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      relationships['service_instance&rsquo;]['guid&rsquo;]
+      relationships[service_instance][guid]
 
       <span class="method-list-item-type method-list-item-type-required">required</span>
     </h4>
@@ -6982,7 +6986,7 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </li>
   <li class="method-list-item">
     <h4 class="method-list-item-label">
-      data['parameters&rsquo;]
+      data[parameters]
 
       <span class="method-list-item-type">optional</span>
     </h4>
