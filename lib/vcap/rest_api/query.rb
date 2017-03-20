@@ -108,14 +108,12 @@ module VCAP::RestAPI
 
       if values.empty?
         { key => nil }
+      elsif comparison.include?('IN') || comparison == '='
+        # IN, :
+        { key.to_sym => values }
       else
-        if comparison.include?('IN') || comparison == '='
-          # IN, :
-          { key.to_sym => values }
-        else
-          # > < >= <=
-          Sequel[@model.table_name][key.to_sym].send(comparison.to_sym, values)
-        end
+        # > < >= <=
+        Sequel[@model.table_name][key.to_sym].send(comparison.to_sym, values)
       end
     end
 
