@@ -50,5 +50,4 @@ env:
     - COVERAGE=true DB=postgres TASKS=spec:all
     - DB=mysql TASKS=spec:all
     - DB=mssql TASKS=spec:all
-    - DB=postgres TASKS=spec:api
     - TASKS=rubocop
