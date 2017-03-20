@@ -257,7 +257,7 @@ RSpec.describe 'Apps' do
         get '/v2/apps?q=name:filter-name', nil, admin_headers
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response.status).to eq(200), "Response Body: #{last_response.body}"
         expect(parsed_response['total_results']).to eq(1)
         expect(parsed_response['resources'][0]['entity']['name']).to eq('filter-name')
       end

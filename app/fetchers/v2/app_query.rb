@@ -7,11 +7,11 @@ module VCAP::RestAPI
             org_filter(filter, cond)
           elsif cond.key?(:stack)
             stack_filter(filter, cond)
+          elsif cond.key?(:name)
+            name_filter(filter, cond)
           else
             filter.filter(cond)
           end
-        elsif cond[0].starts_with?('name')
-          name_filter(filter, cond)
         else
           filter.filter(cond)
         end
@@ -35,9 +35,6 @@ module VCAP::RestAPI
     end
 
     def name_filter(ds, cond)
-      if ds.db.database_type == :mssql
-        cond[0].sub!('name', 'NAME')
-      end
       ds.where(app: VCAP::CloudController::AppModel.filter(cond))
     end
 

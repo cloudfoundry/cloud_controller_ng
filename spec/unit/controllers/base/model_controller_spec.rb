@@ -477,7 +477,7 @@ module VCAP::CloudController
         it 'returns matching results when querying for less than or equal' do
           get escape_query("/v2/test_models?q=created_at<=#{model2.created_at.utc.iso8601}")
 
-          expect(decoded_response['total_results']).to eq(2)
+          expect(decoded_response['total_results']).to eq(2), "response: #{last_response.body}"
           found_guids = decoded_response['resources'].collect { |resource| resource['metadata']['guid'] }
           expect(found_guids).to eq([model1.guid, model2.guid])
         end
