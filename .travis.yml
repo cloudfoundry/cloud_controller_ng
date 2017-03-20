@@ -36,6 +36,7 @@ after_script:
 services:
   - mysql
   - postgresql
+  - docker
 
 addons:
   code_climate:
