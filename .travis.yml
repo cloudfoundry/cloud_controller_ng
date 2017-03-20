@@ -22,10 +22,9 @@ before_install:
   - "if [ \"$DB\" = \"mssql\" ]; then npm install -g sql-cli && ./scripts/run-ms-sql-background.sh; fi"
 
 before_script:
-  - bundle exec rake db:create
   - DB=mysql bundle exec rake parallel:create
   - DB=postgres bundle exec rake parallel:create
-  - "if [ \"$DB\" = \"mssql\" ]; then bundle exec rake parallel:create; fi"
+  - "if [ \"$DB\" = \"mssql\" ]; then bundle exec rake db:create; fi"
 
 script:
   - bundle exec rake $TASKS
@@ -49,5 +48,6 @@ env:
   matrix:
     - COVERAGE=true DB=postgres TASKS=spec:all
     - DB=mysql TASKS=spec:all
-    - DB=mssql TASKS=spec:all
+    # - DB=mssql TASKS=spec:all
+    - DB=mssql TASKS=spec:serial
     - TASKS=rubocop
