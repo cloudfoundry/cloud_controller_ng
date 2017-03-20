@@ -99,6 +99,9 @@ The development team typically will run the specs to a single file as (e.g.)
    
 ### Running against a local MS SQL docker image
 
+**Note:** The MS SQL image requires at least 4GB of RAM available to docker.
+Follow [these instructions](https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-setup-docker) for increasing RAM limit for docker.
+
 To start a local MS SQL instance on OSX / Linux:
 
 ```sh
