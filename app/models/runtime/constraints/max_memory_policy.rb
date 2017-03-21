@@ -49,6 +49,10 @@ end
 class TaskMaxMemoryPolicy < BaseMaxMemoryPolicy
   private
 
+  def additional_checks
+    !(resource.state == VCAP::CloudController::TaskModel::CANCELING_STATE)
+  end
+
   def field
     :memory_in_mb
   end

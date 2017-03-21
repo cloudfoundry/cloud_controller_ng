@@ -40,24 +40,33 @@ RSpec.describe 'max memory policies' do
   end
 
   describe TaskMaxMemoryPolicy do
-    let(:task) { VCAP::CloudController::TaskModel.make memory_in_mb: 150 }
-
     subject(:validator) { TaskMaxMemoryPolicy.new(task, org_or_space, error_name) }
 
-    it 'registers error when quota is exceeded' do
-      allow(org_or_space).to receive(:has_remaining_memory).with(150).and_return(false)
-      expect(validator).to validate_with_error(task, :memory_in_mb, error_name)
+    let(:task) { VCAP::CloudController::TaskModel.make memory_in_mb: 150, state: VCAP::CloudController::TaskModel::RUNNING_STATE }
+
+    context 'when not cancelling a task' do
+      it 'registers error when quota is exceeded' do
+        allow(org_or_space).to receive(:has_remaining_memory).with(150).and_return(false)
+        expect(validator).to validate_with_error(task, :memory_in_mb, error_name)
+      end
+
+      it 'does not register error when quota is not exceeded' do
+        allow(org_or_space).to receive(:has_remaining_memory).with(150).and_return(true)
+        expect(validator).to validate_without_error(task)
+      end
+
+      it 'adds the given error to the model' do
+        allow(org_or_space).to receive(:has_remaining_memory).with(150).and_return(false)
+        validator.validate
+        expect(task.errors.on(:memory_in_mb)).to include(error_name)
+      end
     end
 
-    it 'does not register error when quota is not exceeded' do
-      allow(org_or_space).to receive(:has_remaining_memory).with(150).and_return(true)
-      expect(validator).to validate_without_error(task)
-    end
-
-    it 'adds the given error to the model' do
-      allow(org_or_space).to receive(:has_remaining_memory).with(150).and_return(false)
-      validator.validate
-      expect(task.errors.on(:memory_in_mb)).to include(error_name)
+    context 'when cancelling a task' do
+      it 'does not register error' do
+        task.state = VCAP::CloudController::TaskModel::CANCELING_STATE
+        expect(validator).to validate_without_error(task)
+      end
     end
   end
 end

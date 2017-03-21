@@ -13,8 +13,7 @@ module VCAP::CloudController
 
       TaskModel.db.transaction do
         task.lock!
-        task.state = TaskModel::CANCELING_STATE
-        task.save
+        task.update(state: TaskModel::CANCELING_STATE)
 
         task_event_repository.record_task_cancel(task, user_audit_info)
       end

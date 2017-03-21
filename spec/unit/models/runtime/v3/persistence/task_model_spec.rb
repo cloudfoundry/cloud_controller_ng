@@ -209,6 +209,14 @@ module VCAP::CloudController
                 )
               }.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds space memory quota'
             end
+
+            it 'does not raise errors when canceling task above quota' do
+              task = TaskModel.make(memory_in_mb: 10, app: app)
+              space.update(space_quota_definition: SpaceQuotaDefinition.make(memory_limit: 5, organization: org))
+
+              task.update(state: TaskModel::CANCELING_STATE)
+              expect(task.reload).to be_valid
+            end
           end
 
           describe 'when the quota has an instance_memory_limit' do
@@ -308,6 +316,14 @@ module VCAP::CloudController
                   app: app,
                 )
               }.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds organization memory quota'
+            end
+
+            it 'does not raise errors when canceling task above quota' do
+              task = TaskModel.make(memory_in_mb: 10, app: app)
+              org.update(quota_definition: QuotaDefinition.make(memory_limit: 5))
+
+              task.update(state: TaskModel::CANCELING_STATE)
+              expect(task.reload).to be_valid
             end
           end
 
