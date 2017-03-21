@@ -22,9 +22,7 @@ before_install:
   - "if [ \"$DB\" = \"mssql\" ]; then npm install -g sql-cli && ./scripts/run-ms-sql-background.sh; fi"
 
 before_script:
-  - DB=mysql bundle exec rake parallel:create
-  - DB=postgres bundle exec rake parallel:create
-  - "if [ \"$DB\" = \"mssql\" ]; then bundle exec rake parallel:create; fi"
+  - "if [ -n \"$DB\" ]; then bundle exec rake parallel:create ; fi"
 
 script:
   - bundle exec rake $TASKS
