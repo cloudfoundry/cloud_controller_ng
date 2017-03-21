@@ -2,13 +2,14 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class SpacesListMessage < ListMessage
-    ALLOWED_KEYS = [:page, :per_page, :names].freeze
+    ALLOWED_KEYS = [:page, :per_page, :names, :organization_guids].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 
     validates_with NoAdditionalParamsValidator
 
     validates :names, array: true, allow_nil: true
+    validates :organization_guids, array: true, allow_nil: true
 
     def initialize(params={})
       super(params.symbolize_keys)
@@ -17,6 +18,7 @@ module VCAP::CloudController
     def self.from_params(params)
       opts = params.dup
       to_array! opts, 'names'
+      to_array! opts, 'organization_guids'
       new(opts.symbolize_keys)
     end
 

@@ -20,6 +20,10 @@ module VCAP::CloudController
         dataset = dataset.where(name: message.names)
       end
 
+      if message.requested? :organization_guids
+        dataset = dataset.where(organization: Organization.where(guid: message.organization_guids))
+      end
+
       dataset
     end
   end
