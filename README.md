@@ -83,6 +83,12 @@ You will also need a database called:
 
     `cc_test_integration_cc`
 
+#### Installing dependencies
+
+If tiny_tds fails to install on OSX, run:
+
+    brew install freetds
+
 #### Running tests on a single file
 
 The development team typically will run the specs to a single file as (e.g.)
