@@ -20,8 +20,20 @@ module CloudFoundry
 
       rescue VCAP::CloudController::UaaUnavailable => e
         logger.error("Failed communicating with UAA: #{e.message}")
-        [502, { 'Content-Type:' => 'application/json' },
-         [{ Code: 0, Description: "Failed communicating with UAA: #{e.message}" }.to_json]]
+        [502, { 'Content-Type:' => 'application/json' }, [error_message(env)]]
+      end
+
+      private
+
+      def error_message(env)
+        api_error = CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
+        version = env['PATH_INFO'][0..2]
+
+        if version == '/v2'
+          ErrorPresenter.new(api_error, Rails.env.test?, V2ErrorHasher.new(api_error)).to_json
+        elsif version == '/v3'
+          ErrorPresenter.new(api_error, Rails.env.test?, V3ErrorHasher.new(api_error)).to_json
+        end
       end
 
       def logger
