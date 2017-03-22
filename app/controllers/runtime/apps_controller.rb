@@ -286,12 +286,12 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', route_guid) unless route
 
       begin
-        V2::RouteMappingCreate.new(user_audit_info, route, app).add(request_attrs)
+        RouteMappingCreate.new(user_audit_info, route, app).add(request_attrs)
       rescue RouteMappingCreate::DuplicateRouteMapping
         # the route is already mapped, consider the request successful
-      rescue V2::RouteMappingCreate::TcpRoutingDisabledError
+      rescue RouteMappingCreate::TcpRoutingDisabledError
         raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
-      rescue V2::RouteMappingCreate::RouteServiceNotSupportedError
+      rescue RouteMappingCreate::RouteServiceNotSupportedError
         raise CloudController::Errors::InvalidRouteRelation.new("#{route.guid} - Route services are only supported for apps on Diego")
       rescue RouteMappingCreate::SpaceMismatch
         raise CloudController::Errors::InvalidRelation.new(

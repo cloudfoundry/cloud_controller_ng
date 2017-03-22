@@ -18,6 +18,8 @@ module VCAP::CloudController
               if !r.domain.router_group_guid.nil?
                 if routing_api_client
                   router_group = routing_api_client.router_group(r.domain.router_group_guid)
+                  # TODO: raise if router group is nil
+                  # TODO: Rescue any RoutingApi errors?  Or just let them go up the stack?
                   if router_group.type.eql?('tcp') && !route_app_port_map[r.guid].blank?
                     info = { 'router_group_guid' => r.domain.router_group_guid }
                     info['external_port'] = r.port

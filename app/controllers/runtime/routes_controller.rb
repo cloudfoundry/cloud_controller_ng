@@ -231,14 +231,14 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', app_guid) unless app
 
       begin
-        V2::RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, app).add(request_attrs)
+        RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, app).add(request_attrs)
       rescue RouteMappingCreate::DuplicateRouteMapping
         # the route is already mapped, consider the request successful
-      rescue V2::RouteMappingCreate::TcpRoutingDisabledError
+      rescue RouteMappingCreate::TcpRoutingDisabledError
         raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
       rescue RouteMappingCreate::SpaceMismatch => e
         raise CloudController::Errors::InvalidAppRelation.new(e.message)
-      rescue V2::RouteMappingCreate::RouteServiceNotSupportedError
+      rescue RouteMappingCreate::RouteServiceNotSupportedError
         raise CloudController::Errors::InvalidAppRelation.new("#{app.guid} - Route services are only supported for apps on Diego")
       end
 

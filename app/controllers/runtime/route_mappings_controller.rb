@@ -1,4 +1,4 @@
-require 'actions/v2/route_mapping_create'
+require 'actions/route_mapping_create'
 
 module VCAP::CloudController
   class RouteMappingsController < RestController::ModelController
@@ -32,7 +32,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', request_attrs['app_guid']) unless process
       raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(process.space.guid)
 
-      route_mapping = V2::RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process).add(request_attrs)
+      route_mapping = RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process).add(request_attrs)
 
       if !request_attrs.key?('app_port') && !process.ports.blank?
         add_warning("Route has been mapped to app port #{route_mapping.app_port}.")
@@ -48,11 +48,11 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('RouteMappingTaken', route_mapping_taken_message(request_attrs))
     rescue RouteMappingCreate::UnavailableAppPort
       raise CloudController::Errors::ApiError.new_from_details('RoutePortNotEnabledOnApp')
-    rescue V2::RouteMappingCreate::TcpRoutingDisabledError
+    rescue RouteMappingCreate::TcpRoutingDisabledError
       raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
-    rescue V2::RouteMappingCreate::RouteServiceNotSupportedError
+    rescue RouteMappingCreate::RouteServiceNotSupportedError
       raise CloudController::Errors::InvalidRelation.new('Route services are only supported for apps on Diego')
-    rescue V2::RouteMappingCreate::AppPortNotSupportedError
+    rescue RouteMappingCreate::AppPortNotSupportedError
       raise CloudController::Errors::ApiError.new_from_details('AppPortMappingRequiresDiego')
     rescue RouteMappingCreate::SpaceMismatch => e
       raise CloudController::Errors::InvalidRelation.new(e.message)
