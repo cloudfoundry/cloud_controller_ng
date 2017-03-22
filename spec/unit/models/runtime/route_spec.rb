@@ -5,6 +5,15 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe '#tcp?' do
+      let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
+      let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
+      let(:dependency_double) {double('dependency_locator', routing_api_client: routing_api_client)}
+
+      before do
+        allow_any_instance_of(RouteValidator).to receive(:validate)
+        allow(CloudController::DependencyLocator).to receive(:instance).and_return(dependency_double)
+      end
+
       context 'when the route belongs to a shared domain' do
         context 'and that domain is a TCP domain' do
           let!(:tcp_domain) { SharedDomain.make(router_group_guid: 'guid') }
@@ -359,8 +368,12 @@ module VCAP::CloudController
           let(:domain) { SharedDomain.make(router_group_guid: 'tcp-router-group') }
           let(:space_quota_definition) { SpaceQuotaDefinition.make }
           let(:space) { Space.make(space_quota_definition: space_quota_definition, organization: space_quota_definition.organization) }
+          let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
+          let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
+          let(:dependency_double) {double('dependency_locator', routing_api_client: routing_api_client)}
 
           before do
+            allow(CloudController::DependencyLocator).to receive(:instance).and_return(dependency_double)
             validator = double
             allow(RouteValidator).to receive(:new).and_return(validator)
             allow(validator).to receive(:validate)

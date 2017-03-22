@@ -8,6 +8,7 @@ module VCAP::CloudController::RoutingApi
     ROUTER_GROUPS_PATH = '/routing/v1/router_groups'.freeze
 
     def initialize(routing_api_uri, uaa_client, skip_cert_verify)
+      # raise RoutingApiUnavailable
       @routing_api_uri = URI(routing_api_uri) if routing_api_uri
       @uaa_client = uaa_client
       @skip_cert_verify = skip_cert_verify

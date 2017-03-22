@@ -433,6 +433,9 @@ module VCAP::CloudController
           let(:tcp_route) { Route.make(port: 9090, host: '', space: space, domain: tcp_domain) }
           let(:app_obj) { AppFactory.make(space: space, ports: [9090], diego: true) }
           let(:space_developer) { make_developer_for_space(space) }
+          let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
+          let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
+
           let(:body) do
             {
                 app_guid: app_obj.guid,
@@ -443,6 +446,8 @@ module VCAP::CloudController
           before do
             space.space_quota_definition = space_quota
             allow_any_instance_of(RouteValidator).to receive(:validate)
+            allow(RoutingApi::Client).to receive(:new).and_return(routing_api_client)
+            body
             TestConfig.override(routing_api: nil)
           end
 

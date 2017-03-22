@@ -16,11 +16,10 @@ module VCAP::CloudController
           process.routes.each do |r|
             route_app_port_map[r.guid].each do |app_port|
               if !r.domain.router_group_guid.nil?
-                if routing_api_client
-                  router_group = routing_api_client.router_group(r.domain.router_group_guid)
-                  # TODO: raise if router group is nil
-                  # TODO: Rescue any RoutingApi errors?  Or just let them go up the stack?
-                  if router_group.type.eql?('tcp') && !route_app_port_map[r.guid].blank?
+                # TODO: raise if router group is nil
+                # TODO: Rescue any RoutingApi errors?  Or just let them go up the stack?
+                if r.domain is_a?(SharedDomain)
+                  if r.domain.tcp? && !route_app_port_map[r.guid].blank?
                     info = { 'router_group_guid' => r.domain.router_group_guid }
                     info['external_port'] = r.port
                     info['container_port'] = app_port
@@ -62,10 +61,6 @@ module VCAP::CloudController
               route_app_port_map[route_map.route_guid].push(VCAP::CloudController::App::DEFAULT_HTTP_PORT)
             end
           end
-        end
-
-        def routing_api_client
-          @routing_api_client ||= CloudController::DependencyLocator.instance.routing_api_client
         end
       end
     end

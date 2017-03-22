@@ -33,12 +33,11 @@ module VCAP::CloudController
 
           before do
             allow_any_instance_of(RouteValidator).to receive(:validate)
-            allow(routing_info).to receive(:routing_api_client).and_return(routing_api_client)
-            allow(routing_api_client).to receive(:router_groups).and_return([router_group])
+            allow_any_instance_of(SharedDomain).to receive(:routing_api_client).and_return(routing_api_client)
+            # allow(routing_api_client).to receive(:router_groups).and_return([router_group])
           end
 
           context 'http routes' do
-            let(:router_group_type) { 'http' }
 
             context 'with no app ports specified in route mapping' do
               before do
@@ -182,7 +181,8 @@ module VCAP::CloudController
             end
 
             context 'when using a router group' do
-              let(:domain) { SharedDomain.make(name: 'httpdomain.com', router_group_guid: router_group_guid, router_group_type: 'http') }
+              let(:router_group_type) { 'http' }
+              let(:domain) { SharedDomain.make(name: 'httpdomain.com', router_group_guid: router_group_guid)}
               let(:http_route) { Route.make(domain: domain, space: space, port: 8080) }
               let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: http_route) }
 
@@ -205,7 +205,6 @@ module VCAP::CloudController
             let!(:domain) { SharedDomain.make(name: 'tcpdomain.com', router_group_guid: 'router-group-guid-1') }
             let(:process) { AppFactory.make(space: space, diego: true, ports: [9090]) }
             let(:tcp_route) { Route.make(domain: domain, space: space, port: 52000) }
-            let(:router_group_type) { 'tcp' }
 
             context 'with only one app port mapped to route' do
               let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: tcp_route, app_port: 9090) }

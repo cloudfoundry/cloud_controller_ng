@@ -2226,11 +2226,14 @@ module VCAP::CloudController
       end
 
       describe 'routes from tcp router groups' do
-        let(:domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: 'guid_1') }
+        let(:domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: 'router-group-guid') }
         let(:route) { Route.make(space: app_obj.space, domain: domain, port: 9090, host: '') }
+        let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
+        let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
 
         before do
           allow_any_instance_of(RouteValidator).to receive(:validate)
+          allow(VCAP::CloudController::RoutingApi::Client).to receive(:new).and_return(routing_api_client)
         end
 
         it 'adds the route to the app' do

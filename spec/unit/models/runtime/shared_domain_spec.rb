@@ -81,8 +81,17 @@ module VCAP::CloudController
     end
 
     describe '#tcp?' do
+      let(:router_group_type) { 'http' }
+      let(:ra_client) { instance_double(VCAP::CloudController::RoutingApi::Client, :router_group => rg) }
+      let(:rg) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, :type => router_group_type)}
+      let(:shared_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: '123') }
+
+      before do
+        allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(ra_client)
+      end
+
       context 'when shared domain is a tcp domain' do
-        let(:shared_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: '123') }
+        let(:router_group_type) { 'tcp' }
 
         it 'returns true' do
           expect(shared_domain.tcp?).to be_truthy
@@ -90,8 +99,6 @@ module VCAP::CloudController
       end
 
       context 'when shared domain is not a tcp domain' do
-        let(:shared_domain) { SharedDomain.make(name: 'tcp.com') }
-
         it 'returns false' do
           expect(shared_domain.tcp?).to eq(false)
         end
