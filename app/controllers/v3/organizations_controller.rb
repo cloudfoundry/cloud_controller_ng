@@ -32,7 +32,12 @@ class OrganizationsV3Controller < ApplicationController
 
     isolation_segment = fetch_isolation_segment(org.default_isolation_segment_guid)
 
-    render status: :ok, json: Presenters::V3::ToOneRelationshipPresenter.new("organizations/#{org.guid}", isolation_segment, 'default_isolation_segment')
+    render status: :ok, json: Presenters::V3::ToOneRelationshipPresenter.new(
+      resource_path: "organizations/#{org.guid}",
+      related_instance: isolation_segment,
+      relationship_name: 'default_isolation_segment',
+      related_resource_name: 'isolation_segments'
+    )
   end
 
   def update_default_isolation_segment
@@ -47,7 +52,12 @@ class OrganizationsV3Controller < ApplicationController
 
     SetDefaultIsolationSegment.new.set(org, isolation_segment, message)
 
-    render status: :ok, json: Presenters::V3::ToOneRelationshipPresenter.new("organizations/#{org.guid}", isolation_segment, 'default_isolation_segment')
+    render status: :ok, json: Presenters::V3::ToOneRelationshipPresenter.new(
+      resource_path: "organizations/#{org.guid}",
+      related_instance: isolation_segment,
+      relationship_name: 'default_isolation_segment',
+      related_resource_name: 'isolation_segments'
+    )
   rescue SetDefaultIsolationSegment::InvalidRelationship
     unprocessable!("Unable to set #{iso_seg_guid} as the default isolation segment. Ensure it has been entitled to this organization.")
   rescue SetDefaultIsolationSegment::InvalidOrg => e

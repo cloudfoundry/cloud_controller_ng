@@ -1224,7 +1224,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   describe '#assign_current_droplet' do
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:droplet) { VCAP::CloudController::DropletModel.make(process_types: { 'web' => 'start app' }, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
-    let(:req_body) { { droplet_guid: droplet.guid } }
+    let(:req_body) { { data: { guid: droplet.guid } } }
     let(:droplet_link) { { 'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}" } }
     let(:space) { app_model.space }
     let(:org) { space.organization }
@@ -1238,36 +1238,58 @@ RSpec.describe AppsV3Controller, type: :controller do
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
-    it 'returns 200 and the droplet' do
+    it 'returns 200 and the droplet guid' do
       put :assign_current_droplet, guid: app_model.guid, body: req_body
 
       response_body = parsed_body
 
       expect(response.status).to eq(200)
-      expect(response_body['guid']).to eq(droplet.guid)
-      expect(response_body['links']['self']).to eq(droplet_link)
+      expect(response_body['data']['guid']).to eq(droplet.guid)
+      expect(response_body['links']['related']).to eq(droplet_link)
+    end
+
+    context 'the user does not provide the data key' do
+      let(:req_body) { {} }
+
+      it 'returns a 422' do
+        put :assign_current_droplet, guid: app_model.guid, body: req_body
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
+      end
+    end
+
+    context 'the user does not provide any droplet guid element' do
+      let(:req_body) { { data: {} } }
+
+      it 'returns a 422' do
+        put :assign_current_droplet, guid: app_model.guid, body: req_body
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
+      end
     end
 
     context 'and the droplet is not associated with the application' do
       let(:unassociated_droplet) { VCAP::CloudController::DropletModel.make }
-      let(:req_body) { { droplet_guid: unassociated_droplet.guid } }
+      let(:req_body) { { data: { guid: unassociated_droplet.guid } } }
 
-      it 'returns a 404 ResourceNotFound' do
+      it 'returns a 422' do
         put :assign_current_droplet, guid: app_model.guid, body: req_body
 
-        expect(response.status).to eq 404
-        expect(response.body).to include 'ResourceNotFound'
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
       end
     end
 
     context 'and the droplet does not exist' do
-      let(:req_body) { { droplet_guid: 'pitter-patter-zim-zoom' } }
+      let(:req_body) { { data: { guid: 'pitter-patter-zim-zoom' } } }
 
-      it 'returns a 404 ResourceNotFound' do
+      it 'returns a 422' do
         put :assign_current_droplet, guid: app_model.guid, body: req_body
 
-        expect(response.status).to eq 404
-        expect(response.body).to include 'ResourceNotFound'
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
       end
     end
 

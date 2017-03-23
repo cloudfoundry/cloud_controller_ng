@@ -138,18 +138,22 @@ class AppsV3Controller < ApplicationController
 
   def assign_current_droplet
     app_guid                 = params[:guid]
-    droplet_guid             = params[:body]['droplet_guid']
+    droplet_guid             = HashUtils.dig(params[:body], 'data', 'guid')
     app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
     unprocessable!('Stop the app before changing droplet') if app.desired_state != 'STOPPED'
-
-    droplet_not_found! if droplet.nil?
+    unprocessable!("Cannot find droplet with guid \"#{droplet_guid}\"") if droplet.nil?
 
     SetCurrentDroplet.new(user_audit_info).update_to(app, droplet)
 
-    render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
+    render status: :ok, json: Presenters::V3::ToOneRelationshipPresenter.new(
+      resource_path: "apps/#{app_guid}",
+      related_instance: droplet,
+      relationship_name: 'current_droplet',
+      related_resource_name: 'droplets'
+    )
   rescue SetCurrentDroplet::InvalidApp => e
     unprocessable!(e.message)
   end

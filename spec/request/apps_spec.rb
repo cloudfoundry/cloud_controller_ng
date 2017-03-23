@@ -852,7 +852,7 @@ RSpec.describe 'Apps' do
     end
   end
 
-  describe 'PUT /v3/apps/:guid/droplets/current' do
+  describe 'PATCH /v3/apps/:guid/relationships/current_droplet' do
     let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
     let(:app_model) do
       VCAP::CloudController::AppModel.make(
@@ -877,33 +877,17 @@ RSpec.describe 'Apps' do
         package:       VCAP::CloudController::PackageModel.make
       )
 
-      request_body = { droplet_guid: droplet.guid }
+      request_body = { data: { guid: droplet.guid } }
 
-      put "/v3/apps/#{app_model.guid}/droplets/current", request_body, user_header
+      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body, user_header
 
       expected_response = {
-        'guid'                  => droplet.guid,
-        'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
-        'error'                 => nil,
-        'lifecycle'             => {
-          'type' => 'docker',
-          'data' => {}
+        'data' => {
+          'guid' => droplet.guid
         },
-        'staging_memory_in_mb'  => 123,
-        'staging_disk_in_mb'    => nil,
-        'result'                => {
-          'image'              => nil,
-          'execution_metadata' => nil,
-          'process_types'      => { 'web' => 'rackup' }
-        },
-        'environment_variables' => {},
-        'created_at'            => iso8601,
-        'updated_at'            => iso8601,
-        'links'                 => {
-          'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}" },
-          'package'                => { 'href' => "#{link_prefix}/v3/packages/#{droplet.package.guid}" },
-          'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet" },
+          'related' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}" }
         }
       }
 
@@ -939,9 +923,9 @@ RSpec.describe 'Apps' do
         state:         VCAP::CloudController::DropletModel::STAGED_STATE
       )
 
-      request_body = { droplet_guid: droplet.guid }
+      request_body = { data: { guid: droplet.guid } }
 
-      put "/v3/apps/#{app_model.guid}/droplets/current", request_body, user_header
+      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body, user_header
 
       expect(last_response.status).to eq(200)
 
@@ -993,9 +977,9 @@ RSpec.describe 'Apps' do
         state:         VCAP::CloudController::DropletModel::STAGED_STATE
       )
 
-      request_body = { droplet_guid: droplet.guid }
+      request_body = { data: { guid: droplet.guid } }
 
-      put "/v3/apps/#{app_model.guid}/droplets/current", request_body, user_header
+      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body, user_header
 
       expect(last_response.status).to eq(200)
 
@@ -1034,9 +1018,9 @@ RSpec.describe 'Apps' do
         state:         VCAP::CloudController::DropletModel::STAGED_STATE
       )
 
-      request_body = { droplet_guid: droplet.guid }
+      request_body = { data: { guid: droplet.guid } }
 
-      put "/v3/apps/#{app_model.guid}/droplets/current", request_body, user_header
+      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body, user_header
 
       expect(last_response.status).to eq(200)
 

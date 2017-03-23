@@ -125,6 +125,7 @@ RSpec.describe 'Organizations' do
         },
         'links' => {
           'self' => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment" },
+          'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
         }
       }
 
@@ -161,6 +162,7 @@ RSpec.describe 'Organizations' do
         },
         'links' => {
           'self' => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment" },
+          'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
         }
       }
 
