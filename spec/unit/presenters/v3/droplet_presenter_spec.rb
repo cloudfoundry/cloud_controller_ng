@@ -102,7 +102,7 @@ module VCAP::CloudController::Presenters::V3
             end
 
             it 'has the correct result' do
-              expect(result[:result][:hash]).to eq(type: 'sha1', value: nil)
+              expect(result[:result][:checksum]).to eq(type: 'sha1', value: nil)
             end
           end
 
@@ -113,7 +113,7 @@ module VCAP::CloudController::Presenters::V3
             end
 
             it 'has the correct result' do
-              expect(result[:result][:hash]).to eq(type: 'sha1', value: 'droplet-sha1-checksum')
+              expect(result[:result][:checksum]).to eq(type: 'sha1', value: 'droplet-sha1-checksum')
             end
           end
 
@@ -141,7 +141,7 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'has the correct result' do
-            expect(result[:result][:hash]).to eq(type: 'sha256', value: 'droplet-sha256-checksum')
+            expect(result[:result][:checksum]).to eq(type: 'sha256', value: 'droplet-sha256-checksum')
             expect(result[:result][:stack]).to eq('the-happiest-stack')
             expect(result[:result][:buildpacks]).to eq([{ name: 'the-happiest-buildpack', detect_output: 'the-happiest-buildpack-detect-output' }])
           end

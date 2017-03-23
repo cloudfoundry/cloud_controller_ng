@@ -833,7 +833,7 @@ RSpec.describe 'Apps' do
         'staging_memory_in_mb'  => 100,
         'staging_disk_in_mb'    => 200,
         'result'                => {
-          'hash'               => { 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' },
+          'checksum' => { 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' },
           'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
           'stack'              => 'stack-name',
           'execution_metadata' => 'some-data',

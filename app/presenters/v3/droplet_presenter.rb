@@ -48,7 +48,7 @@ module VCAP::CloudController
 
           lifecycle_result = if droplet.lifecycle_type == Lifecycles::BUILDPACK
                                {
-                                 hash:      droplet_checksum_info,
+                                 checksum:      droplet_checksum_info,
                                  buildpacks: [{
                                    name:          CloudController::UrlSecretObfuscator.obfuscate(droplet.buildpack_receipt_buildpack),
                                    detect_output: droplet.buildpack_receipt_detect_output
