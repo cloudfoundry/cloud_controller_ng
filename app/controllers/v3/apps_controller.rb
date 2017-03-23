@@ -164,7 +164,13 @@ class AppsV3Controller < ApplicationController
     droplet = DropletModel.where(guid: app.droplet_guid).eager(:space, space: :organization).all.first
 
     droplet_not_found! unless droplet
-    render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
+
+    render status: :ok, json: Presenters::V3::ToOneRelationshipPresenter.new(
+      resource_path: "apps/#{app.guid}",
+      related_instance: droplet,
+      relationship_name: 'current_droplet',
+      related_resource_name: 'droplets'
+    )
   end
 
   private

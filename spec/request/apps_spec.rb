@@ -784,7 +784,7 @@ RSpec.describe 'Apps' do
     end
   end
 
-  describe 'GET /v3/apps/:guid/droplets/current' do
+  describe 'GET /v3/apps/:guid/relationships/current_droplet' do
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:guid) { droplet_model.guid }
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
@@ -814,39 +814,18 @@ RSpec.describe 'Apps' do
     end
 
     it 'gets the current droplet' do
-      get "/v3/apps/#{app_model.guid}/droplets/current", nil, user_header
+      get "/v3/apps/#{app_model.guid}/relationships/current_droplet", nil, user_header
 
       parsed_response = MultiJson.load(last_response.body)
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like({
-        'guid'                  => droplet_model.guid,
-        'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
-        'error'                 => 'example error',
-        'lifecycle'             => {
-          'type' => 'buildpack',
-          'data' => {
-            'buildpacks' => ['http://buildpack.git.url.com'],
-            'stack'      => 'stack-name'
-          }
+        'data' => {
+          'guid' => droplet_model.guid
         },
-        'staging_memory_in_mb'  => 100,
-        'staging_disk_in_mb'    => 200,
-        'result'                => {
-          'checksum' => { 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' },
-          'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
-          'stack'              => 'stack-name',
-          'execution_metadata' => 'some-data',
-          'process_types'      => { 'web' => 'start-command' }
-        },
-        'environment_variables' => { 'cloud' => 'foundry' },
-        'created_at'            => iso8601,
-        'updated_at'            => iso8601,
-        'links'                 => {
-          'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
-          'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-          'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
-          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets/current", 'method' => 'PUT' },
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet" },
+          'related' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet_model.guid}" }
         }
       })
     end
