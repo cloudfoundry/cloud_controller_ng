@@ -7,7 +7,7 @@ module VCAP::CloudController
         isolation_segment.lock!
 
         check_not_shared!(isolation_segment)
-        check_no_apps_in_segment!(isolation_segment)
+        check_not_assigned!(isolation_segment)
 
         isolation_segment.name = message.name if message.requested?(:name)
         isolation_segment.save
@@ -24,24 +24,14 @@ module VCAP::CloudController
       end
     end
 
-    # In this function we are using these lookup queries rather than doing something of the form
-    # isolation_segment.organizations.sort.each { ... }. Which would then also need to iterate over all
-    # of the spaces within each organization.
-    def check_no_apps_in_segment!(isolation_segment)
-      org_dataset = Organization.dataset.where(guid: isolation_segment.organizations.map(&:guid), default_isolation_segment_model: isolation_segment)
+    def check_not_assigned!(isolation_segment)
+      error = CloudController::Errors::ApiError.new_from_details(
+        'UnprocessableEntity',
+        'Cannot update Isolation Segments that are assigned as the default for an Organization or Space.'
+      )
 
-      unless AppModel.dataset.where(space: Space.dataset.where(isolation_segment_guid: nil, organization: org_dataset)).empty?
-        raise CloudController::Errors::ApiError.new_from_details(
-          'UnableToPerform',
-          "Updating Isolation Segment with name #{isolation_segment.name}",
-          "Please delete all Apps from Spaces without assigned Isolation Segments in any Organization were #{isolation_segment.name} is the default.")
-      end
-
-      unless AppModel.dataset.where(space: Space.dataset.where(isolation_segment_guid: isolation_segment.guid)).empty?
-        raise CloudController::Errors::ApiError.new_from_details(
-          'UnprocessableEntity',
-          "Cannot update the #{isolation_segment.name} Isolation Segment when associated spaces contain apps")
-      end
+      raise error unless Organization.dataset.where(default_isolation_segment_model: isolation_segment).empty?
+      raise error unless Space.dataset.where(isolation_segment_guid: isolation_segment.guid).empty?
     end
   end
 end
