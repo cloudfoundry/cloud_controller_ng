@@ -20,6 +20,7 @@ module VCAP::CloudController
 
     many_to_one :package, class: 'VCAP::CloudController::PackageModel', key: :package_guid, primary_key: :guid, without_guid_generation: true
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
+    many_to_one :build, class: 'VCAP::CloudController::BuildModel', key: :build_guid, primary_key: :guid, without_guid_generation: true
     one_through_one :space, join_table: AppModel.table_name, left_key: :guid, left_primary_key: :app_guid, right_primary_key: :guid, right_key: :space_guid
     one_to_one :buildpack_lifecycle_data,
       class:       'VCAP::CloudController::BuildpackLifecycleDataModel',

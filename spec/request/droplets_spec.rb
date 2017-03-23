@@ -48,7 +48,7 @@ RSpec.describe 'Droplets' do
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:v3_app_buildpack_cache_upload_url).and_return('some-string')
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_download_url).and_return('some-string')
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_droplet_upload_url).and_return('some-string')
-      stub_request(:put, "#{TestConfig.config[:diego][:stager_url]}/v1/staging/whatuuid").
+      stub_request(:put, %r{#{TestConfig.config[:diego][:stager_url]}/v1/staging/}).
         to_return(status: 202, body: diego_staging_response.to_json)
       stub_const('SecureRandom', double(:sr, uuid: 'whatuuid', hex: '8-octetx'))
     end

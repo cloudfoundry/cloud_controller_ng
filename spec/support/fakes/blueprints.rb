@@ -49,6 +49,11 @@ module VCAP::CloudController
   AppModel.blueprint(:buildpack) do
   end
 
+  BuildModel.blueprint do
+    guid     { Sham.guid }
+    state    { VCAP::CloudController::DropletModel::STAGING_STATE }
+  end
+
   PackageModel.blueprint do
     guid     { Sham.guid }
     state    { VCAP::CloudController::PackageModel::CREATED_STATE }
