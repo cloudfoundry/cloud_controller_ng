@@ -8,8 +8,8 @@ module VCAP::CloudController
       def start(app:, user_audit_info:, record_event: true)
         app.db.transaction do
           app.lock!
-          app.update(desired_state: 'STARTED')
-          app.processes.each { |process| process.update(state: 'STARTED') }
+          app.update(desired_state: ProcessModel::STARTED)
+          app.processes.each { |process| process.update(state: ProcessModel::STARTED) }
 
           record_audit_event(app, user_audit_info) if record_event
         end

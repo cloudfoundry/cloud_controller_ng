@@ -1261,14 +1261,14 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'the user does not provide any droplet guid element' do
-      let(:req_body) { { data: {} } }
+      let(:req_body) { { data: nil } }
 
       it 'returns a 422' do
         put :assign_current_droplet, guid: app_model.guid, body: req_body
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
-        expect(response.body).to include 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
+        expect(response.body).to include 'Current droplet cannot be removed. Replace it with a preferred droplet.'
       end
     end
 

@@ -67,7 +67,7 @@ module VCAP::CloudController
       end
 
       def runnable
-        staged.where("#{App.table_name}__state".to_sym => 'STARTED').where { instances > 0 }
+        staged.where("#{App.table_name}__state".to_sym => STARTED).where { instances > 0 }
       end
 
       def diego
@@ -127,7 +127,9 @@ module VCAP::CloudController
     encrypt :docker_credentials_json, salt: :docker_salt, column: :encrypted_docker_credentials_json
     serializes_via_json :docker_credentials_json
 
-    APP_STATES         = %w(STOPPED STARTED).map(&:freeze).freeze
+    STARTED            = 'STARTED'.freeze
+    STOPPED            = 'STOPPED'.freeze
+    APP_STATES         = [STARTED, STOPPED].freeze
     HEALTH_CHECK_TYPES = %w(port none process http).map(&:freeze).freeze
 
     # Last staging response which will contain streaming log url
@@ -480,7 +482,7 @@ module VCAP::CloudController
     end
 
     def started?
-      state == 'STARTED'
+      state == STARTED
     end
 
     def package_available?
@@ -495,7 +497,7 @@ module VCAP::CloudController
     end
 
     def stopped?
-      state == 'STOPPED'
+      state == STOPPED
     end
 
     def uris
@@ -617,7 +619,7 @@ module VCAP::CloudController
     end
 
     def app_usage_changed?
-      previously_started = initial_value(:state) == 'STARTED'
+      previously_started = initial_value(:state) == STARTED
       return true if previously_started != started?
       return true if started? && footprint_changed?
       false

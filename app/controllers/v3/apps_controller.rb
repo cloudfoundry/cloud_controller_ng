@@ -139,12 +139,11 @@ class AppsV3Controller < ApplicationController
   def assign_current_droplet
     app_guid                 = params[:guid]
     droplet_guid             = HashUtils.dig(params[:body], 'data', 'guid')
+    cannot_remove_droplet! if params[:body].key?('data') && droplet_guid.nil?
     app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
-    unprocessable!('Stop the app before changing droplet') if app.desired_state != 'STOPPED'
-    unable_to_assign! if droplet.nil?
 
     SetCurrentDroplet.new(user_audit_info).update_to(app, droplet)
 
@@ -154,7 +153,7 @@ class AppsV3Controller < ApplicationController
       relationship_name: 'current_droplet',
       related_resource_name: 'droplets'
     )
-  rescue SetCurrentDroplet::InvalidApp => e
+  rescue SetCurrentDroplet::InvalidApp, SetCurrentDroplet::Error => e
     unprocessable!(e.message)
   end
 
@@ -187,8 +186,8 @@ class AppsV3Controller < ApplicationController
     resource_not_found!(:app)
   end
 
-  def unable_to_assign!
-    unprocessable!('Unable to assign current droplet. Ensure the droplet exists and belongs to this app.')
+  def cannot_remove_droplet!
+    unprocessable!('Current droplet cannot be removed. Replace it with a preferred droplet.')
   end
 
   def instances_reporters
