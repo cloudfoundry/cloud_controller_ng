@@ -100,7 +100,8 @@ module VCAP::CloudController::RestController
       transform_opts = opts[:transform_opts] || {}
       collection_transformer.transform(dataset_records, transform_opts) if collection_transformer
 
-      dataset_records.map { |obj| @serializer.serialize(controller, obj, opts, orphans) }
+      serialized_records = dataset_records.map { |obj| @serializer.serialize(controller, obj, opts, orphans) }
+      serialized_records.select { |obj| !obj.nil? }
     end
 
     def default_visibility_filter

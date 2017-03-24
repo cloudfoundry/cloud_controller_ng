@@ -44,6 +44,29 @@ module VCAP::CloudController::RestController
         paginated_collection_renderer.render_json(controller, dataset, '/v2/cars', opts, {})
       end
 
+      context 'when one of the objects serializes to nil' do
+        let(:dataset) { VCAP::CloudController::TestModel.dataset }
+        let(:serializer) { instance_double(PreloadedObjectSerializer) }
+
+        before do
+          VCAP::CloudController::TestModel.make
+          VCAP::CloudController::TestModel.make
+          counter = 0
+          allow(serializer).to receive(:serialize).with(any_args) do
+            if counter == 0
+              counter += 1
+              nil
+            else
+              'fake-serialization'
+            end
+          end
+        end
+
+        it 'excludes that object from the serialization' do
+          expect(JSON.parse(render_json_call)['resources'].size).to eq(1)
+        end
+      end
+
       context 'when results_per_page' do
         context 'is more than max results_per_page' do
           let(:max_results_per_page) { 10 }
