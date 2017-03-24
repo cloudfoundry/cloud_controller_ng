@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe SharedDomain, type: :model do
     subject { described_class.make name: 'test.example.com', router_group_guid: router_group_guid, router_group_type: 'tcp' }
 
-    let(:router_group_guid) {'my-router-group-guid'}
+    let(:router_group_guid) { 'my-router-group-guid' }
 
     it { is_expected.to have_timestamp_columns }
 
@@ -90,8 +90,8 @@ module VCAP::CloudController
 
     describe '#tcp?' do
       let(:router_group_type) { 'http' }
-      let(:ra_client) { instance_double(VCAP::CloudController::RoutingApi::Client, :router_group => rg) }
-      let(:rg) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, :type => router_group_type)}
+      let(:ra_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group: rg) }
+      let(:rg) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, type: router_group_type) }
       let(:shared_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: '123') }
 
       before do
@@ -120,8 +120,8 @@ module VCAP::CloudController
       end
       context 'when there router group doesnt match' do
         let(:router_group_type) { 'http' }
-        let(:ra_client) { instance_double(VCAP::CloudController::RoutingApi::Client, :router_group => nil) }
-        let(:rg) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, :type => router_group_type)}
+        let(:ra_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group: nil) }
+        let(:rg) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, type: router_group_type) }
         let(:shared_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: '123') }
 
         it 'returns false' do

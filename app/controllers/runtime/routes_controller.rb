@@ -317,7 +317,9 @@ module VCAP::CloudController
       domain = Domain.find(guid: domain_guid)
       domain_invalid!(domain_guid) if domain.nil?
 
-      raise CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', domain.router_group_guid.to_s) if routing_api_client.router_group(domain.router_group_guid).nil?
+      if routing_api_client.router_group(domain.router_group_guid).nil?
+        raise CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', domain.router_group_guid.to_s)
+      end
 
       unless domain.shared? && domain.tcp?
         raise CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.')

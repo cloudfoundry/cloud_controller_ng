@@ -1,24 +1,31 @@
 module VCAP::CloudController
   class RouteMappingCreate
-    class InvalidRouteMapping < StandardError; end
-    class DuplicateRouteMapping < InvalidRouteMapping; end
-    class UnavailableAppPort < InvalidRouteMapping; end
-    class SpaceMismatch < InvalidRouteMapping; end
-    class RoutingApiDisabledError < InvalidRouteMapping; end
-    class AppPortNotSupportedError < InvalidRouteMapping; end
-    class RouteServiceNotSupportedError < InvalidRouteMapping; end
+    class InvalidRouteMapping < StandardError
+    end
+    class DuplicateRouteMapping < InvalidRouteMapping
+    end
+    class UnavailableAppPort < InvalidRouteMapping
+    end
+    class SpaceMismatch < InvalidRouteMapping
+    end
+    class RoutingApiDisabledError < InvalidRouteMapping
+    end
+    class AppPortNotSupportedError < InvalidRouteMapping
+    end
+    class RouteServiceNotSupportedError < InvalidRouteMapping
+    end
 
-    DUPLICATE_MESSAGE                   = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
-    INVALID_SPACE_MESSAGE               = 'the app and route must belong to the same space'.freeze
+    DUPLICATE_MESSAGE = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
+    INVALID_SPACE_MESSAGE = 'the app and route must belong to the same space'.freeze
     UNAVAILABLE_APP_PORT_MESSAGE_FORMAT = 'Port %s is not available on the app\'s process'.freeze
-    NO_PORT_REQUESTED                   = 'Port must be specified when mapping to a non-web process'.freeze
+    NO_PORT_REQUESTED = 'Port must be specified when mapping to a non-web process'.freeze
 
     def initialize(user_audit_info, route, process, message=nil)
       @user_audit_info = user_audit_info
-      @app             = process.app
-      @route           = route
-      @process         = process
-      @message         = message
+      @app = process.app
+      @route = route
+      @process = process
+      @message = message
     end
 
     def add(request_attrs=nil)
@@ -32,10 +39,10 @@ module VCAP::CloudController
       validate!
 
       route_mapping = RouteMappingModel.new(
-        app:          @app,
-        route:        @route,
+        app: @app,
+        route: @route,
         process_type: @message.process_type,
-        app_port:     port_with_defaults
+        app_port: port_with_defaults
       )
 
       route_handler = ProcessRouteHandler.new(@process)
@@ -116,14 +123,14 @@ module VCAP::CloudController
     end
 
     def create_message(request_attrs)
-      message = RouteMappingsCreateMessage.new({
-                                                   relationships: {
-                                                       app:     { guid: @process.app.guid },
-                                                       route:   { guid: @route.guid },
-                                                       process: { type: @process.type }
-                                                   },
-                                                   app_port:      get_port(request_attrs)
-                                               })
+      RouteMappingsCreateMessage.new({
+        relationships: {
+          app: { guid: @process.app.guid },
+          route: { guid: @route.guid },
+          process: { type: @process.type }
+        },
+        app_port: get_port(request_attrs)
+      })
     end
 
     def get_port(request_attrs)

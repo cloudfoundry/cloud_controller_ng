@@ -7,7 +7,7 @@ module VCAP::CloudController
     describe '#tcp?' do
       let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
       let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
-      let(:dependency_double) {double('dependency_locator', routing_api_client: routing_api_client)}
+      let(:dependency_double) { double('dependency_locator', routing_api_client: routing_api_client) }
 
       before do
         allow_any_instance_of(RouteValidator).to receive(:validate)
@@ -370,7 +370,7 @@ module VCAP::CloudController
           let(:space) { Space.make(space_quota_definition: space_quota_definition, organization: space_quota_definition.organization) }
           let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
           let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
-          let(:dependency_double) {double('dependency_locator', routing_api_client: routing_api_client)}
+          let(:dependency_double) { double('dependency_locator', routing_api_client: routing_api_client) }
 
           before do
             allow(CloudController::DependencyLocator).to receive(:instance).and_return(dependency_double)

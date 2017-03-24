@@ -38,7 +38,6 @@ module VCAP::CloudController
           end
 
           context 'http routes' do
-
             context 'with no app ports specified in route mapping' do
               before do
                 RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: nil)
@@ -182,15 +181,11 @@ module VCAP::CloudController
 
             context 'when using a router group' do
               let(:router_group_type) { 'http' }
-              let(:domain) { SharedDomain.make(name: 'httpdomain.com', router_group_guid: router_group_guid)}
+              let(:domain) { SharedDomain.make(name: 'httpdomain.com', router_group_guid: router_group_guid) }
               let(:http_route) { Route.make(domain: domain, space: space, port: 8080) }
               let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: http_route) }
 
               it 'returns the router group guid in the http routing info' do
-                expected_http = [
-                  { 'router_group_guid' => domain.router_group_guid, 'port' => http_route.port, 'hostname' => "host-1.#{domain.name}" },
-                ]
-
                 expect(ri.keys).to contain_exactly('http_routes')
                 hr = ri['http_routes'][0]
                 expect(hr.keys).to contain_exactly('router_group_guid', 'port', 'hostname')
@@ -306,11 +301,6 @@ module VCAP::CloudController
             end
 
             it 'returns the app port in routing info' do
-              expected_http = [
-                { 'hostname' => route_with_service.uri, 'port' => 8080 },
-                { 'hostname' => route_with_service.uri, 'port' => 9090 },
-              ]
-
               expected_tcp = [
                 { 'router_group_guid' => tcp_domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 5555 },
               ]
