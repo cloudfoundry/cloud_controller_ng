@@ -454,7 +454,7 @@ module VCAP::CloudController
           it 'returns 403' do
             post '/v2/route_mappings', body
             expect(last_response).to have_status_code(403)
-            expect(decoded_response['description']).to include('Support for TCP routing is disabled')
+            expect(decoded_response['description']).to include('Routing API is disabled')
           end
         end
 

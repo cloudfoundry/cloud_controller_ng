@@ -364,8 +364,8 @@ module VCAP::CloudController
               TestConfig.config[:routing_api] = nil
             end
 
-            it 'raises TcpRoutingDisabledError' do
-              expect { route_mapping_create.add(request_attrs) }.to raise_error(RouteMappingCreate::TcpRoutingDisabledError)
+            it 'raises RoutingApiDisabledError' do
+              expect { route_mapping_create.add(request_attrs) }.to raise_error(RouteMappingCreate::RoutingApiDisabledError)
             end
           end
         end

@@ -4,7 +4,7 @@ module VCAP::CloudController
     class DuplicateRouteMapping < InvalidRouteMapping; end
     class UnavailableAppPort < InvalidRouteMapping; end
     class SpaceMismatch < InvalidRouteMapping; end
-    class TcpRoutingDisabledError < InvalidRouteMapping; end
+    class RoutingApiDisabledError < InvalidRouteMapping; end
     class AppPortNotSupportedError < InvalidRouteMapping; end
     class RouteServiceNotSupportedError < InvalidRouteMapping; end
 
@@ -135,8 +135,8 @@ module VCAP::CloudController
     end
 
     def validate_routing_api_enabled!
-      if @route.domain.shared? && @route.domain.tcp? && Config.config[:routing_api].nil?
-        raise TcpRoutingDisabledError.new('TCP routing is disabled')
+      if Config.config[:routing_api].nil? && @route.domain.shared? && @route.domain.router_group_guid
+        raise RoutingApiDisabledError.new('Routing API is disabled')
       end
     end
 

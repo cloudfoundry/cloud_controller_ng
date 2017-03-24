@@ -289,8 +289,8 @@ module VCAP::CloudController
         RouteMappingCreate.new(user_audit_info, route, app).add(request_attrs)
       rescue RouteMappingCreate::DuplicateRouteMapping
         # the route is already mapped, consider the request successful
-      rescue RouteMappingCreate::TcpRoutingDisabledError
-        raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+      rescue RouteMappingCreate::RoutingApiDisabledError
+        raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
       rescue RouteMappingCreate::RouteServiceNotSupportedError
         raise CloudController::Errors::InvalidRouteRelation.new("#{route.guid} - Route services are only supported for apps on Diego")
       rescue RouteMappingCreate::SpaceMismatch

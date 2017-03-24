@@ -1064,10 +1064,10 @@
   http_code: 503
   message: "The Routing API is currently unavailable"
 
-370002:
-  name: TcpRoutingDisabled
+370003:
+  name: RoutingApiDisabled
   http_code: 403
-  message: "Support for TCP routing is disabled"
+  message: "Routing API is disabled"
 
 380001:
   name: EnvironmentVariableGroupInvalid

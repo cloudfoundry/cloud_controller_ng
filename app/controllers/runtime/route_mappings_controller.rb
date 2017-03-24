@@ -48,8 +48,8 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('RouteMappingTaken', route_mapping_taken_message(request_attrs))
     rescue RouteMappingCreate::UnavailableAppPort
       raise CloudController::Errors::ApiError.new_from_details('RoutePortNotEnabledOnApp')
-    rescue RouteMappingCreate::TcpRoutingDisabledError
-      raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+    rescue RouteMappingCreate::RoutingApiDisabledError
+      raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
     rescue RouteMappingCreate::RouteServiceNotSupportedError
       raise CloudController::Errors::InvalidRelation.new('Route services are only supported for apps on Diego')
     rescue RouteMappingCreate::AppPortNotSupportedError

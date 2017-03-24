@@ -2249,15 +2249,16 @@ module VCAP::CloudController
           expect(route_mapping.process_type).to eq('web')
         end
 
-        context 'when routing api is not enabled' do
+        context 'when routing api is disabled' do
           before do
+            route
             TestConfig.override(routing_api: nil)
           end
 
-          it 'returns 403' do
+          it 'existing routes with router groups return 403 when mapped to apps' do
             put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
             expect(last_response).to have_status_code(403)
-            expect(decoded_response['description']).to include('Support for TCP routing is disabled')
+            expect(decoded_response['description']).to include('Routing API is disabled')
           end
         end
       end

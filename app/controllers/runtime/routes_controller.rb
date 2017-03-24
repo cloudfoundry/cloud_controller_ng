@@ -30,7 +30,7 @@ module VCAP::CloudController
     # rubocop:disable Metrics/MethodLength
     def self.translate_validation_exception(e, attributes)
       if e.errors.on(:routing_api) == [:routing_api_disabled]
-        return CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+        return CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
       end
 
       if e.errors.on(:routing_api) == [:uaa_unavailable]
@@ -234,8 +234,8 @@ module VCAP::CloudController
         RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, app).add(request_attrs)
       rescue RouteMappingCreate::DuplicateRouteMapping
         # the route is already mapped, consider the request successful
-      rescue RouteMappingCreate::TcpRoutingDisabledError
-        raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+      rescue RouteMappingCreate::RoutingApiDisabledError
+        raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
       rescue RouteMappingCreate::SpaceMismatch => e
         raise CloudController::Errors::InvalidAppRelation.new(e.message)
       rescue RouteMappingCreate::RouteServiceNotSupportedError
@@ -308,7 +308,7 @@ module VCAP::CloudController
         begin
           routing_api_client.router_group(validated_domain.router_group_guid)
         rescue RoutingApi::RoutingApiDisabled
-          raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+          raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
         end
     end
 
