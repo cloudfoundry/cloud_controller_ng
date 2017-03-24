@@ -87,6 +87,7 @@
           
 
 
+
           
 
 
@@ -1802,92 +1803,30 @@ It will include environment variables for Environment Variable Groups and Servic
           <h3 id="set-current-droplet-for-an-app">Set current droplet for an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
-<pre class="highlight http"><code><span class="nf">PUT</span> <span class="nn">/v3/apps/:guid/droplets/current</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<pre class="highlight http"><code><span class="nf">PATCH</span> <span class="nn">/v3/apps/:guid/relationships/current_droplet</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/droplets/current"</span> <span class="se">\</span>
-  -X PUT <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/relationships/current_droplet"</span> <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
-  -d <span class="s1">'{ "droplet_guid": "[droplet_guid]" }'</span>
+  -d <span class="s1">'{ "data": { "guid": "[droplet_guid]" } }'</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGED"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"buildpacks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"ruby_buildpack"</span><span class="w"> </span><span class="p">],</span><span class="w">
-      </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-    </span><span class="p">}</span><span class="w">
+  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9d8e007c-ce52-4ea7-8a57-f2825d2c6b39"</span><span class="w">
   </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"execution_metadata"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"rake"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rake"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"web"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rackup config.ru -p $PORT"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"hash"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha256"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"buildpacks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ruby_buildpack"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"detect_output"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ruby 1.6.14"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"CF_STACK"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"VCAP_APPLICATION"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"mem"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"disk"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"fds"</span><span class="p">:</span><span class="w"> </span><span class="mi">16384</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"application_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"7b34f1cf-7e73-428a-bb5a-8a17a8058396"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"application_version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d5985d64-c455-44d0-99a5-285b6521f84c"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"application_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"application_uris"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-        </span><span class="s2">"my_app.example.com"</span><span class="w">
-      </span><span class="p">],</span><span class="w">
-      </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d5985d64-c455-44d0-99a5-285b6521f84c"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"space_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_space"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"space_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"uris"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-        </span><span class="s2">"my_app.example.com"</span><span class="w">
-      </span><span class="p">],</span><span class="w">
-      </span><span class="nt">"users"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"MEMORY_LIMIT"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1024m"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"VCAP_SERVICES"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:34Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:47Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/relationships/current_droplet"</span><span class="w">
     </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"package"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"assign_current_droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+    </span><span class="nt">"related"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/droplets/9d8e007c-ce52-4ea7-8a57-f2825d2c6b39"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -1899,11 +1838,11 @@ It will include environment variables for Environment Variable Groups and Servic
           <h3 id="get-current-droplet-for-an-app">Get current droplet for an app</h3>
 <pre class="highlight plaintext"><code>Definition
 </code></pre>
-<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/droplets/current</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<pre class="highlight http"><code><span class="nf">GET</span> <span class="nn">/v3/apps/:guid/relationships/current_droplet</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/droplets/current"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/relationships/current_droplet"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -1912,77 +1851,15 @@ It will include environment variables for Environment Variable Groups and Servic
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGED"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"buildpacks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"ruby_buildpack"</span><span class="w"> </span><span class="p">],</span><span class="w">
-      </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-    </span><span class="p">}</span><span class="w">
+  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9d8e007c-ce52-4ea7-8a57-f2825d2c6b39"</span><span class="w">
   </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"execution_metadata"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"rake"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rake"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"web"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rackup config.ru -p $PORT"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"hash"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha256"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"buildpacks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ruby_buildpack"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"detect_output"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ruby 1.6.14"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"CF_STACK"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"VCAP_APPLICATION"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"mem"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"disk"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"fds"</span><span class="p">:</span><span class="w"> </span><span class="mi">16384</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"application_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"7b34f1cf-7e73-428a-bb5a-8a17a8058396"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"application_version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d5985d64-c455-44d0-99a5-285b6521f84c"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"application_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"application_uris"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-        </span><span class="s2">"my_app.example.com"</span><span class="w">
-      </span><span class="p">],</span><span class="w">
-      </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d5985d64-c455-44d0-99a5-285b6521f84c"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"space_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_space"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"space_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"uris"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-        </span><span class="s2">"my_app.example.com"</span><span class="w">
-      </span><span class="p">],</span><span class="w">
-      </span><span class="nt">"users"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"MEMORY_LIMIT"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1024m"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"VCAP_SERVICES"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:34Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:47Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/relationships/current_droplet"</span><span class="w">
     </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"package"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"assign_current_droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets/current"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+    </span><span class="nt">"related"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/droplets/9d8e007c-ce52-4ea7-8a57-f2825d2c6b39"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -4404,6 +4281,9 @@ In the case where the specified isolation segment is the system-wide shared segm
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/relationships/default_isolation_segment"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"related"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/9d8e007c-ce52-4ea7-8a57-f2825d2c6b39"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -4454,6 +4334,9 @@ Only isolation segments that are entitled to the organization are eligible to be
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/relationships/default_isolation_segment"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"related"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/9d8e007c-ce52-4ea7-8a57-f2825d2c6b39"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -7432,6 +7315,9 @@ When using a remote blobstore, such as AWS, the response is a redirect to the ac
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/relationships/isolation_segment"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"related"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/e4c91047-3b29-4fda-b7f9-04033e5a9c9f"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -7483,6 +7369,9 @@ entitled to the isolation_segment.</p>
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/relationships/isolation_segment"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"related"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/e4c91047-3b29-4fda-b7f9-04033e5a9c9f"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
