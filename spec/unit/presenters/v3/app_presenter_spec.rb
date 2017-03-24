@@ -29,7 +29,7 @@ module VCAP::CloudController::Presenters::V3
           processes: { href: "#{link_prefix}/v3/apps/#{app.guid}/processes" },
           route_mappings: { href: "#{link_prefix}/v3/apps/#{app.guid}/route_mappings" },
           packages: { href: "#{link_prefix}/v3/apps/#{app.guid}/packages" },
-          droplet: { href: "#{link_prefix}/v3/apps/#{app.guid}/droplets/current" },
+          current_droplet: { href: "#{link_prefix}/v3/apps/#{app.guid}/relationships/current_droplet" },
           droplets: { href: "#{link_prefix}/v3/apps/#{app.guid}/droplets" },
           tasks: { href: "#{link_prefix}/v3/apps/#{app.guid}/tasks" },
           start: { href: "#{link_prefix}/v3/apps/#{app.guid}/start", method: 'PUT' },
@@ -85,7 +85,7 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'includes a link to the current droplet' do
-            expect(result[:links][:droplet][:href]).to eq("#{link_prefix}/v3/apps/#{app.guid}/droplets/current")
+            expect(result[:links][:current_droplet][:href]).to eq("#{link_prefix}/v3/apps/#{app.guid}/relationships/current_droplet")
           end
 
           it 'includes a link to the droplets if present' do

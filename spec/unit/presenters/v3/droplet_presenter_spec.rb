@@ -40,7 +40,7 @@ module VCAP::CloudController::Presenters::V3
             self: { href: "#{link_prefix}/v3/droplets/#{droplet.guid}" },
             package: { href: "#{link_prefix}/v3/packages/#{droplet.package_guid}" },
             app: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}" },
-            assign_current_droplet: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}/droplets/current", method: 'PUT' }
+            assign_current_droplet: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}/relationships/current_droplet", method: 'PATCH' }
           }
 
           expect(result[:guid]).to eq(droplet.guid)

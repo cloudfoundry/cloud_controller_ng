@@ -97,7 +97,7 @@ RSpec.describe 'Droplets' do
           'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{created_droplet.guid}" },
           'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
           'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
         }
       }
 
@@ -178,7 +178,7 @@ RSpec.describe 'Droplets' do
           'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
           'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
           'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
-          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets/current", 'method' => 'PUT' },
+          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet", 'method' => 'PATCH' },
         }
       })
     end
@@ -290,7 +290,7 @@ RSpec.describe 'Droplets' do
               'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             }
           },
           {
@@ -314,7 +314,7 @@ RSpec.describe 'Droplets' do
               'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
               'buildpack'              => { 'href' => "#{link_prefix}/v2/buildpacks/#{buildpack.guid}" }
             }
           }
@@ -559,7 +559,7 @@ RSpec.describe 'Droplets' do
               'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             }
           },
           {
@@ -583,7 +583,7 @@ RSpec.describe 'Droplets' do
               'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
               'buildpack'              => { 'href' => "#{link_prefix}/v2/buildpacks/#{buildpack.guid}" }
             }
           }
@@ -703,7 +703,7 @@ RSpec.describe 'Droplets' do
               'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             }
           },
           {
@@ -727,7 +727,7 @@ RSpec.describe 'Droplets' do
               'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current", 'method' => 'PUT' },
+              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
               'buildpack'              => { 'href' => "#{link_prefix}/v2/buildpacks/#{buildpack.guid}" }
             }
           }
@@ -795,7 +795,7 @@ RSpec.describe 'Droplets' do
           'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{copied_droplet.guid}" },
           'package'                => nil,
           'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}" },
-          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}/droplets/current", 'method' => 'PUT' },
+          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}/relationships/current_droplet", 'method' => 'PATCH' },
         }
       })
     end

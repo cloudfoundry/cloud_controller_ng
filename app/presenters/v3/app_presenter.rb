@@ -31,16 +31,16 @@ module VCAP::CloudController
           url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
 
           links = {
-            self:           { href: url_builder.build_url(path: "/v3/apps/#{app.guid}") },
-            space:          { href: url_builder.build_url(path: "/v2/spaces/#{app.space_guid}") },
-            processes:      { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/processes") },
-            route_mappings: { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/route_mappings") },
-            packages:       { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/packages") },
-            droplet:        { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/droplets/current") },
-            droplets:       { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/droplets") },
-            tasks:          { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/tasks") },
-            start:          { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/start"), method: 'PUT' },
-            stop:           { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/stop"), method: 'PUT' },
+            self:            { href: url_builder.build_url(path: "/v3/apps/#{app.guid}") },
+            space:           { href: url_builder.build_url(path: "/v2/spaces/#{app.space_guid}") },
+            processes:       { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/processes") },
+            route_mappings:  { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/route_mappings") },
+            packages:        { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/packages") },
+            current_droplet: { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/relationships/current_droplet") },
+            droplets:        { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/droplets") },
+            tasks:           { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/tasks") },
+            start:           { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/start"), method: 'PUT' },
+            stop:            { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/stop"), method: 'PUT' },
           }
 
           links.delete_if { |_, v| v.nil? }
