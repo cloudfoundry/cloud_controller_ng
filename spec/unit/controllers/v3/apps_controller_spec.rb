@@ -1256,6 +1256,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
       end
     end
 
@@ -1267,6 +1268,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
       end
     end
 
@@ -1279,6 +1281,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
       end
     end
 
@@ -1290,6 +1293,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
       end
     end
 

@@ -144,7 +144,7 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
     unprocessable!('Stop the app before changing droplet') if app.desired_state != 'STOPPED'
-    unprocessable!("Cannot find droplet with guid \"#{droplet_guid}\"") if droplet.nil?
+    unable_to_assign! if droplet.nil?
 
     SetCurrentDroplet.new(user_audit_info).update_to(app, droplet)
 
@@ -185,6 +185,10 @@ class AppsV3Controller < ApplicationController
 
   def app_not_found!
     resource_not_found!(:app)
+  end
+
+  def unable_to_assign!
+    unprocessable!('Unable to assign current droplet. Ensure the droplet exists and belongs to this app.')
   end
 
   def instances_reporters
