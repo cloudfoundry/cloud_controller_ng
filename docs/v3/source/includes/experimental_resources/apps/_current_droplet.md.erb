@@ -5,7 +5,7 @@ Definition
 ```
 
 ```http
-PUT /v3/apps/:guid/droplets/current HTTP/1.1
+PATCH /v3/apps/:guid/relationships/current_droplet HTTP/1.1
 ```
 
 ```
@@ -13,11 +13,11 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/apps/[guid]/droplets/current" \
-  -X PUT \
+curl "https://api.example.org/v3/apps/[guid]/relationships/current_droplet" \
+  -X PATCH \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json" \
-  -d '{ "droplet_guid": "[droplet_guid]" }'
+  -d '{ "data": { "guid": "[droplet_guid]" } }'
 ```
 
 ```
@@ -28,7 +28,7 @@ Example Response
 HTTP/1.1 200 OK
 ```
 ```json
-<%= yield_content :single_staged_buildpack_droplet %>
+<%= yield_content :app_current_droplet_relationship %>
 ```
 
 This endpoint sets the current droplet for an app. The current droplet is the droplet that the app will use when running.

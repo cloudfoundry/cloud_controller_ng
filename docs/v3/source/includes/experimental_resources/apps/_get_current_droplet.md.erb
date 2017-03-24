@@ -5,7 +5,7 @@ Definition
 ```
 
 ```http
-GET /v3/apps/:guid/droplets/current HTTP/1.1
+GET /v3/apps/:guid/relationships/current_droplet HTTP/1.1
 ```
 
 ```
@@ -13,7 +13,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/apps/[guid]/droplets/current" \
+curl "https://api.example.org/v3/apps/[guid]/relationships/current_droplet" \
   -X GET \
   -H "Authorization: bearer [token]"
 ```
@@ -26,7 +26,7 @@ Example Response
 HTTP/1.1 200 OK
 ```
 ```json
-<%= yield_content :single_staged_buildpack_droplet %>
+<%= yield_content :app_current_droplet_relationship %>
 ```
 
 This endpoint retrieves the current droplet for an app.
