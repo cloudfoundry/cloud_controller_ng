@@ -21,6 +21,16 @@ module VCAP::CloudController
     end
 
     describe 'validations' do
+      context 'when no params are given' do
+        let(:params) {}
+        it 'is not valid' do
+          message = BuildCreateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:package_guid]).to include("can't be blank")
+        end
+      end
+
       context 'when unexpected keys are requested' do
         let(:params) do
           {
@@ -37,80 +47,109 @@ module VCAP::CloudController
         end
       end
 
-      context 'package guid is not a guid' do
-        let(:params) do
-          {
-            package: { guid: 1 },
-            lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } }
-          }
+      context 'package guid' do
+        context 'when no package guid is given' do
+          let(:params) do
+            { package: nil }
+          end
+
+          it 'is not valid' do
+            message = BuildCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:package_guid]).to include("can't be blank")
+          end
         end
 
-        it 'is not valid' do
-          message = BuildCreateMessage.new(params)
+        context 'package guid is not a guid' do
+          let(:params) do
+            {
+              package: { guid: 1 },
+              lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } }
+            }
+          end
 
-          expect(message).not_to be_valid
-          expect(message.errors[:package_guid]).to include('must be a string')
+          it 'is not valid' do
+            message = BuildCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:package_guid]).to include('must be a string')
+          end
         end
       end
 
-      context 'when lifecycle is provided' do
-        it 'is valid' do
-          params = { lifecycle: { type: 'buildpack', data: { buildpacks: ['java'], stack: 'cflinuxfs2' } } }
-          message = BuildCreateMessage.new(params)
-          expect(message).to be_valid
+      context 'lifecycle' do
+        let(:params) do
+          { package: { guid: 'guid' } }
         end
 
-        it 'must provide type' do
-          params = { lifecycle: { data: { buildpacks: ['java'], stack: 'cflinuxfs2' } } }
-
-          message = BuildCreateMessage.new(params)
-          expect(message).not_to be_valid
-          expect(message.errors[:lifecycle_type]).to include('must be a string')
-        end
-
-        it 'must be a valid lifecycle type' do
-          params = { lifecycle: { data: {}, type: { subhash: 'woah!' } } }
-
-          message = BuildCreateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors[:lifecycle_type]).to include('must be a string')
-        end
-
-        it 'must provide a data field' do
-          params = { lifecycle: { type: 'buildpack' } }
-
-          message = BuildCreateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors[:lifecycle_data]).to include('must be a hash')
-        end
-
-        describe 'buildpack lifecycle' do
-          it 'must provide a valid stack' do
-            params = { lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: { non: 'sense' } } } }
-
+        context 'when lifecycle is not provided' do
+          it 'is valid' do
             message = BuildCreateMessage.new(params)
 
-            expect(message).not_to be_valid
-            expect(message.errors[:lifecycle]).to include('Stack must be a string')
-          end
-
-          it 'must provide a valid buildpack' do
-            params = { lifecycle: { type: 'buildpack', data: { buildpacks: [{ wh: 'at?' }], stack: 'onstacksonstacks' } } }
-
-            message = BuildCreateMessage.new(params)
-
-            expect(message).not_to be_valid
-            expect(message.errors[:lifecycle]).to include('Buildpacks can only contain strings')
+            expect(message).to be_valid
           end
         end
 
-        describe 'docker lifecycle' do
-          it 'works' do
-            params = { lifecycle: { type: 'docker', data: {} } }
+        context 'when lifecycle is provided' do
+          it 'is valid' do
+            params[:lifecycle] = { type: 'buildpack', data: { buildpacks: ['java'], stack: 'cflinuxfs2' } }
             message = BuildCreateMessage.new(params)
             expect(message).to be_valid
+          end
+
+          it 'must provide type' do
+            params[:lifecycle] = { data: { buildpacks: ['java'], stack: 'cflinuxfs2' } }
+
+            message = BuildCreateMessage.new(params)
+            expect(message).not_to be_valid
+            expect(message.errors[:lifecycle_type]).to include('must be a string')
+          end
+
+          it 'must be a valid lifecycle type' do
+            params[:lifecycle] = { data: {}, type: { subhash: 'woah!' } }
+
+            message = BuildCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:lifecycle_type]).to include('must be a string')
+          end
+
+          it 'must provide a data field' do
+            params[:lifecycle] = { type: 'buildpack' }
+
+            message = BuildCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:lifecycle_data]).to include('must be a hash')
+          end
+
+          describe 'buildpack lifecycle' do
+            it 'must provide a valid stack' do
+              params[:lifecycle] = { type: 'buildpack', data: { buildpack: 'java', stack: { non: 'sense' } } }
+
+              message = BuildCreateMessage.new(params)
+
+              expect(message).not_to be_valid
+              expect(message.errors[:lifecycle]).to include('Stack must be a string')
+            end
+
+            it 'must provide a valid buildpack' do
+              params[:lifecycle] = { type: 'buildpack', data: { buildpacks: [{ wh: 'at?' }], stack: 'onstacksonstacks' } }
+
+              message = BuildCreateMessage.new(params)
+
+              expect(message).not_to be_valid
+              expect(message.errors[:lifecycle]).to include('Buildpacks can only contain strings')
+            end
+          end
+
+          describe 'docker lifecycle' do
+            it 'is valid' do
+              params[:lifecycle] = { type: 'docker', data: {} }
+              message = BuildCreateMessage.new(params)
+              expect(message).to be_valid
+            end
           end
         end
       end

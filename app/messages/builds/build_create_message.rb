@@ -16,9 +16,9 @@ module VCAP::CloudController
     validates_with LifecycleValidator, if: lifecycle_requested?
 
     validates :package_guid,
-      guid: true,
+      presence: true,
       allow_nil: false,
-      if: proc { |a| a.requested?(:package) }
+      guid: true
     validates :lifecycle_type,
       string: true,
       allow_nil: false,

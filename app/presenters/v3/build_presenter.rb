@@ -7,16 +7,16 @@ module VCAP::CloudController
         def to_hash
           {
             guid: build.guid,
+            created_at: build.created_at,
+            updated_at: build.updated_at,
             state: build.state,
-            error: nil,
+            error: droplet.error,
             lifecycle: {
               type: droplet.lifecycle_type,
               data: droplet.lifecycle_data.to_hash
             },
-            droplet: { guid: droplet.guid },
-            created_at: build.created_at,
-            updated_at: build.updated_at,
             package: { guid: package.guid },
+            droplet: droplet_guid,
             links: build_links,
           }
         end
@@ -29,6 +29,13 @@ module VCAP::CloudController
 
         def droplet
           @droplet ||= build.droplet
+        end
+
+        def droplet_guid
+          if droplet.state == VCAP::CloudController::DropletModel::STAGED_STATE
+            return { guid: droplet.guid }
+          end
+          nil
         end
 
         def package

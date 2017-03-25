@@ -154,11 +154,6 @@ RSpec.describe DropletsController, type: :controller do
 
       before do
         expect(docker_app_model.lifecycle_type).to eq('docker')
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(
-          app:       docker_app_model,
-          buildpack: nil,
-          stack:     VCAP::CloudController::Stack.default.name
-        )
       end
 
       context 'when diego_docker is enabled' do
