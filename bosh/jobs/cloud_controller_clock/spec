@@ -534,11 +534,11 @@ properties:
       description: "Set of buildpacks to install during deploy"
 
   cc.security_group_definitions:
-    description: "Array of security groups that will be seeded into CloudController."
+    description: "Array of security groups that will be seeded into CloudController. Note: security groups are only seeded on the first deploy, after which they should be managed via the API"
   cc.default_running_security_groups:
-    description: "The default running security groups that will be seeded in CloudController."
+    description: "The default running security groups that will be seeded in CloudController. Note: security groups are only seeded on the first deploy, after which they should be managed via the API"
   cc.default_staging_security_groups:
-    description: "The default staging security groups that will be seeded in CloudController."
+    description: "The default staging security groups that will be seeded in CloudController. Note: security groups are only seeded on the first deploy, after which they should be managed via the API"
 
   cc.thresholds.api.alert_if_above_mb:
     description: "The cc will alert if memory remains above this threshold for 3 monit cycles"
