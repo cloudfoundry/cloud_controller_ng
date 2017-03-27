@@ -62,7 +62,7 @@ RSpec.describe 'Apps' do
             'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/processes" },
             'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/packages" },
             'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
-            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet" },
+            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets/current" },
             'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets" },
             'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/tasks" },
             'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/route_mappings" },
@@ -125,7 +125,7 @@ RSpec.describe 'Apps' do
             'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/processes" },
             'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/packages" },
             'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
-            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/relationships/current_droplet" },
+            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets/current" },
             'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets" },
             'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/tasks" },
             'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/route_mappings" },
@@ -212,7 +212,7 @@ RSpec.describe 'Apps' do
                 'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/processes" },
                 'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/packages" },
                 'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
-                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/relationships/current_droplet" },
+                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets/current" },
                 'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets" },
                 'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/tasks" },
                 'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/route_mappings" },
@@ -239,7 +239,7 @@ RSpec.describe 'Apps' do
                 'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/processes" },
                 'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/packages" },
                 'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
-                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/relationships/current_droplet" },
+                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/droplets/current" },
                 'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/droplets" },
                 'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/tasks" },
                 'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/route_mappings" },
@@ -421,7 +421,7 @@ RSpec.describe 'Apps' do
             'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
             'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
             'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
-            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet" },
+            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
             'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
             'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
             'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings" },
@@ -618,7 +618,7 @@ RSpec.describe 'Apps' do
             'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
             'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
             'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
-            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet" },
+            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
             'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
             'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
             'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings" },
@@ -690,7 +690,7 @@ RSpec.describe 'Apps' do
           'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
           'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
           'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
-          'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet" },
+          'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
           'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
           'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
           'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings" },
@@ -758,7 +758,7 @@ RSpec.describe 'Apps' do
             'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
             'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
             'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
-            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet" },
+            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
             'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
             'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
             'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings" },
@@ -784,7 +784,7 @@ RSpec.describe 'Apps' do
     end
   end
 
-  describe 'GET /v3/apps/:guid/relationships/current_droplet' do
+  describe 'GET /v3/apps/:guid/droplets/current' do
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:guid) { droplet_model.guid }
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
@@ -814,18 +814,39 @@ RSpec.describe 'Apps' do
     end
 
     it 'gets the current droplet' do
-      get "/v3/apps/#{app_model.guid}/relationships/current_droplet", nil, user_header
+      get "/v3/apps/#{app_model.guid}/droplets/current", nil, user_header
 
       parsed_response = MultiJson.load(last_response.body)
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like({
-        'data' => {
-          'guid' => droplet_model.guid
+        'guid'                  => droplet_model.guid,
+        'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
+        'error'                 => 'example error',
+        'lifecycle'             => {
+          'type' => 'buildpack',
+          'data' => {
+            'buildpacks' => ['http://buildpack.git.url.com'],
+            'stack'      => 'stack-name'
+          }
         },
-        'links' => {
-          'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet" },
-          'related' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet_model.guid}" }
+        'staging_memory_in_mb'  => 100,
+        'staging_disk_in_mb'    => 200,
+        'result'                => {
+          'checksum' => { 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' },
+          'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
+          'stack'              => 'stack-name',
+          'execution_metadata' => 'some-data',
+          'process_types'      => { 'web' => 'start-command' }
+        },
+        'environment_variables' => { 'cloud' => 'foundry' },
+        'created_at'            => iso8601,
+        'updated_at'            => iso8601,
+        'links'                 => {
+          'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
+          'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+          'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
+          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet", 'method' => 'PATCH' },
         }
       })
     end

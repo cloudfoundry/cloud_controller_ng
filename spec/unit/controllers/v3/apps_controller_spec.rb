@@ -1377,7 +1377,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
   end
 
-  describe '#current_droplet' do
+  describe 'current_droplet' do
     let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid) }
     let(:droplet) { VCAP::CloudController::DropletModel.make(process_types: { 'web' => 'start app' }, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:droplet_link) { { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" } }
@@ -1391,11 +1391,11 @@ RSpec.describe AppsV3Controller, type: :controller do
       allow_user_read_access_for(user, spaces: [space])
     end
 
-    it 'returns a 200 OK and the appropriate body' do
+    it 'returns a 200 OK and the droplet' do
       get :current_droplet, guid: app_model.guid
 
       expect(response.status).to eq(200)
-      expect(parsed_body['data']['guid']).to eq(droplet.guid)
+      expect(parsed_body['guid']).to eq(droplet.guid)
     end
 
     context 'when the application does not exist' do
