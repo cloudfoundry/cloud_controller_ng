@@ -447,16 +447,43 @@ module VCAP::CloudController
             space.space_quota_definition = space_quota
             allow_any_instance_of(RouteValidator).to receive(:validate)
             allow(RoutingApi::Client).to receive(:new).and_return(routing_api_client)
-            body
-            TestConfig.override(routing_api: nil)
           end
 
-          it 'returns 403' do
-            post '/v2/route_mappings', body
-            expect(last_response).to have_status_code(403)
-            expect(decoded_response['description']).to include('Routing API is disabled')
+          context 'when a pre-exiting route has a router_group' do
+            before do
+              tcp_route
+              TestConfig.override(routing_api: nil)
+            end
+
+            it 'returns 403' do
+              post '/v2/route_mappings', body
+              expect(last_response).to have_status_code(403)
+              expect(decoded_response['description']).to include('Routing API is disabled')
+            end
+          end
+
+          context 'when a pre-existing route has no router_group' do
+            let(:route) { Route.make(port: 9090, host: '', space: space) }
+            let(:body) do
+              {
+                app_guid: app_obj.guid,
+                route_guid: route.guid
+              }.to_json
+            end
+
+            before do
+              route
+              TestConfig.override(routing_api: nil)
+            end
+
+
+            it 'returns 201 created' do
+              post '/v2/route_mappings', body
+              expect(last_response).to have_status_code(201)
+            end
           end
         end
+
 
         context 'when the app and route are in different spaces' do
           let(:route) { Route.make }
