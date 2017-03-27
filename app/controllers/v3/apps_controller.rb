@@ -12,6 +12,7 @@ require 'messages/apps/app_create_message'
 require 'presenters/v3/app_presenter'
 require 'presenters/v3/app_env_presenter'
 require 'presenters/v3/paginated_list_presenter'
+require 'presenters/v3/app_droplet_relationship_presenter'
 require 'fetchers/app_list_fetcher'
 require 'fetchers/app_fetcher'
 require 'fetchers/app_delete_fetcher'
@@ -147,11 +148,12 @@ class AppsV3Controller < ApplicationController
 
     SetCurrentDroplet.new(user_audit_info).update_to(app, droplet)
 
-    render status: :ok, json: Presenters::V3::ToOneRelationshipPresenter.new(
+    render status: :ok, json: Presenters::V3::AppDropletRelationshipPresenter.new(
       resource_path: "apps/#{app_guid}",
       related_instance: droplet,
       relationship_name: 'current_droplet',
-      related_resource_name: 'droplets'
+      related_resource_name: 'droplets',
+      app_model: app
     )
   rescue SetCurrentDroplet::InvalidApp, SetCurrentDroplet::Error => e
     unprocessable!(e.message)

@@ -887,7 +887,7 @@ RSpec.describe 'Apps' do
         },
         'links' => {
           'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet" },
-          'related' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}" }
+          'related' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" }
         }
       }
 
