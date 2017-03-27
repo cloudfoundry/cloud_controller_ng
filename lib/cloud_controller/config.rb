@@ -170,6 +170,7 @@ module VCAP::CloudController
         ],
         :default_staging_security_groups => [String],
         :default_running_security_groups => [String],
+        optional(:overwrite_security_groups) => bool,
 
         :resource_pool => {
           optional(:maximum_size) => Integer,

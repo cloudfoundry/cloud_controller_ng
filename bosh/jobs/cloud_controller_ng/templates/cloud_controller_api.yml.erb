@@ -388,6 +388,7 @@ app_bits_upload_grace_period_in_seconds: <%= p("cc.app_bits_upload_grace_period_
 security_group_definitions: <%= p("cc.security_group_definitions").to_json %>
 default_running_security_groups: <%= p("cc.default_running_security_groups").to_json %>
 default_staging_security_groups: <%= p("cc.default_staging_security_groups").to_json %>
+overwrite_security_groups: <%= p("cc.overwrite_security_groups") %>
 
 <% if_p("cc.feature_disabled_message") do %>
 feature_disabled_message: <%= p("cc.feature_disabled_message") %>

@@ -111,21 +111,19 @@ module VCAP::CloudController
       end
 
       def create_seed_security_groups(config)
-        return unless config[:security_group_definitions] && SecurityGroup.count == 0
+        return unless update_security_groups?(config)
 
         config[:security_group_definitions].each do |security_group|
           seed_security_group = security_group.dup
+          seed_security_group['staging_default'] = config[:default_staging_security_groups].include?(security_group['name'])
+          seed_security_group['running_default'] = config[:default_running_security_groups].include?(security_group['name'])
 
-          if config[:default_staging_security_groups].include?(security_group['name'])
-            seed_security_group['staging_default'] = true
-          end
-
-          if config[:default_running_security_groups].include?(security_group['name'])
-            seed_security_group['running_default'] = true
-          end
-
-          SecurityGroup.create(seed_security_group)
+          SecurityGroup.update_or_create(name: security_group['name']) { |group| group.set(seed_security_group) }
         end
+      end
+
+      def update_security_groups?(config)
+        config[:security_group_definitions] && (SecurityGroup.count == 0 || config[:overwrite_security_groups])
       end
 
       def create_seed_lockings

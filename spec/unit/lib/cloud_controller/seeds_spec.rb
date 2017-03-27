@@ -514,12 +514,62 @@ module VCAP::CloudController
         end
       end
 
-      context 'when there are exisiting security groups' do
+      context 'when there are existing security groups and overwrite_security_groups is false' do
         before do
           SecurityGroup.make(name: 'EXISTING SECURITY GROUP')
         end
 
         it 'does nothing' do
+          expect {
+            Seeds.create_seed_security_groups(config)
+          }.not_to change { SecurityGroup.count }
+        end
+      end
+
+      context 'when there are existing security groups and overwrite_security_groups is true' do
+        before do
+          config[:overwrite_security_groups] = true
+
+          SecurityGroup.dataset.destroy
+          Seeds.create_seed_security_groups(config)
+        end
+
+        it 'updates already existing security groups with new attributes' do
+          staging_def = config[:security_group_definitions][0]
+          staging_def['rules'] = [{'destination' => '0.0.0.0-9.255.255.255', 'protocol' => 'all'}]
+          config[:default_staging_security_groups].delete(staging_def['name'])
+          config[:default_running_security_groups] << staging_def['name']
+
+          expect {
+            Seeds.create_seed_security_groups(config)
+          }.not_to change { SecurityGroup.count }
+
+          changed_group = SecurityGroup.find(name: staging_def['name'])
+          expect(changed_group.rules).to eq(staging_def['rules'])
+          expect(changed_group.staging_default).to be false
+          expect(changed_group.running_default).to be true
+        end
+
+        it 'allows to add new security groups on subsequent invocations' do
+          config[:security_group_definitions] << {
+              'name' => 'default2',
+              'rules' => []
+          }
+          config[:default_running_security_groups] << 'default2'
+          config[:default_staging_security_groups] << 'default2'
+
+          expect {
+            Seeds.create_seed_security_groups(config)
+          }.to change { SecurityGroup.count }.by(1)
+
+          new_def = SecurityGroup.find(name: 'default2')
+          expect(new_def.staging_default).to be true
+          expect(new_def.running_default).to be true
+        end
+
+        it 'does not touch security groups that are not part of the updated definition' do
+          config[:security_group_definitions].delete_at(0)
+
           expect {
             Seeds.create_seed_security_groups(config)
           }.not_to change { SecurityGroup.count }
