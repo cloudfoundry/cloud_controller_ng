@@ -34,7 +34,7 @@ module VCAP::CloudController
           before do
             allow_any_instance_of(RouteValidator).to receive(:validate)
             allow_any_instance_of(SharedDomain).to receive(:routing_api_client).and_return(routing_api_client)
-            # allow(routing_api_client).to receive(:router_groups).and_return([router_group])
+            allow(routing_api_client).to receive(:router_groups).and_return([router_group])
           end
 
           context 'http routes' do
@@ -302,13 +302,31 @@ module VCAP::CloudController
 
             it 'returns the app port in routing info' do
               expected_tcp = [
-                { 'router_group_guid' => tcp_domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 5555 },
+                {'router_group_guid' => tcp_domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 5555},
               ]
 
               expect(ri.keys).to match_array ['tcp_routes', 'http_routes']
               expect(ri['tcp_routes']).to match_array expected_tcp
               http_ports = ri['http_routes'].map { |hr| hr['port'] }
               expect(http_ports).to contain_exactly(8080, 9090)
+            end
+
+            context 'errors in the routing_api_client' do
+
+              it 'turns RoutingApiDisabled into an ApiError' do
+                allow(routing_api_client).to receive(:router_group).and_raise(RoutingApi::RoutingApiDisabled)
+                expect { ri }.to raise_error(CloudController::Errors::ApiError)
+              end
+
+              it 'turns RoutingApiUnavailable into an ApiError' do
+                allow(routing_api_client).to receive(:router_group).and_raise(RoutingApi::RoutingApiUnavailable)
+                expect { ri }.to raise_error(CloudController::Errors::ApiError)
+              end
+
+              it 'turns UaaUnavailable into an ApiError' do
+                allow(routing_api_client).to receive(:router_group).and_raise(RoutingApi::UaaUnavailable)
+                expect { ri }.to raise_error(CloudController::Errors::ApiError)
+              end
             end
           end
         end
