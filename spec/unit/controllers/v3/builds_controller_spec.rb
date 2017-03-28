@@ -443,4 +443,69 @@ RSpec.describe BuildsController, type: :controller do
       end
     end
   end
+
+  describe '#show' do
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:build) { VCAP::CloudController::BuildModel.make(package: package) }
+    let!(:droplet) { VCAP::CloudController::DropletModel.make(
+      state: VCAP::CloudController::DropletModel::STAGED_STATE,
+      package_guid: package.guid,
+      build: build,
+    )
+    }
+
+    before do
+      allow_user_read_access_for(user, spaces: [space])
+      allow_user_secret_access(user, space: space)
+    end
+
+    it 'returns a 200 OK and the build' do
+      get :show, guid: build.guid
+
+      expect(response.status).to eq(200)
+      expect(parsed_body['guid']).to eq(build.guid)
+    end
+
+    context 'when the build does not exist' do
+      it 'returns a 404 Not Found' do
+        get :show, guid: 'shablam!'
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+      end
+    end
+
+    context 'permissions' do
+      context 'when the user does not have the read scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: [])
+        end
+
+        it 'returns a 403 NotAuthorized error' do
+          get :show, guid: build.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
+      end
+
+      context 'when the user can not read from the space' do
+        let(:org) { space.organization }
+
+        before do
+          disallow_user_read_access(user, space: space)
+        end
+
+        it 'returns a 404 not found' do
+          get :show, guid: build.guid
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
+      end
+    end
+  end
 end

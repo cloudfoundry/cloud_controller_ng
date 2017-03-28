@@ -3,6 +3,8 @@ Sequel.migration do
     create_table :builds do
       VCAP::Migration.common(self)
       String :state
+      String :package_guid
+      # TODO: add FK constraint
     end
 
     alter_table :droplets do

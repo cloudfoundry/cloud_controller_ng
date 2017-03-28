@@ -1,5 +1,6 @@
 require 'messages/builds/build_create_message'
 require 'presenters/v3/build_presenter'
+require 'actions/build_create'
 
 class BuildsController < ApplicationController
   def create
@@ -17,7 +18,7 @@ class BuildsController < ApplicationController
     lifecycle = LifecycleProvider.provide(package, message)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
-    build = BuildModel.create(state: VCAP::CloudController::BuildModel::STAGING_STATE)
+    build = BuildCreate.new.create_and_stage(package: package, lifecycle: lifecycle, message: message, user_audit_info: user_audit_info)
 
     droplet = DropletCreate.new.create_and_stage(
       package: package,
@@ -39,10 +40,24 @@ class BuildsController < ApplicationController
     unprocessable!('disk limit exceeded')
   end
 
+  def show
+    # TODO: could we optimize this call with .eager?
+    build = BuildModel.where(guid: params[:guid]).first
+    build_not_found! unless build
+
+    space = build.package.app.space
+    build_not_found! unless can_read?(space.guid, space.organization.guid)
+    render status: :ok, json: Presenters::V3::BuildPresenter.new(build, show_secrets: can_see_secrets?(space))
+  end
+
   private
 
   def package_not_found!
     resource_not_found!(:package)
+  end
+
+  def build_not_found!
+    resource_not_found!(:build)
   end
 
   def unprocessable_package!

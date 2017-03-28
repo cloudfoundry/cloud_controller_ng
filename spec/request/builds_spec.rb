@@ -42,6 +42,14 @@ RSpec.describe 'Builds' do
     end
 
     before do
+      stack = (VCAP::CloudController::Stack.find(name: create_request[:lifecycle][:data][:stack]) ||
+               VCAP::CloudController::Stack.make(name: create_request[:lifecycle][:data][:stack]))
+      # putting stack in the App.make call leads to an "App doesn't have a primary key" error
+      # message from sequel.
+      process = VCAP::CloudController::App.make(app: app_model, memory: 1024, disk_quota: 1536)
+      process.stack = stack
+      process.save
+      allow_any_instance_of(VCAP::CloudController::Dea::Stager).to receive(:stage)
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:v3_app_buildpack_cache_download_url).and_return('some-string')
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:v3_app_buildpack_cache_upload_url).and_return('some-string')
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_download_url).and_return('some-string')
@@ -83,7 +91,7 @@ RSpec.describe 'Builds' do
           }
         }
 
-      expect(last_response.status).to eq(201)
+      expect(last_response.status).to eq(201), last_response.body
       expect(parsed_response).to be_a_response_like(expected_response)
 
       event = VCAP::CloudController::Event.last
@@ -98,6 +106,59 @@ RSpec.describe 'Builds' do
         space_guid:        space.guid,
         organization_guid: space.organization.guid,
       )
+    end
+  end
+
+  describe 'GET /v3/builds' do
+    let(:build) { VCAP::CloudController::BuildModel.make(package: package) }
+    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(
+      state: VCAP::CloudController::DropletModel::STAGED_STATE,
+      package_guid: package.guid,
+      build: build,
+    )
+    }
+
+    before do
+      droplet.buildpack_lifecycle_data.update(buildpack: 'http://github.com/myorg/awesome-buildpack', stack: 'cflinuxfs2')
+    end
+    it 'shows the build' do
+      get "v3/builds/#{build.guid}", nil, json_headers(developer_headers)
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expected_response =
+        {
+          'guid' => build.guid,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'state' => 'STAGED',
+          'error' => nil,
+          'lifecycle' => {
+            'type' => 'buildpack',
+            'data' => {
+              'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
+              'stack' => 'cflinuxfs2'
+            },
+          },
+          'package' => {
+            'guid' => package.guid
+          },
+          'droplet' => {
+            'guid' => droplet.guid
+          },
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/builds/#{build.guid}"
+            },
+            'app' => {
+              'href' => "#{link_prefix}/v3/apps/#{package.app.guid}"
+            }
+          }
+        }
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 end

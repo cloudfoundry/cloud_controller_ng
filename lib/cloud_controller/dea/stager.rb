@@ -34,8 +34,7 @@ module VCAP::CloudController
 
       def stager_task
         staging_guid = @droplet ? @droplet.guid : nil
-        process = @droplet ? @droplet.app.web_process : nil
-        @task ||= AppStagerTask.new(@config, @message_bus, staging_guid, @dea_pool, CloudController::DependencyLocator.instance.blobstore_url_generator, process)
+        @task ||= AppStagerTask.new(@config, @message_bus, staging_guid, @dea_pool, CloudController::DependencyLocator.instance.blobstore_url_generator, @process)
       end
     end
   end

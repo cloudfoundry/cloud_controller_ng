@@ -9,8 +9,8 @@ module VCAP::CloudController
             guid: build.guid,
             created_at: build.created_at,
             updated_at: build.updated_at,
-            state: build.state,
-            error: droplet.error,
+            state: droplet.state,
+            error: droplet.error_description,
             lifecycle: {
               type: droplet.lifecycle_type,
               data: droplet.lifecycle_data.to_hash
@@ -32,7 +32,7 @@ module VCAP::CloudController
         end
 
         def droplet_guid
-          if droplet.state == VCAP::CloudController::DropletModel::STAGED_STATE
+          if VCAP::CloudController::DropletModel::FINAL_STATES.include?(droplet.state)
             return { guid: droplet.guid }
           end
           nil
