@@ -121,6 +121,27 @@ module VCAP::CloudController
           Seeds.create_seed_quota_definitions(config)
         end
 
+        it 'is possible to add new quota definitions on subsequent seeds' do
+          config[:quota_definitions]['medium'] = {
+              non_basic_services_allowed: false,
+              total_routes: 20,
+              total_services: 20,
+              memory_limit: 10240,
+              total_reserved_route_ports: 20,
+          }
+
+          expect {
+            Seeds.create_seed_quota_definitions(config)
+          }.to change { QuotaDefinition.count }.by(1)
+
+          medium_quota = QuotaDefinition[name: 'medium']
+          expect(medium_quota.non_basic_services_allowed).to eq(false)
+          expect(medium_quota.total_routes).to eq(20)
+          expect(medium_quota.total_services).to eq(20)
+          expect(medium_quota.memory_limit).to eq(10240)
+          expect(medium_quota.total_reserved_route_ports).to eq(20)
+        end
+
         context 'when the existing records exactly match the config' do
           it 'does not create duplicates' do
             expect {
@@ -143,15 +164,42 @@ module VCAP::CloudController
           end
         end
 
-        context 'when there are records with names that match but other fields that do not match' do
-          it 'warns' do
-            mock_logger = double
-            allow(Steno).to receive(:logger).and_return(mock_logger)
-            config[:quota_definitions]['small'][:total_routes] = 2
+        context 'if overwrite_quota_definitions is false (default)' do
+          context 'when there are records with names that match but other fields that do not match' do
+            it 'warns' do
+              mock_logger = double
+              allow(Steno).to receive(:logger).and_return(mock_logger)
+              config[:quota_definitions]['small'][:total_routes] = 20
 
-            expect(mock_logger).to receive(:warn).with('seeds.quota-collision', hash_including(name: 'small'))
+              expect(mock_logger).to receive(:warn).with('seeds.quota-collision', hash_including(name: 'small'))
 
-            Seeds.create_seed_quota_definitions(config)
+              expect {
+                Seeds.create_seed_quota_definitions(config)
+              }.not_to change { QuotaDefinition.count }
+            end
+          end
+        end
+
+        context 'if overwrite_quota_definitions is true' do
+          before do
+            config[:overwrite_quota_definitions] = true
+          end
+
+          context 'when there are records with names that match but other fields that do not match' do
+            it 'overwrites them' do
+              config[:quota_definitions]['small'][:total_routes] = 20
+
+              expect {
+                Seeds.create_seed_quota_definitions(config)
+              }.not_to change { QuotaDefinition.count }
+
+              small_quota = QuotaDefinition[name: 'small']
+              expect(small_quota.non_basic_services_allowed).to eq(false)
+              expect(small_quota.total_routes).to eq(20) # changed
+              expect(small_quota.total_services).to eq(10)
+              expect(small_quota.memory_limit).to eq(1024)
+              expect(small_quota.total_reserved_route_ports).to eq(10)
+            end
           end
         end
       end

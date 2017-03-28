@@ -31,7 +31,11 @@ module VCAP::CloudController
           if quota
             quota.set(values)
             if quota.modified?
-              Steno.logger('cc.seeds').warn('seeds.quota-collision', name: name, values: values)
+              if config[:overwrite_quota_definitions]
+                quota.save
+              else
+                Steno.logger('cc.seeds').warn('seeds.quota-collision', name: name, values: values)
+              end
             end
           else
             QuotaDefinition.create(values.merge(name: name.to_s))
