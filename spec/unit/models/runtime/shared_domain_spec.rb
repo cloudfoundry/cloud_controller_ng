@@ -118,7 +118,8 @@ module VCAP::CloudController
           expect(shared_domain.tcp?).to eq(false)
         end
       end
-      context 'when there router group doesnt match' do
+
+      context 'when the router group doesnt match' do
         let(:router_group_type) { 'http' }
         let(:ra_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group: nil) }
         let(:rg) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, type: router_group_type) }
@@ -127,7 +128,21 @@ module VCAP::CloudController
         it 'returns false' do
           expect(shared_domain.tcp?).to eq(false)
         end
+
+        it 'when tcp? is called twice it only calls the routing api once' do
+          expect(ra_client).to receive(:router_group).once
+          shared_domain.tcp?
+          shared_domain.tcp?
+        end
       end
+
+      it 'when tcp? is called twice it only calls the routing api once' do
+        expect(ra_client).to receive(:router_group).once
+        shared_domain.tcp?
+        shared_domain.tcp?
+      end
+
+
     end
 
     describe 'addable_to_organization!' do
