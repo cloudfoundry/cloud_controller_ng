@@ -218,7 +218,7 @@ properties:
           total_reserved_route_ports: 10
 
   cc.overwrite_quota_definitions:
-    description: "If set to true, it will not only create quota definitions when not existing, but update existing quotas when their definition in quota_definitions changes.".
+    description: "If set to true, it will not only create quota definitions when not existing, but update existing quotas when their definition in quota_definitions changes."
     default: false
 
   cc.default_quota_definition:
