@@ -65,33 +65,13 @@ module VCAP::CloudController
 
     post '/staging/v3/droplets/:guid/upload', :upload_package_droplet
     def upload_package_droplet(guid)
-      droplet = DropletModel.find(guid: guid)
-
-      raise ApiError.new_from_details('NotFound', guid) if droplet.nil?
-      raise ApiError.new_from_details('StagingError', "malformed droplet upload request for #{guid}") unless upload_path
-      check_file_md5
-
-      logger.info 'v3-droplet.begin-upload', droplet_guid: guid
-
-      droplet_upload_job = Jobs::V3::DropletUpload.new(upload_path, guid)
-
-      job = Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::LocalQueue.new(config)).enqueue
+      job = upload_droplet(guid)
       [HTTP::OK, StagingJobPresenter.new(job, 'http').to_json]
     end
 
     post '/internal/v4/droplets/:guid/upload', :upload_package_droplet_mtls
     def upload_package_droplet_mtls(guid)
-      droplet = DropletModel.find(guid: guid)
-
-      raise ApiError.new_from_details('NotFound', guid) if droplet.nil?
-      raise ApiError.new_from_details('StagingError', "malformed droplet upload request for #{guid}") unless upload_path
-      check_file_md5
-
-      logger.info 'v3-droplet.begin-upload', droplet_guid: guid
-
-      droplet_upload_job = Jobs::V3::DropletUpload.new(upload_path, guid)
-
-      job = Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::LocalQueue.new(config)).enqueue
+      job = upload_droplet(guid)
       [HTTP::OK, StagingJobPresenter.new(job, 'https').to_json]
     end
 
@@ -135,6 +115,20 @@ module VCAP::CloudController
       @config = dependencies.fetch(:config)
       @missing_blob_handler = dependencies.fetch(:missing_blob_handler)
       @blob_sender = dependencies.fetch(:blob_sender)
+    end
+
+    def upload_droplet(guid)
+      droplet = DropletModel.find(guid: guid)
+
+      raise ApiError.new_from_details('NotFound', guid) if droplet.nil?
+      raise ApiError.new_from_details('StagingError', "malformed droplet upload request for #{guid}") unless upload_path
+      check_file_md5
+
+      logger.info 'v3-droplet.begin-upload', droplet_guid: guid
+
+      droplet_upload_job = Jobs::V3::DropletUpload.new(upload_path, guid)
+
+      Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::LocalQueue.new(config)).enqueue
     end
 
     def upload_path
