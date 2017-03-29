@@ -536,7 +536,7 @@ module VCAP::CloudController
 
         it 'updates already existing security groups with new attributes' do
           staging_def = config[:security_group_definitions][0]
-          staging_def['rules'] = [{'destination' => '0.0.0.0-9.255.255.255', 'protocol' => 'all'}]
+          staging_def['rules'] = [{ 'destination' => '0.0.0.0-9.255.255.255', 'protocol' => 'all' }]
           config[:default_staging_security_groups].delete(staging_def['name'])
           config[:default_running_security_groups] << staging_def['name']
 
