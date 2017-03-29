@@ -17,12 +17,12 @@ module VCAP::CloudController
             route_app_port_map[r.guid].each do |app_port|
               if r.domain.is_a?(SharedDomain) && !r.domain.router_group_guid.nil?
                 if r.domain.tcp? && !route_app_port_map[r.guid].blank?
-                  info = {'router_group_guid' => r.domain.router_group_guid}
+                  info = { 'router_group_guid' => r.domain.router_group_guid }
                   info['external_port'] = r.port
                   info['container_port'] = app_port
                   tcp_info.push(info)
                 else
-                  info = {'hostname' => r.uri}
+                  info = { 'hostname' => r.uri }
                   info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
                   info['port'] = app_port
                   info['router_group_guid'] = r.domain.router_group_guid

@@ -476,14 +476,12 @@ module VCAP::CloudController
               TestConfig.override(routing_api: nil)
             end
 
-
             it 'returns 201 created' do
               post '/v2/route_mappings', body
               expect(last_response).to have_status_code(201)
             end
           end
         end
-
 
         context 'when the app and route are in different spaces' do
           let(:route) { Route.make }

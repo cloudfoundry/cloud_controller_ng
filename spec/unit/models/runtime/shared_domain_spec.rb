@@ -141,8 +141,6 @@ module VCAP::CloudController
         shared_domain.tcp?
         shared_domain.tcp?
       end
-
-
     end
 
     describe 'addable_to_organization!' do

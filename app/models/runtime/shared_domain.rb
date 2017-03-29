@@ -54,13 +54,9 @@ module VCAP::CloudController
       if router_group_guid.present?
         if @router_group_type.nil?
           router_group = routing_api_client.router_group(router_group_guid)
-          if router_group.nil?
-            @router_group_type = ''
-          else
-            @router_group_type = router_group.type
-          end
+          @router_group_type = router_group.nil? ? '' : router_group.type
         end
-        
+
         return @router_group_type.eql?('tcp')
       end
 

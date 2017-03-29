@@ -302,7 +302,7 @@ module VCAP::CloudController
 
             it 'returns the app port in routing info' do
               expected_tcp = [
-                {'router_group_guid' => tcp_domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 5555},
+                { 'router_group_guid' => tcp_domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 5555 },
               ]
 
               expect(ri.keys).to match_array ['tcp_routes', 'http_routes']
@@ -312,7 +312,6 @@ module VCAP::CloudController
             end
 
             context 'errors in the routing_api_client' do
-
               it 'turns RoutingApiDisabled into an ApiError' do
                 allow(routing_api_client).to receive(:router_group).and_raise(RoutingApi::RoutingApiDisabled)
                 expect { ri }.to raise_error(CloudController::Errors::ApiError)

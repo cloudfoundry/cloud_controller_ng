@@ -138,7 +138,7 @@ RSpec.describe 'SharedDomains' do
                 "reservable_ports":"1024-65535",
                 "type": "tcp"
               }]',
-            headers: {})
+                    headers: {})
       end
 
       it 'makes a shared domain with HTTP router group' do
@@ -166,7 +166,6 @@ RSpec.describe 'SharedDomains' do
 
       it 'makes a TCP shared domain with TCP router group' do
         post '/v2/shared_domains', '{"name": "meow.mc.meowerson.com", "router_group_guid": "9876"}', admin_headers_for(user)
-
 
         puts last_response.body
         expect(last_response.status).to be(201)
