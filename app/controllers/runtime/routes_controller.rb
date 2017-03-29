@@ -30,7 +30,7 @@ module VCAP::CloudController
     # rubocop:disable Metrics/MethodLength
     def self.translate_validation_exception(e, attributes)
       if e.errors.on(:routing_api) == [:routing_api_disabled]
-        return CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+        return CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
       end
 
       if e.errors.on(:routing_api) == [:uaa_unavailable]
@@ -231,14 +231,14 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', app_guid) unless app
 
       begin
-        V2::RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, app).add(request_attrs)
+        RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, app).add(request_attrs)
       rescue RouteMappingCreate::DuplicateRouteMapping
         # the route is already mapped, consider the request successful
-      rescue V2::RouteMappingCreate::TcpRoutingDisabledError
-        raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+      rescue RouteMappingCreate::RoutingApiDisabledError
+        raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
       rescue RouteMappingCreate::SpaceMismatch => e
         raise CloudController::Errors::InvalidAppRelation.new(e.message)
-      rescue V2::RouteMappingCreate::RouteServiceNotSupportedError
+      rescue RouteMappingCreate::RouteServiceNotSupportedError
         raise CloudController::Errors::InvalidAppRelation.new("#{app.guid} - Route services are only supported for apps on Diego")
       end
 
@@ -306,11 +306,9 @@ module VCAP::CloudController
     def validated_router_group
       @router_group ||=
         begin
-          router_group = routing_api_client.router_group(validated_domain.router_group_guid)
-          raise CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', validated_domain.router_group_guid.to_s) if router_group.nil?
-          router_group
+          routing_api_client.router_group(validated_domain.router_group_guid)
         rescue RoutingApi::RoutingApiDisabled
-          raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+          raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
         end
     end
 
@@ -318,6 +316,10 @@ module VCAP::CloudController
       domain_guid = @request_attrs['domain_guid']
       domain = Domain.find(guid: domain_guid)
       domain_invalid!(domain_guid) if domain.nil?
+
+      if routing_api_client.router_group(domain.router_group_guid).nil?
+        raise CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', domain.router_group_guid.to_s)
+      end
 
       unless domain.shared? && domain.tcp?
         raise CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.')

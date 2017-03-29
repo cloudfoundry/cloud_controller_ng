@@ -12,9 +12,11 @@ module VCAP::CloudController
     let(:generator1) { PortGenerator.new(domain_guid1) }
     let(:space_quota) { SpaceQuotaDefinition.make }
     let(:space) { Space.make(organization: space_quota.organization, space_quota_definition: space_quota) }
+    let(:dependency_double) { double('dependency_locator', routing_api_client: routing_api_client) }
 
     before do
       allow_any_instance_of(RouteValidator).to receive(:validate)
+      allow(CloudController::DependencyLocator).to receive(:instance).and_return(dependency_double)
     end
 
     describe 'generate_port' do

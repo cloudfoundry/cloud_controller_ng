@@ -103,6 +103,7 @@ module VCAP::CloudController
           {
             hostnames:         [i['hostname']],
             port:              i['port'],
+            router_group_guid: i['router_group_guid'],
             route_service_url: i['route_service_url']
           }
         end

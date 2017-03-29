@@ -15,16 +15,24 @@ module VCAP::CloudController
           tcp_info = []
           process.routes.each do |r|
             route_app_port_map[r.guid].each do |app_port|
-              if r.domain.router_group_guid.nil?
+              if r.domain.is_a?(SharedDomain) && !r.domain.router_group_guid.nil?
+                if r.domain.tcp? && !route_app_port_map[r.guid].blank?
+                  info = {'router_group_guid' => r.domain.router_group_guid}
+                  info['external_port'] = r.port
+                  info['container_port'] = app_port
+                  tcp_info.push(info)
+                else
+                  info = {'hostname' => r.uri}
+                  info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
+                  info['port'] = app_port
+                  info['router_group_guid'] = r.domain.router_group_guid
+                  http_info.push(info)
+                end
+              else
                 info = { 'hostname' => r.uri }
                 info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
                 info['port'] = app_port
                 http_info.push(info)
-              elsif !route_app_port_map[r.guid].blank?
-                info = { 'router_group_guid' => r.domain.router_group_guid }
-                info['external_port'] = r.port
-                info['container_port'] = app_port
-                tcp_info.push(info)
               end
             end
           end
@@ -32,6 +40,12 @@ module VCAP::CloudController
           route_info['http_routes'] = http_info unless http_info.blank?
           route_info['tcp_routes'] = tcp_info unless tcp_info.blank?
           route_info
+        rescue RoutingApi::RoutingApiDisabled
+          raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
+        rescue RoutingApi::RoutingApiUnavailable
+          raise CloudController::Errors::ApiError.new_from_details('RoutingApiUnavailable')
+        rescue RoutingApi::UaaUnavailable
+          raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         end
 
         private

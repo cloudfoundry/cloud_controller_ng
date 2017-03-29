@@ -2,7 +2,9 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SharedDomain, type: :model do
-    subject { described_class.make name: 'test.example.com', router_group_guid: 'my-router-group-guid', router_group_type: 'tcp' }
+    subject { described_class.make name: 'test.example.com', router_group_guid: router_group_guid, router_group_type: 'tcp' }
+
+    let(:router_group_guid) { 'my-router-group-guid' }
 
     it { is_expected.to have_timestamp_columns }
 
@@ -67,7 +69,13 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
+      let(:routing_api_client) { double('routing_api_client') }
+      let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
+
       before do
+        allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
+          and_return(routing_api_client)
+        allow(routing_api_client).to receive(:router_group).with(router_group_guid).and_return(router_group)
         allow_any_instance_of(RouteValidator).to receive(:validate)
       end
 
@@ -81,8 +89,17 @@ module VCAP::CloudController
     end
 
     describe '#tcp?' do
+      let(:router_group_type) { 'http' }
+      let(:ra_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group: rg) }
+      let(:rg) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, type: router_group_type) }
+      let(:shared_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: '123') }
+
+      before do
+        allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(ra_client)
+      end
+
       context 'when shared domain is a tcp domain' do
-        let(:shared_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: '123') }
+        let(:router_group_type) { 'tcp' }
 
         it 'returns true' do
           expect(shared_domain.tcp?).to be_truthy
@@ -90,12 +107,42 @@ module VCAP::CloudController
       end
 
       context 'when shared domain is not a tcp domain' do
-        let(:shared_domain) { SharedDomain.make(name: 'tcp.com') }
-
         it 'returns false' do
           expect(shared_domain.tcp?).to eq(false)
         end
       end
+
+      context 'when there is no router group guid' do
+        let(:shared_domain) { SharedDomain.make(name: 'tcp.com') }
+        it 'returns false' do
+          expect(shared_domain.tcp?).to eq(false)
+        end
+      end
+
+      context 'when the router group doesnt match' do
+        let(:router_group_type) { 'http' }
+        let(:ra_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group: nil) }
+        let(:rg) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, type: router_group_type) }
+        let(:shared_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: '123') }
+
+        it 'returns false' do
+          expect(shared_domain.tcp?).to eq(false)
+        end
+
+        it 'when tcp? is called twice it only calls the routing api once' do
+          expect(ra_client).to receive(:router_group).once
+          shared_domain.tcp?
+          shared_domain.tcp?
+        end
+      end
+
+      it 'when tcp? is called twice it only calls the routing api once' do
+        expect(ra_client).to receive(:router_group).once
+        shared_domain.tcp?
+        shared_domain.tcp?
+      end
+
+
     end
 
     describe 'addable_to_organization!' do

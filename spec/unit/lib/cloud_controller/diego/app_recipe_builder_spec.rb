@@ -438,11 +438,13 @@ module VCAP::CloudController
                 'http_routes' => [
                   {
                     'hostname' => 'potato.example.com',
-                    'port'     => 8080
+                    'port'     => 8080,
+                    'router_group_guid' => 'potato-guid'
                   },
                   {
                     'hostname'          => 'tomato.example.com',
                     'port'              => 8080,
+                    'router_group_guid' => 'tomato-guid',
                     'route_service_url' => 'https://potatosarebetter.example.com'
                   }
                 ],
@@ -474,11 +476,13 @@ module VCAP::CloudController
                       {
                                'hostnames'         => ['potato.example.com'],
                                'port'              => 8080,
+                               'router_group_guid' => 'potato-guid',
                                'route_service_url' => nil
                              },
                       {
                         'hostnames'         => ['tomato.example.com'],
                         'port'              => 8080,
+                        'router_group_guid' => 'tomato-guid',
                         'route_service_url' => 'https://potatosarebetter.example.com'
                       }
                     ].to_json
@@ -589,11 +593,13 @@ module VCAP::CloudController
                         {
                                  'hostnames'         => ['potato.example.com'],
                                  'port'              => 8080,
+                                 'router_group_guid' => nil,
                                  'route_service_url' => nil
                                },
                         {
                           'hostnames'         => ['tomato.example.com'],
                           'port'              => 8080,
+                          'router_group_guid' => nil,
                           'route_service_url' => 'https://potatosarebetter.example.com'
                         }
                       ].to_json
@@ -905,11 +911,13 @@ module VCAP::CloudController
               'http_routes' => [
                 {
                   'hostname' => 'potato.example.com',
-                  'port'     => 8080
+                  'port'     => 8080,
+                  'router_group_guid' => 'potato-guid'
                 },
                 {
                   'hostname'          => 'tomato.example.com',
                   'port'              => 8080,
+                  'router_group_guid' => 'tomato-guid',
                   'route_service_url' => 'https://potatosarebetter.example.com'
                 }
               ],
@@ -941,11 +949,13 @@ module VCAP::CloudController
                     {
                              'hostnames'         => ['potato.example.com'],
                              'port'              => 8080,
+                             'router_group_guid' => 'potato-guid',
                              'route_service_url' => nil
                            },
                     {
                       'hostnames'         => ['tomato.example.com'],
                       'port'              => 8080,
+                      'router_group_guid' => 'tomato-guid',
                       'route_service_url' => 'https://potatosarebetter.example.com'
                     }
                   ].to_json
@@ -1056,11 +1066,13 @@ module VCAP::CloudController
                       {
                                'hostnames'         => ['potato.example.com'],
                                'port'              => 8080,
+                               'router_group_guid' => nil,
                                'route_service_url' => nil
                              },
                       {
                         'hostnames'         => ['tomato.example.com'],
                         'port'              => 8080,
+                        'router_group_guid' => nil,
                         'route_service_url' => 'https://potatosarebetter.example.com'
                       }
                     ].to_json

@@ -133,7 +133,7 @@ module VCAP::CloudController
               post '/v2/shared_domains', body
 
               expect(last_response).to have_status_code(403)
-              expect(last_response.body).to include 'Support for TCP routing is disabled'
+              expect(last_response.body).to include 'Routing API is disabled'
             end
           end
         end
@@ -143,7 +143,7 @@ module VCAP::CloudController
         let(:router_groups) do
           [
             RoutingApi::RouterGroup.new({ 'guid' => 'router-group-guid1', 'type' => 'tcp' }),
-            RoutingApi::RouterGroup.new({ 'guid' => 'random-guid-2', 'type' => 'tcp' }),
+            RoutingApi::RouterGroup.new({ 'guid' => 'random-guid-2', 'type' => 'http' }),
           ]
         end
         let!(:domain) { SharedDomain.make(name: 'shareddomain.com', router_group_guid: 'router-group-guid1') }
@@ -245,11 +245,11 @@ module VCAP::CloudController
           end
 
           context 'when getting a particular shared domain' do
-            it 'raises a 403 - tcp routing disabled error' do
+            it 'raises a 403 - routing API disabled error' do
               get "/v2/shared_domains/#{domain.guid}"
 
               expect(last_response).to have_status_code(403)
-              expect(last_response.body).to include 'Support for TCP routing is disabled'
+              expect(last_response.body).to include 'Routing API is disabled'
             end
           end
 

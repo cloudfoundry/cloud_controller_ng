@@ -26,7 +26,7 @@ module VCAP::CloudController
       begin
         @router_group = routing_api_client.router_group(router_group_guid)
       rescue RoutingApi::RoutingApiDisabled
-        raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+        raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
       rescue RoutingApi::RoutingApiUnavailable
         raise CloudController::Errors::ApiError.new_from_details('RoutingApiUnavailable')
       rescue RoutingApi::UaaUnavailable
@@ -76,7 +76,7 @@ module VCAP::CloudController
         begin
           rtr_grp = routing_api_client.router_group(domain.router_group_guid)
         rescue RoutingApi::RoutingApiDisabled
-          raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
+          raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
         rescue RoutingApi::RoutingApiUnavailable
           raise CloudController::Errors::ApiError.new_from_details('RoutingApiUnavailable')
         rescue RoutingApi::UaaUnavailable
