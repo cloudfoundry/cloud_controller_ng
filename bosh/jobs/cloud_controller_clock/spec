@@ -635,7 +635,9 @@ properties:
   cc.diego.temporary_cc_uploader_mtls:
     description: "Temporary flag to ensure droplet upload callback endpoints require mTLS"
     default: false
-
+  cc.diego.temporary_droplet_download_mtls:
+    description: "Temporary flag to enable mTLS droplet download to the bbs from cc"
+    default: false
   cc.diego.pid_limit:
     description: "Maximum pid limit for containerized work running user-provided code"
     default: 1024

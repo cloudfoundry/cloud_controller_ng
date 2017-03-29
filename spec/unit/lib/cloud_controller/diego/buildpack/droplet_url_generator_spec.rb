@@ -25,6 +25,17 @@ module VCAP::CloudController
               expect(generator.perma_droplet_download_url(app)).to be_nil
             end
           end
+
+          context 'when temporary_droplet_download_mtls is enabled' do
+            before do
+              TestConfig.override({ diego: { temporary_droplet_download_mtls: true } })
+            end
+
+            it 'gives out a url to the cloud controller using mTLS' do
+              download_url = "https://api.internal.cf:8182/internal/v4/droplets/#{app.guid}/#{app.droplet_checksum}/download"
+              expect(generator.perma_droplet_download_url(app)).to eql(download_url)
+            end
+          end
         end
       end
     end

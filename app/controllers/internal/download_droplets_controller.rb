@@ -15,6 +15,7 @@ module VCAP::CloudController
     attr_reader :blobstore
 
     get '/internal/v2/droplets/:guid/:droplet_checksum/download', :download_droplet
+    get '/internal/v4/droplets/:guid/:droplet_checksum/download', :download_droplet
     def download_droplet(guid, droplet_checksum)
       app = App.find(guid: guid)
       check_app_exists(app, guid)
