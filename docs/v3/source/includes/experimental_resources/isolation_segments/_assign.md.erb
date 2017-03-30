@@ -1,4 +1,4 @@
-### Entitle one or more organizations for an isolation segment
+### Entitle organizations for an isolation segment
 
 ```
 Definition
@@ -31,23 +31,15 @@ Example Response
 
 ```http
 HTTP/1.1 200 OK
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :relationships_organizations %>
 ```
 This endpoint entitles the specified organizations for the isolation segment.  Only Admins can entitle organizations for isolation segments.
 In the case where the specified isolation segment is the system-wide shared segment, and if an organization is not already entitled for any other isolation segment, then the shared isolation segment automatically gets assigned as the  default for that organization.
 
-#### Body Parameters
+#### Required Parameters
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      data
-
-      <span class="method-list-item-type"/>
-    </h4>
-
-    <p class="method-list-item-description">Array of organizations, each specified by its guid, to be entitled.</p>
-  </li>
-</ul>
+Name | Type | Description
+---- | ---- | -----------
+**data** | [_to-many relationship_](#to-many-relationships) | Organization relationships. Each organization will be entitled to manage this isolation segment.

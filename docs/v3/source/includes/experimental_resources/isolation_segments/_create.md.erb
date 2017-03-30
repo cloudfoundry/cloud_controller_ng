@@ -28,22 +28,14 @@ Example Response
 
 ```http
 HTTP/1.1 201 Created
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :single_isolation_segment %>
 ```
-This endpoint creates a new isolation segment.  Only Admins can create isolation segments.
+Only Admins can create isolation segments.
 
-#### Body Parameters
+#### Required Parameters
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      name
-
-      <span class="method-list-item-type method-list-item-type-required">required</span>
-    </h4>
-
-    <p class="method-list-item-description">Name of the Isolation Segment.  Isolation Segment names must be unique across the entire system, and case is ignored when checking for uniqueness.</p>
-  </li>
-</ul>
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Name of the Isolation Segment.  Isolation Segment names must be unique across the entire system, and case is ignored when checking for uniqueness.

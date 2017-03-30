@@ -17,9 +17,7 @@ curl "https://api.example.org/v3/isolation_segments/[guid]" \
   -X PATCH \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json" \
-  -d '{
-    "name": "my_isolation_segment"
-  }' 
+  -d '{ "name": "my_isolation_segment" }'
 ```
 
 ```
@@ -28,22 +26,14 @@ Example Response
 
 ```http
 HTTP/1.1 200 OK
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :isolation_segment_with_name, 'my_isolation_segment' %>
 ```
-This endpoint updates an isolation_segment.  Only Admins can update isolation segments.
+Only Admins can update isolation segments.
 
-#### Body Parameters
+#### Optional Parameters
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      name
-
-      <span class="method-list-item-type"/>
-    </h4>
-
-    <p class="method-list-item-description">Name of the Isolation Segment.  The name must be unique across the entire system, and case is ignored when checking for uniqueness.</p>
-  </li>
-</ul>
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Name of the Isolation Segment.  Isolation Segment names must be unique across the entire system, and case is ignored when checking for uniqueness.
