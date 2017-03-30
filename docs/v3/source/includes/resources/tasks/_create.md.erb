@@ -26,57 +26,24 @@ Example Response
 
 ```http
 HTTP/1.1 202 Accepted
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :single_task %>
 ```
 
-This endpoint creates a new task.
+Create a new task.
 
+#### Required Parameters
 
-#### Body Parameters
+Name | Type | Description
+---- | ---- | -----------
+**command** | _string_ | Command that will be executed
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      command
+#### Optional Parameters
 
-      <span class="method-list-item-type method-list-item-type-required">required</span>
-    </h4>
-
-    <p class="method-list-item-description">Command that will be executed</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      name
-
-     <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">User-facing name of the task</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      memory_in_mb
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Amount of memory to allocate for the task in MB. Defaults to operater-configurable 'default_app_memory' when not specified.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      disk_in_mb
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Amount of disk to allocate for the task in MB. Defaults to operater-configurable 'default_app_disk_in_mb' when not specified.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      droplet_guid
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">The guid of the droplet that will be used to run the command. Defaults to the app's current droplet when not specified.</p>
-  </li>
-</ul>
+Name | Type | Description | Default
+---- | ---- | ----------- | -------
+**name** | _string_ | Name of the task. | auto-generated
+**disk_in_mb** | _integer_ | Amount of disk to allocate for the task in MB. | operator-configured `default_app_memory`
+**memory_in_mb** | _integer_ | Amount of memory to allocate for the task in MB. | operator-configured `default_app_disk_in_mb`
+**droplet_guid** | _uuid_ | The guid of the droplet that will be used to run the command. | the app's current droplet

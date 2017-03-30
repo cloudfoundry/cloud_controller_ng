@@ -24,18 +24,10 @@ Example Response
 
 ```http
 HTTP/1.1 200 OK
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :single_task %>
 ```
 
-This endpoint retrieves a specific task. The <code>command</code> field may be excluded
+Retrieve a specific task. The <code>command</code> field may be excluded
 in the response based on the user's role.
-
-#### Body Parameters
-
-<p class='no-body-parameters-outer'>
-  <span class='no-body-parameters-required'>
-    No arguments
-  </span>
-</p>

@@ -24,58 +24,23 @@ Example Response
 
 ```http
 HTTP/1.1 200 OK
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :paginated_list_of_tasks, '/v3/tasks' %>
 ```
 
-This endpoint retrieves the tasks the user has access to. The <code>command</code> field is excluded in the response.
+Retrieve all tasks the user has access to. The `command` field is excluded in the response.
 
 #### Query Parameters
 
-<ul class="method-list-group">
-<%= yield_content :app_guids_query_param %>
-
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      names
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">array of strings</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of task names to filter by. <br>Example: <code>names=name1,name2</code></p>
-  </li>
-
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      guids
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of task guids to filter by.</p>
-  </li>
-
-<%= yield_content :organization_guids_query_param %>
-
-<%= yield_content :space_guids_query_param %>
-
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      states
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of task states to filter by.</p>
-  </li>
-
-<%= yield_content :page_query_param %>
-
-<%= yield_content :per_page_query_param %>
-
-<%= yield_content :order_by_query_param %>
-</ul>
+Name | Type | Description
+---- | ---- | ------------
+**guids** | _list of strings_ | Comma-delimited list of task guids to filter by.
+**names** | _list of strings_ | Comma-delimited list of task names to filter by.
+**states** | _list of strings_ | Comma-delimited list of task states to filter by.
+**app_guids** | _list of strings_ | Comma-delimited list of app guids to filter by.
+**space_guids** | _list of strings_ | Comma-delimited list of space guids to filter by.
+**organization_guids** | _list of strings_ | Comma-delimited list of organization guids to filter by.
+**page** | _integer_ | Page to display. Valid values are integers >= 1.
+**per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
+**order_by** | _string_ | Value to sort by. Defaults to ascending. Prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`.
