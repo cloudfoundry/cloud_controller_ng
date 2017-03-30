@@ -1,4 +1,4 @@
-### Get current droplet for an app
+### Get current droplet
 
 ```
 Definition
@@ -24,17 +24,7 @@ Example Response
 
 ```http
 HTTP/1.1 200 OK
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :app_current_droplet_relationship %>
 ```
-
-This endpoint retrieves the current droplet for an app.
-
-#### Body Parameters
-
-<p class='no-body-parameters-outer'>
-  <span class='no-body-parameters-required'>
-    No arguments
-  </span>
-</p>

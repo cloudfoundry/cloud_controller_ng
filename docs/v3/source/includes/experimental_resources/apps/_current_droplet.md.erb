@@ -1,4 +1,4 @@
-### Set current droplet for an app
+### Set current droplet
 
 ```
 Definition
@@ -26,9 +26,9 @@ Example Response
 
 ```http
 HTTP/1.1 200 OK
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :app_current_droplet_relationship %>
 ```
 
-This endpoint sets the current droplet for an app. The current droplet is the droplet that the app will use when running.
+Set the current droplet for an app. The current droplet is the droplet that the app will use when running.

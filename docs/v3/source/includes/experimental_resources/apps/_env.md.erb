@@ -24,8 +24,8 @@ Example Response
 
 ```http
 HTTP/1.1 200 OK
-```
-```json
+Content-Type: application/json
+
 {
   "staging_env_json": {
     "GEM_CACHE": "http://gem-cache.example.com"
@@ -71,6 +71,6 @@ HTTP/1.1 200 OK
 }
 ```
 
-This endpoint retrieves the environment variables that will be provided to an app at runtime.
+Retrieve the environment variables that will be provided to an app at runtime.
 It will include environment variables for Environment Variable Groups and Service Bindings.
 

@@ -1,54 +1,13 @@
-<div class='no-margin'></div>
-
 ### The app object
 
-<ul class="method-list-group">
-<%= yield_content :guid, 'app' %>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      name
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">An arbitrary name of the app.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      desired_state
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Current desired state of the app. Can either be <code>STOPPED</code> or <code>STARTED</code>.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      total_desired_instances
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">Number of desired instances of the application.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      lifecycle
-      <span class="method-list-item-type">object</span>
-    </h4>
-
-    <p class="method-list-item-description">Provides the lifecycle object for the application.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      environment_variables
-      <span class="method-list-item-type">object</span>
-    </h4>
-
-    <p class="method-list-item-description">Provides the list of custom environment variables available to the application.</p>
-  </li>
-
-<%= yield_content :created_at %>
-
-<%= yield_content :updated_at %>
-
-<%= yield_content :links %>
-</ul>
-
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Name of the app.
+**desired_state** | _string_ | Current desired state of the app. Valid values are `STOPPED` or `STARTED`.
+**total_desired_instances** | _integer_ | Number of desired instances of the application.
+**environment_variables** | _object_ | Provides the list of custom environment variables available to the application.
+**lifecycle** | [_lifecycle object_](##the-lifecycle-object) | Provides the lifecycle object for the application.
+**guid** | _uuid_ | Unique identifier for the app.
+**created_at** | _datetime_ | The time with zone when the object was created.
+**updated_at** | _datetime_ | The time with zone when the object was last updated.
+**links** | [_links object_](#links) | Links to related resources.

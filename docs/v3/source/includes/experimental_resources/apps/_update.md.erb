@@ -37,40 +37,16 @@ Example Response
 
 ```http
 HTTP/1.1 200 OK
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :app_with_state, 'STARTED' %>
 ```
-This endpoint updates an app.
 
-#### Body Parameters
+#### Optional Parameters
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      name
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Name of the app.
+**environment_variables** | _object_ | Environment variables to be used for the app when running.
+**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Lifecycle to be used when updating the app. Note: `data` is a required field in lifecycle if lifecycle is updated.
 
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Name of the App.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      environment_variables
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Environment variables to be used for the App when running.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      lifecycle
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Lifecycle to be used when updating the app. Note: If no lifecycle is provided, lifecycle type defaults to buildpack. Data is a required field in lifecycle.</p>
-  </li>
-</ul>

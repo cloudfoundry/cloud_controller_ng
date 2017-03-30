@@ -2,7 +2,6 @@
 
 Name | Type | Description
 ---- | ---- | -----------
-**guid** | _uuid_ | Unique identifier for the task.
 **sequence_id** | _integer_ | User-facing id of the task. This number is unique for every task associated with a given app.
 **name** | _string_ | Name of the task.
 **command** | _string_ | Command that will be executed. This field may be excluded based on a user's role.
@@ -12,6 +11,7 @@ Name | Type | Description
 **droplet_guid** | _uuid_ | The guid of the droplet that will be used to run the command.
 **result** | _object_ | Results from the task
 **result.failure_reason** | _string_ | Null if the task succeeds, contains the error message if it fails.
+**guid** | _uuid_ | Unique identifier for the task.
 **created_at** | _datetime_ | The time with zone when the object was created.
 **updated_at** | _datetime_ | The time with zone when the object was last updated.
 **links** | [_links object_](#links) | Links to related resources.

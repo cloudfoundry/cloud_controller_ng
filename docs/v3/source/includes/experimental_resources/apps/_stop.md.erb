@@ -24,11 +24,10 @@ Example Response
 
 ```http
 HTTP/1.1 200 OK
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :app_with_state, 'STOPPED' %>
 ```
 
-This endpoint stops a running app.
 
 

@@ -19,15 +19,6 @@ curl "https://api.example.org/v3/apps" \
   -H "Content-type: application/json" \
   -d '{
     "name": "my_app",
-    "environment_variables": {
-      "HTTP_PROXY": "http://proxy.example.com"
-    },
-    "lifecycle": {
-      "type": "buildpack",
-      "data": {
-        "buildpacks": ["java_buildpack"]
-      }
-    },
     "relationships": {
       "space": {
         "data": {
@@ -44,49 +35,21 @@ Example Response
 
 ```http
 HTTP/1.1 201 Created
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :single_app %>
 ```
-This endpoint creates a new app.
 
-#### Body Parameters
+#### Required Parameters
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      name
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Name of the app.
+**space** | [_to-one relationship_](#to-one-relationships) | A relationship to a space.
 
-      <span class="method-list-item-type method-list-item-type-required">required</span>
-    </h4>
+#### Optional Parameters
 
-    <p class="method-list-item-description">Name of the App</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      relationships[space][data][guid]
-
-      <span class="method-list-item-type method-list-item-type-required">required</span>
-    </h4>
-
-    <p class="method-list-item-description">Guid of the space that will contain the app.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      environment_variables
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Environment variables to be used for the App when running.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      lifecycle
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Lifecycle to be used when creating the app. Note: If no lifecycle is provided, lifecycle type defaults to buildpack. Data is a required field in lifecycle.</p>
-  </li>
-</ul>
+Name | Type | Description | Default
+---- | ---- | ----------- | -------
+**environment_variables** | _object_ | Environment variables to be used for the App when running. | `{}`
+**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Provides the lifecycle object for the application. | buildpack lifecycle
