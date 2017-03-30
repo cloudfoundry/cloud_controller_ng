@@ -137,7 +137,7 @@ module VCAP::CloudController
 
         def upload_buildpack_artifacts_cache_uri
           upload_buildpack_artifacts_cache_uri       = URI(config[:diego][:cc_uploader_url])
-          upload_buildpack_artifacts_cache_uri.path  = "/v1/build_artifacts/#{staging_details.droplet.guid}"
+          upload_buildpack_artifacts_cache_uri.path  = "/v1/build_artifacts/#{staging_details.staging_guid}"
           upload_buildpack_artifacts_cache_uri.query = {
             'cc-build-artifacts-upload-uri' => lifecycle_data[:build_artifacts_cache_upload_uri],
             'timeout'                       => config[:staging][:timeout_in_seconds],
@@ -147,7 +147,7 @@ module VCAP::CloudController
 
         def upload_droplet_uri
           upload_droplet_uri       = URI(config[:diego][:cc_uploader_url])
-          upload_droplet_uri.path  = "/v1/droplet/#{staging_details.droplet.guid}"
+          upload_droplet_uri.path  = "/v1/droplet/#{staging_details.staging_guid}"
           upload_droplet_uri.query = {
             'cc-droplet-upload-uri' => lifecycle_data[:droplet_upload_uri],
             'timeout'               => config[:staging][:timeout_in_seconds],

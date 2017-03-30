@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe Dea::AppStagerTask do
-    subject!(:staging_task) { Dea::AppStagerTask.new(config_hash, message_bus, droplet, dea_pool, blobstore_url_generator) }
+    subject!(:staging_task) { Dea::AppStagerTask.new(config_hash, message_bus, droplet.guid, dea_pool, blobstore_url_generator, app) }
 
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:dea_pool) { instance_double(Dea::Pool, reserve_app_memory: nil) }

@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:runners) { instance_double(Runners) }
       let(:runner) { double(:Runner) }
       let(:stager_task) { instance_double(AppStagerTask) }
-      let(:staging_details) { instance_double(Diego::StagingDetails, droplet: process.latest_droplet) }
+      let(:staging_details) { instance_double(Diego::StagingDetails, staging_guid: process.latest_droplet.guid) }
 
       let(:reply_json_error) { nil }
       let(:reply_error_info) { nil }
@@ -55,9 +55,10 @@ module VCAP::CloudController
           expect(stager_task).to have_received(:stage)
           expect(AppStagerTask).to have_received(:new).with(config,
                                                             message_bus,
-                                                            process.latest_droplet,
+                                                            staging_details.staging_guid,
                                                             dea_pool,
-                                                            an_instance_of(CloudController::Blobstore::UrlGenerator))
+                                                            an_instance_of(CloudController::Blobstore::UrlGenerator),
+                                                            process)
         end
 
         it 'starts the app with the returned staging result' do

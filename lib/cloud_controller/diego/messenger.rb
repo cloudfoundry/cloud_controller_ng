@@ -7,7 +7,7 @@ module VCAP::CloudController
       def send_stage_request(config, staging_details)
         logger.info('staging.begin', package_guid: staging_details.package.guid)
 
-        staging_guid = staging_details.droplet.guid
+        staging_guid = staging_details.staging_guid
 
         if do_local_staging
           task_definition = task_recipe_builder.build_staging_task(config, staging_details)

@@ -101,7 +101,7 @@ RSpec.describe 'Droplets' do
         }
       }
 
-      expect(last_response.status).to eq(201)
+      expect(last_response.status).to eq(201), last_response.body
       expect(parsed_response).to be_a_response_like(expected_response)
 
       event = VCAP::CloudController::Event.last

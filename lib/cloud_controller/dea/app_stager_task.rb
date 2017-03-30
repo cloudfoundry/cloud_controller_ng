@@ -9,17 +9,17 @@ module VCAP::CloudController
       attr_reader :config
       attr_reader :message_bus
 
-      def initialize(config, message_bus, droplet, dea_pool, blobstore_url_generator)
+      def initialize(config, message_bus, staging_guid, dea_pool, blobstore_url_generator, app)
         @config                  = config
         @message_bus             = message_bus
         @dea_pool                = dea_pool
         @blobstore_url_generator = blobstore_url_generator
-        @app                     = droplet.app.web_process
-        @droplet                 = droplet
+        @app                     = app
+        @staging_guid            = staging_guid
       end
 
       def task_id
-        @task_id ||= @droplet.guid
+        @task_id ||= @staging_guid
       end
 
       def stage(&completion_callback)
@@ -208,38 +208,40 @@ module VCAP::CloudController
       end
 
       def staging_completion(stager_response)
-        @droplet.db.transaction do
-          @droplet.lock!
-          @droplet.app.lock!
+        droplet = DropletModel.find(guid: @staging_guid)
+        droplet.db.transaction do
+          droplet.lock!
+          droplet.app.lock!
 
-          @droplet.mark_as_staged
-          @droplet.set_buildpack_receipt(
+          droplet.mark_as_staged
+          droplet.set_buildpack_receipt(
             detect_output:       stager_response.detected_buildpack,
             buildpack_key:       stager_response.buildpack_key,
-            requested_buildpack: @droplet.buildpack_lifecycle_data.buildpack
+            requested_buildpack: droplet.buildpack_lifecycle_data.buildpack
           )
-          @droplet.process_types      = { web: stager_response.detected_start_command }
-          @droplet.execution_metadata = stager_response.execution_metadata
-          @droplet.save_changes(raise_on_save_failure: true)
+          droplet.process_types      = { web: stager_response.detected_start_command }
+          droplet.execution_metadata = stager_response.execution_metadata
+          droplet.save_changes(raise_on_save_failure: true)
 
-          @droplet.app.droplet = @droplet
-          @droplet.app.save
+          droplet.app.droplet = droplet
+          droplet.app.save
 
-          @droplet.app.processes.each do |p|
+          droplet.app.processes.each do |p|
             p.lock!
             Repositories::AppUsageEventRepository.new.create_from_app(p, 'BUILDPACK_SET')
           end
         end
 
-        BitsExpiration.new.expire_droplets!(@droplet.app)
+        BitsExpiration.new.expire_droplets!(droplet.app)
       end
 
       def staging_fail(error)
-        @droplet.db.transaction do
-          @droplet.lock!
-          @droplet.fail_to_stage!(error)
+        droplet = DropletModel.find(guid: @staging_guid)
+        droplet.db.transaction do
+          droplet.lock!
+          droplet.fail_to_stage!(error)
 
-          V2::AppStop.stop(@droplet.app, stagers)
+          V2::AppStop.stop(droplet.app, stagers)
         end
       end
 

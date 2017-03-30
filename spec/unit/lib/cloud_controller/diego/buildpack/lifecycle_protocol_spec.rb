@@ -28,9 +28,9 @@ module VCAP
             let(:process) { App.make(app: app) }
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
-                details.droplet   = droplet
-                details.package   = package
-                details.lifecycle = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: buildpack_info)
+                details.staging_guid = droplet.guid
+                details.package      = package
+                details.lifecycle    = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: buildpack_info)
               end
             end
             let(:buildpack_info) { BuildpackInfo.new('http://some-buildpack.url', nil) }
@@ -54,7 +54,7 @@ module VCAP
 
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
-                details.droplet               = droplet
+                details.staging_guid          = droplet.guid
                 details.package               = package
                 details.environment_variables = { 'nightshade_fruit' => 'potato' }
                 details.staging_memory_in_mb  = 42
@@ -203,9 +203,9 @@ module VCAP
             let(:droplet) { DropletModel.make }
             let(:staging_details) do
               StagingDetails.new.tap do |details|
-                details.lifecycle = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: 'some buildpack info')
-                details.package   = package
-                details.droplet   = droplet
+                details.lifecycle    = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: 'some buildpack info')
+                details.package      = package
+                details.staging_guid = droplet.guid
               end
             end
 

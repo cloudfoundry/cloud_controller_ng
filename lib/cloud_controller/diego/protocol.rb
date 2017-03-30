@@ -18,11 +18,11 @@ module VCAP::CloudController
         env = VCAP::CloudController::Diego::NormalEnvHashToDiegoEnvArrayPhilosopher.muse(staging_details.environment_variables)
         logger.debug2("staging environment: #{env.map { |e| e['name'] }}")
 
-        lifecycle_type = staging_details.droplet.lifecycle_type
+        lifecycle_type = staging_details.lifecycle.type
         lifecycle_data = LifecycleProtocol.protocol_for_type(lifecycle_type).lifecycle_data(staging_details)
 
         staging_request                     = StagingRequest.new
-        staging_request.app_id              = staging_details.droplet.guid
+        staging_request.app_id              = staging_details.staging_guid
         staging_request.log_guid            = staging_details.package.app_guid
         staging_request.environment         = env
         staging_request.memory_mb           = staging_details.staging_memory_in_mb
@@ -79,7 +79,7 @@ module VCAP::CloudController
       def staging_completion_callback(staging_details, config)
         auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"
         host_port = "#{config[:internal_service_hostname]}:#{config[:external_port]}"
-        path      = "/internal/v3/staging/#{staging_details.droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}"
+        path      = "/internal/v3/staging/#{staging_details.staging_guid}/droplet_completed?start=#{staging_details.start_after_staging}"
         "http://#{auth}@#{host_port}#{path}"
       end
 

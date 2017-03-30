@@ -10,7 +10,7 @@ module VCAP::CloudController
       end
 
       def stage(staging_details)
-        @droplet = staging_details.droplet
+        @droplet = DropletModel.find(guid: staging_details.staging_guid)
 
         stager_task.stage do |staging_result|
           @runners.runner_for_app(@process).start(staging_result)
@@ -33,7 +33,9 @@ module VCAP::CloudController
       private
 
       def stager_task
-        @task ||= AppStagerTask.new(@config, @message_bus, @droplet, @dea_pool, CloudController::DependencyLocator.instance.blobstore_url_generator)
+        staging_guid = @droplet ? @droplet.guid : nil
+        process = @droplet ? @droplet.app.web_process : nil
+        @task ||= AppStagerTask.new(@config, @message_bus, staging_guid, @dea_pool, CloudController::DependencyLocator.instance.blobstore_url_generator, process)
       end
     end
   end

@@ -41,7 +41,7 @@ module VCAP::CloudController
 
       DropletModel.db.transaction do
         droplet.save
-        staging_details.droplet = droplet
+        staging_details.staging_guid = droplet.guid
         lifecycle.create_lifecycle_data_model(droplet)
 
         record_audit_event(droplet, message, package, user_audit_info) if record_event

@@ -105,7 +105,7 @@ module VCAP::CloudController
           droplet = action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
           expect(stager).to have_received(:stage) do |staging_details|
             expect(staging_details.package).to eq(package)
-            expect(staging_details.droplet).to eq(droplet)
+            expect(staging_details.staging_guid).to eq(droplet.guid)
             expect(staging_details.staging_memory_in_mb).to eq(calculated_mem_limit)
             expect(staging_details.staging_disk_in_mb).to eq(calculated_staging_disk_in_mb)
             expect(staging_details.environment_variables).to eq(environment_variables)

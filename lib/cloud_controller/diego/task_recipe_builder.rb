@@ -44,7 +44,7 @@ module VCAP::CloudController
       end
 
       def build_staging_task(config, staging_details)
-        lifecycle_type = staging_details.droplet.lifecycle_type
+        lifecycle_type = staging_details.lifecycle.type
         action_builder = LifecycleProtocol.protocol_for_type(lifecycle_type).staging_action_builder(config, staging_details)
 
         ::Diego::Bbs::Models::TaskDefinition.new(
@@ -77,7 +77,7 @@ module VCAP::CloudController
 
         auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"
         host_port = "#{config[:internal_service_hostname]}:#{port}"
-        path      = "/internal/v3/staging/#{staging_details.droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}"
+        path      = "/internal/v3/staging/#{staging_details.staging_guid}/droplet_completed?start=#{staging_details.start_after_staging}"
         "#{scheme}://#{auth}@#{host_port}#{path}"
       end
 

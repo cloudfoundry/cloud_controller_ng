@@ -9,15 +9,26 @@ module VCAP::CloudController
         let(:app) { AppModel.make(guid: 'banana-guid') }
         let(:staging_details) do
           Diego::StagingDetails.new.tap do |details|
-            details.droplet = droplet
+            details.staging_guid = droplet.guid
             details.package = package
             details.environment_variables = [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'nightshade_fruit', value: 'potato')]
             details.staging_memory_in_mb  = 42
             details.staging_disk_in_mb    = 51
             details.start_after_staging   = true
+            details.lifecycle             = lifecycle
             details.isolation_segment     = isolation_segment
           end
         end
+        let(:lifecycle) do
+          LifecycleProvider.provide(package, staging_message)
+        end
+        let(:staging_message) { DropletCreateMessage.new(lifecycle: { data: request_data, type: lifecycle_type }) }
+        let(:request_data) do
+          {
+            stack:     'cool-stack'
+          }
+        end
+        let(:package) { PackageModel.make(app: app) }
         let(:config) do
           {
             tls_port: tls_port,
@@ -69,17 +80,22 @@ module VCAP::CloudController
             organizational_unit: ["app:#{app.guid}"],
           )
         end
+        let(:lifecycle_protocol) do
+          instance_double(VCAP::CloudController::Diego::Buildpack::LifecycleProtocol,
+            staging_action_builder: lifecycle_action_builder
+          )
+        end
 
         before do
           SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }], staging_default: true)
           SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }], staging_default: true)
           security_group = SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }], staging_default: false)
           security_group.add_staging_space(app.space)
+          allow(LifecycleProtocol).to receive(:protocol_for_type).with(lifecycle_type).and_return(lifecycle_protocol)
         end
 
         context 'with a buildpack backend' do
           let(:droplet) { DropletModel.make(:buildpack, package: package, app: app) }
-          let(:package) { PackageModel.make(app: app) }
 
           let(:buildpack_staging_action) { ::Diego::Bbs::Models::RunAction.new }
           let(:lifecycle_environment_variables) { [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'the-buildpack-env-var', value: 'the-buildpack-value')] }
@@ -95,15 +111,6 @@ module VCAP::CloudController
           end
 
           let(:lifecycle_type) { 'buildpack' }
-          let(:lifecycle_protocol) do
-            instance_double(VCAP::CloudController::Diego::Buildpack::LifecycleProtocol,
-              staging_action_builder: lifecycle_action_builder
-            )
-          end
-
-          before do
-            allow(LifecycleProtocol).to receive(:protocol_for_type).with(lifecycle_type).and_return(lifecycle_protocol)
-          end
 
           it 'constructs a TaskDefinition with staging instructions' do
             result = task_recipe_builder.build_staging_task(config, staging_details)

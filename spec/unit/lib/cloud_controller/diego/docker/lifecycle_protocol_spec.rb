@@ -21,7 +21,7 @@ module VCAP
 
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
-                details.droplet = droplet
+                details.staging_guid = droplet.guid
                 details.package = package
                 details.lifecycle = instance_double(VCAP::CloudController::DockerLifecycle)
               end
@@ -29,11 +29,12 @@ module VCAP
           end
 
           describe '#lifecycle_data' do
-            let(:package) { PackageModel.make(:docker, docker_image: 'registry/image-name:latest') }
+            let(:app) { AppModel.make }
+            let(:package) { PackageModel.make(:docker, app: app, docker_image: 'registry/image-name:latest') }
             let(:droplet) { DropletModel.make(package_guid: package.guid) }
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
-                details.droplet = droplet
+                details.staging_guid = droplet.guid
                 details.package = package
                 details.lifecycle = instance_double(VCAP::CloudController::DockerLifecycle)
               end

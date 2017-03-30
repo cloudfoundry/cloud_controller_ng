@@ -9,8 +9,9 @@ module VCAP::CloudController
         send_stage_package_request(staging_details)
 
       rescue CloudController::Errors::ApiError => e
-        logger.error('stage.package', package_guid: staging_details.package.guid, staging_guid: staging_details.droplet.guid, error: e)
-        staging_complete(staging_details.droplet, { error: { id: 'StagingError', message: e.message } })
+        logger.error('stage.package', package_guid: staging_details.package.guid, staging_guid: staging_details.staging_guid, error: e)
+        droplet = DropletModel.find(guid: staging_details.staging_guid)
+        staging_complete(droplet, { error: { id: 'StagingError', message: e.message } })
         raise e
       end
 

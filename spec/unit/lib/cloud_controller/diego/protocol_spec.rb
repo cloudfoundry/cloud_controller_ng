@@ -49,13 +49,19 @@ module VCAP::CloudController
         let(:droplet) { DropletModel.make(package: package, app: app) }
         let(:staging_details) do
           Diego::StagingDetails.new.tap do |details|
-            details.droplet               = droplet
+            details.staging_guid          = droplet.guid
             details.package               = package
             details.environment_variables = { 'nightshade_fruit' => 'potato' }
             details.staging_memory_in_mb  = 42
             details.staging_disk_in_mb    = 51
-            details.start_after_staging = true
+            details.start_after_staging   = true
+            details.lifecycle             = lifecycle
           end
+        end
+        let(:lifecycle_type) { 'buildpack' }
+        let(:staging_message) { DropletCreateMessage.new(lifecycle: { data: {}, type: lifecycle_type }) }
+        let(:lifecycle) do
+          LifecycleProvider.provide(package, staging_message)
         end
         let(:config) do
           {
@@ -85,7 +91,7 @@ module VCAP::CloudController
 
         it 'contains the correct payload for staging a package' do
           expect(result).to eq({
-            app_id:              staging_details.droplet.guid,
+            app_id:              staging_details.staging_guid,
             log_guid:            app.guid,
             memory_mb:           staging_details.staging_memory_in_mb,
             disk_mb:             staging_details.staging_disk_in_mb,
@@ -93,7 +99,7 @@ module VCAP::CloudController
             environment:         VCAP::CloudController::Diego::NormalEnvHashToDiegoEnvArrayPhilosopher.muse(staging_details.environment_variables),
             egress_rules:        ['staging_egress_rule'],
             timeout:             90,
-            lifecycle:           droplet.lifecycle_type,
+            lifecycle:           lifecycle_type,
             lifecycle_data:      { 'some' => 'data' },
             completion_callback: "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}" \
             "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}"
