@@ -37,58 +37,16 @@ Example Response
 
 ```http
 HTTP/1.1 201 Created
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :single_staging_buildpack_droplet %>
 ```
 
-This endpoint creates a new droplet from a package.
+#### Optional Parameters
 
-#### Body Parameters
-
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      environment_variables
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">
-      Environment variables to use during staging. Environment variable names may
-      not start with <code>VCAP_</code> or <code>CF_</code>. <code>PORT</code> is not a valid environment variable.
-    </p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-       staging_memory_in_mb
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Memory limit used to stage package	</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      staging_disk_in_mb
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Disk limit used to stage package</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      lifecycle
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">
-      Lifecycle information for a droplet.  If not provided, it will default to
-      what is specified on the app. If the app does not have lifecycle information,
-      it will default to a buildpack.
-    </p>
-  </li>
-</ul>
-
+Name | Type | Description | Default
+---- | ---- | ----------- | -------
+**environment_variables** | _object_ | Environment variables to use during staging. Environment variable names may not start with `VCAP_` or `CF_`. `PORT` is not a valid environment variable. | `{}`
+**staging_memory_in_mb** | _integer_ | Memory limit used to stage package. |
+**staging_disk_in_mb** | _integer_ | Disk limit used to stage package. |
+**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Lifecycle information for a droplet. | lifecycle on the app

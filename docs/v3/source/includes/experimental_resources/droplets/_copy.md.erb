@@ -32,26 +32,16 @@ Example Response
 
 ```http
 HTTP/1.1 201 Created
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :single_copied_staging_buildpack_droplet %>
 ```
 
-This endpoint copies a droplet to a different app. The copied droplet excludes the
+Copy a droplet to a different app. The copied droplet excludes the
 environment variables listed on the source droplet.
 
 #### Query Parameters
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      guid
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">
-      Source guid of the droplet to be copied
-    </p>
-  </li>
-</ul>
+Name | Type | Description
+---- | ---- | ------------
+**guid** | _uuid_ | Source guid of the droplet to be copied.
