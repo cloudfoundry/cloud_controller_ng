@@ -38,7 +38,7 @@ function write_versions_json() {
   declare version_list=''
   local dirs
   local dir
-  dirs=$(ls -l version | egrep '^d' | awk '{print $9}' | sort -n -r)
+  dirs=$(ls -l version | egrep '^d' | awk '{print $9}' | grep -v alpha | sort --version-sort -r)
 
   rm -f versions.json
 
