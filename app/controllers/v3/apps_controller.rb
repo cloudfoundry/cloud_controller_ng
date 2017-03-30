@@ -159,6 +159,21 @@ class AppsV3Controller < ApplicationController
     unprocessable!(e.message)
   end
 
+  def current_droplet_relationship
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    droplet = DropletModel.where(guid: app.droplet_guid).eager(:space, space: :organization).all.first
+
+    droplet_not_found! unless droplet
+    render status: :ok, json: Presenters::V3::AppDropletRelationshipPresenter.new(
+      resource_path: "apps/#{app.guid}",
+      related_instance: droplet,
+      relationship_name: 'current_droplet',
+      related_resource_name: 'droplets',
+      app_model: app
+            )
+  end
+
   def current_droplet
     app, space, org = AppFetcher.new.fetch(params[:guid])
     app_not_found! unless app && can_read?(space.guid, org.guid)
