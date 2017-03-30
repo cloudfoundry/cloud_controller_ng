@@ -387,9 +387,31 @@ a, .link {
     clear:both;
   }
 
+  h1 {
+    @extend %header-font;
+    font-size: 30px;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: $h1-margin-bottom;
+    margin-top: 2em;
+    border-top: 1px solid #ddd;
+    background-image: linear-gradient(to bottom, #fff, $gray5);
+  }
+
   h1:first-child, div:first-child + h1 {
     border-top-width: 0;
     margin-top: 0;
+  }
+
+  h2, h3 {
+    @extend %header-font;
+    font-size: 20px;
+    margin-top: 4em;
+    margin-bottom: 0;
+    border-top: 1px solid #ccc;
+    padding-top: 1.2em;
+    padding-bottom: 1.2em;
   }
 
   // h2s right after h1s should bump right up
@@ -429,10 +451,13 @@ a, .link {
       padding: 5px 10px;
       border-bottom: 1px solid #ccc;
       vertical-align: bottom;
+      @extend %header-font;
+      font-size: 15px;
     }
 
     td {
       padding: 10px;
+      font-size: 14px;
     }
 
     tr:last-child {
@@ -440,11 +465,11 @@ a, .link {
     }
 
     tr:nth-child(odd)>td {
-      background-color: lighten($main-bg,4.2%);
+      background-color: lighten($table-row-bg,4.2%);
     }
 
     tr:nth-child(even)>td {
-      background-color: lighten($main-bg,2.4%);
+      background-color: lighten($table-row-bg,2.4%);
     }
   }
 

@@ -70,6 +70,6 @@ $contrasted-dark-default: $color-text;
 $contrasted-light-default: #fff;
 $contrasted-lightness-threshold: 90%;
 
-$code-snippet-background-color: $navy;
+$code-snippet-background-color: $gray1;
 $code-background-color: darken($code-snippet-background-color, 7%);
 $lang-selector-background-color: desaturate($code-snippet-background-color, 10%);
