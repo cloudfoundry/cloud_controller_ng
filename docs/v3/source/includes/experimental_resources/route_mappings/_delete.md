@@ -25,13 +25,3 @@ Example Response
 ```http
 HTTP/1.1 204 No Content
 ```
-
-This endpoint deletes a specific route mapping.
-
-#### Body Parameters
-
-<p class='no-body-parameters-outer'>
-  <span class='no-body-parameters-required'>
-    No arguments
-  </span>
-</p>

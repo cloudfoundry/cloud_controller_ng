@@ -35,50 +35,21 @@ Example Response
 
 ```http
 HTTP/1.1 201 Created
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :single_route_mapping %>
 ```
 
-This endpoint creates a new route mapping.
+#### Required Parameters
 
-#### Body Parameters
+Name | Type | Description
+---- | ---- | -----------
+**app** | [_to-one relationship_](#to-one-relationships) | A relationship to an app.
+**route** | [_to-one relationship_](#to-one-relationships) | A relationship to a route.
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      app_port
+#### Optional Parameters
 
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">The port that traffic will be routed to for the mapped process. Defaults to <code>8080</code></p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      relationships[app][guid]
-
-      <span class="method-list-item-type method-list-item-type-required">required</span>
-    </h4>
-
-    <p class="method-list-item-description">Guid of the app to which you would like to map the route.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      relationships[route][guid]
-
-      <span class="method-list-item-type method-list-item-type-required">required</span>
-    </h4>
-
-    <p class="method-list-item-description">Guid of the route to which you would like to map the app.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      relationships[process][type]
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Type of the process on the app to which you would like to map the route. Defaults to <code>web</code></p>
-  </li>
-</ul>
+Name | Type | Description | Default
+---- | ---- | ----------- | -------
+**app_port** | _integer_ | The port that traffic will be routed to for the mapped process. | `8080`
+**process** | [_to-one relationship_](#to-one-relationships) | A relationship to a process. This relationship is specified by `type` instead of `guid`.
