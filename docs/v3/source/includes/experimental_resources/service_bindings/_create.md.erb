@@ -41,50 +41,21 @@ Example Response
 
 ```http
 HTTP/1.1 201 Created
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :single_service_binding %>
 ```
 
-This endpoint creates a new service binding.
+#### Required Parameters
 
-#### Body Parameters
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | Service binding type. Valid value is `app`.
+**app** | [_to-one relationship_](#to-one-relationships) | A relationship to an app.
+**service_instance** | [_to-one relationship_](#to-one-relationships) | A relationship to a service_instance.
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      type
+#### Optional Parameters
 
-      <span class="method-list-item-type method-list-item-type-required">required</span>
-    </h4>
-
-    <p class="method-list-item-description">Service binding type. Currently, the only possible value is "app".</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      relationships[app][guid]
-
-      <span class="method-list-item-type method-list-item-type-required">required</span>
-    </h4>
-
-    <p class="method-list-item-description">Guid of the app to which you would like to bind the service instance.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      relationships[service_instance][guid]
-
-      <span class="method-list-item-type method-list-item-type-required">required</span>
-    </h4>
-
-    <p class="method-list-item-description">Guid of the service instance to which you would like to bind the app.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      data[parameters]
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Additional configuration parameters for the service binding.</p>
-  </li>
-</ul>
+Name | Type | Description | Default
+---- | ---- | ----------- | -------
+**data.parameters** | _object_ | Additional configuration parameters for the service binding. | `{}`
