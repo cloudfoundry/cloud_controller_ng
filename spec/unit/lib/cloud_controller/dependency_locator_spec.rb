@@ -329,6 +329,7 @@ RSpec.describe CloudController::DependencyLocator do
     let(:config) do
       TestConfig.override(routing_api:
                           {
+        private_endpoint: 'routing-api-internal-url',
         url: 'routing-api-url',
         routing_client_name: 'routing-client',
         routing_client_secret: 'routing-secret',
@@ -361,7 +362,7 @@ RSpec.describe CloudController::DependencyLocator do
 
       expect(client).to be_an_instance_of(VCAP::CloudController::RoutingApi::Client)
       expect(client.uaa_client).to eq uaa_client
-      expect(client.routing_api_uri.to_s).to eq(config[:routing_api][:url])
+      expect(client.routing_api_uri.to_s).to eq(config[:routing_api][:private_endpoint])
       expect(client.skip_cert_verify).to eq(config[:skip_cert_verify])
     end
   end

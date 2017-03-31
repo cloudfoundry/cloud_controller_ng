@@ -97,6 +97,7 @@ hm9000:
 
 routing_api:
   url: "http://localhost:3000"
+  private_endpoint: "http://localhost:3000/internal"
   routing_client_name: 'routing-client'
   routing_client_secret: 'routing-secret'
 

@@ -254,7 +254,7 @@ module CloudController
       )
 
       skip_cert_verify = @config[:skip_cert_verify]
-      routing_api_url  = HashUtils.dig(@config, :routing_api, :url)
+      routing_api_url  = HashUtils.dig(@config, :routing_api, :private_endpoint)
       RoutingApi::Client.new(routing_api_url, uaa_client, skip_cert_verify)
     end
 

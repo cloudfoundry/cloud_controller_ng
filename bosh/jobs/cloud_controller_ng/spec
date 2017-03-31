@@ -742,6 +742,13 @@ properties:
     description: "Whether to expose the routing_endpoint listed at /v2/info. Enable this after deploying the Routing API"
     default: false
 
+  routing_api.uri:
+    description: "URL where the routing API can be reached internally"
+    default: http://routing-api.service.cf.internal
+  routing_api.port:
+    description: "Port on which Routing API is running."
+    default: 3000
+
   cc.reserved_private_domains:
     description: "File location of a list of reserved private domains (for file format, see https://publicsuffix.org/)"
     default: ~
