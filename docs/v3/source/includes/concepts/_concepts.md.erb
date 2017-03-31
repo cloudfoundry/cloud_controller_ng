@@ -73,40 +73,12 @@ Example Person Resource
 }
 ```
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      guid
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">The unique identifier for the resource</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      created_at
-      <span class="method-list-item-type">datetime</span>
-    </h4>
-
-    <p class="method-list-item-description">The ISO8601 compatible date and time when resource was created.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      updated_at
-      <span class="method-list-item-type">datetime</span>
-    </h4>
-
-    <p class="method-list-item-description">The ISO8601 compatible date and time when resource was last updated.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      links
-      <span class="method-list-item-type"><%= link_to 'link object', '#the-link-object' %></span>
-    </h4>
-
-    <p class="method-list-item-description">Provide URLs to related resources and actions for the current resource.</p>
-  </li>
-</ul>
+Name | Type | Description
+---- | ---- | -----------
+**guid** | _uuid_ | The unique identifier for the resource.
+**created_at** | _datetime_ | The ISO8601 compatible date and time when resource was created.
+**updated_at** | _datetime_ | The ISO8601 compatible date and time when resource was last updated.
+**links** | [_links object_](#links) | Provide URLs to related resources and actions for the current resource.
 
 ### Links
 
@@ -116,24 +88,10 @@ Each link is keyed by its type and will include a `href` for the URL and an opti
 
 #### The link object
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      href
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">The absolute URL.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      method
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">An optional field containing the HTTP method to be used when following the URL.</p>
-  </li>
-</ul>
+Name | Type | Description
+---- | ---- | -----------
+**href** | _string_ | The absolute URL.
+**method** | _string_ | An optional field containing the HTTP method to be used when following the URL.
 
 ## Relationships
 
@@ -234,9 +192,7 @@ An error response will always return a list of error objects in the `errors` fie
 Example Error
 ```
 
-```http
-HTTP/1.1 422 Unprocessable
-
+```json
 {
   "errors": [
     {
@@ -248,32 +204,11 @@ HTTP/1.1 422 Unprocessable
 }
 ```
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      code
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">A numeric code for this error</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      title
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Short description of the error.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      detail
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Detailed description of the error.</p>
-  </li>
-</ul>
+Name | Type | Description
+---- | ---- | -----------
+**code** | _integer_ | A numeric code for this error.
+**title** | _string_ | Short description of the error.
+**detail** | _string_ | Detailed description of the error.
 
 ## Pagination
 
@@ -319,53 +254,11 @@ Example Paginated Response
 }
 ```
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      total_results
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">Total number of resources for all pages</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      total_pages
-      <span class="method-list-item-type">integer</span>
-    </h4>
-
-    <p class="method-list-item-description">Total number of pages</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      first
-      <span class="method-list-item-type">link object</span>
-    </h4>
-
-    <p class="method-list-item-description">Link to the first page</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      last
-      <span class="method-list-item-type">link object</span>
-    </h4>
-
-    <p class="method-list-item-description">Link to the last page</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      next
-      <span class="method-list-item-type">link object</span>
-    </h4>
-
-    <p class="method-list-item-description">Link to the next page</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      previous
-      <span class="method-list-item-type">link object</span>
-    </h4>
-
-    <p class="method-list-item-description">Link to the previous page</p>
-  </li>
-</ul>
+Name | Type | Description
+---- | ---- | -----------
+**total_results** | _integer_ | Total number of resources for all pages.
+**total_pages** | _integer_ | Total number of pages.
+**first** | [_link object_](#the-link-object) | Link to the first page.
+**last** | [_link object_](#the-link-object) | Link to the last page.
+**next** | [_link object_](#the-link-object) | Link to the next page.
+**previous** | [_link object_](#the-link-object) | Link to the previous page.
